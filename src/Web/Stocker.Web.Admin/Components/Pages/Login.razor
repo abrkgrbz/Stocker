@@ -1,0 +1,476 @@
+@page "/login"
+@using Stocker.Web.Admin.Models
+@using Stocker.Web.Admin.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ILogger<Login> Logger
+
+<PageTitle>Giriş - Stocker Admin</PageTitle>
+
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <h1>Stocker Admin</h1>
+            <p>Yönetim Paneli</p>
+        </div>
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" class="login-form">
+            <DataAnnotationsValidator />
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @errorMessage
+                </div>
+            }
+
+            <div class="form-group">
+                <label for="username">
+                    <i class="bi bi-person-circle"></i> Kullanıcı Adı
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <InputText id="username" @bind-Value="loginModel.Email" class="form-control" 
+                               placeholder="Emailinizi girin" disabled="@isLoading" />
+                </div>
+                <ValidationMessage For="() => loginModel.Email" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <i class="bi bi-lock-fill"></i> Şifre
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-key"></i>
+                    </span>
+                    <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" 
+                               placeholder="Şifrenizi girin" disabled="@isLoading" />
+                </div>
+                <ValidationMessage For="() => loginModel.Password" />
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="rememberMe">
+                <label class="form-check-label" for="rememberMe">
+                    Beni hatırla
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-login" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Giriş yapılıyor...</span>
+                }
+                else
+                {
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    <span>Giriş Yap</span>
+                }
+            </button>
+        </EditForm>
+
+        <div class="login-footer">
+            <p class="text-muted">© 2024 Stocker. Tüm hakları saklıdır.</p>
+            <div class="social-links">
+                <a href="#" class="social-link" title="Twitter">
+                    <i class="bi bi-twitter"></i>
+                </a>
+                <a href="#" class="social-link" title="LinkedIn">
+                    <i class="bi bi-linkedin"></i>
+                </a>
+                <a href="#" class="social-link" title="GitHub">
+                    <i class="bi bi-github"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+    private bool _shouldNavigateHome = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            _shouldNavigateHome = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _shouldNavigateHome)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await AuthService.LoginAsync(loginModel);
+
+            if (result.Success)
+            {
+                Logger.LogInformation("User {Username} logged in successfully", loginModel.Email);
+                Navigation.NavigateTo("/", replace: true);
+            }
+            else
+            {
+                errorMessage = result.Errors.FirstOrDefault() ?? result.Message ?? "Giriş başarısız";
+                Logger.LogWarning("Login failed for user {Username}: {Error}", loginModel.Email, errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Login error for user {Username}", loginModel.Email);
+            errorMessage = "Bir hata oluştu. Lütfen tekrar deneyin.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: backgroundMove 20s linear infinite;
+        opacity: 0.3;
+    }
+
+    keyframes backgroundMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    .login-box {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 420px;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .login-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-header::after {
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    keyframes pulse {
+        0%, 100% { transform: scale(0.8); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    .login-header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .logo-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 28px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-form {
+        padding: 40px 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group label i {
+        margin-right: 5px;
+        color: #667eea;
+    }
+
+    .input-group {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .input-group-text {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+        color: #667eea;
+    }
+
+    .input-group .form-control {
+        border-radius: 0 8px 8px 0;
+        border-left: none;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s;
+        background: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: #fff;
+    }
+
+    .form-control:disabled {
+        background-color: #f7fafc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .form-check {
+        margin-top: 15px;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin-top: 3px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+
+    .form-check-label {
+        margin-left: 5px;
+        cursor: pointer;
+        color: #4a5568;
+        font-size: 14px;
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        margin-top: 25px;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: left 0.3s;
+    }
+
+    .btn-login:hover:not(:disabled)::before {
+        left: 100%;
+    }
+
+    .btn-login:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-login:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+    }
+
+    .alert {
+        padding: 14px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-danger {
+        background-color: #fed7d7;
+        color: #c53030;
+        border: 1px solid #fc8181;
+        box-shadow: 0 2px 8px rgba(229, 62, 62, 0.1);
+    }
+
+    .alert i {
+        margin-right: 8px;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    .login-footer {
+        padding: 25px 20px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+        background: #f7fafc;
+    }
+
+    .login-footer p {
+        margin: 0 0 15px 0;
+        font-size: 14px;
+        color: #718096;
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .social-link {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border-radius: 50%;
+        color: #718096;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 1px solid #e2e8f0;
+        font-size: 16px;
+    }
+
+    .social-link:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        border-color: transparent;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
+</style>

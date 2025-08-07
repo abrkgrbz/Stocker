@@ -1,40 +1,71 @@
+ 
+using Microsoft.EntityFrameworkCore;
 using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.SharedKernel.Specifications;
 
-public class SpecificationEvaluator<TEntity> where TEntity : Entity
+/// <summary>
+/// Evaluates specifications against IQueryable
+/// </summary>
+public static class SpecificationEvaluator
 {
-    public static IQueryable<TEntity> GetQuery(IQueryable<TEntity> inputQuery, ISpecification<TEntity> specification)
+    public static IQueryable<TEntity> GetQuery<TEntity>(
+        IQueryable<TEntity> inputQuery, 
+        ISpecification<TEntity> specification) where TEntity : class
     {
         var query = inputQuery;
 
-        if (specification.Criteria is not null)
+        // Apply filtering
+        if (specification.Criteria != null)
         {
             query = query.Where(specification.Criteria);
         }
 
-        specification.Includes.Aggregate(query, (current, include) => current);
+        // Apply includes
+        query = specification.Includes.Aggregate(query, 
+            (current, include) => current.Include(include));
 
-        specification.IncludeStrings.Aggregate(query, (current, include) => current);
+        // Apply string-based includes
+        query = specification.IncludeStrings.Aggregate(query, 
+            (current, include) => current.Include(include));
 
-        if (specification.OrderBy is not null)
+        // Apply ordering
+        if (specification.OrderBy != null)
         {
             query = query.OrderBy(specification.OrderBy);
         }
-        else if (specification.OrderByDescending is not null)
+        else if (specification.OrderByDescending != null)
         {
             query = query.OrderByDescending(specification.OrderByDescending);
         }
 
-        if (specification.GroupBy is not null)
+        // Apply grouping
+        if (specification.GroupBy != null)
         {
             query = query.GroupBy(specification.GroupBy).SelectMany(x => x);
         }
 
-        if (specification.IsPagingEnabled)
+        // Apply paging
+        if (specification.Skip.HasValue)
         {
-            query = query.Skip(specification.Skip)
-                         .Take(specification.Take);
+            query = query.Skip(specification.Skip.Value);
+        }
+
+        if (specification.Take.HasValue)
+        {
+            query = query.Take(specification.Take.Value);
+        }
+
+        // Apply tracking
+        if (specification.AsNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        // Apply query filters
+        if (specification.IgnoreQueryFilters)
+        {
+            query = query.IgnoreQueryFilters();
         }
 
         return query;

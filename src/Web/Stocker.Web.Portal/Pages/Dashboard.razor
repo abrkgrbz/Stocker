@@ -1,0 +1,87 @@
+@page "/dashboard"
+@attribute [Authorize]
+@inject IAuthService AuthService
+
+<PageTitle>Dashboard - Stocker Portal</PageTitle>
+
+<h1>Dashboard</h1>
+
+<AuthorizeView>
+    <Authorized>
+        @if (isLoaded && userInfo != null)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <h4>Hoş geldiniz, @userInfo.FullName!</h4>
+                        <p>Kullanıcı ID: @userInfo.Id</p>
+                        <p>E-posta: @userInfo.Email</p>
+                        @if (userInfo.TenantId != null)
+                        {
+                            <p>Tenant: @userInfo.TenantName (ID: @userInfo.TenantId)</p>
+                        }
+                        <p>Master User: @(userInfo.IsMasterUser ? "Evet" : "Hayır")</p>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (!isLoaded)
+        {
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+            </div>
+        }
+
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">Toplam Ürün</div>
+                    <div class="card-body">
+                        <h5 class="card-title">1,234</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">Aktif Siparişler</div>
+                    <div class="card-body">
+                        <h5 class="card-title">56</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-header">Bekleyen Siparişler</div>
+                    <div class="card-body">
+                        <h5 class="card-title">12</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Toplam Müşteri</div>
+                    <div class="card-body">
+                        <h5 class="card-title">89</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private UserInfo? userInfo;
+    private bool isLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userInfo = await AuthService.GetCurrentUserAsync();
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+}

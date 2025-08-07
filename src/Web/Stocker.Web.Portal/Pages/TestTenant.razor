@@ -1,0 +1,140 @@
+@page "/test-tenant"
+@using Stocker.Web.Portal.Services
+@inject IApiService ApiService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Navigation
+
+<h3>Multi-Tenant Test Page</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Current Request Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Current URL:</strong> @Navigation.Uri</p>
+                <p><strong>Host:</strong> @(HttpContextAccessor.HttpContext?.Request.Host.Host ?? "N/A")</p>
+                <p><strong>Extracted Subdomain:</strong> @ExtractedSubdomain</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>API Test Results</h5>
+            </div>
+            <div class="card-body">
+                @if (isLoading)
+                {
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                }
+                else if (apiResponse != null)
+                {
+                    <pre>@apiResponseJson</pre>
+                }
+                else if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">
+                        @errorMessage
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <button class="btn btn-primary" @onclick="TestHealthEndpoint">Test Health Endpoint</button>
+    <button class="btn btn-secondary ms-2" @onclick="TestTenantInfoEndpoint">Test Tenant Info</button>
+</div>
+
+<div class="mt-4">
+    <h5>Test Different Tenants</h5>
+    <p>Access this page with different subdomains to test multi-tenancy:</p>
+    <ul>
+        <li><a href="http://test001.stocker.local:5232/test-tenant" target="_blank">test001.stocker.local</a></li>
+        <li><a href="http://abc001.stocker.local:5232/test-tenant" target="_blank">abc001.stocker.local</a></li>
+        <li><a href="http://demo.stocker.local:5232/test-tenant" target="_blank">demo.stocker.local</a></li>
+    </ul>
+</div>
+
+@code {
+    private bool isLoading = false;
+    private object? apiResponse;
+    private string? apiResponseJson;
+    private string? errorMessage;
+    private string? ExtractedSubdomain;
+
+    protected override void OnInitialized()
+    {
+        var host = HttpContextAccessor.HttpContext?.Request.Host.Host ?? "";
+        ExtractedSubdomain = ExtractSubdomain(host) ?? "None";
+    }
+
+    private async Task TestHealthEndpoint()
+    {
+        isLoading = true;
+        errorMessage = null;
+        
+        try
+        {
+            apiResponse = await ApiService.GetAsync<object>("api/test/health");
+            apiResponseJson = System.Text.Json.JsonSerializer.Serialize(apiResponse, 
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task TestTenantInfoEndpoint()
+    {
+        isLoading = true;
+        errorMessage = null;
+        
+        try
+        {
+            apiResponse = await ApiService.GetAsync<object>("api/test/tenant-info");
+            apiResponseJson = System.Text.Json.JsonSerializer.Serialize(apiResponse, 
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string? ExtractSubdomain(string host)
+    {
+        if (host.StartsWith("localhost", StringComparison.OrdinalIgnoreCase) || 
+            host.StartsWith("127.0.0.1") ||
+            host.StartsWith("[::1]"))
+        {
+            return null;
+        }
+
+        var parts = host.Split('.');
+        if (parts.Length >= 3)
+        {
+            var subdomain = parts[0];
+            if (subdomain == "www" || subdomain == "api" || subdomain == "admin")
+                return null;
+            return subdomain.ToLower();
+        }
+
+        return null;
+    }
+}

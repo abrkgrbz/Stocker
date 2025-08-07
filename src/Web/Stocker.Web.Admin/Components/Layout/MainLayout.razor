@@ -1,15 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@using Stocker.Web.Admin.Services
+@inject NavigationManager Navigation
+@inject IAuthService AuthService
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+    @if (!isLoginPage)
+    {
+        <div class="sidebar">
+            <NavMenu />
         </div>
+    }
 
+    <main class="@(isLoginPage ? "full-width" : "")">
         <article class="content px-4">
             @Body
         </article>
@@ -21,3 +24,33 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool isLoginPage = false;
+
+    protected override void OnInitialized()
+    {
+        var currentUri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        isLoginPage = currentUri.LocalPath.Equals("/login", StringComparison.OrdinalIgnoreCase);
+        
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        var currentUri = Navigation.ToAbsoluteUri(e.Location);
+        isLoginPage = currentUri.LocalPath.Equals("/login", StringComparison.OrdinalIgnoreCase);
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}
+
+<style>
+    main.full-width {
+        padding-left: 0 !important;
+    }
+</style>

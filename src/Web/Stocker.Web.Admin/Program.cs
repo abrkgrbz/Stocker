@@ -1,10 +1,27 @@
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Stocker.Web.Admin.Components;
+using Stocker.Web.Admin.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add storage
+builder.Services.AddScoped<ProtectedLocalStorage>();
+
+// Add HttpClient for API calls
+builder.Services.AddHttpClient<IApiService, ApiService>();
+
+// Add application services
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add application services
+builder.Services.AddScoped<ITenantService, TenantService>();
+
+// Add logging
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
@@ -17,7 +34,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

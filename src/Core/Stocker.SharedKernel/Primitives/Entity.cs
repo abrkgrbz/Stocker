@@ -16,7 +16,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>, IEntity<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = new();
 
-    public TId Id { get; private set; }
+    public TId Id { get; protected set; }
 
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 

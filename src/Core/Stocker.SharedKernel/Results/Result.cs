@@ -48,6 +48,9 @@ public class Result<TValue> : Result
         ? _value!
         : throw new InvalidOperationException("Cannot access value on failure result.");
 
+    public static Result<TValue> Success(TValue value) => new(value, true, Error.None);
+    public static new Result<TValue> Failure(Error error) => new(default!, false, error);
+
     public static implicit operator Result<TValue>(TValue? value) =>
-        value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
+        value is not null ? Success(value) : Failure(Error.NullValue);
 }

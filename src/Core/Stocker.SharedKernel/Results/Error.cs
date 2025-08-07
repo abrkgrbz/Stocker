@@ -1,11 +1,25 @@
 namespace Stocker.SharedKernel.Results;
 
-public record Error(string Code, string Message)
+public sealed record Error(string Code, string Description, ErrorType Type = ErrorType.Failure)
 {
-    public static readonly Error None = new(string.Empty, string.Empty);
-    public static readonly Error NullValue = new("Error.NullValue", "The specified result value is null.");
+    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.None);
+    public static readonly Error NullValue = new("Error.NullValue", "Null value was provided", ErrorType.Validation);
 
-    public static implicit operator string(Error error) => error.Code;
+    public static Error NotFound(string code, string description) =>
+        new(code, description, ErrorType.NotFound);
 
-    public static implicit operator Result(Error error) => Result.Failure(error);
+    public static Error Validation(string code, string description) =>
+        new(code, description, ErrorType.Validation);
+
+    public static Error Conflict(string code, string description) =>
+        new(code, description, ErrorType.Conflict);
+
+    public static Error Unauthorized(string code, string description) =>
+        new(code, description, ErrorType.Unauthorized);
+
+    public static Error Forbidden(string code, string description) =>
+        new(code, description, ErrorType.Forbidden);
+
+    public static Error Failure(string code, string description) =>
+        new(code, description, ErrorType.Failure);
 }

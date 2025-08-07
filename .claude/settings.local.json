@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(dotnet build:*)",
+      "Bash(rm:*)",
+      "Bash(dotnet ef database update:*)",
+      "Bash(touch:*)",
+      "Bash(sqlcmd:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(dotnet new:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(dotnet run:*)"
     ],
     "deny": []
   }

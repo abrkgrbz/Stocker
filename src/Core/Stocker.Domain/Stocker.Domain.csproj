@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
+  </ItemGroup>
+
 </Project>

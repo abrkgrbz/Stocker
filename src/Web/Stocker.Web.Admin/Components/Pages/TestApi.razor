@@ -1,0 +1,235 @@
+@page "/test-api"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Stocker.Web.Admin.Services
+@inject HttpClient Http
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>API Test</PageTitle>
+
+<h3>API Test Page</h3>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            @if (!string.IsNullOrEmpty(authToken))
+            {
+                <div class="alert alert-info">
+                    <strong>Current Token:</strong>
+                    <div style="word-break: break-all; font-size: 0.8em;">@authToken</div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">No authentication token found. Please login first.</div>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Test Endpoints</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary mb-2 w-100" @onclick="TestClaims" disabled="@isLoading">
+                        Test Claims Endpoint
+                    </button>
+                    <button class="btn btn-success mb-2 w-100" @onclick="TestAdminEndpoint" disabled="@isLoading">
+                        Test Admin Endpoint
+                    </button>
+                    <button class="btn btn-info mb-2 w-100" @onclick="TestTenantsEndpoint" disabled="@isLoading">
+                        Test Tenants Endpoint
+                    </button>
+                    <button class="btn btn-warning mb-2 w-100" @onclick="RefreshToken" disabled="@isLoading">
+                        Refresh Token from Storage
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Response</h5>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <strong>Error:</strong> @errorMessage
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(responseContent))
+                    {
+                        <pre style="max-height: 400px; overflow-y: auto;">@responseContent</pre>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Click a button to test an endpoint</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Request Details</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(requestDetails))
+                    {
+                        <pre>@requestDetails</pre>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No request sent yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string authToken = string.Empty;
+    private string responseContent = string.Empty;
+    private string errorMessage = string.Empty;
+    private string requestDetails = string.Empty;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshToken();
+    }
+
+    private async Task RefreshToken()
+    {
+        var token =   AuthService.GetAccessToken();
+        if (!string.IsNullOrEmpty(token))
+        {
+            authToken = token;
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+        }
+        else
+        {
+            authToken = string.Empty;
+        }
+    }
+
+    private async Task TestClaims()
+    {
+        await MakeApiCall("http://localhost:5104/api/test/claims", "GET");
+    }
+
+    private async Task TestAdminEndpoint()
+    {
+        await MakeApiCall("http://localhost:5104/api/test/admin-test", "GET");
+    }
+
+    private async Task TestTenantsEndpoint()
+    {
+        await MakeApiCall("http://localhost:5104/api/master/Tenants", "GET");
+    }
+
+    private async Task MakeApiCall(string url, string method)
+    {
+        isLoading = true;
+        responseContent = string.Empty;
+        errorMessage = string.Empty;
+        
+        try
+        {
+            await RefreshToken();
+            
+            if (string.IsNullOrEmpty(authToken))
+            {
+                errorMessage = "No authentication token found. Please login first.";
+                return;
+            }
+
+            requestDetails = $"Method: {method}\nURL: {url}\nAuthorization: Bearer {authToken.Substring(0, Math.Min(20, authToken.Length))}...";
+
+            HttpResponseMessage response;
+            
+            switch (method.ToUpper())
+            {
+                case "GET":
+                    response = await Http.GetAsync(url);
+                    break;
+                case "POST":
+                    response = await Http.PostAsync(url, null);
+                    break;
+                default:
+                    throw new NotSupportedException($"Method {method} not supported");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try to format JSON
+                try
+                {
+                    var jsonDocument = JsonDocument.Parse(content);
+                    responseContent = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions { WriteIndented = true });
+                }
+                catch
+                {
+                    responseContent = content;
+                }
+            }
+            else
+            {
+                errorMessage = $"Status: {response.StatusCode}\nContent: {content}";
+            }
+
+            requestDetails += $"\n\nResponse Status: {response.StatusCode}";
+            requestDetails += $"\nResponse Headers:\n{string.Join("\n", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+            if (ex.InnerException != null)
+            {
+                errorMessage += $"\nInner Exception: {ex.InnerException.Message}";
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class AuthenticationResponse
+    {
+        public string AccessToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+        public DateTime ExpiresAt { get; set; }
+        public UserInfo User { get; set; } = new();
+    }
+
+    public class UserInfo
+    {
+        public Guid Id { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public List<string> Roles { get; set; } = new();
+        public Guid? TenantId { get; set; }
+        public string? TenantName { get; set; }
+    }
+}
