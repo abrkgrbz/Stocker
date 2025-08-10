@@ -167,6 +167,32 @@ public class AuthService : IAuthService
 
         return _cachedAccessToken;
     }
+    
+    public async Task<string?> GetAccessTokenAsync()
+    {
+        // Return cached token if available
+        if (!string.IsNullOrEmpty(_cachedAccessToken))
+        {
+            return _cachedAccessToken;
+        }
+
+        try
+        {
+            var result = await _localStorage.GetAsync<string>(AccessTokenKey);
+            if (result.Success && !string.IsNullOrEmpty(result.Value))
+            {
+                _cachedAccessToken = result.Value;
+                _apiService.SetAuthToken(result.Value);
+                return _cachedAccessToken;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting access token from storage");
+        }
+
+        return null;
+    }
 
 }
 

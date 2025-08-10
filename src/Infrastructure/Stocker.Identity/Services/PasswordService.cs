@@ -10,10 +10,11 @@ namespace Stocker.Identity.Services;
 public class PasswordService : IPasswordService
 {
     private readonly IPasswordHasher _passwordHasher;
-    
+
     private const int SaltSize = 128 / 8; // 128 bit
     private const int KeySize = 256 / 8; // 256 bit
-    private const int Iterations = 10000;
+    private const int Iterations = 600000; // OWASP 2023 recommendation for PBKDF2-HMAC-SHA256
+
 
     public PasswordService(IPasswordHasher passwordHasher)
     {
@@ -83,7 +84,7 @@ public class PasswordService : IPasswordService
                 numBytesRequested: KeySize);
 
             // Compare hashes
-            return storedHash.SequenceEqual(testHash);
+            return CryptographicOperations.FixedTimeEquals(storedHash, testHash);
         }
         catch
         {

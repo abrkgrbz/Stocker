@@ -10,6 +10,7 @@ namespace Stocker.API.Controllers;
 public class TestController : ControllerBase
 {
     [HttpGet("claims")]
+    [Authorize]
     public IActionResult GetClaims()
     {
         var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();

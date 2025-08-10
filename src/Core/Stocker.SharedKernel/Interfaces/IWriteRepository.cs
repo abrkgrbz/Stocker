@@ -30,6 +30,11 @@ public interface IWriteRepository<TEntity, TId>
     void Update(TEntity entity);
 
     /// <summary>
+    /// Updates an entity in the repository asynchronously
+    /// </summary>
+    Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates multiple entities in the repository
     /// </summary>
     void UpdateRange(IEnumerable<TEntity> entities);

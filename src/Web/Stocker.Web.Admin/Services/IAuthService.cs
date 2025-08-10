@@ -9,4 +9,5 @@ public interface IAuthService
     Task<bool> IsAuthenticatedAsync();
     Task<UserInfo?> GetCurrentUserAsync();
     string? GetAccessToken();
+    Task<string?> GetAccessTokenAsync();
 }

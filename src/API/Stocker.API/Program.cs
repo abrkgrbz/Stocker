@@ -4,6 +4,7 @@ using Stocker.Identity.Extensions;
 using Stocker.Infrastructure.Extensions;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Persistence.Extensions;
+using Stocker.Modules.CRM;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,9 +29,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:5107")
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
         });
     
     // Production için daha güvenli bir policy
@@ -45,7 +47,13 @@ builder.Services.AddCors(options =>
 });
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(Stocker.Modules.CRM.CRMModule).Assembly) // CRM Controller'larını yükle
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -54,7 +62,17 @@ builder.Services.AddSwaggerGen(c =>
     { 
         Title = "Stocker API", 
         Version = "v1",
-        Description = "Multi-tenant SaaS Inventory Management System API"
+        Description = "Multi-tenant SaaS Inventory Management System API",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Stocker Team",
+            Email = "support@stocker.com"
+        },
+        License = new Microsoft.OpenApi.Models.OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        }
     });
     
     // Master API (System Admin)
@@ -72,15 +90,24 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "Tenant Administration API - Requires TenantAdmin role"
     });
+
+    // XML Documentation
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
     
     // JWT Authentication için Swagger ayarları
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
         Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme.\r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIs...\""
     });
 
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -94,7 +121,7 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
@@ -105,6 +132,9 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddMultiTenancy();
+
+// Add CRM Module
+builder.Services.AddCRMModule(builder.Configuration);
 
 // Add Authorization Policies
 builder.Services.AddAuthorization(options =>
@@ -126,24 +156,34 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Swagger'ı hem development hem de production'da kullanılabilir yap
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Stocker API v1");
-        c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
-        c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
-    });
-}
-
-app.UseHttpsRedirection();
-
-// Use CORS - önemli: UseAuthorization'dan önce olmalı
-app.UseCors("AllowAll"); // Development için AllowAll, Production için "Production" policy kullanın
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Stocker API v1");
+    c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
+    c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+    // RoutePrefix varsayılan olarak "swagger" kullanır
+    c.DocumentTitle = "Stocker API Documentation";
+    c.EnableDeepLinking();
+    c.DisplayRequestDuration();
+    c.EnableFilter();
+    c.ShowExtensions();
+    c.EnableValidator();
+    c.DefaultModelsExpandDepth(1);
+});
 
 // Add Global Exception Handling Middleware - En başta olmalı
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// HTTPS redirect'i sadece production'da kullan
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Use CORS - Authentication'dan önce olmalı
+app.UseCors("AllowAll"); // Development için AllowAll, Production için "Production" policy kullanın
 
 // Add Tenant Resolution Middleware - Authentication'dan önce olmalı
 app.UseMiddleware<TenantResolutionMiddleware>();

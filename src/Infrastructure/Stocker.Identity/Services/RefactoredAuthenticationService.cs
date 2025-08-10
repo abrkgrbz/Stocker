@@ -292,7 +292,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 firstName: request.FirstName,
                 lastName: request.LastName,
                 phoneNumber: request.PhoneNumber,
-                userType: UserType.TenantOwner);
+                userType: UserType.TenantAdmin);
 
             // Then ensure tenant user exists
             await _userManagementService.EnsureTenantUserExistsAsync(masterUser, tenantId);

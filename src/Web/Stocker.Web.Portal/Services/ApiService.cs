@@ -99,7 +99,12 @@ public class ApiService : IApiService
 
     public void SetAuthToken(string token)
     {
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Token'ın etrafındaki tırnak işaretlerini temizle
+        token = token?.Trim('"') ?? string.Empty;
+        if (!string.IsNullOrEmpty(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
     }
 
     public void ClearAuthToken()
@@ -107,11 +112,33 @@ public class ApiService : IApiService
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
+    private async Task EnsureAuthTokenAsync()
+    {
+        try
+        {
+            // GetItemAsync<string> kullan, GetItemAsStringAsync yerine
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Pre-rendering sırasında LocalStorage erişilemiyor
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not set auth token");
+        }
+    }
+
     public async Task<T?> GetAsync<T>(string endpoint)
     {
         try
         {
             SetTenantHeader(); // Refresh tenant header on each request
+            await EnsureAuthTokenAsync(); // Token'ı ekle
             
             var response = await _httpClient.GetAsync(endpoint);
             if (response.IsSuccessStatusCode)
@@ -135,6 +162,12 @@ public class ApiService : IApiService
         try
         {
             SetTenantHeader(); // Refresh tenant header on each request
+            
+            // Login endpoint'i hariç diğer tüm isteklerde token ekle
+            if (!endpoint.Contains("/auth/login") && !endpoint.Contains("/auth/register"))
+            {
+                await EnsureAuthTokenAsync();
+            }
             
             var json = JsonSerializer.Serialize(data, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -161,6 +194,7 @@ public class ApiService : IApiService
         try
         {
             SetTenantHeader(); // Refresh tenant header on each request
+            await EnsureAuthTokenAsync(); // Token'ı ekle
             
             var json = JsonSerializer.Serialize(data, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -187,6 +221,7 @@ public class ApiService : IApiService
         try
         {
             SetTenantHeader(); // Refresh tenant header on each request
+            await EnsureAuthTokenAsync(); // Token'ı ekle
             
             var response = await _httpClient.DeleteAsync(endpoint);
             if (response.IsSuccessStatusCode)

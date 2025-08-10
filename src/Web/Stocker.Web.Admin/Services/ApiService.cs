@@ -9,8 +9,11 @@ public interface IApiService
 {
     Task<T?> GetAsync<T>(string endpoint);
     Task<TResponse?> PostAsync<TRequest, TResponse>(string endpoint, TRequest data);
+    Task<T?> PostAsync<T>(string endpoint, object data);
     Task<TResponse?> PutAsync<TRequest, TResponse>(string endpoint, TRequest data);
+    Task<T?> PutAsync<T>(string endpoint, object data);
     Task<bool> DeleteAsync(string endpoint);
+    Task<T?> DeleteAsync<T>(string endpoint);
     void SetAuthToken(string token);
     Task InitializeAsync();
 }
@@ -30,7 +33,7 @@ public class ApiService : IApiService
         _logger = logger;
         _localStorage = localStorage;
         
-        var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5104";
+        var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "http://localhost:7021";
         _httpClient.BaseAddress = new Uri(apiBaseUrl);
         _httpClient.DefaultRequestHeaders.Accept.Clear();
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -76,6 +79,12 @@ public class ApiService : IApiService
     {
         try
         {
+            // Login endpoint'i hariç diğer tüm endpoint'ler için token gerekli
+            if (!endpoint.Contains("/auth/login"))
+            {
+                await EnsureAuthTokenAsync();
+            }
+            
             var json = JsonSerializer.Serialize(data, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
@@ -85,6 +94,33 @@ public class ApiService : IApiService
             {
                 var responseJson = await response.Content.ReadAsStringAsync();
                 return JsonSerializer.Deserialize<TResponse>(responseJson, _jsonOptions);
+            }
+            
+            _logger.LogWarning("API POST request failed: {StatusCode} - {Endpoint}", 
+                response.StatusCode, endpoint);
+            return default;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling POST {Endpoint}", endpoint);
+            throw;
+        }
+    }
+
+    public async Task<T?> PostAsync<T>(string endpoint, object data)
+    {
+        try
+        {
+            await EnsureAuthTokenAsync();
+            var json = JsonSerializer.Serialize(data, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            var response = await _httpClient.PostAsync(endpoint, content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseJson = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
             }
             
             _logger.LogWarning("API POST request failed: {StatusCode} - {Endpoint}", 
@@ -125,6 +161,33 @@ public class ApiService : IApiService
         }
     }
 
+    public async Task<T?> PutAsync<T>(string endpoint, object data)
+    {
+        try
+        {
+            await EnsureAuthTokenAsync();
+            var json = JsonSerializer.Serialize(data, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            var response = await _httpClient.PutAsync(endpoint, content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseJson = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            }
+            
+            _logger.LogWarning("API PUT request failed: {StatusCode} - {Endpoint}", 
+                response.StatusCode, endpoint);
+            return default;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling PUT {Endpoint}", endpoint);
+            throw;
+        }
+    }
+
     public async Task<bool> DeleteAsync(string endpoint)
     {
         try
@@ -137,6 +200,34 @@ public class ApiService : IApiService
         {
             _logger.LogError(ex, "Error calling DELETE {Endpoint}", endpoint);
             return false;
+        }
+    }
+
+    public async Task<T?> DeleteAsync<T>(string endpoint)
+    {
+        try
+        {
+            await EnsureAuthTokenAsync();
+            var response = await _httpClient.DeleteAsync(endpoint);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseJson = await response.Content.ReadAsStringAsync();
+                if (!string.IsNullOrWhiteSpace(responseJson))
+                {
+                    return JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+                }
+                return default;
+            }
+            
+            _logger.LogWarning("API DELETE request failed: {StatusCode} - {Endpoint}", 
+                response.StatusCode, endpoint);
+            return default;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling DELETE {Endpoint}", endpoint);
+            return default;
         }
     }
 

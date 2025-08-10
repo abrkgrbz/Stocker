@@ -18,7 +18,7 @@ namespace Stocker.Persistence.Migrations.Master
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("master")
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

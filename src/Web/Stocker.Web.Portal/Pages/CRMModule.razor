@@ -1,0 +1,274 @@
+@page "/crm-module"
+@using Stocker.Web.Portal.Services
+@using System.Text.Json
+@inject IApiService ApiService
+@inject ILogger<CRMModule> Logger
+@inject IJSRuntime JSRuntime
+
+<h3>CRM Modül Yönetimi</h3>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tenant Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="tenantId" class="form-label">Tenant ID:</label>
+                        <input type="text" class="form-control" id="tenantId" @bind="tenantId" placeholder="ör: d9bfa696-c73a-4be4-91b8-7ca528e08a75" />
+                        <small class="text-muted">Test için bir Tenant ID giriniz</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>CRM Modül Durumu</h5>
+                </div>
+                <div class="card-body">
+                    @if (crmStatus != null)
+                    {
+                        <div class="alert @(crmStatus.CRMEnabled ? "alert-success" : "alert-warning")">
+                            <strong>Durum:</strong> @(crmStatus.CRMEnabled ? "Aktif" : "Pasif")<br/>
+                            <strong>Veritabanı:</strong> @crmStatus.DatabaseName
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            Durumu kontrol etmek için "Durumu Kontrol Et" butonuna tıklayın.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>CRM İşlemleri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-info" @onclick="CheckCRMStatus" disabled="@isLoading">
+                            @if (isLoading && currentOperation == "check")
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            Durumu Kontrol Et
+                        </button>
+                        
+                        <button class="btn btn-success" @onclick="EnableCRM" disabled="@(isLoading || string.IsNullOrEmpty(tenantId))">
+                            @if (isLoading && currentOperation == "enable")
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            CRM'i Etkinleştir
+                        </button>
+                        
+                        <button class="btn btn-warning" @onclick="DisableCRM" disabled="@(isLoading || string.IsNullOrEmpty(tenantId))">
+                            @if (isLoading && currentOperation == "disable")
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            CRM'i Devre Dışı Bırak
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert @messageClass alert-dismissible fade show" role="alert">
+                    @message
+                    <button type="button" class="btn-close" @onclick="ClearMessage"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>API Yanıtları (Debug)</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3">@debugResponse</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string tenantId = "";
+    private bool isLoading = false;
+    private string currentOperation = "";
+    private string message = "";
+    private string messageClass = "alert-info";
+    private string debugResponse = "API yanıtları burada görünecek...";
+    private CRMStatusResponse? crmStatus;
+
+    private async Task CheckCRMStatus()
+    {
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            ShowMessage("Lütfen bir Tenant ID giriniz!", "alert-danger");
+            return;
+        }
+
+        isLoading = true;
+        currentOperation = "check";
+        message = "";
+
+        try
+        {
+            var response = await ApiService.GetAsync<CRMStatusResponse>($"/api/admin/tenant-modules/{tenantId}/crm/status");
+            
+            if (response != null)
+            {
+                crmStatus = response;
+                debugResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
+                ShowMessage($"CRM durumu kontrol edildi. Durum: {(response.CRMEnabled ? "Aktif" : "Pasif")}", "alert-info");
+            }
+            else
+            {
+                ShowMessage("CRM durumu alınamadı. API yanıt vermedi.", "alert-warning");
+                debugResponse = "API'den yanıt alınamadı.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Hata: {ex.Message}", "alert-danger");
+            debugResponse = $"Exception: {ex.Message}\n{ex.StackTrace}";
+            Logger.LogError(ex, "CRM durumu kontrol edilirken hata oluştu");
+        }
+        finally
+        {
+            isLoading = false;
+            currentOperation = "";
+        }
+    }
+
+    private async Task EnableCRM()
+    {
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            ShowMessage("Lütfen bir Tenant ID giriniz!", "alert-danger");
+            return;
+        }
+
+        isLoading = true;
+        currentOperation = "enable";
+        message = "";
+
+        try
+        {
+            var response = await ApiService.PostAsync<ApiResponse>($"/api/admin/tenant-modules/{tenantId}/crm/enable", new { });
+            
+            if (response != null)
+            {
+                debugResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
+                ShowMessage($"CRM başarıyla etkinleştirildi! {response.Message}", "alert-success");
+                
+                // Durumu tekrar kontrol et
+                await CheckCRMStatus();
+            }
+            else
+            {
+                ShowMessage("CRM etkinleştirilemedi. API yanıt vermedi.", "alert-danger");
+                debugResponse = "API'den yanıt alınamadı.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Hata: {ex.Message}", "alert-danger");
+            debugResponse = $"Exception: {ex.Message}\n{ex.StackTrace}";
+            Logger.LogError(ex, "CRM etkinleştirilirken hata oluştu");
+        }
+        finally
+        {
+            isLoading = false;
+            currentOperation = "";
+        }
+    }
+
+    private async Task DisableCRM()
+    {
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            ShowMessage("Lütfen bir Tenant ID giriniz!", "alert-danger");
+            return;
+        }
+
+        isLoading = true;
+        currentOperation = "disable";
+        message = "";
+
+        try
+        {
+            var response = await ApiService.PostAsync<ApiResponse>($"/api/admin/tenant-modules/{tenantId}/crm/disable", new { });
+            
+            if (response != null)
+            {
+                debugResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
+                ShowMessage($"CRM devre dışı bırakıldı. {response.Message}", "alert-warning");
+                
+                // Durumu tekrar kontrol et
+                await CheckCRMStatus();
+            }
+            else
+            {
+                ShowMessage("CRM devre dışı bırakılamadı. API yanıt vermedi.", "alert-danger");
+                debugResponse = "API'den yanıt alınamadı.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Hata: {ex.Message}", "alert-danger");
+            debugResponse = $"Exception: {ex.Message}\n{ex.StackTrace}";
+            Logger.LogError(ex, "CRM devre dışı bırakılırken hata oluştu");
+        }
+        finally
+        {
+            isLoading = false;
+            currentOperation = "";
+        }
+    }
+
+    private void ShowMessage(string msg, string cssClass)
+    {
+        message = msg;
+        messageClass = cssClass;
+    }
+
+    private void ClearMessage()
+    {
+        message = "";
+    }
+
+    // Response modelleri
+    public class CRMStatusResponse
+    {
+        public Guid TenantId { get; set; }
+        public bool CRMEnabled { get; set; }
+        public string DatabaseName { get; set; } = "";
+    }
+
+    public class ApiResponse
+    {
+        public string Message { get; set; } = "";
+        public string? Error { get; set; }
+    }
+}

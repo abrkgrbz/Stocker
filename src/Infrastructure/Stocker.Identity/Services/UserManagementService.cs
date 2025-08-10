@@ -34,7 +34,9 @@ public class UserManagementService : IUserManagementService
     public async Task<MasterUser?> FindMasterUserAsync(string usernameOrEmail)
     {
         return await _masterContext.MasterUsers
-            .Include(u => u.UserTenants)
+            .Include(u => u.UserTenants) 
+            .Include(u => u.RefreshTokens)
+            .Include(x=>x.LoginHistory)
             .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email.Value == usernameOrEmail);
     }
 
@@ -174,8 +176,8 @@ public class UserManagementService : IUserManagementService
 
     public async Task UpdateLastLoginAsync(MasterUser user)
     {
-        user.RecordSuccessfulLogin();
-        _masterContext.MasterUsers.Update(user);
+        user.RecordSuccessfulLogin();   
+        //_masterContext.MasterUsers.Update(user);
         await _masterContext.SaveChangesAsync();
     }
 

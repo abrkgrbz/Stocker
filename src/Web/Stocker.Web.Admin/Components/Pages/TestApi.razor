@@ -113,36 +113,55 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await RefreshToken();
+        // Don't call RefreshToken here - JavaScript interop not available
+        // await RefreshToken();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RefreshToken();
+            StateHasChanged(); // Update UI after token is loaded
+        }
     }
 
     private async Task RefreshToken()
     {
-        var token =   AuthService.GetAccessToken();
-        if (!string.IsNullOrEmpty(token))
+        try
         {
-            authToken = token;
-            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+            var token = await AuthService.GetAccessTokenAsync();
+            if (!string.IsNullOrEmpty(token))
+            { 
+                authToken = token;
+                Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+            }
+            else
+            {
+                authToken = string.Empty;
+            }
         }
-        else
+        catch (Exception ex)
         {
+            // Log the error but don't throw - this might happen during prerendering
+            Console.WriteLine($"Error getting token: {ex.Message}");
             authToken = string.Empty;
         }
     }
 
     private async Task TestClaims()
     {
-        await MakeApiCall("http://localhost:5104/api/test/claims", "GET");
+        await MakeApiCall("https://localhost:7021/api/Test/claims", "GET");
     }
 
     private async Task TestAdminEndpoint()
     {
-        await MakeApiCall("http://localhost:5104/api/test/admin-test", "GET");
+        await MakeApiCall("https://localhost:7021/api/Test/admin-test", "GET");
     }
 
     private async Task TestTenantsEndpoint()
     {
-        await MakeApiCall("http://localhost:5104/api/master/Tenants", "GET");
+        await MakeApiCall("https://localhost:7021/api/master/Tenants", "GET");
     }
 
     private async Task MakeApiCall(string url, string method)

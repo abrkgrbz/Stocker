@@ -22,7 +22,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         try
         {
             // LocalStorage erişimi try-catch içinde
-            var token = await _localStorage.GetItemAsStringAsync("authToken");
+            var token = await _localStorage.GetItemAsync<string>("authToken");
             
             if (string.IsNullOrWhiteSpace(token))
             {

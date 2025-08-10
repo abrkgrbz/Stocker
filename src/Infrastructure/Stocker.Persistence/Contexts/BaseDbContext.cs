@@ -19,7 +19,7 @@ public abstract class BaseDbContext : DbContext
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    { 
+    {
         var domainEvents = ChangeTracker
             .Entries<Entity>()
             .Select(entry => entry.Entity)
@@ -30,9 +30,9 @@ public abstract class BaseDbContext : DbContext
                 return domainEvents;
             })
             .ToList();
-         
+
         var result = await base.SaveChangesAsync(cancellationToken);
-         
+
         await DispatchDomainEventsAsync(domainEvents, cancellationToken);
 
         return result;

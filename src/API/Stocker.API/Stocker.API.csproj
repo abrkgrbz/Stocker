@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>stocker-api-secrets-a1b2c3d4-e5f6-7890-abcd-ef1234567890</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +34,7 @@
     <ProjectReference Include="..\..\Infrastructure\Stocker.Identity\Stocker.Identity.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Stocker.Infrastructure\Stocker.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Stocker.Persistence\Stocker.Persistence.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj" />
   </ItemGroup>
 
 </Project>

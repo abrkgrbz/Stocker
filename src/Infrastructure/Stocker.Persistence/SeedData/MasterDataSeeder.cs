@@ -212,7 +212,7 @@ public class MasterDataSeeder
         }
 
         var tenantAdmin = MasterUser.Create(
-            username: "admin",
+            username: "tenantadmin",
             email: emailResult.Value,
             plainPassword: "Admin123!",
             firstName: "Tenant",

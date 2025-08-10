@@ -30,6 +30,15 @@ public class TenantDbContext : BaseDbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
 
+    // CRM Module - TODO: Move to separate CRM DbContext to avoid circular reference
+    // public DbSet<Customer> Customers => Set<Customer>();
+    // public DbSet<Contact> Contacts => Set<Contact>();
+    // public DbSet<Lead> Leads => Set<Lead>();
+    // public DbSet<Opportunity> Opportunities => Set<Opportunity>();
+    // public DbSet<Activity> Activities => Set<Activity>();
+    // public DbSet<Note> Notes => Set<Note>();
+    // public DbSet<OpportunityProduct> OpportunityProducts => Set<OpportunityProduct>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -45,6 +54,7 @@ public class TenantDbContext : BaseDbContext
         
         // Apply only Tenant configurations
         var tenantConfigNamespace = "Stocker.Persistence.Configurations.Tenant";
+        
         var configurations = GetType().Assembly.GetTypes()
             .Where(t => t.Namespace == tenantConfigNamespace && 
                        !t.IsAbstract && 
@@ -53,10 +63,15 @@ public class TenantDbContext : BaseDbContext
                                                   i.GetGenericTypeDefinition() == typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>)))
             .ToList();
 
+        // CRM configurations are now handled in the separate CRMDbContext
+
         foreach (var configurationType in configurations)
         {
-            dynamic configurationInstance = Activator.CreateInstance(configurationType);
-            modelBuilder.ApplyConfiguration(configurationInstance);
+            dynamic? configurationInstance = Activator.CreateInstance(configurationType);
+            if (configurationInstance != null)
+            {
+                modelBuilder.ApplyConfiguration(configurationInstance);
+            }
         }
 
         // Apply global query filter for multi-tenancy

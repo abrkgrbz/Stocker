@@ -9,6 +9,7 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Interfaces;
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Master.Enums;
+using Stocker.Domain.Master.ValueObjects;
 
 namespace Stocker.Identity.Services;
 
@@ -49,13 +50,19 @@ public class AuthenticationService : IAuthenticationService
         // Önce MasterUser'ı kontrol et (username veya email ile)
         var masterUser = await _masterContext.MasterUsers
             .Include(u => u.UserTenants)
+            .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email.Value == request.Username);
-
+       
         if (masterUser != null)
         {
+            // Debug logging
+            _logger.LogInformation("Attempting to verify password for user {Username}", masterUser.Username);
+           
+            
             // Password kontrolü
             if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
             {
+                _logger.LogWarning("Password verification failed for user {Username}", masterUser.Username);
                 return new AuthenticationResult
                 {
                     Success = false,

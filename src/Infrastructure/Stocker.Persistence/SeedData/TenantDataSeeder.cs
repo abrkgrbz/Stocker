@@ -132,6 +132,8 @@ public class TenantDataSeeder
         // 2. Tenant oluşturun
         // 3. "tenantadmin" kullanıcısı ile o tenant'a giriş yapın:
         //    POST /api/auth/login
+        
+        await Task.CompletedTask;
         //    Headers: X-Tenant-Code: {tenant-code}
         //    Body: { "username": "tenantadmin", "password": "Admin123!" }
         // 

@@ -21,7 +21,7 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
     {
-        var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+        var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
@@ -49,7 +49,7 @@ public class JwtTokenService : IJwtTokenService
     {
         try
         {
-            var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,

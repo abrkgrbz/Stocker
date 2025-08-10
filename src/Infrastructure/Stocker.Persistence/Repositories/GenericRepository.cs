@@ -183,6 +183,12 @@ public class GenericRepository<TEntity, TId, TContext> : IRepository<TEntity, TI
         DbSet.Update(entity);
     }
 
+    public virtual Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        Update(entity);
+        return Task.CompletedTask;
+    }
+
     public virtual void UpdateRange(IEnumerable<TEntity> entities)
     {
         DbSet.UpdateRange(entities);

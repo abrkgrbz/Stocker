@@ -1,0 +1,27 @@
+.master-content {
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.master-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 77, 79, 0.1);
+  border-radius: 6px;
+}
+
+/* Override ProLayout styles for master theme */
+.ant-pro-layout .ant-pro-layout-header {
+  background: #001529 !important;
+}
+
+.ant-pro-layout .ant-pro-sider-menu-logo {
+  background: #001529 !important;
+}
+
+.ant-pro-layout .ant-pro-sider {
+  background: #001529 !important;
+}

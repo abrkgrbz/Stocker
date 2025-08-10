@@ -26,11 +26,11 @@
                         
                         <div class="mb-3">
                             <label for="username" class="form-label">Kullanıcı Adı</label>
-                            <InputText @bind-Value="loginModel.Username" 
+                            <InputText @bind-Value="loginModel.Email" 
                                        class="form-control" 
                                        id="username" 
                                        placeholder="Kullanıcı adınız" />
-                            <ValidationMessage For="@(() => loginModel.Username)" />
+                            <ValidationMessage For="@(() => loginModel.Email)" />
                         </div>
 
                         <div class="mb-3">
@@ -98,7 +98,9 @@
             if (result.Success)
             {
                 // Başarılı giriş - Ana sayfaya yönlendir
-                Navigation.NavigateTo("/", true);
+                // Force reload yapma, authentication state'in güncellenmesini bekle
+                await Task.Delay(100); // LocalStorage yazma işleminin tamamlanması için kısa bekleme
+                Navigation.NavigateTo("/", false);
             }
             else
             {

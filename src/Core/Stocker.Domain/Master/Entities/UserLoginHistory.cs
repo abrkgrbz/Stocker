@@ -20,7 +20,7 @@ public sealed class UserLoginHistory : Entity
         string? userAgent = null,
         string? failureReason = null)
     {
-        Id = Guid.NewGuid();
+        // Id = Guid.NewGuid(); // EF Core will generate this
         UserId = userId;
         IsSuccessful = isSuccessful;
         LoginAt = DateTime.UtcNow;

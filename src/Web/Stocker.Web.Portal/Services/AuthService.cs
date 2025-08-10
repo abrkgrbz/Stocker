@@ -38,54 +38,57 @@ public class AuthService : IAuthService
 
     public async Task<AuthenticationResponse> LoginAsync(LoginModel loginModel)
     {
-        var response = await _apiService.PostAsync<ApiResponse<AuthenticationResponse>>("api/auth/login", loginModel);
+        // API direkt AuthenticationResponse dönüyor, ApiResponse wrapper'ı yok
+        var response = await _apiService.PostAsync<AuthenticationResponse>("api/auth/login", loginModel);
         
-        if (response?.Success == true && response.Data != null)
+        if (response != null && !string.IsNullOrEmpty(response.AccessToken))
         {
             // Token'ları local storage'a kaydet
-            await _localStorage.SetItemAsync("authToken", response.Data.AccessToken);
-            await _localStorage.SetItemAsync("refreshToken", response.Data.RefreshToken);
-            await _localStorage.SetItemAsync("tokenExpiry", response.Data.AccessTokenExpiration);
-            await _localStorage.SetItemAsync("userInfo", response.Data.User);
+            await _localStorage.SetItemAsync("authToken", response.AccessToken);
+            await _localStorage.SetItemAsync("refreshToken", response.RefreshToken);
+            await _localStorage.SetItemAsync("tokenExpiry", response.AccessTokenExpiration);
+            await _localStorage.SetItemAsync("userInfo", response.User);
 
             // API Service'e token'ı set et
-            _apiService.SetAuthToken(response.Data.AccessToken!);
+            _apiService.SetAuthToken(response.AccessToken!);
 
             // Authentication state'i güncelle
-            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(response.Data.AccessToken!);
+            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(response.AccessToken!);
 
-            return response.Data;
+            response.Success = true;
+            return response;
         }
 
         return new AuthenticationResponse
         {
             Success = false,
-            Errors = response?.Errors ?? new List<string> { "Login failed" }
+            Errors = new List<string> { "Login failed" }
         };
     }
 
     public async Task<AuthenticationResponse> RegisterAsync(RegisterModel registerModel)
     {
-        var response = await _apiService.PostAsync<ApiResponse<AuthenticationResponse>>("api/auth/register", registerModel);
+        var response = await _apiService.PostAsync<AuthenticationResponse>("api/auth/register", registerModel);
         
-        if (response?.Success == true && response.Data != null)
+        if (response != null && !string.IsNullOrEmpty(response.AccessToken))
         {
             // Kayıt başarılıysa otomatik login yap
-            await _localStorage.SetItemAsync("authToken", response.Data.AccessToken);
-            await _localStorage.SetItemAsync("refreshToken", response.Data.RefreshToken);
-            await _localStorage.SetItemAsync("tokenExpiry", response.Data.AccessTokenExpiration);
-            await _localStorage.SetItemAsync("userInfo", response.Data.User);
+            await _localStorage.SetItemAsync("authToken", response.AccessToken);
+            await _localStorage.SetItemAsync("refreshToken", response.RefreshToken);
+            await _localStorage.SetItemAsync("tokenExpiry", response.AccessTokenExpiration);
+            await _localStorage.SetItemAsync("userInfo", response.User);
 
-            _apiService.SetAuthToken(response.Data.AccessToken!);
-            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(response.Data.AccessToken!);
+            _apiService.SetAuthToken(response.AccessToken!);
+            ((CustomAuthStateProvider)_authStateProvider).NotifyUserAuthentication(response.AccessToken!);
 
-            return response.Data;
+            response.Success = true;
+            return response;
         }
 
         return new AuthenticationResponse
         {
             Success = false,
-            Errors = response?.Errors ?? new List<string> { "Registration failed" }
+            Errors = new List<string> { "Registration failed" }
         };
     }
 

@@ -1,0 +1,111 @@
+@page "/crm-test-guide"
+
+<h3>CRM Modül Test Rehberi</h3>
+
+<div class="container mt-4">
+    <div class="alert alert-info">
+        <h5>Test Adımları</h5>
+        <p>CRM modülünün tenant-özel veritabanı mimarisini test etmek için aşağıdaki adımları takip edin:</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>1. API'yi Başlatın</h5>
+        </div>
+        <div class="card-body">
+            <code>cd C:\Users\PC\source\repos\Stocker\src\API\Stocker.API</code><br/>
+            <code>dotnet run</code>
+            <p class="mt-2">API <strong>http://localhost:5104</strong> adresinde çalışacaktır.</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>2. Portal'ı Başlatın</h5>
+        </div>
+        <div class="card-body">
+            <code>cd C:\Users\PC\source\repos\Stocker\src\Web\Stocker.Web.Portal</code><br/>
+            <code>dotnet run</code>
+            <p class="mt-2">Portal <strong>http://localhost:5232</strong> adresinde çalışacaktır.</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h5>3. Test Sayfalarını Kullanın</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li><a href="/tenant-management" target="_blank">Tenant Yönetimi</a> - Mevcut tenant'ları listeleyin ve CRM modülünü etkinleştirin</li>
+                <li><a href="/crm-module" target="_blank">CRM Modül Test</a> - Manuel olarak Tenant ID ile CRM işlemleri yapın</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h5>4. Veritabanı Kontrolü</h5>
+        </div>
+        <div class="card-body">
+            <p>CRM etkinleştirildikten sonra SQL Server'da kontrol edin:</p>
+            <code>
+                -- Tenant veritabanlarını listele<br/>
+                SELECT name FROM sys.databases WHERE name LIKE 'Stocker_Tenant_%'<br/><br/>
+                
+                -- Belirli bir tenant veritabanında CRM tablolarını kontrol et<br/>
+                USE Stocker_Tenant_[TenantId]<br/>
+                SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+            </code>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5>5. API Endpoint'leri</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li><strong>GET</strong> /api/master/tenants - Tüm tenant'ları listele</li>
+                <li><strong>POST</strong> /api/master/tenants - Yeni tenant oluştur</li>
+                <li><strong>GET</strong> /api/admin/tenant-modules/{tenantId}/crm/status - CRM durumunu kontrol et</li>
+                <li><strong>POST</strong> /api/admin/tenant-modules/{tenantId}/crm/enable - CRM'i etkinleştir</li>
+                <li><strong>POST</strong> /api/admin/tenant-modules/{tenantId}/crm/disable - CRM'i devre dışı bırak</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-danger text-white">
+            <h5>Önemli Notlar</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>Her tenant'ın kendi veritabanı olacak: <strong>Stocker_Tenant_{TenantId}</strong></li>
+                <li>CRM tabloları sadece modül etkinleştirildiğinde oluşturulur</li>
+                <li>Her tenant'ın verileri tamamen izole edilmiştir</li>
+                <li>Tenant ID'ler GUID formatındadır (örn: d9bfa696-c73a-4be4-91b8-7ca528e08a75)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5>Test Senaryosu</h5>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li>Tenant Yönetimi sayfasından mevcut tenant'ları listeleyin</li>
+                <li>Bir tenant seçin veya yeni tenant oluşturun</li>
+                <li>"CRM'i Etkinleştir" butonuna tıklayın</li>
+                <li>SQL Server'da <code>Stocker_Tenant_{TenantId}</code> veritabanının oluştuğunu kontrol edin</li>
+                <li>Bu veritabanında CRM tablolarının (Customers, Contacts, Leads) oluştuğunu doğrulayın</li>
+                <li>Farklı bir tenant için aynı işlemi tekrarlayın</li>
+                <li>Her tenant'ın ayrı veritabanına sahip olduğunu doğrulayın</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+@code {
+    
+}

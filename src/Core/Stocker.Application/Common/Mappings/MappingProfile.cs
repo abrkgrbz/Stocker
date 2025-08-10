@@ -1,6 +1,7 @@
 using AutoMapper;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
+using Stocker.Application.DTOs.Subscription;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 
@@ -41,13 +42,35 @@ public class MappingProfile : Profile
 
         // Package Mappings
         CreateMap<Package, PackageDto>()
-            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.BasePrice.Amount))
-            .ForMember(dest => dest.BillingCycle, opt => opt.Ignore()) // BillingCycle will be set from context
+            .ForMember(dest => dest.BasePrice, opt => opt.MapFrom(src => src.BasePrice.Amount))
+            .ForMember(dest => dest.BillingCycle, opt => opt.MapFrom(src => "Monthly")) // Default billing cycle
             .ForMember(dest => dest.MaxUsers, opt => opt.MapFrom(src => src.Limits.MaxUsers))
-            .ForMember(dest => dest.MaxStorage, opt => opt.MapFrom(src => src.Limits.MaxStorage)) // MaxStorage is in GB in entity
-            .ForMember(dest => dest.MaxProjects, opt => opt.MapFrom(src => src.Limits.MaxProjects))
-            .ForMember(dest => dest.MaxApiCalls, opt => opt.MapFrom(src => src.Limits.MaxApiCalls))
-            .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.Features.Select(f => f.FeatureName).ToList()))
-            .ForMember(dest => dest.IsPopular, opt => opt.MapFrom(src => src.Type == PackageType.Professional)); // Example logic
+            .ForMember(dest => dest.MaxStorage, opt => opt.MapFrom(src => src.Limits.MaxStorage))
+            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+            .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.Features.Select(f => new PackageFeatureDto
+            {
+                FeatureCode = f.FeatureCode,
+                FeatureName = f.FeatureName,
+                IsEnabled = true
+            }).ToList()))
+            .ForMember(dest => dest.Modules, opt => opt.MapFrom(src => src.Modules.Select(m => new PackageModuleDto
+            {
+                ModuleCode = m.ModuleCode,
+                ModuleName = m.ModuleName,
+                IsIncluded = m.IsIncluded
+            }).ToList()));
+
+        // Full Subscription Mappings
+        CreateMap<Domain.Master.Entities.Subscription, SubscriptionDto>()
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Price.Currency))
+            .ForMember(dest => dest.Modules, opt => opt.MapFrom(src => src.Modules))
+            .ForMember(dest => dest.Usages, opt => opt.MapFrom(src => src.Usages));
+
+        CreateMap<SubscriptionModule, SubscriptionModuleDto>()
+            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+
+        CreateMap<SubscriptionUsage, SubscriptionUsageDto>();
     }
 }

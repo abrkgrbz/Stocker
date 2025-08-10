@@ -26,16 +26,27 @@ builder.Services.AddBlazoredLocalStorage(config =>
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// Add HttpClient for API calls
+// Add HttpClient for API calls with SSL bypass for development
 builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 {
     var configuration = builder.Configuration;
-    var apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5104";
+    var apiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7021";
     client.BaseAddress = new Uri(apiBaseUrl);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
 });
 
-// Add separate HttpClient for AuthService
-builder.Services.AddScoped(sp => new HttpClient());
+// Add separate HttpClient for AuthService with SSL bypass
+builder.Services.AddScoped(sp => 
+{
+    var handler = new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    };
+    return new HttpClient(handler);
+});
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthStateProvider>());
@@ -57,6 +68,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapBlazorHub();
+app.MapRazorPages(); 
 app.MapFallbackToPage("/_Host");
 
 app.Run();

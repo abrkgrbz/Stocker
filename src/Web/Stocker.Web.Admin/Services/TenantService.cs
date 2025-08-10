@@ -11,6 +11,7 @@ public interface ITenantService
     Task<bool> DeleteTenantAsync(Guid id);
     Task<bool> ActivateTenantAsync(Guid id);
     Task<bool> DeactivateTenantAsync(Guid id);
+    Task<TenantListResponse?> GetTenantsAsync();
 }
 
 public class TenantService : ITenantService
@@ -42,7 +43,7 @@ public class TenantService : ITenantService
     {
         try
         {
-            var response = await _apiService.GetAsync<ApiResponse<TenantDto>>($"api//master/Tenants/{id}");
+            var response = await _apiService.GetAsync<ApiResponse<TenantDto>>($"api/master/Tenants/{id}");
             return response?.Data;
         }
         catch (Exception ex)
@@ -56,7 +57,7 @@ public class TenantService : ITenantService
     {
         try
         {
-            var response = await _apiService.PostAsync<CreateTenantRequest, ApiResponse<TenantDto>>("api//master/Tenants", request);
+            var response = await _apiService.PostAsync<CreateTenantRequest, ApiResponse<TenantDto>>("api/master/Tenants", request);
             return response?.Data;
         }
         catch (Exception ex)
@@ -70,7 +71,7 @@ public class TenantService : ITenantService
     {
         try
         {
-            var response = await _apiService.PutAsync<UpdateTenantRequest, ApiResponse<TenantDto>>($"api//master/Tenants/{request.Id}", request);
+            var response = await _apiService.PutAsync<UpdateTenantRequest, ApiResponse<TenantDto>>($"api/master/Tenants/{request.Id}", request);
             return response?.Data;
         }
         catch (Exception ex)
@@ -97,7 +98,7 @@ public class TenantService : ITenantService
     {
         try
         {
-            var result = await _apiService.PostAsync<object, object>($"api//master/Tenants/{id}/activate", new { });
+            var result = await _apiService.PostAsync<object, object>($"api/master/Tenants/{id}/activate", new { });
             return result != null;
         }
         catch (Exception ex)
@@ -111,7 +112,7 @@ public class TenantService : ITenantService
     {
         try
         {
-            var result = await _apiService.PostAsync<object, object>($"api//master/Tenants/{id}/deactivate", new { });
+            var result = await _apiService.PostAsync<object, object>($"api/master/Tenants/{id}/deactivate", new { });
             return result != null;
         }
         catch (Exception ex)
@@ -120,4 +121,41 @@ public class TenantService : ITenantService
             return false;
         }
     }
+
+    public async Task<TenantListResponse?> GetTenantsAsync()
+    {
+        try
+        {
+            var response = await _apiService.GetAsync<ApiResponse<List<TenantListDto>>>("api/master/Tenants");
+            if (response?.Success == true && response.Data != null)
+            {
+                return new TenantListResponse
+                {
+                    Tenants = response.Data
+                };
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting tenants");
+            return null;
+        }
+    }
+}
+
+// Additional DTOs
+public class TenantListResponse
+{
+    public List<TenantListDto> Tenants { get; set; } = new();
+}
+
+public class TenantListDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string ContactName { get; set; } = string.Empty;
+    public string ContactEmail { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
 }

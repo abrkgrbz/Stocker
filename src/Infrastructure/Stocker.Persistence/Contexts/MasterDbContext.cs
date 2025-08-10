@@ -51,8 +51,11 @@ public class MasterDbContext : BaseDbContext
 
         foreach (var configurationType in configurations)
         {
-            dynamic configurationInstance = Activator.CreateInstance(configurationType);
-            modelBuilder.ApplyConfiguration(configurationInstance);
+            dynamic? configurationInstance = Activator.CreateInstance(configurationType);
+            if (configurationInstance != null)
+            {
+                modelBuilder.ApplyConfiguration(configurationInstance);
+            }
         }
     }
 

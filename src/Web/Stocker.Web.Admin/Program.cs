@@ -11,14 +11,30 @@ builder.Services.AddRazorComponents()
 // Add storage
 builder.Services.AddScoped<ProtectedLocalStorage>();
 
-// Add HttpClient for API calls
-builder.Services.AddHttpClient<IApiService, ApiService>();
+// Add HttpClient for API calls with SSL bypass for development
+builder.Services.AddHttpClient<IApiService, ApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    });
+
+// Add HttpClient for direct injection with SSL bypass for development
+builder.Services.AddScoped(sp => 
+{
+    var handler = new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    };
+    return new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7021") };
+});
 
 // Add application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Add application services
 builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 // Add logging
 builder.Services.AddLogging();

@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
             {
                 OnAuthenticationFailed = context =>
                 {
+                    Console.WriteLine($"JWT Authentication Failed: {context.Exception.Message}");
                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                     {
                         context.Response.Headers["Token-Expired"] = "true";
@@ -61,12 +62,15 @@ public static class ServiceCollectionExtensions
                 },
                 OnTokenValidated = context =>
                 {
+                    Console.WriteLine($"JWT Token Validated Successfully for user: {context.Principal?.Identity?.Name}");
                     // Token doğrulandığında yapılacak işlemler
                     // Örneğin: User bilgilerini cache'e alma
                     return Task.CompletedTask;
                 },
                 OnMessageReceived = context =>
                 {
+                    Console.WriteLine($"JWT Message Received. Authorization Header: {context.Request.Headers["Authorization"]}");
+                    
                     // SignalR için token'ı query string'den alma
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;

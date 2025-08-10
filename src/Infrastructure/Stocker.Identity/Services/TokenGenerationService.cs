@@ -178,6 +178,7 @@ public class TokenGenerationService : ITokenGenerationService
         var tenant = await _masterContext.Tenants.FindAsync(tenantId.Value);
         return tenant?.Name;
     }
+
 }
 
 public interface ITokenGenerationService
