@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: stocker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=database"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stocker-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=cache"
+
+  # API Service
+  stocker-api:
+    build:
+      context: ..
+      dockerfile: src/API/Stocker.API/Dockerfile
+    container_name: stocker-api
+    restart: unless-stopped
+    env_file:
+      - coolify.env
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__MasterDb: Host=${DB_HOST};Port=${DB_PORT};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      ConnectionStrings__Redis: ${REDIS_HOST}:${REDIS_PORT},password=${REDIS_PASSWORD}
+    networks:
+      - stocker-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - api-logs:/app/logs
+      - api-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=api"
+      - "coolify.domain=api.test.stocker.app"
+      - "traefik.enable=true"
+      - "traefik.http.routers.stocker-api.rule=Host(`api.test.stocker.app`)"
+      - "traefik.http.services.stocker-api.loadbalancer.server.port=80"
+
+  # Web Application
+  stocker-web:
+    build:
+      context: ../stocker-web
+      dockerfile: Dockerfile
+    container_name: stocker-web
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: ${PUBLIC_API_URL}
+      REACT_APP_SIGNALR_URL: ${PUBLIC_API_URL}
+      REACT_APP_ENVIRONMENT: test
+    networks:
+      - stocker-network
+    depends_on:
+      - stocker-api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=web"
+      - "coolify.domain=test.stocker.app"
+      - "traefik.enable=true"
+      - "traefik.http.routers.stocker-web.rule=Host(`test.stocker.app`)"
+      - "traefik.http.services.stocker-web.loadbalancer.server.port=80"
+
+  # Database Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: stocker-backup
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./backup.sh:/backup.sh
+      - backups:/backups
+    networks:
+      - stocker-network
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do /backup.sh; sleep 86400; done"]
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=backup"
+
+  # Monitoring Service
+  monitor:
+    image: alpine:latest
+    container_name: stocker-monitor
+    restart: unless-stopped
+    volumes:
+      - ./monitor.sh:/monitor.sh
+      - monitor-logs:/logs
+    networks:
+      - stocker-network
+    depends_on:
+      - stocker-api
+      - stocker-web
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["apk add --no-cache curl bash && chmod +x /monitor.sh && /monitor.sh --continuous"]
+    labels:
+      - "coolify.managed=true"
+      - "coolify.service=monitor"
+
+networks:
+  stocker-network:
+    driver: bridge
+    labels:
+      - "coolify.managed=true"
+
+volumes:
+  postgres-data:
+    driver: local
+  api-logs:
+    driver: local
+  api-uploads:
+    driver: local
+  backups:
+    driver: local
+  monitor-logs:
+    driver: local

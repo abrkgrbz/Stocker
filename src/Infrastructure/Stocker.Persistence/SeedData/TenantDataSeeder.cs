@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Stocker.Domain.Tenant.Entities;
+using TenantEntities = Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Tenant.Enums;
 using Stocker.Persistence.Contexts;
 using Stocker.Domain.Common.ValueObjects;
-using Stocker.Domain.Master.Entities;
 
 namespace Stocker.Persistence.SeedData;
 
@@ -34,7 +33,7 @@ public class TenantDataSeeder
             return;
         }
 
-        var tenantId = _context.ChangeTracker.Entries<Role>()
+        var tenantId = _context.ChangeTracker.Entries<TenantEntities.Role>()
             .FirstOrDefault()?.Entity.TenantId ?? Guid.Empty;
 
         if (tenantId == Guid.Empty)
@@ -43,10 +42,10 @@ public class TenantDataSeeder
             return;
         }
 
-        var roles = new List<Role>();
+        var roles = new List<TenantEntities.Role>();
 
         // Admin Role
-        var adminRole = Role.Create(
+        var adminRole = TenantEntities.Role.Create(
             tenantId: tenantId,
             name: "Administrator",
             description: "Full system access",
@@ -65,7 +64,7 @@ public class TenantDataSeeder
         roles.Add(adminRole);
 
         // Manager Role
-        var managerRole = Role.Create(
+        var managerRole = TenantEntities.Role.Create(
             tenantId: tenantId,
             name: "Manager",
             description: "Department/Branch manager access",
@@ -88,7 +87,7 @@ public class TenantDataSeeder
         roles.Add(managerRole);
 
         // Employee Role
-        var employeeRole = Role.Create(
+        var employeeRole = TenantEntities.Role.Create(
             tenantId: tenantId,
             name: "Employee",
             description: "Basic employee access",
@@ -103,7 +102,7 @@ public class TenantDataSeeder
         roles.Add(employeeRole);
 
         // Read-Only Role
-        var readOnlyRole = Role.Create(
+        var readOnlyRole = TenantEntities.Role.Create(
             tenantId: tenantId,
             name: "Read-Only",
             description: "View-only access",
@@ -141,4 +140,5 @@ public class TenantDataSeeder
         
         _logger.LogInformation("Tenant admin user should be created by logging in with the 'tenantadmin' MasterUser.");
     }
+     
 }

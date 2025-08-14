@@ -12,7 +12,6 @@ namespace Stocker.API.Controllers.Admin;
 [Route("api/admin/tenant-modules")]
 [Authorize(Roles = "SuperAdmin,Admin")]
 [Produces("application/json")]
-[ApiExplorerSettings(GroupName = "admin")]
 public class TenantModulesController : ControllerBase
 {
     private readonly ITenantCRMDatabaseService _tenantCRMService;

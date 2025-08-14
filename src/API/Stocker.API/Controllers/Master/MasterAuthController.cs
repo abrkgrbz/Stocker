@@ -5,12 +5,13 @@ using Stocker.API.Controllers.Base;
 using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/auth")]
-[ApiExplorerSettings(GroupName = "master")]
+[SwaggerTag("Master Authentication - System administrator authentication")]
 public class MasterAuthController : ApiController
 {
     private readonly ILogger<MasterAuthController> _logger;

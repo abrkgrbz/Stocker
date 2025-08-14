@@ -1,0 +1,250 @@
+.tenant-dashboard {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* Welcome Banner */
+.welcome-banner {
+  margin-bottom: 24px;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.welcome-banner.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.welcome-banner .ant-card-body {
+  padding: 32px;
+}
+
+.dashboard-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+/* Statistics Cards */
+.stats-row {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--card-color-from), var(--card-color-to));
+}
+
+.stat-card-primary::before {
+  --card-color-from: #667eea;
+  --card-color-to: #764ba2;
+}
+
+.stat-card-success::before {
+  --card-color-from: #10b981;
+  --card-color-to: #34d399;
+}
+
+.stat-card-warning::before {
+  --card-color-from: #f59e0b;
+  --card-color-to: #fbbf24;
+}
+
+.stat-card-danger::before {
+  --card-color-from: #ef4444;
+  --card-color-to: #f87171;
+}
+
+.stat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.stat-trend.positive {
+  color: #10b981;
+}
+
+.stat-trend.negative {
+  color: #ef4444;
+}
+
+.stat-period {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+/* Charts */
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-card-head-title {
+  font-weight: 600;
+}
+
+/* Timeline */
+.timeline-content {
+  padding-left: 8px;
+}
+
+.ant-timeline-item-content {
+  min-height: 48px;
+}
+
+/* Quick Actions */
+.quick-actions-card {
+  margin-top: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.action-card {
+  border-radius: 12px;
+  text-align: center;
+  padding: 24px 16px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.action-card:hover {
+  border-color: #667eea;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+}
+
+.action-card .ant-card-body {
+  padding: 0;
+}
+
+/* Product List */
+.ant-list-item {
+  padding: 12px 0;
+  transition: background-color 0.2s ease;
+}
+
+.ant-list-item:hover {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 12px 8px;
+  margin: 0 -8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tenant-dashboard {
+    padding: 16px;
+  }
+
+  .welcome-banner .ant-card-body {
+    padding: 24px 16px;
+  }
+
+  .dashboard-illustration {
+    display: none;
+  }
+
+  .stat-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Loading animations */
+.ant-skeleton-content {
+  border-radius: 8px;
+}
+
+/* Custom scrollbar */
+.tenant-dashboard ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tenant-dashboard ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.tenant-dashboard ::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+
+.tenant-dashboard ::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Card animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card,
+.welcome-banner,
+.quick-actions-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.stat-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Gradient text for special numbers */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}

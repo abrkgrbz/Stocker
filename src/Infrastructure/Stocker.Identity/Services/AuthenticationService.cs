@@ -7,6 +7,7 @@ using Stocker.Persistence.Factories;
 using System.Security.Claims;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Master.ValueObjects;

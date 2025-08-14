@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Input, Button, message, Typography, Space } from 'antd';
-import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LoginRequest } from '@/shared/types';
 import './style.css';
@@ -14,15 +14,40 @@ export const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuthStore();
   const [form] = Form.useForm();
 
-  const from = (location.state as any)?.from?.pathname || '/master';
-
-  const handleSubmit = async (values: LoginRequest) => {
+  const handleSubmit = async (values: any) => {
     try {
-      await login(values);
-      message.success('Login successful!');
-      navigate(from, { replace: true });
+      // If tenant code is provided, set it as a header
+      if (values.tenantCode) {
+        localStorage.setItem('X-Tenant-Code', values.tenantCode);
+      }
+      
+      const loginData: LoginRequest = {
+        email: values.email,
+        password: values.password,
+        tenantCode: values.tenantCode
+      };
+      
+      await login(loginData);
+      message.success('Giriş başarılı!');
+      
+      // Get the user after login to check role
+      const authStore = useAuthStore.getState();
+      
+      // Redirect based on user role
+      const userRole = authStore.user?.roles?.[0];
+      const from = (location.state as any)?.from?.pathname;
+      
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (userRole === 'SystemAdmin') {
+        navigate('/master', { replace: true });
+      } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/app/default', { replace: true });
+      }
     } catch (error: any) {
-      message.error(error.message || 'Login failed. Please try again.');
+      message.error(error.message || 'Giriş başarısız. Lütfen tekrar deneyin.');
     }
   };
 
@@ -41,8 +66,8 @@ export const LoginPage: React.FC = () => {
             <RocketOutlined style={{ fontSize: 48, color: '#667eea' }} />
           </div>
           <div className="login-header">
-            <Title level={2} style={{ margin: 0, color: '#1a1a1a' }}>Welcome Back</Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>Sign in to continue to Stocker</Text>
+            <Title level={2} style={{ margin: 0, color: '#1a1a1a' }}>Hoş Geldiniz</Title>
+            <Text type="secondary" style={{ fontSize: 16 }}>Stocker'a devam etmek için giriş yapın</Text>
           </div>
 
           <Form
@@ -54,15 +79,29 @@ export const LoginPage: React.FC = () => {
             className="login-form"
           >
             <Form.Item
+              name="tenantCode"
+              rules={[
+                { required: false, message: 'Lütfen kiracı kodunu girin!' }
+              ]}
+            >
+              <Input 
+                prefix={<HomeOutlined style={{ color: '#667eea' }} />} 
+                placeholder="Kiracı Kodu (örn: test)" 
+                autoComplete="organization"
+                className="login-input"
+              />
+            </Form.Item>
+
+            <Form.Item
               name="email"
               rules={[
-                { required: true, message: 'Please enter your email!' },
-                { type: 'email', message: 'Please enter a valid email!' }
+                { required: true, message: 'Lütfen email adresinizi girin!' },
+                { type: 'email', message: 'Lütfen geçerli bir email adresi girin!' }
               ]}
             >
               <Input 
                 prefix={<MailOutlined style={{ color: '#667eea' }} />} 
-                placeholder="Email address" 
+                placeholder="Email adresi" 
                 autoComplete="email"
                 type="email"
                 className="login-input"
@@ -71,11 +110,11 @@ export const LoginPage: React.FC = () => {
 
             <Form.Item
               name="password"
-              rules={[{ required: true, message: 'Please enter your password!' }]}
+              rules={[{ required: true, message: 'Lütfen şifrenizi girin!' }]}
             >
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#667eea' }} />}
-                placeholder="Password"
+                placeholder="Şifre"
                 autoComplete="current-password"
                 className="login-input"
               />
@@ -91,20 +130,20 @@ export const LoginPage: React.FC = () => {
                 icon={<LoginOutlined />}
                 className="login-button"
               >
-                Sign In
+                Giriş Yap
               </Button>
             </Form.Item>
 
             <div className="login-links">
-              <a href="#">Forgot password?</a>
+              <a href="/forgot-password">Şifremi unuttum</a>
               <span className="separator">•</span>
-              <a href="#">Create account</a>
+              <a href="/register">Hesap oluştur</a>
             </div>
           </Form>
 
           <div className="demo-section">
             <Text type="secondary" style={{ fontSize: 12, textAlign: 'center', display: 'block', marginBottom: 12 }}>
-              DEMO ACCOUNTS
+              DEMO HESAPLARI
             </Text>
             <Space direction="vertical" style={{ width: '100%' }} size="small">
               <div className="demo-credential" onClick={() => {
@@ -112,20 +151,20 @@ export const LoginPage: React.FC = () => {
               }}>
                 <div className="demo-icon">👨‍💼</div>
                 <div className="demo-info">
-                  <Text strong style={{ fontSize: 13 }}>System Admin</Text>
+                  <Text strong style={{ fontSize: 13 }}>Sistem Yöneticisi</Text>
                   <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>admin@stocker.com</Text>
                 </div>
-                <Text className="demo-hint">Click to fill</Text>
+                <Text className="demo-hint">Doldurmak için tıkla</Text>
               </div>
               <div className="demo-credential" onClick={() => {
                 form.setFieldsValue({ email: 'tenant@example.com', password: 'Tenant@123456' });
               }}>
                 <div className="demo-icon">👤</div>
                 <div className="demo-info">
-                  <Text strong style={{ fontSize: 13 }}>Tenant Admin</Text>
+                  <Text strong style={{ fontSize: 13 }}>Kiracı Yöneticisi</Text>
                   <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>tenant@example.com</Text>
                 </div>
-                <Text className="demo-hint">Click to fill</Text>
+                <Text className="demo-hint">Doldurmak için tıkla</Text>
               </div>
             </Space>
           </div>

@@ -56,12 +56,23 @@ public class MigrationService : IMigrationService
     {
         using var scope = _serviceProvider.CreateScope();
         var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+        var masterContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
 
         try
         {
             _logger.LogInformation("Starting tenant database migration for tenant {TenantId}...", tenantId);
             
+            // Get tenant information
+            var tenant = await masterContext.Tenants.FindAsync(tenantId);
+            if (tenant == null)
+            {
+                throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+            }
+            
             using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
+            
+            // MigrateAsync will create the database if it doesn't exist and apply all migrations
+            _logger.LogInformation("Creating database and applying migrations for tenant {TenantId}...", tenantId);
             await context.Database.MigrateAsync();
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);

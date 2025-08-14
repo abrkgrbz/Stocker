@@ -1,0 +1,319 @@
+.payment-page {
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.payment-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.payment-header .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-content {
+  padding: 48px 0;
+}
+
+.payment-content .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Credit Card Visual */
+.credit-card-visual {
+  perspective: 1000px;
+  margin-bottom: 24px;
+}
+
+.credit-card {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  aspect-ratio: 1.586;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card-front {
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-front::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.card-chip {
+  width: 50px;
+  height: 40px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-chip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 35px;
+  height: 25px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.card-logo {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  height: 40px;
+}
+
+.card-logo img {
+  height: 100%;
+  filter: brightness(0) invert(1);
+}
+
+.card-number {
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  color: white;
+  letter-spacing: 2px;
+  margin: 40px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-info {
+  display: flex;
+  justify-content: space-between;
+  color: white;
+}
+
+.card-info .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.card-info .value {
+  font-size: 16px;
+  font-weight: 500;
+  display: block;
+}
+
+/* Card Type Variants */
+.credit-card.visa .card-front {
+  background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+}
+
+.credit-card.mastercard .card-front {
+  background: linear-gradient(135deg, #eb001b 0%, #f79e1b 100%);
+}
+
+.credit-card.amex .card-front {
+  background: linear-gradient(135deg, #006fcf 0%, #00a1e0 100%);
+}
+
+.credit-card.troy .card-front {
+  background: linear-gradient(135deg, #00a19c 0%, #e85a2b 100%);
+}
+
+/* Form Styles */
+.payment-form-container {
+  animation: fadeInUp 0.5s ease;
+}
+
+.payment-form-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.security-badges {
+  text-align: center;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.bank-logos {
+  text-align: center;
+}
+
+.bank-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.bank-logo {
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.bank-logo img {
+  max-height: 100%;
+  max-width: 100%;
+  filter: grayscale(100%);
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.bank-logo:hover img {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+/* 3D Secure Modal */
+.secure-3d-container {
+  padding: 16px;
+}
+
+.bank-info {
+  text-align: center;
+  padding: 24px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.transaction-info {
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+/* Order Summary */
+.order-summary {
+  position: sticky;
+  top: 24px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-total {
+  text-align: center;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+/* Success Page */
+.success-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+/* Wallet Cards */
+.wallet-card {
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.wallet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-header .container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .credit-card {
+    max-width: 320px;
+  }
+
+  .card-number {
+    font-size: 18px;
+  }
+
+  .bank-logo-grid {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  }
+
+  .order-summary {
+    position: static;
+    margin-top: 24px;
+  }
+}

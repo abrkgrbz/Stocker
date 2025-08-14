@@ -27,4 +27,9 @@
     <ProjectReference Include="..\..\Core\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\Master\" />
+    <Folder Include="Migrations\Tenant\" />
+  </ItemGroup>
+
 </Project>

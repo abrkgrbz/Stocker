@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stocker.Web.Portal", "src\W
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stocker.Modules.CRM", "src\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj", "{AB309C1A-74D3-4DAC-BAB4-5FAB9084252A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stocker.SignalR", "src\Infrastructure\Stocker.SignalR\Stocker.SignalR.csproj", "{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{AB309C1A-74D3-4DAC-BAB4-5FAB9084252A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB309C1A-74D3-4DAC-BAB4-5FAB9084252A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB309C1A-74D3-4DAC-BAB4-5FAB9084252A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +107,7 @@ Global
 		{6D8173BA-3478-718B-5854-2D49254D8EEA} = {D4C05EAF-1AA4-4D3E-A685-7488221F0EA8}
 		{7C7FB34C-73EF-4E87-ACF5-AD44CF350E44} = {ACAD90CA-D5C6-4AD1-8DDF-332614F345D0}
 		{AB309C1A-74D3-4DAC-BAB4-5FAB9084252A} = {A9BDCF23-7BA4-4FE9-89ED-8822729DFD01}
+		{6313BBAD-C65A-49C9-B3A2-E4D40F1F2C45} = {C992CC30-CA1D-4F89-95DF-FA73F09742A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3D45E6C2-4713-44E6-AB2F-E8815EB6EDA4}

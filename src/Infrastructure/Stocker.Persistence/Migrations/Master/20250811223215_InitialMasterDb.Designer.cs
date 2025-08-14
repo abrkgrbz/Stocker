@@ -12,7 +12,7 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Master
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20250808153441_InitialMasterDb")]
+    [Migration("20250811223215_InitialMasterDb")]
     partial class InitialMasterDb
     {
         /// <inheritdoc />

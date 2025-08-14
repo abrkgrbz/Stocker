@@ -26,12 +26,12 @@ import './style.css';
 const menuItems = [
   {
     path: '/master',
-    name: 'Dashboard',
+    name: 'Kontrol Paneli',
     icon: <DashboardOutlined />,
   },
   {
     path: '/master/tenants',
-    name: 'Tenants',
+    name: 'Kiracılar',
     icon: <TeamOutlined />,
     children: [
       {
@@ -168,7 +168,7 @@ export const MasterLayout: React.FC = () => {
     ),
     layout: 'mix',
     splitMenus: false,
-    navTheme: 'dark',
+    navTheme: 'light',
     contentWidth: 'Fluid',
     fixedHeader: true,
     fixSiderbar: true,

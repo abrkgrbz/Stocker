@@ -1,0 +1,70 @@
+{
+  "general": {
+    "title": "Hata",
+    "unknown": "Beklenmeyen bir hata oluştu",
+    "tryAgain": "Tekrar Dene",
+    "goBack": "Geri Dön",
+    "contactSupport": "Destek ile İletişime Geç"
+  },
+  "network": {
+    "title": "Bağlantı Hatası",
+    "offline": "İnternet bağlantınız yok",
+    "timeout": "İstek zaman aşımına uğradı",
+    "serverError": "Sunucu hatası oluştu",
+    "connectionLost": "Bağlantı koptu"
+  },
+  "auth": {
+    "title": "Kimlik Doğrulama Hatası",
+    "invalidCredentials": "Geçersiz kullanıcı adı veya şifre",
+    "sessionExpired": "Oturum süreniz doldu",
+    "unauthorized": "Bu işlem için yetkiniz yok",
+    "accountLocked": "Hesabınız kilitlendi",
+    "accountNotFound": "Hesap bulunamadı",
+    "emailNotVerified": "E-posta adresiniz doğrulanmamış"
+  },
+  "validation": {
+    "title": "Doğrulama Hatası",
+    "required": "Bu alan zorunludur",
+    "email": "Geçerli bir e-posta adresi girin",
+    "phone": "Geçerli bir telefon numarası girin",
+    "minLength": "En az {{min}} karakter olmalıdır",
+    "maxLength": "En fazla {{max}} karakter olabilir",
+    "minValue": "En az {{min}} olmalıdır",
+    "maxValue": "En fazla {{max}} olabilir",
+    "pattern": "Geçerli bir format girin",
+    "passwordMismatch": "Şifreler eşleşmiyor",
+    "invalidDate": "Geçersiz tarih",
+    "invalidNumber": "Geçerli bir sayı girin"
+  },
+  "api": {
+    "400": "Geçersiz istek",
+    "401": "Kimlik doğrulama gerekli",
+    "403": "Erişim reddedildi",
+    "404": "Kaynak bulunamadı",
+    "409": "Çakışma hatası",
+    "422": "İşlenemeyen veri",
+    "429": "Çok fazla istek",
+    "500": "Sunucu hatası",
+    "502": "Geçersiz ağ geçidi",
+    "503": "Servis kullanılamıyor",
+    "504": "Ağ geçidi zaman aşımı"
+  },
+  "business": {
+    "duplicateEntry": "Bu kayıt zaten mevcut",
+    "insufficientStock": "Yetersiz stok",
+    "insufficientBalance": "Yetersiz bakiye",
+    "limitExceeded": "Limit aşıldı",
+    "notFound": "Kayıt bulunamadı",
+    "alreadyProcessed": "Bu işlem zaten gerçekleştirildi",
+    "cannotDelete": "Bu kayıt silinemez",
+    "cannotUpdate": "Bu kayıt güncellenemez"
+  },
+  "file": {
+    "title": "Dosya Hatası",
+    "tooLarge": "Dosya boyutu çok büyük",
+    "invalidType": "Geçersiz dosya türü",
+    "uploadFailed": "Dosya yüklenemedi",
+    "downloadFailed": "Dosya indirilemedi",
+    "notFound": "Dosya bulunamadı"
+  }
+}

@@ -9,12 +9,14 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
   
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  initializeAuth: () => void;
   clearError: () => void;
   setTenant: (tenantId: string) => void;
 }
@@ -22,12 +24,42 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         user: null,
         token: null,
         isAuthenticated: false,
         isLoading: false,
+        isInitialized: false,
         error: null,
+
+        initializeAuth: () => {
+          console.log('initializeAuth called');
+          const token = localStorage.getItem(TOKEN_KEY);
+          const state = get();
+          console.log('Current state:', { user: state.user, token: state.token, hasLocalToken: !!token });
+          
+          // If we already have a user and token from persisted state, we're good
+          if (state.user && state.token) {
+            console.log('User and token exist, setting authenticated');
+            set({ 
+              isAuthenticated: true,
+              isInitialized: true,
+              isLoading: false 
+            });
+          } else if (token) {
+            // We have a token but no user, need to fetch user data
+            console.log('Token exists but no user, checking auth...');
+            get().checkAuth();
+          } else {
+            // No token, not authenticated
+            console.log('No token, setting unauthenticated');
+            set({ 
+              isAuthenticated: false,
+              isInitialized: true,
+              isLoading: false 
+            });
+          }
+        },
 
         login: async (credentials) => {
           set({ isLoading: true, error: null });
@@ -48,6 +80,7 @@ export const useAuthStore = create<AuthState>()(
               token: accessToken,
               isAuthenticated: true,
               isLoading: false,
+              isInitialized: true,
             });
           } catch (error: any) {
             console.error('Login error:', error);
@@ -79,23 +112,35 @@ export const useAuthStore = create<AuthState>()(
         },
 
         checkAuth: async () => {
+          console.log('checkAuth called');
           const token = localStorage.getItem(TOKEN_KEY);
+          
           if (!token) {
-            set({ isAuthenticated: false, user: null });
+            console.log('No token in checkAuth');
+            set({ 
+              isAuthenticated: false, 
+              user: null, 
+              isLoading: false,
+              isInitialized: true 
+            });
             return;
           }
 
+          console.log('Token found, fetching user...');
           set({ isLoading: true });
           try {
             const response = await authApi.getCurrentUser();
+            console.log('User fetch response:', response);
             const userData = response.data || response;
             set({
               user: userData,
               token,
               isAuthenticated: true,
               isLoading: false,
+              isInitialized: true,
             });
           } catch (error) {
+            console.error('CheckAuth error:', error);
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(REFRESH_TOKEN_KEY);
             set({
@@ -103,6 +148,7 @@ export const useAuthStore = create<AuthState>()(
               token: null,
               isAuthenticated: false,
               isLoading: false,
+              isInitialized: true,
             });
           }
         },

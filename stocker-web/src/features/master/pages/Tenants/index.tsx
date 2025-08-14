@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
 import { 
   Card, 
@@ -86,12 +86,13 @@ export const MasterTenantsPage: React.FC = () => {
   const [form] = Form.useForm();
 
   // API Hooks
-  const { data: tenantsData, isLoading, refetch } = useGetTenants({
+  const { data: tenantsData, isLoading, error, refetch } = useGetTenants({
     page: currentPage,
     pageSize,
     status: selectedStatus === 'all' ? undefined : selectedStatus,
     search: searchText,
   });
+
 
   const { data: selectedTenantDetail } = useGetTenant(selectedTenant?.id || '');
   const { data: tenantUsage } = useGetTenantUsage(selectedTenant?.id || '');
@@ -317,8 +318,11 @@ export const MasterTenantsPage: React.FC = () => {
     },
   ];
 
-  const tenants = tenantsData?.data?.items || [];
-  const totalCount = tenantsData?.data?.totalCount || 0;
+  // Handle API response wrapper structure
+  // Backend returns ApiResponse<List<TenantListDto>>
+  // Structure: { success: true, data: [...], timestamp: ... }
+  const tenants = tenantsData?.data?.data || tenantsData?.data || [];
+  const totalCount = Array.isArray(tenants) ? tenants.length : 0;
 
   // Calculate statistics
   const statusCounts = {
@@ -434,7 +438,19 @@ export const MasterTenantsPage: React.FC = () => {
 
       {/* Tenants Table */}
       <Card>
-        {isLoading ? (
+        {error ? (
+          <Alert
+            message="Hata"
+            description={`Tenant'lar yüklenirken bir hata oluştu: ${error}`}
+            type="error"
+            showIcon
+            action={
+              <Button size="small" danger onClick={() => refetch()}>
+                Tekrar Dene
+              </Button>
+            }
+          />
+        ) : isLoading ? (
           <div style={{ textAlign: 'center', padding: 50 }}>
             <Spin size="large" />
           </div>

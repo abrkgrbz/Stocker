@@ -1,0 +1,310 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Stocker.API.Controllers.Base;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Common.Models;
+
+namespace Stocker.API.Controllers.Public;
+
+/// <summary>
+/// Public validation endpoints for form inputs
+/// </summary>
+[AllowAnonymous]
+[Route("api/public/validate")]
+[ApiExplorerSettings(GroupName = "public")]
+public class ValidationController : ApiController
+{
+    private readonly IValidationService _validationService;
+    private readonly ILogger<ValidationController> _logger;
+
+    public ValidationController(
+        IValidationService validationService,
+        ILogger<ValidationController> logger)
+    {
+        _validationService = validationService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Validate email address format and availability
+    /// </summary>
+    /// <param name="email">Email address to validate</param>
+    /// <returns>Email validation result</returns>
+    [HttpPost("email")]
+    [ProducesResponseType(typeof(Base.ApiResponse<EmailValidationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateEmail([FromBody] EmailValidationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest("Email adresi boş olamaz");
+            }
+
+            var result = await _validationService.ValidateEmailAsync(request.Email);
+            
+            var response = new EmailValidationResponse
+            {
+                IsValid = result.IsValid,
+                Message = result.Message,
+                NormalizedEmail = result.NormalizedEmail,
+                IsDisposable = result.IsDisposable,
+                HasMxRecord = result.HasMxRecord,
+                SuggestedEmail = result.SuggestedEmail,
+                Details = result.Details
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating email: {Email}", request.Email);
+            return StatusCode(500, "Email doğrulama sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
+    /// Validate phone number format and carrier
+    /// </summary>
+    /// <param name="request">Phone validation request</param>
+    /// <returns>Phone validation result</returns>
+    [HttpPost("phone")]
+    [ProducesResponseType(typeof(Base.ApiResponse<PhoneValidationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidatePhone([FromBody] PhoneValidationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            {
+                return BadRequest("Telefon numarası boş olamaz");
+            }
+
+            var result = await _validationService.ValidatePhoneAsync(
+                request.PhoneNumber, 
+                request.CountryCode ?? "TR");
+            
+            var response = new PhoneValidationResponse
+            {
+                IsValid = result.IsValid,
+                Message = result.Message,
+                FormattedNumber = result.FormattedNumber,
+                CountryCode = result.CountryCode,
+                CountryName = result.CountryName,
+                Carrier = result.Carrier,
+                NumberType = result.NumberType,
+                Details = result.Details
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating phone: {Phone}", request.PhoneNumber);
+            return StatusCode(500, "Telefon doğrulama sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
+    /// Check password strength
+    /// </summary>
+    /// <param name="request">Password strength check request</param>
+    /// <returns>Password strength result</returns>
+    [HttpPost("password-strength")]
+    [ProducesResponseType(typeof(Base.ApiResponse<PasswordStrengthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CheckPasswordStrength([FromBody] PasswordStrengthRequest request)
+    {
+        try
+        {
+            var result = await _validationService.CheckPasswordStrengthAsync(request.Password);
+            
+            var response = new PasswordStrengthResponse
+            {
+                Score = result.Score,
+                Level = result.Level,
+                Color = result.Color,
+                Suggestions = result.Suggestions,
+                HasLowercase = result.HasLowercase,
+                HasUppercase = result.HasUppercase,
+                HasNumbers = result.HasNumbers,
+                HasSpecialChars = result.HasSpecialChars,
+                Length = result.Length,
+                ContainsCommonPassword = result.ContainsCommonPassword,
+                EntropyBits = result.EntropyBits
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking password strength");
+            return StatusCode(500, "Şifre gücü kontrolü sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
+    /// Check domain availability
+    /// </summary>
+    /// <param name="request">Domain check request</param>
+    /// <returns>Domain availability result</returns>
+    [HttpPost("domain")]
+    [ProducesResponseType(typeof(Base.ApiResponse<DomainCheckResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CheckDomain([FromBody] DomainCheckRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Domain))
+            {
+                return BadRequest("Domain adı boş olamaz");
+            }
+
+            var result = await _validationService.CheckDomainAvailabilityAsync(request.Domain);
+            
+            var response = new DomainCheckResponse
+            {
+                IsAvailable = result.IsAvailable,
+                Message = result.Message,
+                Suggestions = result.Suggestions,
+                CurrentOwner = result.CurrentOwner,
+                IsPremium = result.IsPremium,
+                Details = result.Details
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking domain: {Domain}", request.Domain);
+            return StatusCode(500, "Domain kontrolü sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
+    /// Validate company name availability
+    /// </summary>
+    /// <param name="request">Company name validation request</param>
+    /// <returns>Company name validation result</returns>
+    [HttpPost("company-name")]
+    [ProducesResponseType(typeof(Base.ApiResponse<CompanyNameValidationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateCompanyName([FromBody] CompanyNameValidationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.CompanyName))
+            {
+                return BadRequest("Şirket adı boş olamaz");
+            }
+
+            var result = await _validationService.ValidateCompanyNameAsync(request.CompanyName);
+            
+            var response = new CompanyNameValidationResponse
+            {
+                IsValid = result.IsValid,
+                Message = result.Message,
+                IsUnique = result.IsUnique,
+                ContainsRestrictedWords = result.ContainsRestrictedWords,
+                SimilarNames = result.SimilarNames,
+                Details = result.Details
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating company name: {CompanyName}", request.CompanyName);
+            return StatusCode(500, "Şirket adı kontrolü sırasında bir hata oluştu");
+        }
+    }
+}
+
+#region Request/Response DTOs
+
+public class EmailValidationRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class EmailValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? NormalizedEmail { get; set; }
+    public bool IsDisposable { get; set; }
+    public bool HasMxRecord { get; set; }
+    public string? SuggestedEmail { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class PhoneValidationRequest
+{
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string? CountryCode { get; set; }
+}
+
+public class PhoneValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? FormattedNumber { get; set; }
+    public string? CountryCode { get; set; }
+    public string? CountryName { get; set; }
+    public string? Carrier { get; set; }
+    public string? NumberType { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class PasswordStrengthRequest
+{
+    public string Password { get; set; } = string.Empty;
+}
+
+public class PasswordStrengthResponse
+{
+    public int Score { get; set; }
+    public string Level { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
+    public List<string> Suggestions { get; set; } = new();
+    public bool HasLowercase { get; set; }
+    public bool HasUppercase { get; set; }
+    public bool HasNumbers { get; set; }
+    public bool HasSpecialChars { get; set; }
+    public int Length { get; set; }
+    public bool ContainsCommonPassword { get; set; }
+    public double EntropyBits { get; set; }
+}
+
+public class DomainCheckRequest
+{
+    public string Domain { get; set; } = string.Empty;
+}
+
+public class DomainCheckResponse
+{
+    public bool IsAvailable { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public List<string> Suggestions { get; set; } = new();
+    public string? CurrentOwner { get; set; }
+    public bool IsPremium { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class CompanyNameValidationRequest
+{
+    public string CompanyName { get; set; } = string.Empty;
+}
+
+public class CompanyNameValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public bool IsUnique { get; set; }
+    public bool ContainsRestrictedWords { get; set; }
+    public List<string> SimilarNames { get; set; } = new();
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+#endregion

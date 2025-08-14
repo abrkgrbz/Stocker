@@ -74,6 +74,25 @@ public sealed class Subscription : AggregateRoot
         return new Subscription(tenantId, packageId, billingCycle, price, startDate, trialEndDate);
     }
 
+    public void StartTrial(DateTime trialEndDate)
+    {
+        if (Status != SubscriptionStatus.Suspended && Status != SubscriptionStatus.Pending)
+        {
+            throw new InvalidOperationException("Can only start trial from Suspended or Pending status.");
+        }
+
+        if (trialEndDate <= DateTime.UtcNow)
+        {
+            throw new ArgumentException("Trial end date must be in the future.", nameof(trialEndDate));
+        }
+
+        Status = SubscriptionStatus.Trial;
+        TrialEndDate = trialEndDate;
+        StartDate = DateTime.UtcNow;
+        CurrentPeriodStart = DateTime.UtcNow;
+        CurrentPeriodEnd = trialEndDate;
+    }
+
     public void Activate()
     {
         if (Status != SubscriptionStatus.Trial)

@@ -1,0 +1,131 @@
+.tenant-settings-page {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.tenant-settings-page .ant-tabs-tab {
+  padding: 12px 16px;
+}
+
+.tenant-settings-page .ant-tabs-tab span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tenant-settings-page h4 {
+  margin-bottom: 8px;
+  color: #262626;
+}
+
+.tenant-settings-page h5 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  color: #595959;
+  font-weight: 600;
+}
+
+.settings-section {
+  margin-bottom: 32px;
+}
+
+.api-key-item {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.api-key-item:hover {
+  background: #f0f0f0;
+}
+
+.webhook-event-item {
+  padding: 8px 0;
+}
+
+/* Upload Logo Styles */
+.ant-upload-drag {
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.ant-upload-drag:hover {
+  border-color: #667eea;
+}
+
+.ant-upload-drag-icon {
+  color: #667eea;
+}
+
+/* Form Styles */
+.tenant-settings-page .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.tenant-settings-page .ant-form-item-label {
+  font-weight: 500;
+}
+
+.tenant-settings-page .ant-input-number {
+  width: 100%;
+}
+
+/* Alert Styles */
+.tenant-settings-page .ant-alert {
+  border-radius: 8px;
+}
+
+/* Card Styles */
+.tenant-settings-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.tenant-settings-page .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Button Styles */
+.tenant-settings-page .ant-btn {
+  border-radius: 6px;
+}
+
+.tenant-settings-page .ant-btn-primary {
+  background: #667eea;
+  border-color: #667eea;
+}
+
+.tenant-settings-page .ant-btn-primary:hover {
+  background: #5a67d8;
+  border-color: #5a67d8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tenant-settings-page {
+    padding: 16px;
+  }
+
+  .tenant-settings-page .ant-tabs-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .tenant-settings-page .ant-tabs-tab span {
+    gap: 4px;
+  }
+
+  .tenant-settings-page .ant-tabs-tab .anticon {
+    font-size: 14px;
+  }
+
+  .tenant-settings-page h4 {
+    font-size: 16px;
+  }
+
+  .tenant-settings-page h5 {
+    font-size: 14px;
+  }
+}

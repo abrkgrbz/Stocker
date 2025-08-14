@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[SwaggerTag("Authentication - User authentication and token management")]
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;

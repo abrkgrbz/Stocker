@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Identity.Services;
 

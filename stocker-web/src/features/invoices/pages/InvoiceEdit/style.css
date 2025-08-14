@@ -1,0 +1,114 @@
+.invoice-edit-page {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.invoice-edit-content {
+  margin-top: 24px;
+}
+
+.invoice-card {
+  margin-bottom: 24px;
+}
+
+.invoice-form h5 {
+  margin-bottom: 16px;
+  color: #262626;
+  font-weight: 600;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.invoice-items-section {
+  margin-top: 24px;
+}
+
+.invoice-items-table {
+  margin-top: 16px;
+}
+
+.invoice-items-table .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+  padding: 12px 8px;
+}
+
+.invoice-items-table .ant-table-tbody > tr > td {
+  padding: 8px;
+}
+
+.invoice-items-table .ant-select,
+.invoice-items-table .ant-input-number {
+  width: 100%;
+}
+
+.summary-card {
+  position: sticky;
+  top: 24px;
+}
+
+.summary-content {
+  padding: 8px 0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.summary-item.total {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.summary-item.total h4 {
+  margin: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 992px) {
+  .summary-card {
+    position: relative;
+    top: 0;
+  }
+
+  .invoice-items-table {
+    overflow-x: auto;
+  }
+
+  .invoice-items-table table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 576px) {
+  .invoice-edit-page {
+    padding: 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ant-page-header-heading-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .ant-page-header-heading-extra .ant-btn {
+    width: 100%;
+  }
+}

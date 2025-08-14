@@ -1,0 +1,181 @@
+{
+  "crm": {
+    "title": "CRM - Müşteri İlişkileri Yönetimi",
+    "description": "Müşteri ilişkilerinizi güçlendirin",
+    "customers": {
+      "title": "Müşteriler",
+      "add": "Müşteri Ekle",
+      "edit": "Müşteri Düzenle",
+      "delete": "Müşteri Sil",
+      "list": "Müşteri Listesi",
+      "details": "Müşteri Detayları",
+      "contact": "İletişim Bilgileri",
+      "notes": "Notlar",
+      "activities": "Aktiviteler",
+      "deals": "Anlaşmalar"
+    },
+    "leads": {
+      "title": "Potansiyel Müşteriler",
+      "convert": "Müşteriye Dönüştür",
+      "score": "Lead Puanı",
+      "source": "Kaynak"
+    },
+    "opportunities": {
+      "title": "Fırsatlar",
+      "stage": "Aşama",
+      "probability": "Olasılık",
+      "value": "Değer",
+      "expectedClose": "Tahmini Kapanış"
+    }
+  },
+  "inventory": {
+    "title": "Envanter Yönetimi",
+    "description": "Stok ve envanter kontrolü",
+    "products": {
+      "title": "Ürünler",
+      "add": "Ürün Ekle",
+      "edit": "Ürün Düzenle",
+      "delete": "Ürün Sil",
+      "barcode": "Barkod",
+      "sku": "Stok Kodu",
+      "category": "Kategori",
+      "stock": "Stok",
+      "price": "Fiyat",
+      "cost": "Maliyet"
+    },
+    "warehouses": {
+      "title": "Depolar",
+      "location": "Konum",
+      "capacity": "Kapasite",
+      "occupancy": "Doluluk"
+    },
+    "movements": {
+      "title": "Stok Hareketleri",
+      "in": "Giriş",
+      "out": "Çıkış",
+      "transfer": "Transfer",
+      "adjustment": "Düzeltme"
+    },
+    "alerts": {
+      "lowStock": "Düşük Stok",
+      "outOfStock": "Stok Tükendi",
+      "expiring": "Yaklaşan Son Kullanma"
+    }
+  },
+  "sales": {
+    "title": "Satış Yönetimi",
+    "description": "Satış süreçlerini yönetin",
+    "orders": {
+      "title": "Siparişler",
+      "new": "Yeni Sipariş",
+      "pending": "Bekleyen Siparişler",
+      "processing": "İşlenen Siparişler",
+      "shipped": "Gönderilen Siparişler",
+      "delivered": "Teslim Edilen",
+      "cancelled": "İptal Edilen"
+    },
+    "quotes": {
+      "title": "Teklifler",
+      "create": "Teklif Oluştur",
+      "send": "Teklif Gönder",
+      "convert": "Siparişe Dönüştür"
+    },
+    "invoices": {
+      "title": "Faturalar",
+      "create": "Fatura Oluştur",
+      "paid": "Ödenen",
+      "unpaid": "Ödenmemiş",
+      "overdue": "Gecikmiş"
+    }
+  },
+  "finance": {
+    "title": "Finans Yönetimi",
+    "description": "Finansal süreçleri yönetin",
+    "accounting": {
+      "title": "Muhasebe",
+      "ledger": "Büyük Defter",
+      "journal": "Yevmiye",
+      "balance": "Mizan",
+      "profitLoss": "Kar/Zarar",
+      "balanceSheet": "Bilanço"
+    },
+    "payments": {
+      "title": "Ödemeler",
+      "received": "Alınan Ödemeler",
+      "made": "Yapılan Ödemeler",
+      "pending": "Bekleyen Ödemeler"
+    },
+    "expenses": {
+      "title": "Giderler",
+      "add": "Gider Ekle",
+      "categories": "Gider Kategorileri",
+      "reports": "Gider Raporları"
+    },
+    "budget": {
+      "title": "Bütçe",
+      "planning": "Bütçe Planlama",
+      "tracking": "Bütçe Takibi",
+      "variance": "Bütçe Sapması"
+    }
+  },
+  "hr": {
+    "title": "İnsan Kaynakları",
+    "description": "Personel ve İK yönetimi",
+    "employees": {
+      "title": "Çalışanlar",
+      "add": "Çalışan Ekle",
+      "list": "Çalışan Listesi",
+      "profile": "Çalışan Profili",
+      "documents": "Belgeler",
+      "contracts": "Sözleşmeler"
+    },
+    "attendance": {
+      "title": "Devam Takibi",
+      "checkIn": "Giriş",
+      "checkOut": "Çıkış",
+      "leaves": "İzinler",
+      "holidays": "Tatiller"
+    },
+    "payroll": {
+      "title": "Bordro",
+      "salary": "Maaş",
+      "bonuses": "Primler",
+      "deductions": "Kesintiler",
+      "payslips": "Maaş Bordroları"
+    },
+    "recruitment": {
+      "title": "İşe Alım",
+      "positions": "Açık Pozisyonlar",
+      "applications": "Başvurular",
+      "interviews": "Mülakatlar"
+    }
+  },
+  "production": {
+    "title": "Üretim Yönetimi",
+    "description": "Üretim süreçlerini yönetin",
+    "planning": {
+      "title": "Üretim Planlama",
+      "orders": "Üretim Emirleri",
+      "schedule": "Üretim Çizelgesi",
+      "capacity": "Kapasite Planlama"
+    },
+    "operations": {
+      "title": "Operasyonlar",
+      "workcenters": "İş Merkezleri",
+      "routing": "Rotalama",
+      "bom": "Ürün Ağacı"
+    },
+    "quality": {
+      "title": "Kalite Kontrol",
+      "inspections": "Denetimler",
+      "defects": "Hatalar",
+      "reports": "Kalite Raporları"
+    },
+    "maintenance": {
+      "title": "Bakım",
+      "preventive": "Önleyici Bakım",
+      "corrective": "Düzeltici Bakım",
+      "schedule": "Bakım Takvimi"
+    }
+  }
+}

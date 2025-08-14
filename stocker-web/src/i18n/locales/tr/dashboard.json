@@ -1,0 +1,51 @@
+{
+  "title": "Kontrol Paneli",
+  "welcome": "Hoş Geldiniz, {{name}}!",
+  "overview": "Genel Bakış",
+  "statistics": {
+    "title": "İstatistikler",
+    "totalSales": "Toplam Satış",
+    "totalCustomers": "Toplam Müşteri",
+    "totalOrders": "Toplam Sipariş",
+    "totalRevenue": "Toplam Gelir",
+    "growth": "Büyüme",
+    "daily": "Günlük",
+    "weekly": "Haftalık",
+    "monthly": "Aylık",
+    "yearly": "Yıllık"
+  },
+  "charts": {
+    "salesTrend": "Satış Trendi",
+    "revenueDistribution": "Gelir Dağılımı",
+    "topProducts": "En Çok Satan Ürünler",
+    "customerGrowth": "Müşteri Artışı",
+    "performanceMetrics": "Performans Metrikleri"
+  },
+  "quickActions": {
+    "title": "Hızlı İşlemler",
+    "newOrder": "Yeni Sipariş",
+    "newCustomer": "Yeni Müşteri",
+    "newProduct": "Yeni Ürün",
+    "newInvoice": "Yeni Fatura",
+    "viewReports": "Raporları Görüntüle"
+  },
+  "recentActivities": {
+    "title": "Son Aktiviteler",
+    "viewAll": "Tümünü Görüntüle",
+    "noActivity": "Henüz aktivite yok"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAsRead": "Okundu İşaretle",
+    "markAllAsRead": "Tümünü Okundu İşaretle",
+    "noNotifications": "Yeni bildirim yok",
+    "viewAll": "Tüm Bildirimleri Görüntüle"
+  },
+  "widgets": {
+    "todoList": "Yapılacaklar",
+    "calendar": "Takvim",
+    "weather": "Hava Durumu",
+    "news": "Haberler",
+    "stocks": "Borsa"
+  }
+}

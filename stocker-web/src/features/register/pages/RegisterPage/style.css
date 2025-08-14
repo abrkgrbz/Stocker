@@ -1,0 +1,231 @@
+.register-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.register-header {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.register-header .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.register-content {
+  padding: 48px 0 96px;
+}
+
+.register-content .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Package Cards */
+.packages-section {
+  animation: fadeInUp 0.5s ease;
+}
+
+.billing-toggle {
+  text-align: center;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.package-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: visible;
+}
+
+.package-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.package-card.selected {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.package-card.popular {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.package-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.package-pricing {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.package-pricing .price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.package-pricing .currency {
+  font-size: 20px;
+  color: #667eea;
+  margin-right: 4px;
+}
+
+.package-pricing .amount {
+  font-size: 48px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.package-pricing .period {
+  font-size: 16px;
+  color: #666;
+  margin-left: 4px;
+}
+
+.package-comparison {
+  margin-top: 48px;
+}
+
+/* Registration Form */
+.order-summary-container {
+  position: relative;
+  height: fit-content;
+}
+
+.order-summary {
+  /* Sticky pozisyonu tamamen kaldırıyoruz */
+  position: relative;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.summary-total {
+  background: #f0f2ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.total-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.total-amount .currency {
+  font-size: 16px;
+  color: #667eea;
+  margin-right: 4px;
+}
+
+.total-amount .amount {
+  font-size: 32px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.total-amount .period {
+  font-size: 14px;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* Payment Section */
+.payment-section {
+  animation: fadeInUp 0.5s ease;
+}
+
+.payment-methods {
+  margin: 32px 0;
+}
+
+.payment-method-card {
+  text-align: center;
+  padding: 24px;
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.payment-method-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.payment-summary {
+  background: #fafafa;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.summary-details {
+  margin-top: 16px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.summary-row.total {
+  padding-top: 16px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-header .container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .package-card.popular {
+    transform: none;
+  }
+  
+  .order-summary-container {
+    margin-top: 24px;
+  }
+  
+  .order-summary {
+    position: relative !important;
+  }
+}

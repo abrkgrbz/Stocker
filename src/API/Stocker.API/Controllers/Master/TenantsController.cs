@@ -3,12 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Tenants.Commands.CreateTenant;
 using Stocker.Application.Features.Tenants.Commands.UpdateTenant;
 using Stocker.Application.Features.Tenants.Commands.ToggleTenantStatus;
+using Stocker.Application.Features.Tenants.Commands.DeleteTenant;
 using Stocker.Application.Features.Tenants.Queries.GetTenantById;
 using Stocker.Application.Features.Tenants.Queries.GetTenantsList;
 using Stocker.Application.Features.Tenants.Queries.GetTenantStatistics;
 using Stocker.Application.DTOs.Tenant;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
+
+[SwaggerTag("Tenant Management - Manage system tenants and their configurations")]
 
 public class TenantsController : MasterControllerBase
 {
@@ -147,18 +151,14 @@ public class TenantsController : MasterControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] string? reason = null, [FromQuery] bool hardDelete = false)
     {
-        _logger.LogWarning("Deleting tenant ID: {TenantId} by user: {UserEmail}", 
-            id, CurrentUserEmail);
+        _logger.LogWarning("Deleting tenant ID: {TenantId} by user: {UserEmail}. HardDelete: {HardDelete}", 
+            id, CurrentUserEmail, hardDelete);
         
-        // TODO: Implement DeleteTenantCommand
-        return Ok(new ApiResponse<bool>
-        {
-            Success = true,
-            Data = true,
-            Message = "Delete functionality not implemented yet",
-            Timestamp = DateTime.UtcNow
-        });
+        var command = new DeleteTenantCommand(id, reason, hardDelete);
+        var result = await _mediator.Send(command);
+        
+        return HandleResult(result);
     }
 }

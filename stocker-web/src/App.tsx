@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ConfigProvider, App as AntApp } from 'antd';
+import { ConfigProvider, App as AntApp, Spin } from 'antd';
 import { ProConfigProvider } from '@ant-design/pro-components';
-import enUS from 'antd/locale/en_US';
+import trTR from 'antd/locale/tr_TR';
 import dayjs from 'dayjs';
-import 'dayjs/locale/en';
+import 'dayjs/locale/tr';
 
 // Stores
 import { useAuthStore } from '@/app/store/auth.store';
@@ -20,6 +20,10 @@ import { PublicLayout } from '@/layouts/PublicLayout';
 // Pages
 import { LandingPage } from '@/features/landing/pages/LandingPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { RegisterPage } from '@/features/register/pages/RegisterPage';
+import { SignalRTestPage } from '@/features/register/pages/SignalRTest';
+import { PaymentPage } from '@/features/payment/pages/PaymentPage';
 import { MasterDashboard } from '@/features/dashboard/pages/MasterDashboard';
 import { AdminDashboard } from '@/features/dashboard/pages/AdminDashboard';
 import { TenantDashboard } from '@/features/dashboard/pages/TenantDashboard';
@@ -29,14 +33,30 @@ import { MasterPackagesPage } from '@/features/master/pages/Packages';
 import { SubscriptionsPage } from '@/features/subscriptions/pages/SubscriptionsPage';
 import { PackagesPage } from '@/features/packages/pages/PackagesPage';
 import { UsersPage } from '@/features/users/pages/UsersPage';
+import InvoiceList from '@/features/invoices/pages/InvoiceList';
+import CreateInvoice from '@/features/invoices/pages/CreateInvoice';
+import { InvoiceDetail } from '@/features/invoices/pages/InvoiceDetail';
+import { InvoiceEdit } from '@/features/invoices/pages/InvoiceEdit';
+import { TenantUsers } from '@/features/users/pages/TenantUsers';
+import { TenantSettings } from '@/features/settings/pages/TenantSettings';
+import { NotFoundPage } from '@/features/error/pages/NotFoundPage';
+
+// Module Pages
+import { CRMModule } from '@/features/modules/pages/CRMModule';
+import { InventoryModule } from '@/features/modules/pages/InventoryModule';
+import { SalesModule } from '@/features/modules/pages/SalesModule';
+import { FinanceModule } from '@/features/modules/pages/FinanceModule';
+import { HRModule } from '@/features/modules/pages/HRModule';
+import { ProductionModule } from '@/features/modules/pages/ProductionModule';
 
 // Components
 import { PrivateRoute } from '@/app/router/PrivateRoute';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 
 // Styles
 import './App.css';
 
-dayjs.locale('en');
+dayjs.locale('tr');
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,16 +70,41 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const { initializeAuth, isInitialized, isLoading } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    // Initialize auth state on app load
+    console.log('App mounting, initializing auth...');
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Show loading spinner while checking initial auth state
+  if (!isInitialized || isLoading) {
+    console.log('App loading state:', { isInitialized, isLoading });
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <ConfigProvider>
+          <AntApp>
+            <Spin size="large" tip="Yükleniyor..." />
+          </AntApp>
+        </ConfigProvider>
+      </div>
+    );
+  }
+
+  console.log('App initialized, rendering routes...');
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ConfigProvider
-        locale={enUS}
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ConfigProvider
+        locale={trTR}
         theme={{
           token: {
             colorPrimary: '#667eea',
@@ -93,11 +138,15 @@ function App() {
                 {/* Landing Page - No layout wrapper */}
                 <Route path="/" element={<LandingPage />} />
                 
+                {/* Register Page - No layout wrapper for full experience */}
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/payment" element={<PaymentPage />} />
+                <Route path="/signalr-test" element={<SignalRTestPage />} />
+                
                 {/* Public Routes */}
                 <Route element={<PublicLayout />}>
                   <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<div>Register Page</div>} />
-                  <Route path="/forgot-password" element={<div>Forgot Password</div>} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 </Route>
 
                 {/* Master Routes - Only for System Admin */}
@@ -148,14 +197,22 @@ function App() {
                   }
                 >
                   <Route index element={<TenantDashboard />} />
-                  <Route path="crm/*" element={<div>CRM Module</div>} />
-                  <Route path="inventory/*" element={<div>Inventory Module</div>} />
-                  <Route path="users" element={<div>Tenant Users</div>} />
-                  <Route path="settings" element={<div>Tenant Settings</div>} />
+                  <Route path="invoices" element={<InvoiceList />} />
+                  <Route path="invoices/new" element={<CreateInvoice />} />
+                  <Route path="invoices/:id" element={<InvoiceDetail />} />
+                  <Route path="invoices/:id/edit" element={<InvoiceEdit />} />
+                  <Route path="crm/*" element={<CRMModule />} />
+                  <Route path="inventory/*" element={<InventoryModule />} />
+                  <Route path="sales/*" element={<SalesModule />} />
+                  <Route path="finance/*" element={<FinanceModule />} />
+                  <Route path="hr/*" element={<HRModule />} />
+                  <Route path="production/*" element={<ProductionModule />} />
+                  <Route path="users" element={<TenantUsers />} />
+                  <Route path="settings" element={<TenantSettings />} />
                 </Route>
 
                 {/* 404 Page */}
-                <Route path="*" element={<div>404 - Page Not Found</div>} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
           </AntApp>
@@ -163,6 +220,7 @@ function App() {
       </ConfigProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

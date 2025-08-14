@@ -1,10 +1,13 @@
 using Serilog;
+using Stocker.API.Filters;
 using Stocker.Application;
 using Stocker.Identity.Extensions;
 using Stocker.Infrastructure.Extensions;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
+using Stocker.SignalR.Extensions;
+using Stocker.SignalR.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,10 +32,22 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:5107")
+            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:5107")
                   .AllowAnyMethod()
                   .AllowAnyHeader()
-                  .AllowCredentials();
+                  .AllowCredentials()
+                  .SetIsOriginAllowed(_ => true); // SignalR için gerekli
+        });
+    
+    // SignalR için özel policy
+    options.AddPolicy("SignalRPolicy",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials()
+                  .SetIsOriginAllowed(_ => true);
         });
     
     // Production için daha güvenli bir policy
@@ -57,41 +72,175 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // General API
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
-    { 
-        Title = "Stocker API", 
+    // Master Admin APIs
+    c.SwaggerDoc("master", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Stocker Master API",
         Version = "v1",
-        Description = "Multi-tenant SaaS Inventory Management System API",
-        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        Description = "Master administration endpoints for system management"
+    });
+    
+    // Tenant APIs
+    c.SwaggerDoc("tenant", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Stocker Tenant API",
+        Version = "v1",
+        Description = "Tenant-specific endpoints for business operations"
+    });
+    
+    // Public APIs
+    c.SwaggerDoc("public", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Stocker Public API",
+        Version = "v1",
+        Description = "Public endpoints for registration and authentication"
+    });
+    
+    // Admin APIs
+    c.SwaggerDoc("admin", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Stocker Admin API",
+        Version = "v1",
+        Description = "System administration and migration endpoints"
+    });
+    
+    // Add JWT Authentication
+    var securityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter your token in the text input below.\r\n\r\nExample: \"1234567890abcdef\"",
+        Reference = new Microsoft.OpenApi.Models.OpenApiReference
         {
-            Name = "Stocker Team",
-            Email = "support@stocker.com"
-        },
-        License = new Microsoft.OpenApi.Models.OpenApiLicense
-        {
-            Name = "MIT License",
-            Url = new Uri("https://opensource.org/licenses/MIT")
+            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+            Id = "Bearer"
         }
+    };
+    
+    c.AddSecurityDefinition("Bearer", securityScheme);
+    
+    // Add security requirement for non-public APIs
+    var securityRequirement = new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        { securityScheme, new[] { "Bearer" } }
+    };
+    
+    c.AddSecurityRequirement(securityRequirement);
+    
+    // Use custom schema IDs for cleaner documentation
+    c.CustomSchemaIds(type =>
+    {
+        var typeName = type.Name;
+        
+        // Handle generic types with full type information
+        if (type.IsGenericType)
+        {
+            var genericTypeName = type.GetGenericTypeDefinition().Name;
+            // Remove the `1, `2 etc from the generic type name
+            if (genericTypeName.Contains('`'))
+            {
+                genericTypeName = genericTypeName.Substring(0, genericTypeName.IndexOf('`'));
+            }
+            
+            // Get the generic arguments and build their names recursively
+            var genericArgs = type.GetGenericArguments();
+            var genericArgNames = new List<string>();
+            
+            foreach (var arg in genericArgs)
+            {
+                if (arg.IsGenericType)
+                {
+                    // Recursively handle nested generics
+                    var nestedName = arg.GetGenericTypeDefinition().Name;
+                    if (nestedName.Contains('`'))
+                    {
+                        nestedName = nestedName.Substring(0, nestedName.IndexOf('`'));
+                    }
+                    var nestedArgs = arg.GetGenericArguments();
+                    var nestedArgNames = nestedArgs.Select(a => a.Name.Replace("Dto", ""));
+                    genericArgNames.Add($"{nestedName}Of{string.Join("And", nestedArgNames)}");
+                }
+                else
+                {
+                    // Simple type - clean up the name
+                    var argName = arg.Name;
+                    // Remove common suffixes for cleaner names
+                    argName = argName.Replace("Dto", "").Replace("ViewModel", "VM");
+                    genericArgNames.Add(argName);
+                }
+            }
+            
+            typeName = $"{genericTypeName}Of{string.Join("_", genericArgNames)}";
+        }
+        
+        // Add namespace prefix for duplicate class names to avoid conflicts
+        var duplicateNames = new[] 
+        { 
+            "ProcessPaymentCommand", 
+            "ProcessPaymentResult",
+            "PaymentResultDto",
+            "CreateInvoiceCommand",
+            "UpdateInvoiceCommand",
+            "ApiResponse",
+            "PagedResult" 
+        };
+        
+        var baseTypeName = typeName.Contains("Of") ? typeName.Substring(0, typeName.IndexOf("Of")) : typeName;
+        
+        if (duplicateNames.Contains(baseTypeName))
+        {
+            // Get the immediate parent namespace for context
+            var namespaceParts = type.Namespace?.Split('.') ?? Array.Empty<string>();
+            if (namespaceParts.Length > 0)
+            {
+                var context = namespaceParts[^1]; // Get last part of namespace
+                if (context == "ProcessPayment" || context == "Commands" || context == "Queries")
+                {
+                    // Go one level up for better context
+                    context = namespaceParts.Length > 1 ? namespaceParts[^2] : context;
+                }
+                
+                // Only add context if it's not already in the name
+                if (!typeName.StartsWith(context))
+                {
+                    typeName = $"{context}_{typeName}";
+                }
+            }
+        }
+        
+        // Clean up common suffixes for better readability (but not for generics)
+        if (!type.IsGenericType)
+        {
+            var cleanupSuffixes = new Dictionary<string, string>
+            {
+                { "Dto", "" },
+                { "ViewModel", "VM" },
+                { "Request", "Req" },
+                { "Response", "Res" },
+                { "Command", "Cmd" },
+                { "Query", "Qry" }
+            };
+            
+            foreach (var suffix in cleanupSuffixes)
+            {
+                if (typeName.EndsWith(suffix.Key) && typeName.Length > suffix.Key.Length)
+                {
+                    typeName = typeName.Substring(0, typeName.Length - suffix.Key.Length) + suffix.Value;
+                    break;
+                }
+            }
+        }
+        
+        return typeName;
     });
     
-    // Master API (System Admin)
-    c.SwaggerDoc("master", new Microsoft.OpenApi.Models.OpenApiInfo 
-    { 
-        Title = "Stocker Master API", 
-        Version = "v1",
-        Description = "System Administration API - Requires SystemAdmin role"
-    });
+    // Enable annotations
+    c.EnableAnnotations();
     
-    // Admin API (Tenant Admin)
-    c.SwaggerDoc("admin", new Microsoft.OpenApi.Models.OpenApiInfo 
-    { 
-        Title = "Stocker Admin API", 
-        Version = "v1",
-        Description = "Tenant Administration API - Requires TenantAdmin role"
-    });
-
-    // XML Documentation
+    // Include XML comments for better documentation
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -99,42 +248,47 @@ builder.Services.AddSwaggerGen(c =>
         c.IncludeXmlComments(xmlPath);
     }
     
-    // JWT Authentication için Swagger ayarları
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    // Add schema filter to clean up schema display
+    c.SchemaFilter<CleanupSchemaFilter>();
+    
+    // Group endpoints by path
+    c.DocInclusionPredicate((docName, apiDesc) =>
     {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme.\r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIs...\""
-    });
-
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
+        var path = apiDesc.RelativePath?.ToLower() ?? "";
+        
+        return docName switch
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+            "master" => path.Contains("/master/"),
+            "tenant" => path.Contains("/tenant/"),
+            "public" => path.Contains("/public/") || path.Contains("/auth"),
+            "admin" => path.Contains("/admin/"),
+            _ => false
+        };
     });
+    
+    // Add operation filter to conditionally apply security requirements
+    c.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
 // Add layer services using extension methods
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddPersistenceServices(builder.Configuration);
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddMultiTenancy();
 
 // Add CRM Module
 builder.Services.AddCRMModule(builder.Configuration);
+
+// Add SignalR Services
+builder.Services.AddSignalRServices();
+
+// Configure SignalR for Redis if connection string is available (for scale-out)
+var redisConnection = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    builder.Services.AddSignalRRedis(redisConnection);
+}
 
 // Add Authorization Policies
 builder.Services.AddAuthorization(options =>
@@ -160,17 +314,12 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Stocker API v1");
     c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
+    c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
+    c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
     c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
-    // RoutePrefix varsayılan olarak "swagger" kullanır
+    c.RoutePrefix = string.Empty; // Swagger UI at root
     c.DocumentTitle = "Stocker API Documentation";
-    c.EnableDeepLinking();
-    c.DisplayRequestDuration();
-    c.EnableFilter();
-    c.ShowExtensions();
-    c.EnableValidator();
-    c.DefaultModelsExpandDepth(1);
 });
 
 // Add Global Exception Handling Middleware - En başta olmalı
@@ -190,8 +339,28 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map controllers
 app.MapControllers();
 
- 
+// Map SignalR Hubs with CORS
+app.MapHub<ValidationHub>("/hubs/validation", options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+}).RequireCors("AllowAll");
+
+app.MapHub<NotificationHub>("/hubs/notification", options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+}).RequireCors("AllowAll");
+
+// Add health check endpoint for SignalR
+app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
+   .WithName("SignalRHealthCheck")
+   .WithTags("Health");
 
 app.Run();

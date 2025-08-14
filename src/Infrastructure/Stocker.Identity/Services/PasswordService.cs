@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Stocker.Domain.Master.ValueObjects;
 using System.Security.Cryptography;
+using Stocker.Application.Common.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Identity.Services;
 
@@ -10,30 +12,37 @@ namespace Stocker.Identity.Services;
 public class PasswordService : IPasswordService
 {
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IPasswordValidator _passwordValidator;
 
     private const int SaltSize = 128 / 8; // 128 bit
     private const int KeySize = 256 / 8; // 256 bit
     private const int Iterations = 600000; // OWASP 2023 recommendation for PBKDF2-HMAC-SHA256
 
 
-    public PasswordService(IPasswordHasher passwordHasher)
+    public PasswordService(IPasswordHasher passwordHasher, IPasswordValidator? passwordValidator = null)
     {
         _passwordHasher = passwordHasher;
+        _passwordValidator = passwordValidator ?? new PasswordValidator(new SharedKernel.Settings.PasswordPolicy());
+    }
+
+    /// <summary>
+    /// Validates a password against the configured policy
+    /// </summary>
+    public Result<bool> ValidatePassword(string plainPassword, string? username = null, string? email = null)
+    {
+        return _passwordValidator.ValidatePassword(plainPassword, username, email);
     }
 
     /// <summary>
     /// Creates a HashedPassword value object using secure PBKDF2 hashing
     /// </summary>
-    public HashedPassword CreateHashedPassword(string plainPassword)
+    public HashedPassword CreateHashedPassword(string plainPassword, string? username = null, string? email = null)
     {
-        if (string.IsNullOrWhiteSpace(plainPassword))
+        // Validate password first
+        var validationResult = ValidatePassword(plainPassword, username, email);
+        if (validationResult.IsFailure)
         {
-            throw new ArgumentException("Password cannot be empty.", nameof(plainPassword));
-        }
-
-        if (plainPassword.Length < 8)
-        {
-            throw new ArgumentException("Password must be at least 8 characters long.", nameof(plainPassword));
+            throw new ArgumentException($"Password validation failed: {string.Join(", ", validationResult.Errors.Select(e => e.Description))}", nameof(plainPassword));
         }
 
         // Generate salt
@@ -112,11 +121,21 @@ public class PasswordService : IPasswordService
         
         return Convert.ToBase64String(combined);
     }
+
+    /// <summary>
+    /// Calculates the strength of a password
+    /// </summary>
+    public PasswordStrength CalculatePasswordStrength(string plainPassword)
+    {
+        return _passwordValidator.CalculateStrength(plainPassword);
+    }
 }
 
 public interface IPasswordService
 {
-    HashedPassword CreateHashedPassword(string plainPassword);
+    Result<bool> ValidatePassword(string plainPassword, string? username = null, string? email = null);
+    HashedPassword CreateHashedPassword(string plainPassword, string? username = null, string? email = null);
     bool VerifyPassword(HashedPassword hashedPassword, string plainPassword);
     string GetCombinedHash(HashedPassword hashedPassword);
+    PasswordStrength CalculatePasswordStrength(string plainPassword);
 }

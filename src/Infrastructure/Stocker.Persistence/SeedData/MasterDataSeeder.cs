@@ -44,11 +44,11 @@ public class MasterDataSeeder
 
         var packages = new List<Package>();
 
-        // Starter Package
+        // Başlangıç Package
         var starterPackage = Package.Create(
-            name: "Starter",
+            name: "Başlangıç",
             type: PackageType.Starter,
-            basePrice: Money.Create(29.99m, "USD"),
+            basePrice: Money.Create(499m, "TRY"),
             limits: PackageLimit.Create(
                 maxUsers: 5,
                 maxStorage: 10,
@@ -59,25 +59,27 @@ public class MasterDataSeeder
                     ["CRM"] = 100,
                     ["ACCOUNTING"] = 50
                 }),
-            description: "Perfect for small businesses and startups",
+            description: "Küçük işletmeler için ideal başlangıç paketi",
             trialDays: 14,
             displayOrder: 1,
             isPublic: true);
 
-        starterPackage.AddFeature("BASIC_REPORTS", "Basic Reports", "Access to basic reporting features", true);
-        starterPackage.AddFeature("EMAIL_SUPPORT", "Email Support", "Email support during business hours");
-        starterPackage.AddFeature("MOBILE_ACCESS", "Mobile Access", "Access from mobile devices");
+        starterPackage.AddFeature("BASIC_REPORTS", "Temel Raporlama", "Temel raporlama özellikleri", true);
+        starterPackage.AddFeature("EMAIL_SUPPORT", "E-posta Desteği", "Mesai saatleri içinde e-posta desteği");
+        starterPackage.AddFeature("MOBILE_ACCESS", "Mobil Erişim", "Mobil cihazlardan erişim");
+        starterPackage.AddFeature("USER_MANAGEMENT", "5 Kullanıcı", "5 kullanıcıya kadar");
+        starterPackage.AddFeature("STORAGE", "10 GB Depolama", "10 GB bulut depolama alanı");
         
-        starterPackage.AddModule("CRM", "Customer Relationship Management", true, 100);
-        starterPackage.AddModule("ACCOUNTING", "Basic Accounting", true, 50);
+        starterPackage.AddModule("CRM", "CRM Modülü", true, 100);
+        starterPackage.AddModule("ACCOUNTING", "Temel Muhasebe", true, 50);
 
         packages.Add(starterPackage);
 
-        // Professional Package
+        // Profesyonel Package
         var professionalPackage = Package.Create(
-            name: "Professional",
+            name: "Profesyonel",
             type: PackageType.Professional,
-            basePrice: Money.Create(79.99m, "USD"),
+            basePrice: Money.Create(999m, "TRY"),
             limits: PackageLimit.Create(
                 maxUsers: 20,
                 maxStorage: 50,
@@ -89,68 +91,50 @@ public class MasterDataSeeder
                     ["ACCOUNTING"] = 500,
                     ["ERP"] = 100
                 }),
-            description: "For growing businesses with advanced needs",
+            description: "Büyüyen işletmeler için profesyonel çözüm",
             trialDays: 30,
             displayOrder: 2,
             isPublic: true);
 
-        professionalPackage.AddFeature("ADVANCED_REPORTS", "Advanced Reports", "Comprehensive reporting and analytics", true);
-        professionalPackage.AddFeature("PRIORITY_SUPPORT", "Priority Support", "24/7 priority support", true);
-        professionalPackage.AddFeature("API_ACCESS", "API Access", "Full API access for integrations");
-        professionalPackage.AddFeature("CUSTOM_FIELDS", "Custom Fields", "Create custom fields and forms");
+        professionalPackage.AddFeature("ADVANCED_REPORTS", "Gelişmiş Raporlama", "Detaylı raporlama ve analitik", true);
+        professionalPackage.AddFeature("PRIORITY_SUPPORT", "Öncelikli Destek", "7/24 öncelikli destek", true);
+        professionalPackage.AddFeature("API_ACCESS", "API Erişimi", "Entegrasyonlar için tam API erişimi");
+        professionalPackage.AddFeature("CUSTOM_FIELDS", "Özel Alanlar", "Özel alan ve formlar oluşturma");
+        professionalPackage.AddFeature("USER_MANAGEMENT", "20 Kullanıcı", "20 kullanıcıya kadar");
+        professionalPackage.AddFeature("STORAGE", "50 GB Depolama", "50 GB bulut depolama alanı");
+        professionalPackage.AddFeature("TRAINING", "Özel Eğitim", "Ekibiniz için özel eğitim");
         
-        professionalPackage.AddModule("CRM", "Customer Relationship Management", true, 1000);
-        professionalPackage.AddModule("ACCOUNTING", "Professional Accounting", true, 500);
-        professionalPackage.AddModule("ERP", "Enterprise Resource Planning", true, 100);
+        professionalPackage.AddModule("CRM", "CRM Modülü", true, 1000);
+        professionalPackage.AddModule("ACCOUNTING", "Profesyonel Muhasebe", true, 500);
+        professionalPackage.AddModule("INVENTORY", "Stok Yönetimi", true, 100);
 
         packages.Add(professionalPackage);
-
-        // Business Package
-        var businessPackage = Package.Create(
-            name: "Business",
-            type: PackageType.Business,
-            basePrice: Money.Create(199.99m, "USD"),
-            limits: PackageLimit.Create(
-                maxUsers: 100,
-                maxStorage: 200,
-                maxProjects: 50,
-                maxApiCalls: 200000),
-            description: "Complete solution for established businesses",
-            trialDays: 30,
-            displayOrder: 3,
-            isPublic: true);
-
-        businessPackage.AddFeature("ENTERPRISE_REPORTS", "Enterprise Reports", "Real-time dashboards and custom reports", true);
-        businessPackage.AddFeature("DEDICATED_SUPPORT", "Dedicated Support", "Dedicated account manager");
-        businessPackage.AddFeature("SSO", "Single Sign-On", "Enterprise SSO integration");
-        businessPackage.AddFeature("AUDIT_LOGS", "Audit Logs", "Complete audit trail");
-        businessPackage.AddFeature("BACKUP", "Automated Backups", "Daily automated backups");
-        
-        businessPackage.AddModule("CRM", "Customer Relationship Management", true);
-        businessPackage.AddModule("ACCOUNTING", "Enterprise Accounting", true);
-        businessPackage.AddModule("ERP", "Enterprise Resource Planning", true);
-
-        packages.Add(businessPackage);
 
         // Enterprise Package
         var enterprisePackage = Package.Create(
             name: "Enterprise",
             type: PackageType.Enterprise,
-            basePrice: Money.Create(499.99m, "USD"),
+            basePrice: Money.Create(2499m, "TRY"),
             limits: PackageLimit.Unlimited(),
-            description: "Unlimited everything for large enterprises",
+            description: "Büyük ölçekli işletmeler için kurumsal paket",
             trialDays: 30,
-            displayOrder: 4,
+            displayOrder: 3,
             isPublic: true);
 
-        enterprisePackage.AddFeature("CUSTOM_DEVELOPMENT", "Custom Development", "Custom feature development", true);
-        enterprisePackage.AddFeature("SLA", "99.99% SLA", "Enterprise SLA guarantee", true);
-        enterprisePackage.AddFeature("ONBOARDING", "Dedicated Onboarding", "White-glove onboarding service");
-        enterprisePackage.AddFeature("TRAINING", "Training Program", "Comprehensive training for all users");
+        enterprisePackage.AddFeature("CUSTOM_DEVELOPMENT", "Özel Geliştirme", "İhtiyaçlarınıza özel geliştirme", true);
+        enterprisePackage.AddFeature("SLA", "%99.99 SLA Garantisi", "Kurumsal SLA garantisi", true);
+        enterprisePackage.AddFeature("ONBOARDING", "Özel Kurulum", "Kişiselleştirilmiş kurulum hizmeti");
+        enterprisePackage.AddFeature("TRAINING", "Kapsamlı Eğitim", "Tüm kullanıcılar için eğitim programı");
+        enterprisePackage.AddFeature("USER_MANAGEMENT", "Sınırsız Kullanıcı", "Kullanıcı limiti yok");
+        enterprisePackage.AddFeature("STORAGE", "500 GB Depolama", "500 GB bulut depolama alanı");
+        enterprisePackage.AddFeature("DEDICATED_SUPPORT", "Özel Destek Ekibi", "Size özel atanmış destek ekibi");
+        enterprisePackage.AddFeature("CUSTOM_SERVER", "Özel Sunucu", "İsteğe bağlı özel sunucu seçeneği");
         
-        enterprisePackage.AddModule("CRM", "Customer Relationship Management", true);
-        enterprisePackage.AddModule("ACCOUNTING", "Enterprise Accounting", true);
-        enterprisePackage.AddModule("ERP", "Enterprise Resource Planning", true);
+        enterprisePackage.AddModule("CRM", "CRM Modülü", true);
+        enterprisePackage.AddModule("ACCOUNTING", "Kurumsal Muhasebe", true);
+        enterprisePackage.AddModule("INVENTORY", "Stok Yönetimi", true);
+        enterprisePackage.AddModule("HR", "İnsan Kaynakları", true);
+        enterprisePackage.AddModule("PROJECTS", "Proje Yönetimi", true);
 
         packages.Add(enterprisePackage);
 

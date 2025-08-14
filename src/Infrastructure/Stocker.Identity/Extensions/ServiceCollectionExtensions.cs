@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using Stocker.Identity.Models;
 using Stocker.Identity.Services;
 using System.Text;
+using Stocker.Application.Common.Interfaces;
+using Stocker.SharedKernel.Settings;
 
 namespace Stocker.Identity.Extensions;
 
@@ -17,10 +19,22 @@ public static class ServiceCollectionExtensions
         configuration.Bind("JwtSettings", jwtSettings);
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
 
+        // Configure Password Policy
+        var passwordPolicy = new PasswordPolicy();
+        configuration.Bind("PasswordPolicy", passwordPolicy);
+        services.AddSingleton(passwordPolicy);
+
         // Add Services
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
-        services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<Application.Common.Interfaces.IPasswordHasher, PasswordHasher>();
+        
+        // Register Identity services
+        services.AddScoped<Identity.Services.IPasswordValidator, PasswordValidator>();
+        services.AddScoped<Identity.Services.IPasswordService, PasswordService>();
+        
+        // Create wrapper implementations for Application interfaces
+        services.AddScoped<Application.Common.Interfaces.IPasswordValidator, ApplicationPasswordValidatorWrapper>();
+        services.AddScoped<Application.Common.Interfaces.IPasswordService, ApplicationPasswordServiceWrapper>();
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<ITokenGenerationService, TokenGenerationService>();
         services.AddScoped<IAuthenticationService, RefactoredAuthenticationService>();

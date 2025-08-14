@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Button, Card, Row, Col, Typography, Space, Tag, Statistic, List, Avatar, Rate, Divider, Badge } from 'antd';
+import { Layout, Button, Card, Row, Col, Typography, Space, Tag, Statistic, List, Avatar, Rate, Divider, Badge, Progress, Carousel } from 'antd';
 import {
   RocketOutlined,
   ThunderboltOutlined,
@@ -25,45 +25,102 @@ import {
   SyncOutlined,
   FileProtectOutlined,
   ToolOutlined,
+  PlayCircleOutlined,
+  MenuOutlined,
+  TrophyOutlined,
+  LockOutlined,
+  LineChartOutlined,
+  BulbOutlined,
+  HeartOutlined,
+  DatabaseOutlined,
+  CompassOutlined,
+  SolutionOutlined,
+  BankOutlined,
+  CalendarOutlined,
+  BoxPlotOutlined,
+  ContactsOutlined,
+  FileDoneOutlined,
+  FundProjectionScreenOutlined,
+  ReconciliationOutlined,
+  AuditOutlined,
+  CalculatorOutlined,
+  IdcardOutlined,
+  ScheduleOutlined,
+  ContainerOutlined,
+  ShopOutlined,
+  TagsOutlined,
+  BarcodeOutlined,
+  TruckOutlined,
+  FundOutlined,
+  ProfileOutlined,
+  PieChartOutlined,
+  RiseOutlined,
 } from '@ant-design/icons';
 import './style.css';
+import './corporate-style.css';
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+  const [statsVisible, setStatsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+      
+      // Check if stats section is visible
+      const statsSection = document.querySelector('.hero-stats');
+      if (statsSection) {
+        const rect = statsSection.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          setStatsVisible(true);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const features = [
     {
-      icon: <TeamOutlined style={{ fontSize: 32 }} />,
+      icon: <TeamOutlined style={{ fontSize: 36 }} />,
       title: 'Çoklu Kiracı Mimarisi',
-      description: 'Her müşteri için izole edilmiş veri ve özelleştirilmiş deneyim. Tam güvenlik ve gizlilik.'
+      description: 'Her müşteri için izole edilmiş veri ve özelleştirilmiş deneyim. Tam güvenlik ve gizlilik.',
+      color: '#667eea'
     },
     {
-      icon: <AppstoreOutlined style={{ fontSize: 32 }} />,
+      icon: <AppstoreOutlined style={{ fontSize: 36 }} />,
       title: 'Modüler Yapı',
-      description: 'İhtiyacınıza göre modül seçin. CRM, Stok, Muhasebe, İK ve daha fazlası.'
+      description: 'İhtiyacınıza göre modül seçin. CRM, Stok, Muhasebe, İK ve daha fazlası.',
+      color: '#764ba2'
     },
     {
-      icon: <CloudOutlined style={{ fontSize: 32 }} />,
+      icon: <CloudOutlined style={{ fontSize: 36 }} />,
       title: 'Bulut Tabanlı',
-      description: 'Her yerden erişim. Kurulum gerektirmez, bakım maliyeti yoktur.'
+      description: 'Her yerden erişim. Kurulum gerektirmez, bakım maliyeti yoktur.',
+      color: '#667eea'
     },
     {
-      icon: <SafetyOutlined style={{ fontSize: 32 }} />,
+      icon: <LockOutlined style={{ fontSize: 36 }} />,
       title: 'Kurumsal Güvenlik',
-      description: 'SSL şifreleme, günlük yedekleme ve KVKK uyumlu veri güvenliği.'
+      description: 'SSL şifreleme, günlük yedekleme ve KVKK uyumlu veri güvenliği.',
+      color: '#764ba2'
     },
     {
-      icon: <ApiOutlined style={{ fontSize: 32 }} />,
+      icon: <ApiOutlined style={{ fontSize: 36 }} />,
       title: 'API Entegrasyonu',
-      description: 'E-fatura, e-arşiv, kargo, pazaryeri ve banka entegrasyonları hazır.'
+      description: 'E-fatura, e-arşiv, kargo, pazaryeri ve banka entegrasyonları hazır.',
+      color: '#667eea'
     },
     {
-      icon: <BarChartOutlined style={{ fontSize: 32 }} />,
+      icon: <LineChartOutlined style={{ fontSize: 36 }} />,
       title: 'Gelişmiş Raporlama',
-      description: 'Anlık raporlar, özelleştirilebilir dashboard ve veri analitiği.'
+      description: 'Anlık raporlar, özelleştirilebilir dashboard ve veri analitiği.',
+      color: '#764ba2'
     }
   ];
 
@@ -154,19 +211,137 @@ export const LandingPage: React.FC = () => {
     { title: 'Çalışma Süresi', value: 99.9, suffix: '%', prefix: <ClockCircleOutlined /> }
   ];
 
-  const modules = [
-    { name: 'CRM', icon: <UserOutlined />, description: 'Müşteri ilişkileri yönetimi' },
-    { name: 'Stok', icon: <ShoppingCartOutlined />, description: 'Stok ve depo yönetimi' },
-    { name: 'Muhasebe', icon: <DollarOutlined />, description: 'Finansal işlemler' },
-    { name: 'İnsan Kaynakları', icon: <TeamOutlined />, description: 'Personel yönetimi' },
-    { name: 'E-Ticaret', icon: <GlobalOutlined />, description: 'Online satış yönetimi' },
-    { name: 'Üretim', icon: <ToolOutlined />, description: 'Üretim takibi' }
+  const mainModules = [
+    {
+      id: 'crm',
+      name: 'CRM',
+      title: 'Müşteri İlişkileri Yönetimi',
+      icon: <ContactsOutlined style={{ fontSize: 48 }} />,
+      color: '#1890ff',
+      description: 'Müşteri ilişkilerinizi güçlendirin, satışlarınızı artırın',
+      features: [
+        'Müşteri ve firma yönetimi',
+        'Fırsat ve teklif takibi',
+        'Satış hunisi ve pipeline yönetimi',
+        'Aktivite ve görev yönetimi',
+        'E-posta ve SMS entegrasyonu',
+        'Müşteri segmentasyonu',
+        'Satış raporları ve analizler',
+        'Mobil CRM uygulaması'
+      ],
+      benefits: [
+        'Satış verimliliğini %40 artırır',
+        'Müşteri memnuniyetini yükseltir',
+        'Satış süreçlerini otomatikleştirir'
+      ]
+    },
+    {
+      id: 'erp',
+      name: 'ERP',
+      title: 'Kurumsal Kaynak Planlama',
+      icon: <BankOutlined style={{ fontSize: 48 }} />,
+      color: '#52c41a',
+      description: 'Tüm iş süreçlerinizi entegre edin ve optimize edin',
+      features: [
+        'Üretim planlama ve kontrol',
+        'Tedarik zinciri yönetimi',
+        'Proje yönetimi',
+        'Kalite kontrol',
+        'Bakım ve onarım yönetimi',
+        'Kaynak planlama',
+        'Maliyet analizi',
+        'Performans göstergeleri (KPI)'
+      ],
+      benefits: [
+        'Operasyonel verimliliği artırır',
+        'Maliyetleri %30 azaltır',
+        'Karar alma süreçlerini hızlandırır'
+      ]
+    },
+    {
+      id: 'accounting',
+      name: 'Muhasebe',
+      title: 'Finansal Yönetim ve Muhasebe',
+      icon: <CalculatorOutlined style={{ fontSize: 48 }} />,
+      color: '#fa8c16',
+      description: 'Finansal süreçlerinizi dijitalleştirin, vergi uyumluluğunu sağlayın',
+      features: [
+        'Genel muhasebe ve defterler',
+        'Fatura ve tahsilat yönetimi',
+        'E-fatura, e-arşiv entegrasyonu',
+        'Banka ve kasa yönetimi',
+        'KDV, stopaj hesaplamaları',
+        'Mizan ve mali tablolar',
+        'Bütçe planlama ve takibi',
+        'Vergi beyanname hazırlığı'
+      ],
+      benefits: [
+        'Muhasebe hatalarını %95 azaltır',
+        'Vergi uyumluluğunu garanti eder',
+        'Mali süreçleri otomatikleştirir'
+      ]
+    },
+    {
+      id: 'hr',
+      name: 'İnsan Kaynakları',
+      title: 'İK ve Personel Yönetimi',
+      icon: <IdcardOutlined style={{ fontSize: 48 }} />,
+      color: '#722ed1',
+      description: 'Çalışan deneyimini iyileştirin, İK süreçlerinizi dijitalleştirin',
+      features: [
+        'Personel özlük yönetimi',
+        'Puantaj ve mesai takibi',
+        'İzin ve talep yönetimi',
+        'Bordro ve maaş hesaplama',
+        'Performans değerlendirme',
+        'İşe alım ve aday takibi',
+        'Eğitim ve gelişim yönetimi',
+        'Organizasyon şeması'
+      ],
+      benefits: [
+        'İK süreçlerini %60 hızlandırır',
+        'Çalışan memnuniyetini artırır',
+        'İK maliyetlerini optimize eder'
+      ]
+    },
+    {
+      id: 'inventory',
+      name: 'Stok Yönetimi',
+      title: 'Envanter ve Depo Yönetimi',
+      icon: <ContainerOutlined style={{ fontSize: 48 }} />,
+      color: '#eb2f96',
+      description: 'Stok seviyelerinizi optimize edin, depo operasyonlarınızı yönetin',
+      features: [
+        'Ürün ve stok kartları',
+        'Depo ve raf yönetimi',
+        'Stok hareketleri takibi',
+        'Barkod ve QR kod desteği',
+        'Sayım ve envanter kontrolü',
+        'Minimum-maksimum stok takibi',
+        'Sipariş ve sevkiyat yönetimi',
+        'Stok değerleme raporları'
+      ],
+      benefits: [
+        'Stok maliyetlerini %25 düşürür',
+        'Stoksuz kalma riskini minimize eder',
+        'Depo verimliliğini maksimize eder'
+      ]
+    }
+  ];
+
+  const additionalModules = [
+    { name: 'E-Ticaret', icon: <ShopOutlined />, description: 'Online satış yönetimi' },
+    { name: 'Üretim', icon: <ToolOutlined />, description: 'Üretim planlama ve takibi' },
+    { name: 'Proje Yönetimi', icon: <FundProjectionScreenOutlined />, description: 'Proje takibi ve yönetimi' },
+    { name: 'Lojistik', icon: <TruckOutlined />, description: 'Nakliye ve kargo yönetimi' },
+    { name: 'Satın Alma', icon: <ShoppingCartOutlined />, description: 'Tedarik ve satın alma' },
+    { name: 'Raporlama', icon: <PieChartOutlined />, description: 'İş zekası ve analizler' }
   ];
 
   return (
     <Layout className="landing-layout">
       {/* Navigation Header */}
-      <Header className="landing-header">
+      <Header className={`landing-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
           <div className="logo-section" onClick={() => navigate('/')}>
             <RocketOutlined className="logo-icon" />
@@ -180,10 +355,25 @@ export const LandingPage: React.FC = () => {
             <a href="#contact">İletişim</a>
           </nav>
           <div className="header-actions">
-            <Button onClick={() => navigate('/login')}>Giriş Yap</Button>
-            <Button type="primary" onClick={() => navigate('/register')}>
+            <Button 
+              ghost={!scrolled}
+              onClick={() => navigate('/login')}
+              icon={<UserOutlined />}
+            >
+              Giriş Yap
+            </Button>
+            <Button 
+              type="primary" 
+              onClick={() => navigate('/register')}
+              icon={<RocketOutlined />}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+              }}
+            >
               Ücretsiz Dene
             </Button>
+            <MenuOutlined className="mobile-menu-toggle" />
           </div>
         </div>
       </Header>
@@ -192,24 +382,25 @@ export const LandingPage: React.FC = () => {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-background">
+            <div className="hero-particles"></div>
             <div className="hero-shape-1"></div>
             <div className="hero-shape-2"></div>
             <div className="hero-shape-3"></div>
           </div>
           <div className="hero-content">
-            <Badge.Ribbon text="Yeni" color="purple">
-              <Tag color="purple" className="hero-tag">
-                <ThunderboltOutlined /> 500+ işletme Stocker kullanıyor
-              </Tag>
-            </Badge.Ribbon>
+            <div className="hero-badge">
+              <StarFilled className="hero-badge-icon" />
+              <span className="hero-badge-text">500+ işletme güveniyor</span>
+            </div>
             <Title level={1} className="hero-title">
-              İşletmeniz İçin Komple Yönetim Platformu
+              İşletmeniz İçin <span className="hero-title-gradient">Akıllı</span><br/>
+              Yönetim Platformu
             </Title>
             <Paragraph className="hero-description">
               Tüm iş süreçlerinizi tek platformdan yönetin. 
               CRM, stok, muhasebe, e-ticaret ve daha fazlası bir arada.
             </Paragraph>
-            <Space size="large" className="hero-buttons">
+            <div className="hero-buttons">
               <Button 
                 type="primary" 
                 size="large" 
@@ -221,22 +412,37 @@ export const LandingPage: React.FC = () => {
               </Button>
               <Button 
                 size="large" 
+                className="cta-secondary"
                 icon={<ArrowRightOutlined />}
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Detaylı İncele
               </Button>
-            </Space>
+            </div>
+            <div className="hero-demo-button" onClick={() => window.open('https://demo.stocker.com', '_blank')}>
+              <div className="play-icon">
+                <PlayCircleOutlined style={{ fontSize: 20, color: 'white' }} />
+              </div>
+              <span>Demo İzle</span>
+            </div>
             <div className="hero-stats">
               {stats.map((stat, index) => (
                 <div key={index} className="stat-item">
                   <Statistic
-                    value={stat.value}
+                    value={statsVisible ? stat.value : 0}
                     prefix={stat.prefix}
                     suffix={stat.suffix}
-                    valueStyle={{ color: '#667eea', fontSize: 24 }}
+                    valueStyle={{ fontSize: 28, fontWeight: 700 }}
+                    formatter={(value) => {
+                      if (statsVisible) {
+                        return value;
+                      }
+                      return '0';
+                    }}
                   />
-                  <Text type="secondary">{stat.title}</Text>
+                  <Text type="secondary" style={{ fontSize: 14, fontWeight: 500 }}>
+                    {stat.title}
+                  </Text>
                 </div>
               ))}
             </div>
@@ -247,6 +453,9 @@ export const LandingPage: React.FC = () => {
         <section id="features" className="features-section">
           <div className="section-container">
             <div className="section-header">
+              <Tag color="purple" style={{ marginBottom: 16 }}>
+                <BulbOutlined /> Özellikler
+              </Tag>
               <Title level={2}>Modern İşletmeler İçin Güçlü Özellikler</Title>
               <Paragraph>
                 İşletmenizi büyütmek için ihtiyacınız olan tüm araçlar
@@ -256,11 +465,14 @@ export const LandingPage: React.FC = () => {
               {features.map((feature, index) => (
                 <Col xs={24} sm={12} lg={8} key={index}>
                   <Card 
-                    className="feature-card"
+                    className="feature-card fade-in"
                     hoverable
                     bordered={false}
+                    style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="feature-icon">{feature.icon}</div>
+                    <div className="feature-icon">
+                      {feature.icon}
+                    </div>
                     <Title level={4}>{feature.title}</Title>
                     <Text type="secondary">{feature.description}</Text>
                   </Card>
@@ -270,30 +482,190 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Modules Section */}
+        {/* Main Modules Section */}
         <section id="modules" className="modules-section">
           <div className="section-container">
             <div className="section-header">
-              <Title level={2}>İhtiyacınıza Özel Modüller</Title>
+              <Tag color="purple" style={{ marginBottom: 16 }}>
+                <AppstoreOutlined /> Ana Modüller
+              </Tag>
+              <Title level={2}>İşletmenizi Güçlendirecek 5 Ana Modül</Title>
               <Paragraph>
-                Sektörünüze ve büyüklüğünüze uygun modülleri seçin
+                Entegre çalışan modüller ile tüm iş süreçlerinizi tek platformdan yönetin
               </Paragraph>
             </div>
-            <Row gutter={[24, 24]}>
-              {modules.map((module, index) => (
-                <Col xs={12} sm={8} lg={4} key={index}>
+            
+            {/* Module Cards */}
+            <Row gutter={[32, 32]}>
+              {mainModules.map((module, index) => (
+                <Col xs={24} key={module.id}>
                   <Card 
-                    className="module-card"
+                    className="main-module-card fade-in"
                     hoverable
                     bordered={false}
+                    style={{ 
+                      animationDelay: `${index * 0.15}s`,
+                      background: `linear-gradient(135deg, ${module.color}15 0%, ${module.color}05 100%)`,
+                      borderLeft: `4px solid ${module.color}`
+                    }}
                   >
-                    <div className="module-icon">{module.icon}</div>
-                    <Title level={5} style={{ marginBottom: 4 }}>{module.name}</Title>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{module.description}</Text>
+                    <Row gutter={[32, 24]} align="middle">
+                      <Col xs={24} md={8}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ 
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 100,
+                            height: 100,
+                            borderRadius: '50%',
+                            background: `${module.color}20`,
+                            marginBottom: 16
+                          }}>
+                            <div style={{ color: module.color }}>
+                              {module.icon}
+                            </div>
+                          </div>
+                          <Title level={3}>{module.title}</Title>
+                          <Paragraph style={{ fontSize: 16 }}>
+                            {module.description}
+                          </Paragraph>
+                          <Button 
+                            type="primary"
+                            icon={<ArrowRightOutlined />}
+                            style={{ 
+                              background: module.color,
+                              borderColor: module.color 
+                            }}
+                            onClick={() => navigate(`/modules/${module.id}`)}
+                          >
+                            Detaylı İncele
+                          </Button>
+                        </div>
+                      </Col>
+                      <Col xs={24} md={8}>
+                        <Title level={5}>Özellikler</Title>
+                        <List
+                          size="small"
+                          dataSource={module.features}
+                          renderItem={item => (
+                            <List.Item style={{ padding: '4px 0', border: 'none' }}>
+                              <Space>
+                                <CheckCircleOutlined style={{ color: module.color }} />
+                                <Text>{item}</Text>
+                              </Space>
+                            </List.Item>
+                          )}
+                        />
+                      </Col>
+                      <Col xs={24} md={8}>
+                        <Title level={5}>Faydaları</Title>
+                        <div style={{ marginBottom: 24 }}>
+                          {module.benefits.map((benefit, idx) => (
+                            <div key={idx} style={{ 
+                              padding: '12px',
+                              background: `${module.color}10`,
+                              borderRadius: 8,
+                              marginBottom: 12
+                            }}>
+                              <Space>
+                                <RiseOutlined style={{ color: module.color, fontSize: 20 }} />
+                                <Text strong>{benefit}</Text>
+                              </Space>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ 
+                          padding: '16px',
+                          background: `linear-gradient(135deg, ${module.color} 0%, ${module.color}dd 100%)`,
+                          borderRadius: 8,
+                          textAlign: 'center'
+                        }}>
+                          <Text style={{ color: 'white', fontSize: 14 }}>Bu modülü kullanan</Text>
+                          <Title level={3} style={{ color: 'white', margin: '8px 0' }}>
+                            {100 + index * 50}+
+                          </Title>
+                          <Text style={{ color: 'white', fontSize: 14 }}>işletme mevcut</Text>
+                        </div>
+                      </Col>
+                    </Row>
                   </Card>
                 </Col>
               ))}
             </Row>
+
+            {/* Additional Modules */}
+            <Divider style={{ margin: '48px 0' }}>
+              <Title level={4}>Ek Modüller</Title>
+            </Divider>
+            <Row gutter={[24, 24]}>
+              {additionalModules.map((module, index) => (
+                <Col xs={12} sm={8} lg={4} key={index}>
+                  <Card 
+                    className="module-card slide-up"
+                    hoverable
+                    bordered={false}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="module-icon" style={{ color: '#667eea', fontSize: 32 }}>
+                      {module.icon}
+                    </div>
+                    <Title level={5} style={{ marginBottom: 4 }}>{module.name}</Title>
+                    <Text type="secondary" style={{ fontSize: 13 }}>{module.description}</Text>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            {/* Module Integration Info */}
+            <Card 
+              style={{ 
+                marginTop: 48,
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                border: 'none'
+              }}
+            >
+              <Row gutter={[32, 24]} align="middle">
+                <Col xs={24} md={12}>
+                  <Title level={3}>
+                    <SyncOutlined /> Tam Entegrasyon
+                  </Title>
+                  <Paragraph style={{ fontSize: 16 }}>
+                    Tüm modüller birbiriyle entegre çalışır. Bir modülde yapılan işlem,
+                    ilgili diğer modüllerde otomatik olarak güncellenir.
+                  </Paragraph>
+                  <Space wrap>
+                    <Tag color="purple">Gerçek Zamanlı Senkronizasyon</Tag>
+                    <Tag color="purple">Çapraz Modül Raporlama</Tag>
+                    <Tag color="purple">Merkezi Veri Yönetimi</Tag>
+                  </Space>
+                </Col>
+                <Col xs={24} md={12}>
+                  <div style={{ textAlign: 'center' }}>
+                    <Title level={4}>Modüller Arası Veri Akışı</Title>
+                    <div style={{ 
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 16,
+                      marginTop: 24
+                    }}>
+                      <Badge count="CRM" style={{ backgroundColor: '#1890ff' }}>
+                        <Avatar size={48} icon={<ContactsOutlined />} />
+                      </Badge>
+                      <ArrowRightOutlined style={{ fontSize: 24, color: '#667eea' }} />
+                      <Badge count="ERP" style={{ backgroundColor: '#52c41a' }}>
+                        <Avatar size={48} icon={<BankOutlined />} />
+                      </Badge>
+                      <ArrowRightOutlined style={{ fontSize: 24, color: '#667eea' }} />
+                      <Badge count="Muhasebe" style={{ backgroundColor: '#fa8c16' }}>
+                        <Avatar size={48} icon={<CalculatorOutlined />} />
+                      </Badge>
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
           </div>
         </section>
 
@@ -301,6 +673,9 @@ export const LandingPage: React.FC = () => {
         <section id="pricing" className="pricing-section">
           <div className="section-container">
             <div className="section-header">
+              <Tag color="purple" style={{ marginBottom: 16 }}>
+                <DollarOutlined /> Fiyatlandırma
+              </Tag>
               <Title level={2}>Şeffaf ve Uygun Fiyatlandırma</Title>
               <Paragraph>
                 İşletmenize uygun paketi seçin. Gizli ücret yoktur.
@@ -315,10 +690,16 @@ export const LandingPage: React.FC = () => {
                     style={{ display: plan.popular ? 'block' : 'none' }}
                   >
                     <Card 
-                      className={`pricing-card ${plan.popular ? 'popular' : ''}`}
+                      className={`pricing-card ${plan.popular ? 'popular' : ''} fade-in`}
                       hoverable
                       bordered={false}
+                      style={{ animationDelay: `${index * 0.15}s` }}
                     >
+                      {plan.popular && (
+                        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                          <TrophyOutlined style={{ fontSize: 32, color: '#ffd700' }} />
+                        </div>
+                      )}
                       <div className="pricing-header">
                         <Title level={3}>{plan.name}</Title>
                         <Text type="secondary">{plan.description}</Text>
@@ -332,7 +713,7 @@ export const LandingPage: React.FC = () => {
                         dataSource={plan.features}
                         renderItem={item => (
                           <List.Item className="pricing-feature">
-                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                            <CheckCircleOutlined />
                             <span>{item}</span>
                           </List.Item>
                         )}
@@ -343,6 +724,7 @@ export const LandingPage: React.FC = () => {
                         block
                         className="pricing-button"
                         onClick={() => navigate('/register')}
+                        icon={<RocketOutlined />}
                       >
                         Hemen Başla
                       </Button>
@@ -351,10 +733,15 @@ export const LandingPage: React.FC = () => {
                 </Col>
               ))}
             </Row>
-            <div style={{ textAlign: 'center', marginTop: 32 }}>
-              <Text type="secondary">
-                * Tüm paketlerde KDV dahildir. Yıllık ödemede %20 indirim.
-              </Text>
+            <div style={{ textAlign: 'center', marginTop: 48 }}>
+              <Space direction="vertical" size="small">
+                <Text type="secondary">
+                  * Tüm paketlerde KDV dahildir. Yıllık ödemede %20 indirim.
+                </Text>
+                <Button type="link" icon={<CompassOutlined />}>
+                  Paketleri Karşılaştır
+                </Button>
+              </Space>
             </div>
           </div>
         </section>
@@ -363,6 +750,9 @@ export const LandingPage: React.FC = () => {
         <section id="testimonials" className="testimonials-section">
           <div className="section-container">
             <div className="section-header">
+              <Tag color="purple" style={{ marginBottom: 16 }}>
+                <HeartOutlined /> Referanslar
+              </Tag>
               <Title level={2}>Müşterilerimiz Ne Diyor?</Title>
               <Paragraph>
                 Stocker kullanan işletmelerin başarı hikayeleri
@@ -371,11 +761,15 @@ export const LandingPage: React.FC = () => {
             <Row gutter={[32, 32]}>
               {testimonials.map((testimonial, index) => (
                 <Col xs={24} sm={24} lg={8} key={index}>
-                  <Card className="testimonial-card" bordered={false}>
+                  <Card 
+                    className="testimonial-card fade-in" 
+                    bordered={false}
+                    style={{ animationDelay: `${index * 0.2}s` }}
+                  >
                     <div className="testimonial-content">
                       <Rate disabled defaultValue={testimonial.rating} />
                       <Paragraph className="testimonial-text">
-                        "{testimonial.content}"
+                        {testimonial.content}
                       </Paragraph>
                     </div>
                     <div className="testimonial-author">
@@ -397,25 +791,35 @@ export const LandingPage: React.FC = () => {
         <section className="integration-section">
           <div className="section-container">
             <div className="section-header">
+              <Tag color="purple" style={{ marginBottom: 16 }}>
+                <ApiOutlined /> Entegrasyonlar
+              </Tag>
               <Title level={2}>Hazır Entegrasyonlar</Title>
               <Paragraph>
                 Kullandığınız tüm sistemlerle uyumlu çalışır
               </Paragraph>
             </div>
             <Row gutter={[24, 24]} justify="center">
-              <Col><Tag className="integration-tag">e-Fatura</Tag></Col>
-              <Col><Tag className="integration-tag">e-Arşiv</Tag></Col>
-              <Col><Tag className="integration-tag">e-İrsaliye</Tag></Col>
-              <Col><Tag className="integration-tag">Trendyol</Tag></Col>
-              <Col><Tag className="integration-tag">Hepsiburada</Tag></Col>
-              <Col><Tag className="integration-tag">N11</Tag></Col>
-              <Col><Tag className="integration-tag">Amazon</Tag></Col>
-              <Col><Tag className="integration-tag">Paraşüt</Tag></Col>
-              <Col><Tag className="integration-tag">Logo</Tag></Col>
-              <Col><Tag className="integration-tag">Mikro</Tag></Col>
-              <Col><Tag className="integration-tag">Nebim</Tag></Col>
-              <Col><Tag className="integration-tag">SAP</Tag></Col>
+              {[
+                'e-Fatura', 'e-Arşiv', 'e-İrsaliye', 'Trendyol', 
+                'Hepsiburada', 'N11', 'Amazon', 'Paraşüt', 
+                'Logo', 'Mikro', 'Nebim', 'SAP'
+              ].map((integration, index) => (
+                <Col key={index}>
+                  <Tag 
+                    className="integration-tag fade-in" 
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {integration}
+                  </Tag>
+                </Col>
+              ))}
             </Row>
+            <div style={{ textAlign: 'center', marginTop: 32 }}>
+              <Button type="link" icon={<DatabaseOutlined />}>
+                Tüm Entegrasyonları Gör
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -423,14 +827,17 @@ export const LandingPage: React.FC = () => {
         <section className="cta-section">
           <div className="section-container">
             <Card className="cta-card" bordered={false}>
+              <Badge.Ribbon text="Sınırlı Süre" color="red">
+                <div></div>
+              </Badge.Ribbon>
               <Title level={2} style={{ color: 'white' }}>
                 İşletmenizi Dijitalleştirmeye Hazır mısınız?
               </Title>
-              <Paragraph style={{ color: 'rgba(255,255,255,0.9)', fontSize: 18 }}>
+              <Paragraph style={{ color: 'rgba(255,255,255,0.95)', fontSize: 20, maxWidth: 700, margin: '0 auto 40px' }}>
                 14 gün ücretsiz deneme sürümüyle başlayın. 
                 Kredi kartı gerekmez, hemen kullanmaya başlayın.
               </Paragraph>
-              <Space size="large">
+              <Space size="large" wrap>
                 <Button 
                   type="primary" 
                   size="large"
@@ -443,21 +850,27 @@ export const LandingPage: React.FC = () => {
                 <Button 
                   size="large"
                   ghost
-                  style={{ color: 'white', borderColor: 'white' }}
+                  style={{ color: 'white', borderColor: 'white', backdropFilter: 'blur(10px)' }}
                   icon={<CustomerServiceOutlined />}
                   onClick={() => window.open('https://wa.me/905555555555', '_blank')}
                 >
                   Satış Ekibiyle Görüş
                 </Button>
               </Space>
-              <div style={{ marginTop: 24 }}>
-                <Space>
-                  <CheckCircleOutlined style={{ color: 'white' }} />
-                  <Text style={{ color: 'white' }}>Kurulum ücreti yok</Text>
-                  <CheckCircleOutlined style={{ color: 'white' }} />
-                  <Text style={{ color: 'white' }}>İstediğiniz zaman iptal</Text>
-                  <CheckCircleOutlined style={{ color: 'white' }} />
-                  <Text style={{ color: 'white' }}>7/24 destek</Text>
+              <div style={{ marginTop: 40 }}>
+                <Space wrap size="large" style={{ justifyContent: 'center' }}>
+                  <div style={{ color: 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CheckCircleOutlined style={{ fontSize: 20 }} />
+                    <Text style={{ color: 'white', fontSize: 16 }}>Kurulum ücreti yok</Text>
+                  </div>
+                  <div style={{ color: 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CheckCircleOutlined style={{ fontSize: 20 }} />
+                    <Text style={{ color: 'white', fontSize: 16 }}>İstediğiniz zaman iptal</Text>
+                  </div>
+                  <div style={{ color: 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CheckCircleOutlined style={{ fontSize: 20 }} />
+                    <Text style={{ color: 'white', fontSize: 16 }}>7/24 destek</Text>
+                  </div>
                 </Space>
               </div>
             </Card>

@@ -2,15 +2,18 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Packages.Commands.CreatePackage;
 using Stocker.Application.Features.Packages.Commands.UpdatePackage;
+using Stocker.Application.Features.Packages.Commands.DeletePackage;
 using Stocker.Application.Features.Packages.Queries.GetPackageById;
 using Stocker.Application.Features.Packages.Queries.GetPackagesList;
 using Stocker.Application.DTOs.Package;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
 /// <summary>
 /// Manages subscription packages
 /// </summary>
+[SwaggerTag("Package Management - Manage subscription packages and pricing")]
 public class PackagesController : MasterControllerBase
 {
     public PackagesController(IMediator mediator, ILogger<PackagesController> logger) 
@@ -111,14 +114,15 @@ public class PackagesController : MasterControllerBase
         _logger.LogWarning("Deleting package ID: {PackageId} by user: {UserEmail}", 
             id, CurrentUserEmail);
         
-        // TODO: Implement DeletePackageCommand
-        // Check for active subscriptions before deleting
-        return Ok(new ApiResponse<bool>
+        var command = new DeletePackageCommand { PackageId = id };
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            Success = true,
-            Data = true,
-            Message = "Delete functionality not implemented yet",
-            Timestamp = DateTime.UtcNow
-        });
+            _logger.LogWarning("Package {PackageId} has been deleted by {UserEmail}", 
+                id, CurrentUserEmail);
+        }
+        
+        return HandleResult(result);
     }
 }

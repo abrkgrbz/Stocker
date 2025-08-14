@@ -1,4 +1,4 @@
-namespace Stocker.Identity.Services;
+namespace Stocker.Application.Common.Interfaces;
 
 public interface IPasswordHasher
 {

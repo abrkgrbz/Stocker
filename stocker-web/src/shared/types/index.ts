@@ -31,6 +31,7 @@ export interface User {
 export interface LoginRequest {
   email: string;
   password: string;
+  tenantCode?: string;
 }
 
 export interface LoginResponse {

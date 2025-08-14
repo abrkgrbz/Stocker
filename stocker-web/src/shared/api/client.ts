@@ -12,13 +12,23 @@ export const apiClient = axios.create({
   },
 });
 
-// Request interceptor for adding auth token
+// Export as api for compatibility
+export const api = apiClient;
+
+// Request interceptor for adding auth token and tenant header
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add tenant header if available
+    const tenantCode = localStorage.getItem('X-Tenant-Code');
+    if (tenantCode && config.headers) {
+      config.headers['X-Tenant-Code'] = tenantCode;
+    }
+    
     return config;
   },
   (error: AxiosError) => {

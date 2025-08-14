@@ -4,13 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Subscriptions.Commands.CreateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.UpdateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.CancelSubscription;
+using Stocker.Application.Features.Subscriptions.Commands.RenewSubscription;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptions;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionById;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
 [Authorize]
 [Route("api/master/[controller]")]
+[SwaggerTag("Subscription Management - Manage tenant subscriptions and billing")]
 public class SubscriptionsController : MasterControllerBase
 {
     public SubscriptionsController(IMediator mediator, ILogger<SubscriptionsController> logger) : base(mediator, logger)
@@ -115,12 +118,18 @@ public class SubscriptionsController : MasterControllerBase
     }
 
     [HttpPost("{id}/renew")]
-    public async Task<IActionResult> RenewSubscription(Guid id)
+    public async Task<IActionResult> RenewSubscription(Guid id, [FromBody] RenewSubscriptionRequest? request = null)
     { 
         try
         {
-            // TODO: Implement RenewSubscriptionCommand
-            throw new NotImplementedException();
+            var command = new RenewSubscriptionCommand
+            {
+                SubscriptionId = id,
+                AdditionalMonths = request?.AdditionalMonths ?? 1
+            };
+            
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
         }
         catch (Exception ex)
         {
@@ -163,6 +172,11 @@ public class SubscriptionsController : MasterControllerBase
 public class CancelSubscriptionRequest
 {
     public string? Reason { get; set; }
+}
+
+public class RenewSubscriptionRequest
+{
+    public int? AdditionalMonths { get; set; }
 }
 
 public class SuspendSubscriptionRequest

@@ -29,6 +29,11 @@ public class TenantDbContext : BaseDbContext
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
+    
+    // Financial
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
 
     // CRM Module - TODO: Move to separate CRM DbContext to avoid circular reference
     // public DbSet<Customer> Customers => Set<Customer>();

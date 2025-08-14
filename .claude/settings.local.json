@@ -44,7 +44,12 @@
       "Bash(npm run dev:*)",
       "Bash(yarn install)",
       "Bash(npm cache clean:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dotnet ef database drop:*)",
+      "Bash(taskkill:*)",
+      "Bash(del /Q node_modules.vitedeps*)",
+      "Bash(python:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

@@ -17,37 +17,37 @@ import { useAuthStore } from '@/app/store/auth.store';
 const menuItems = [
   {
     path: '/admin',
-    name: 'Dashboard',
+    name: 'Kontrol Paneli',
     icon: <DashboardOutlined />,
   },
   {
     path: '/admin/tenants',
-    name: 'Tenants',
+    name: 'Kiracılar',
     icon: <TeamOutlined />,
   },
   {
     path: '/admin/packages',
-    name: 'Packages',
+    name: 'Paketler',
     icon: <AppstoreOutlined />,
   },
   {
     path: '/admin/subscriptions',
-    name: 'Subscriptions',
+    name: 'Abonelikler',
     icon: <CreditCardOutlined />,
   },
   {
     path: '/admin/users',
-    name: 'Users',
+    name: 'Kullanıcılar',
     icon: <UserOutlined />,
   },
   {
     path: '/admin/reports',
-    name: 'Reports',
+    name: 'Raporlar',
     icon: <BarChartOutlined />,
   },
   {
     path: '/admin/settings',
-    name: 'Settings',
+    name: 'Ayarlar',
     icon: <SettingOutlined />,
   },
 ];
@@ -119,13 +119,13 @@ export const AdminLayout: React.FC = () => {
               {
                 key: 'profile',
                 icon: <UserOutlined />,
-                label: 'Profile',
+                label: 'Profil',
                 onClick: () => navigate('/admin/profile'),
               },
               {
                 key: 'settings',
                 icon: <SettingOutlined />,
-                label: 'Settings',
+                label: 'Ayarlar',
                 onClick: () => navigate('/admin/settings'),
               },
               {
@@ -134,7 +134,7 @@ export const AdminLayout: React.FC = () => {
               {
                 key: 'logout',
                 icon: <LogoutOutlined />,
-                label: 'Logout',
+                label: 'Çıkış Yap',
                 onClick: async () => {
                   await logout();
                   navigate('/login');

@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: stocker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: StockerDb2024!
+      POSTGRES_DB: stocker_master
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deployment/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stocker-redis
+    restart: unless-stopped
+    command: redis-server --requirepass Redis2024!
+    ports:
+      - "6379:6379"
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Service
+  stocker-api:
+    build:
+      context: .
+      dockerfile: src/API/Stocker.API/Dockerfile
+    container_name: stocker-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__MasterDb: Host=postgres;Port=5432;Database=stocker_master;Username=postgres;Password=StockerDb2024!
+      ConnectionStrings__Redis: redis:6379,password=Redis2024!
+      JwtSettings__SecretKey: ThisIsAVerySecureSecretKeyForStockerTestEnvironment2024!
+      JwtSettings__Issuer: stocker-test
+      JwtSettings__Audience: stocker-test
+      PasswordPolicy__MinimumLength: 8
+      PasswordPolicy__RequireUppercase: true
+      PasswordPolicy__RequireLowercase: true
+      PasswordPolicy__RequireDigit: true
+      PasswordPolicy__RequireNonAlphanumeric: true
+      SignalR__EnableDetailedErrors: true
+      CORS__Origins: http://localhost:3000,http://localhost:3001
+    ports:
+      - "5104:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - stocker-network
+    volumes:
+      - ./deployment/logs:/app/logs
+
+  # Web Application
+  stocker-web:
+    build:
+      context: ./stocker-web
+      dockerfile: Dockerfile
+    container_name: stocker-web
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: http://localhost:5104
+      REACT_APP_SIGNALR_URL: http://localhost:5104
+      REACT_APP_ENVIRONMENT: test
+    ports:
+      - "3000:80"
+    depends_on:
+      - stocker-api
+    networks:
+      - stocker-network
+
+  # Adminer (Database Management UI)
+  adminer:
+    image: adminer:latest
+    container_name: stocker-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - stocker-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+
+networks:
+  stocker-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

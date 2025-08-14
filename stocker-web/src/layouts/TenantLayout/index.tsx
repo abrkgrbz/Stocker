@@ -8,6 +8,8 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
+  DollarOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -22,8 +24,14 @@ export const TenantLayout: React.FC = () => {
   const menuItems = [
     {
       path: `/app/${tenantId}`,
-      name: 'Dashboard',
+      name: 'Kontrol Paneli',
       icon: <DashboardOutlined />,
+    },
+    {
+      path: `/app/${tenantId}/invoices`,
+      name: 'Faturalar',
+      icon: <FileTextOutlined />,
+      badge: { count: 5, dot: true },
     },
     {
       path: `/app/${tenantId}/crm`,
@@ -32,17 +40,17 @@ export const TenantLayout: React.FC = () => {
     },
     {
       path: `/app/${tenantId}/inventory`,
-      name: 'Inventory',
+      name: 'Stok',
       icon: <ShoppingCartOutlined />,
     },
     {
       path: `/app/${tenantId}/users`,
-      name: 'Users',
+      name: 'Kullanıcılar',
       icon: <UserOutlined />,
     },
     {
       path: `/app/${tenantId}/settings`,
-      name: 'Settings',
+      name: 'Ayarlar',
       icon: <SettingOutlined />,
     },
   ];
@@ -84,13 +92,13 @@ export const TenantLayout: React.FC = () => {
               {
                 key: 'profile',
                 icon: <UserOutlined />,
-                label: 'Profile',
+                label: 'Profil',
                 onClick: () => navigate(`/app/${tenantId}/profile`),
               },
               {
                 key: 'settings',
                 icon: <SettingOutlined />,
-                label: 'Settings',
+                label: 'Ayarlar',
                 onClick: () => navigate(`/app/${tenantId}/settings`),
               },
               {
@@ -99,7 +107,7 @@ export const TenantLayout: React.FC = () => {
               {
                 key: 'logout',
                 icon: <LogoutOutlined />,
-                label: 'Logout',
+                label: 'Çıkış Yap',
                 onClick: async () => {
                   await logout();
                   navigate('/login');

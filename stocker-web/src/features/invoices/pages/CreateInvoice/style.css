@@ -1,0 +1,83 @@
+.create-invoice {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.invoice-form-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+}
+
+.invoice-summary-card {
+  position: sticky;
+  top: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.invoice-summary-card .ant-card-body {
+  color: white;
+}
+
+.invoice-summary-card .ant-typography,
+.invoice-summary-card .ant-divider {
+  color: white !important;
+}
+
+.invoice-summary-card .ant-divider {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.summary-items {
+  margin: 24px 0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.summary-item.total {
+  margin-top: 16px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.product-card {
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.product-card:hover {
+  border-color: #1890ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ant-form-item-label > label {
+  font-weight: 500;
+}
+
+@media (max-width: 992px) {
+  .invoice-summary-card {
+    position: relative;
+    top: 0;
+    margin-top: 24px;
+  }
+}

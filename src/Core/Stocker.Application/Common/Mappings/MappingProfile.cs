@@ -2,6 +2,7 @@ using AutoMapper;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.Subscription;
+using Stocker.Application.DTOs.TenantInvoice;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 
@@ -42,11 +43,20 @@ public class MappingProfile : Profile
 
         // Package Mappings
         CreateMap<Package, PackageDto>()
-            .ForMember(dest => dest.BasePrice, opt => opt.MapFrom(src => src.BasePrice.Amount))
+            .ForMember(dest => dest.BasePrice, opt => opt.MapFrom(src => new MoneyDto 
+            { 
+                Amount = src.BasePrice.Amount, 
+                Currency = src.BasePrice.Currency 
+            }))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.BasePrice.Currency))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
             .ForMember(dest => dest.BillingCycle, opt => opt.MapFrom(src => "Monthly")) // Default billing cycle
             .ForMember(dest => dest.MaxUsers, opt => opt.MapFrom(src => src.Limits.MaxUsers))
             .ForMember(dest => dest.MaxStorage, opt => opt.MapFrom(src => src.Limits.MaxStorage))
+            .ForMember(dest => dest.TrialDays, opt => opt.MapFrom(src => src.TrialDays))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+            .ForMember(dest => dest.IsPublic, opt => opt.MapFrom(src => src.IsPublic))
+            .ForMember(dest => dest.DisplayOrder, opt => opt.MapFrom(src => src.DisplayOrder))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
             .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.Features.Select(f => new PackageFeatureDto
             {
@@ -72,5 +82,24 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
 
         CreateMap<SubscriptionUsage, SubscriptionUsageDto>();
+
+        // Tenant Invoice Mappings
+        CreateMap<Domain.Tenant.Entities.Invoice, TenantInvoiceDto>()
+            .ForMember(dest => dest.SubTotal, opt => opt.MapFrom(src => src.SubTotal.Amount))
+            .ForMember(dest => dest.TaxAmount, opt => opt.MapFrom(src => src.TaxAmount.Amount))
+            .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountAmount.Amount))
+            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.TotalAmount.Currency))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) // Invoice doesn't have CreatedAt yet
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => (DateTime?)null)) // Invoice doesn't have UpdatedAt yet
+            .ForMember(dest => dest.CustomerName, opt => opt.Ignore()); // Will be set separately if needed
+
+        CreateMap<Domain.Tenant.Entities.InvoiceItem, TenantInvoiceItemDto>()
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.UnitPrice.Currency))
+            .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountAmount != null ? src.DiscountAmount.Amount : (decimal?)null))
+            .ForMember(dest => dest.TaxAmount, opt => opt.MapFrom(src => src.TaxAmount != null ? src.TaxAmount.Amount : (decimal?)null));
     }
 }

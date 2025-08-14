@@ -62,8 +62,26 @@ public static class ServiceCollectionExtensions
         // Add Unit of Work
         services.AddScoped<IMasterUnitOfWork, MasterUnitOfWork>();
         
-        // Note: ITenantUnitOfWork should be created through factory with tenant-specific context
-        // Not registered directly here
+        // Register ITenantUnitOfWork as a scoped service
+        services.AddScoped<ITenantUnitOfWork>(serviceProvider =>
+        {
+            var tenantService = serviceProvider.GetService<ITenantService>();
+            var factory = serviceProvider.GetRequiredService<ITenantUnitOfWorkFactory>();
+            
+            // Get current tenant ID from tenant service
+            var currentTenantId = tenantService?.GetCurrentTenantId();
+            
+            if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
+            {
+                return factory.CreateAsync(currentTenantId.Value).GetAwaiter().GetResult();
+            }
+            
+            // For non-tenant specific operations or when tenant is not yet resolved
+            // Create with a default/empty context
+            var contextFactory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
+            var defaultContext = contextFactory.CreateDbContextAsync(Guid.Empty).GetAwaiter().GetResult();
+            return new TenantUnitOfWork(defaultContext);
+        });
 
         // Add Tenant Services
         services.AddScoped<ITenantService, TenantService>();

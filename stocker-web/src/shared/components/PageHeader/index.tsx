@@ -1,0 +1,69 @@
+import React from 'react';
+import { PageHeader as AntPageHeader } from '@ant-design/pro-components';
+import { Breadcrumb, Space, Button } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import './style.css';
+
+interface BreadcrumbItem {
+  title: string;
+  path?: string;
+}
+
+interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  breadcrumbs?: BreadcrumbItem[];
+  showBack?: boolean;
+  onBack?: () => void;
+  extra?: React.ReactNode;
+  ghost?: boolean;
+  children?: React.ReactNode;
+}
+
+export const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  subtitle,
+  breadcrumbs,
+  showBack = false,
+  onBack,
+  extra,
+  ghost = true,
+  children,
+}) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const breadcrumbItems = breadcrumbs?.map((item, index) => ({
+    title: item.path && index < (breadcrumbs?.length || 0) - 1 ? (
+      <a onClick={() => navigate(item.path!)}>{item.title}</a>
+    ) : (
+      item.title
+    ),
+  }));
+
+  return (
+    <div className="page-header-wrapper">
+      <AntPageHeader
+        ghost={ghost}
+        title={title}
+        subTitle={subtitle}
+        onBack={showBack ? handleBack : undefined}
+        backIcon={showBack ? <ArrowLeftOutlined /> : false}
+        breadcrumb={breadcrumbItems ? { items: breadcrumbItems } : undefined}
+        extra={extra}
+      >
+        {children}
+      </AntPageHeader>
+    </div>
+  );
+};
+
+export default PageHeader;
