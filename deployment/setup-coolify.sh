@@ -48,7 +48,7 @@ fi
 
 # Install Coolify
 echo -e "${GREEN}Installing Coolify...${NC}"
-curl -fsSL https://get.coolify.io | bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 # Wait for Coolify to start
 echo -e "${YELLOW}Waiting for Coolify to start...${NC}"

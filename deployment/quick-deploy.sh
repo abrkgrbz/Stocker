@@ -86,7 +86,7 @@ read -p "Do you want to install Coolify? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}Installing Coolify...${NC}"
-    curl -fsSL https://get.coolify.io | bash
+    curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
     sleep 30
 fi
 
