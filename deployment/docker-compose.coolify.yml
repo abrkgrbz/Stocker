@@ -7,53 +7,50 @@ services:
     container_name: stocker-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: StockerDb2024!
+      POSTGRES_DB: stocker_master
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - stocker-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=database"
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: stocker-redis
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass Redis2024!
+    ports:
+      - "6379:6379"
     networks:
       - stocker-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "Redis2024!", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=cache"
 
-  # API Service
+  # API Service - Pre-built image kullan
   stocker-api:
-    build:
-      context: ..
-      dockerfile: src/API/Stocker.API/Dockerfile
+    image: mcr.microsoft.com/dotnet/samples:aspnetapp
     container_name: stocker-api
     restart: unless-stopped
-    env_file:
-      - coolify.env
     environment:
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__MasterDb: Host=${DB_HOST};Port=${DB_PORT};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      ConnectionStrings__Redis: ${REDIS_HOST}:${REDIS_PORT},password=${REDIS_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__MasterDb: Host=postgres;Port=5432;Database=stocker_master;Username=postgres;Password=StockerDb2024!
+      ConnectionStrings__Redis: redis:6379,password=Redis2024!
+      JwtSettings__SecretKey: ThisIsAVerySecureSecretKeyForStockerTestEnvironment2024!
+      JwtSettings__Issuer: stocker-test
+      JwtSettings__Audience: stocker-test
+    ports:
+      - "5104:80"
     networks:
       - stocker-network
     depends_on:
@@ -61,101 +58,30 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - api-logs:/app/logs
-      - api-uploads:/app/uploads
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=api"
-      - "coolify.domain=api.test.stocker.app"
-      - "traefik.enable=true"
-      - "traefik.http.routers.stocker-api.rule=Host(`api.test.stocker.app`)"
-      - "traefik.http.services.stocker-api.loadbalancer.server.port=80"
 
-  # Web Application
-  stocker-web:
-    build:
-      context: ../stocker-web
-      dockerfile: Dockerfile
-    container_name: stocker-web
+  # Adminer - Database Management
+  adminer:
+    image: adminer:latest
+    container_name: stocker-adminer
     restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - stocker-network
     environment:
-      REACT_APP_API_URL: ${PUBLIC_API_URL}
-      REACT_APP_SIGNALR_URL: ${PUBLIC_API_URL}
-      REACT_APP_ENVIRONMENT: test
-    networks:
-      - stocker-network
-    depends_on:
-      - stocker-api
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=web"
-      - "coolify.domain=test.stocker.app"
-      - "traefik.enable=true"
-      - "traefik.http.routers.stocker-web.rule=Host(`test.stocker.app`)"
-      - "traefik.http.services.stocker-web.loadbalancer.server.port=80"
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
 
-  # Database Backup Service
-  backup:
-    image: postgres:15-alpine
-    container_name: stocker-backup
-    restart: unless-stopped
-    environment:
-      PGPASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./backup.sh:/backup.sh
-      - backups:/backups
-    networks:
-      - stocker-network
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["while true; do /backup.sh; sleep 86400; done"]
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=backup"
-
-  # Monitoring Service
-  monitor:
-    image: alpine:latest
-    container_name: stocker-monitor
-    restart: unless-stopped
-    volumes:
-      - ./monitor.sh:/monitor.sh
-      - monitor-logs:/logs
-    networks:
-      - stocker-network
-    depends_on:
-      - stocker-api
-      - stocker-web
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["apk add --no-cache curl bash && chmod +x /monitor.sh && /monitor.sh --continuous"]
-    labels:
-      - "coolify.managed=true"
-      - "coolify.service=monitor"
 
 networks:
   stocker-network:
     driver: bridge
-    labels:
-      - "coolify.managed=true"
 
 volumes:
   postgres-data:
-    driver: local
-  api-logs:
-    driver: local
-  api-uploads:
-    driver: local
-  backups:
-    driver: local
-  monitor-logs:
     driver: local
