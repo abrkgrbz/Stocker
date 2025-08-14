@@ -70,7 +70,7 @@ services:
     container_name: stocker-adminer
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8090:8080"
     networks:
       - stocker-network
     environment:
