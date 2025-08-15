@@ -1,0 +1,30 @@
+# Simplified API Dockerfile for Coolify (if main fails)
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy everything
+COPY . .
+
+# Navigate to API project
+WORKDIR /src/src/API/Stocker.API
+
+# Restore and publish
+RUN dotnet restore || true
+RUN dotnet publish -c Release -o /app/out || dotnet publish -c Debug -o /app/out
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy app
+COPY --from=build /app/out .
+
+# Configure
+EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:80
+
+# Run
+ENTRYPOINT ["dotnet", "Stocker.API.dll"]
