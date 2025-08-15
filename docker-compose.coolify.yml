@@ -61,8 +61,8 @@ services:
   # Web Frontend
   web:
     build:
-      context: .
-      dockerfile: Dockerfile.web
+      context: ./stocker-web
+      dockerfile: Dockerfile
     container_name: stocker-web
     environment:
       VITE_API_URL: ${FQDN:-http://localhost:5000}/api
