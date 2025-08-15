@@ -1,12 +1,29 @@
+-- MSSQL Initialization Script
 -- Create master database if not exists
-SELECT 'CREATE DATABASE stocker_master'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'stocker_master')\gexec
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'StockerMaster')
+BEGIN
+    CREATE DATABASE StockerMaster;
+END
+GO
 
--- Create tenant databases (örnek)
-SELECT 'CREATE DATABASE tenant_db_template'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tenant_db_template')\gexec
+USE StockerMaster;
+GO
 
--- Extensions
-\c stocker_master;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Create schema if not exists
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'dbo')
+BEGIN
+    EXEC('CREATE SCHEMA dbo');
+END
+GO
+
+-- Create tenant database template
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TenantDbTemplate')
+BEGIN
+    CREATE DATABASE TenantDbTemplate;
+END
+GO
+
+-- Enable CDC if needed (optional)
+-- EXEC sys.sp_cdc_enable_db;
+
+PRINT 'Database initialization completed successfully';

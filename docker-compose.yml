@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # MSSQL Database
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: stocker-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD:-StockerPass123!}
+      MSSQL_PID: ${MSSQL_PID:-Developer}
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./deployment/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "1433:1433"
+    networks:
+      - stocker-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$${SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stocker-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__MasterDb: "Server=mssql;Database=StockerMaster;User Id=sa;Password=${SA_PASSWORD:-StockerPass123!};TrustServerCertificate=true;MultipleActiveResultSets=true"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY:-YourSecretKeyMustBeLongerThan256Bits123456789}
+      EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
+      EmailSettings__SmtpPort: ${SMTP_PORT:-587}
+      EmailSettings__SmtpUser: ${SMTP_USER}
+      EmailSettings__SmtpPassword: ${SMTP_PASSWORD}
+      EmailSettings__FromEmail: ${FROM_EMAIL:-noreply@stocker.com}
+      EmailSettings__FromName: ${FROM_NAME:-Stocker}
+    depends_on:
+      mssql:
+        condition: service_healthy
+    ports:
+      - "5000:80"
+    networks:
+      - stocker-network
+    volumes:
+      - ./logs:/app/logs
+      - ./emails:/app/emails
+
+networks:
+  stocker-network:
+    driver: bridge
+
+volumes:
+  mssql_data:
