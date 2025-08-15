@@ -1,11 +1,11 @@
 version: '3.8'
 
+# Simplified Docker Compose for Coolify deployment
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: stocker-db
-    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: StockerDb2024!
@@ -17,66 +17,59 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
-      timeout: 5s
       retries: 5
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: stocker-redis
-    restart: unless-stopped
     command: redis-server --requirepass Redis2024!
-    ports:
-      - "6379:6379"
     networks:
       - stocker-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "Redis2024!", "ping"]
       interval: 10s
-      timeout: 5s
       retries: 5
 
-  # API Service - Pre-built image kullan
-  stocker-api:
-    image: mcr.microsoft.com/dotnet/samples:aspnetapp
+  # API Service
+  api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.api
     container_name: stocker-api
-    restart: unless-stopped
     environment:
-      ASPNETCORE_URLS: http://+:80
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
       ConnectionStrings__MasterDb: Host=postgres;Port=5432;Database=stocker_master;Username=postgres;Password=StockerDb2024!
       ConnectionStrings__Redis: redis:6379,password=Redis2024!
       JwtSettings__SecretKey: ThisIsAVerySecureSecretKeyForStockerTestEnvironment2024!
-      JwtSettings__Issuer: stocker-test
-      JwtSettings__Audience: stocker-test
+      JwtSettings__Issuer: Stocker
+      JwtSettings__Audience: Stocker
+      SignalR__EnableDetailedErrors: true
+      CORS__Origins: http://localhost:3000,http://localhost:5104
     ports:
       - "5104:80"
-    networks:
-      - stocker-network
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Adminer - Database Management
-  adminer:
-    image: adminer:latest
-    container_name: stocker-adminer
-    restart: unless-stopped
-    ports:
-      - "8090:8080"
+      - postgres
+      - redis
     networks:
       - stocker-network
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-      ADMINER_DESIGN: dracula
 
+  # Frontend
+  web:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.web
+    container_name: stocker-web
+    environment:
+      REACT_APP_API_URL: http://localhost:5104
+      REACT_APP_SIGNALR_URL: http://localhost:5104
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - stocker-network
 
 networks:
   stocker-network:
@@ -84,4 +77,3 @@ networks:
 
 volumes:
   postgres-data:
-    driver: local
