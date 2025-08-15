@@ -38,11 +38,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # API Service - Using working Dockerfile
+  # API Service with fixed Dockerfile
   api:
     build:
       context: .
-      dockerfile: ./deployment/Dockerfile.api.working
+      dockerfile: Dockerfile
     image: stocker-api:latest
     container_name: stocker-api
     restart: unless-stopped
@@ -63,9 +63,6 @@ services:
         condition: service_healthy
     networks:
       - stocker-network
-    volumes:
-      - ./src:/app/src:ro
-      - ./deployment/logs:/app/logs
 
   # Database Admin
   adminer:
