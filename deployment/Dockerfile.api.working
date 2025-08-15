@@ -1,6 +1,6 @@
 # Working Dockerfile - No build, just run
 FROM mcr.microsoft.com/dotnet/sdk:9.0
-WORKDIR /app
+WORKDIR /src
 
 # Copy all source files
 COPY . .
