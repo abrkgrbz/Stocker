@@ -62,7 +62,7 @@ services:
   web:
     build:
       context: ./stocker-web
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.simple
     container_name: stocker-web
     environment:
       VITE_API_URL: ${FQDN:-http://localhost:5000}/api

@@ -2,11 +2,17 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install Python and build tools for native dependencies
+RUN apk add --no-cache python3 make g++ 
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Copy package files
+COPY package.json ./
+COPY package-lock.json ./
+
+# Clean npm cache and install
+RUN npm cache clean --force && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm install --verbose || npm install --force
 
 # Copy source code
 COPY . .
@@ -24,12 +30,8 @@ RUN rm -rf ./*
 # Copy built application
 COPY --from=build /app/dist .
 
-# Copy nginx configuration
-COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true
-
-# Create nginx config if it doesn't exist
-RUN if [ ! -f /etc/nginx/conf.d/default.conf ]; then \
-  echo 'server { \
+# Create nginx config
+RUN echo 'server { \
     listen 80; \
     server_name localhost; \
     location / { \
@@ -38,7 +40,7 @@ RUN if [ ! -f /etc/nginx/conf.d/default.conf ]; then \
       try_files $uri $uri/ /index.html; \
     } \
     location /api { \
-      proxy_pass http://stocker-api:80; \
+      proxy_pass http://api:80; \
       proxy_http_version 1.1; \
       proxy_set_header Upgrade $http_upgrade; \
       proxy_set_header Connection "upgrade"; \
@@ -46,15 +48,14 @@ RUN if [ ! -f /etc/nginx/conf.d/default.conf ]; then \
       proxy_cache_bypass $http_upgrade; \
     } \
     location /hubs { \
-      proxy_pass http://stocker-api:80; \
+      proxy_pass http://api:80; \
       proxy_http_version 1.1; \
       proxy_set_header Upgrade $http_upgrade; \
       proxy_set_header Connection "upgrade"; \
       proxy_set_header Host $host; \
       proxy_cache_bypass $http_upgrade; \
     } \
-  }' > /etc/nginx/conf.d/default.conf; \
-  fi
+  }' > /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80
