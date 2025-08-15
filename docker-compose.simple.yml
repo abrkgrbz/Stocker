@@ -1,0 +1,42 @@
+version: '3.8'
+
+# Simplified compose without building
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: stocker-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: StockerDb2024!
+      POSTGRES_DB: stocker_master
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: stocker-redis
+    command: redis-server --requirepass Redis2024!
+    ports:
+      - "6379:6379"
+
+  # Use pre-built sample API
+  api:
+    image: mcr.microsoft.com/dotnet/samples:aspnetapp
+    container_name: stocker-api
+    ports:
+      - "5104:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  adminer:
+    image: adminer:latest
+    container_name: stocker-adminer
+    ports:
+      - "8090:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+volumes:
+  postgres-data:
