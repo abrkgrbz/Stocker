@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 
 # Go to API directory
-WORKDIR /app/src/API/Stocker.API
+WORKDIR /src/API/Stocker.API
 
 # Restore dependencies (ignore errors)
 RUN dotnet restore --verbosity quiet || true
