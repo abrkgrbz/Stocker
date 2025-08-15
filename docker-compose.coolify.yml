@@ -35,7 +35,7 @@ services:
   api:
     build:
       context: ..
-      dockerfile: Dockerfile.api
+      dockerfile: /Dockerfile.api
     container_name: stocker-api
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -59,7 +59,7 @@ services:
   web:
     build:
       context: ..
-      dockerfile: Dockerfile.web
+      dockerfile: /Dockerfile.web
     container_name: stocker-web
     environment:
       REACT_APP_API_URL: http://localhost:5104
