@@ -20,7 +20,7 @@ RUN dotnet restore "src/API/Stocker.API/Stocker.API.csproj"
 COPY . .
 
 # Build and publish
-WORKDIR /src/src/API/Stocker.API
+WORKDIR /src/API/Stocker.API
 RUN dotnet build "Stocker.API.csproj" -c Release -o /app/build --no-restore
 RUN dotnet publish "Stocker.API.csproj" -c Release -o /app/publish --no-restore
 
