@@ -1,41 +1,49 @@
-# Fixed Dockerfile with correct paths
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /source
+# Build aşaması
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# Copy csproj files
+# Solution dosyasını kopyala
+COPY Stocker.sln ./
+
+# Proje dosyalarını kopyala
 COPY src/API/Stocker.API/*.csproj ./src/API/Stocker.API/
 COPY src/Core/Stocker.Application/*.csproj ./src/Core/Stocker.Application/
 COPY src/Core/Stocker.Domain/*.csproj ./src/Core/Stocker.Domain/
 COPY src/Core/Stocker.SharedKernel/*.csproj ./src/Core/Stocker.SharedKernel/
+COPY src/Infrastructure/Stocker.Identity/*.csproj ./src/Infrastructure/Stocker.Identity/
 COPY src/Infrastructure/Stocker.Infrastructure/*.csproj ./src/Infrastructure/Stocker.Infrastructure/
 COPY src/Infrastructure/Stocker.Persistence/*.csproj ./src/Infrastructure/Stocker.Persistence/
-COPY src/Infrastructure/Stocker.Identity/*.csproj ./src/Infrastructure/Stocker.Identity/
 COPY src/Infrastructure/Stocker.SignalR/*.csproj ./src/Infrastructure/Stocker.SignalR/
 COPY src/Modules/Stocker.Modules.CRM/*.csproj ./src/Modules/Stocker.Modules.CRM/
 
-# Restore
-RUN dotnet restore "src/API/Stocker.API/Stocker.API.csproj"
+# Restore dependencies
+RUN dotnet restore
 
-# Copy everything
+# Tüm kaynak kodları kopyala
 COPY . .
 
-# Build - Path düzeltmesi
-WORKDIR /source/src/API/Stocker.API
-RUN dotnet build "Stocker.API.csproj" -c Release --no-restore
-RUN dotnet publish "Stocker.API.csproj" -c Release -o /app/publish --no-restore
+# Build
+WORKDIR /src/src/API/Stocker.API
+RUN dotnet build -c Release -o /app/build
 
-# Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+# Publish
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
+
+# Runtime aşaması
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-COPY --from=build /app/publish .
-
+# Port expose
 EXPOSE 80
-ENV ASPNETCORE_URLS=http://+:80
+EXPOSE 443
 
+# Published dosyaları kopyala
+COPY --from=publish /app/publish .
+
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl --fail http://localhost:80/health || exit 1
 
+# Entry point
 ENTRYPOINT ["dotnet", "Stocker.API.dll"]
