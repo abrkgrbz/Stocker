@@ -55,7 +55,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__MasterDb: "Server=stocker-mssql;Database=StockerMaster;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
+      ConnectionStrings__MasterConnection: "Server=stocker-mssql;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
+      ConnectionStrings__TenantConnection: "Server=stocker-mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
+      ConnectionStrings__DefaultConnection: "Server=stocker-mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
       JwtSettings__SecretKey: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
