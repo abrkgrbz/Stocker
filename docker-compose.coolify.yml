@@ -75,26 +75,7 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # Web Service
-  web:
-    build:
-      context: ./src/Web/Stocker.Web.Portal
-      dockerfile: Dockerfile
-    container_name: stocker-web
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://api:80}
-      NODE_ENV: production
-    depends_on:
-      - api
-    ports:
-      - "${WEB_PORT:-3000}:80"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    restart: unless-stopped
+ 
 
 volumes:
   mssql_data:
