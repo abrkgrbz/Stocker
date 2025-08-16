@@ -6,6 +6,7 @@ using Stocker.Infrastructure.Extensions;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
+using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.SignalR.Hubs;
 
@@ -60,6 +61,9 @@ builder.Services.AddCors(options =>
                   .AllowCredentials();
         });
 });
+
+// Configure Settings
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("DatabaseSettings"));
 
 // Add services to the container
 builder.Services.AddControllers()
