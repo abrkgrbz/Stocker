@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using Stocker.Persistence.Contexts;
 using Stocker.SharedKernel.Interfaces;
 
@@ -9,10 +10,16 @@ namespace Stocker.Persistence.Factories;
 public class DesignTimeTenantService : ITenantService
 {
     private readonly Guid _tenantId = Guid.NewGuid(); // Design-time tenant ID
+    private readonly string _connectionString;
+    
+    public DesignTimeTenantService(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
 
     public Guid? GetCurrentTenantId() => _tenantId;
     public string? GetCurrentTenantName() => "Design Tenant";
-    public string? GetConnectionString() => "Server=DESKTOP-A1C2AO3;Database=StockerTenantDb_Design;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    public string? GetConnectionString() => _connectionString;
     public Task<bool> SetCurrentTenant(Guid tenantId) => Task.FromResult(true);
     public Task<bool> SetCurrentTenant(string tenantIdentifier) => Task.FromResult(true);
 }
@@ -24,12 +31,27 @@ public class TenantDbContextDesignFactory : IDesignTimeDbContextFactory<TenantDb
     {
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         
-        // Design-time connection string for migration generation
-        optionsBuilder.UseSqlServer(
-            "Server=DESKTOP-A1C2AO3;Database=StockerTenantDb_Design;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        // Build configuration
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+        
+        // Get connection string from configuration
+        var connectionString = configuration.GetConnectionString("TenantConnection");
+        
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            // Fallback for local development
+            connectionString = "Server=localhost;Database=StockerTenantDb_Design;User Id=sa;Password=YourStrongPassword123!;MultipleActiveResultSets=true;TrustServerCertificate=True";
+        }
+        
+        optionsBuilder.UseSqlServer(connectionString);
 
         // Create a design-time tenant service
-        var tenantService = new DesignTimeTenantService();
+        var tenantService = new DesignTimeTenantService(connectionString);
 
         return new TenantDbContext(optionsBuilder.Options, tenantService);
     }
