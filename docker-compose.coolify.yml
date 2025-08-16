@@ -20,6 +20,8 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+    networks:
+      - stocker-network
 
   # CloudBeaver - Database Management UI
   cloudbeaver:
@@ -41,6 +43,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - stocker-network
 
   # API Service
   api:
@@ -51,7 +55,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__MasterDb: "Server=mssql;Database=StockerMaster;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
+      ConnectionStrings__MasterDb: "Server=stocker-mssql;Database=StockerMaster;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"
       JwtSettings__SecretKey: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
@@ -74,8 +78,35 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    networks:
+      - stocker-network
 
- 
+  # Stocker Web Service
+  stocker-web:
+    build:
+      context: ./src/Web/Stocker.Web.Portal
+      dockerfile: Dockerfile
+    container_name: stocker-web
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://api:80}
+      NODE_ENV: production
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - stocker-network
+
+networks:
+  stocker-network:
+    driver: bridge
 
 volumes:
   mssql_data:
