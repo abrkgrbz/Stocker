@@ -21,6 +21,27 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # CloudBeaver - Database Management UI
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: stocker-cloudbeaver
+    environment:
+      CB_ADMIN_NAME: ${CB_ADMIN_NAME:-admin}
+      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD:-admin123}
+    ports:
+      - "${CLOUDBEAVER_PORT:-8978}:8978"
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    depends_on:
+      - mssql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8978"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   # API Service
   api:
     build:
@@ -54,8 +75,29 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-   
+  # Web Service
+  web:
+    build:
+      context: ./src/Web/Stocker.Web.Portal
+      dockerfile: Dockerfile
+    container_name: stocker-web
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://api:80}
+      NODE_ENV: production
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   mssql_data:
+    driver: local
+  cloudbeaver_data:
     driver: local

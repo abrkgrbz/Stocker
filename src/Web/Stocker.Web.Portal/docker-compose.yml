@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  stocker-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stocker-web:latest
+    container_name: stocker-web-portal
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:80
+      - ApiSettings__BaseUrl=${API_BASE_URL:-https://localhost:7021}
+      - TenantSettings__BaseDomain=${TENANT_BASE_DOMAIN:-stocker.local}
+      - Logging__LogLevel__Default=${LOG_LEVEL:-Information}
+    ports:
+      - "${WEB_PORT:-5001}:80"
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
