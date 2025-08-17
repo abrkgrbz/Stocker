@@ -55,9 +55,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__MasterConnection: "Server=mssql;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
-      ConnectionStrings__TenantConnection: "Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
-      ConnectionStrings__DefaultConnection: "Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
+      ConnectionStrings__MasterConnection: "Server=10.0.2.3,1433;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
+      ConnectionStrings__TenantConnection: "Server=10.0.2.3,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
+      ConnectionStrings__DefaultConnection: "Server=10.0.2.3,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
       JwtSettings__SecretKey: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
