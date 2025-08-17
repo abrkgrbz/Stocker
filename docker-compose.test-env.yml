@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # Environment Test Container
+  env-test:
+    image: alpine:latest
+    container_name: env-test
+    environment:
+      TEST_VAR: ${TEST_VAR:-default_value}
+      ConnectionStrings__Test: ${ConnectionStrings__MasterConnection:-not_set}
+      SA_PASSWORD: ${SA_PASSWORD:-not_set}
+    command: >
+      sh -c "
+      echo '==== Environment Variables Test ====';
+      echo 'TEST_VAR:' $$TEST_VAR;
+      echo 'ConnectionStrings__Test:' $$ConnectionStrings__Test;
+      echo 'SA_PASSWORD:' $$SA_PASSWORD;
+      echo '==== All Environment Variables ====';
+      env | sort;
+      echo '==================================';
+      sleep 3600
+      "
+    restart: unless-stopped

@@ -26,8 +26,8 @@ services:
     image: dbeaver/cloudbeaver:latest
     container_name: stocker-cloudbeaver
     environment:
-      CB_ADMIN_NAME: ${CB_ADMIN_NAME:-admin}
-      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD:-admin123}
+      CB_ADMIN_NAME: ${CB_ADMIN_NAME}
+      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD}
     ports:
       - "${CLOUDBEAVER_PORT:-8978}:8978"
     volumes:
@@ -53,9 +53,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5000
-      ConnectionStrings__MasterConnection: ${ConnectionStrings__MasterConnection}
-      ConnectionStrings__TenantConnection: ${ConnectionStrings__TenantConnection}
-      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      ConnectionStrings__MasterConnection: "${ConnectionStrings__MasterConnection}"
+      ConnectionStrings__TenantConnection: "${ConnectionStrings__TenantConnection}"
+      ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection}"
       JwtSettings__SecretKey: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
