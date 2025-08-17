@@ -4,7 +4,7 @@ services:
   # MSSQL Database
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: stocker-mssql
+    container_name: mssql
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: ${SA_PASSWORD}
@@ -42,7 +42,7 @@ services:
       retries: 3
       start_period: 60s
     links:
-      - stocker-mssql:database
+      - mssql:database
 
   # API Service
   api:
@@ -78,7 +78,7 @@ services:
       start_period: 40s
     restart: unless-stopped
     links:
-      - stocker-mssql:database
+      - mssql:database
 
 volumes:
   mssql_data:
