@@ -42,7 +42,7 @@ services:
       retries: 3
       start_period: 60s
     links:
-      - mssql:database
+      - stocker-mssql:database
 
   # API Service
   api:
@@ -53,9 +53,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5000
-      ConnectionStrings__MasterConnection: "Server=stocker-mssql,1433;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
-      ConnectionStrings__TenantConnection: "Server=stocker-mssql,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
-      ConnectionStrings__DefaultConnection: "Server=stocker-mssql,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true;Encrypt=false"
+      ConnectionStrings__MasterConnection: ${ConnectionStrings__MasterConnection}
+      ConnectionStrings__TenantConnection: ${ConnectionStrings__TenantConnection}
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
       JwtSettings__SecretKey: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
@@ -78,7 +78,7 @@ services:
       start_period: 40s
     restart: unless-stopped
     links:
-      - mssql:database
+      - stocker-mssql:database
 
 volumes:
   mssql_data:
