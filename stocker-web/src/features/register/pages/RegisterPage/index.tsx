@@ -155,7 +155,7 @@ export const RegisterPage: React.FC = () => {
           id: pkg.id, // Real GUID from backend
           name: pkg.name,
           description: pkg.description,
-          price: pkg.basePrice?.amount || pkg.price || 0,
+          price: pkg.basePrice?.amount || 0,
           currency: pkg.basePrice?.currency || pkg.currency || '₺',
           type: pkg.type,
           billingPeriod: 'Monthly',
@@ -170,6 +170,10 @@ export const RegisterPage: React.FC = () => {
         
         console.log('Mapped packages:', packages); // Debug log
         setPackages(packages);
+        // Auto-select first package
+        if (packages.length > 0 && !selectedPackage) {
+          setSelectedPackage(packages[0]);
+        }
       } else {
         console.log('No packages received from API, using mock data'); // Debug log
         // Fallback to mock packages if API fails
@@ -238,6 +242,10 @@ export const RegisterPage: React.FC = () => {
         }
       ];
         setPackages(mockPackages);
+        // Auto-select first package
+        if (mockPackages.length > 0 && !selectedPackage) {
+          setSelectedPackage(mockPackages[0]);
+        }
       }
     } catch (error: any) {
       console.error('Error fetching packages:', error);
@@ -285,6 +293,10 @@ export const RegisterPage: React.FC = () => {
         }
       ];
       setPackages(mockPackages);
+      // Auto-select first package
+      if (mockPackages.length > 0 && !selectedPackage) {
+        setSelectedPackage(mockPackages[0]);
+      }
     }
   };
 
