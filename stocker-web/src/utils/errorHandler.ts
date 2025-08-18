@@ -185,7 +185,7 @@ export class ErrorHandler {
       setTimeout(() => {
         window.location.href = '/login';
       }, 2000);
-    } else if (error.statusCode >= 500) {
+    } else if (error.statusCode && error.statusCode >= 500) {
       // Server error - show notification
       notification.error({
         message: 'Sistem Hatası',
@@ -214,7 +214,7 @@ export class ErrorHandler {
   }
 
   // React error boundary error handler
-  handleBoundaryError(error: Error, errorInfo: any): void {
+  handleBoundaryError(error: Error, _errorInfo: any): void {
     logger.error('React Error Boundary', error, 'ErrorBoundary');
     
     if (env.app.isProduction) {

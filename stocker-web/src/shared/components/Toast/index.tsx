@@ -1,7 +1,7 @@
 import { notification, message } from 'antd';
-import type { NotificationArgsProps } from 'antd/es/notification/interface';
+import type { ArgsProps } from 'antd/es/notification';
 
-interface ToastOptions extends Omit<NotificationArgsProps, 'message' | 'description'> {
+interface ToastOptions extends Omit<ArgsProps, 'message' | 'description'> {
   title?: string;
   description?: string;
 }

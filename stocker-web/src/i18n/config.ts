@@ -87,7 +87,7 @@ i18n
 
     // Missing key handler
     saveMissing: env.app.isDevelopment,
-    missingKeyHandler: (lng, ns, key, fallbackValue) => {
+    missingKeyHandler: (lng, ns, key, _fallbackValue) => {
       if (env.app.isDevelopment) {
         console.warn(`Missing translation: ${lng}/${ns}:${key}`);
       }

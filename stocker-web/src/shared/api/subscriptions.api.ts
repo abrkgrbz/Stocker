@@ -7,7 +7,7 @@ export const subscriptionsApi = {
     status?: SubscriptionStatus; 
     autoRenew?: boolean 
   }) => 
-    api.get<Subscription[]>('/api/master/subscriptions', params),
+    api.get<Subscription[]>('/api/master/subscriptions', { params }),
     
   getById: (id: string) => 
     api.get<Subscription>(`/api/master/subscriptions/${id}`),

@@ -3,7 +3,7 @@ import { Tenant, CreateTenantRequest, PaginatedResponse } from '@/shared/types';
 
 export const tenantsApi = {
   getAll: (params?: { page?: number; pageSize?: number; search?: string; isActive?: boolean }) => 
-    api.get<PaginatedResponse<Tenant>>('/api/master/tenants', params),
+    api.get<PaginatedResponse<Tenant>>('/api/master/tenants', { params }),
     
   getById: (id: string) => 
     api.get<Tenant>(`/api/master/tenants/${id}`),

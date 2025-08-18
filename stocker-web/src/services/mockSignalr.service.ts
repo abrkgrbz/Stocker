@@ -40,7 +40,7 @@ class MockSignalRService {
         details: {
           format: isValid ? "valid" : "invalid",
           domain: email.split('@')[1] || "",
-          suggestion: !isValid && !email.includes('@') ? "@ işareti eksik" : undefined
+          suggestion: !isValid && !email.includes('@') ? "@ işareti eksik" : ""
         }
       };
       
@@ -148,7 +148,7 @@ class MockSignalRService {
           format: isValid ? "valid" : "invalid",
           suggestion: countryCode === 'TR' && !isValid 
             ? "Türkiye telefon numarası 5XX XXX XX XX formatında olmalı" 
-            : undefined
+            : ""
         }
       };
       
@@ -175,7 +175,7 @@ class MockSignalRService {
           : "Bu şirket adı zaten kayıtlı",
         details: {
           available: isValid ? "yes" : "no",
-          suggestion: !isValid ? "Şirket adına bir numara veya ayırt edici kelime ekleyin" : undefined
+          suggestion: !isValid ? "Şirket adına bir numara veya ayırt edici kelime ekleyin" : ""
         }
       };
       

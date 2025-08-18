@@ -28,9 +28,7 @@ interface ImportMetaEnv {
   readonly VITE_LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+// ImportMeta interface extension for better typing
 
 // Environment configuration with defaults
 export const env = {

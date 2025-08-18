@@ -51,6 +51,7 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   BankOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { formRules } from '@/shared/utils/validators';
@@ -374,7 +375,6 @@ export const TenantSettings: React.FC = () => {
                 <TextArea
                   rows={3}
                   placeholder="Şirket adresi"
-                  prefix={<EnvironmentOutlined />}
                 />
               </Form.Item>
 
