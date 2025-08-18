@@ -28,9 +28,15 @@ public static class ServiceCollectionExtensions
         // Add DbContexts
         services.AddDbContext<MasterDbContext>((serviceProvider, options) =>
         {
-            var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
-            var connectionString = databaseSettings?.GetMasterConnectionString() 
-                ?? configuration.GetConnectionString("MasterConnection");
+            // In Production/Docker, prefer ConnectionStrings over DatabaseSettings
+            var connectionString = configuration.GetConnectionString("MasterConnection");
+            
+            // Fallback to DatabaseSettings if ConnectionString is not provided
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
+                connectionString = databaseSettings?.GetMasterConnectionString();
+            }
             
             // Log the connection string for debugging (remove sensitive parts)
             var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<MasterDbContext>>();
