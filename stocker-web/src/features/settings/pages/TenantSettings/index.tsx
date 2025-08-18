@@ -873,7 +873,6 @@ export const TenantSettings: React.FC = () => {
               form={emailForm}
               layout="vertical"
               onFinish={(values) => {
-                console.log('Email settings:', values);
                 message.success('E-posta ayarları güncellendi');
               }}
             >

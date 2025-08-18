@@ -11,21 +11,54 @@ export default defineConfig({
     },
   },
   build: {
-    // Skip TypeScript type checking during build
-    // @ts-ignore
+    // Optimize bundle size
+    target: 'es2015',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    // Chunk splitting for better caching
     rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'antd-vendor': ['antd', '@ant-design/icons', '@ant-design/pro-components'],
+          'utils-vendor': ['dayjs', 'axios', 'zustand'],
+          'signalr-vendor': ['@microsoft/signalr'],
+        },
+        // Better chunk naming
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `assets/js/${facadeModuleId}-[hash].js`;
+        },
+      },
       onwarn(warning, warn) {
         // Skip certain warnings
         if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
         warn(warning)
       }
-    }
+    },
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000, // 1MB
+    // Source maps for production (optional, can be disabled for security)
+    sourcemap: false,
+    // Assets inlining threshold
+    assetsInlineLimit: 4096, // 4kb
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'antd', 'dayjs'],
+    exclude: ['@tanstack/react-query-devtools'],
   },
   server: {
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5104',
+        target: process.env.VITE_API_URL || 'http://localhost:5104',
         changeOrigin: true,
       },
     },

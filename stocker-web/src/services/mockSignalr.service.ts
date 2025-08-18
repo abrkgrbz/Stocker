@@ -14,14 +14,12 @@ class MockSignalRService {
   async startValidationConnection(): Promise<void> {
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log("Mock Validation hub connected");
     this.connectedCallbacks.forEach(cb => cb({ connectionId: "mock-connection-id" }));
   }
 
   async startNotificationConnection(token?: string): Promise<void> {
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log("Mock Notification hub connected");
     this.connectedCallbacks.forEach(cb => cb({ connectionId: "mock-notification-id", token }));
   }
 
@@ -216,7 +214,6 @@ class MockSignalRService {
 
   // Cleanup
   async stopValidationConnection(): Promise<void> {
-    console.log("Mock Validation hub disconnected");
     this.emailCallbacks = [];
     this.passwordCallbacks = [];
     this.domainCallbacks = [];
@@ -227,7 +224,6 @@ class MockSignalRService {
   }
 
   async stopNotificationConnection(): Promise<void> {
-    console.log("Mock Notification hub disconnected");
     this.notificationCallbacks = [];
   }
 

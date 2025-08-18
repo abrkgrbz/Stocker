@@ -9,7 +9,6 @@ class SignalRService {
   // Validation Hub Methods
   async startValidationConnection(): Promise<void> {
     if (this.validationConnection?.state === signalR.HubConnectionState.Connected) {
-      console.log("Validation hub already connected");
       return;
     }
 
@@ -22,20 +21,16 @@ class SignalRService {
       .build();
 
     this.validationConnection.onreconnecting(() => {
-      console.log("Validation hub reconnecting...");
     });
 
     this.validationConnection.onreconnected(() => {
-      console.log("Validation hub reconnected");
     });
 
     this.validationConnection.onclose(() => {
-      console.log("Validation hub connection closed");
     });
 
     try {
       await this.validationConnection.start();
-      console.log("Validation hub connected successfully");
     } catch (err) {
       console.error("Error connecting to validation hub:", err);
       throw err;
@@ -45,7 +40,6 @@ class SignalRService {
   // Notification Hub Methods
   async startNotificationConnection(token?: string): Promise<void> {
     if (this.notificationConnection?.state === signalR.HubConnectionState.Connected) {
-      console.log("Notification hub already connected");
       return;
     }
 
@@ -67,20 +61,16 @@ class SignalRService {
       .build();
 
     this.notificationConnection.onreconnecting(() => {
-      console.log("Notification hub reconnecting...");
     });
 
     this.notificationConnection.onreconnected(() => {
-      console.log("Notification hub reconnected");
     });
 
     this.notificationConnection.onclose(() => {
-      console.log("Notification hub connection closed");
     });
 
     try {
       await this.notificationConnection.start();
-      console.log("Notification hub connected successfully");
     } catch (err) {
       console.error("Error connecting to notification hub:", err);
       throw err;

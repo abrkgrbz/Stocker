@@ -133,7 +133,6 @@ export const InvoiceDetail: React.FC = () => {
       setInvoice(mockInvoice);
     } catch (error) {
       message.error('Fatura detayları yüklenemedi');
-      console.error(error);
     } finally {
       setLoading(false);
     }

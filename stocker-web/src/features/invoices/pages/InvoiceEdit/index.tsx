@@ -179,7 +179,6 @@ export const InvoiceEdit: React.FC = () => {
       setItems(invoice.items);
     } catch (error) {
       message.error('Fatura yüklenemedi');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -373,7 +372,6 @@ export const InvoiceEdit: React.FC = () => {
       navigate(-1);
     } catch (error) {
       message.error('İşlem başarısız');
-      console.error(error);
     } finally {
       setSaving(false);
     }

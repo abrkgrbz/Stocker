@@ -33,14 +33,11 @@ export const useAuthStore = create<AuthState>()(
         error: null,
 
         initializeAuth: () => {
-          console.log('initializeAuth called');
           const token = localStorage.getItem(TOKEN_KEY);
           const state = get();
-          console.log('Current state:', { user: state.user, token: state.token, hasLocalToken: !!token });
           
           // If we already have a user and token from persisted state, we're good
           if (state.user && state.token) {
-            console.log('User and token exist, setting authenticated');
             set({ 
               isAuthenticated: true,
               isInitialized: true,
@@ -48,11 +45,9 @@ export const useAuthStore = create<AuthState>()(
             });
           } else if (token) {
             // We have a token but no user, need to fetch user data
-            console.log('Token exists but no user, checking auth...');
             get().checkAuth();
           } else {
             // No token, not authenticated
-            console.log('No token, setting unauthenticated');
             set({ 
               isAuthenticated: false,
               isInitialized: true,
@@ -64,9 +59,7 @@ export const useAuthStore = create<AuthState>()(
         login: async (credentials) => {
           set({ isLoading: true, error: null });
           try {
-            console.log('Login request:', credentials);
             const response = await authApi.login(credentials);
-            console.log('Login response:', response);
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
@@ -83,8 +76,6 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: true,
             });
           } catch (error: any) {
-            console.error('Login error:', error);
-            console.error('Error response:', error.response);
             set({
               error: error.response?.data?.message || error.message || 'Login failed',
               isLoading: false,
@@ -112,11 +103,9 @@ export const useAuthStore = create<AuthState>()(
         },
 
         checkAuth: async () => {
-          console.log('checkAuth called');
           const token = localStorage.getItem(TOKEN_KEY);
           
           if (!token) {
-            console.log('No token in checkAuth');
             set({ 
               isAuthenticated: false, 
               user: null, 
@@ -126,11 +115,9 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          console.log('Token found, fetching user...');
           set({ isLoading: true });
           try {
             const response = await authApi.getCurrentUser();
-            console.log('User fetch response:', response);
             const userData = response.data || response;
             set({
               user: userData,
@@ -140,7 +127,6 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: true,
             });
           } catch (error) {
-            console.error('CheckAuth error:', error);
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(REFRESH_TOKEN_KEY);
             set({

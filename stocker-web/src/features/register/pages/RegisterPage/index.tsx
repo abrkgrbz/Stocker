@@ -148,7 +148,6 @@ export const RegisterPage: React.FC = () => {
       // Fetch real packages from API
       const response = await apiClient.get('/api/public/packages');
       
-      console.log('Packages API Response:', response.data); // Debug log
       
       if (response.data?.success && response.data?.data && response.data.data.length > 0) {
         const packages = response.data.data.map((pkg: any) => ({
@@ -168,14 +167,12 @@ export const RegisterPage: React.FC = () => {
           trialDays: pkg.trialDays || 14
         }));
         
-        console.log('Mapped packages:', packages); // Debug log
         setPackages(packages);
         // Auto-select first package
         if (packages.length > 0 && !selectedPackage) {
           setSelectedPackage(packages[0]);
         }
       } else {
-        console.log('No packages received from API, using mock data'); // Debug log
         // Fallback to mock packages if API fails
         const mockPackages: Package[] = [
         {
@@ -248,8 +245,6 @@ export const RegisterPage: React.FC = () => {
         }
       }
     } catch (error: any) {
-      console.error('Error fetching packages:', error);
-      console.error('Error response:', error.response?.data);
       message.error('Paketler API\'den yüklenemedi, mock data kullanılıyor');
       
       // Use mock packages on error

@@ -263,7 +263,7 @@ export const TenantUsers: React.FC = () => {
       form.resetFields();
       fetchUsers();
     } catch (error) {
-      console.error('Form validation failed:', error);
+      // Handle form validation error silently
     }
   };
 
