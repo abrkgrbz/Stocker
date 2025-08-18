@@ -1,0 +1,30 @@
+# Single stage build with Node
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies for building
+RUN apk add --no-cache python3 make g++
+
+# Copy and install dependencies
+COPY package.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Set API URL
+ARG VITE_API_URL=http://95.217.219.4:5000
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build
+RUN npm run build
+
+# Install serve to run the app
+RUN npm install -g serve
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["serve", "-s", "dist", "-l", "3000"]
