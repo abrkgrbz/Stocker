@@ -359,6 +359,7 @@ export const LandingPage: React.FC = () => {
               ghost={!scrolled}
               onClick={() => navigate('/login')}
               icon={<UserOutlined />}
+              style={{ marginRight: '8px' }}
             >
               Giriş Yap
             </Button>
