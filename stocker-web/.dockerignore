@@ -1,7 +1,7 @@
 node_modules
 package-lock.json
 npm-debug.log
-dist
+# dist - removed to include in Docker build
 .git
 .gitignore
 README.md
