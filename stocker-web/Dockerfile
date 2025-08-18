@@ -4,10 +4,11 @@ FROM node:18
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json ./
 
-# Install dependencies
-RUN npm install
+# Remove package-lock and install fresh dependencies
+RUN rm -f package-lock.json && \
+    npm install --force
 
 # Copy all source files
 COPY . .
