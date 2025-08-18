@@ -3,7 +3,7 @@ import * as signalR from "@microsoft/signalr";
 class SignalRService {
   private validationConnection: signalR.HubConnection | null = null;
   private notificationConnection: signalR.HubConnection | null = null;
-  private baseUrl: string = window.location.hostname === "localhost" ? "http://localhost:5104" : "http://127.0.0.1:5104";
+  private baseUrl: string = import.meta.env.VITE_API_BASE_URL || (window.location.hostname === "localhost" ? "http://localhost:5104" : "http://95.217.219.4:5000");
 
   // Validation Hub Methods
   async startValidationConnection(): Promise<void> {
