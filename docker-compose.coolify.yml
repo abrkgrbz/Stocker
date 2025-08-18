@@ -56,7 +56,7 @@ services:
       ConnectionStrings__MasterConnection: "${ConnectionStrings__MasterConnection}"
       ConnectionStrings__TenantConnection: "${ConnectionStrings__TenantConnection}"
       ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection}"
-      JwtSettings__SecretKey: ${JWT_SECRET_KEY}
+      JwtSettings__Secret: ${JWT_SECRET_KEY}
       EmailSettings__SmtpHost: ${SMTP_HOST:-smtp.gmail.com}
       EmailSettings__SmtpPort: ${SMTP_PORT:-587}
       EmailSettings__SmtpUser: ${SMTP_USER}
