@@ -30,11 +30,11 @@ public static class ServiceCollectionExtensions
         {
             // In Production/Docker, prefer ConnectionStrings over DatabaseSettings
             var connectionString = configuration.GetConnectionString("MasterConnection");
+            var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
             
             // Fallback to DatabaseSettings if ConnectionString is not provided
             if (string.IsNullOrEmpty(connectionString))
             {
-                var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
                 connectionString = databaseSettings?.GetMasterConnectionString();
             }
             
