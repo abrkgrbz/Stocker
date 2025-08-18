@@ -1,17 +1,16 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies for native modules
-RUN apk add --no-cache python3 make g++
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ git
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Clean npm cache and install dependencies
-RUN npm cache clean --force && \
-    npm install --verbose
+# Install dependencies with legacy peer deps flag
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
