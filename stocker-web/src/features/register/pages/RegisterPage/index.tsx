@@ -846,7 +846,7 @@ export const RegisterPage: React.FC = () => {
                     <Title level={5}>Toplam</Title>
                     <div className="total-amount">
                       <Text className="currency">{selectedPackage.currency}</Text>
-                      <Text className="amount">{calculatePrice()}</Text>
+                      <Text className="amount">{selectedPackage.price || 0}</Text>
                       <Text className="period">
                         /{billingPeriod === 'Monthly' ? 'ay' : 'yıl'}
                       </Text>
