@@ -205,9 +205,9 @@ export const LandingPage: React.FC = () => {
   ];
 
   const stats = [
-    { title: 'Aktif Firma', value: 500, suffix: '+', prefix: <TeamOutlined /> },
-    { title: 'Kullanıcı', value: 10000, suffix: '+', prefix: <UserOutlined /> },
-    { title: 'İşlem/Gün', value: 100, suffix: 'K+', prefix: <SyncOutlined /> },
+    { title: 'Aktif Firma', value: 12, suffix: '+', prefix: <TeamOutlined /> },
+    { title: 'Kullanıcı', value: 248, suffix: '+', prefix: <UserOutlined /> },
+    { title: 'İşlem/Gün', value: 1.5, suffix: 'K+', prefix: <SyncOutlined /> },
     { title: 'Çalışma Süresi', value: 99.9, suffix: '%', prefix: <ClockCircleOutlined /> }
   ];
 
@@ -356,10 +356,18 @@ export const LandingPage: React.FC = () => {
           </nav>
           <div className="header-actions">
             <Button 
-              ghost={!scrolled}
+              type={scrolled ? 'default' : 'primary'}
+              ghost={scrolled}
               onClick={() => navigate('/login')}
               icon={<UserOutlined />}
-              style={{ marginRight: '8px' }}
+              style={{ 
+                marginRight: '8px',
+                ...(scrolled ? {} : { 
+                  background: 'transparent', 
+                  border: '2px solid #667eea',
+                  color: '#667eea'
+                })
+              }}
             >
               Giriş Yap
             </Button>
