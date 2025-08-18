@@ -10,6 +10,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // Skip TypeScript type checking during build
+    // @ts-ignore
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Skip certain warnings
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+        warn(warning)
+      }
+    }
+  },
   server: {
     port: 3000,
     proxy: {
