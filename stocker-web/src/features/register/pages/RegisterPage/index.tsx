@@ -359,7 +359,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   const calculatePrice = () => {
-    if (!selectedPackage) return 0;
+    if (!selectedPackage || !selectedPackage.price) return 0;
     
     let price = selectedPackage.price;
     
