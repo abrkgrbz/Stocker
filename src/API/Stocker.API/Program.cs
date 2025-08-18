@@ -362,7 +362,11 @@ app.MapHub<NotificationHub>("/hubs/notification", options =>
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
 }).RequireCors("AllowAll");
 
-// Add health check endpoint for SignalR
+// Add health check endpoints
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
+   .WithName("HealthCheck")
+   .WithTags("Health");
+
 app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
    .WithName("SignalRHealthCheck")
    .WithTags("Health");

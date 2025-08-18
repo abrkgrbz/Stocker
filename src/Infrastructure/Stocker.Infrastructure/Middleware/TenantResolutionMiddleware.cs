@@ -20,6 +20,15 @@ public class TenantResolutionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip tenant resolution for health check endpoints
+        if (context.Request.Path.StartsWithSegments("/health") || 
+            context.Request.Path.StartsWithSegments("/healthz") ||
+            context.Request.Path.StartsWithSegments("/ready"))
+        {
+            await _next(context);
+            return;
+        }
+
         var tenantService = context.RequestServices.GetRequiredService<ITenantService>();
         
         // Debug logging - gelen header'ları görelim
