@@ -31,6 +31,20 @@ public static class ServiceCollectionExtensions
             var connectionString = databaseSettings?.GetMasterConnectionString() 
                 ?? configuration.GetConnectionString("MasterConnection");
             
+            // Log the connection string for debugging (remove sensitive parts)
+            var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<MasterDbContext>>();
+            if (logger != null && !string.IsNullOrEmpty(connectionString))
+            {
+                var sanitizedConnStr = connectionString.Contains("Password") 
+                    ? connectionString.Substring(0, connectionString.IndexOf("Password")) + "Password=***"
+                    : connectionString;
+                logger.LogInformation("Connecting to MasterDb with connection string: {ConnectionString}", sanitizedConnStr);
+            }
+            else if (string.IsNullOrEmpty(connectionString))
+            {
+                logger?.LogError("MasterDb connection string is null or empty!");
+            }
+            
             options.UseSqlServer(connectionString);
             
             // Add interceptors

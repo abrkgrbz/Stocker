@@ -1,10 +1,14 @@
 version: '3.8'
 
+networks:
+  stocker-network:
+    driver: bridge
+
 services:
   # MSSQL Database
-  mssql:
+  database:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: mssql
+    container_name: stocker-database
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: ${SA_PASSWORD}
@@ -20,6 +24,8 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+    networks:
+      - stocker-network
 
   # CloudBeaver - Database Management UI
   cloudbeaver:
@@ -33,16 +39,17 @@ services:
     volumes:
       - cloudbeaver_data:/opt/cloudbeaver/workspace
     depends_on:
-      - mssql
+      database:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - stocker-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8978"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    links:
-      - mssql:database
 
   # API Service
   api:
@@ -64,7 +71,8 @@ services:
       EmailSettings__FromEmail: ${FROM_EMAIL:-noreply@stocker.com}
       EmailSettings__FromName: ${FROM_NAME:-Stocker}
     depends_on:
-      - mssql
+      database:
+        condition: service_healthy
     ports:
       - "${API_PORT:-5000}:5000" 
     volumes:
@@ -77,9 +85,8 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-    links:
-      - mssql:database
-
+    networks:
+      - stocker-network
 volumes:
   mssql_data:
     driver: local
