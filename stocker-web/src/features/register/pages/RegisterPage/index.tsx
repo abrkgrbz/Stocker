@@ -44,7 +44,9 @@ import {
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
+import { ModuleSelection } from './ModuleSelection';
 import './style.css';
+import './module-selection.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
@@ -62,6 +64,12 @@ interface Package {
   modules: string[];
   isPopular?: boolean;
   discount?: number;
+}
+
+interface ModulePackageData {
+  selectedModules: string[];
+  basePackage: string;
+  totalPrice: number;
 }
 
 interface RegisterFormData {
@@ -101,6 +109,7 @@ export const RegisterPage: React.FC = () => {
   const [tenantId, setTenantId] = useState<string | null>(null); // Store tenant ID after registration
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
   const [password, setPassword] = useState('');
+  const [modulePackageData, setModulePackageData] = useState<ModulePackageData | null>(null);
   const [form] = Form.useForm();
 
   // SignalR Validation Hook
@@ -295,6 +304,15 @@ export const RegisterPage: React.FC = () => {
     }
   };
 
+  const handleModuleSelectionComplete = (selectedModules: string[], basePackage: string, totalPrice: number) => {
+    setModulePackageData({
+      selectedModules,
+      basePackage,
+      totalPrice
+    });
+    setCurrentStep(1);
+  };
+
   const handlePackageSelect = (pkg: Package) => {
     setSelectedPackage(pkg);
     setCurrentStep(1);
@@ -354,6 +372,19 @@ export const RegisterPage: React.FC = () => {
   };
 
   const calculatePrice = () => {
+    if (modulePackageData) {
+      // Use module-based pricing
+      let price = modulePackageData.totalPrice;
+      
+      // Apply yearly discount
+      if (billingPeriod === 'Yearly') {
+        price = price * 12 * 0.8; // 20% yearly discount
+      }
+      
+      return Math.floor(price);
+    }
+    
+    // Fallback to old pricing
     if (!selectedPackage || !selectedPackage.price) return 0;
     
     let price = selectedPackage.price;
@@ -786,7 +817,63 @@ export const RegisterPage: React.FC = () => {
             <Card className="order-summary">
               <Title level={4}>Sipariş Özeti</Title>
               
-              {selectedPackage && (
+              {modulePackageData ? (
+                <>
+                  <div className="summary-item">
+                    <Text>Temel Paket:</Text>
+                    <Text strong>{modulePackageData.basePackage}</Text>
+                  </div>
+                  
+                  <div className="summary-item">
+                    <Text>Seçilen Modüller:</Text>
+                    <Text strong>{modulePackageData.selectedModules.length} modül</Text>
+                  </div>
+                  
+                  <div className="summary-item">
+                    <Text>Dönem:</Text>
+                    <Text strong>
+                      {billingPeriod === 'Monthly' ? 'Aylık' : 'Yıllık'}
+                    </Text>
+                  </div>
+
+                  <Divider />
+
+                  <div className="summary-item">
+                    <Text>Aylık Tutar:</Text>
+                    <Text>₺{modulePackageData.totalPrice}</Text>
+                  </div>
+
+                  {billingPeriod === 'Yearly' && (
+                    <>
+                      <div className="summary-item">
+                        <Text>Yıllık İndirim:</Text>
+                        <Text type="success">%20</Text>
+                      </div>
+                    </>
+                  )}
+
+                  <Divider />
+
+                  <div className="summary-total">
+                    <Title level={5}>Toplam</Title>
+                    <div className="total-amount">
+                      <Text className="currency">₺</Text>
+                      <Text className="amount">{calculatePrice()}</Text>
+                      <Text className="period">
+                        /{billingPeriod === 'Monthly' ? 'ay' : 'yıl'}
+                      </Text>
+                    </div>
+                  </div>
+
+                  <Alert
+                    message="14 Gün Ücretsiz Deneme"
+                    description="İlk 14 gün ücretsiz kullanın. İstediğiniz zaman iptal edebilirsiniz."
+                    type="info"
+                    showIcon
+                    style={{ marginTop: 16 }}
+                  />
+                </>
+              ) : selectedPackage && (
                 <>
                   <div className="summary-item">
                     <Text>Paket:</Text>
@@ -1028,7 +1115,7 @@ export const RegisterPage: React.FC = () => {
             style={{ marginBottom: 48 }}
             items={[
               {
-                title: 'Paket Seçimi',
+                title: 'Modül Seçimi',
                 icon: <ShoppingCartOutlined />
               },
               {
@@ -1042,7 +1129,7 @@ export const RegisterPage: React.FC = () => {
             ]}
           />
 
-          {currentStep === 0 && renderPackageSelection()}
+          {currentStep === 0 && renderModuleSelection()}
           {currentStep === 1 && renderRegistrationForm()}
           {currentStep === 2 && renderPayment()}
         </div>

@@ -1,0 +1,50 @@
+.module-selection {
+  padding: 20px 0;
+}
+
+.module-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.module-card.selected {
+  background: linear-gradient(135deg, #f5f7ff 0%, #f0f3ff 100%);
+  border-color: #667eea !important;
+}
+
+.module-card.required {
+  background: #fafafa;
+}
+
+.package-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.package-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.package-card.selected {
+  background: linear-gradient(135deg, #f5f7ff 0%, #f0f3ff 100%);
+  border-color: #667eea !important;
+}
+
+.price-summary-bar {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+}
