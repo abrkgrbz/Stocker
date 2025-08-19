@@ -1,0 +1,479 @@
+.register-wizard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-wizard::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-30px, -30px) rotate(180deg); }
+}
+
+.wizard-header {
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.wizard-header h2 {
+  color: white;
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.wizard-header .ant-typography {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+}
+
+.wizard-card {
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.wizard-steps {
+  padding: 32px 48px 0;
+}
+
+.wizard-steps .ant-steps-item-icon {
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+}
+
+.wizard-steps .ant-steps-item-process .ant-steps-item-icon {
+  border: none !important;
+}
+
+.wizard-body {
+  padding: 40px;
+  min-height: 500px;
+}
+
+.step-content {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.step-header h3 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.step-description {
+  font-size: 16px;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.step-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.step-form .ant-form-item-label > label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.step-form .ant-input-affix-wrapper,
+.step-form .ant-input,
+.step-form .ant-input-password {
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.step-form .ant-input-affix-wrapper:hover,
+.step-form .ant-input:hover {
+  border-color: #667eea;
+}
+
+.step-form .ant-input-affix-wrapper:focus,
+.step-form .ant-input:focus,
+.step-form .ant-input-affix-wrapper-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Sector Radio Group */
+.sector-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sector-button {
+  flex: 0 0 calc(50% - 6px);
+  height: 48px;
+  line-height: 46px;
+  text-align: center;
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.sector-button:hover {
+  border-color: #667eea;
+}
+
+.sector-radio-group .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+/* Employee Radio Group */
+.employee-radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.employee-button {
+  flex: 1;
+  min-width: 120px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.employee-button:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+.employee-radio-group .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+/* Contact Benefits */
+.contact-benefits {
+  margin-top: 40px;
+  padding: 24px;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+.contact-benefits h4 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.contact-benefits .ant-timeline-item-content {
+  font-size: 15px;
+  color: #555;
+}
+
+/* Security Features */
+.security-features {
+  margin-top: 40px;
+  padding: 24px;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+.security-features h4 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.security-card {
+  text-align: center;
+  border: none;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.security-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.security-card .ant-card-body {
+  padding: 16px;
+}
+
+.security-card .anticon {
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Agreement Summary */
+.agreement-summary {
+  margin-bottom: 32px;
+}
+
+.summary-card {
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.summary-card h4 {
+  color: #333;
+  margin-bottom: 0;
+}
+
+.agreements {
+  padding: 24px;
+  background: white;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+}
+
+.agreements .ant-checkbox-wrapper {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Success Details */
+.success-details {
+  max-width: 500px;
+  margin: 40px auto 0;
+  padding: 32px;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+.success-details h4 {
+  margin-bottom: 24px;
+  text-align: center;
+  color: #333;
+}
+
+/* Wizard Footer */
+.wizard-footer {
+  padding: 24px 40px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  background: #fafafa;
+  border-radius: 0 0 16px 16px;
+}
+
+.wizard-footer button {
+  min-width: 120px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.wizard-footer button.ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.wizard-footer button.ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+/* Footer Info */
+.wizard-footer-info {
+  text-align: center;
+  margin-top: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.wizard-footer-info .ant-typography {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.wizard-footer-info .anticon {
+  margin-right: 4px;
+}
+
+/* Step Info Alert */
+.step-info {
+  margin-top: 32px;
+}
+
+.step-info .ant-alert {
+  border-radius: 8px;
+  border: none;
+  background: #e6f7ff;
+}
+
+/* Password Strength Component Integration */
+.ant-form-item-explain .password-strength {
+  margin-top: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .register-wizard {
+    padding: 20px 10px;
+  }
+
+  .wizard-header h2 {
+    font-size: 28px;
+  }
+
+  .wizard-header .ant-typography {
+    font-size: 16px;
+  }
+
+  .wizard-card {
+    border-radius: 12px;
+  }
+
+  .wizard-steps {
+    padding: 24px 16px 0;
+  }
+
+  .wizard-steps .ant-steps-item-title {
+    display: none;
+  }
+
+  .wizard-steps .ant-steps-item-description {
+    display: none;
+  }
+
+  .wizard-body {
+    padding: 24px 16px;
+  }
+
+  .step-header h3 {
+    font-size: 24px;
+  }
+
+  .step-description {
+    font-size: 14px;
+  }
+
+  .sector-button {
+    flex: 0 0 100%;
+  }
+
+  .employee-button {
+    flex: 0 0 calc(50% - 6px);
+  }
+
+  .wizard-footer {
+    padding: 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .wizard-footer button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .wizard-header h2 {
+    font-size: 24px;
+  }
+
+  .wizard-header .ant-typography {
+    font-size: 14px;
+  }
+
+  .step-header h3 {
+    font-size: 20px;
+  }
+
+  .employee-button {
+    flex: 0 0 100%;
+  }
+
+  .security-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* Loading State */
+.wizard-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.wizard-loading .anticon {
+  font-size: 48px;
+  color: #667eea;
+}
+
+/* Validation Feedback */
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-affix-wrapper {
+  border-color: #ff4d4f;
+}
+
+.ant-form-item-has-success .ant-input,
+.ant-form-item-has-success .ant-input-affix-wrapper {
+  border-color: #52c41a;
+}
+
+/* Custom Scrollbar */
+.wizard-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.wizard-body::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.wizard-body::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.wizard-body::-webkit-scrollbar-thumb:hover {
+  background: #764ba2;
+}

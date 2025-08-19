@@ -22,6 +22,7 @@ const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage').th
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const RegisterPage = lazy(() => import('@/features/register/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const RegisterWizard = lazy(() => import('@/features/register/pages/RegisterWizard'));
 const SignalRTestPage = lazy(() => import('@/features/register/pages/SignalRTest').then(m => ({ default: m.SignalRTestPage })));
 const PaymentPage = lazy(() => import('@/features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const MasterDashboard = lazy(() => import('@/features/dashboard/pages/MasterDashboard').then(m => ({ default: m.MasterDashboard })));
@@ -137,7 +138,8 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 
                 {/* Register Page - No layout wrapper for full experience */}
-                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/register-old" element={<RegisterPage />} />
+                <Route path="/register" element={<RegisterWizard />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/signalr-test" element={<SignalRTestPage />} />
                 
