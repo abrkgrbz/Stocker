@@ -6,7 +6,7 @@ const { Title, Paragraph } = Typography;
 
 export const FeaturesSection: React.FC = () => {
   return (
-    <section style={{ padding: '80px 0', background: '#f8f9fa' }}>
+    <section id="features" style={{ padding: '80px 0', background: '#f8f9fa' }}>
       <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: 16 }}>
           Neden Stocker?

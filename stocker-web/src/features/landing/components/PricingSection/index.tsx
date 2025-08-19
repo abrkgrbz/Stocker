@@ -14,7 +14,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
   const navigate = navProp || useNavigate();
 
   return (
-    <section style={{ padding: '80px 0', background: 'white' }}>
+    <section id="pricing" style={{ padding: '80px 0', background: 'white' }}>
       <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: 16 }}>
           Size Uygun Paketi Seçin

@@ -6,7 +6,7 @@ const { Title, Paragraph, Text } = Typography;
 
 export const TestimonialsSection: React.FC = () => {
   return (
-    <section style={{ padding: '80px 0', background: '#f8f9fa' }}>
+    <section id="testimonials" style={{ padding: '80px 0', background: '#f8f9fa' }}>
       <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: 16 }}>
           Müşterilerimiz Ne Diyor?

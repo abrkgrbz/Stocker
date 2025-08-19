@@ -66,11 +66,11 @@ export const LandingPage: React.FC = () => {
             <span className="logo-text">Stocker</span>
           </div>
           <nav className="nav-menu">
-            <a href="#features">Özellikler</a>
-            <a href="#modules">Modüller</a>
-            <a href="#pricing">Fiyatlandırma</a>
-            <a href="#testimonials">Referanslar</a>
-            <a href="#contact">İletişim</a>
+            <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>Özellikler</a>
+            <a href="#modules" onClick={(e) => { e.preventDefault(); document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' }); }}>Modüller</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}>Fiyatlandırma</a>
+            <a href="#testimonials" onClick={(e) => { e.preventDefault(); document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' }); }}>Referanslar</a>
+            <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>İletişim</a>
           </nav>
           <div className="header-actions">
             <Button 
@@ -196,7 +196,7 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="cta-section">
+        <section id="contact" className="cta-section">
           <div className="section-container">
             <Card className="cta-card" bordered={false}>
               <Typography.Title level={2} style={{ color: 'white' }}>
