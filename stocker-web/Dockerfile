@@ -16,12 +16,6 @@ RUN rm -rf node_modules package-lock.json && \
 # Copy all source files
 COPY . .
 
-# Debug: Show what's actually copied
-RUN echo "=== Directory structure ===" && \
-    ls -la src/features/master/pages/ && \
-    echo "=== Packages content ===" && \
-    ls -la src/features/master/pages/Packages/ || echo "Packages dir not found"
-
 # Build the application
 RUN npm run build
 
