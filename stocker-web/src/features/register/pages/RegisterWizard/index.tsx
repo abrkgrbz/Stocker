@@ -39,7 +39,8 @@ import {
   BankOutlined,
   InfoCircleOutlined,
   LoadingOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  IdcardOutlined
 } from '@ant-design/icons';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
@@ -262,195 +263,221 @@ const RegisterWizard: React.FC = () => {
             </div>
 
             <Form form={form} layout="vertical" className="step-form">
-              <Row gutter={24}>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="companyName"
-                    label="Şirket Adı"
-                    rules={[
-                      { required: true, message: 'Şirket adı zorunludur' },
-                      { min: 3, message: 'En az 3 karakter olmalıdır' }
-                    ]}
-                    validateStatus={companyNameCheck?.isValid === false ? 'error' : ''}
-                    help={companyNameCheck?.message}
+              {/* Kayıt Türü Seçimi */}
+              <div style={{ marginBottom: 32 }}>
+                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
+                  <IdcardOutlined style={{ marginRight: 8, color: '#667eea' }} />
+                  Kayıt Türü
+                </Title>
+                <Form.Item
+                  name="identityType"
+                  initialValue="vergi"
+                  rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Radio.Group 
+                    onChange={(e) => handleIdentityTypeChange(e.target.value)}
+                    style={{ width: '100%' }}
                   >
-                    <Input
-                      size="large"
-                      placeholder="Örn: ABC Teknoloji A.Ş."
-                      prefix={<BankOutlined />}
-                      onChange={(e) => handleCompanyNameChange(e.target.value)}
-                      suffix={
-                        companyNameCheck?.isValid === true ? (
-                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                        ) : companyNameCheck?.isValid === false ? (
-                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                        ) : null
-                      }
-                    />
-                  </Form.Item>
-                </Col>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Radio value="vergi" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
+                          <Card 
+                            className={`identity-card ${identityType === 'vergi' ? 'identity-card-active' : ''}`}
+                            hoverable
+                            style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Space direction="vertical" align="center" size={8}>
+                              <Avatar 
+                                size={44} 
+                                icon={<BankOutlined />}
+                                style={{ 
+                                  backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0'
+                                }}
+                              />
+                              <div style={{ textAlign: 'center' }}>
+                                <Title level={5} style={{ margin: 0, fontSize: 16 }}>Şirket</Title>
+                                <Text type="secondary" style={{ fontSize: 12 }}>Tüzel Kişilik</Text>
+                              </div>
+                              <Tag color="blue" style={{ margin: 0 }}>Vergi No (10 Hane)</Tag>
+                            </Space>
+                          </Card>
+                        </Radio>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Radio value="tc" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
+                          <Card 
+                            className={`identity-card ${identityType === 'tc' ? 'identity-card-active' : ''}`}
+                            hoverable
+                            style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Space direction="vertical" align="center" size={8}>
+                              <Avatar 
+                                size={44} 
+                                icon={<UserOutlined />}
+                                style={{ 
+                                  backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0'
+                                }}
+                              />
+                              <div style={{ textAlign: 'center' }}>
+                                <Title level={5} style={{ margin: 0, fontSize: 16 }}>Bireysel</Title>
+                                <Text type="secondary" style={{ fontSize: 12 }}>Şahıs</Text>
+                              </div>
+                              <Tag color="green" style={{ margin: 0 }}>TC Kimlik (11 Hane)</Tag>
+                            </Space>
+                          </Card>
+                        </Radio>
+                      </Col>
+                    </Row>
+                  </Radio.Group>
+                </Form.Item>
+              </div>
 
-                <Col xs={24}>
-                  <div style={{ marginBottom: 24 }}>
-                    <Text strong style={{ fontSize: 16, marginBottom: 16, display: 'block' }}>
-                      Kayıt Türünü Seçin
-                    </Text>
+              {/* Şirket Bilgileri */}
+              <div style={{ marginBottom: 32 }}>
+                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
+                  <BankOutlined style={{ marginRight: 8, color: '#667eea' }} />
+                  Şirket Bilgileri
+                </Title>
+                <Row gutter={16}>
+                  <Col xs={24} md={12}>
                     <Form.Item
-                      name="identityType"
-                      initialValue="vergi"
-                      rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
+                      name="companyName"
+                      label="Şirket Adı"
+                      rules={[
+                        { required: true, message: 'Şirket adı zorunludur' },
+                        { min: 3, message: 'En az 3 karakter olmalıdır' }
+                      ]}
+                      validateStatus={companyNameCheck?.isValid === false ? 'error' : ''}
+                      help={companyNameCheck?.message}
                     >
-                      <Radio.Group 
-                        onChange={(e) => handleIdentityTypeChange(e.target.value)}
-                        style={{ width: '100%' }}
-                      >
-                        <Row gutter={16}>
-                          <Col xs={24} md={12}>
-                            <Radio value="vergi" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
-                              <Card 
-                                className={`identity-card ${identityType === 'vergi' ? 'identity-card-active' : ''}`}
-                                hoverable
-                                style={{ marginTop: 8 }}
+                      <Input
+                        size="large"
+                        placeholder="Örn: ABC Teknoloji A.Ş."
+                        prefix={<BankOutlined />}
+                        onChange={(e) => handleCompanyNameChange(e.target.value)}
+                        suffix={
+                          companyNameCheck?.isValid === true ? (
+                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                          ) : companyNameCheck?.isValid === false ? (
+                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                          ) : null
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="companyCode"
+                      label={identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}
+                      rules={[
+                        { required: true, message: `${identityType === 'tc' ? 'TC Kimlik' : 'Vergi'} numarası zorunludur` },
+                        { 
+                          pattern: identityType === 'tc' ? /^[0-9]{11}$/ : /^[0-9]{10}$/, 
+                          message: `${identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'} girin` 
+                        }
+                      ]}
+                      validateStatus={identityValidation?.isValid === false ? 'error' : ''}
+                      help={identityValidation?.message}
+                    >
+                      <Input
+                        size="large"
+                        placeholder={identityType === 'tc' ? 'Örn: 12345678901' : 'Örn: 1234567890'}
+                        prefix={identityType === 'tc' ? <UserOutlined /> : <InfoCircleOutlined />}
+                        maxLength={identityType === 'tc' ? 11 : 10}
+                        onChange={(e) => handleIdentityNumberChange(e.target.value)}
+                        suffix={
+                          isValidating ? (
+                            <LoadingOutlined style={{ color: '#667eea' }} spin />
+                          ) : identityValidation?.isValid === true ? (
+                            <Tooltip title={`Geçerli ${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}`}>
+                              <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                            </Tooltip>
+                          ) : identityValidation?.isValid === false ? (
+                            <Tooltip title={identityValidation?.message}>
+                              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                            </Tooltip>
+                          ) : null
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
+
+              {/* İşletme Detayları */}
+              <div style={{ marginBottom: 32 }}>
+                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
+                  <TeamOutlined style={{ marginRight: 8, color: '#667eea' }} />
+                  İşletme Detayları
+                </Title>
+                <Row gutter={16}>
+                  <Col xs={24}>
+                    <Form.Item
+                      name="sector"
+                      label="Faaliyet Sektörü"
+                      rules={[{ required: true, message: 'Sektör seçimi zorunludur' }]}
+                    >
+                      <Radio.Group className="sector-radio-group" style={{ width: '100%' }}>
+                        <Row gutter={[8, 8]}>
+                          {sectors.map((sector) => (
+                            <Col xs={24} sm={12} key={sector}>
+                              <Radio.Button 
+                                value={sector} 
+                                className="sector-button" 
+                                style={{ 
+                                  width: '100%', 
+                                  height: 44,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
                               >
-                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                  <Avatar 
-                                    size={64} 
-                                    icon={<BankOutlined />}
-                                    style={{ 
-                                      backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0',
-                                      marginBottom: 16
-                                    }}
-                                  />
-                                  <Title level={4} style={{ margin: '8px 0' }}>Şirket Kaydı</Title>
-                                  <Text type="secondary">Tüzel kişilik için</Text>
-                                  <Divider style={{ margin: '16px 0' }} />
-                                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                                    <Tag color="blue" style={{ margin: 0 }}>10 Haneli Vergi No</Tag>
-                                    <Text style={{ fontSize: 12 }}>Limited, A.Ş. vb.</Text>
-                                  </Space>
-                                </div>
-                              </Card>
-                            </Radio>
-                          </Col>
-                          <Col xs={24} md={12}>
-                            <Radio value="tc" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
-                              <Card 
-                                className={`identity-card ${identityType === 'tc' ? 'identity-card-active' : ''}`}
-                                hoverable
-                                style={{ marginTop: 8 }}
-                              >
-                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                  <Avatar 
-                                    size={64} 
-                                    icon={<UserOutlined />}
-                                    style={{ 
-                                      backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0',
-                                      marginBottom: 16
-                                    }}
-                                  />
-                                  <Title level={4} style={{ margin: '8px 0' }}>Şahıs Kaydı</Title>
-                                  <Text type="secondary">Bireysel kullanım için</Text>
-                                  <Divider style={{ margin: '16px 0' }} />
-                                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                                    <Tag color="green" style={{ margin: 0 }}>11 Haneli TC Kimlik No</Tag>
-                                    <Text style={{ fontSize: 12 }}>Şahıs şirketi, serbest meslek</Text>
-                                  </Space>
-                                </div>
-                              </Card>
-                            </Radio>
-                          </Col>
+                                {sector}
+                              </Radio.Button>
+                            </Col>
+                          ))}
                         </Row>
                       </Radio.Group>
                     </Form.Item>
-                  </div>
-                </Col>
+                  </Col>
 
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="companyCode"
-                    label={
-                      <Space>
-                        {identityType === 'tc' ? (
-                          <>
-                            <UserOutlined />
-                            <span>TC Kimlik No</span>
-                          </>
-                        ) : (
-                          <>
-                            <BankOutlined />
-                            <span>Vergi No</span>
-                          </>
-                        )}
-                      </Space>
-                    }
-                    rules={[
-                      { required: true, message: `${identityType === 'tc' ? 'TC Kimlik' : 'Vergi'} numarası zorunludur` },
-                      { 
-                        pattern: identityType === 'tc' ? /^[0-9]{11}$/ : /^[0-9]{10}$/, 
-                        message: `${identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'} girin` 
-                      }
-                    ]}
-                    validateStatus={identityValidation?.isValid === false ? 'error' : ''}
-                    help={identityValidation?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder={identityType === 'tc' ? 'Örn: 12345678901' : 'Örn: 1234567890'}
-                      prefix={<InfoCircleOutlined />}
-                      maxLength={identityType === 'tc' ? 11 : 10}
-                      onChange={(e) => handleIdentityNumberChange(e.target.value)}
-                      suffix={
-                        isValidating ? (
-                          <LoadingOutlined style={{ color: '#667eea' }} spin />
-                        ) : identityValidation?.isValid === true ? (
-                          <Tooltip title={`Geçerli ${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}`}>
-                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />
-                          </Tooltip>
-                        ) : identityValidation?.isValid === false ? (
-                          <Tooltip title={identityValidation?.message}>
-                            <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />
-                          </Tooltip>
-                        ) : null
-                      }
-                      style={{
-                        borderColor: identityValidation?.isValid === true ? '#52c41a' : undefined
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="sector"
-                    label="Sektör"
-                    rules={[{ required: true, message: 'Sektör seçimi zorunludur' }]}
-                  >
-                    <Radio.Group className="sector-radio-group">
-                      {sectors.map((sector) => (
-                        <Radio.Button key={sector} value={sector} className="sector-button">
-                          {sector}
-                        </Radio.Button>
-                      ))}
-                    </Radio.Group>
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="employeeCount"
-                    label="Çalışan Sayısı"
-                    rules={[{ required: true, message: 'Çalışan sayısı seçimi zorunludur' }]}
-                  >
-                    <Radio.Group className="employee-radio-group">
-                      {employeeCounts.map((count) => (
-                        <Radio.Button key={count.value} value={count.value} className="employee-button">
-                          <TeamOutlined /> {count.label}
-                        </Radio.Button>
-                      ))}
-                    </Radio.Group>
-                  </Form.Item>
-                </Col>
-              </Row>
+                  <Col xs={24}>
+                    <Form.Item
+                      name="employeeCount"
+                      label="Çalışan Sayısı"
+                      rules={[{ required: true, message: 'Çalışan sayısı seçimi zorunludur' }]}
+                    >
+                      <Radio.Group className="employee-radio-group" style={{ width: '100%' }}>
+                        <Row gutter={[8, 8]}>
+                          {employeeCounts.map((count) => (
+                            <Col xs={12} sm={6} key={count.value}>
+                              <Radio.Button 
+                                value={count.value} 
+                                className="employee-button" 
+                                style={{ 
+                                  width: '100%', 
+                                  height: 64,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '8px'
+                                }}
+                              >
+                                <Space direction="vertical" size={2} align="center">
+                                  <TeamOutlined style={{ fontSize: 18, color: '#667eea' }} />
+                                  <Text style={{ fontSize: 13, lineHeight: 1.2 }}>{count.label}</Text>
+                                </Space>
+                              </Radio.Button>
+                            </Col>
+                          ))}
+                        </Row>
+                      </Radio.Group>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
             </Form>
 
             <div className="step-info">

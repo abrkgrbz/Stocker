@@ -130,6 +130,13 @@
   margin: 0 auto;
 }
 
+/* Form Section Headers */
+.step-form h5.ant-typography {
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
 .step-form .ant-form-item-label > label {
   font-weight: 600;
   font-size: 14px;
@@ -158,48 +165,49 @@
 
 /* Sector Radio Group */
 .sector-radio-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  width: 100%;
 }
 
 .sector-button {
-  flex: 0 0 calc(50% - 6px);
-  height: 48px;
-  line-height: 46px;
   text-align: center;
   border-radius: 8px;
   border: 2px solid #e8e8e8;
   transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sector-button:hover {
   border-color: #667eea;
+  background: rgba(102, 126, 234, 0.02);
 }
 
 .sector-radio-group .ant-radio-button-wrapper-checked {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
   color: white;
+  font-weight: 600;
 }
 
 /* Employee Radio Group */
 .employee-radio-group {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .employee-button {
-  flex: 1;
-  min-width: 120px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 8px;
   border: 2px solid #e8e8e8;
   transition: all 0.3s ease;
+  font-weight: 500;
+  white-space: normal;
+  text-align: center;
+}
+
+.employee-button .ant-space {
+  width: 100%;
 }
 
 /* Identity Type Cards */
@@ -209,6 +217,15 @@
   transition: all 0.3s ease;
   background: #fafafa;
   cursor: pointer;
+  min-height: 140px;
+}
+
+.identity-card .ant-card-body {
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .identity-card:hover {
@@ -265,12 +282,19 @@
 .employee-button:hover {
   border-color: #667eea;
   transform: translateY(-2px);
+  background: rgba(102, 126, 234, 0.02);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .employee-radio-group .ant-radio-button-wrapper-checked {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
   color: white;
+  font-weight: 600;
+}
+
+.employee-radio-group .ant-radio-button-wrapper-checked .anticon {
+  color: white !important;
 }
 
 /* Contact Benefits */
@@ -468,14 +492,6 @@
 
   .step-description {
     font-size: 14px;
-  }
-
-  .sector-button {
-    flex: 0 0 100%;
-  }
-
-  .employee-button {
-    flex: 0 0 calc(50% - 6px);
   }
 
   .wizard-footer {
