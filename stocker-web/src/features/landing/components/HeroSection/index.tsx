@@ -6,10 +6,11 @@ import { useNavigate } from 'react-router-dom';
 const { Title, Paragraph } = Typography;
 
 interface HeroSectionProps {
-  scrolled: boolean;
+  scrolled?: boolean;
+  navigate?: any;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled, navigate: navProp }) => {
   const navigate = useNavigate();
 
   return (

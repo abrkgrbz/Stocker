@@ -6,8 +6,12 @@ import { pricingPlans } from '../../data/pricingPlans';
 
 const { Title, Text, Paragraph } = Typography;
 
-export const PricingSection: React.FC = () => {
-  const navigate = useNavigate();
+interface PricingSectionProps {
+  navigate?: any;
+}
+
+export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navProp }) => {
+  const navigate = navProp || useNavigate();
 
   return (
     <section style={{ padding: '80px 0', background: 'white' }}>
