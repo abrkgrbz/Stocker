@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
+using Stocker.Application.Features.Identity.Commands.Register;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -65,6 +66,35 @@ public class AuthController : ControllerBase
             return Ok(result.Value);
         }
         
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Register a new user and company
+    /// </summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(RegisterResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> Register([FromBody] RegisterCommand command)
+    {
+        _logger.LogInformation("Registration attempt for company: {CompanyName}, user: {Username}", 
+            command.CompanyName, command.Username);
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Registration successful for company: {CompanyName}", command.CompanyName);
+            return Ok(result.Value);
+        }
+        
+        _logger.LogWarning("Failed registration attempt for company: {CompanyName}, error: {Error}", 
+            command.CompanyName, result.Error.Description);
         return BadRequest(new
         {
             success = false,

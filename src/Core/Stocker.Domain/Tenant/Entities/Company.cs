@@ -12,6 +12,8 @@ public sealed class Company : TenantAggregateRoot
     public string Name { get; private set; }
     public string Code { get; private set; }
     public string? LegalName { get; private set; }
+    public string? IdentityType { get; private set; } // 'TC' or 'Vergi'
+    public string? IdentityNumber { get; private set; } // TC Kimlik No or Vergi No
     public string? TaxNumber { get; private set; }
     public string? TaxOffice { get; private set; }
     public string? TradeRegisterNumber { get; private set; }
@@ -43,6 +45,8 @@ public sealed class Company : TenantAggregateRoot
         Address address,
         string currency,
         string? legalName = null,
+        string? identityType = null,
+        string? identityNumber = null,
         string? taxNumber = null,
         string? taxOffice = null,
         string? tradeRegisterNumber = null,
@@ -58,6 +62,8 @@ public sealed class Company : TenantAggregateRoot
         Name = name;
         Code = code;
         LegalName = legalName;
+        IdentityType = identityType;
+        IdentityNumber = identityNumber;
         TaxNumber = taxNumber;
         TaxOffice = taxOffice;
         TradeRegisterNumber = tradeRegisterNumber;
@@ -84,6 +90,10 @@ public sealed class Company : TenantAggregateRoot
         Address address,
         PhoneNumber? phone = null,
         PhoneNumber? fax = null,
+        string? identityType = null,
+        string? identityNumber = null,
+        string? sector = null,
+        int? employeeCount = null,
         string? taxOffice = null,
         string? tradeRegisterNumber = null,
         string? website = null)
@@ -111,12 +121,16 @@ public sealed class Company : TenantAggregateRoot
             phone ?? PhoneNumber.Create("+90 000 000 0000").Value!, // Default phone if not provided
             address,
             "TRY", // Default currency
-            null,
+            null, // legalName
+            identityType,
+            identityNumber,
             taxNumber,
             taxOffice,
             tradeRegisterNumber,
             fax,
-            website);
+            website,
+            sector,
+            employeeCount);
     }
 
     public void Update(

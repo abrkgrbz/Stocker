@@ -227,16 +227,18 @@ const RegisterWizard: React.FC = () => {
       // API call to register
       const response = await apiClient.post('/auth/register', {
         companyName: finalData.companyName,
+        companyCode: finalData.companyCode || finalData.companyName.toLowerCase().replace(/[^a-z0-9]/g, ''),
         identityType: finalData.identityType,
-        companyCode: finalData.companyCode,
+        identityNumber: finalData.companyCode, // Using companyCode as identityNumber
+        sector: finalData.sector,
+        employeeCount: finalData.employeeCount,
         contactName: finalData.contactName,
         contactEmail: finalData.contactEmail,
         contactPhone: finalData.contactPhone,
+        contactTitle: finalData.contactTitle,
         username: finalData.username,
         password: finalData.password,
-        domain: `${finalData.domain}.stocker.com`,
-        sector: finalData.sector,
-        employeeCount: finalData.employeeCount
+        domain: finalData.domain // Without .stocker.com suffix
       });
 
       if (response.data.success) {
