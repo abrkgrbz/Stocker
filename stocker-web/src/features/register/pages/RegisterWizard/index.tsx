@@ -285,21 +285,22 @@ const RegisterWizard: React.FC = () => {
                           <Card 
                             className={`identity-card ${identityType === 'vergi' ? 'identity-card-active' : ''}`}
                             hoverable
-                            style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Space direction="vertical" align="center" size={8}>
+                            <Space direction="vertical" align="center" size={12}>
                               <Avatar 
-                                size={44} 
+                                size={48} 
                                 icon={<BankOutlined />}
                                 style={{ 
-                                  backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0'
+                                  backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0',
+                                  marginBottom: 4
                                 }}
                               />
                               <div style={{ textAlign: 'center' }}>
                                 <Title level={5} style={{ margin: 0, fontSize: 16 }}>Şirket</Title>
                                 <Text type="secondary" style={{ fontSize: 12 }}>Tüzel Kişilik</Text>
                               </div>
-                              <Tag color="blue" style={{ margin: 0 }}>Vergi No (10 Hane)</Tag>
+                              <Tag color="blue" style={{ margin: 0, marginTop: 4 }}>Vergi No (10 Hane)</Tag>
                             </Space>
                           </Card>
                         </Radio>
@@ -309,21 +310,22 @@ const RegisterWizard: React.FC = () => {
                           <Card 
                             className={`identity-card ${identityType === 'tc' ? 'identity-card-active' : ''}`}
                             hoverable
-                            style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Space direction="vertical" align="center" size={8}>
+                            <Space direction="vertical" align="center" size={12}>
                               <Avatar 
-                                size={44} 
+                                size={48} 
                                 icon={<UserOutlined />}
                                 style={{ 
-                                  backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0'
+                                  backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0',
+                                  marginBottom: 4
                                 }}
                               />
                               <div style={{ textAlign: 'center' }}>
                                 <Title level={5} style={{ margin: 0, fontSize: 16 }}>Bireysel</Title>
                                 <Text type="secondary" style={{ fontSize: 12 }}>Şahıs</Text>
                               </div>
-                              <Tag color="green" style={{ margin: 0 }}>TC Kimlik (11 Hane)</Tag>
+                              <Tag color="green" style={{ margin: 0, marginTop: 4 }}>TC Kimlik (11 Hane)</Tag>
                             </Space>
                           </Card>
                         </Radio>
