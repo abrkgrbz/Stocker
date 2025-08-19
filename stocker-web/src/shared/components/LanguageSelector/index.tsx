@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dropdown, Button, Space } from 'antd';
 import { GlobalOutlined, CheckOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 import { languages, SupportedLanguage, changeLanguage, getCurrentLanguage } from '@/i18n/config';
 import type { MenuProps } from 'antd';
 
@@ -14,7 +13,6 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   type = 'button',
   size = 'middle' 
 }) => {
-  const { i18n } = useTranslation();
   const currentLanguage = getCurrentLanguage();
 
   const handleLanguageChange = (language: SupportedLanguage) => {

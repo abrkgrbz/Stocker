@@ -55,7 +55,7 @@ export const useSignalRValidation = () => {
           setError(error);
         });
 
-        service.onConnected((data) => {
+        service.onConnected(() => {
         });
       } catch (err) {
         console.error('Failed to connect to SignalR, falling back to mock service:', err);
@@ -165,7 +165,7 @@ export const useSignalRNotifications = (token?: string) => {
           setNotifications(prev => [notification, ...prev]);
         });
 
-        signalRService.onConnected((data) => {
+        signalRService.onConnected(() => {
         });
       } catch (err) {
         console.error('Failed to connect to notification hub:', err);

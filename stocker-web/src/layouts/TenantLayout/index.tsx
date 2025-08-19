@@ -8,7 +8,6 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
-  DollarOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar } from 'antd';

@@ -2,13 +2,13 @@ import { useState, useMemo, useCallback } from 'react';
 
 type FilterFunction<T> = (item: T) => boolean;
 
-interface FilterConfig<T> {
+interface FilterConfig {
   [key: string]: any;
 }
 
 interface UseFilterResult<T> {
   filteredData: T[];
-  filters: FilterConfig<T>;
+  filters: FilterConfig;
   setFilter: (key: string, value: any) => void;
   removeFilter: (key: string) => void;
   clearFilters: () => void;
@@ -17,9 +17,9 @@ interface UseFilterResult<T> {
 
 export function useFilter<T>(
   data: T[],
-  initialFilters: FilterConfig<T> = {}
+  initialFilters: FilterConfig = {}
 ): UseFilterResult<T> {
-  const [filters, setFilters] = useState<FilterConfig<T>>(initialFilters);
+  const [filters, setFilters] = useState<FilterConfig>(initialFilters);
   const [customFilter, setCustomFilter] = useState<FilterFunction<T> | null>(null);
 
   const filteredData = useMemo(() => {

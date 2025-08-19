@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Result, Button } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 
