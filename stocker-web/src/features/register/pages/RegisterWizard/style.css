@@ -186,6 +186,32 @@
   transition: all 0.3s ease;
 }
 
+/* Identity Type Radio Group */
+.identity-type-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.identity-type-group .ant-radio-button-wrapper {
+  height: 48px;
+  line-height: 46px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.identity-type-group .ant-radio-button-wrapper:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.identity-type-group .ant-radio-button-wrapper-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
 .employee-button:hover {
   border-color: #667eea;
   transform: translateY(-2px);

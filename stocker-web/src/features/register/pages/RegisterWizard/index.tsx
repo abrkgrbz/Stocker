@@ -50,6 +50,7 @@ const { Title, Text, Paragraph } = Typography;
 interface RegisterData {
   // Step 1: Company Info
   companyName: string;
+  identityType: 'tc' | 'vergi';
   companyCode: string;
   sector: string;
   employeeCount: string;
@@ -75,9 +76,10 @@ const RegisterWizard: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
-  const [registerData, setRegisterData] = useState<Partial<RegisterData>>({});
+  const [registerData, setRegisterData] = useState<Partial<RegisterData>>({ identityType: 'vergi' });
   const [loading, setLoading] = useState(false);
   const [validationStatus, setValidationStatus] = useState<Record<string, any>>({});
+  const [identityType, setIdentityType] = useState<'tc' | 'vergi'>('vergi');
   
   const {
     emailValidation,
@@ -148,8 +150,19 @@ const RegisterWizard: React.FC = () => {
 
   const handleIdentityNumberChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
-    if (cleaned && (cleaned.length === 10 || cleaned.length === 11)) {
+    const expectedLength = identityType === 'tc' ? 11 : 10;
+    if (cleaned && cleaned.length === expectedLength) {
       validateIdentity(cleaned);
+    }
+  };
+
+  const handleIdentityTypeChange = (value: 'tc' | 'vergi') => {
+    setIdentityType(value);
+    form.setFieldsValue({ companyCode: '' });
+    setRegisterData({ ...registerData, identityType: value });
+    // Clear validation
+    if (identityValidation) {
+      validateIdentity('');
     }
   };
 
@@ -209,6 +222,7 @@ const RegisterWizard: React.FC = () => {
       // API call to register
       const response = await apiClient.post('/auth/register', {
         companyName: finalData.companyName,
+        identityType: finalData.identityType,
         companyCode: finalData.companyCode,
         contactName: finalData.contactName,
         contactEmail: finalData.contactEmail,
@@ -274,26 +288,47 @@ const RegisterWizard: React.FC = () => {
 
                 <Col xs={24} md={12}>
                   <Form.Item
+                    name="identityType"
+                    label="Kayıt Türü"
+                    initialValue="vergi"
+                    rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
+                  >
+                    <Radio.Group 
+                      onChange={(e) => handleIdentityTypeChange(e.target.value)}
+                      className="identity-type-group"
+                      style={{ width: '100%', display: 'flex', gap: '12px' }}
+                    >
+                      <Radio.Button value="vergi" style={{ flex: 1, textAlign: 'center' }}>
+                        <BankOutlined /> Şirket (Vergi No)
+                      </Radio.Button>
+                      <Radio.Button value="tc" style={{ flex: 1, textAlign: 'center' }}>
+                        <UserOutlined /> Şahıs (TC Kimlik No)
+                      </Radio.Button>
+                    </Radio.Group>
+                  </Form.Item>
+
+                  <Form.Item
                     name="companyCode"
-                    label="Vergi No / TC Kimlik No"
+                    label={identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}
                     rules={[
-                      { required: true, message: 'Vergi numarası zorunludur' },
-                      { pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir numara girin' }
+                      { required: true, message: `${identityType === 'tc' ? 'TC Kimlik' : 'Vergi'} numarası zorunludur` },
+                      { 
+                        pattern: identityType === 'tc' ? /^[0-9]{11}$/ : /^[0-9]{10}$/, 
+                        message: `${identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'} girin` 
+                      }
                     ]}
                     validateStatus={identityValidation?.isValid === false ? 'error' : ''}
                     help={identityValidation?.message}
                   >
                     <Input
                       size="large"
-                      placeholder="10 haneli Vergi No veya 11 haneli TC Kimlik No"
+                      placeholder={identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'}
                       prefix={<InfoCircleOutlined />}
-                      maxLength={11}
+                      maxLength={identityType === 'tc' ? 11 : 10}
                       onChange={(e) => handleIdentityNumberChange(e.target.value)}
                       suffix={
                         identityValidation?.isValid === true ? (
-                          <Tooltip title={identityValidation.details?.numberType === 'TCKimlik' ? 'TC Kimlik No' : 'Vergi No'}>
-                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                          </Tooltip>
+                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
                         ) : identityValidation?.isValid === false ? (
                           <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
                         ) : null
