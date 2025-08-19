@@ -26,8 +26,10 @@ export const useSignalRValidation = () => {
         // Try real service first
         if (!useMockService) {
           await signalRService.startValidationConnection();
+          console.log('✅ Connected to real SignalR validation service at', 'http://localhost:5104');
         } else {
           await mockSignalRService.startValidationConnection();
+          console.log('🔧 Using mock SignalR validation service');
         }
         setIsConnected(true);
 
@@ -67,6 +69,7 @@ export const useSignalRValidation = () => {
         
         // Fallback to mock service
         if (!useMockService) {
+          console.warn('⚠️ Falling back to mock validation service - API not available at', 'http://localhost:5104');
           setUseMockService(true);
           setError('Using mock validation service (API not available)');
         } else {

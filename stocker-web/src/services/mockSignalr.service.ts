@@ -196,17 +196,16 @@ class MockSignalRService {
       let message = '';
       
       if (cleaned.length === 11) {
-        // TC Kimlik No validation (simplified)
+        // TC Kimlik No validation with proper algorithm
         numberType = 'TCKimlik';
-        const firstDigit = parseInt(cleaned[0]);
-        isValid = firstDigit !== 0 && /^\d{11}$/.test(cleaned);
+        isValid = this.validateTCKimlikNo(cleaned);
         message = isValid 
           ? "TC Kimlik numarası geçerli" 
           : "Geçersiz TC Kimlik numarası";
       } else if (cleaned.length === 10) {
-        // Vergi No validation (simplified)
+        // Vergi No validation with proper algorithm
         numberType = 'VergiNo';
-        isValid = /^\d{10}$/.test(cleaned);
+        isValid = this.validateVergiNo(cleaned);
         message = isValid 
           ? "Vergi numarası geçerli" 
           : "Geçersiz Vergi numarası";
@@ -226,6 +225,82 @@ class MockSignalRService {
       
       this.identityCallbacks.forEach(cb => cb(result));
     }, 400);
+  }
+
+  private validateTCKimlikNo(tcKimlikNo: string): boolean {
+    // TC Kimlik No validation algorithm
+    // 1. Must be 11 digits
+    // 2. First digit cannot be 0
+    // 3. 10th digit = ((1st + 3rd + 5th + 7th + 9th) * 7 - (2nd + 4th + 6th + 8th)) % 10
+    // 4. 11th digit = sum of first 10 digits % 10
+
+    if (tcKimlikNo.length !== 11) return false;
+    if (!/^\d{11}$/.test(tcKimlikNo)) return false;
+    if (tcKimlikNo[0] === '0') return false;
+
+    const digits = tcKimlikNo.split('').map(Number);
+
+    // Calculate 10th digit
+    const oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+    const evenSum = digits[1] + digits[3] + digits[5] + digits[7];
+    let tenthDigit = ((oddSum * 7) - evenSum) % 10;
+    
+    if (tenthDigit < 0) tenthDigit += 10;
+    
+    if (digits[9] !== tenthDigit) return false;
+
+    // Calculate 11th digit
+    const firstTenSum = digits.slice(0, 10).reduce((a, b) => a + b, 0);
+    const eleventhDigit = firstTenSum % 10;
+    
+    if (digits[10] !== eleventhDigit) return false;
+
+    return true;
+  }
+
+  private validateVergiNo(vergiNo: string): boolean {
+    // Vergi No validation algorithm
+    // 1. Must be 10 digits
+    // 2. Uses modulo 11 algorithm
+    
+    if (vergiNo.length !== 10) return false;
+    if (!/^\d{10}$/.test(vergiNo)) return false;
+
+    const digits = vergiNo.split('').map(Number);
+    
+    // Vergi No algorithm
+    let v1 = (digits[0] + 9) % 10;
+    let v2 = (v1 * 2) % 9;
+    if (v1 !== 0 && v2 === 0) v2 = 9;
+    let v3 = (digits[1] + 8) % 10;
+    let v4 = (v3 * 4) % 9;
+    if (v3 !== 0 && v4 === 0) v4 = 9;
+    let v5 = (digits[2] + 7) % 10;
+    let v6 = (v5 * 8) % 9;
+    if (v5 !== 0 && v6 === 0) v6 = 9;
+    let v7 = (digits[3] + 6) % 10;
+    let v8 = (v7 * 16) % 9;
+    if (v7 !== 0 && v8 === 0) v8 = 9;
+    let v9 = (digits[4] + 5) % 10;
+    let v10 = (v9 * 32) % 9;
+    if (v9 !== 0 && v10 === 0) v10 = 9;
+    let v11 = (digits[5] + 4) % 10;
+    let v12 = (v11 * 64) % 9;
+    if (v11 !== 0 && v12 === 0) v12 = 9;
+    let v13 = (digits[6] + 3) % 10;
+    let v14 = (v13 * 128) % 9;
+    if (v13 !== 0 && v14 === 0) v14 = 9;
+    let v15 = (digits[7] + 2) % 10;
+    let v16 = (v15 * 256) % 9;
+    if (v15 !== 0 && v16 === 0) v16 = 9;
+    let v17 = (digits[8] + 1) % 10;
+    let v18 = (v17 * 512) % 9;
+    if (v17 !== 0 && v18 === 0) v18 = 9;
+
+    const sum = v2 + v4 + v6 + v8 + v10 + v12 + v14 + v16 + v18;
+    const lastDigit = (10 - (sum % 10)) % 10;
+
+    return digits[9] === lastDigit;
   }
 
   onIdentityValidated(callback: (result: ValidationResult) => void): void {
