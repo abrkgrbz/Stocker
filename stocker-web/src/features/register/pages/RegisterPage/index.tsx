@@ -402,6 +402,14 @@ export const RegisterPage: React.FC = () => {
     return Math.floor(price);
   };
 
+  const renderModuleSelection = () => (
+    <ModuleSelection
+      onComplete={handleModuleSelectionComplete}
+      initialModules={modulePackageData?.selectedModules}
+      initialPackage={modulePackageData?.basePackage}
+    />
+  );
+
   const renderPackageSelection = () => (
     <div className="packages-section">
       <div className="billing-toggle">
