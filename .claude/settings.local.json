@@ -54,7 +54,8 @@
       "Bash(npx vite:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }

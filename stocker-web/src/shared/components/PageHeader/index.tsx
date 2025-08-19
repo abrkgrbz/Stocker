@@ -16,6 +16,7 @@ interface PageHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   extra?: React.ReactNode;
+  actions?: React.ReactNode;
   ghost?: boolean;
   children?: React.ReactNode;
 }
@@ -27,6 +28,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   showBack = false,
   onBack,
   extra,
+  actions,
   ghost = true,
   children,
 }) => {
@@ -57,7 +59,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         onBack={showBack ? handleBack : undefined}
         backIcon={showBack ? <ArrowLeftOutlined /> : false}
         breadcrumb={breadcrumbItems ? { items: breadcrumbItems } : undefined}
-        extra={extra}
+        extra={actions || extra}
       >
         {children}
       </AntPageHeader>
