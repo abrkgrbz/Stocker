@@ -1,8 +1,9 @@
-import React from 'react';
-import { Row, Col, Card, Button, Typography, Badge, List } from 'antd';
-import { CheckOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Row, Col, Card, Button, Typography, Badge, List, Segmented, Space } from 'antd';
+import { CheckOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { pricingPlans } from '../../data/pricingPlans';
+import { PricingWizard } from '../PricingWizard';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -12,6 +13,7 @@ interface PricingSectionProps {
 
 export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navProp }) => {
   const navigate = navProp || useNavigate();
+  const [viewMode, setViewMode] = useState<'classic' | 'wizard'>('wizard');
 
   return (
     <section id="pricing" style={{ padding: '80px 0', background: 'white' }}>
@@ -25,11 +27,49 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
             fontSize: 18, 
             color: '#666',
             maxWidth: 700,
-            margin: '0 auto 48px'
+            margin: '0 auto 32px'
           }}
         >
           İşletmenizin büyüklüğüne ve ihtiyaçlarına göre esnek fiyatlandırma
         </Paragraph>
+        
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <Segmented
+            value={viewMode}
+            onChange={(value) => setViewMode(value as 'classic' | 'wizard')}
+            options={[
+              {
+                value: 'wizard',
+                label: (
+                  <Space>
+                    <CalculatorOutlined />
+                    <span>Size Özel Plan</span>
+                  </Space>
+                ),
+              },
+              {
+                value: 'classic',
+                label: (
+                  <Space>
+                    <AppstoreOutlined />
+                    <span>Tüm Planlar</span>
+                  </Space>
+                ),
+              },
+            ]}
+            size="large"
+          />
+          <Paragraph style={{ marginTop: 16, color: '#666' }}>
+            {viewMode === 'wizard' 
+              ? 'Birkaç basit soruyla size özel plan oluşturun'
+              : 'Hazır paket planlarımızı inceleyin'}
+          </Paragraph>
+        </div>
+
+        {viewMode === 'wizard' ? (
+          <PricingWizard />
+        ) : (
+          <>
 
         <Row gutter={[32, 32]} justify="center">
           {pricingPlans.map((plan, index) => (
@@ -98,6 +138,8 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
             Tüm paketlerde 14 gün ücretsiz deneme hakkı • İstediğiniz zaman iptal edebilirsiniz
           </Text>
         </div>
+        </>
+        )}
       </div>
     </section>
   );
