@@ -79,6 +79,22 @@
   animation: fadeInUp 0.5s ease-out;
 }
 
+/* Input transition for identity type change */
+.ant-form-item-has-feedback .ant-input-affix-wrapper {
+  transition: all 0.3s ease;
+}
+
+/* Success input style */
+.ant-input-affix-wrapper-status-success {
+  border-color: #52c41a !important;
+  background: rgba(82, 196, 26, 0.03);
+}
+
+/* Enhanced input focus */
+.ant-input-affix-wrapper:focus-within {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -186,30 +202,64 @@
   transition: all 0.3s ease;
 }
 
-/* Identity Type Radio Group */
-.identity-type-group {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+/* Identity Type Cards */
+.identity-card {
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
 }
 
-.identity-type-group .ant-radio-button-wrapper {
-  height: 48px;
-  line-height: 46px;
-  font-weight: 500;
-  border-radius: 8px;
+.identity-card:hover {
+  border-color: #667eea;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  background: #fff;
+}
+
+.identity-card-active {
+  border-color: #667eea !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2) !important;
+}
+
+.identity-card-active:hover {
+  transform: translateY(-2px);
+}
+
+/* Hide radio button circle */
+.ant-radio-wrapper {
+  display: contents;
+}
+
+.ant-radio {
+  display: none;
+}
+
+/* Identity card content animations */
+.identity-card .ant-avatar {
   transition: all 0.3s ease;
 }
 
-.identity-type-group .ant-radio-button-wrapper:hover {
-  border-color: #667eea;
-  color: #667eea;
+.identity-card:hover .ant-avatar {
+  transform: scale(1.1);
 }
 
-.identity-type-group .ant-radio-button-wrapper-checked {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: white;
+.identity-card-active .ant-avatar {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
 }
 
 .employee-button:hover {

@@ -20,7 +20,8 @@ import {
   Checkbox,
   Radio,
   Avatar,
-  Timeline
+  Timeline,
+  Badge
 } from 'antd';
 import {
   UserOutlined,
@@ -80,6 +81,7 @@ const RegisterWizard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [validationStatus, setValidationStatus] = useState<Record<string, any>>({});
   const [identityType, setIdentityType] = useState<'tc' | 'vergi'>('vergi');
+  const [isValidating, setIsValidating] = useState(false);
   
   const {
     emailValidation,
@@ -152,7 +154,9 @@ const RegisterWizard: React.FC = () => {
     const cleaned = value.replace(/\D/g, '');
     const expectedLength = identityType === 'tc' ? 11 : 10;
     if (cleaned && cleaned.length === expectedLength) {
+      setIsValidating(true);
       validateIdentity(cleaned);
+      setTimeout(() => setIsValidating(false), 500);
     }
   };
 
@@ -286,30 +290,99 @@ const RegisterWizard: React.FC = () => {
                   </Form.Item>
                 </Col>
 
+                <Col xs={24}>
+                  <div style={{ marginBottom: 24 }}>
+                    <Text strong style={{ fontSize: 16, marginBottom: 16, display: 'block' }}>
+                      Kayıt Türünü Seçin
+                    </Text>
+                    <Form.Item
+                      name="identityType"
+                      initialValue="vergi"
+                      rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
+                    >
+                      <Radio.Group 
+                        onChange={(e) => handleIdentityTypeChange(e.target.value)}
+                        style={{ width: '100%' }}
+                      >
+                        <Row gutter={16}>
+                          <Col xs={24} md={12}>
+                            <Radio value="vergi" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
+                              <Card 
+                                className={`identity-card ${identityType === 'vergi' ? 'identity-card-active' : ''}`}
+                                hoverable
+                                style={{ marginTop: 8 }}
+                              >
+                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                  <Avatar 
+                                    size={64} 
+                                    icon={<BankOutlined />}
+                                    style={{ 
+                                      backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0',
+                                      marginBottom: 16
+                                    }}
+                                  />
+                                  <Title level={4} style={{ margin: '8px 0' }}>Şirket Kaydı</Title>
+                                  <Text type="secondary">Tüzel kişilik için</Text>
+                                  <Divider style={{ margin: '16px 0' }} />
+                                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                    <Tag color="blue" style={{ margin: 0 }}>10 Haneli Vergi No</Tag>
+                                    <Text style={{ fontSize: 12 }}>Limited, A.Ş. vb.</Text>
+                                  </Space>
+                                </div>
+                              </Card>
+                            </Radio>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Radio value="tc" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
+                              <Card 
+                                className={`identity-card ${identityType === 'tc' ? 'identity-card-active' : ''}`}
+                                hoverable
+                                style={{ marginTop: 8 }}
+                              >
+                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                  <Avatar 
+                                    size={64} 
+                                    icon={<UserOutlined />}
+                                    style={{ 
+                                      backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0',
+                                      marginBottom: 16
+                                    }}
+                                  />
+                                  <Title level={4} style={{ margin: '8px 0' }}>Şahıs Kaydı</Title>
+                                  <Text type="secondary">Bireysel kullanım için</Text>
+                                  <Divider style={{ margin: '16px 0' }} />
+                                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                    <Tag color="green" style={{ margin: 0 }}>11 Haneli TC Kimlik No</Tag>
+                                    <Text style={{ fontSize: 12 }}>Şahıs şirketi, serbest meslek</Text>
+                                  </Space>
+                                </div>
+                              </Card>
+                            </Radio>
+                          </Col>
+                        </Row>
+                      </Radio.Group>
+                    </Form.Item>
+                  </div>
+                </Col>
+
                 <Col xs={24} md={12}>
                   <Form.Item
-                    name="identityType"
-                    label="Kayıt Türü"
-                    initialValue="vergi"
-                    rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
-                  >
-                    <Radio.Group 
-                      onChange={(e) => handleIdentityTypeChange(e.target.value)}
-                      className="identity-type-group"
-                      style={{ width: '100%', display: 'flex', gap: '12px' }}
-                    >
-                      <Radio.Button value="vergi" style={{ flex: 1, textAlign: 'center' }}>
-                        <BankOutlined /> Şirket (Vergi No)
-                      </Radio.Button>
-                      <Radio.Button value="tc" style={{ flex: 1, textAlign: 'center' }}>
-                        <UserOutlined /> Şahıs (TC Kimlik No)
-                      </Radio.Button>
-                    </Radio.Group>
-                  </Form.Item>
-
-                  <Form.Item
                     name="companyCode"
-                    label={identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}
+                    label={
+                      <Space>
+                        {identityType === 'tc' ? (
+                          <>
+                            <UserOutlined />
+                            <span>TC Kimlik No</span>
+                          </>
+                        ) : (
+                          <>
+                            <BankOutlined />
+                            <span>Vergi No</span>
+                          </>
+                        )}
+                      </Space>
+                    }
                     rules={[
                       { required: true, message: `${identityType === 'tc' ? 'TC Kimlik' : 'Vergi'} numarası zorunludur` },
                       { 
@@ -322,17 +395,26 @@ const RegisterWizard: React.FC = () => {
                   >
                     <Input
                       size="large"
-                      placeholder={identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'}
+                      placeholder={identityType === 'tc' ? 'Örn: 12345678901' : 'Örn: 1234567890'}
                       prefix={<InfoCircleOutlined />}
                       maxLength={identityType === 'tc' ? 11 : 10}
                       onChange={(e) => handleIdentityNumberChange(e.target.value)}
                       suffix={
-                        identityValidation?.isValid === true ? (
-                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                        isValidating ? (
+                          <LoadingOutlined style={{ color: '#667eea' }} spin />
+                        ) : identityValidation?.isValid === true ? (
+                          <Tooltip title={`Geçerli ${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}`}>
+                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />
+                          </Tooltip>
                         ) : identityValidation?.isValid === false ? (
-                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                          <Tooltip title={identityValidation?.message}>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />
+                          </Tooltip>
                         ) : null
                       }
+                      style={{
+                        borderColor: identityValidation?.isValid === true ? '#52c41a' : undefined
+                      }}
                     />
                   </Form.Item>
                 </Col>
