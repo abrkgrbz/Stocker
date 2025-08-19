@@ -5,17 +5,20 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (only package.json, not lock file)
+COPY package.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps --omit=optional
+# Clean everything and fresh install for Alpine Linux
+RUN rm -rf node_modules package-lock.json && \
+    npm cache clean --force && \
+    npm install --legacy-peer-deps
 
 # Copy all source files
 COPY . .
 
-# Build the application (skip TypeScript checks for now)
-RUN npx vite build
+# Remove any existing node_modules from host and build
+RUN rm -rf node_modules/.vite && \
+    npm run build || npx vite build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
