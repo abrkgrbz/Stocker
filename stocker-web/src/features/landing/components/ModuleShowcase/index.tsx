@@ -210,7 +210,7 @@ export const ModuleShowcase = () => {
         </Paragraph>
       </div>
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[32, 32]}>
         {modules.map((module) => (
           <Col xs={24} sm={12} lg={8} key={module.id}>
             <Card 

@@ -31,19 +31,21 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
           İşletmenizin büyüklüğüne ve ihtiyaçlarına göre esnek fiyatlandırma
         </Paragraph>
 
-        <Row gutter={[24, 24]} justify="center">
+        <Row gutter={[32, 32]} justify="center">
           {pricingPlans.map((plan, index) => (
-            <Col xs={24} md={8} key={index}>
+            <Col xs={24} sm={24} md={12} lg={8} key={index}>
               <Badge.Ribbon 
                 text="Popüler" 
-                color="red"
+                color="#52c41a"
                 style={{ display: plan.popular ? 'block' : 'none' }}
               >
                 <Card
                   hoverable
                   style={{ 
                     height: '100%',
-                    border: plan.popular ? '2px solid #667eea' : '1px solid #f0f0f0'
+                    border: plan.popular ? '2px solid #667eea' : '1px solid #f0f0f0',
+                    transition: 'all 0.3s ease',
+                    transform: plan.popular ? 'scale(1.02)' : 'scale(1)'
                   }}
                   bodyStyle={{ padding: 32 }}
                 >
