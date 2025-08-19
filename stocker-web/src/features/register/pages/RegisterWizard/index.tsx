@@ -85,11 +85,13 @@ const RegisterWizard: React.FC = () => {
     companyNameCheck,
     phoneValidation,
     passwordStrength,
+    identityValidation,
     validateEmail,
     checkDomain,
     checkCompanyName,
     validatePhone,
     checkPasswordStrength,
+    validateIdentity,
     isConnected
   } = useSignalRValidation();
 
@@ -141,6 +143,13 @@ const RegisterWizard: React.FC = () => {
   const handleCompanyNameChange = (value: string) => {
     if (value && value.length > 2) {
       checkCompanyName(value);
+    }
+  };
+
+  const handleIdentityNumberChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned && (cleaned.length === 10 || cleaned.length === 11)) {
+      validateIdentity(cleaned);
     }
   };
 
@@ -271,12 +280,24 @@ const RegisterWizard: React.FC = () => {
                       { required: true, message: 'Vergi numarası zorunludur' },
                       { pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir numara girin' }
                     ]}
+                    validateStatus={identityValidation?.isValid === false ? 'error' : ''}
+                    help={identityValidation?.message}
                   >
                     <Input
                       size="large"
-                      placeholder="Vergi numaranızı girin"
+                      placeholder="10 haneli Vergi No veya 11 haneli TC Kimlik No"
                       prefix={<InfoCircleOutlined />}
                       maxLength={11}
+                      onChange={(e) => handleIdentityNumberChange(e.target.value)}
+                      suffix={
+                        identityValidation?.isValid === true ? (
+                          <Tooltip title={identityValidation.details?.numberType === 'TCKimlik' ? 'TC Kimlik No' : 'Vergi No'}>
+                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                          </Tooltip>
+                        ) : identityValidation?.isValid === false ? (
+                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                        ) : null
+                      }
                     />
                   </Form.Item>
                 </Col>

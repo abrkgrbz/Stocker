@@ -14,6 +14,7 @@ export const useSignalRValidation = () => {
   const [domainCheck, setDomainCheck] = useState<DomainCheckResult | null>(null);
   const [phoneValidation, setPhoneValidation] = useState<ValidationResult | null>(null);
   const [companyNameCheck, setCompanyNameCheck] = useState<ValidationResult | null>(null);
+  const [identityValidation, setIdentityValidation] = useState<ValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [useMockService, setUseMockService] = useState(false);
 
@@ -49,6 +50,10 @@ export const useSignalRValidation = () => {
 
         service.onCompanyNameChecked((result) => {
           setCompanyNameCheck(result);
+        });
+
+        service.onIdentityValidated((result) => {
+          setIdentityValidation(result);
         });
 
         service.onValidationError((error) => {
@@ -134,6 +139,16 @@ export const useSignalRValidation = () => {
     }
   }, [service]);
 
+  const validateIdentity = useCallback(async (identityNumber: string) => {
+    setError(null);
+    setIdentityValidation(null);
+    try {
+      await service.validateIdentity(identityNumber);
+    } catch (err) {
+      setError('Failed to validate identity number');
+    }
+  }, [service]);
+
   return {
     isConnected,
     emailValidation,
@@ -141,12 +156,14 @@ export const useSignalRValidation = () => {
     domainCheck,
     phoneValidation,
     companyNameCheck,
+    identityValidation,
     error,
     validateEmail,
     checkPasswordStrength,
     checkDomain,
     validatePhone,
     checkCompanyName,
+    validateIdentity,
   };
 };
 

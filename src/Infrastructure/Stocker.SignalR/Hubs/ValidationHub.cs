@@ -193,6 +193,44 @@ public class ValidationHub : Hub
             await Clients.Caller.SendAsync("ValidationError", "Şirket adı kontrolü sırasında bir hata oluştu");
         }
     }
+
+    /// <summary>
+    /// Validate Turkish ID Number (TC Kimlik No) or Tax Number (Vergi No)
+    /// </summary>
+    public async Task ValidateIdentity(string identityNumber)
+    {
+        try
+        {
+            var identityResult = await _validationService.ValidateIdentityNumberAsync(identityNumber);
+            
+            var result = new IdentityValidationResult
+            {
+                IsValid = identityResult.IsValid,
+                Message = identityResult.Message,
+                NumberType = identityResult.NumberType,
+                Details = identityResult.Details
+            };
+
+            // Add formatted number if available
+            if (!string.IsNullOrEmpty(identityResult.FormattedNumber))
+            {
+                result.Details["formattedNumber"] = identityResult.FormattedNumber;
+            }
+            
+            // Add test number warning if applicable
+            if (identityResult.IsTestNumber)
+            {
+                result.Details["isTestNumber"] = "true";
+            }
+
+            await Clients.Caller.SendAsync("IdentityValidated", result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating identity number");
+            await Clients.Caller.SendAsync("ValidationError", "Kimlik/Vergi numarası kontrolü sırasında bir hata oluştu");
+        }
+    }
 }
 
 #region DTOs
@@ -217,6 +255,14 @@ public class DomainCheckResult
     public bool IsAvailable { get; set; }
     public string Message { get; set; } = string.Empty;
     public string[] Suggestions { get; set; } = Array.Empty<string>();
+}
+
+public class IdentityValidationResult
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string NumberType { get; set; } = string.Empty;
+    public Dictionary<string, string> Details { get; set; } = new();
 }
 
 #endregion

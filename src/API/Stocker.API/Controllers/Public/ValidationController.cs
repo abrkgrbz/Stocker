@@ -219,6 +219,44 @@ public class ValidationController : ApiController
             return StatusCode(500, "Şirket adı kontrolü sırasında bir hata oluştu");
         }
     }
+
+    /// <summary>
+    /// Validate Turkish ID Number (TC Kimlik No) or Tax Number (Vergi No)
+    /// </summary>
+    /// <param name="request">Identity validation request</param>
+    /// <returns>Identity validation result</returns>
+    [HttpPost("identity")]
+    [ProducesResponseType(typeof(Base.ApiResponse<IdentityValidationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateIdentity([FromBody] IdentityValidationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.IdentityNumber))
+            {
+                return BadRequest("Kimlik/Vergi numarası boş olamaz");
+            }
+
+            var result = await _validationService.ValidateIdentityNumberAsync(request.IdentityNumber);
+            
+            var response = new IdentityValidationResponse
+            {
+                IsValid = result.IsValid,
+                Message = result.Message,
+                NumberType = result.NumberType,
+                FormattedNumber = result.FormattedNumber,
+                IsTestNumber = result.IsTestNumber,
+                Details = result.Details
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating identity number: {IdentityNumber}", request.IdentityNumber);
+            return StatusCode(500, "Kimlik/Vergi numarası kontrolü sırasında bir hata oluştu");
+        }
+    }
 }
 
 #region Request/Response DTOs
@@ -304,6 +342,21 @@ public class CompanyNameValidationResponse
     public bool IsUnique { get; set; }
     public bool ContainsRestrictedWords { get; set; }
     public List<string> SimilarNames { get; set; } = new();
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class IdentityValidationRequest
+{
+    public string IdentityNumber { get; set; } = string.Empty;
+}
+
+public class IdentityValidationResponse
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string NumberType { get; set; } = string.Empty;
+    public string? FormattedNumber { get; set; }
+    public bool IsTestNumber { get; set; }
     public Dictionary<string, string> Details { get; set; } = new();
 }
 

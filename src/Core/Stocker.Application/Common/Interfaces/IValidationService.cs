@@ -7,6 +7,7 @@ public interface IValidationService
     Task<PasswordStrengthResult> CheckPasswordStrengthAsync(string password);
     Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(string domain);
     Task<CompanyNameValidationResult> ValidateCompanyNameAsync(string companyName);
+    Task<IdentityValidationResult> ValidateIdentityNumberAsync(string identityNumber);
 }
 
 public class EmailValidationResult
@@ -64,5 +65,15 @@ public class CompanyNameValidationResult
     public bool IsUnique { get; set; }
     public bool ContainsRestrictedWords { get; set; }
     public List<string> SimilarNames { get; set; } = new();
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class IdentityValidationResult
+{
+    public bool IsValid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string NumberType { get; set; } = string.Empty; // TCKimlik, VergiNo
+    public string? FormattedNumber { get; set; }
+    public bool IsTestNumber { get; set; }
     public Dictionary<string, string> Details { get; set; } = new();
 }

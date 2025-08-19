@@ -7,6 +7,7 @@ class MockSignalRService {
   private domainCallbacks: Array<(result: DomainCheckResult) => void> = [];
   private phoneCallbacks: Array<(result: ValidationResult) => void> = [];
   private companyCallbacks: Array<(result: ValidationResult) => void> = [];
+  private identityCallbacks: Array<(result: ValidationResult) => void> = [];
   private notificationCallbacks: Array<(notification: NotificationMessage) => void> = [];
   private connectedCallbacks: Array<(data: any) => void> = [];
   private errorCallbacks: Array<(error: string) => void> = [];
@@ -185,6 +186,52 @@ class MockSignalRService {
     this.companyCallbacks.push(callback);
   }
 
+  // Identity Validation (TC Kimlik No / Vergi No)
+  async validateIdentity(identityNumber: string): Promise<void> {
+    setTimeout(() => {
+      // Remove spaces and non-numeric characters
+      const cleaned = identityNumber.replace(/\D/g, '');
+      let isValid = false;
+      let numberType = '';
+      let message = '';
+      
+      if (cleaned.length === 11) {
+        // TC Kimlik No validation (simplified)
+        numberType = 'TCKimlik';
+        const firstDigit = parseInt(cleaned[0]);
+        isValid = firstDigit !== 0 && /^\d{11}$/.test(cleaned);
+        message = isValid 
+          ? "TC Kimlik numarası geçerli" 
+          : "Geçersiz TC Kimlik numarası";
+      } else if (cleaned.length === 10) {
+        // Vergi No validation (simplified)
+        numberType = 'VergiNo';
+        isValid = /^\d{10}$/.test(cleaned);
+        message = isValid 
+          ? "Vergi numarası geçerli" 
+          : "Geçersiz Vergi numarası";
+      } else {
+        message = "Kimlik/Vergi numarası 10 veya 11 haneli olmalıdır";
+      }
+      
+      const result: ValidationResult = {
+        isValid,
+        message,
+        details: {
+          numberType,
+          formattedNumber: cleaned,
+          length: cleaned.length.toString()
+        }
+      };
+      
+      this.identityCallbacks.forEach(cb => cb(result));
+    }, 400);
+  }
+
+  onIdentityValidated(callback: (result: ValidationResult) => void): void {
+    this.identityCallbacks.push(callback);
+  }
+
   // Notification Methods
   onNotificationReceived(callback: (notification: NotificationMessage) => void): void {
     this.notificationCallbacks.push(callback);
@@ -219,6 +266,7 @@ class MockSignalRService {
     this.domainCallbacks = [];
     this.phoneCallbacks = [];
     this.companyCallbacks = [];
+    this.identityCallbacks = [];
     this.connectedCallbacks = [];
     this.errorCallbacks = [];
   }

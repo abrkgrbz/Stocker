@@ -137,6 +137,18 @@ class SignalRService {
     this.validationConnection?.on("CompanyNameChecked", callback);
   }
 
+  // Identity Validation (TC Kimlik No / Vergi No)
+  async validateIdentity(identityNumber: string): Promise<void> {
+    if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
+      await this.startValidationConnection();
+    }
+    return this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+  }
+
+  onIdentityValidated(callback: (result: ValidationResult) => void): void {
+    this.validationConnection?.on("IdentityValidated", callback);
+  }
+
   // Notification Methods
   onNotificationReceived(callback: (notification: NotificationMessage) => void): void {
     this.notificationConnection?.on("ReceiveNotification", callback);

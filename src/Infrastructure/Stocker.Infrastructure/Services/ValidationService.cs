@@ -450,6 +450,98 @@ public class ValidationService : IValidationService
         }
     }
 
+    public async Task<IdentityValidationResult> ValidateIdentityNumberAsync(string identityNumber)
+    {
+        var result = new IdentityValidationResult();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(identityNumber))
+            {
+                result.IsValid = false;
+                result.Message = "Kimlik/Vergi numarası boş olamaz";
+                return result;
+            }
+
+            // Remove spaces and non-numeric characters
+            identityNumber = Regex.Replace(identityNumber.Trim(), @"\D", "");
+
+            // Check if it's TC Kimlik No (11 digits) or Vergi No (10 digits)
+            if (identityNumber.Length == 11)
+            {
+                result.NumberType = "TCKimlik";
+                result.IsValid = ValidateTCKimlikNo(identityNumber);
+                result.FormattedNumber = identityNumber;
+                
+                // Check for test numbers
+                result.IsTestNumber = identityNumber == "11111111110" || 
+                                    identityNumber == "12345678901" ||
+                                    identityNumber == "10000000146";
+                
+                if (result.IsValid)
+                {
+                    result.Message = result.IsTestNumber 
+                        ? "Test TC Kimlik numarası geçerli" 
+                        : "TC Kimlik numarası geçerli";
+                    
+                    if (result.IsTestNumber)
+                    {
+                        result.Details["warning"] = "Bu bir test TC Kimlik numarasıdır";
+                    }
+                }
+                else
+                {
+                    result.Message = "Geçersiz TC Kimlik numarası";
+                    result.Details["format"] = "TC Kimlik numarası 11 haneli olmalı ve algoritma kurallarına uymalıdır";
+                }
+            }
+            else if (identityNumber.Length == 10)
+            {
+                result.NumberType = "VergiNo";
+                result.IsValid = ValidateVergiNo(identityNumber);
+                result.FormattedNumber = identityNumber;
+                
+                // Check for test numbers
+                result.IsTestNumber = identityNumber == "1234567890" || 
+                                    identityNumber == "1111111111" ||
+                                    identityNumber == "0000000000";
+                
+                if (result.IsValid)
+                {
+                    result.Message = result.IsTestNumber 
+                        ? "Test Vergi numarası geçerli" 
+                        : "Vergi numarası geçerli";
+                    
+                    if (result.IsTestNumber)
+                    {
+                        result.Details["warning"] = "Bu bir test Vergi numarasıdır";
+                    }
+                }
+                else
+                {
+                    result.Message = "Geçersiz Vergi numarası";
+                    result.Details["format"] = "Vergi numarası 10 haneli olmalı ve algoritma kurallarına uymalıdır";
+                }
+            }
+            else
+            {
+                result.IsValid = false;
+                result.Message = "Kimlik/Vergi numarası 10 veya 11 haneli olmalıdır";
+                result.Details["info"] = "TC Kimlik No: 11 hane, Vergi No: 10 hane";
+            }
+
+            await Task.CompletedTask;
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating identity number");
+            result.IsValid = false;
+            result.Message = "Kimlik/Vergi numarası kontrolü sırasında bir hata oluştu";
+            return result;
+        }
+    }
+
     public async Task<CompanyNameValidationResult> ValidateCompanyNameAsync(string companyName)
     {
         var result = new CompanyNameValidationResult();
@@ -609,6 +701,95 @@ public class ValidationService : IValidationService
         }
 
         return d[s1.Length, s2.Length];
+    }
+
+    private bool ValidateTCKimlikNo(string tcKimlikNo)
+    {
+        // TC Kimlik No validation algorithm
+        // 1. Must be 11 digits
+        // 2. First digit cannot be 0
+        // 3. 10th digit = ((1st + 3rd + 5th + 7th + 9th) * 7 - (2nd + 4th + 6th + 8th)) % 10
+        // 4. 11th digit = sum of first 10 digits % 10
+
+        if (tcKimlikNo.Length != 11)
+            return false;
+
+        if (!tcKimlikNo.All(char.IsDigit))
+            return false;
+
+        if (tcKimlikNo[0] == '0')
+            return false;
+
+        var digits = tcKimlikNo.Select(c => int.Parse(c.ToString())).ToArray();
+
+        // Calculate 10th digit
+        var oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+        var evenSum = digits[1] + digits[3] + digits[5] + digits[7];
+        var tenthDigit = ((oddSum * 7) - evenSum) % 10;
+
+        if (tenthDigit < 0)
+            tenthDigit += 10;
+
+        if (digits[9] != tenthDigit)
+            return false;
+
+        // Calculate 11th digit
+        var firstTenSum = digits.Take(10).Sum();
+        var eleventhDigit = firstTenSum % 10;
+
+        if (digits[10] != eleventhDigit)
+            return false;
+
+        return true;
+    }
+
+    private bool ValidateVergiNo(string vergiNo)
+    {
+        // Vergi No validation algorithm
+        // 1. Must be 10 digits
+        // 2. Uses modulo 11 algorithm
+        
+        if (vergiNo.Length != 10)
+            return false;
+
+        if (!vergiNo.All(char.IsDigit))
+            return false;
+
+        var digits = vergiNo.Select(c => int.Parse(c.ToString())).ToArray();
+        
+        // Vergi No algorithm
+        var v1 = (digits[0] + 9) % 10;
+        var v2 = (v1 * 2) % 9;
+        if (v1 != 0 && v2 == 0) v2 = 9;
+        var v3 = (digits[1] + 8) % 10;
+        var v4 = (v3 * 4) % 9;
+        if (v3 != 0 && v4 == 0) v4 = 9;
+        var v5 = (digits[2] + 7) % 10;
+        var v6 = (v5 * 8) % 9;
+        if (v5 != 0 && v6 == 0) v6 = 9;
+        var v7 = (digits[3] + 6) % 10;
+        var v8 = (v7 * 16) % 9;
+        if (v7 != 0 && v8 == 0) v8 = 9;
+        var v9 = (digits[4] + 5) % 10;
+        var v10 = (v9 * 32) % 9;
+        if (v9 != 0 && v10 == 0) v10 = 9;
+        var v11 = (digits[5] + 4) % 10;
+        var v12 = (v11 * 64) % 9;
+        if (v11 != 0 && v12 == 0) v12 = 9;
+        var v13 = (digits[6] + 3) % 10;
+        var v14 = (v13 * 128) % 9;
+        if (v13 != 0 && v14 == 0) v14 = 9;
+        var v15 = (digits[7] + 2) % 10;
+        var v16 = (v15 * 256) % 9;
+        if (v15 != 0 && v16 == 0) v16 = 9;
+        var v17 = (digits[8] + 1) % 10;
+        var v18 = (v17 * 512) % 9;
+        if (v17 != 0 && v18 == 0) v18 = 9;
+
+        var sum = v2 + v4 + v6 + v8 + v10 + v12 + v14 + v16 + v18;
+        var lastDigit = (10 - (sum % 10)) % 10;
+
+        return digits[9] == lastDigit;
     }
 
     #endregion
