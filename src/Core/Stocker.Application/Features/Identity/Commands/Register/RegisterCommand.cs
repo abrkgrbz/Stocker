@@ -18,13 +18,7 @@ public sealed record RegisterCommand : IRequest<Result<RegisterResponse>>
     public string Username { get; init; } = string.Empty;
     public string Password { get; init; } = string.Empty;
     public string Domain { get; init; } = string.Empty;
-}
-
-public sealed record RegisterResponse
-{
-    public bool Success { get; init; }
-    public string Message { get; init; } = string.Empty;
-    public Guid? UserId { get; init; }
-    public Guid? TenantId { get; init; }
-    public Guid? CompanyId { get; init; }
+    public string Email { get; init; } = string.Empty;
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
 }

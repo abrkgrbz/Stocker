@@ -16,4 +16,12 @@ export const authApi = {
     
   changePassword: (data: { currentPassword: string; newPassword: string }) => 
     apiClient.post('/api/auth/change-password', data),
+    
+  verifyEmail: (data: { email: string; token: string }) =>
+    apiClient.post<{ success: boolean; message: string; redirectUrl?: string }>('/api/auth/verify-email', data),
+    
+  resendVerificationEmail: (data: { email: string }) =>
+    apiClient.post<{ success: boolean; message: string }>('/api/auth/resend-verification-email', data),
 };
+
+export const authAPI = authApi;

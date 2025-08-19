@@ -5,6 +5,8 @@ using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
 using Stocker.Application.Features.Identity.Commands.Register;
+using Stocker.Application.Features.Identity.Commands.VerifyEmail;
+using Stocker.Application.Features.Identity.Commands.ResendVerificationEmail;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -126,6 +128,62 @@ public class AuthController : ControllerBase
         {
             success = true,
             message = "Logged out successfully"
+        });
+    }
+
+    /// <summary>
+    /// Verify email address with token
+    /// </summary>
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(VerifyEmailResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+    {
+        _logger.LogInformation("Email verification attempt for: {Email}", command.Email);
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Email verified successfully for: {Email}", command.Email);
+            return Ok(result.Value);
+        }
+        
+        _logger.LogWarning("Failed email verification for: {Email}, error: {Error}", 
+            command.Email, result.Error.Description);
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Resend email verification
+    /// </summary>
+    [HttpPost("resend-verification-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ResendVerificationEmailResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailCommand command)
+    {
+        _logger.LogInformation("Resend verification email request for: {Email}", command.Email);
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Verification email resent for: {Email}", command.Email);
+            return Ok(result.Value);
+        }
+        
+        _logger.LogWarning("Failed to resend verification email for: {Email}, error: {Error}", 
+            command.Email, result.Error.Description);
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
         });
     }
 }

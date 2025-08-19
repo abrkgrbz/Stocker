@@ -32,6 +32,9 @@ public sealed class MasterUser : AggregateRoot
     public string? ProfilePictureUrl { get; private set; }
     public string? Timezone { get; private set; }
     public string? PreferredLanguage { get; private set; }
+    public EmailVerificationToken? EmailVerificationToken { get; private set; }
+    public string? PasswordResetToken { get; private set; }
+    public DateTime? PasswordResetTokenExpiry { get; private set; }
     public IReadOnlyList<ValueObjects.RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
     public IReadOnlyList<UserTenant> Tenants => _tenants.AsReadOnly();
     public IReadOnlyList<UserLoginHistory> LoginHistory => _loginHistory.AsReadOnly();
@@ -144,11 +147,36 @@ public sealed class MasterUser : AggregateRoot
         IsActive = false;
     }
 
-    public void VerifyEmail()
+    public EmailVerificationToken GenerateEmailVerificationToken()
+    {
+        EmailVerificationToken = EmailVerificationToken.Create();
+        return EmailVerificationToken;
+    }
+
+    public bool ValidateEmailVerificationToken(string token)
+    {
+        if (EmailVerificationToken == null)
+            return false;
+
+        return EmailVerificationToken.Token == token && EmailVerificationToken.IsValid();
+    }
+
+    public void VerifyEmail(string? token = null)
     {
         if (IsEmailVerified)
         {
             throw new InvalidOperationException("Email is already verified.");
+        }
+
+        // If token is provided, validate it
+        if (token != null)
+        {
+            if (!ValidateEmailVerificationToken(token))
+            {
+                throw new InvalidOperationException("Invalid or expired verification token.");
+            }
+
+            EmailVerificationToken?.MarkAsUsed();
         }
 
         IsEmailVerified = true;
@@ -159,6 +187,43 @@ public sealed class MasterUser : AggregateRoot
         {
             Activate();
         }
+    }
+
+    public void GeneratePasswordResetToken()
+    {
+        var bytes = new byte[32];
+        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(bytes);
+        }
+        PasswordResetToken = Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
+        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1); // Token expires in 1 hour
+    }
+
+    public bool ValidatePasswordResetToken(string token)
+    {
+        return PasswordResetToken == token && 
+               PasswordResetTokenExpiry.HasValue && 
+               PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+    }
+
+    public void ResetPassword(string newPassword, string resetToken)
+    {
+        if (!ValidatePasswordResetToken(resetToken))
+        {
+            throw new InvalidOperationException("Invalid or expired password reset token.");
+        }
+
+        Password = HashedPassword.Create(newPassword);
+        PasswordChangedAt = DateTime.UtcNow;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
+        
+        // Clear all refresh tokens for security
+        RevokeAllRefreshTokens();
     }
 
     public void ChangePassword(string currentPassword, string newPassword)

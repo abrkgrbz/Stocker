@@ -21,6 +21,7 @@ import { PublicLayout } from '@/layouts/PublicLayout';
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVerification'));
 const RegisterPage = lazy(() => import('@/features/register/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const RegisterWizard = lazy(() => import('@/features/register/pages/RegisterWizard'));
 const SignalRTestPage = lazy(() => import('@/features/register/pages/SignalRTest').then(m => ({ default: m.SignalRTestPage })));
@@ -148,6 +149,7 @@ function App() {
                 <Route element={<PublicLayout />}>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/verify-email" element={<EmailVerificationPage />} />
                 </Route>
 
                 {/* Master Routes - Only for System Admin */}
