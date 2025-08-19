@@ -1,6 +1,6 @@
 # Multi-stage build for React app
 # Stage 1: Build the application
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,9 +16,8 @@ RUN rm -rf node_modules package-lock.json && \
 # Copy all source files
 COPY . .
 
-# Remove any existing node_modules from host and build
-RUN rm -rf node_modules/.vite && \
-    npm run build || npx vite build
+# Build the application
+RUN npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
