@@ -45,6 +45,7 @@ import {
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
+import { useAuthStore } from '@/app/store/auth.store';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -224,6 +225,11 @@ const RegisterWizard: React.FC = () => {
     try {
       const finalData = { ...registerData, ...form.getFieldsValue() };
       
+      // Parse name into firstName and lastName
+      const nameParts = finalData.contactName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+      
       // API call to register
       const response = await apiClient.post('/auth/register', {
         companyName: finalData.companyName,
@@ -232,17 +238,47 @@ const RegisterWizard: React.FC = () => {
         identityNumber: finalData.companyCode, // Using companyCode as identityNumber
         sector: finalData.sector,
         employeeCount: finalData.employeeCount,
-        contactName: finalData.contactName,
-        contactEmail: finalData.contactEmail,
-        contactPhone: finalData.contactPhone,
-        contactTitle: finalData.contactTitle,
+        firstName: firstName,
+        lastName: lastName,
+        email: finalData.contactEmail,
+        phone: finalData.contactPhone,
+        title: finalData.contactTitle,
         username: finalData.username,
         password: finalData.password,
         domain: finalData.domain // Without .stocker.com suffix
       });
 
       if (response.data.success) {
-        setCurrentStep(currentStep + 1);
+        // Auto-login if token is provided
+        if (response.data.token) {
+          // Store auth data
+          useAuthStore.getState().setAuth({
+            user: {
+              id: response.data.userId,
+              email: response.data.email,
+              fullName: response.data.fullName,
+              tenantId: response.data.tenantId,
+              role: 'TenantAdmin'
+            },
+            token: response.data.token,
+            refreshToken: response.data.refreshToken
+          });
+          
+          // Show success message
+          message.success('Kayıt başarılı! Hoşgeldiniz sayfasına yönlendiriliyorsunuz...');
+          
+          // Redirect to welcome page or dashboard
+          setTimeout(() => {
+            if (response.data.redirectUrl) {
+              navigate(response.data.redirectUrl);
+            } else {
+              navigate(`/app/${response.data.tenantId}/welcome`);
+            }
+          }, 1500);
+        } else {
+          // If no token, show success step
+          setCurrentStep(currentStep + 1);
+        }
       }
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Kayıt sırasında bir hata oluştu');

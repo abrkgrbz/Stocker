@@ -40,6 +40,7 @@ const InvoiceDetail = lazy(() => import('@/features/invoices/pages/InvoiceDetail
 const InvoiceEdit = lazy(() => import('@/features/invoices/pages/InvoiceEdit').then(m => ({ default: m.InvoiceEdit })));
 const TenantUsers = lazy(() => import('@/features/users/pages/TenantUsers').then(m => ({ default: m.TenantUsers })));
 const TenantSettings = lazy(() => import('@/features/settings/pages/TenantSettings').then(m => ({ default: m.TenantSettings })));
+const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const NotFoundPage = lazy(() => import('@/features/error/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Lazy load module pages
@@ -197,6 +198,8 @@ function App() {
                   }
                 >
                   <Route index element={<TenantDashboard />} />
+                  <Route path="welcome" element={<WelcomePage />} />
+                  <Route path="dashboard" element={<TenantDashboard />} />
                   <Route path="invoices" element={<InvoiceList />} />
                   <Route path="invoices/new" element={<CreateInvoice />} />
                   <Route path="invoices/:id" element={<InvoiceDetail />} />
