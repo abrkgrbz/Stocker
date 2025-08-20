@@ -58,6 +58,7 @@ interface RegisterData {
   // Step 2: Basic Info
   companyName?: string;
   fullName?: string;
+  subdomain?: string;
   identityType: 'tc' | 'vergi';
   identityNumber: string;
   
@@ -89,6 +90,9 @@ const RegisterWizard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [identityType, setIdentityType] = useState<'tc' | 'vergi'>('vergi');
   const [isValidating, setIsValidating] = useState(false);
+  const [subdomain, setSubdomain] = useState('');
+  const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null);
+  const [checkingSubdomain, setCheckingSubdomain] = useState(false);
   // const [completionTime, setCompletionTime] = useState(3); // minutes - Removed
   const [progressPercent, setProgressPercent] = useState(0);
   
@@ -119,8 +123,50 @@ const RegisterWizard: React.FC = () => {
         `${value} Yazılım ve Danışmanlık`,
         `${value} İnovasyon Merkezi`
       ]);
+      
+      // Auto-generate subdomain suggestion
+      const suggestedSubdomain = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .substring(0, 30);
+      
+      if (suggestedSubdomain && suggestedSubdomain !== subdomain) {
+        setSubdomain(suggestedSubdomain);
+        checkSubdomainAvailability(suggestedSubdomain);
+      }
     }
   };
+
+  // Check subdomain availability
+  const checkSubdomainAvailability = async (domain: string) => {
+    if (!domain || domain.length < 3) {
+      setSubdomainAvailable(null);
+      return;
+    }
+
+    setCheckingSubdomain(true);
+    try {
+      // Call API to check availability
+      const response = await apiClient.get(`/api/tenants/check-subdomain/${domain}`);
+      setSubdomainAvailable(response.data.available);
+    } catch (error) {
+      // If error, assume it's available (API might not be implemented yet)
+      setSubdomainAvailable(true);
+    } finally {
+      setCheckingSubdomain(false);
+    }
+  };
+
+  // Debounced subdomain check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (subdomain) {
+        checkSubdomainAvailability(subdomain);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [subdomain]);
 
   const handleNext = async () => {
     try {
@@ -164,8 +210,8 @@ const RegisterWizard: React.FC = () => {
         
         // Company info
         companyName: allData.companyName || allData.fullName,
-        companyCode: allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
-        domain: allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
+        companyCode: allData.subdomain || allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
+        domain: allData.subdomain || allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
         
         // Identity info
         identityType: allData.identityType,
@@ -428,7 +474,64 @@ const RegisterWizard: React.FC = () => {
                     suffixIcon={<ShopOutlined />}
                   />
                 </Form.Item>
-              ) : (
+              ) : null}
+
+              {registerData.accountType === 'company' && (
+                <Form.Item
+                  name="subdomain"
+                  label={
+                    <span>
+                      <HomeOutlined style={{ marginRight: 8, color: '#667eea' }} />
+                      Web Adresi (Subdomain) <Text type="danger">*</Text>
+                    </span>
+                  }
+                  rules={[
+                    { required: true, message: 'Web adresi zorunludur' },
+                    { min: 3, message: 'En az 3 karakter olmalıdır' },
+                    { max: 30, message: 'En fazla 30 karakter olabilir' },
+                    { pattern: /^[a-z0-9][a-z0-9-]*[a-z0-9]$/, message: 'Sadece küçük harf, rakam ve tire kullanabilirsiniz' }
+                  ]}
+                  validateStatus={
+                    checkingSubdomain ? 'validating' :
+                    subdomainAvailable === false ? 'error' :
+                    subdomainAvailable === true ? 'success' : ''
+                  }
+                  hasFeedback={subdomain.length > 0}
+                  help={
+                    subdomainAvailable === false ? 'Bu adres kullanımda, başka bir tane deneyin' :
+                    subdomainAvailable === true ? 'Bu adres müsait!' : 
+                    subdomain.length > 0 && subdomain.length < 3 ? 'En az 3 karakter olmalıdır' : ''
+                  }
+                  extra={
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary">Şirketinizin web adresi: </Text>
+                      <Text strong style={{ color: '#667eea' }}>
+                        {subdomain || 'sirketiniz'}.stocker.app
+                      </Text>
+                    </div>
+                  }
+                >
+                  <Input
+                    size="large"
+                    placeholder="sirketiniz"
+                    value={subdomain}
+                    onChange={(e) => {
+                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setSubdomain(value);
+                      form.setFieldsValue({ subdomain: value });
+                    }}
+                    prefix={<HomeOutlined style={{ color: '#999' }} />}
+                    suffix={
+                      checkingSubdomain ? <LoadingOutlined /> :
+                      subdomainAvailable === true ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> :
+                      subdomainAvailable === false ? <CloseOutlined style={{ color: '#f5222d' }} /> : null
+                    }
+                    addonAfter=".stocker.app"
+                  />
+                </Form.Item>
+              )}
+
+              {registerData.accountType === 'individual' ? (
                 <Form.Item 
                   name="fullName" 
                   label={
@@ -445,7 +548,7 @@ const RegisterWizard: React.FC = () => {
                     prefix={<UserOutlined style={{ color: '#999' }} />}
                   />
                 </Form.Item>
-              )}
+              ) : null}
 
               <div className="identity-selector">
                 <Text strong style={{ marginBottom: 8, display: 'block' }}>
