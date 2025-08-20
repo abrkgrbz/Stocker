@@ -1,0 +1,92 @@
+### Test Stocker API on Coolify
+@baseUrl = http://95.217.219.4:5000
+@contentType = application/json
+
+### 1. Health Check
+GET {{baseUrl}}/health
+
+### 2. Register New Tenant (Public Endpoint)
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "test@company.com",
+  "password": "Test123!@#",
+  "firstName": "Test",
+  "lastName": "User",
+  "companyName": "Test Company",
+  "companyCode": "testcompany",
+  "phoneNumber": "+905551234567"
+}
+
+### 3. Login to get JWT Token
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test@company.com",
+  "password": "Test123!@#"
+}
+
+### Save the token from login response
+@authToken = <PASTE_TOKEN_HERE>
+
+### 4. Get Current User Info
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{authToken}}
+
+### 5. Create a Tenant (Master Admin Only)
+POST {{baseUrl}}/api/master/tenants
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "Demo Tenant",
+  "code": "demo-tenant",
+  "domain": "demo.stocker.app",
+  "contactEmail": "admin@demo.com",
+  "contactName": "Demo Admin",
+  "contactPhone": "+905551234567",
+  "packageId": "00000000-0000-0000-0000-000000000001"
+}
+
+### 6. Get All Tenants (Master Admin)
+GET {{baseUrl}}/api/master/tenants
+Authorization: Bearer {{authToken}}
+
+### 7. Get Tenant by ID
+GET {{baseUrl}}/api/master/tenants/{tenantId}
+Authorization: Bearer {{authToken}}
+
+### 8. Check Tenant Database Creation
+GET {{baseUrl}}/api/admin/tenants/{tenantId}/database/status
+Authorization: Bearer {{authToken}}
+
+### 9. Test CRM Module - Create Customer
+POST {{baseUrl}}/api/crm/customers
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+X-Tenant-Id: {tenantId}
+
+{
+  "name": "Test Customer",
+  "email": "customer@test.com",
+  "phone": "+905551234567",
+  "address": "Test Address",
+  "city": "Istanbul",
+  "country": "Turkey",
+  "postalCode": "34000",
+  "taxNumber": "1234567890"
+}
+
+### 10. Get All Customers (CRM)
+GET {{baseUrl}}/api/crm/customers
+Authorization: Bearer {{authToken}}
+X-Tenant-Id: {tenantId}
+
+### 11. Test Tenant Resolution via Subdomain
+GET {{baseUrl}}/api/tenant/info
+Host: demo.stocker.app
+
+### 12. Check SignalR Connection
+GET {{baseUrl}}/hubs/validation/negotiate?negotiateVersion=1

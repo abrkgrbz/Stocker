@@ -144,15 +144,63 @@ const RegisterWizard: React.FC = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // API call simulation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const values = await form.validateFields();
+      const allData = { ...registerData, ...values };
       
-      message.success('Kayıt başarılı! Yönlendiriliyorsunuz...');
-      setTimeout(() => {
-        navigate('/welcome');
-      }, 1500);
-    } catch (error) {
-      message.error('Kayıt sırasında bir hata oluştu');
+      // Prepare registration data for API
+      const registrationData = {
+        // User info
+        email: allData.email,
+        password: allData.password,
+        firstName: allData.fullName?.split(' ')[0] || allData.contactName?.split(' ')[0] || '',
+        lastName: allData.fullName?.split(' ').slice(1).join(' ') || allData.contactName?.split(' ').slice(1).join(' ') || '',
+        username: allData.email.split('@')[0],
+        
+        // Company info
+        companyName: allData.companyName || allData.fullName,
+        companyCode: allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
+        domain: allData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company',
+        
+        // Identity info
+        identityType: allData.identityType,
+        identityNumber: allData.identityNumber,
+        
+        // Business details
+        sector: allData.sector,
+        employeeCount: allData.employeeCount,
+        
+        // Contact info
+        contactName: allData.fullName || allData.contactName || `${allData.firstName} ${allData.lastName}`,
+        phoneNumber: allData.phone,
+        title: allData.accountType === 'company' ? 'Yönetici' : 'Kullanıcı'
+      };
+      
+      // Call actual API
+      const response = await apiClient.post('/api/auth/register', registrationData);
+      
+      if (response.data.success) {
+        message.success('Kayıt başarılı! Yönlendiriliyorsunuz...');
+        
+        // Auto login after registration
+        const loginResponse = await apiClient.post('/api/auth/login', {
+          email: allData.email,
+          password: allData.password
+        });
+        
+        if (loginResponse.data.token) {
+          localStorage.setItem('token', loginResponse.data.token);
+          localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+          
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1500);
+        }
+      } else {
+        message.error(response.data.message || 'Kayıt sırasında bir hata oluştu');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      message.error(error.response?.data?.message || 'Kayıt sırasında bir hata oluştu');
     } finally {
       setLoading(false);
     }
