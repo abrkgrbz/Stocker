@@ -77,7 +77,14 @@ namespace Stocker.Persistence.Migrations.Master
                     LockoutEndAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ProfilePictureUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Timezone = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    PreferredLanguage = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true)
+                    PreferredLanguage = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    EmailVerificationToken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    EmailVerificationTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EmailVerificationTokenCreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EmailVerificationTokenIsUsed = table.Column<bool>(type: "bit", nullable: true),
+                    EmailVerificationTokenUsedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PasswordResetToken = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    PasswordResetTokenExpiry = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {

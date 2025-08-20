@@ -142,6 +142,13 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Property<DateTime?>("PasswordChangedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PreferredLanguage")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
@@ -978,6 +985,41 @@ namespace Stocker.Persistence.Migrations.Master
                                 .HasForeignKey("MasterUserId");
                         });
 
+                    b.OwnsOne("Stocker.Domain.Master.ValueObjects.EmailVerificationToken", "EmailVerificationToken", b1 =>
+                        {
+                            b1.Property<Guid>("MasterUserId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("EmailVerificationTokenCreatedAt");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("EmailVerificationTokenExpiresAt");
+
+                            b1.Property<bool>("IsUsed")
+                                .HasColumnType("bit")
+                                .HasColumnName("EmailVerificationTokenIsUsed");
+
+                            b1.Property<string>("Token")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("EmailVerificationToken");
+
+                            b1.Property<DateTime?>("UsedAt")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("EmailVerificationTokenUsedAt");
+
+                            b1.HasKey("MasterUserId");
+
+                            b1.ToTable("MasterUsers", "master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MasterUserId");
+                        });
+
                     b.OwnsOne("Stocker.Domain.Master.ValueObjects.HashedPassword", "Password", b1 =>
                         {
                             b1.Property<Guid>("MasterUserId")
@@ -1048,6 +1090,8 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Navigation("Email")
                         .IsRequired();
+
+                    b.Navigation("EmailVerificationToken");
 
                     b.Navigation("Password")
                         .IsRequired();
