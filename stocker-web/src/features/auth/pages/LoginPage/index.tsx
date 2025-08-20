@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Form, Input, Button, message, Typography, Space } from 'antd';
+import { Form, Input, Button, Typography, Space } from 'antd';
 import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LoginRequest } from '@/shared/types';
 import companyService from '@/services/companyService';
+import { showApiResponse, showLoginSuccess } from '@/shared/utils/sweetAlert';
+import Swal from 'sweetalert2';
 import './style.css';
 
 const { Title, Text } = Typography;
@@ -16,6 +18,9 @@ export const LoginPage: React.FC = () => {
   const [form] = Form.useForm();
 
   const handleSubmit = async (values: any) => {
+    // Show loading
+    showApiResponse.loading('Giriş yapılıyor...');
+    
     try {
       // If tenant code is provided, set it as a header
       if (values.tenantCode) {
@@ -29,10 +34,16 @@ export const LoginPage: React.FC = () => {
       };
       
       await login(loginData);
-      message.success('Giriş başarılı!');
+      
+      // Close loading
+      Swal.close();
       
       // Get the user after login to check role
       const authStore = useAuthStore.getState();
+      const userName = authStore.user?.firstName || authStore.user?.email || 'Kullanıcı';
+      
+      // Show success message
+      await showLoginSuccess(userName);
       
       // Redirect based on user role
       const userRole = authStore.user?.roles?.[0];
@@ -40,24 +51,59 @@ export const LoginPage: React.FC = () => {
       
       // Check if company exists for tenant users
       if (userRole !== 'SystemAdmin') {
-        const hasCompany = await companyService.checkCompanyExists();
-        if (!hasCompany) {
-          navigate('/company-setup', { replace: true });
-          return;
+        try {
+          const hasCompany = await companyService.checkCompanyExists();
+          if (!hasCompany) {
+            showApiResponse.info(
+              'Şirket bilgilerinizi tamamlamanız gerekiyor. Yönlendiriliyorsunuz...',
+              'Şirket Kurulumu'
+            );
+            setTimeout(() => {
+              navigate('/company-setup', { replace: true });
+            }, 2000);
+            return;
+          }
+        } catch (companyError) {
+          console.log('Company check skipped:', companyError);
         }
       }
       
-      if (from) {
-        navigate(from, { replace: true });
-      } else if (userRole === 'SystemAdmin') {
-        navigate('/master', { replace: true });
-      } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/app/default', { replace: true });
-      }
+      // Navigate after a short delay
+      setTimeout(() => {
+        if (from) {
+          navigate(from, { replace: true });
+        } else if (userRole === 'SystemAdmin') {
+          navigate('/master', { replace: true });
+        } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/app/default', { replace: true });
+        }
+      }, 1500);
+      
     } catch (error: any) {
-      message.error(error.message || 'Giriş başarısız. Lütfen tekrar deneyin.');
+      // Close loading
+      Swal.close();
+      
+      console.error('Login error:', error);
+      
+      // Show detailed error message
+      if (error.response) {
+        // API returned an error response
+        showApiResponse.error(error, 'Giriş başarısız');
+      } else if (error.message) {
+        // Network or other error
+        showApiResponse.error(
+          { response: { data: { message: error.message } } },
+          'Giriş başarısız'
+        );
+      } else {
+        // Unknown error
+        showApiResponse.error(
+          { response: { data: { message: 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.' } } },
+          'Giriş başarısız'
+        );
+      }
     }
   };
 
