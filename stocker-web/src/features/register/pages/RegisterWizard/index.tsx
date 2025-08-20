@@ -537,7 +537,7 @@ const RegisterWizard: React.FC = () => {
                     <div style={{ marginTop: 8 }}>
                       <Text type="secondary">Şirketinizin web adresi: </Text>
                       <Text strong style={{ color: '#667eea' }}>
-                        {subdomain || 'sirketiniz'}.stocker.app
+                        {subdomain || 'sirketiniz'}.stoocker.app
                       </Text>
                     </div>
                   }
@@ -557,7 +557,7 @@ const RegisterWizard: React.FC = () => {
                       subdomainAvailable === true ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> :
                       subdomainAvailable === false ? <CloseOutlined style={{ color: '#f5222d' }} /> : null
                     }
-                    addonAfter=".stocker.app"
+                    addonAfter=".stoocker.app"
                   />
                 </Form.Item>
               )}

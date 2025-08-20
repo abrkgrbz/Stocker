@@ -7,7 +7,7 @@ Stocker is a multi-tenant SaaS application that supports wildcard subdomains for
 ## 📋 Prerequisites
 
 1. **Domain Configuration**
-   - A domain name (e.g., stocker.app)
+   - A domain name (e.g., stoocker.app)
    - DNS access for wildcard subdomain setup
    - SSL wildcard certificate (or Let's Encrypt)
 
@@ -60,8 +60,8 @@ Coolify handles this automatically with Traefik labels.
 #### Option B: Manual Certificate
 
 Place your wildcard certificate files:
-- `/etc/nginx/ssl/stocker.app/fullchain.pem`
-- `/etc/nginx/ssl/stocker.app/privkey.pem`
+- `/etc/nginx/ssl/stoocker.app/fullchain.pem`
+- `/etc/nginx/ssl/stoocker.app/privkey.pem`
 
 ### 4. Database Migration
 
@@ -75,7 +75,7 @@ docker exec stocker-api dotnet ef database update
 
 ### Subdomain Resolution Flow
 
-1. User visits `acme.stocker.app`
+1. User visits `acme.stoocker.app`
 2. Nginx/Traefik extracts subdomain (`acme`)
 3. Passes `X-Tenant-Code: acme` header to API
 4. TenantResolutionMiddleware identifies tenant
@@ -83,12 +83,12 @@ docker exec stocker-api dotnet ef database update
 
 ### Tenant Creation Flow
 
-1. User registers at `www.stocker.app`
+1. User registers at `www.stoocker.app`
 2. Chooses subdomain (e.g., `acme`)
 3. System creates:
    - Tenant record in master database
    - Tenant-specific database (`StockerTenant_acme`)
-   - User redirects to `acme.stocker.app`
+   - User redirects to `acme.stoocker.app`
 
 ## 🔒 Security Considerations
 
@@ -102,8 +102,8 @@ docker exec stocker-api dotnet ef database update
 
 ### Health Checks
 
-- API Health: `https://api.stocker.app/health`
-- SignalR Health: `https://api.stocker.app/health/signalr`
+- API Health: `https://api.stoocker.app/health`
+- SignalR Health: `https://api.stoocker.app/health/signalr`
 
 ### Logs
 
@@ -157,11 +157,11 @@ localStorage.setItem('dev-subdomain', 'test-tenant');
 ### Common Issues
 
 1. **Subdomain not resolving**
-   - Check DNS propagation: `nslookup test.stocker.app`
+   - Check DNS propagation: `nslookup test.stoocker.app`
    - Verify wildcard DNS record
 
 2. **SSL Certificate errors**
-   - Ensure wildcard certificate covers `*.stocker.app`
+   - Ensure wildcard certificate covers `*.stoocker.app`
    - Check certificate expiration
 
 3. **Tenant not found**
@@ -186,7 +186,7 @@ environment:
 
 For deployment assistance:
 - GitHub Issues: https://github.com/your-repo/stocker/issues
-- Documentation: https://docs.stocker.app
+- Documentation: https://docs.stoocker.app
 
 ## 🚦 Status Monitoring
 

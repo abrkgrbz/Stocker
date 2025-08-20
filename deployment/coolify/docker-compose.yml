@@ -7,12 +7,12 @@ services:
       context: ../../stocker-web
       dockerfile: Dockerfile
     environment:
-      - VITE_API_URL=https://api.stocker.app
-      - VITE_SIGNALR_URL=https://api.stocker.app/hubs
+      - VITE_API_URL=https://api.stoocker.app
+      - VITE_SIGNALR_URL=https://api.stoocker.app/hubs
     labels:
       # Traefik labels for wildcard subdomain
       - "traefik.enable=true"
-      - "traefik.http.routers.stocker-web.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stocker.app`)"
+      - "traefik.http.routers.stocker-web.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
       - "traefik.http.routers.stocker-web.entrypoints=websecure"
       - "traefik.http.routers.stocker-web.tls=true"
       - "traefik.http.routers.stocker-web.tls.certresolver=letsencrypt"
@@ -35,18 +35,18 @@ services:
       - DatabaseSettings__MasterConnectionString=Server=mssql;Database=StockerMasterDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
       - DatabaseSettings__TenantConnectionStringTemplate=Server=mssql;Database=StockerTenant_{0};User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
       - JwtSettings__Secret=${JWT_SECRET}
-      - JwtSettings__Issuer=https://api.stocker.app
-      - JwtSettings__Audience=https://stocker.app
+      - JwtSettings__Issuer=https://api.stoocker.app
+      - JwtSettings__Audience=https://stoocker.app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.stocker-api.rule=Host(`api.stocker.app`)"
+      - "traefik.http.routers.stocker-api.rule=Host(`api.stoocker.app`)"
       - "traefik.http.routers.stocker-api.entrypoints=websecure"
       - "traefik.http.routers.stocker-api.tls=true"
       - "traefik.http.routers.stocker-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.stocker-api.loadbalancer.server.port=5000"
       # CORS headers
       - "traefik.http.middlewares.stocker-cors.headers.accesscontrolallowmethods=*"
-      - "traefik.http.middlewares.stocker-cors.headers.accesscontrolalloworiginlist=https://*.stocker.app"
+      - "traefik.http.middlewares.stocker-cors.headers.accesscontrolalloworiginlist=https://*.stoocker.app"
       - "traefik.http.middlewares.stocker-cors.headers.accesscontrolallowheaders=*"
       - "traefik.http.middlewares.stocker-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.stocker-cors.headers.addvaryheader=true"
