@@ -19,13 +19,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.stocker-web.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
-      - "traefik.http.routers.stocker-web.entrypoints=http"
-      - "traefik.http.routers.stocker-web.middlewares=redirect-to-https"
       - "traefik.http.services.stocker-web.loadbalancer.server.port=80"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       - "traefik.docker.network=coolify"
-      - "coolify.managed=true"
 
   # Backend API (.NET)
   stocker-api:
@@ -69,13 +64,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.stocker-api.rule=Host(`api.stoocker.app`)"
-      - "traefik.http.routers.stocker-api.entrypoints=http"
-      - "traefik.http.routers.stocker-api.middlewares=api-redirect-to-https"
       - "traefik.http.services.stocker-api.loadbalancer.server.port=5000"
-      - "traefik.http.middlewares.api-redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.api-redirect-to-https.redirectscheme.permanent=true"
       - "traefik.docker.network=coolify"
-      - "coolify.managed=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
