@@ -46,6 +46,7 @@ import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse, showRegistrationSuccess } from '@/shared/utils/sweetAlert';
+import Swal from 'sweetalert2';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -145,12 +146,12 @@ const RegisterWizard: React.FC = () => {
   const handleSubmit = async () => {
     setLoading(true);
     
-    // Show loading alert
-    showApiResponse.loading('Hesabınız oluşturuluyor...');
-    
     try {
       const values = await form.validateFields();
       const allData = { ...registerData, ...values };
+      
+      // Show loading alert
+      showApiResponse.loading('Hesabınız oluşturuluyor...');
       
       // Prepare registration data for API
       const registrationData = {
@@ -182,6 +183,9 @@ const RegisterWizard: React.FC = () => {
       
       // Call actual API
       const response = await apiClient.post('/api/auth/register', registrationData);
+      
+      // Close loading alert
+      Swal.close();
       
       if (response.data.success) {
         // Show success message with email verification info
@@ -228,6 +232,9 @@ const RegisterWizard: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      
+      // Close loading alert if open
+      Swal.close();
       
       // Show detailed error message from API
       showApiResponse.error(error, 'Kayıt sırasında bir hata oluştu');

@@ -44,6 +44,7 @@ const TenantSettings = lazy(() => import('@/features/settings/pages/TenantSettin
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const NotFoundPage = lazy(() => import('@/features/error/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
+const TestSweetAlert = lazy(() => import('@/features/test/TestSweetAlert'));
 
 // Lazy load module pages
 const CRMModule = lazy(() => import('@/features/modules/pages/CRMModule').then(m => ({ default: m.CRMModule })));
@@ -145,6 +146,7 @@ function App() {
                 <Route path="/register" element={<RegisterWizard />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/signalr-test" element={<SignalRTestPage />} />
+                <Route path="/test-sweetalert" element={<TestSweetAlert />} />
                 
                 {/* Company Setup - Protected route but no layout */}
                 <Route 
