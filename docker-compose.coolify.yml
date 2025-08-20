@@ -39,11 +39,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
       - ASPNETCORE_URLS=http://+:5000
       # Database connections
-      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
-      - ConnectionStrings__MasterConnection=${ConnectionStrings__MasterConnection}
-      - ConnectionStrings__TenantConnection=${ConnectionStrings__TenantConnection}
+      - ConnectionStrings__DefaultConnection=Server=database;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=database;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=database;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true
       # JWT Settings
-      - JwtSettings__Secret=${JwtSettings__Secret}
+      - JwtSettings__Secret=${JwtSettings__Secret:-your-super-secret-jwt-key-minimum-32-characters-long-2024}
       - JwtSettings__Issuer=${JwtSettings__Issuer:-https://api.stoocker.app}
       - JwtSettings__Audience=${JwtSettings__Audience:-https://stoocker.app}
       - JwtSettings__AccessTokenExpirationMinutes=60
