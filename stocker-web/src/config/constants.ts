@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5104';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://95.217.219.4:5000';
 export const APP_NAME = 'Stocker';
 export const TOKEN_KEY = 'stocker_token';
 export const REFRESH_TOKEN_KEY = 'stocker_refresh_token';
