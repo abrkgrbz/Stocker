@@ -35,7 +35,9 @@ import {
   LoadingOutlined,
   IdcardOutlined,
   BankFilled as BuildingOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  ShopOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
@@ -77,7 +79,7 @@ const RegisterWizard: React.FC = () => {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
   const [registerData, setRegisterData] = useState<Partial<RegisterData>>({ 
-    accountType: 'company',
+    accountType: 'company', // Default to company
     identityType: 'vergi' 
   });
   const [loading, setLoading] = useState(false);
@@ -167,7 +169,7 @@ const RegisterWizard: React.FC = () => {
             <div className="step-header">
               <Title level={2}>Hesap Türünüzü Seçin</Title>
               <Paragraph type="secondary">
-                İşletmeniz için mi yoksa bireysel kullanım için mi kayıt oluyorsunuz?
+                İşletmeniz için kurumsal hesap mı, yoksa kişisel kullanım için bireysel hesap mı açmak istiyorsunuz?
               </Paragraph>
             </div>
 
@@ -178,38 +180,61 @@ const RegisterWizard: React.FC = () => {
                 defaultValue="company"
               >
                 <Space direction="vertical" size={16} style={{ width: '100%' }}>
-                  <Radio.Button value="company" className="account-type-card">
+                  <Radio.Button value="company" className="account-type-card selected-default">
                     <div className="card-content">
-                      <BuildingOutlined className="card-icon" />
+                      <div className="selection-indicator">
+                        <CheckOutlined />
+                      </div>
+                      <ShopOutlined className="card-icon company-icon" />
                       <div className="card-text">
                         <Title level={4}>Kurumsal Hesap</Title>
-                        <Text type="secondary">Şirketim veya işletmem için</Text>
+                        <Text type="secondary">Şirketler ve işletmeler için profesyonel çözüm</Text>
                       </div>
                       <div className="card-benefits">
-                        <Tag color="blue">Çoklu kullanıcı</Tag>
-                        <Tag color="green">Fatura kesebilme</Tag>
-                        <Tag color="purple">Tüm modüller</Tag>
+                        <ul className="benefit-list">
+                          <li>Sınırsız kullanıcı ekleme</li>
+                          <li>E-Fatura ve E-Arşiv entegrasyonu</li>
+                          <li>Gelişmiş raporlama ve analiz</li>
+                          <li>Özel destek ve eğitim</li>
+                        </ul>
                       </div>
+                      <Tag color="green" className="recommended-tag">
+                        <CheckCircleOutlined /> Önerilen
+                      </Tag>
                     </div>
                   </Radio.Button>
 
                   <Radio.Button value="individual" className="account-type-card">
                     <div className="card-content">
-                      <UserOutlined className="card-icon" />
+                      <div className="selection-indicator">
+                        <CheckOutlined />
+                      </div>
+                      <UserOutlined className="card-icon individual-icon" />
                       <div className="card-text">
                         <Title level={4}>Bireysel Hesap</Title>
-                        <Text type="secondary">Kişisel kullanım için</Text>
+                        <Text type="secondary">Freelancer ve bireysel kullanıcılar için ideal</Text>
                       </div>
                       <div className="card-benefits">
-                        <Tag color="blue">Tek kullanıcı</Tag>
-                        <Tag color="green">Basit arayüz</Tag>
-                        <Tag color="purple">Temel özellikler</Tag>
+                        <ul className="benefit-list">
+                          <li>Tek kullanıcı hesabı</li>
+                          <li>Temel stok takibi</li>
+                          <li>Basit raporlama</li>
+                          <li>E-posta desteği</li>
+                        </ul>
                       </div>
                     </div>
                   </Radio.Button>
                 </Space>
               </Radio.Group>
             </Form.Item>
+
+            <Alert
+              message="Bilgi"
+              description="Hesap türünüzü daha sonra yükseltebilir veya değiştirebilirsiniz."
+              type="info"
+              showIcon
+              style={{ marginTop: 24 }}
+            />
           </div>
         );
 
@@ -634,6 +659,19 @@ const RegisterWizard: React.FC = () => {
         </div>
         
         <div className="wizard-progress">
+          <div className="step-indicators">
+            {['Hesap Türü', 'Temel Bilgiler', 'İşletme', 'İletişim', 'Güvenlik', 'Onay'].map((step, index) => (
+              <div 
+                key={index} 
+                className={`step-indicator ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
+              >
+                <div className="step-number">
+                  {index < currentStep ? <CheckOutlined /> : index + 1}
+                </div>
+                <span className="step-label">{step}</span>
+              </div>
+            ))}
+          </div>
           <Progress 
             percent={progressPercent} 
             strokeColor="#667eea"
@@ -644,7 +682,7 @@ const RegisterWizard: React.FC = () => {
               <ClockCircleOutlined />
               <Text>Yaklaşık {completionTime} dakika kaldı</Text>
             </Space>
-            <Text strong>{progressPercent}% tamamlandı</Text>
+            <Text strong>Adım {currentStep + 1} / 6</Text>
           </div>
         </div>
       </div>
