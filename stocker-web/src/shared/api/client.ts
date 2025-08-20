@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL, TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/config/constants';
 import { ApiResponse } from '@/shared/types';
+import { getTenantCode } from '@/shared/utils/subdomain';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -23,10 +24,11 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Add tenant header if available
-    const tenantCode = localStorage.getItem('X-Tenant-Code');
+    // Add tenant header from subdomain or localStorage
+    const tenantCode = getTenantCode();
     if (tenantCode && config.headers) {
       config.headers['X-Tenant-Code'] = tenantCode;
+      config.headers['X-Tenant-Subdomain'] = tenantCode;
     }
     
     return config;

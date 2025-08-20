@@ -47,6 +47,7 @@ import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse, showRegistrationSuccess } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
+import { navigateToSubdomain } from '@/shared/utils/subdomain';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -286,8 +287,14 @@ const RegisterWizard: React.FC = () => {
               'Hoş Geldiniz!'
             );
             
+            // Redirect to subdomain if available
             setTimeout(() => {
-              navigate('/dashboard');
+              if (response.data.subdomain) {
+                // Navigate to the tenant's subdomain
+                navigateToSubdomain(response.data.subdomain, '/dashboard');
+              } else {
+                navigate('/dashboard');
+              }
             }, 1000);
           } else {
             throw new Error('No token received');
