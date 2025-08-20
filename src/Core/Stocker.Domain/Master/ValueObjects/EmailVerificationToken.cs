@@ -4,11 +4,17 @@ namespace Stocker.Domain.Master.ValueObjects;
 
 public sealed class EmailVerificationToken : ValueObject
 {
-    public string Token { get; }
-    public DateTime ExpiresAt { get; }
-    public DateTime CreatedAt { get; }
+    public string Token { get; private set; }
+    public DateTime ExpiresAt { get; private set; }
+    public DateTime CreatedAt { get; private set; }
     public bool IsUsed { get; private set; }
     public DateTime? UsedAt { get; private set; }
+
+    // Parameterless constructor for EF Core
+    private EmailVerificationToken()
+    {
+        Token = string.Empty;
+    }
 
     private EmailVerificationToken(string token, DateTime expiresAt)
     {
