@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Stocker.Persistence.Context;
+using Microsoft.EntityFrameworkCore; 
 using StackExchange.Redis;
+using Stocker.Persistence.Contexts;
 
 namespace Stocker.API.Controllers;
 
