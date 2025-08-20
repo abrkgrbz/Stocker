@@ -37,6 +37,14 @@ services:
       - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=https://api.stoocker.app
       - JwtSettings__Audience=https://stoocker.app
+      - EmailSettings__SmtpHost=mail.privateemail.com
+      - EmailSettings__SmtpPort=465
+      - EmailSettings__SmtpUsername=info@stoocker.app
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__FromEmail=info@stoocker.app
+      - EmailSettings__FromName=Stoocker
+      - EmailSettings__UseStartTls=false
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.stocker-api.rule=Host(`api.stoocker.app`)"

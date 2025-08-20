@@ -79,6 +79,7 @@ public class EmailService : IEmailService
             await smtp.ConnectAsync(
                 _emailSettings.SmtpHost, 
                 _emailSettings.SmtpPort, 
+                _emailSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : 
                 _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None, 
                 cancellationToken);
             
@@ -206,6 +207,7 @@ public class EmailService : IEmailService
             await smtp.ConnectAsync(
                 _emailSettings.SmtpHost, 
                 _emailSettings.SmtpPort, 
+                _emailSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : 
                 _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
             
             await smtp.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
