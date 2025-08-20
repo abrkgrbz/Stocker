@@ -7,7 +7,7 @@ services:
       context: ./stocker-web
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:80"
     environment:
       - VITE_API_URL=${VITE_API_URL:-https://api.stoocker.app}
       - VITE_SIGNALR_URL=${VITE_SIGNALR_URL:-https://api.stoocker.app/hubs}
@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.web.entrypoints=websecure"
       - "traefik.http.routers.web.tls=true"
       - "traefik.http.routers.web.tls.certresolver=letsencrypt"
-      - "traefik.http.services.web.loadbalancer.server.port=3000"
+      - "traefik.http.services.web.loadbalancer.server.port=80"
       # HTTP to HTTPS redirect
       - "traefik.http.routers.web-http.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
       - "traefik.http.routers.web-http.entrypoints=web"
