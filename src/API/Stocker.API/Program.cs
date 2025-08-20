@@ -9,6 +9,8 @@ using Stocker.Modules.CRM;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.SignalR.Hubs;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,7 +57,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Production",
         policy =>
         {
-            policy.WithOrigins("https://yourdomain.com", "http://localhost:3000")
+            policy.WithOrigins(
+                    "https://stoocker.app", 
+                    "https://www.stoocker.app",
+                    "https://api.stoocker.app",
+                    "http://localhost:3000") // Development için
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();
@@ -311,6 +317,48 @@ builder.Services.AddAuthorization(options =>
               .RequireClaim("TenantId"));
 });
 
+// Add Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    // Global limiter
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    // Specific limiter for auth endpoints
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    // API limiter for general endpoints
+    options.AddPolicy("api", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 60,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -336,7 +384,28 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Use CORS - Authentication'dan önce olmalı
-app.UseCors("AllowAll"); // Development için AllowAll, Production için "Production" policy kullanın
+if (app.Environment.IsProduction())
+{
+    app.UseCors("Production");
+}
+else
+{
+    app.UseCors("AllowAll");
+}
+
+// Add Security Headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
+    await next();
+});
+
+// Add Rate Limiting
+app.UseRateLimiter();
 
 // Add Tenant Resolution Middleware - Authentication'dan önce olmalı
 app.UseMiddleware<TenantResolutionMiddleware>();
