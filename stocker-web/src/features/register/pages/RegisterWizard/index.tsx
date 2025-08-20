@@ -45,6 +45,7 @@ import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useAuthStore } from '@/app/store/auth.store';
+import { showApiResponse, showRegistrationSuccess } from '@/shared/utils/sweetAlert';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -132,7 +133,7 @@ const RegisterWizard: React.FC = () => {
         handleSubmit();
       }
     } catch (error) {
-      message.error('Lütfen gerekli alanları doldurun');
+      showApiResponse.toast.error('Lütfen gerekli alanları doldurun');
     }
   };
 
@@ -143,6 +144,10 @@ const RegisterWizard: React.FC = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
+    
+    // Show loading alert
+    showApiResponse.loading('Hesabınız oluşturuluyor...');
+    
     try {
       const values = await form.validateFields();
       const allData = { ...registerData, ...values };
@@ -179,28 +184,53 @@ const RegisterWizard: React.FC = () => {
       const response = await apiClient.post('/api/auth/register', registrationData);
       
       if (response.data.success) {
-        message.success('Kayıt başarılı! Yönlendiriliyorsunuz...');
+        // Show success message with email verification info
+        await showRegistrationSuccess(allData.email);
         
         // Auto login after registration
-        const loginResponse = await apiClient.post('/api/auth/login', {
-          email: allData.email,
-          password: allData.password
-        });
-        
-        if (loginResponse.data.token) {
-          localStorage.setItem('token', loginResponse.data.token);
-          localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+        try {
+          const loginResponse = await apiClient.post('/api/auth/login', {
+            email: allData.email,
+            password: allData.password
+          });
+          
+          if (loginResponse.data.token) {
+            localStorage.setItem('token', loginResponse.data.token);
+            localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+            
+            // Show final success and redirect
+            await showApiResponse.success(
+              'Hesabınız başarıyla oluşturuldu ve giriş yapıldı. Yönlendiriliyorsunuz...',
+              'Hoş Geldiniz!'
+            );
+            
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 1000);
+          }
+        } catch (loginError) {
+          // If auto-login fails, still show success but redirect to login
+          await showApiResponse.info(
+            'Hesabınız oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...',
+            'Kayıt Başarılı'
+          );
           
           setTimeout(() => {
-            navigate('/dashboard');
-          }, 1500);
+            navigate('/login');
+          }, 2000);
         }
       } else {
-        message.error(response.data.message || 'Kayıt sırasında bir hata oluştu');
+        // Show error with API message
+        showApiResponse.error(
+          { response: { data: response.data } },
+          'Kayıt işlemi başarısız oldu'
+        );
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      message.error(error.response?.data?.message || 'Kayıt sırasında bir hata oluştu');
+      
+      // Show detailed error message from API
+      showApiResponse.error(error, 'Kayıt sırasında bir hata oluştu');
     } finally {
       setLoading(false);
     }
