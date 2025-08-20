@@ -26,6 +26,9 @@ public static class ServiceCollectionExtensions
         
         // Add JWT Service
         services.AddScoped<IJwtService, JwtService>();
+        
+        // Add Token Service
+        services.AddScoped<ITokenService, TokenService>();
 
         // Add Tenant Resolution Service
         services.AddScoped<ITenantResolverService, TenantResolverService>();
