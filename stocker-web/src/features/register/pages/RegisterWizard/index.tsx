@@ -187,20 +187,28 @@ const RegisterWizard: React.FC = () => {
       // Close loading alert
       Swal.close();
       
-      if (response.data.success) {
+      // Check if registration was successful
+      // API might return data directly or wrapped in response.data
+      const responseData = response.data;
+      
+      if (response.status === 200 || response.status === 201) {
         // Show success message with email verification info
         await showRegistrationSuccess(allData.email);
         
         // Auto login after registration
         try {
+          // Small delay before login attempt
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           const loginResponse = await apiClient.post('/api/auth/login', {
             email: allData.email,
             password: allData.password
           });
           
-          if (loginResponse.data.token) {
-            localStorage.setItem('token', loginResponse.data.token);
-            localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+          if (loginResponse.data.accessToken || loginResponse.data.token) {
+            const token = loginResponse.data.accessToken || loginResponse.data.token;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(loginResponse.data.user || loginResponse.data));
             
             // Show final success and redirect
             await showApiResponse.success(
@@ -211,11 +219,15 @@ const RegisterWizard: React.FC = () => {
             setTimeout(() => {
               navigate('/dashboard');
             }, 1000);
+          } else {
+            throw new Error('No token received');
           }
-        } catch (loginError) {
+        } catch (loginError: any) {
+          console.log('Auto-login failed:', loginError);
+          
           // If auto-login fails, still show success but redirect to login
           await showApiResponse.info(
-            'Hesabınız oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...',
+            'Hesabınız oluşturuldu. E-posta doğrulaması sonrası giriş yapabilirsiniz.',
             'Kayıt Başarılı'
           );
           
@@ -226,7 +238,7 @@ const RegisterWizard: React.FC = () => {
       } else {
         // Show error with API message
         showApiResponse.error(
-          { response: { data: response.data } },
+          { response: { data: responseData } },
           'Kayıt işlemi başarısız oldu'
         );
       }
@@ -236,8 +248,74 @@ const RegisterWizard: React.FC = () => {
       // Close loading alert if open
       Swal.close();
       
-      // Show detailed error message from API
-      showApiResponse.error(error, 'Kayıt sırasında bir hata oluştu');
+      // Parse error details
+      let errorMessage = 'Kayıt sırasında bir hata oluştu';
+      let errorDetails = null;
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        
+        // Check for validation errors
+        if (data.errors) {
+          // If errors is an object with field-specific errors
+          if (typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+            const fieldErrors: string[] = [];
+            Object.entries(data.errors).forEach(([field, errors]: [string, any]) => {
+              if (Array.isArray(errors)) {
+                errors.forEach(err => {
+                  fieldErrors.push(`${field}: ${err}`);
+                });
+              } else {
+                fieldErrors.push(`${field}: ${errors}`);
+              }
+            });
+            
+            if (fieldErrors.length > 0) {
+              errorMessage = 'Lütfen formdaki hataları düzeltin';
+              errorDetails = fieldErrors;
+            }
+          }
+          // If errors is a simple array
+          else if (Array.isArray(data.errors)) {
+            errorMessage = 'Kayıt işlemi başarısız';
+            errorDetails = data.errors;
+          }
+        }
+        // Check for general message
+        else if (data.message) {
+          errorMessage = data.message;
+        }
+        // Check for title and detail (API problem response)
+        else if (data.title) {
+          errorMessage = data.title;
+          if (data.detail) {
+            errorDetails = [data.detail];
+          }
+        }
+      }
+      
+      // Show error with parsed details
+      if (errorDetails && Array.isArray(errorDetails) && errorDetails.length > 0) {
+        // Show validation errors in a formatted way
+        Swal.fire({
+          icon: 'error',
+          title: 'Kayıt Hatası',
+          html: `
+            <div style="text-align: left;">
+              <p>${errorMessage}</p>
+              <ul style="margin-top: 10px; padding-left: 20px;">
+                ${errorDetails.map(err => `<li style="margin: 5px 0;">${err}</li>`).join('')}
+              </ul>
+            </div>
+          `,
+          confirmButtonText: 'Tamam',
+          confirmButtonColor: '#667eea',
+          width: '500px'
+        });
+      } else {
+        // Show general error
+        showApiResponse.error(error, errorMessage);
+      }
     } finally {
       setLoading(false);
     }
