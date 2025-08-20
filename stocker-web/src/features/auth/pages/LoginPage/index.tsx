@@ -4,6 +4,7 @@ import { Form, Input, Button, message, Typography, Space } from 'antd';
 import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LoginRequest } from '@/shared/types';
+import companyService from '@/services/companyService';
 import './style.css';
 
 const { Title, Text } = Typography;
@@ -36,6 +37,15 @@ export const LoginPage: React.FC = () => {
       // Redirect based on user role
       const userRole = authStore.user?.roles?.[0];
       const from = (location.state as any)?.from?.pathname;
+      
+      // Check if company exists for tenant users
+      if (userRole !== 'SystemAdmin') {
+        const hasCompany = await companyService.checkCompanyExists();
+        if (!hasCompany) {
+          navigate('/company-setup', { replace: true });
+          return;
+        }
+      }
       
       if (from) {
         navigate(from, { replace: true });

@@ -75,9 +75,9 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
           {pricingPlans.map((plan, index) => (
             <Col xs={24} sm={24} md={12} lg={8} key={index}>
               <Badge.Ribbon 
-                text="Popüler" 
-                color="#52c41a"
-                style={{ display: plan.popular ? 'block' : 'none' }}
+                text={plan.badge || "Popüler"} 
+                color={plan.popular ? "#667eea" : "#52c41a"}
+                style={{ display: plan.badge ? 'block' : 'none' }}
               >
                 <Card
                   hoverable
@@ -97,10 +97,34 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
                   </div>
 
                   <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <Text style={{ fontSize: 48, fontWeight: 'bold' }}>
-                      {plan.currency}{plan.price}
-                    </Text>
-                    <Text style={{ fontSize: 18, color: '#666' }}>/{plan.period}</Text>
+                    {plan.oldPrice && (
+                      <Text 
+                        delete 
+                        style={{ 
+                          fontSize: 20, 
+                          color: '#999',
+                          display: 'block',
+                          marginBottom: 8
+                        }}
+                      >
+                        {plan.currency}{plan.oldPrice}
+                      </Text>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
+                      <Text style={{ fontSize: 48, fontWeight: 'bold', color: plan.popular ? '#667eea' : '#1a1a1a' }}>
+                        {plan.currency}{plan.price}
+                      </Text>
+                      <Text style={{ fontSize: 18, color: '#666' }}>/{plan.period}</Text>
+                    </div>
+                    {plan.savings && (
+                      <Badge 
+                        count={plan.savings} 
+                        style={{ 
+                          backgroundColor: '#52c41a',
+                          marginTop: 8
+                        }} 
+                      />
+                    )}
                   </div>
 
                   <List
@@ -133,9 +157,21 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
           ))}
         </Row>
 
-        <div style={{ textAlign: 'center', marginTop: 48 }}>
-          <Text style={{ fontSize: 16, color: '#666' }}>
-            Tüm paketlerde 14 gün ücretsiz deneme hakkı • İstediğiniz zaman iptal edebilirsiniz
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: 64,
+          padding: '32px',
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+          borderRadius: 16
+        }}>
+          <Title level={4} style={{ marginBottom: 16 }}>
+            💰 30 Gün Para İade Garantisi
+          </Title>
+          <Text style={{ fontSize: 16, color: '#666', display: 'block', marginBottom: 8 }}>
+            14 gün ücretsiz deneme • Kredi kartı gerekmez • Anında iptal
+          </Text>
+          <Text style={{ fontSize: 14, color: '#999' }}>
+            Memnun kalmazsanız, ilk 30 gün içinde ücret iadesi alabilirsiniz
           </Text>
         </div>
         </>

@@ -29,45 +29,56 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled, navigate: na
           <Title 
             level={1} 
             style={{ 
-              fontSize: '3.5rem', 
+              fontSize: 'clamp(2.5rem, 5vw, 4rem)', 
               fontWeight: 700,
               color: 'white',
-              marginBottom: 24
+              marginBottom: 24,
+              lineHeight: 1.2
             }}
           >
-            İşletmeniz için Akıllı ERP Çözümü
+            Tüm İşletme Süreçleriniz<br />Tek Platformda
           </Title>
           
           <Paragraph 
             style={{ 
-              fontSize: '1.25rem', 
-              color: 'rgba(255,255,255,0.9)',
-              maxWidth: 700,
-              margin: '0 auto 40px'
+              fontSize: '1.35rem', 
+              color: 'rgba(255,255,255,0.95)',
+              maxWidth: 600,
+              margin: '0 auto 40px',
+              fontWeight: 300
             }}
           >
-            Stocker ile tüm iş süreçlerinizi tek bir platformdan yönetin. 
-            CRM'den muhasebeye, stok yönetiminden insan kaynaklarına kadar 
-            ihtiyacınız olan tüm modüller bir arada.
+            Stocker ERP ile işletmenizi dijitalleştirin, verimliliğinizi %40 artırın.
           </Paragraph>
 
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Button
               type="primary"
               size="large"
               icon={<RocketOutlined />}
               onClick={() => navigate('/register')}
               style={{
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
-                fontSize: 16,
+                height: 56,
+                paddingLeft: 40,
+                paddingRight: 40,
+                fontSize: 18,
                 background: 'white',
                 color: '#667eea',
-                border: 'none'
+                border: 'none',
+                fontWeight: 600,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12)';
               }}
             >
-              Ücretsiz Deneyin
+              14 Gün Ücretsiz Dene
             </Button>
             
             <Button
@@ -75,26 +86,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled, navigate: na
               icon={<PlayCircleOutlined />}
               ghost
               style={{
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
-                fontSize: 16,
+                height: 56,
+                paddingLeft: 40,
+                paddingRight: 40,
+                fontSize: 18,
                 color: 'white',
-                borderColor: 'white'
+                borderColor: 'rgba(255,255,255,0.8)',
+                borderWidth: 2,
+                fontWeight: 500
               }}
             >
-              Demo İzle
+              Canlı Demo
             </Button>
           </div>
 
-          <Paragraph 
-            style={{ 
-              marginTop: 24,
-              color: 'rgba(255,255,255,0.8)'
-            }}
-          >
-            14 gün ücretsiz deneme • Kredi kartı gerektirmez • Anında aktivasyon
-          </Paragraph>
+          <div style={{ 
+            marginTop: 32,
+            display: 'flex',
+            gap: 24,
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15 }}>✓ Kredi kartı gerekmez</span>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15 }}>✓ 5 dakikada kurulum</span>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15 }}>✓ 7/24 destek</span>
+          </div>
         </div>
       </div>
     </section>

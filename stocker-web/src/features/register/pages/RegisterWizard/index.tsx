@@ -12,35 +12,30 @@ import {
   Col,
   Progress,
   message,
-  Result,
+  Radio,
   Tooltip,
   Tag,
-  Divider,
   Alert,
   Checkbox,
-  Radio,
-  Avatar,
-  Timeline,
-  Badge
+  Spin,
+  AutoComplete
 } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
   MailOutlined,
   PhoneOutlined,
-  HomeOutlined,
   RocketOutlined,
   CheckCircleOutlined,
   ArrowRightOutlined,
   ArrowLeftOutlined,
-  SafetyOutlined,
   TeamOutlined,
-  GlobalOutlined,
   BankOutlined,
   InfoCircleOutlined,
   LoadingOutlined,
-  CloseCircleOutlined,
-  IdcardOutlined
+  IdcardOutlined,
+  BankFilled as BuildingOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
@@ -51,26 +46,28 @@ import './style.css';
 const { Title, Text, Paragraph } = Typography;
 
 interface RegisterData {
-  // Step 1: Company Info
-  companyName: string;
+  // Step 1: Account Type
+  accountType: 'company' | 'individual';
+  
+  // Step 2: Basic Info
+  companyName?: string;
+  fullName?: string;
   identityType: 'tc' | 'vergi';
-  companyCode: string;
+  identityNumber: string;
+  
+  // Step 3: Business Details
   sector: string;
   employeeCount: string;
   
-  // Step 2: Contact Person
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  contactTitle: string;
+  // Step 4: Contact Info
+  email: string;
+  phone: string;
   
-  // Step 3: Account Setup
-  username: string;
+  // Step 5: Security
   password: string;
   confirmPassword: string;
-  domain: string;
   
-  // Step 4: Agreement
+  // Step 6: Agreement
   termsAccepted: boolean;
   marketingAccepted: boolean;
 }
@@ -79,833 +76,548 @@ const RegisterWizard: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
-  const [registerData, setRegisterData] = useState<Partial<RegisterData>>({ identityType: 'vergi' });
+  const [registerData, setRegisterData] = useState<Partial<RegisterData>>({ 
+    accountType: 'company',
+    identityType: 'vergi' 
+  });
   const [loading, setLoading] = useState(false);
-  const [validationStatus, setValidationStatus] = useState<Record<string, any>>({});
   const [identityType, setIdentityType] = useState<'tc' | 'vergi'>('vergi');
   const [isValidating, setIsValidating] = useState(false);
+  const [completionTime, setCompletionTime] = useState(3); // minutes
+  const [progressPercent, setProgressPercent] = useState(0);
   
   const {
     emailValidation,
-    domainCheck,
-    companyNameCheck,
-    phoneValidation,
-    passwordStrength,
     identityValidation,
     validateEmail,
-    checkDomain,
-    checkCompanyName,
-    validatePhone,
-    checkPasswordStrength,
     validateIdentity,
     isConnected
   } = useSignalRValidation();
 
-  // Step definitions
-  const steps = [
-    {
-      title: 'Şirket Bilgileri',
-      icon: <BankOutlined />,
-      description: 'İşletmeniz hakkında temel bilgiler'
-    },
-    {
-      title: 'İletişim Bilgileri',
-      icon: <TeamOutlined />,
-      description: 'Yetkili kişi ve iletişim detayları'
-    },
-    {
-      title: 'Hesap Oluştur',
-      icon: <SafetyOutlined />,
-      description: 'Kullanıcı adı ve şifre belirleme'
-    },
-    {
-      title: 'Onay & Başlangıç',
-      icon: <CheckCircleOutlined />,
-      description: 'Sözleşme ve hesap aktivasyonu'
-    }
-  ];
+  // Calculate progress
+  useEffect(() => {
+    const totalSteps = 6;
+    const percent = Math.round(((currentStep + 1) / totalSteps) * 100);
+    setProgressPercent(percent);
+    
+    // Update estimated time
+    const timePerStep = 0.5; // 30 seconds per step
+    const remainingSteps = totalSteps - currentStep - 1;
+    setCompletionTime(Math.max(1, Math.round(remainingSteps * timePerStep)));
+  }, [currentStep]);
 
-  const sectors = [
-    'Bilişim ve Teknoloji',
-    'Üretim ve Sanayi',
-    'Perakende ve E-ticaret',
-    'Hizmet Sektörü',
-    'Sağlık',
-    'Eğitim',
-    'İnşaat ve Gayrimenkul',
-    'Lojistik',
-    'Turizm',
-    'Diğer'
-  ];
-
-  const employeeCounts = [
-    { value: '1-10', label: '1-10 Çalışan' },
-    { value: '11-50', label: '11-50 Çalışan' },
-    { value: '51-200', label: '51-200 Çalışan' },
-    { value: '200+', label: '200+ Çalışan' }
-  ];
-
-  // Real-time validation handlers
-  const handleCompanyNameChange = (value: string) => {
-    if (value && value.length > 2) {
-      checkCompanyName(value);
-    }
-  };
-
-  const handleIdentityNumberChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    const expectedLength = identityType === 'tc' ? 11 : 10;
-    if (cleaned && cleaned.length === expectedLength) {
-      setIsValidating(true);
-      validateIdentity(cleaned);
-      setTimeout(() => setIsValidating(false), 500);
-    }
-  };
-
-  const handleIdentityTypeChange = (value: 'tc' | 'vergi') => {
-    setIdentityType(value);
-    form.setFieldsValue({ companyCode: '' });
-    setRegisterData({ ...registerData, identityType: value });
-    // Clear validation
-    if (identityValidation) {
-      validateIdentity('');
-    }
-  };
-
-  const handleEmailChange = (value: string) => {
-    if (value && value.includes('@')) {
-      validateEmail(value);
-    }
-  };
-
-  const handlePhoneChange = (value: string) => {
-    if (value && value.length >= 10) {
-      validatePhone(value, 'TR');
-    }
-  };
-
-  const handlePasswordChange = (value: string) => {
+  // Company name suggestions
+  const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
+  
+  const handleCompanySearch = (value: string) => {
+    // Simulate company suggestions
     if (value) {
-      checkPasswordStrength(value);
+      setCompanySuggestions([
+        `${value} Teknoloji A.Ş.`,
+        `${value} Bilişim Ltd. Şti.`,
+        `${value} Yazılım ve Danışmanlık`,
+        `${value} İnovasyon Merkezi`
+      ]);
     }
   };
 
-  const handleDomainChange = (value: string) => {
-    if (value && value.length > 2) {
-      const domain = value.toLowerCase().replace(/[^a-z0-9]/g, '');
-      form.setFieldsValue({ domain });
-      checkDomain(`${domain}.stocker.com`);
-    }
-  };
-
-  // Navigation handlers
-  const next = async () => {
+  const handleNext = async () => {
     try {
       const values = await form.validateFields();
       setRegisterData({ ...registerData, ...values });
       
-      if (currentStep === steps.length - 1) {
-        handleSubmit();
-      } else {
+      if (currentStep < 5) {
         setCurrentStep(currentStep + 1);
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        handleSubmit();
       }
     } catch (error) {
       message.error('Lütfen gerekli alanları doldurun');
     }
   };
 
-  const prev = () => {
+  const handlePrev = () => {
     setCurrentStep(currentStep - 1);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const finalData = { ...registerData, ...form.getFieldsValue() };
+      // API call simulation
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Parse name into firstName and lastName
-      const nameParts = finalData.contactName.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
-      
-      // API call to register
-      const response = await apiClient.post('/auth/register', {
-        companyName: finalData.companyName,
-        companyCode: finalData.companyCode || finalData.companyName.toLowerCase().replace(/[^a-z0-9]/g, ''),
-        identityType: finalData.identityType,
-        identityNumber: finalData.companyCode, // Using companyCode as identityNumber
-        sector: finalData.sector,
-        employeeCount: finalData.employeeCount,
-        firstName: firstName,
-        lastName: lastName,
-        email: finalData.contactEmail,
-        phone: finalData.contactPhone,
-        title: finalData.contactTitle,
-        username: finalData.username,
-        password: finalData.password,
-        domain: finalData.domain // Without .stocker.com suffix
-      });
-
-      if (response.data.success) {
-        // Auto-login if token is provided
-        if (response.data.token) {
-          // Store auth data
-          useAuthStore.getState().setAuth({
-            user: {
-              id: response.data.userId,
-              email: response.data.email,
-              fullName: response.data.fullName,
-              tenantId: response.data.tenantId,
-              role: 'TenantAdmin'
-            },
-            token: response.data.token,
-            refreshToken: response.data.refreshToken
-          });
-          
-          // Show success message
-          message.success('Kayıt başarılı! Hoşgeldiniz sayfasına yönlendiriliyorsunuz...');
-          
-          // Redirect to welcome page or dashboard
-          setTimeout(() => {
-            if (response.data.redirectUrl) {
-              navigate(response.data.redirectUrl);
-            } else {
-              navigate(`/app/${response.data.tenantId}/welcome`);
-            }
-          }, 1500);
-        } else {
-          // If no token, show success step
-          setCurrentStep(currentStep + 1);
-        }
-      }
-    } catch (error: any) {
-      message.error(error.response?.data?.message || 'Kayıt sırasında bir hata oluştu');
+      message.success('Kayıt başarılı! Yönlendiriliyorsunuz...');
+      setTimeout(() => {
+        navigate('/welcome');
+      }, 1500);
+    } catch (error) {
+      message.error('Kayıt sırasında bir hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  // Step content renderers
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0:
+      case 0: // Account Type Selection
         return (
-          <div className="step-content">
+          <div className="step-account-type">
             <div className="step-header">
-              <Title level={3}>Şirket Bilgileri</Title>
-              <Paragraph className="step-description">
-                İşletmeniz hakkında temel bilgileri girin. Bu bilgiler fatura ve resmi işlemlerinizde kullanılacaktır.
+              <Title level={2}>Hesap Türünüzü Seçin</Title>
+              <Paragraph type="secondary">
+                İşletmeniz için mi yoksa bireysel kullanım için mi kayıt oluyorsunuz?
               </Paragraph>
             </div>
 
-            <Form form={form} layout="vertical" className="step-form">
-              {/* Kayıt Türü Seçimi */}
-              <div style={{ marginBottom: 32 }}>
-                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
-                  <IdcardOutlined style={{ marginRight: 8, color: '#667eea' }} />
-                  Kayıt Türü
-                </Title>
-                <Form.Item
-                  name="identityType"
-                  initialValue="vergi"
-                  rules={[{ required: true, message: 'Kayıt türü seçimi zorunludur' }]}
-                  style={{ marginBottom: 0 }}
+            <Form.Item name="accountType" rules={[{ required: true, message: 'Hesap türü seçimi zorunludur' }]}>
+              <Radio.Group 
+                size="large" 
+                className="account-type-cards"
+                defaultValue="company"
+              >
+                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  <Radio.Button value="company" className="account-type-card">
+                    <div className="card-content">
+                      <BuildingOutlined className="card-icon" />
+                      <div className="card-text">
+                        <Title level={4}>Kurumsal Hesap</Title>
+                        <Text type="secondary">Şirketim veya işletmem için</Text>
+                      </div>
+                      <div className="card-benefits">
+                        <Tag color="blue">Çoklu kullanıcı</Tag>
+                        <Tag color="green">Fatura kesebilme</Tag>
+                        <Tag color="purple">Tüm modüller</Tag>
+                      </div>
+                    </div>
+                  </Radio.Button>
+
+                  <Radio.Button value="individual" className="account-type-card">
+                    <div className="card-content">
+                      <UserOutlined className="card-icon" />
+                      <div className="card-text">
+                        <Title level={4}>Bireysel Hesap</Title>
+                        <Text type="secondary">Kişisel kullanım için</Text>
+                      </div>
+                      <div className="card-benefits">
+                        <Tag color="blue">Tek kullanıcı</Tag>
+                        <Tag color="green">Basit arayüz</Tag>
+                        <Tag color="purple">Temel özellikler</Tag>
+                      </div>
+                    </div>
+                  </Radio.Button>
+                </Space>
+              </Radio.Group>
+            </Form.Item>
+          </div>
+        );
+
+      case 1: // Basic Information
+        return (
+          <div className="step-basic-info">
+            <div className="step-header">
+              <Title level={2}>Temel Bilgiler</Title>
+              <Paragraph type="secondary">
+                {registerData.accountType === 'company' ? 'Şirket' : 'Kişisel'} bilgilerinizi girin
+              </Paragraph>
+            </div>
+
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              {registerData.accountType === 'company' ? (
+                <Form.Item 
+                  name="companyName" 
+                  label={
+                    <span>
+                      Şirket Adı <Text type="danger">*</Text>
+                    </span>
+                  }
+                  rules={[{ required: true, message: 'Şirket adı zorunludur' }]}
+                  extra="Resmi şirket unvanınızı yazın"
                 >
-                  <Radio.Group 
-                    onChange={(e) => handleIdentityTypeChange(e.target.value)}
-                    style={{ width: '100%' }}
-                  >
-                    <Row gutter={16}>
-                      <Col xs={24} sm={12}>
-                        <Radio value="vergi" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
-                          <Card 
-                            className={`identity-card ${identityType === 'vergi' ? 'identity-card-active' : ''}`}
-                            hoverable
-                            style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <Space direction="vertical" align="center" size={12}>
-                              <Avatar 
-                                size={48} 
-                                icon={<BankOutlined />}
-                                style={{ 
-                                  backgroundColor: identityType === 'vergi' ? '#667eea' : '#f0f0f0',
-                                  marginBottom: 4
-                                }}
-                              />
-                              <div style={{ textAlign: 'center' }}>
-                                <Title level={5} style={{ margin: 0, fontSize: 16 }}>Şirket</Title>
-                                <Text type="secondary" style={{ fontSize: 12 }}>Tüzel Kişilik</Text>
-                              </div>
-                              <Tag color="blue" style={{ margin: 0, marginTop: 4 }}>Vergi No (10 Hane)</Tag>
-                            </Space>
-                          </Card>
-                        </Radio>
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <Radio value="tc" style={{ display: 'block', width: '100%', height: 'auto', lineHeight: 'normal' }}>
-                          <Card 
-                            className={`identity-card ${identityType === 'tc' ? 'identity-card-active' : ''}`}
-                            hoverable
-                            style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <Space direction="vertical" align="center" size={12}>
-                              <Avatar 
-                                size={48} 
-                                icon={<UserOutlined />}
-                                style={{ 
-                                  backgroundColor: identityType === 'tc' ? '#667eea' : '#f0f0f0',
-                                  marginBottom: 4
-                                }}
-                              />
-                              <div style={{ textAlign: 'center' }}>
-                                <Title level={5} style={{ margin: 0, fontSize: 16 }}>Bireysel</Title>
-                                <Text type="secondary" style={{ fontSize: 12 }}>Şahıs</Text>
-                              </div>
-                              <Tag color="green" style={{ margin: 0, marginTop: 4 }}>TC Kimlik (11 Hane)</Tag>
-                            </Space>
-                          </Card>
-                        </Radio>
-                      </Col>
+                  <AutoComplete
+                    size="large"
+                    placeholder="Örn: ABC Teknoloji A.Ş."
+                    onSearch={handleCompanySearch}
+                    options={companySuggestions.map(s => ({ value: s }))}
+                  />
+                </Form.Item>
+              ) : (
+                <Form.Item 
+                  name="fullName" 
+                  label={
+                    <span>
+                      Ad Soyad <Text type="danger">*</Text>
+                    </span>
+                  }
+                  rules={[{ required: true, message: 'Ad soyad zorunludur' }]}
+                >
+                  <Input size="large" placeholder="Adınız ve soyadınız" />
+                </Form.Item>
+              )}
+
+              <div className="identity-selector">
+                <Text strong style={{ marginBottom: 8, display: 'block' }}>
+                  Kimlik Doğrulama Tipi <Text type="danger">*</Text>
+                </Text>
+                <Radio.Group 
+                  value={identityType}
+                  onChange={(e) => setIdentityType(e.target.value)}
+                  size="large"
+                  style={{ width: '100%' }}
+                >
+                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Radio value="tc" className="identity-option">
+                      <Space>
+                        <IdcardOutlined />
+                        <span>TC Kimlik No</span>
+                        <Tooltip title="11 haneli TC kimlik numaranız">
+                          <InfoCircleOutlined style={{ color: '#999' }} />
+                        </Tooltip>
+                      </Space>
+                    </Radio>
+                    <Radio value="vergi" className="identity-option">
+                      <Space>
+                        <BankOutlined />
+                        <span>Vergi No</span>
+                        <Tooltip title="10 haneli vergi numaranız">
+                          <InfoCircleOutlined style={{ color: '#999' }} />
+                        </Tooltip>
+                      </Space>
+                    </Radio>
+                  </Space>
+                </Radio.Group>
+              </div>
+
+              <Form.Item
+                name="identityNumber"
+                label={
+                  <span>
+                    {identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'} <Text type="danger">*</Text>
+                  </span>
+                }
+                rules={[
+                  { required: true, message: `${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'} zorunludur` },
+                  { len: identityType === 'tc' ? 11 : 10, message: `${identityType === 'tc' ? '11' : '10'} haneli olmalıdır` }
+                ]}
+                validateStatus={identityValidation?.isValid === false ? 'error' : ''}
+                help={identityValidation?.isValid === false ? identityValidation.message : ''}
+              >
+                <Input
+                  size="large"
+                  placeholder={identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'}
+                  maxLength={identityType === 'tc' ? 11 : 10}
+                  suffix={
+                    isValidating ? <LoadingOutlined /> :
+                    identityValidation?.isValid ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : null
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    form.setFieldsValue({ identityNumber: value });
+                    if (value.length === (identityType === 'tc' ? 11 : 10)) {
+                      setIsValidating(true);
+                      validateIdentity(value);
+                      setTimeout(() => setIsValidating(false), 500);
+                    }
+                  }}
+                />
+              </Form.Item>
+            </Space>
+          </div>
+        );
+
+      case 2: // Business Details
+        return (
+          <div className="step-business">
+            <div className="step-header">
+              <Title level={2}>İşletme Detayları</Title>
+              <Paragraph type="secondary">
+                Sektörünüzü ve işletme büyüklüğünüzü belirtin
+              </Paragraph>
+            </div>
+
+            <Space direction="vertical" size={32} style={{ width: '100%' }}>
+              <div>
+                <Text strong style={{ marginBottom: 16, display: 'block', fontSize: 16 }}>
+                  Faaliyet Sektörünüz <Text type="danger">*</Text>
+                </Text>
+                <Form.Item 
+                  name="sector" 
+                  rules={[{ required: true, message: 'Sektör seçimi zorunludur' }]}
+                >
+                  <Radio.Group className="sector-cards">
+                    <Row gutter={[16, 16]}>
+                      {[
+                        { value: 'tech', label: 'Teknoloji', icon: '💻' },
+                        { value: 'retail', label: 'Perakende', icon: '🛍️' },
+                        { value: 'service', label: 'Hizmet', icon: '🤝' },
+                        { value: 'production', label: 'Üretim', icon: '🏭' },
+                        { value: 'health', label: 'Sağlık', icon: '🏥' },
+                        { value: 'education', label: 'Eğitim', icon: '🎓' },
+                        { value: 'construction', label: 'İnşaat', icon: '🏗️' },
+                        { value: 'other', label: 'Diğer', icon: '📊' }
+                      ].map(sector => (
+                        <Col xs={12} sm={8} md={6} key={sector.value}>
+                          <Radio.Button value={sector.value} className="sector-card">
+                            <div className="sector-card-content">
+                              <span className="sector-icon">{sector.icon}</span>
+                              <span className="sector-label">{sector.label}</span>
+                            </div>
+                          </Radio.Button>
+                        </Col>
+                      ))}
                     </Row>
                   </Radio.Group>
                 </Form.Item>
               </div>
 
-              {/* Şirket Bilgileri */}
-              <div style={{ marginBottom: 32 }}>
-                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
-                  <BankOutlined style={{ marginRight: 8, color: '#667eea' }} />
-                  Şirket Bilgileri
-                </Title>
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="companyName"
-                      label="Şirket Adı"
-                      rules={[
-                        { required: true, message: 'Şirket adı zorunludur' },
-                        { min: 3, message: 'En az 3 karakter olmalıdır' }
-                      ]}
-                      validateStatus={companyNameCheck?.isValid === false ? 'error' : ''}
-                      help={companyNameCheck?.message}
-                    >
-                      <Input
-                        size="large"
-                        placeholder="Örn: ABC Teknoloji A.Ş."
-                        prefix={<BankOutlined />}
-                        onChange={(e) => handleCompanyNameChange(e.target.value)}
-                        suffix={
-                          companyNameCheck?.isValid === true ? (
-                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                          ) : companyNameCheck?.isValid === false ? (
-                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                          ) : null
-                        }
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="companyCode"
-                      label={identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}
-                      rules={[
-                        { required: true, message: `${identityType === 'tc' ? 'TC Kimlik' : 'Vergi'} numarası zorunludur` },
-                        { 
-                          pattern: identityType === 'tc' ? /^[0-9]{11}$/ : /^[0-9]{10}$/, 
-                          message: `${identityType === 'tc' ? '11 haneli TC Kimlik No' : '10 haneli Vergi No'} girin` 
-                        }
-                      ]}
-                      validateStatus={identityValidation?.isValid === false ? 'error' : ''}
-                      help={identityValidation?.message}
-                    >
-                      <Input
-                        size="large"
-                        placeholder={identityType === 'tc' ? 'Örn: 12345678901' : 'Örn: 1234567890'}
-                        prefix={identityType === 'tc' ? <UserOutlined /> : <InfoCircleOutlined />}
-                        maxLength={identityType === 'tc' ? 11 : 10}
-                        onChange={(e) => handleIdentityNumberChange(e.target.value)}
-                        suffix={
-                          isValidating ? (
-                            <LoadingOutlined style={{ color: '#667eea' }} spin />
-                          ) : identityValidation?.isValid === true ? (
-                            <Tooltip title={`Geçerli ${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'}`}>
-                              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                            </Tooltip>
-                          ) : identityValidation?.isValid === false ? (
-                            <Tooltip title={identityValidation?.message}>
-                              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                            </Tooltip>
-                          ) : null
-                        }
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
+              <div>
+                <Text strong style={{ marginBottom: 16, display: 'block', fontSize: 16 }}>
+                  Çalışan Sayısı <Text type="danger">*</Text>
+                </Text>
+                <Form.Item 
+                  name="employeeCount" 
+                  rules={[{ required: true, message: 'Çalışan sayısı seçimi zorunludur' }]}
+                >
+                  <Radio.Group className="employee-cards">
+                    <Row gutter={[16, 16]}>
+                      {[
+                        { value: '1-10', label: '1-10', desc: 'Mikro İşletme' },
+                        { value: '11-50', label: '11-50', desc: 'Küçük İşletme' },
+                        { value: '51-200', label: '51-200', desc: 'Orta Ölçekli' },
+                        { value: '200+', label: '200+', desc: 'Büyük İşletme' }
+                      ].map(size => (
+                        <Col xs={12} sm={6} key={size.value}>
+                          <Radio.Button value={size.value} className="employee-card">
+                            <TeamOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+                            <div className="employee-count">{size.label}</div>
+                            <div className="employee-desc">{size.desc}</div>
+                          </Radio.Button>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Radio.Group>
+                </Form.Item>
               </div>
+            </Space>
+          </div>
+        );
 
-              {/* İşletme Detayları */}
-              <div style={{ marginBottom: 32 }}>
-                <Title level={5} style={{ marginBottom: 20, color: '#1a1a1a', fontWeight: 600 }}>
-                  <TeamOutlined style={{ marginRight: 8, color: '#667eea' }} />
-                  İşletme Detayları
-                </Title>
-                <Row gutter={16}>
-                  <Col xs={24}>
-                    <Form.Item
-                      name="sector"
-                      label="Faaliyet Sektörü"
-                      rules={[{ required: true, message: 'Sektör seçimi zorunludur' }]}
-                    >
-                      <Radio.Group className="sector-radio-group" style={{ width: '100%' }}>
-                        <Row gutter={[8, 8]}>
-                          {sectors.map((sector) => (
-                            <Col xs={24} sm={12} key={sector}>
-                              <Radio.Button 
-                                value={sector} 
-                                className="sector-button" 
-                                style={{ 
-                                  width: '100%', 
-                                  height: 44,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                {sector}
-                              </Radio.Button>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Radio.Group>
-                    </Form.Item>
-                  </Col>
+      case 3: // Contact Information
+        return (
+          <div className="step-contact">
+            <div className="step-header">
+              <Title level={2}>İletişim Bilgileri</Title>
+              <Paragraph type="secondary">
+                Size ulaşabileceğimiz iletişim bilgilerinizi girin
+              </Paragraph>
+            </div>
 
-                  <Col xs={24}>
-                    <Form.Item
-                      name="employeeCount"
-                      label="Çalışan Sayısı"
-                      rules={[{ required: true, message: 'Çalışan sayısı seçimi zorunludur' }]}
-                    >
-                      <Radio.Group className="employee-radio-group" style={{ width: '100%' }}>
-                        <Row gutter={[8, 8]}>
-                          {employeeCounts.map((count) => (
-                            <Col xs={12} sm={6} key={count.value}>
-                              <Radio.Button 
-                                value={count.value} 
-                                className="employee-button" 
-                                style={{ 
-                                  width: '100%', 
-                                  height: 64,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  padding: '8px'
-                                }}
-                              >
-                                <Space direction="vertical" size={2} align="center">
-                                  <TeamOutlined style={{ fontSize: 18, color: '#667eea' }} />
-                                  <Text style={{ fontSize: 13, lineHeight: 1.2 }}>{count.label}</Text>
-                                </Space>
-                              </Radio.Button>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Radio.Group>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </div>
-            </Form>
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <Form.Item
+                name="email"
+                label={
+                  <span>
+                    E-posta Adresi <Text type="danger">*</Text>
+                  </span>
+                }
+                rules={[
+                  { required: true, message: 'E-posta adresi zorunludur' },
+                  { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
+                ]}
+                validateStatus={emailValidation?.isValid === false ? 'error' : ''}
+                help={emailValidation?.isValid === false ? 'Bu e-posta adresi zaten kullanımda' : ''}
+                extra="Giriş yapmak ve bildirimler için kullanılacak"
+              >
+                <Input
+                  size="large"
+                  prefix={<MailOutlined />}
+                  placeholder="ornek@sirket.com"
+                  onChange={(e) => validateEmail(e.target.value)}
+                  suffix={
+                    emailValidation?.isValid ? 
+                    <CheckCircleOutlined style={{ color: '#52c41a' }} /> : null
+                  }
+                />
+              </Form.Item>
 
-            <div className="step-info">
+              <Form.Item
+                name="phone"
+                label={
+                  <span>
+                    Telefon Numarası <Text type="danger">*</Text>
+                  </span>
+                }
+                rules={[
+                  { required: true, message: 'Telefon numarası zorunludur' },
+                  { pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir telefon numarası girin' }
+                ]}
+                extra="Başında 0 olmadan, 10 haneli olarak girin"
+              >
+                <Input
+                  size="large"
+                  prefix={<PhoneOutlined />}
+                  placeholder="5XX XXX XX XX"
+                  maxLength={10}
+                />
+              </Form.Item>
+            </Space>
+          </div>
+        );
+
+      case 4: // Security
+        return (
+          <div className="step-security">
+            <div className="step-header">
+              <Title level={2}>Güvenlik</Title>
+              <Paragraph type="secondary">
+                Hesabınız için güçlü bir şifre belirleyin
+              </Paragraph>
+            </div>
+
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <Form.Item
+                name="password"
+                label={
+                  <span>
+                    Şifre <Text type="danger">*</Text>
+                  </span>
+                }
+                rules={[
+                  { required: true, message: 'Şifre zorunludur' },
+                  { min: 8, message: 'Şifre en az 8 karakter olmalıdır' }
+                ]}
+                extra={<PasswordStrength password={form.getFieldValue('password')} />}
+              >
+                <Input.Password
+                  size="large"
+                  prefix={<LockOutlined />}
+                  placeholder="En az 8 karakter"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="confirmPassword"
+                label={
+                  <span>
+                    Şifre Tekrar <Text type="danger">*</Text>
+                  </span>
+                }
+                dependencies={['password']}
+                rules={[
+                  { required: true, message: 'Şifre tekrarı zorunludur' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Şifreler eşleşmiyor'));
+                    },
+                  }),
+                ]}
+              >
+                <Input.Password
+                  size="large"
+                  prefix={<LockOutlined />}
+                  placeholder="Şifrenizi tekrar girin"
+                />
+              </Form.Item>
+
               <Alert
-                message="Bilgi"
-                description="Şirket bilgileriniz güvenle saklanır ve sadece yasal gereklilikler için kullanılır."
+                message="Güvenlik İpuçları"
+                description={
+                  <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
+                    <li>Büyük ve küçük harf kullanın</li>
+                    <li>En az bir rakam ekleyin</li>
+                    <li>Özel karakter kullanın (!@#$%)</li>
+                    <li>Kişisel bilgilerinizi kullanmayın</li>
+                  </ul>
+                }
                 type="info"
                 showIcon
-                icon={<SafetyOutlined />}
               />
-            </div>
+            </Space>
           </div>
         );
 
-      case 1:
+      case 5: // Agreement & Summary
         return (
-          <div className="step-content">
+          <div className="step-agreement">
             <div className="step-header">
-              <Title level={3}>İletişim Bilgileri</Title>
-              <Paragraph className="step-description">
-                Sizinle iletişime geçeceğimiz yetkili kişi bilgilerini girin.
+              <Title level={2}>Neredeyse Hazırsınız!</Title>
+              <Paragraph type="secondary">
+                Son adım: Sözleşmeleri onaylayın ve hesabınızı oluşturun
               </Paragraph>
             </div>
 
-            <Form form={form} layout="vertical" className="step-form">
-              <Row gutter={24}>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="contactName"
-                    label="Ad Soyad"
-                    rules={[
-                      { required: true, message: 'Ad soyad zorunludur' },
-                      { min: 3, message: 'En az 3 karakter olmalıdır' }
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Adınız ve soyadınız"
-                      prefix={<UserOutlined />}
-                    />
-                  </Form.Item>
-                </Col>
+            <Card className="summary-card">
+              <Title level={4}>Hesap Özeti</Title>
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <div className="summary-item">
+                  <Text type="secondary">Hesap Türü:</Text>
+                  <Text strong>{registerData.accountType === 'company' ? 'Kurumsal' : 'Bireysel'}</Text>
+                </div>
+                {registerData.companyName && (
+                  <div className="summary-item">
+                    <Text type="secondary">Şirket:</Text>
+                    <Text strong>{registerData.companyName}</Text>
+                  </div>
+                )}
+                <div className="summary-item">
+                  <Text type="secondary">E-posta:</Text>
+                  <Text strong>{registerData.email}</Text>
+                </div>
+                <div className="summary-item">
+                  <Text type="secondary">Sektör:</Text>
+                  <Text strong>{registerData.sector}</Text>
+                </div>
+              </Space>
+            </Card>
 
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="contactTitle"
-                    label="Unvan"
-                    rules={[{ required: true, message: 'Unvan zorunludur' }]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Örn: Genel Müdür, IT Müdürü"
-                      prefix={<TeamOutlined />}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="contactEmail"
-                    label="E-posta Adresi"
-                    rules={[
-                      { required: true, message: 'E-posta zorunludur' },
-                      { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
-                    ]}
-                    validateStatus={emailValidation?.isValid === false ? 'error' : ''}
-                    help={emailValidation?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="ornek@sirket.com"
-                      prefix={<MailOutlined />}
-                      onChange={(e) => handleEmailChange(e.target.value)}
-                      suffix={
-                        emailValidation?.isValid === true ? (
-                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                        ) : emailValidation?.isValid === false ? (
-                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                        ) : null
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="contactPhone"
-                    label="Telefon Numarası"
-                    rules={[
-                      { required: true, message: 'Telefon numarası zorunludur' },
-                      { pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir telefon numarası girin' }
-                    ]}
-                    validateStatus={phoneValidation?.isValid === false ? 'error' : ''}
-                    help={phoneValidation?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="5XX XXX XX XX"
-                      prefix={<PhoneOutlined />}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                      suffix={
-                        phoneValidation?.isValid === true ? (
-                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                        ) : phoneValidation?.isValid === false ? (
-                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                        ) : null
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-
-            <div className="contact-benefits">
-              <Title level={4}>İletişim Avantajları</Title>
-              <Timeline>
-                <Timeline.Item color="green">7/24 teknik destek</Timeline.Item>
-                <Timeline.Item color="blue">Özel müşteri temsilcisi</Timeline.Item>
-                <Timeline.Item color="orange">Ücretsiz eğitim ve danışmanlık</Timeline.Item>
-                <Timeline.Item color="purple">Öncelikli güncelleme bildirimleri</Timeline.Item>
-              </Timeline>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="step-content">
-            <div className="step-header">
-              <Title level={3}>Hesap Bilgileri</Title>
-              <Paragraph className="step-description">
-                Sisteme giriş için kullanacağınız bilgileri oluşturun.
-              </Paragraph>
-            </div>
-
-            <Form form={form} layout="vertical" className="step-form">
-              <Row gutter={24}>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="domain"
-                    label="Alt Alan Adı"
-                    rules={[
-                      { required: true, message: 'Alt alan adı zorunludur' },
-                      { pattern: /^[a-z0-9]+$/, message: 'Sadece küçük harf ve rakam kullanın' },
-                      { min: 3, message: 'En az 3 karakter olmalıdır' }
-                    ]}
-                    validateStatus={domainCheck?.isAvailable === false ? 'error' : ''}
-                    help={domainCheck?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="sirketiniz"
-                      prefix={<GlobalOutlined />}
-                      suffix={<Text type="secondary">.stocker.com</Text>}
-                      onChange={(e) => handleDomainChange(e.target.value)}
-                    />
-                  </Form.Item>
-                  {domainCheck?.isAvailable && (
-                    <Alert
-                      message={`${form.getFieldValue('domain')}.stocker.com adresi kullanılabilir!`}
-                      type="success"
-                      showIcon
-                      style={{ marginBottom: 16 }}
-                    />
-                  )}
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="username"
-                    label="Kullanıcı Adı"
-                    rules={[
-                      { required: true, message: 'Kullanıcı adı zorunludur' },
-                      { min: 3, message: 'En az 3 karakter olmalıdır' }
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Kullanıcı adınız"
-                      prefix={<UserOutlined />}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="password"
-                    label="Şifre"
-                    rules={[
-                      { required: true, message: 'Şifre zorunludur' },
-                      { min: 8, message: 'En az 8 karakter olmalıdır' }
-                    ]}
-                  >
-                    <Input.Password
-                      size="large"
-                      placeholder="Güçlü bir şifre belirleyin"
-                      prefix={<LockOutlined />}
-                      onChange={(e) => handlePasswordChange(e.target.value)}
-                    />
-                  </Form.Item>
-                  {passwordStrength && (
-                    <PasswordStrength strength={passwordStrength} />
-                  )}
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="confirmPassword"
-                    label="Şifre Tekrar"
-                    dependencies={['password']}
-                    rules={[
-                      { required: true, message: 'Şifre tekrarı zorunludur' },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('password') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(new Error('Şifreler eşleşmiyor'));
-                        },
-                      }),
-                    ]}
-                  >
-                    <Input.Password
-                      size="large"
-                      placeholder="Şifrenizi tekrar girin"
-                      prefix={<LockOutlined />}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-
-            <div className="security-features">
-              <Title level={4}>Güvenlik Özellikleri</Title>
-              <Row gutter={[16, 16]}>
-                <Col xs={12} md={6}>
-                  <Card size="small" className="security-card">
-                    <SafetyOutlined style={{ fontSize: 24, color: '#52c41a' }} />
-                    <Text>256-bit Şifreleme</Text>
-                  </Card>
-                </Col>
-                <Col xs={12} md={6}>
-                  <Card size="small" className="security-card">
-                    <CheckCircleOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-                    <Text>İki Faktörlü Doğrulama</Text>
-                  </Card>
-                </Col>
-                <Col xs={12} md={6}>
-                  <Card size="small" className="security-card">
-                    <GlobalOutlined style={{ fontSize: 24, color: '#722ed1' }} />
-                    <Text>SSL Sertifikası</Text>
-                  </Card>
-                </Col>
-                <Col xs={12} md={6}>
-                  <Card size="small" className="security-card">
-                    <TeamOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
-                    <Text>KVKK Uyumlu</Text>
-                  </Card>
-                </Col>
-              </Row>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="step-content">
-            <div className="step-header">
-              <Title level={3}>Sözleşme ve Onay</Title>
-              <Paragraph className="step-description">
-                Son adım! Sözleşmeleri onaylayarak hesabınızı aktif edin.
-              </Paragraph>
-            </div>
-
-            <Form form={form} layout="vertical" className="step-form">
-              <div className="agreement-summary">
-                <Card className="summary-card">
-                  <Title level={4}>Hesap Özeti</Title>
-                  <Divider />
-                  <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                      <Text type="secondary">Şirket:</Text>
-                      <br />
-                      <Text strong>{registerData.companyName}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text type="secondary">Yetkili:</Text>
-                      <br />
-                      <Text strong>{registerData.contactName}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text type="secondary">E-posta:</Text>
-                      <br />
-                      <Text strong>{registerData.contactEmail}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text type="secondary">Alan Adı:</Text>
-                      <br />
-                      <Text strong>{registerData.domain}.stocker.com</Text>
-                    </Col>
-                  </Row>
-                </Card>
-              </div>
-
-              <div className="agreements">
-                <Form.Item
-                  name="termsAccepted"
-                  valuePropName="checked"
-                  rules={[
-                    {
-                      validator: (_, value) =>
-                        value ? Promise.resolve() : Promise.reject(new Error('Sözleşmeyi kabul etmelisiniz')),
-                    },
-                  ]}
-                >
-                  <Checkbox>
-                    <Space>
-                      <span>
-                        <a href="/terms" target="_blank">Kullanım Sözleşmesi</a> ve{' '}
-                        <a href="/privacy" target="_blank">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
-                      </span>
-                    </Space>
-                  </Checkbox>
-                </Form.Item>
-
-                <Form.Item name="marketingAccepted" valuePropName="checked">
-                  <Checkbox>
-                    <Space>
-                      <span>Ürün güncellemeleri ve kampanyalar hakkında bilgi almak istiyorum.</span>
-                    </Space>
-                  </Checkbox>
-                </Form.Item>
-              </div>
-
-              <Alert
-                message="14 Gün Ücretsiz Deneme"
-                description="Kredi kartı bilgisi gerekmez. İstediğiniz zaman iptal edebilirsiniz."
-                type="success"
-                showIcon
-                style={{ marginTop: 24 }}
-              />
-            </Form>
-          </div>
-        );
-
-      case 4:
-        return (
-          <Result
-            status="success"
-            title="Hesabınız Başarıyla Oluşturuldu!"
-            subTitle={`${registerData.domain}.stocker.com adresiniz hazır. E-posta adresinize gönderilen doğrulama linkine tıklayarak hesabınızı aktif edebilirsiniz.`}
-            extra={[
-              <Button 
-                type="primary" 
-                key="login"
-                size="large"
-                icon={<RocketOutlined />}
-                onClick={() => navigate('/login')}
+            <Space direction="vertical" size={16} style={{ width: '100%', marginTop: 24 }}>
+              <Form.Item
+                name="termsAccepted"
+                valuePropName="checked"
+                rules={[
+                  {
+                    validator: (_, value) =>
+                      value ? Promise.resolve() : Promise.reject(new Error('Sözleşmeyi kabul etmelisiniz')),
+                  },
+                ]}
               >
-                Giriş Yap
-              </Button>,
-              <Button 
-                key="home"
-                size="large"
-                onClick={() => navigate('/')}
-              >
-                Ana Sayfa
-              </Button>
-            ]}
-          >
-            <div className="success-details">
-              <Title level={4}>Sonraki Adımlar</Title>
-              <Timeline>
-                <Timeline.Item color="green">
-                  E-posta adresinizi doğrulayın
-                </Timeline.Item>
-                <Timeline.Item color="blue">
-                  Şirket profilinizi tamamlayın
-                </Timeline.Item>
-                <Timeline.Item color="orange">
-                  İlk kullanıcılarınızı ekleyin
-                </Timeline.Item>
-                <Timeline.Item color="purple">
-                  Modüllerinizi yapılandırın
-                </Timeline.Item>
-              </Timeline>
-            </div>
-          </Result>
+                <Checkbox>
+                  <Space>
+                    <span>
+                      <a href="/terms" target="_blank">Kullanım Sözleşmesi</a> ve{' '}
+                      <a href="/privacy" target="_blank">Gizlilik Politikası</a>'nı okudum, kabul ediyorum
+                    </span>
+                    <Text type="danger">*</Text>
+                  </Space>
+                </Checkbox>
+              </Form.Item>
+
+              <Form.Item name="marketingAccepted" valuePropName="checked">
+                <Checkbox>
+                  Stocker'dan haberler ve kampanyalar hakkında e-posta almak istiyorum
+                </Checkbox>
+              </Form.Item>
+            </Space>
+
+            <Alert
+              message="Hesabınız oluşturulduktan sonra:"
+              description={
+                <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
+                  <li>14 gün ücretsiz deneme başlayacak</li>
+                  <li>Tüm özelliklere erişim sağlanacak</li>
+                  <li>İstediğiniz zaman iptal edebileceksiniz</li>
+                  <li>7/24 destek alabileceksiniz</li>
+                </ul>
+              }
+              type="success"
+              showIcon
+              style={{ marginTop: 24 }}
+            />
+          </div>
         );
 
       default:
@@ -914,87 +626,81 @@ const RegisterWizard: React.FC = () => {
   };
 
   return (
-    <div className="register-wizard">
+    <div className="register-wizard-container">
       <div className="wizard-header">
-        <div className="header-content">
-          <Title level={2}>Stocker'a Hoş Geldiniz</Title>
-          <Paragraph>
-            İşletmenizi dijitalleştirmeye hazır mısınız? Birkaç dakika içinde hesabınızı oluşturun.
-          </Paragraph>
+        <div className="wizard-logo" onClick={() => navigate('/')}>
+          <RocketOutlined />
+          <span>Stocker</span>
+        </div>
+        
+        <div className="wizard-progress">
+          <Progress 
+            percent={progressPercent} 
+            strokeColor="#667eea"
+            showInfo={false}
+          />
+          <div className="progress-info">
+            <Space>
+              <ClockCircleOutlined />
+              <Text>Yaklaşık {completionTime} dakika kaldı</Text>
+            </Space>
+            <Text strong>{progressPercent}% tamamlandı</Text>
+          </div>
         </div>
       </div>
 
-      <Card className="wizard-card">
-        {currentStep < 4 && (
-          <>
-            <Steps current={currentStep} className="wizard-steps">
-              {steps.map((step, index) => (
-                <Steps.Step
-                  key={index}
-                  title={step.title}
-                  description={step.description}
-                  icon={
-                    <Avatar
-                      size="large"
-                      style={{
-                        backgroundColor: currentStep >= index ? '#667eea' : '#f0f0f0',
-                        color: currentStep >= index ? '#fff' : '#999'
-                      }}
-                    >
-                      {step.icon}
-                    </Avatar>
-                  }
-                />
-              ))}
-            </Steps>
-
-            <Progress
-              percent={(currentStep / (steps.length - 1)) * 100}
-              showInfo={false}
-              strokeColor="#667eea"
-              style={{ marginTop: 24 }}
+      <div className="wizard-content">
+        <Card className="wizard-card">
+          {!isConnected && (
+            <Alert
+              message="Bağlantı Kontrol Ediliyor"
+              description="Gerçek zamanlı doğrulama servisi bağlanıyor..."
+              type="warning"
+              showIcon
+              icon={<LoadingOutlined />}
+              style={{ marginBottom: 24 }}
             />
-          </>
-        )}
+          )}
 
-        <div className="wizard-body">
-          {renderStepContent()}
-        </div>
+          <Form
+            form={form}
+            layout="vertical"
+            size="large"
+            initialValues={registerData}
+            onFinish={handleSubmit}
+          >
+            {renderStepContent()}
+          </Form>
 
-        {currentStep < 4 && (
-          <div className="wizard-footer">
-            <Button
-              onClick={prev}
-              disabled={currentStep === 0}
-              icon={<ArrowLeftOutlined />}
-            >
-              Geri
-            </Button>
+          <div className="wizard-actions">
+            {currentStep > 0 && (
+              <Button 
+                size="large" 
+                onClick={handlePrev}
+                icon={<ArrowLeftOutlined />}
+              >
+                Geri
+              </Button>
+            )}
+            
             <Button
               type="primary"
-              onClick={next}
+              size="large"
+              onClick={handleNext}
               loading={loading}
-              icon={currentStep === steps.length - 1 ? <CheckCircleOutlined /> : <ArrowRightOutlined />}
+              icon={currentStep === 5 ? <CheckCircleOutlined /> : <ArrowRightOutlined />}
               iconPosition="end"
             >
-              {currentStep === steps.length - 1 ? 'Hesabı Oluştur' : 'İleri'}
+              {currentStep === 5 ? 'Hesabı Oluştur' : 'Devam Et'}
             </Button>
           </div>
-        )}
-      </Card>
+        </Card>
 
-      <div className="wizard-footer-info">
-        <Space split={<Divider type="vertical" />}>
+        <div className="wizard-footer">
           <Text type="secondary">
-            <SafetyOutlined /> 256-bit SSL Şifreleme
+            Zaten hesabınız var mı? <a href="/login">Giriş yapın</a>
           </Text>
-          <Text type="secondary">
-            <CheckCircleOutlined /> KVKK Uyumlu
-          </Text>
-          <Text type="secondary">
-            <GlobalOutlined /> %99.9 Uptime Garantisi
-          </Text>
-        </Space>
+        </div>
       </div>
     </div>
   );

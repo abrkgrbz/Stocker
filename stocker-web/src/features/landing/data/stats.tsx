@@ -6,11 +6,36 @@ export interface Stat {
   value: number;
   suffix: string;
   prefix: React.ReactNode;
+  description: string;
 }
 
 export const stats: Stat[] = [
-  { title: 'Aktif Firma', value: 12, suffix: '+', prefix: <TeamOutlined /> },
-  { title: 'Kullanıcı', value: 248, suffix: '+', prefix: <UserOutlined /> },
-  { title: 'İşlem/Gün', value: 1.5, suffix: 'K+', prefix: <SyncOutlined /> },
-  { title: 'Çalışma Süresi', value: 99.9, suffix: '%', prefix: <ClockCircleOutlined /> }
+  { 
+    title: 'Aktif Müşteri', 
+    value: 2500, 
+    suffix: '+', 
+    prefix: <TeamOutlined />,
+    description: 'Güvenle kullanıyor'
+  },
+  { 
+    title: 'Toplam Kullanıcı', 
+    value: 15000, 
+    suffix: '+', 
+    prefix: <UserOutlined />,
+    description: 'Her gün artıyor'
+  },
+  { 
+    title: 'Günlük İşlem', 
+    value: 50, 
+    suffix: 'K+', 
+    prefix: <SyncOutlined />,
+    description: 'Kesintisiz hizmet'
+  },
+  { 
+    title: 'Çalışma Süresi', 
+    value: 99.9, 
+    suffix: '%', 
+    prefix: <ClockCircleOutlined />,
+    description: 'Yüksek erişilebilirlik'
+  }
 ];

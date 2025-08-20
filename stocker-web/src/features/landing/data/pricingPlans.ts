@@ -1,65 +1,74 @@
 export interface PricingPlan {
   name: string;
   price: number;
+  oldPrice?: number;
   currency: string;
   period: string;
   description: string;
   features: string[];
   popular: boolean;
+  badge?: string;
+  savings?: string;
 }
 
 export const pricingPlans: PricingPlan[] = [
   {
     name: 'Başlangıç',
     price: 499,
+    oldPrice: 799,
     currency: '₺',
     period: 'ay',
-    description: 'Küçük işletmeler için ideal',
+    description: 'Küçük işletmeler için ideal başlangıç',
     features: [
       '5 kullanıcıya kadar',
       'CRM modülü',
-      'Stok takibi',
-      '10 GB depolama',
+      'Stok yönetimi',
+      '10 GB bulut depolama',
       'E-posta desteği',
-      'Temel raporlar',
-      'Mobil uygulama'
+      'Temel raporlama',
+      'Mobil uygulama erişimi'
     ],
-    popular: false
+    popular: false,
+    savings: '%37 tasarruf'
   },
   {
     name: 'Profesyonel',
     price: 999,
+    oldPrice: 1499,
     currency: '₺',
     period: 'ay',
-    description: 'Büyüyen işletmeler için',
+    description: 'En popüler seçim',
     features: [
       '25 kullanıcıya kadar',
-      'CRM + Stok + Muhasebe',
-      'E-fatura entegrasyonu',
-      '100 GB depolama',
-      'Öncelikli destek',
-      'Gelişmiş raporlar',
+      'Tüm temel modüller',
+      'E-fatura & E-defter',
+      '100 GB bulut depolama',
+      'Öncelikli 7/24 destek',
+      'Gelişmiş analitik',
       'API erişimi',
-      'Özel eğitim'
+      'Ücretsiz eğitim (3 saat)'
     ],
-    popular: true
+    popular: true,
+    badge: 'En Çok Tercih Edilen',
+    savings: '%33 tasarruf'
   },
   {
     name: 'Kurumsal',
     price: 2499,
     currency: '₺',
     period: 'ay',
-    description: 'Büyük organizasyonlar için',
+    description: 'Büyük ölçekli işletmeler için',
     features: [
       'Sınırsız kullanıcı',
-      'Tüm modüller dahil',
-      'Tüm entegrasyonlar',
+      'Tüm premium modüller',
+      'Özel entegrasyonlar',
       'Sınırsız depolama',
-      '7/24 VIP destek',
-      'Özel geliştirmeler',
-      'SLA garantisi',
-      'Yerinde eğitim'
+      'Özel hesap yöneticisi',
+      'Özelleştirilebilir çözümler',
+      '%99.9 SLA garantisi',
+      'Yerinde kurulum & eğitim'
     ],
-    popular: false
+    popular: false,
+    badge: 'Özel Çözüm'
   }
 ];
