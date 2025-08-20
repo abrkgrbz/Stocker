@@ -362,6 +362,27 @@ app.MapHub<NotificationHub>("/hubs/notification", options =>
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
 }).RequireCors("AllowAll");
 
+// Apply migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Persistence.Migrations.IMigrationService>();
+        await migrationService.MigrateMasterDatabaseAsync();
+        await migrationService.SeedMasterDataAsync();
+        app.Logger.LogInformation("Database migration completed successfully");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while migrating the database");
+        // Don't throw in production, just log the error
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
+}
+
 // Add health check endpoints
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
    .WithName("HealthCheck")
