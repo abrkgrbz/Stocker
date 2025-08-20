@@ -31,7 +31,7 @@ export const FeaturesSection: React.FC = () => {
                 <Card
                   hoverable
                   style={{ height: '100%', textAlign: 'center' }}
-                  bodyStyle={{ padding: 32 }}
+                  styles={{ body: { padding: 32 } }}
                 >
                   <div style={{ marginBottom: 24 }}>
                     <Icon style={{ fontSize: feature.iconSize, color: feature.color }} />

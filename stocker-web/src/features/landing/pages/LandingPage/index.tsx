@@ -138,7 +138,7 @@ export const LandingPage: React.FC = () => {
                   <Card 
                     className="module-card slide-up"
                     hoverable
-                    bordered={false}
+                    variant="borderless"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div className="module-icon" style={{ color: '#667eea', fontSize: 32 }}>
@@ -198,7 +198,7 @@ export const LandingPage: React.FC = () => {
         {/* CTA Section */}
         <section id="contact" className="cta-section">
           <div className="section-container">
-            <Card className="cta-card" bordered={false}>
+            <Card className="cta-card" variant="borderless">
               <Typography.Title level={2} style={{ color: 'white' }}>
                 İşletmenizi Dijitalleştirmeye Hazır mısınız?
               </Typography.Title>

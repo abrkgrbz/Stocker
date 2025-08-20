@@ -94,7 +94,7 @@ function App() {
       }}>
         <ConfigProvider>
           <AntApp>
-            <Spin size="large" tip="Yükleniyor..." />
+            <Spin size="large" />
           </AntApp>
         </ConfigProvider>
       </div>

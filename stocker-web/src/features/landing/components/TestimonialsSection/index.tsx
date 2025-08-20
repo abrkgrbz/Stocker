@@ -28,7 +28,7 @@ export const TestimonialsSection: React.FC = () => {
             <Col xs={24} md={8} key={index}>
               <Card
                 style={{ height: '100%' }}
-                bodyStyle={{ padding: 32 }}
+                styles={{ body: { padding: 32 } }}
               >
                 <div style={{ marginBottom: 24 }}>
                   <Rate disabled defaultValue={testimonial.rating} />

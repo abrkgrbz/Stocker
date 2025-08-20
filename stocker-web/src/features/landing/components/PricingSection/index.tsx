@@ -87,7 +87,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ navigate: navPro
                     transition: 'all 0.3s ease',
                     transform: plan.popular ? 'scale(1.02)' : 'scale(1)'
                   }}
-                  bodyStyle={{ padding: 32 }}
+                  styles={{ body: { padding: 32 } }}
                 >
                   <div style={{ textAlign: 'center', marginBottom: 24 }}>
                     <Title level={3} style={{ marginBottom: 8 }}>

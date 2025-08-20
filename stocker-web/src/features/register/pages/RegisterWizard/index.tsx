@@ -37,7 +37,9 @@ import {
   BankFilled as BuildingOutlined,
   ClockCircleOutlined,
   ShopOutlined,
-  CheckOutlined
+  CheckOutlined,
+  HomeOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
@@ -85,7 +87,7 @@ const RegisterWizard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [identityType, setIdentityType] = useState<'tc' | 'vergi'>('vergi');
   const [isValidating, setIsValidating] = useState(false);
-  const [completionTime, setCompletionTime] = useState(3); // minutes
+  // const [completionTime, setCompletionTime] = useState(3); // minutes - Removed
   const [progressPercent, setProgressPercent] = useState(0);
   
   const {
@@ -101,11 +103,6 @@ const RegisterWizard: React.FC = () => {
     const totalSteps = 6;
     const percent = Math.round(((currentStep + 1) / totalSteps) * 100);
     setProgressPercent(percent);
-    
-    // Update estimated time
-    const timePerStep = 0.5; // 30 seconds per step
-    const remainingSteps = totalSteps - currentStep - 1;
-    setCompletionTime(Math.max(1, Math.round(remainingSteps * timePerStep)));
   }, [currentStep]);
 
   // Company name suggestions
@@ -177,7 +174,6 @@ const RegisterWizard: React.FC = () => {
               <Radio.Group 
                 size="large" 
                 className="account-type-cards"
-                defaultValue="company"
               >
                 <Space direction="vertical" size={16} style={{ width: '100%' }}>
                   <Radio.Button value="company" className="account-type-card selected-default">
@@ -254,6 +250,7 @@ const RegisterWizard: React.FC = () => {
                   name="companyName" 
                   label={
                     <span>
+                      <ShopOutlined style={{ marginRight: 8, color: '#667eea' }} />
                       Şirket Adı <Text type="danger">*</Text>
                     </span>
                   }
@@ -265,6 +262,7 @@ const RegisterWizard: React.FC = () => {
                     placeholder="Örn: ABC Teknoloji A.Ş."
                     onSearch={handleCompanySearch}
                     options={companySuggestions.map(s => ({ value: s }))}
+                    suffixIcon={<ShopOutlined />}
                   />
                 </Form.Item>
               ) : (
@@ -272,17 +270,23 @@ const RegisterWizard: React.FC = () => {
                   name="fullName" 
                   label={
                     <span>
+                      <UserOutlined style={{ marginRight: 8, color: '#667eea' }} />
                       Ad Soyad <Text type="danger">*</Text>
                     </span>
                   }
                   rules={[{ required: true, message: 'Ad soyad zorunludur' }]}
                 >
-                  <Input size="large" placeholder="Adınız ve soyadınız" />
+                  <Input 
+                    size="large" 
+                    placeholder="Adınız ve soyadınız"
+                    prefix={<UserOutlined style={{ color: '#999' }} />}
+                  />
                 </Form.Item>
               )}
 
               <div className="identity-selector">
                 <Text strong style={{ marginBottom: 8, display: 'block' }}>
+                  <IdcardOutlined style={{ marginRight: 8, color: '#667eea' }} />
                   Kimlik Doğrulama Tipi <Text type="danger">*</Text>
                 </Text>
                 <Radio.Group 
@@ -318,6 +322,10 @@ const RegisterWizard: React.FC = () => {
                 name="identityNumber"
                 label={
                   <span>
+                    {identityType === 'tc' ? 
+                      <IdcardOutlined style={{ marginRight: 8, color: '#667eea' }} /> : 
+                      <BankOutlined style={{ marginRight: 8, color: '#667eea' }} />
+                    }
                     {identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'} <Text type="danger">*</Text>
                   </span>
                 }
@@ -653,12 +661,71 @@ const RegisterWizard: React.FC = () => {
   return (
     <div className="register-wizard-container">
       <div className="wizard-header">
-        <div className="wizard-logo" onClick={() => navigate('/')}>
-          <RocketOutlined />
-          <span>Stocker</span>
+        <div className="wizard-header-content">
+          <div className="wizard-logo">
+            <RocketOutlined />
+            <span>Stocker</span>
+          </div>
+          <Button 
+            className="wizard-home-button" 
+            onClick={() => navigate('/')}
+            icon={<HomeOutlined />}
+            type="primary"
+            size="large"
+            style={{ 
+              background: 'white', 
+              color: '#667eea',
+              border: 'none',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            Anasayfaya Dön
+          </Button>
         </div>
         
         <div className="wizard-progress">
+          <div className="wizard-title">
+            {currentStep === 0 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>Kayıt Sihirbazına Hoş Geldiniz</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Hesabınızı oluşturmak için adımları takip edin</Text>
+              </>
+            )}
+            {currentStep === 1 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>Kimlik Doğrulama</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Güvenliğiniz için kimlik bilgilerinizi doğrulayın</Text>
+              </>
+            )}
+            {currentStep === 2 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>İşletme Profili</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Size özel çözümler sunabilmemiz için</Text>
+              </>
+            )}
+            {currentStep === 3 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>İletişim Tercihleri</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Size ulaşabileceğimiz bilgiler</Text>
+              </>
+            )}
+            {currentStep === 4 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>Güvenlik Ayarları</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Hesabınızı korumak için güçlü bir şifre</Text>
+              </>
+            )}
+            {currentStep === 5 && (
+              <>
+                <Title level={3} style={{ color: 'white', margin: 0 }}>Son Adım!</Title>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Sözleşmeleri onaylayın ve başlayalım</Text>
+              </>
+            )}
+          </div>
           <div className="step-indicators">
             {['Hesap Türü', 'Temel Bilgiler', 'İşletme', 'İletişim', 'Güvenlik', 'Onay'].map((step, index) => (
               <div 
@@ -676,14 +743,8 @@ const RegisterWizard: React.FC = () => {
             percent={progressPercent} 
             strokeColor="#667eea"
             showInfo={false}
+            style={{ marginBottom: 0 }}
           />
-          <div className="progress-info">
-            <Space>
-              <ClockCircleOutlined />
-              <Text>Yaklaşık {completionTime} dakika kaldı</Text>
-            </Space>
-            <Text strong>Adım {currentStep + 1} / 6</Text>
-          </div>
         </div>
       </div>
 
@@ -733,12 +794,6 @@ const RegisterWizard: React.FC = () => {
             </Button>
           </div>
         </Card>
-
-        <div className="wizard-footer">
-          <Text type="secondary">
-            Zaten hesabınız var mı? <a href="/login">Giriş yapın</a>
-          </Text>
-        </div>
       </div>
     </div>
   );
