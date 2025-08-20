@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/API/Stocker.API/Dockerfile
+    ports:
+      - "80:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      # Database connections - Update these with your actual database host
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION:-Server=95.217.219.4,1433;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
+      - ConnectionStrings__MasterConnection=${DB_CONNECTION:-Server=95.217.219.4,1433;Database=StockerMasterDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
+      - ConnectionStrings__TenantConnection=${DB_CONNECTION:-Server=95.217.219.4,1433;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
+      # JWT Settings
+      - JwtSettings__Secret=${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters-long-2024}
+      - JwtSettings__Issuer=https://api.stoocker.app
+      - JwtSettings__Audience=https://stoocker.app
+      - JwtSettings__AccessTokenExpirationMinutes=60
+      - JwtSettings__RefreshTokenExpirationDays=7
+      # Email Settings
+      - EmailSettings__SmtpHost=mail.privateemail.com
+      - EmailSettings__SmtpPort=465
+      - EmailSettings__SmtpUsername=info@stoocker.app
+      - EmailSettings__SmtpPassword=${EMAIL_PASSWORD:-A.bg010203}
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__FromEmail=info@stoocker.app
+      - EmailSettings__FromName=Stoocker
+      - EmailSettings__UseStartTls=false
+      - EmailSettings__EnableEmail=true
+      - EmailSettings__BaseUrl=https://stoocker.app
+      - EmailSettings__TemplatesPath=EmailTemplates
+      - EmailSettings__Timeout=30000
+      # Redis connection - Update with your actual Redis host
+      - Redis__ConnectionString=${REDIS_CONNECTION:-95.217.219.4:6379}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
