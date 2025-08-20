@@ -5,6 +5,8 @@ using Stocker.SharedKernel.Settings;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
+using MediatR;
+using Stocker.Application.Features.Tenants.Queries.CheckSubdomainAvailability;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -12,6 +14,7 @@ public class ValidationService : IValidationService
 {
     private readonly ILogger<ValidationService> _logger;
     private readonly PasswordPolicy _passwordPolicy;
+    private readonly IMediator _mediator;
     private readonly HashSet<string> _commonPasswords;
     private readonly HashSet<string> _disposableEmailDomains;
     private readonly HashSet<string> _restrictedCompanyWords;
@@ -20,10 +23,12 @@ public class ValidationService : IValidationService
 
     public ValidationService(
         ILogger<ValidationService> logger,
-        IOptions<PasswordPolicy> passwordPolicy)
+        IOptions<PasswordPolicy> passwordPolicy,
+        IMediator mediator)
     {
         _logger = logger;
         _passwordPolicy = passwordPolicy.Value;
+        _mediator = mediator;
         
         // Initialize common passwords list (in production, load from file/database)
         _commonPasswords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -391,54 +396,86 @@ public class ValidationService : IValidationService
             }
 
             domain = domain.Trim().ToLower();
-
-            // Extract subdomain and base domain
-            var parts = domain.Split('.');
-            if (parts.Length < 2)
+            
+            // If just subdomain is provided (no dots), check it directly
+            if (!domain.Contains('.'))
             {
-                result.IsAvailable = false;
-                result.Message = "Geçersiz domain formatı";
-                return result;
-            }
-
-            var subdomain = parts[0];
-            var baseDomain = string.Join(".", parts.Skip(1));
-
-            // Check if domain is already taken (mock implementation)
-            if (_existingDomains.ContainsKey(baseDomain))
-            {
-                result.IsAvailable = !_existingDomains[baseDomain].Contains(subdomain);
-            }
-            else
-            {
-                result.IsAvailable = true;
-            }
-
-            if (!result.IsAvailable)
-            {
-                result.Message = "Bu domain zaten kullanılıyor";
-                result.CurrentOwner = "Başka bir kullanıcı";
+                // Use MediatR to check subdomain availability from database
+                var query = new CheckSubdomainAvailabilityQuery(domain);
+                var checkResult = await _mediator.Send(query);
                 
-                // Generate suggestions
-                result.Suggestions.Add($"{subdomain}1.{baseDomain}");
-                result.Suggestions.Add($"{subdomain}-company.{baseDomain}");
-                result.Suggestions.Add($"{subdomain}{DateTime.Now.Year}.{baseDomain}");
-                result.Suggestions.Add($"my{subdomain}.{baseDomain}");
-                result.Suggestions.Add($"{subdomain}-tr.{baseDomain}");
-            }
-            else
-            {
-                result.Message = "Domain kullanılabilir";
-                
-                // Check if it's a premium domain
-                if (subdomain.Length <= 3 || IsPremiumWord(subdomain))
+                if (checkResult.IsSuccess && checkResult.Value != null)
                 {
-                    result.IsPremium = true;
-                    result.Details["note"] = "Bu premium bir domain olabilir";
+                    result.IsAvailable = checkResult.Value.Available;
+                    result.Message = checkResult.Value.Available 
+                        ? "Subdomain kullanılabilir" 
+                        : checkResult.Value.Reason ?? "Bu subdomain zaten kullanılıyor";
+                    
+                    if (!checkResult.Value.Available)
+                    {
+                        // Generate suggestions
+                        result.Suggestions.Add($"{domain}1");
+                        result.Suggestions.Add($"{domain}-{DateTime.Now.Year}");
+                        result.Suggestions.Add($"{domain}-tr");
+                        result.Suggestions.Add($"my{domain}");
+                        result.Suggestions.Add($"{domain}app");
+                    }
+                    
+                    // Add the full URL to details
+                    if (checkResult.Value.Available)
+                    {
+                        result.Details["suggestedUrl"] = checkResult.Value.SuggestedUrl;
+                    }
+                }
+                else
+                {
+                    // Fallback to mock implementation if query fails
+                    result.IsAvailable = !_existingDomains.GetValueOrDefault("stocker.app", new List<string>()).Contains(domain);
+                    result.Message = result.IsAvailable ? "Subdomain kullanılabilir" : "Bu subdomain zaten kullanılıyor";
+                }
+            }
+            else
+            {
+                // Handle full domain format (subdomain.domain.tld)
+                var parts = domain.Split('.');
+                var subdomain = parts[0];
+                var baseDomain = string.Join(".", parts.Skip(1));
+
+                // Check if domain is already taken (mock implementation for non-stocker domains)
+                if (_existingDomains.ContainsKey(baseDomain))
+                {
+                    result.IsAvailable = !_existingDomains[baseDomain].Contains(subdomain);
+                }
+                else
+                {
+                    result.IsAvailable = true;
+                }
+
+                if (!result.IsAvailable)
+                {
+                    result.Message = "Bu domain zaten kullanılıyor";
+                    result.CurrentOwner = "Başka bir kullanıcı";
+                    
+                    // Generate suggestions
+                    result.Suggestions.Add($"{subdomain}1.{baseDomain}");
+                    result.Suggestions.Add($"{subdomain}-company.{baseDomain}");
+                    result.Suggestions.Add($"{subdomain}{DateTime.Now.Year}.{baseDomain}");
+                    result.Suggestions.Add($"my{subdomain}.{baseDomain}");
+                    result.Suggestions.Add($"{subdomain}-tr.{baseDomain}");
+                }
+                else
+                {
+                    result.Message = "Domain kullanılabilir";
+                    
+                    // Check if it's a premium domain
+                    if (subdomain.Length <= 3 || IsPremiumWord(subdomain))
+                    {
+                        result.IsPremium = true;
+                        result.Details["note"] = "Bu premium bir domain olabilir";
+                    }
                 }
             }
 
-            await Task.CompletedTask;
             return result;
         }
         catch (Exception ex)

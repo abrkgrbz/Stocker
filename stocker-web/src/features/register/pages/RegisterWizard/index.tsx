@@ -99,8 +99,10 @@ const RegisterWizard: React.FC = () => {
   const {
     emailValidation,
     identityValidation,
+    domainCheck,
     validateEmail,
     validateIdentity,
+    checkDomain,
     isConnected
   } = useSignalRValidation();
 
@@ -137,36 +139,58 @@ const RegisterWizard: React.FC = () => {
     }
   };
 
-  // Check subdomain availability
+  // Check subdomain availability via SignalR
   const checkSubdomainAvailability = async (domain: string) => {
     if (!domain || domain.length < 3) {
       setSubdomainAvailable(null);
       return;
     }
 
-    setCheckingSubdomain(true);
-    try {
-      // Call API to check availability
-      const response = await apiClient.get(`/api/tenants/check-subdomain/${domain}`);
-      setSubdomainAvailable(response.data.available);
-    } catch (error) {
-      // If error, assume it's available (API might not be implemented yet)
-      setSubdomainAvailable(true);
-    } finally {
-      setCheckingSubdomain(false);
+    // Use SignalR if connected, otherwise fallback to API
+    if (isConnected) {
+      setCheckingSubdomain(true);
+      // SignalR will handle the response via the hook
+      // The response will come through the validation hub
+    } else {
+      // Fallback to direct API call
+      setCheckingSubdomain(true);
+      try {
+        const response = await apiClient.get(`/api/tenants/check-subdomain/${domain}`);
+        setSubdomainAvailable(response.data.available);
+      } catch (error) {
+        // If error, assume it's available (API might not be implemented yet)
+        setSubdomainAvailable(true);
+      } finally {
+        setCheckingSubdomain(false);
+      }
     }
   };
 
   // Debounced subdomain check
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (subdomain) {
-        checkSubdomainAvailability(subdomain);
+      if (subdomain && subdomain.length >= 3) {
+        if (isConnected) {
+          // Use SignalR for real-time validation
+          checkDomain(subdomain);
+          setCheckingSubdomain(true);
+        } else {
+          // Fallback to API
+          checkSubdomainAvailability(subdomain);
+        }
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [subdomain]);
+  }, [subdomain, isConnected, checkDomain]);
+
+  // Listen to SignalR domain check results
+  useEffect(() => {
+    if (domainCheck) {
+      setSubdomainAvailable(domainCheck.isAvailable);
+      setCheckingSubdomain(false);
+    }
+  }, [domainCheck]);
 
   const handleNext = async () => {
     try {

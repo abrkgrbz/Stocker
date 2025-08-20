@@ -38,8 +38,11 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         {
             _logger.LogInformation("Starting registration for company: {CompanyName}", request.CompanyName);
 
-            // Create tenant
-            var subdomain = GenerateSubdomain(request.CompanyName);
+            // Create tenant - use provided domain or generate from company name
+            var subdomain = !string.IsNullOrWhiteSpace(request.Domain) 
+                ? request.Domain.ToLower().Trim() 
+                : GenerateSubdomain(request.CompanyName);
+                
             var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create("");
             var emailResult = Domain.Common.ValueObjects.Email.Create(request.Email);
             
@@ -51,7 +54,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             var tenant = Tenant.Create(
                 name: request.CompanyName,
                 code: subdomain,
-                databaseName: $"Stocker_Tenant_{subdomain}",
+                databaseName: $"StockerTenant_{subdomain}",
                 connectionString: connectionStringResult.Value,
                 contactEmail: emailResult.Value,
                 contactPhone: null,
@@ -148,6 +151,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 RefreshToken = refreshToken,
                 Email = masterUser.Email.Value,
                 FullName = $"{masterUser.FirstName} {masterUser.LastName}",
+                Subdomain = tenant.Code,
+                SubdomainUrl = $"https://{tenant.Code}.stocker.app",
                 CompanyName = request.CompanyName,
                 RequiresEmailVerification = true,
                 RedirectUrl = $"/welcome?tenant={tenant.Id}"

@@ -15,6 +15,10 @@ public sealed class RegisterResponse
     public string FullName { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     
+    // Subdomain info
+    public string Subdomain { get; set; } = string.Empty;
+    public string SubdomainUrl { get; set; } = string.Empty;
+    
     // Flow control fields
     public bool RequiresEmailVerification { get; set; }
     public string RedirectUrl { get; set; } = string.Empty;
