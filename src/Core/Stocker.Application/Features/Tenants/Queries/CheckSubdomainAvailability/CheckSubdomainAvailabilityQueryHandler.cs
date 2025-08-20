@@ -90,7 +90,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
 
         // Check if subdomain already exists in Tenant.Code
         var existingTenant = await _masterUnitOfWork.Repository<Tenant>()
-            .Query()
+            .AsQueryable()
             .FirstOrDefaultAsync(t => t.Code.ToLower() == subdomain, cancellationToken);
 
         if (existingTenant != null)
@@ -106,9 +106,9 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
 
         // Check if subdomain exists in TenantDomain table
         var existingDomain = await _masterUnitOfWork.Repository<TenantDomain>()
-            .Query()
+            .AsQueryable()
             .FirstOrDefaultAsync(td => td.DomainName.ToLower() == subdomain || 
-                                      td.DomainName.ToLower() == $"{subdomain}.stocker.app", 
+                                      td.DomainName.ToLower() == $"{subdomain}.stoocker.app", 
                                       cancellationToken);
 
         if (existingDomain != null)
@@ -128,7 +128,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
             Available = true,
             Subdomain = subdomain,
             Reason = null,
-            SuggestedUrl = $"{subdomain}.stocker.app"
+            SuggestedUrl = $"{subdomain}.stoocker.app"
         });
     }
 }
