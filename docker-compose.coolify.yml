@@ -6,8 +6,8 @@ services:
     build:
       context: ./stocker-web
       dockerfile: Dockerfile
-    ports:
-      - "3000:80"
+    expose:
+      - "80"
     environment:
       - VITE_API_URL=${VITE_API_URL:-https://api.stoocker.app}
       - VITE_SIGNALR_URL=${VITE_SIGNALR_URL:-https://api.stoocker.app/hubs}
@@ -16,14 +16,18 @@ services:
       - coolify
     depends_on:
       - stocker-api
+    labels:
+      - "coolify.serviceId=stocker-web"
 
   # Backend API (.NET)
   stocker-api:
     build:
       context: .
       dockerfile: src/API/Stocker.API/Dockerfile
-    ports:
-      - "${API_PORT:-5000}:5000"
+    expose:
+      - "5000"
+    labels:
+      - "coolify.serviceId=stocker-api"
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
       - ASPNETCORE_URLS=http://+:5000
@@ -66,8 +70,8 @@ services:
   # MSSQL Database
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    ports:
-      - "1433:1433"
+    expose:
+      - "1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SA_PASSWORD:-YourStrongPassword123!}
@@ -89,8 +93,8 @@ services:
   redis:
     image: redis:7-alpine
     command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     networks:
