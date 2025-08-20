@@ -6,7 +6,7 @@ services:
       context: ./stocker-web
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "3000:80"
     environment:
       - VITE_API_URL=https://api.stoocker.app
       - VITE_SIGNALR_URL=https://api.stoocker.app/hubs

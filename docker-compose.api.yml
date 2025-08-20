@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: src/API/Stocker.API/Dockerfile
     ports:
-      - "80:5000"
+      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
