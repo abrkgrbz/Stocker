@@ -9,6 +9,7 @@ services:
       - "3000:80"
     environment:
       - VITE_API_URL=https://api.stoocker.app
+      - VITE_API_BASE_URL=https://api.stoocker.app
       - VITE_SIGNALR_URL=https://api.stoocker.app/hubs
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
