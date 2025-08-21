@@ -4,7 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Application.Common.Behaviors;
 using Stocker.Application.Common.Models;
+using Stocker.Application.Common.Localization;
 using System.Reflection;
+using System.Globalization;
 // Alias for settings from SharedKernel
 using DatabaseSettings = Stocker.SharedKernel.Settings.DatabaseSettings;
 using AdminCredentials = Stocker.SharedKernel.Settings.AdminCredentials;
@@ -33,8 +35,13 @@ public static class DependencyInjection
         // Add AutoMapper
         services.AddAutoMapper(assembly);
 
-        // Add FluentValidation
+        // Add FluentValidation with Turkish language
         services.AddValidatorsFromAssembly(assembly);
+        
+        // Set Turkish as default language for validation messages
+        ValidatorOptions.Global.LanguageManager = new TurkishLanguageManager();
+        ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
+        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
 
         // Add MediatR with pipeline behaviors
         services.AddMediatR(cfg =>

@@ -11,6 +11,8 @@ using Stocker.SignalR.Extensions;
 using Stocker.SignalR.Hubs;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -300,6 +302,15 @@ if (!string.IsNullOrEmpty(redisConnection))
     builder.Services.AddSignalRRedis(redisConnection);
 }
 
+// Configure Localization
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { "tr-TR", "en-US" };
+    options.SetDefaultCulture("tr-TR");
+    options.AddSupportedCultures(supportedCultures);
+    options.AddSupportedUICultures(supportedCultures);
+});
+
 // Add Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
@@ -376,6 +387,9 @@ app.UseSwaggerUI(c =>
 
 // Add Global Exception Handling Middleware - En başta olmalı
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// Use Request Localization
+app.UseRequestLocalization();
 
 // HTTPS redirect'i sadece production'da kullan
 if (!app.Environment.IsDevelopment())
