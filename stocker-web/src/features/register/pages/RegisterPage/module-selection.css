@@ -48,3 +48,41 @@
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   z-index: 100;
 }
+
+/* Price display in cards */
+.module-card .ant-typography,
+.package-card .ant-typography {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .module-card,
+  .package-card {
+    padding: 12px;
+  }
+  
+  .module-card .ant-card-body,
+  .package-card .ant-card-body {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .module-card,
+  .package-card {
+    min-height: auto;
+  }
+  
+  .module-card .ant-typography,
+  .package-card .ant-typography {
+    font-size: 14px !important;
+  }
+  
+  /* Price text adjustments */
+  .module-card strong,
+  .package-card strong {
+    font-size: 20px !important;
+  }
+}

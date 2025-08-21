@@ -139,11 +139,11 @@ export const ModuleSelection: React.FC<ModuleSelectionProps> = ({
               {module.description}
             </Paragraph>
             
-            <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 24, color: '#667eea' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', alignItems: 'baseline', flexWrap: 'wrap' }}>
+              <Text strong style={{ fontSize: 20, color: '#667eea' }}>
                 ₺{module.price}
               </Text>
-              <Text type="secondary">/ay</Text>
+              <Text type="secondary" style={{ fontSize: 14, marginLeft: 4 }}>/ay</Text>
             </div>
 
             <div style={{ textAlign: 'left' }}>
@@ -205,11 +205,11 @@ export const ModuleSelection: React.FC<ModuleSelectionProps> = ({
                     <Title level={4}>{pkg.name}</Title>
                     <Text type="secondary">{pkg.description}</Text>
                     
-                    <div style={{ margin: '20px 0' }}>
-                      <Text strong style={{ fontSize: 28, color: '#667eea' }}>
+                    <div style={{ margin: '20px 0', display: 'flex', justifyContent: 'center', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                      <Text strong style={{ fontSize: 24, color: '#667eea' }}>
                         ₺{pkg.basePrice}
                       </Text>
-                      <Text type="secondary">/ay</Text>
+                      <Text type="secondary" style={{ fontSize: 14, marginLeft: 4 }}>/ay</Text>
                     </div>
 
                     <div style={{ textAlign: 'left' }}>
