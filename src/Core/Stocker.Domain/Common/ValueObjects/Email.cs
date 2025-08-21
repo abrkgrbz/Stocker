@@ -21,12 +21,12 @@ public sealed class Email : ValueObject
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return Result<Email>.Failure(new Error("Email.Empty", "Email cannot be empty.", ErrorType.Validation));
+            return Result<Email>.Failure(new Error("Email.Empty", "E-posta adresi boş olamaz.", ErrorType.Validation));
         }
 
         if (!EmailRegex.IsMatch(value))
         {
-            return Result<Email>.Failure(new Error("Email.Invalid", "Invalid email format.", ErrorType.Validation));
+            return Result<Email>.Failure(new Error("Email.Invalid", "Geçersiz e-posta formatı.", ErrorType.Validation));
         }
 
         return Result<Email>.Success(new Email(value.ToLowerInvariant()));
