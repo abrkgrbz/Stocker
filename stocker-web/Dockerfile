@@ -6,7 +6,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files (only package.json, not lock file)
-COPY package.json ./
+COPY stocker-web/package.json ./
 
 # Clean everything and fresh install for Alpine Linux
 RUN rm -rf node_modules package-lock.json && \
@@ -14,7 +14,7 @@ RUN rm -rf node_modules package-lock.json && \
     npm install --legacy-peer-deps
 
 # Copy all source files
-COPY . .
+COPY stocker-web/ .
 
 # Build the application
 RUN npm run build
@@ -26,7 +26,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY stocker-web/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80

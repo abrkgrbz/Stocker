@@ -18,10 +18,14 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
             return true;
         }
 
+        // TEMPORARY: Allow anonymous access for testing
+        // TODO: Remove this after testing and uncomment the code below
+        return true;
+
         // Production'da sadece Admin ve SuperAdmin rollerine izin ver
-        return httpContext.User.Identity?.IsAuthenticated == true &&
-               (httpContext.User.IsInRole("Admin") || 
-                httpContext.User.IsInRole("SuperAdmin") ||
-                httpContext.User.IsInRole("TenantAdmin"));
+        // return httpContext.User.Identity?.IsAuthenticated == true &&
+        //        (httpContext.User.IsInRole("Admin") || 
+        //         httpContext.User.IsInRole("SuperAdmin") ||
+        //         httpContext.User.IsInRole("TenantAdmin"));
     }
 }

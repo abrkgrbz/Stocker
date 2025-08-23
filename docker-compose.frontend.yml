@@ -3,8 +3,8 @@ version: '3.8'
 services:
   web:
     build:
-      context: ./stocker-web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: stocker-web/Dockerfile
     ports:
       - "3000:80"
     environment:

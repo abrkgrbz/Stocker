@@ -15,11 +15,11 @@ services:
       - ConnectionStrings__MasterConnection=${MASTER_DB_CONNECTION}
       - ConnectionStrings__TenantConnection=${TENANT_DB_CONNECTION}
       # Database Settings for dynamic tenant database creation
-      - DatabaseSettings__ServerName=${DB_SERVER:-coolify.stoocker.app}
-      - DatabaseSettings__UserId=${DB_USER:-sa}
+      - DatabaseSettings__ServerName=${DB_SERVER}
+      - DatabaseSettings__UserId=${DB_USER}
       - DatabaseSettings__Password=${DB_PASSWORD}
       # JWT Settings
-      - JwtSettings__Secret=${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters-long-2024}
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=https://api.stoocker.app
       - JwtSettings__Audience=https://stoocker.app
       - JwtSettings__AccessTokenExpirationMinutes=60
