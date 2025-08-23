@@ -22,7 +22,8 @@ public static class HangfireConfiguration
                 QueuePollInterval = TimeSpan.Zero,
                 UseRecommendedIsolationLevel = true,
                 DisableGlobalLocks = true,
-                SchemaName = "Hangfire"
+                SchemaName = "Hangfire",
+                PrepareSchemaIfNecessary = true // Tabloları otomatik oluştur
             }));
 
         // Hangfire server

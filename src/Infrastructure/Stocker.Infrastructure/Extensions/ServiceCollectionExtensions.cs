@@ -59,6 +59,9 @@ public static class ServiceCollectionExtensions
         // Add Hangfire services
         services.AddHangfireServices(configuration);
         
+        // Add Hangfire initialization service
+        services.AddHostedService<HangfireInitializationService>();
+        
         // Register Hangfire jobs
         services.AddScoped<IEmailBackgroundJob, EmailBackgroundJob>();
         services.AddScoped<ITenantProvisioningJob, TenantProvisioningJob>();
