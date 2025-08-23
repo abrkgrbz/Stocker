@@ -11,11 +11,16 @@ The application requires **THREE separate database connection strings**:
 # Master Database Connection (for Hangfire, system tables)
 MASTER_DB_CONNECTION=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=YourActualPassword;TrustServerCertificate=true;MultipleActiveResultSets=true
 
-# Tenant Database Connection (for tenant-specific data)
+# Tenant Database Connection (for development/default tenant)
 TENANT_DB_CONNECTION=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourActualPassword;TrustServerCertificate=true;MultipleActiveResultSets=true
 
 # Default Connection (usually same as Tenant)
 DB_CONNECTION=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourActualPassword;TrustServerCertificate=true;MultipleActiveResultSets=true
+
+# Database Settings for Dynamic Tenant Creation
+DB_SERVER=coolify.stoocker.app
+DB_USER=sa
+DB_PASSWORD=YourActualPassword
 
 # Other Required Variables
 JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long-2024

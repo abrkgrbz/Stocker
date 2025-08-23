@@ -14,6 +14,10 @@ services:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
       - ConnectionStrings__MasterConnection=${MASTER_DB_CONNECTION}
       - ConnectionStrings__TenantConnection=${TENANT_DB_CONNECTION}
+      # Database Settings for dynamic tenant database creation
+      - DatabaseSettings__ServerName=${DB_SERVER:-coolify.stoocker.app}
+      - DatabaseSettings__UserId=${DB_USER:-sa}
+      - DatabaseSettings__Password=${DB_PASSWORD}
       # JWT Settings
       - JwtSettings__Secret=${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters-long-2024}
       - JwtSettings__Issuer=https://api.stoocker.app
@@ -24,7 +28,7 @@ services:
       - EmailSettings__SmtpHost=mail.privateemail.com
       - EmailSettings__SmtpPort=465
       - EmailSettings__SmtpUsername=info@stoocker.app
-      - EmailSettings__SmtpPassword=${EMAIL_PASSWORD:-A.bg010203}
+      - EmailSettings__SmtpPassword=${EMAIL_PASSWORD}
       - EmailSettings__EnableSsl=true
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
@@ -34,8 +38,8 @@ services:
       - EmailSettings__TemplatesPath=EmailTemplates
       - EmailSettings__Timeout=30000
       # Redis connection - Update with your actual Redis host
-      - Redis__ConnectionString=${REDIS_CONNECTION:-95.217.219.4:6379}
-      - ConnectionStrings__Redis=${REDIS_CONNECTION:-95.217.219.4:6379}
+      - Redis__ConnectionString=${REDIS_CONNECTION}
+      - ConnectionStrings__Redis=${REDIS_CONNECTION}
       # Hangfire Settings
       - Hangfire__DashboardPath=/hangfire
       - Hangfire__ServerName=Stocker-Production
