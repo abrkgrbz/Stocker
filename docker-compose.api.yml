@@ -11,9 +11,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       # Database connections - Update these with your actual database host
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION:-Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
-      - ConnectionStrings__MasterConnection=${MASTER_DB_CONNECTION:-Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
-      - ConnectionStrings__TenantConnection=${TENANT_DB_CONNECTION:-Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true}
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - ConnectionStrings__MasterConnection=${MASTER_DB_CONNECTION}
+      - ConnectionStrings__TenantConnection=${TENANT_DB_CONNECTION}
       # JWT Settings
       - JwtSettings__Secret=${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters-long-2024}
       - JwtSettings__Issuer=https://api.stoocker.app
