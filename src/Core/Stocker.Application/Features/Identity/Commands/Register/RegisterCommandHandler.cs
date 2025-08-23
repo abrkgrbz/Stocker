@@ -15,20 +15,20 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     private readonly IMasterUnitOfWork _masterUnitOfWork;
     private readonly ITenantUnitOfWork _tenantUnitOfWork;
     private readonly ITokenService _tokenService;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundJobService _backgroundJobService;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
         IMasterUnitOfWork masterUnitOfWork,
         ITenantUnitOfWork tenantUnitOfWork,
         ITokenService tokenService,
-        IEmailService emailService,
+        IBackgroundJobService backgroundJobService,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
         _tenantUnitOfWork = tenantUnitOfWork;
         _tokenService = tokenService;
-        _emailService = emailService;
+        _backgroundJobService = backgroundJobService;
         _logger = logger;
     }
 
@@ -106,37 +106,30 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             masterUser.SetRefreshToken(refreshToken, DateTime.UtcNow.AddDays(7));
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Send verification email
-            try
-            {
-                await _emailService.SendEmailVerificationAsync(
-                    email: request.Email,
-                    token: emailVerificationToken.Token,
-                    userName: $"{request.FirstName} {request.LastName}",
-                    cancellationToken);
-                
-                _logger.LogInformation("Verification email sent to {Email}", request.Email);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send verification email to {Email}", request.Email);
-                // Don't fail registration if email sending fails
-            }
+            // Queue verification email as background job
+            _backgroundJobService.Enqueue<IEmailBackgroundJob>(job => 
+                job.SendVerificationEmailAsync(
+                    request.Email,
+                    emailVerificationToken.Token,
+                    $"{request.FirstName} {request.LastName}"));
+            
+            _logger.LogInformation("Verification email queued for {Email}", request.Email);
 
-            // Send welcome email
-            try
-            {
-                await _emailService.SendWelcomeEmailAsync(
-                    email: request.Email,
-                    userName: $"{request.FirstName} {request.LastName}",
-                    companyName: request.CompanyName,
-                    cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send welcome email to {Email}", request.Email);
-                // Don't fail registration if email sending fails
-            }
+            // Queue welcome email as background job with 5 second delay
+            _backgroundJobService.Schedule<IEmailBackgroundJob>(job => 
+                job.SendWelcomeEmailAsync(
+                    request.Email,
+                    $"{request.FirstName} {request.LastName}",
+                    request.CompanyName),
+                TimeSpan.FromSeconds(5));
+            
+            _logger.LogInformation("Welcome email queued for {Email}", request.Email);
+
+            // Queue tenant provisioning as background job
+            _backgroundJobService.Enqueue<ITenantProvisioningJob>(job => 
+                job.ProvisionNewTenantAsync(tenant.Id));
+            
+            _logger.LogInformation("Tenant provisioning queued for {TenantId}", tenant.Id);
 
             _logger.LogInformation("Registration completed successfully for company: {CompanyName}", request.CompanyName);
 

@@ -12,8 +12,8 @@ using Stocker.Persistence.Contexts;
 namespace Stocker.Persistence.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20250820131525_InitialTenantDb")]
-    partial class InitialTenantDb
+    [Migration("20250823092422_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

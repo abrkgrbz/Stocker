@@ -3,6 +3,7 @@ using Stocker.API.Filters;
 using Stocker.Application;
 using Stocker.Identity.Extensions;
 using Stocker.Infrastructure.Extensions;
+using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
@@ -426,6 +427,9 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add Hangfire Dashboard (after authentication to secure it)
+app.UseHangfireDashboard(app.Configuration);
 
 // Map controllers
 app.MapControllers();

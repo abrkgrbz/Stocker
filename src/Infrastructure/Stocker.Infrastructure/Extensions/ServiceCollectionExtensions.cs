@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
+using Stocker.Infrastructure.BackgroundJobs;
+using Stocker.Infrastructure.BackgroundJobs.Jobs;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Infrastructure.Services;
 using Stocker.SharedKernel.Interfaces;
@@ -53,6 +55,16 @@ public static class ServiceCollectionExtensions
         
         // Add Memory Cache for tenant caching
         services.AddMemoryCache();
+
+        // Add Hangfire services
+        services.AddHangfireServices(configuration);
+        
+        // Register Hangfire jobs
+        services.AddScoped<IEmailBackgroundJob, EmailBackgroundJob>();
+        services.AddScoped<ITenantProvisioningJob, TenantProvisioningJob>();
+        
+        // Register Background Job Service
+        services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
 
         // Add other infrastructure services here as needed
 
