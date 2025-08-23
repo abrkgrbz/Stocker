@@ -111,7 +111,8 @@ public static class ServiceCollectionExtensions
 
         // Add Migration Services
         services.AddScoped<IMigrationService, MigrationService>(); 
-         services.AddHostedService<DatabaseMigrationHostedService>();
+        // Disabled automatic migration - handled manually in Program.cs
+        // services.AddHostedService<DatabaseMigrationHostedService>();
 
         return services;
     }
