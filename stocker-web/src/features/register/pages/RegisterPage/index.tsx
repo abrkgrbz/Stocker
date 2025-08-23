@@ -321,9 +321,34 @@ export const RegisterPage: React.FC = () => {
   const handleRegistration = async (values: any) => {
     setLoading(true);
     try {
+      // Backend'in beklediği formatı oluştur
+      const [firstName, ...lastNameParts] = values.contactName?.split(' ') || ['', ''];
+      const lastName = lastNameParts.join(' ') || firstName;
+      
       const registrationData = {
-        ...values,
-        domain: `${values.companyCode}.stocker.app`, // Auto-generate domain from company code
+        // Şirket bilgileri
+        companyName: values.companyName,
+        companyCode: values.companyCode,
+        identityType: values.identityType,
+        identityNumber: values.identityNumber,
+        sector: values.sector,
+        employeeCount: values.employeeCount,
+        
+        // İletişim bilgileri
+        contactName: values.contactName,
+        contactEmail: values.contactEmail,
+        contactPhone: values.contactPhone,
+        contactTitle: values.contactTitle,
+        
+        // Kullanıcı bilgileri
+        email: values.contactEmail, // Backend email field'ı bekliyor
+        username: values.contactEmail?.split('@')[0] || values.companyCode, // Email'den username oluştur
+        firstName: firstName,
+        lastName: lastName,
+        password: values.password,
+        
+        // Domain ve paket
+        domain: `${values.companyCode}`,
         packageId: selectedPackage?.id,
         billingPeriod
       };
@@ -609,6 +634,72 @@ export const RegisterPage: React.FC = () => {
               </Col>
             </Row>
 
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="identityType"
+                  label="Kimlik Türü"
+                  rules={[{ required: true, message: 'Kimlik türü zorunludur' }]}
+                  initialValue="vergi"
+                >
+                  <Select>
+                    <Select.Option value="tc">TC Kimlik No</Select.Option>
+                    <Select.Option value="vergi">Vergi No</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="identityNumber"
+                  label="Kimlik/Vergi Numarası"
+                  rules={[
+                    { required: true, message: 'Kimlik numarası zorunludur' },
+                    { pattern: /^\d{10,11}$/, message: 'Geçerli bir numara giriniz (10-11 hane)' }
+                  ]}
+                >
+                  <Input placeholder="12345678901" maxLength={11} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="sector"
+                  label="Sektör"
+                  rules={[{ required: true, message: 'Sektör zorunludur' }]}
+                >
+                  <Select placeholder="Sektör seçiniz">
+                    <Select.Option value="Teknoloji">Teknoloji</Select.Option>
+                    <Select.Option value="Perakende">Perakende</Select.Option>
+                    <Select.Option value="Üretim">Üretim</Select.Option>
+                    <Select.Option value="Hizmet">Hizmet</Select.Option>
+                    <Select.Option value="İnşaat">İnşaat</Select.Option>
+                    <Select.Option value="Sağlık">Sağlık</Select.Option>
+                    <Select.Option value="Eğitim">Eğitim</Select.Option>
+                    <Select.Option value="Lojistik">Lojistik</Select.Option>
+                    <Select.Option value="Gıda">Gıda</Select.Option>
+                    <Select.Option value="Diğer">Diğer</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="employeeCount"
+                  label="Çalışan Sayısı"
+                  rules={[{ required: true, message: 'Çalışan sayısı zorunludur' }]}
+                >
+                  <Select placeholder="Çalışan sayısı seçiniz">
+                    <Select.Option value="1-10">1-10</Select.Option>
+                    <Select.Option value="11-50">11-50</Select.Option>
+                    <Select.Option value="51-100">51-100</Select.Option>
+                    <Select.Option value="101-500">101-500</Select.Option>
+                    <Select.Option value="500+">500+</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
             <Divider />
 
             <Title level={5}>İletişim Bilgileri</Title>
@@ -622,6 +713,26 @@ export const RegisterPage: React.FC = () => {
                   <Input placeholder="Ad Soyad" />
                 </Form.Item>
               </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="contactTitle"
+                  label="Unvan"
+                  rules={[{ required: true, message: 'Unvan zorunludur' }]}
+                >
+                  <Select placeholder="Unvan seçiniz">
+                    <Select.Option value="Genel Müdür">Genel Müdür</Select.Option>
+                    <Select.Option value="Müdür">Müdür</Select.Option>
+                    <Select.Option value="Yönetici">Yönetici</Select.Option>
+                    <Select.Option value="Muhasebe Müdürü">Muhasebe Müdürü</Select.Option>
+                    <Select.Option value="IT Müdürü">IT Müdürü</Select.Option>
+                    <Select.Option value="Satın Alma Müdürü">Satın Alma Müdürü</Select.Option>
+                    <Select.Option value="Diğer">Diğer</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   name="contactPhone"
@@ -641,28 +752,29 @@ export const RegisterPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="contactEmail"
+                  label="E-posta"
+                  rules={[
+                    { required: true, message: 'E-posta zorunludur' },
+                    { type: 'email', message: 'Geçerli bir e-posta giriniz' }
+                  ]}
+                  validateStatus={emailValidation ? (emailValidation.isValid ? 'success' : 'error') : ''}
+                  help={emailValidation?.message}
+                >
+                  <Input 
+                    placeholder="yetkili@sirket.com" 
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value && value.includes('@')) {
+                        validateEmail(value);
+                      }
+                    }}
+                  />
+                </Form.Item>
+              </Col>
             </Row>
-
-            <Form.Item
-              name="contactEmail"
-              label="E-posta"
-              rules={[
-                { required: true, message: 'E-posta zorunludur' },
-                { type: 'email', message: 'Geçerli bir e-posta giriniz' }
-              ]}
-              validateStatus={emailValidation ? (emailValidation.isValid ? 'success' : 'error') : ''}
-              help={emailValidation?.message}
-            >
-              <Input 
-                placeholder="yetkili@sirket.com" 
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value && value.includes('@')) {
-                    validateEmail(value);
-                  }
-                }}
-              />
-            </Form.Item>
 
             <Divider />
 
