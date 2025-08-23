@@ -35,6 +35,17 @@ services:
       - EmailSettings__Timeout=30000
       # Redis connection - Update with your actual Redis host
       - Redis__ConnectionString=${REDIS_CONNECTION:-95.217.219.4:6379}
+      - ConnectionStrings__Redis=${REDIS_CONNECTION:-95.217.219.4:6379}
+      # Hangfire Settings
+      - Hangfire__DashboardPath=/hangfire
+      - Hangfire__ServerName=Stocker-Production
+      - Hangfire__WorkerCount=8
+      - Hangfire__Queues__0=critical
+      - Hangfire__Queues__1=default
+      - Hangfire__Queues__2=low
+      - Hangfire__RetryAttempts=3
+      - Hangfire__JobExpirationCheckInterval=01:00:00
+      - Hangfire__CountersAggregateInterval=00:05:00
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
