@@ -24,13 +24,16 @@ class SignalRService {
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
-    this.validationConnection.onreconnecting(() => {
+    this.validationConnection.onreconnecting((error) => {
+      console.warn('ValidationHub reconnecting:', error);
     });
 
-    this.validationConnection.onreconnected(() => {
+    this.validationConnection.onreconnected((connectionId) => {
+      console.log('ValidationHub reconnected:', connectionId);
     });
 
-    this.validationConnection.onclose(() => {
+    this.validationConnection.onclose((error) => {
+      console.error('ValidationHub connection closed:', error);
     });
 
     try {
@@ -147,12 +150,23 @@ class SignalRService {
   // Identity Validation (TC Kimlik No / Vergi No)
   async validateIdentity(identityNumber: string): Promise<void> {
     console.log('SignalR validateIdentity called with:', identityNumber);
-    if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
-      console.log('Connection not ready, starting validation connection...');
-      await this.startValidationConnection();
+    
+    try {
+      if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
+        console.log('Connection not ready, starting validation connection...');
+        await this.startValidationConnection();
+      }
+      
+      console.log('Connection state:', this.validationConnection?.state);
+      console.log('Invoking ValidateIdentity on hub...');
+      
+      const result = await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+      console.log('ValidateIdentity invoke completed:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in validateIdentity:', error);
+      throw error;
     }
-    console.log('Invoking ValidateIdentity on hub...');
-    return this.validationConnection!.invoke("ValidateIdentity", identityNumber);
   }
 
   onIdentityValidated(callback: (result: ValidationResult) => void): void {

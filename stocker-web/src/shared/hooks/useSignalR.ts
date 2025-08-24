@@ -55,6 +55,7 @@ export const useSignalRValidation = () => {
         });
 
         service.onIdentityValidated((result) => {
+          console.log('Identity validation result received:', result);
           setIdentityValidation(result);
         });
 
@@ -143,12 +144,20 @@ export const useSignalRValidation = () => {
   }, [service]);
 
   const validateIdentity = useCallback(async (identityNumber: string) => {
+    console.log('useSignalR validateIdentity called with:', identityNumber);
     setError(null);
     setIdentityValidation(null);
     try {
       await service.validateIdentity(identityNumber);
+      console.log('validateIdentity call completed successfully');
     } catch (err) {
+      console.error('Failed to validate identity number:', err);
       setError('Failed to validate identity number');
+      // Set a fallback validation result
+      setIdentityValidation({
+        isValid: false,
+        message: 'Doğrulama servisi geçici olarak kullanılamıyor'
+      });
     }
   }, [service]);
 
