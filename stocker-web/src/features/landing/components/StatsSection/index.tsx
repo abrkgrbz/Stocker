@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Row, Col, Typography } from 'antd';
 import { stats } from '../../data/stats';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+import { motion } from 'framer-motion';
 
 const { Title } = Typography;
 
@@ -52,7 +53,11 @@ export const StatsSection: React.FC = () => {
         <Row gutter={[48, 48]} justify="center">
           {stats.map((stat, index) => (
             <Col xs={12} sm={12} md={6} key={index}>
-              <div 
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ y: -5 }} 
                 style={{ 
                   textAlign: 'center',
                   padding: '20px',
@@ -62,14 +67,6 @@ export const StatsSection: React.FC = () => {
                   transition: 'all 0.3s',
                   cursor: 'pointer',
                   height: '100%'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 15px 50px rgba(102, 126, 234, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.08)';
                 }}
               >
                 <div 
@@ -117,7 +114,7 @@ export const StatsSection: React.FC = () => {
                 }}>
                   {stat.description}
                 </div>
-              </div>
+              </motion.div>
             </Col>
           ))}
         </Row>

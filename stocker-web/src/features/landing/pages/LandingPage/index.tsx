@@ -21,11 +21,12 @@ import {
   ShoppingCartOutlined,
   PieChartOutlined,
 } from '@ant-design/icons';
-import { HeroSection } from '../../components/HeroSection';
+import { AnimatedHero } from '../../components/AnimatedHero';
 import { FeaturesSection } from '../../components/FeaturesSection';
 import { PricingSection } from '../../components/PricingSection';
 import { TestimonialsSection } from '../../components/TestimonialsSection';
 import { StatsSection } from '../../components/StatsSection';
+import { FloatingActionButton } from '../../components/FloatingActionButton';
 import { mainModules } from '../../data/modules';
 import './style.css';
 import './corporate-style.css';
@@ -107,7 +108,7 @@ export const LandingPage: React.FC = () => {
 
       <Content>
         {/* Hero Section */}
-        <HeroSection navigate={navigate} />
+        <AnimatedHero />
 
         {/* Stats Section */}
         <StatsSection />
@@ -331,6 +332,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </Footer>
+      
+      {/* Floating Action Button */}
+      <FloatingActionButton />
     </Layout>
   );
 };
