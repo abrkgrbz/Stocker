@@ -55,28 +55,43 @@ export const masterTenantApi = {
   delete: (id: string) => 
     apiClient.delete(`/api/master/tenants/${id}`),
     
-  suspend: (id: string, reason?: string) => {
-    console.log('API call: Suspending tenant', id);
-    return apiClient.post(`/api/master/tenants/${id}/suspend`, { reason })
+  // Toggle tenant status (activate/deactivate)
+  toggleStatus: (id: string) => {
+    console.log('API call: Toggling tenant status', id);
+    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
       .then(response => {
-        console.log('Suspend API response:', response);
+        console.log('Toggle status API response:', response);
         return response;
       })
       .catch(error => {
-        console.error('Suspend API error:', error);
+        console.error('Toggle status API error:', error);
+        throw error;
+      });
+  },
+  
+  // Legacy methods for backward compatibility
+  suspend: (id: string, reason?: string) => {
+    console.log('API call: Suspending tenant (using toggle)', id);
+    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
+      .then(response => {
+        console.log('Toggle status API response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('Toggle status API error:', error);
         throw error;
       });
   },
     
   activate: (id: string) => {
-    console.log('API call: Activating tenant', id);
-    return apiClient.post(`/api/master/tenants/${id}/activate`)
+    console.log('API call: Activating tenant (using toggle)', id);
+    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
       .then(response => {
-        console.log('Activate API response:', response);
+        console.log('Toggle status API response:', response);
         return response;
       })
       .catch(error => {
-        console.error('Activate API error:', error);
+        console.error('Toggle status API error:', error);
         throw error;
       });
   },
@@ -85,22 +100,25 @@ export const masterTenantApi = {
     apiClient.post(`/api/master/tenants/${id}/reset-password`),
     
   getUsageStats: (id: string) => 
-    apiClient.get(`/api/master/tenants/${id}/usage`),
+    apiClient.get(`/api/master/tenants/${id}/statistics`),
     
   getActivityLog: (id: string) => 
-    apiClient.get(`/api/master/tenants/${id}/activity`),
+    // Activity log endpoint not implemented yet, return empty data
+    Promise.resolve({ data: { data: [] } }),
     
   loginAsTenant: (id: string) => {
-    console.log('API call: Login as tenant', id);
-    return apiClient.post(`/api/master/tenants/${id}/impersonate`)
-      .then(response => {
-        console.log('Login as tenant API response:', response);
-        return response;
-      })
-      .catch(error => {
-        console.error('Login as tenant API error:', error);
-        throw error;
-      });
+    console.log('API call: Login as tenant (Impersonate not implemented)', id);
+    // Impersonate endpoint not implemented in backend yet
+    // For now, just redirect to tenant dashboard with tenant ID
+    return Promise.resolve({
+      data: {
+        success: true,
+        data: {
+          tenantId: id,
+          message: 'Impersonate feature is not implemented yet. Redirecting to tenant dashboard...'
+        }
+      }
+    });
   },
 };
 

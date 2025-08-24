@@ -166,40 +166,17 @@ export const useResetTenantPassword = () => {
   });
 };
 
-// Login as tenant (impersonate)
+// Login as tenant (impersonate) - NOT IMPLEMENTED IN BACKEND YET
 export const useLoginAsTenant = () => {
   return useMutation({
     mutationFn: (id: string) => masterTenantApi.loginAsTenant(id),
     onSuccess: (data) => {
-      console.log('Login as tenant success:', data);
-      message.success('Tenant paneline yönlendiriliyorsunuz...');
+      console.log('Login as tenant - Feature not implemented in backend');
+      message.warning('Tenant olarak giriş özelliği henüz backend\'de implemente edilmemiş. Bu özellik yakında eklenecek.');
       
-      // Handle impersonation token and redirect
-      if (data?.data) {
-        // Store impersonation token if provided
-        if (data.data.token) {
-          localStorage.setItem('impersonation_token', data.data.token);
-        }
-        
-        // Get tenant code for redirect
-        const tenantCode = data.data.tenantCode || data.data.code;
-        
-        // Redirect to tenant dashboard
-        setTimeout(() => {
-          if (tenantCode) {
-            // If we have tenant code, use it in subdomain or path
-            window.location.href = `/admin?tenant=${tenantCode}`;
-          } else if (data.data.tenantId) {
-            // Fallback to tenant ID
-            window.location.href = `/admin?tenantId=${data.data.tenantId}`;
-          } else {
-            // Last resort - just go to admin
-            window.location.href = '/admin';
-          }
-        }, 1000);
-      } else {
-        console.error('No data in response:', data);
-        message.error('Tenant bilgileri alınamadı');
+      // For now, just show a message
+      if (data?.data?.data?.message) {
+        message.info(data.data.data.message);
       }
     },
     onError: (error: any) => {
