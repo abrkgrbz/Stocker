@@ -200,37 +200,123 @@ export const masterModuleApi = {
     apiClient.patch(`/api/master/modules/${id}/status`, { isActive }),
 };
 
-// System Settings API
+// System Settings API - NOT IMPLEMENTED IN BACKEND YET
 export const masterSettingsApi = {
   getGeneral: () => 
-    apiClient.get('/api/master/settings/general'),
+    // Mock data until backend implementation
+    Promise.resolve({
+      data: {
+        success: true,
+        data: {
+          appName: 'Stocker',
+          appTitle: 'Stok Yönetim Sistemi',
+          appDescription: 'Modern ve güçlü stok yönetim çözümü',
+          appVersion: '1.0.0',
+          appUrl: 'https://stoocker.app',
+          apiUrl: 'https://api.stoocker.app',
+          supportEmail: 'info@stoocker.app',
+          supportPhone: '+90 555 123 4567',
+          defaultLanguage: 'tr',
+          defaultTimezone: 'Europe/Istanbul',
+          dateFormat: 'DD/MM/YYYY',
+          timeFormat: 'HH:mm',
+          currency: 'TRY',
+          currencyPosition: 'before',
+        }
+      }
+    }),
     
   updateGeneral: (data: any) => 
-    apiClient.put('/api/master/settings/general', data),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: 'Settings updated successfully'
+      }
+    }),
     
   getEmail: () => 
-    apiClient.get('/api/master/settings/email'),
+    // Mock data until backend implementation
+    Promise.resolve({
+      data: {
+        success: true,
+        data: {
+          emailProvider: 'smtp',
+          smtpHost: 'smtp.gmail.com',
+          smtpPort: 587,
+          smtpUsername: 'info@stoocker.app',
+          smtpEncryption: 'tls',
+          fromEmail: 'info@stoocker.app',
+          fromName: 'Stocker',
+        }
+      }
+    }),
     
   updateEmail: (data: any) => 
-    apiClient.put('/api/master/settings/email', data),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: 'Email settings updated successfully'
+      }
+    }),
     
   testEmail: (email: string) => 
-    apiClient.post('/api/master/settings/email/test', { email }),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: `Test email sent to ${email}`
+      }
+    }),
     
   getIntegrations: () => 
-    apiClient.get('/api/master/settings/integrations'),
+    // Mock data until backend implementation
+    Promise.resolve({
+      data: {
+        success: true,
+        data: []
+      }
+    }),
     
   updateIntegration: (key: string, data: any) => 
-    apiClient.put(`/api/master/settings/integrations/${key}`, data),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: 'Integration updated successfully'
+      }
+    }),
     
   getBackup: () => 
-    apiClient.get('/api/master/settings/backup'),
+    // Mock data until backend implementation
+    Promise.resolve({
+      data: {
+        success: true,
+        data: {
+          lastBackup: new Date().toISOString(),
+          backups: []
+        }
+      }
+    }),
     
   createBackup: () => 
-    apiClient.post('/api/master/settings/backup/create'),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: 'Backup created successfully'
+      }
+    }),
     
   restoreBackup: (backupId: string) => 
-    apiClient.post(`/api/master/settings/backup/restore/${backupId}`),
+    // Mock success response
+    Promise.resolve({
+      data: {
+        success: true,
+        message: `Backup ${backupId} restored successfully`
+      }
+    }),
 };
 
 // System Monitoring API

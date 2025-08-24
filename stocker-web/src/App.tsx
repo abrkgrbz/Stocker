@@ -33,6 +33,7 @@ const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDash
 const TenantsPage = lazy(() => import('@/features/tenants/pages/TenantsPage').then(m => ({ default: m.TenantsPage })));
 const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').then(m => ({ default: m.MasterTenantsPage })));
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
+const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -184,7 +185,7 @@ function App() {
                   <Route path="users" element={<UsersPage />} />
                   <Route path="monitoring/*" element={<div>System Monitoring</div>} />
                   <Route path="reports/*" element={<div>Reports</div>} />
-                  <Route path="settings/*" element={<div>System Settings</div>} />
+                  <Route path="settings/*" element={<MasterSettingsPage />} />
                 </Route>
 
                 {/* Admin Routes - For Tenant Admins */}
