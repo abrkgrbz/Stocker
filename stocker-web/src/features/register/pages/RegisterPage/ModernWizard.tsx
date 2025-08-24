@@ -576,8 +576,24 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           // TC Kimlik No: 11 haneli, Vergi No: 10 haneli
           const cleanNumber = value.replace(/\D/g, '');
           if (cleanNumber.length === 10 || cleanNumber.length === 11) {
-            setValidating(prev => ({ ...prev, identityNumber: true }));
-            validateIdentity(cleanNumber);
+            // Sadece SignalR bağlı ise validation yap
+            if (isConnected) {
+              setValidating(prev => ({ ...prev, identityNumber: true }));
+              try {
+                validateIdentity(cleanNumber);
+              } catch (error) {
+                console.error('Identity validation error:', error);
+                setValidating(prev => ({ ...prev, identityNumber: false }));
+                setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
+              }
+            } else {
+              // SignalR bağlı değilse basit client-side validation yap
+              const isValidLength = (formData.identityType === 'TC' && cleanNumber.length === 11) || 
+                                   (formData.identityType === 'VKN' && cleanNumber.length === 10);
+              if (isValidLength) {
+                setValidationSuccess(prev => ({ ...prev, identityNumber: true }));
+              }
+            }
           }
           break;
       }

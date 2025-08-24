@@ -210,7 +210,7 @@ class MockSignalRService {
   }
 
   // Identity Validation (TC Kimlik No / Vergi No)
-  async validateIdentity(identityNumber: string): Promise<void> {
+  validateIdentity = async (identityNumber: string): Promise<void> => {
     setTimeout(() => {
       // Remove spaces and non-numeric characters
       const cleaned = identityNumber.replace(/\D/g, '');
