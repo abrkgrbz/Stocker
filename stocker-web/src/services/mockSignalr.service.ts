@@ -163,19 +163,42 @@ class MockSignalRService {
   async checkCompanyName(companyName: string): Promise<void> {
     setTimeout(() => {
       const takenNames = ['ABC Teknoloji', 'XYZ Yazılım', 'Test Company'];
-      const isValid = !takenNames.some(name => 
-        name.toLowerCase() === companyName.toLowerCase()
+      const restrictedWords = ['admin', 'system', 'test', 'root', 'superuser'];
+      const lowerName = companyName.toLowerCase();
+      
+      // Check for restricted words
+      const containsRestricted = restrictedWords.some(word => lowerName.includes(word));
+      const isUnique = !takenNames.some(name => 
+        name.toLowerCase() === lowerName
       );
+      
+      // Determine if valid based on restrictions and uniqueness
+      const isValid = !containsRestricted && companyName.length >= 3;
+      
+      let message = '';
+      let details: Record<string, string> = {};
+      
+      if (containsRestricted) {
+        message = "Şirket adı kısıtlı kelimeler içeriyor";
+        details.restriction = "Admin, System, Test gibi kelimeler kullanılamaz";
+      } else if (!isUnique) {
+        message = "Bu şirket adı zaten kayıtlı";
+        details.suggestion = "Şirket adına bir numara veya ayırt edici kelime ekleyin";
+      } else if (companyName.length < 3) {
+        message = "Şirket adı en az 3 karakter olmalıdır";
+      } else {
+        message = "Şirket adı kullanılabilir";
+      }
       
       const result: ValidationResult = {
         isValid,
-        message: isValid 
-          ? "Şirket adı kullanılabilir" 
-          : "Bu şirket adı zaten kayıtlı",
-        details: {
-          available: isValid ? "yes" : "no",
-          suggestion: !isValid ? "Şirket adına bir numara veya ayırt edici kelime ekleyin" : ""
-        }
+        isUnique,
+        containsRestrictedWords: containsRestricted,
+        message,
+        similarNames: !isUnique ? takenNames.filter(name => 
+          name.toLowerCase().includes(lowerName.substring(0, 3))
+        ) : [],
+        details
       };
       
       this.companyCallbacks.forEach(cb => cb(result));

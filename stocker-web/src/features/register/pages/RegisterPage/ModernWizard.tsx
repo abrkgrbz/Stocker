@@ -406,8 +406,26 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   useEffect(() => {
     if (companyNameCheck) {
       setValidating(prev => ({ ...prev, companyName: false }));
-      if (!companyNameCheck.isAvailable) {
-        setValidationErrors(prev => ({ ...prev, companyName: companyNameCheck.message || 'Bu şirket adı kullanılıyor' }));
+      
+      // Check the actual validation result from API
+      // API returns isValid: false when there are issues
+      const isValid = companyNameCheck.isValid === true;
+      const isUnique = companyNameCheck.isUnique !== false;
+      const containsRestricted = companyNameCheck.containsRestrictedWords === true;
+      
+      // Company name is available only if it's valid, unique, and doesn't contain restricted words
+      const isAvailable = isValid && isUnique && !containsRestricted;
+      
+      if (!isAvailable) {
+        // Build detailed error message
+        let errorMessage = companyNameCheck.message || 'Bu şirket adı kullanılamaz';
+        
+        // Add restriction details if available
+        if (companyNameCheck.details?.restriction) {
+          errorMessage += ` (${companyNameCheck.details.restriction})`;
+        }
+        
+        setValidationErrors(prev => ({ ...prev, companyName: errorMessage }));
         setValidationSuccess(prev => ({ ...prev, companyName: false }));
       } else {
         // Company name is available - show success

@@ -188,6 +188,10 @@ class SignalRService {
 export interface ValidationResult {
   isValid: boolean;
   message: string;
+  isUnique?: boolean;
+  isAvailable?: boolean;
+  containsRestrictedWords?: boolean;
+  similarNames?: string[];
   details?: Record<string, string>;
 }
 
