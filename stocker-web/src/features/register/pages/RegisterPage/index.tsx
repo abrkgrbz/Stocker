@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { 
   Card, 
   Steps, 
@@ -589,17 +588,15 @@ export const RegisterPage: React.FC = () => {
 
   const renderRegistrationForm = () => {
     return (
-      <ErrorBoundary>
-        <ModernWizard 
-          onComplete={handleWizardComplete}
-          selectedPackage={selectedPackage || {
-            id: 'default-package',
-            name: 'Profesyonel',
-            price: 999,
-            currency: '₺'
-          }}
-        />
-      </ErrorBoundary>
+      <ModernWizard 
+        onComplete={handleWizardComplete}
+        selectedPackage={selectedPackage || {
+          id: 'default-package',
+          name: 'Profesyonel',
+          price: 999,
+          currency: '₺'
+        }}
+      />
     );
   };
 
