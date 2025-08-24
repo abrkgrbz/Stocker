@@ -139,9 +139,12 @@ class SignalRService {
 
   // Identity Validation (TC Kimlik No / Vergi No)
   async validateIdentity(identityNumber: string): Promise<void> {
+    console.log('SignalR validateIdentity called with:', identityNumber);
     if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
+      console.log('Connection not ready, starting validation connection...');
       await this.startValidationConnection();
     }
+    console.log('Invoking ValidateIdentity on hub...');
     return this.validationConnection!.invoke("ValidateIdentity", identityNumber);
   }
 

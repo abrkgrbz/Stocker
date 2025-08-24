@@ -211,9 +211,11 @@ class MockSignalRService {
 
   // Identity Validation (TC Kimlik No / Vergi No)
   validateIdentity = async (identityNumber: string): Promise<void> => {
+    console.log('Mock validateIdentity called with:', identityNumber);
     setTimeout(() => {
       // Remove spaces and non-numeric characters
       const cleaned = identityNumber.replace(/\D/g, '');
+      console.log('Processing identity number:', cleaned);
       let isValid = false;
       let numberType = '';
       let message = '';
@@ -246,6 +248,8 @@ class MockSignalRService {
         }
       };
       
+      console.log('Identity validation result:', result);
+      console.log('Number of callbacks to notify:', this.identityCallbacks.length);
       this.identityCallbacks.forEach(cb => cb(result));
     }, 400);
   }

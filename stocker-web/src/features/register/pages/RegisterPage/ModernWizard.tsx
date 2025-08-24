@@ -575,18 +575,22 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         case 'identityNumber':
           // TC Kimlik No: 11 haneli, Vergi No: 10 haneli
           const cleanNumber = value.replace(/\D/g, '');
+          console.log('Identity number changed:', cleanNumber, 'Length:', cleanNumber.length, 'Connected:', isConnected);
+          
           if (cleanNumber.length === 10 || cleanNumber.length === 11) {
             // Sadece SignalR bağlı ise validation yap
             if (isConnected) {
+              console.log('Starting identity validation via SignalR...');
               setValidating(prev => ({ ...prev, identityNumber: true }));
-              try {
-                validateIdentity(cleanNumber);
-              } catch (error) {
+              
+              // Async validation with proper error handling
+              validateIdentity(cleanNumber).catch(error => {
                 console.error('Identity validation error:', error);
                 setValidating(prev => ({ ...prev, identityNumber: false }));
                 setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
-              }
+              });
             } else {
+              console.log('SignalR not connected, using client-side validation');
               // SignalR bağlı değilse basit client-side validation yap
               const isValidLength = (formData.identityType === 'TC' && cleanNumber.length === 11) || 
                                    (formData.identityType === 'VKN' && cleanNumber.length === 10);
