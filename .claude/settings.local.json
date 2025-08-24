@@ -58,7 +58,8 @@
       "Bash(git pull:*)",
       "Bash(dotnet publish:*)",
       "Bash(del /Q \"C:\\Users\\PC\\source\\repos\\Stocker\\src\\Infrastructure\\Stocker.Persistence\\Migrations\\Master\\*.cs\")",
-      "WebFetch(domain:coolify.io)"
+      "WebFetch(domain:coolify.io)",
+      "Bash(docker build:*)"
     ],
     "deny": []
   }

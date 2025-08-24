@@ -78,11 +78,13 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     domainCheck,
     phoneValidation,
     companyNameCheck,
+    identityValidation,
     validateEmail,
     checkPasswordStrength: checkSignalRPasswordStrength,
     checkDomain,
     validatePhone,
     checkCompanyName,
+    validateIdentity,
     error: validationError
   } = useSignalRValidation();
 
@@ -449,6 +451,19 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   }, [domainCheck]);
 
   useEffect(() => {
+    if (identityValidation) {
+      setValidating(prev => ({ ...prev, identityNumber: false }));
+      if (!identityValidation.isValid) {
+        setValidationErrors(prev => ({ ...prev, identityNumber: identityValidation.message || 'Geçersiz kimlik/vergi numarası' }));
+        setValidationSuccess(prev => ({ ...prev, identityNumber: false }));
+      } else {
+        setValidationErrors(prev => ({ ...prev, identityNumber: '' }));
+        setValidationSuccess(prev => ({ ...prev, identityNumber: true }));
+      }
+    }
+  }, [identityValidation]);
+
+  useEffect(() => {
     if (signalRPasswordStrength) {
       setPasswordStrength({
         score: signalRPasswordStrength.score,
@@ -555,6 +570,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           if (value && value.length >= 3) {
             setValidating(prev => ({ ...prev, companyCode: true }));
             checkDomain(value);
+          }
+          break;
+        case 'identityNumber':
+          // TC Kimlik No: 11 haneli, Vergi No: 10 haneli
+          const cleanNumber = value.replace(/\D/g, '');
+          if (cleanNumber.length === 10 || cleanNumber.length === 11) {
+            setValidating(prev => ({ ...prev, identityNumber: true }));
+            validateIdentity(cleanNumber);
           }
           break;
       }
@@ -912,15 +935,23 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                 <label className="form-label">
                   {formData.identityType === 'TC' ? 'TC Kimlik No' : 'Vergi No'} <span className="form-label-required">*</span>
                 </label>
-                <input
-                  type="text"
-                  className={`form-input ${validationErrors.identityNumber ? 'input-error' : ''}`}
-                  placeholder={formData.identityType === 'TC' ? '11 haneli TC kimlik numarası' : '10 haneli vergi numarası'}
-                  value={formData.identityNumber}
-                  onChange={(e) => handleInputChange('identityNumber', e.target.value.replace(/\D/g, ''))}
-                  maxLength={formData.identityType === 'TC' ? 11 : 10}
-                />
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    className={`form-input ${validationErrors.identityNumber ? 'input-error' : ''} ${validationSuccess.identityNumber ? 'input-success' : ''} ${validating.identityNumber ? 'input-validating' : ''}`}
+                    placeholder={formData.identityType === 'TC' ? '11 haneli TC kimlik numarası' : '10 haneli vergi numarası'}
+                    value={formData.identityNumber}
+                    onChange={(e) => handleInputChange('identityNumber', e.target.value.replace(/\D/g, ''))}
+                    maxLength={formData.identityType === 'TC' ? 11 : 10}
+                  />
+                  {validating.identityNumber && (
+                    <div className="input-spinner">
+                      <LoadingOutlined style={{ fontSize: 16, color: '#667eea' }} />
+                    </div>
+                  )}
+                </div>
                 {validationErrors.identityNumber && <span className="error-message">{validationErrors.identityNumber}</span>}
+                {validationSuccess.identityNumber && <span className="success-message">✓ {formData.identityType === 'TC' ? 'TC Kimlik numarası' : 'Vergi numarası'} geçerli</span>}
               </div>
             </div>
 
