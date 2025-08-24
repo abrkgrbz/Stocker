@@ -67,7 +67,10 @@ public class ValidationService : IValidationService
 
     public async Task<EmailValidationResult> ValidateEmailAsync(string email)
     {
-        var result = new EmailValidationResult();
+        var result = new EmailValidationResult
+        {
+            Details = new Dictionary<string, string>()
+        };
 
         try
         {
@@ -160,7 +163,8 @@ public class ValidationService : IValidationService
     {
         var result = new PhoneValidationResult
         {
-            CountryCode = countryCode
+            CountryCode = countryCode,
+            Details = new Dictionary<string, string>()
         };
 
         try
@@ -489,7 +493,10 @@ public class ValidationService : IValidationService
 
     public async Task<IdentityValidationResult> ValidateIdentityNumberAsync(string identityNumber)
     {
-        var result = new IdentityValidationResult();
+        var result = new IdentityValidationResult
+        {
+            Details = new Dictionary<string, string>()
+        };
 
         try
         {
@@ -581,7 +588,11 @@ public class ValidationService : IValidationService
 
     public async Task<CompanyNameValidationResult> ValidateCompanyNameAsync(string companyName)
     {
-        var result = new CompanyNameValidationResult();
+        var result = new CompanyNameValidationResult
+        {
+            Details = new Dictionary<string, string>(),
+            SimilarNames = new List<string>()
+        };
 
         try
         {
