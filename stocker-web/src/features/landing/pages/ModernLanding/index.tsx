@@ -14,7 +14,8 @@ import {
   Avatar,
   Rate,
   Tooltip,
-  Divider
+  Divider,
+  App
 } from 'antd';
 import {
   RocketOutlined,
@@ -37,7 +38,9 @@ import {
   TrophyOutlined,
   HeartFilled,
   CrownOutlined,
-  FireOutlined
+  FireOutlined,
+  ShopOutlined,
+  TruckOutlined
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
@@ -47,7 +50,20 @@ const { Title, Paragraph, Text } = Typography;
 
 export const ModernLanding: React.FC = () => {
   const navigate = useNavigate();
+  const { modal, notification } = App.useApp();
   const [activeFeature, setActiveFeature] = useState(0);
+  const [selectedBusinessType, setSelectedBusinessType] = useState('');
+  
+  const handleBusinessTypeSelect = (type: string, name: string) => {
+    setSelectedBusinessType(type);
+    notification.success({
+      message: `${name} Sektörü Seçildi`,
+      description: 'Size özel paket önerilerimizi aşağıda görebilirsiniz.',
+      placement: 'top',
+      duration: 3,
+      icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />
+    });
+  };
   const { ref: statsRef, inView: statsInView } = useInView({ triggerOnce: true });
   const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true });
 
@@ -70,87 +86,212 @@ export const ModernLanding: React.FC = () => {
 
   const features = [
     {
-      icon: <DashboardOutlined />,
-      title: 'Akıllı Dashboard',
-      description: 'Tüm iş süreçlerinizi tek ekrandan yönetin',
+      icon: <TeamOutlined />,
+      title: 'CRM Modülü',
+      description: 'Müşteri ilişkilerinizi profesyonelce yönetin',
       color: '#667eea',
-      details: ['Gerçek zamanlı veriler', 'Özelleştirilebilir widgetlar', 'Mobil uyumlu']
+      details: ['Müşteri takibi', 'Satış pipeline', 'Otomatik hatırlatmalar', 'Raporlama']
+    },
+    {
+      icon: <AppstoreOutlined />,
+      title: 'Stok Yönetimi',
+      description: 'Envanter kontrolünü kolaylaştırın',
+      color: '#764ba2',
+      details: ['Gerçek zamanlı stok takibi', 'Barkod sistemi', 'Min-max uyarıları', 'Depo yönetimi']
     },
     {
       icon: <BarChartOutlined />,
-      title: 'Güçlü Analizler',
-      description: 'Verilerinizi anlamlı içgörülere dönüştürün',
-      color: '#764ba2',
-      details: ['AI destekli raporlar', 'Tahmine dayalı analizler', 'Otomatik öneriler']
-    },
-    {
-      icon: <TeamOutlined />,
-      title: 'Ekip Yönetimi',
-      description: 'Ekibinizle mükemmel uyum içinde çalışın',
+      title: 'Satış & Faturalama',
+      description: 'Satış süreçlerinizi hızlandırın',
       color: '#f093fb',
-      details: ['Rol bazlı yetkiler', 'Performans takibi', 'İletişim araçları']
+      details: ['E-fatura entegrasyonu', 'Teklif yönetimi', 'Sipariş takibi', 'Tahsilat takibi']
     },
     {
-      icon: <SafetyOutlined />,
-      title: 'Maksimum Güvenlik',
-      description: 'Verileriniz güvende, işiniz rahat',
+      icon: <DashboardOutlined />,
+      title: 'Finans & Muhasebe',
+      description: 'Mali süreçlerinizi kontrol altına alın',
       color: '#f5576c',
-      details: ['256-bit şifreleme', 'İki faktörlü doğrulama', 'Günlük yedekleme']
+      details: ['Gelir-gider takibi', 'Bütçe yönetimi', 'Mali raporlar', 'Vergi hesaplamaları']
+    },
+    {
+      icon: <UserOutlined />,
+      title: 'İnsan Kaynakları',
+      description: 'Personel yönetimini dijitalleştirin',
+      color: '#4facfe',
+      details: ['Personel kartları', 'İzin takibi', 'Maaş bordrosu', 'Performans değerlendirme']
+    },
+    {
+      icon: <GlobalOutlined />,
+      title: 'Üretim Planlama',
+      description: 'Üretim süreçlerinizi optimize edin',
+      color: '#43e97b',
+      details: ['İş emirleri', 'Reçete yönetimi', 'Kapasite planlama', 'Maliyet analizi']
     }
   ];
 
   const stats = [
-    { value: 15000, suffix: '+', label: 'Mutlu Müşteri', icon: <HeartFilled /> },
-    { value: 99.9, suffix: '%', label: 'Uptime Garantisi', icon: <ThunderboltOutlined /> },
+    { value: 6, suffix: '', label: 'ERP Modülü', icon: <AppstoreOutlined /> },
+    { value: 100, suffix: '+', label: 'İş Süreci', icon: <ThunderboltOutlined /> },
     { value: 50, suffix: '+', label: 'Entegrasyon', icon: <ApiOutlined /> },
-    { value: 24, suffix: '/7', label: 'Destek', icon: <CustomerServiceOutlined /> }
+    { value: 24, suffix: '/7', label: 'Teknik Destek', icon: <CustomerServiceOutlined /> }
   ];
 
-  const pricingPlans = [
-    {
-      name: 'Başlangıç',
-      price: 299,
-      period: 'aylık',
-      features: ['5 Kullanıcı', '10GB Depolama', 'Temel Raporlar', 'Email Destek'],
-      popular: false
-    },
-    {
-      name: 'Profesyonel',
-      price: 599,
-      period: 'aylık',
-      features: ['25 Kullanıcı', '100GB Depolama', 'Gelişmiş Raporlar', '7/24 Destek', 'API Erişimi'],
-      popular: true
-    },
-    {
-      name: 'Kurumsal',
-      price: 1299,
-      period: 'aylık',
-      features: ['Sınırsız Kullanıcı', 'Sınırsız Depolama', 'Özel Raporlar', 'Özel Destek', 'White Label'],
-      popular: false
-    }
-  ];
+  const pricingPlansByType = {
+    retail: [
+      {
+        name: 'Perakende Başlangıç',
+        price: 399,
+        period: 'aylık',
+        icon: <ShopOutlined />,
+        features: ['3 Kullanıcı', 'Stok + Satış + Kasa Modülleri', 'Barkod Sistemi', '5GB Depolama', 'POS Entegrasyonu', 'Email Destek'],
+        popular: false
+      },
+      {
+        name: 'Perakende Plus',
+        price: 799,
+        period: 'aylık',
+        icon: <ShopOutlined />,
+        features: ['10 Kullanıcı', 'CRM + Stok + Satış + Finans', 'Multi-Mağaza Desteği', '50GB Depolama', 'E-Fatura & E-Arşiv', 'Sadakat Programı', '7/24 Destek'],
+        popular: true
+      },
+      {
+        name: 'Perakende Zincir',
+        price: 1999,
+        period: 'aylık',
+        icon: <ShopOutlined />,
+        features: ['Sınırsız Kullanıcı', 'Tüm Modüller', 'Sınırsız Mağaza', 'Merkezi Yönetim', 'Franchise Desteği', 'Özel Raporlar', 'SLA Garantisi'],
+        popular: false
+      }
+    ],
+    production: [
+      {
+        name: 'Üretim Atölye',
+        price: 599,
+        period: 'aylık',
+        icon: <GlobalOutlined />,
+        features: ['5 Kullanıcı', 'Üretim + Stok + Satış', 'Reçete Yönetimi', '20GB Depolama', 'İş Emirleri', 'Temel Planlama'],
+        popular: false
+      },
+      {
+        name: 'Üretim Fabrika',
+        price: 1299,
+        period: 'aylık',
+        icon: <GlobalOutlined />,
+        features: ['25 Kullanıcı', 'Tüm Üretim Modülleri', 'MRP Planlama', 'Kalite Kontrol', 'Bakım Yönetimi', 'IoT Entegrasyon', 'Vardiya Yönetimi'],
+        popular: true
+      },
+      {
+        name: 'Üretim Enterprise',
+        price: 3499,
+        period: 'aylık',
+        icon: <GlobalOutlined />,
+        features: ['Sınırsız Kullanıcı', 'ERP + MES + WMS', 'Gelişmiş Planlama', 'AI Optimizasyon', 'Multi-Fabrika', 'SAP Entegrasyon', 'Özel Geliştirme'],
+        popular: false
+      }
+    ],
+    distribution: [
+      {
+        name: 'Dağıtım Başlangıç',
+        price: 499,
+        period: 'aylık',
+        icon: <TruckOutlined />,
+        features: ['5 Kullanıcı', 'Stok + Satış + Lojistik', 'Rota Planlama', '15GB Depolama', 'Araç Takibi', 'Sevkiyat Yönetimi'],
+        popular: false
+      },
+      {
+        name: 'Dağıtım Pro',
+        price: 999,
+        period: 'aylık',
+        icon: <TruckOutlined />,
+        features: ['20 Kullanıcı', 'WMS + TMS Modülleri', 'Depo Optimizasyonu', 'Gerçek Zamanlı Takip', 'B2B Portal', 'EDI Entegrasyon', 'Cross-Docking'],
+        popular: true
+      },
+      {
+        name: 'Dağıtım Network',
+        price: 2999,
+        period: 'aylık',
+        icon: <TruckOutlined />,
+        features: ['Sınırsız Kullanıcı', 'Komple Lojistik Suite', 'Multi-Depo', 'Filo Yönetimi', 'Global Ticaret', 'Gümrük Entegrasyonu', 'Blockchain Takip'],
+        popular: false
+      }
+    ],
+    service: [
+      {
+        name: 'Hizmet Başlangıç',
+        price: 349,
+        period: 'aylık',
+        icon: <CustomerServiceOutlined />,
+        features: ['3 Kullanıcı', 'CRM + Servis Yönetimi', 'Randevu Sistemi', '5GB Depolama', 'Ticket Sistemi', 'Email Destek'],
+        popular: false
+      },
+      {
+        name: 'Hizmet Professional',
+        price: 749,
+        period: 'aylık',
+        icon: <CustomerServiceOutlined />,
+        features: ['15 Kullanıcı', 'Field Service Management', 'Saha Ekibi Yönetimi', 'SLA Takibi', 'Müşteri Portali', 'Sözleşme Yönetimi', '7/24 Destek'],
+        popular: true
+      },
+      {
+        name: 'Hizmet Enterprise',
+        price: 1799,
+        period: 'aylık',
+        icon: <CustomerServiceOutlined />,
+        features: ['Sınırsız Kullanıcı', 'Komple Service Suite', 'AI Chatbot', 'Omnichannel Destek', 'Knowledge Base', 'API Marketplace', 'White Label'],
+        popular: false
+      }
+    ],
+    default: [
+      {
+        name: 'Startup Paketi',
+        price: 499,
+        period: 'aylık',
+        icon: <RocketOutlined />,
+        features: ['5 Kullanıcı', 'CRM + Stok + Satış', '10GB Depolama', 'Temel Raporlar', 'Email Destek', 'Mobil Uygulama'],
+        popular: false
+      },
+      {
+        name: 'Profesyonel Paket',
+        price: 999,
+        period: 'aylık',
+        icon: <ThunderboltOutlined />,
+        features: ['25 Kullanıcı', 'Tüm ERP Modülleri', '100GB Depolama', 'Gelişmiş Raporlar', '7/24 Destek', 'E-Fatura', 'API Erişimi'],
+        popular: true
+      },
+      {
+        name: 'Kurumsal Paket',
+        price: 2499,
+        period: 'aylık',
+        icon: <TrophyOutlined />,
+        features: ['Sınırsız Kullanıcı', 'Tüm Modüller + Özelleştirme', 'Sınırsız Depolama', 'BI & Analytics', 'Özel Destek', 'White Label', 'SLA'],
+        popular: false
+      }
+    ]
+  };
+
+  const currentPlans = pricingPlansByType[selectedBusinessType] || pricingPlansByType.default;
 
   const testimonials = [
     {
       name: 'Ahmet Yılmaz',
-      company: 'Tech Startup',
+      company: 'Üretim Firması',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
       rating: 5,
-      comment: 'Stocker sayesinde işlerimizi %70 hızlandırdık. Mükemmel bir platform!'
+      comment: 'Stocker ERP ile tüm departmanlarımızı tek platformda topladık. Üretimden satışa kadar her şey kontrol altında.'
     },
     {
       name: 'Ayşe Demir',
-      company: 'E-Commerce Co',
+      company: 'Toptan Ticaret',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
       rating: 5,
-      comment: 'Stok yönetimi hiç bu kadar kolay olmamıştı. Kesinlikle tavsiye ediyorum.'
+      comment: 'Stok ve finans modülleri mükemmel entegre. E-fatura sistemi sayesinde muhasebe işlerimiz %80 hızlandı.'
     },
     {
       name: 'Mehmet Kara',
-      company: 'Retail Chain',
+      company: 'Perakende Zinciri',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
       rating: 5,
-      comment: 'Müşteri desteği harika! Her sorunumuzda yanımızdalar.'
+      comment: 'CRM modülü ile müşteri memnuniyetimiz arttı. Tüm şubelerimizi tek yerden yönetiyoruz.'
     }
   ];
 
@@ -212,11 +353,14 @@ export const ModernLanding: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge.Ribbon text="🎉 Yeni" color="purple">
-              <Tag color="purple" style={{ marginBottom: 20, padding: '4px 16px' }}>
+            <div style={{ marginBottom: 20 }}>
+              <Tag color="purple" style={{ padding: '8px 20px', fontSize: '16px' }}>
                 <FireOutlined /> 14 Gün Ücretsiz Deneme
               </Tag>
-            </Badge.Ribbon>
+              <Tag color="red" style={{ padding: '8px 20px', fontSize: '16px', marginLeft: '10px' }}>
+                🎉 Yeni
+              </Tag>
+            </div>
             
             <Title level={1} className="hero-title">
               {displayText}
@@ -224,12 +368,12 @@ export const ModernLanding: React.FC = () => {
             </Title>
             
             <Title level={2} className="hero-subtitle">
-              Stocker ERP ile <span className="gradient-text">Geleceği</span> Bugünden Yaşayın
+              Kapsamlı ERP Çözümü ile <span className="gradient-text">Tek Platform</span>da Tüm İşlemler
             </Title>
             
             <Paragraph className="hero-description">
-              Yapay zeka destekli, bulut tabanlı ve tamamen entegre iş yönetim platformu.
-              İşletmenizi bir üst seviyeye taşıyın.
+              CRM, Stok, Satış, Finans, İK ve Üretim modülleriyle işletmenizin tüm süreçlerini 
+              tek bir platformdan yönetin. Bulut tabanlı, güvenli ve ölçeklenebilir ERP sistemi.
             </Paragraph>
 
             <Space size="large" className="hero-actions">
@@ -250,6 +394,22 @@ export const ModernLanding: React.FC = () => {
                   size="large"
                   icon={<PlayCircleOutlined />}
                   className="cta-button secondary-cta"
+                  onClick={() => {
+                    modal.info({
+                      title: 'Demo Videosu',
+                      content: (
+                        <div>
+                          <p>Demo videosu yakında eklenecek!</p>
+                          <p>Şimdilik <strong>14 gün ücretsiz deneme</strong> ile tüm özellikleri test edebilirsiniz.</p>
+                        </div>
+                      ),
+                      icon: <PlayCircleOutlined style={{ color: '#667eea' }} />,
+                      okText: 'Tamam',
+                      okButtonProps: { type: 'primary' },
+                      centered: true,
+                      maskClosable: true
+                    });
+                  }}
                 >
                   Demo İzle
                 </Button>
@@ -278,7 +438,52 @@ export const ModernLanding: React.FC = () => {
               <span></span><span></span><span></span>
             </div>
             <div className="preview-content">
-              <img src="/dashboard-preview.png" alt="Dashboard" />
+              <div style={{ 
+                padding: '40px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '8px',
+                color: 'white',
+                textAlign: 'center'
+              }}>
+                <DashboardOutlined style={{ fontSize: '64px', marginBottom: '20px' }} />
+                <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '10px' }}>
+                  Stocker ERP Dashboard
+                </h3>
+                <p style={{ fontSize: '16px', opacity: 0.9 }}>
+                  6 Ana Modül, Tek Platform
+                </p>
+                <div style={{ 
+                  marginTop: '30px',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '15px'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <TeamOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>CRM</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <AppstoreOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Stok</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <BarChartOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Satış</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <DashboardOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Finans</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <UserOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>İK</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <GlobalOutlined style={{ fontSize: '24px', marginBottom: '5px' }} />
+                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Üretim</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -324,9 +529,9 @@ export const ModernLanding: React.FC = () => {
             animate={featuresInView ? { opacity: 1 } : {}}
             className="section-header"
           >
-            <Tag color="purple" className="section-tag">Özellikler</Tag>
-            <Title level={2}>Neden Stocker?</Title>
-            <Paragraph>İşletmenizi büyütmek için ihtiyacınız olan her şey</Paragraph>
+            <Tag color="purple" className="section-tag">ERP Modülleri</Tag>
+            <Title level={2}>Tek Platform, Komple Çözüm</Title>
+            <Paragraph>İşletmenizin tüm departmanlarını dijitalleştiren kapsamlı ERP modülleri</Paragraph>
           </motion.div>
 
           <Row gutter={[32, 32]}>
@@ -377,8 +582,101 @@ export const ModernLanding: React.FC = () => {
                     </span>
                     <h3>{features[activeFeature].title}</h3>
                   </div>
-                  <div className="showcase-content">
-                    <img src={`/feature-${activeFeature + 1}.png`} alt="Feature" />
+                  <div className="showcase-content" style={{ padding: '20px' }}>
+                    {/* Modül Akış Diyagramı */}
+                    <div style={{ 
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{
+                        background: 'white',
+                        padding: '15px 25px',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        border: `2px solid ${features[activeFeature].color}`,
+                        width: '100%',
+                        maxWidth: '350px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <div style={{ 
+                            fontSize: '32px', 
+                            color: features[activeFeature].color
+                          }}>
+                            {features[activeFeature].icon}
+                          </div>
+                          <div>
+                            <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
+                              {features[activeFeature].title}
+                            </h4>
+                            <p style={{ margin: 0, fontSize: '14px', color: '#666', marginTop: '4px' }}>
+                              {features[activeFeature].description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Özellik Kartları */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '15px',
+                        width: '100%',
+                        maxWidth: '350px'
+                      }}>
+                        {features[activeFeature].details.map((detail, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: i * 0.1 }}
+                            style={{
+                              background: 'white',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              fontSize: '14px',
+                              color: '#333'
+                            }}
+                          >
+                            <CheckCircleOutlined style={{ 
+                              color: features[activeFeature].color,
+                              fontSize: '16px',
+                              flexShrink: 0
+                            }} />
+                            <span>{detail}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Entegrasyon Bilgisi */}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                        padding: '15px',
+                        borderRadius: '10px',
+                        width: '100%',
+                        maxWidth: '350px',
+                        textAlign: 'center'
+                      }}>
+                        <ApiOutlined style={{ 
+                          fontSize: '24px', 
+                          color: '#667eea',
+                          marginBottom: '8px'
+                        }} />
+                        <p style={{ 
+                          margin: 0, 
+                          fontSize: '13px', 
+                          color: '#555',
+                          fontWeight: 500
+                        }}>
+                          Diğer modüllerle tam entegre çalışır
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -391,13 +689,101 @@ export const ModernLanding: React.FC = () => {
       <section id="pricing" className="pricing-section">
         <div className="container">
           <div className="section-header">
-            <Tag color="purple" className="section-tag">Fiyatlandırma</Tag>
-            <Title level={2}>Size Uygun Planı Seçin</Title>
-            <Paragraph>İhtiyacınıza göre ölçeklenebilir fiyatlandırma</Paragraph>
+            <Tag color="purple" className="section-tag">Çözüm Önerileri</Tag>
+            <Title level={2}>İşletmenize Özel ERP Çözümü</Title>
+            <Paragraph>Sektörünüze ve büyüklüğünüze göre özelleştirilmiş paketler</Paragraph>
           </div>
 
+          {/* İşletme Tipi Seçimi */}
+          <div style={{ 
+            maxWidth: '800px', 
+            margin: '0 auto 60px',
+            textAlign: 'center'
+          }}>
+            <Title level={4} style={{ marginBottom: '20px' }}>İşletme tipinizi seçin:</Title>
+            <Row gutter={[16, 16]} justify="center">
+              <Col>
+                <Card 
+                  hoverable
+                  onClick={() => handleBusinessTypeSelect('retail', 'Perakende')}
+                  style={{ 
+                    width: 180,
+                    textAlign: 'center',
+                    borderColor: selectedBusinessType === 'retail' ? '#667eea' : '#e8e8e8',
+                    borderWidth: selectedBusinessType === 'retail' ? '2px' : '1px',
+                    background: selectedBusinessType === 'retail' 
+                      ? 'linear-gradient(135deg, #667eea25 0%, #764ba225 100%)'
+                      : 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)'
+                  }}
+                >
+                  <ShopOutlined style={{ fontSize: '32px', color: '#667eea', marginBottom: '10px' }} />
+                  <h4>Perakende</h4>
+                  <p style={{ fontSize: '12px', color: '#666' }}>1-10 Mağaza</p>
+                </Card>
+              </Col>
+              <Col>
+                <Card 
+                  hoverable
+                  onClick={() => handleBusinessTypeSelect('production', 'Üretim')}
+                  style={{ 
+                    width: 180,
+                    textAlign: 'center',
+                    borderColor: selectedBusinessType === 'production' ? '#764ba2' : '#e8e8e8',
+                    borderWidth: selectedBusinessType === 'production' ? '2px' : '1px',
+                    background: selectedBusinessType === 'production'
+                      ? 'linear-gradient(135deg, #764ba225 0%, #f093fb25 100%)'
+                      : 'linear-gradient(135deg, #764ba215 0%, #f093fb15 100%)'
+                  }}
+                >
+                  <GlobalOutlined style={{ fontSize: '32px', color: '#764ba2', marginBottom: '10px' }} />
+                  <h4>Üretim</h4>
+                  <p style={{ fontSize: '12px', color: '#666' }}>KOBİ & Büyük</p>
+                </Card>
+              </Col>
+              <Col>
+                <Card 
+                  hoverable
+                  onClick={() => handleBusinessTypeSelect('distribution', 'Dağıtım')}
+                  style={{ 
+                    width: 180,
+                    textAlign: 'center',
+                    borderColor: selectedBusinessType === 'distribution' ? '#f093fb' : '#e8e8e8',
+                    borderWidth: selectedBusinessType === 'distribution' ? '2px' : '1px',
+                    background: selectedBusinessType === 'distribution'
+                      ? 'linear-gradient(135deg, #f093fb25 0%, #f5576c25 100%)'
+                      : 'linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%)'
+                  }}
+                >
+                  <TruckOutlined style={{ fontSize: '32px', color: '#f093fb', marginBottom: '10px' }} />
+                  <h4>Dağıtım</h4>
+                  <p style={{ fontSize: '12px', color: '#666' }}>Toptan & Lojistik</p>
+                </Card>
+              </Col>
+              <Col>
+                <Card 
+                  hoverable
+                  onClick={() => handleBusinessTypeSelect('service', 'Hizmet')}
+                  style={{ 
+                    width: 180,
+                    textAlign: 'center',
+                    borderColor: selectedBusinessType === 'service' ? '#f5576c' : '#e8e8e8',
+                    borderWidth: selectedBusinessType === 'service' ? '2px' : '1px',
+                    background: selectedBusinessType === 'service'
+                      ? 'linear-gradient(135deg, #f5576c25 0%, #ffa50025 100%)'
+                      : 'linear-gradient(135deg, #f5576c15 0%, #ffa50015 100%)'
+                  }}
+                >
+                  <CustomerServiceOutlined style={{ fontSize: '32px', color: '#f5576c', marginBottom: '10px' }} />
+                  <h4>Hizmet</h4>
+                  <p style={{ fontSize: '12px', color: '#666' }}>Servis & Danışmanlık</p>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Özelleştirilmiş Paketler */}
           <Row gutter={[32, 32]} justify="center">
-            {pricingPlans.map((plan, index) => (
+            {currentPlans.map((plan, index) => (
               <Col xs={24} sm={12} lg={8} key={index}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -408,9 +794,22 @@ export const ModernLanding: React.FC = () => {
                 >
                   {plan.popular && (
                     <div className="popular-badge">
-                      <CrownOutlined /> En Popüler
+                      <CrownOutlined /> Önerilen
                     </div>
                   )}
+
+                  <div style={{ 
+                    textAlign: 'center',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ 
+                      fontSize: '40px', 
+                      color: plan.popular ? '#764ba2' : '#667eea',
+                      marginBottom: '10px'
+                    }}>
+                      {plan.icon}
+                    </div>
+                  </div>
                   
                   <div className="pricing-header">
                     <h3>{plan.name}</h3>
@@ -425,7 +824,9 @@ export const ModernLanding: React.FC = () => {
                     {plan.features.map((feature, i) => (
                       <li key={i}>
                         <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                        {feature}
+                        {feature.includes('Sınırsız') || feature.includes('Tüm') 
+                          ? <strong>{feature}</strong> 
+                          : feature}
                       </li>
                     ))}
                   </ul>
@@ -437,12 +838,39 @@ export const ModernLanding: React.FC = () => {
                     className="pricing-button"
                     onClick={() => navigate('/register')}
                   >
-                    Başla
+                    {index === 2 ? 'Teklif Al' : plan.popular ? 'Ücretsiz Dene' : 'Hemen Başla'}
                   </Button>
                 </motion.div>
               </Col>
             ))}
           </Row>
+
+          {/* Karşılaştırma Tablosu Butonu */}
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <Button 
+              icon={<BarChartOutlined />}
+              size="large"
+              style={{ marginRight: '10px' }}
+              onClick={() => {
+                notification.info({
+                  message: 'Karşılaştırma Tablosu',
+                  description: 'Detaylı paket karşılaştırma tablosu yakında eklenecek! Şu an için paket özelliklerini yukarıda görebilirsiniz.',
+                  placement: 'topRight',
+                  duration: 4,
+                  icon: <BarChartOutlined style={{ color: '#667eea' }} />
+                });
+              }}
+            >
+              Detaylı Karşılaştırma
+            </Button>
+            <Button 
+              icon={<CustomerServiceOutlined />}
+              size="large"
+              onClick={() => navigate('/register')}
+            >
+              Danışmanlık Al
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -452,7 +880,7 @@ export const ModernLanding: React.FC = () => {
           <div className="section-header">
             <Tag color="purple" className="section-tag">Referanslar</Tag>
             <Title level={2}>Müşterilerimiz Ne Diyor?</Title>
-            <Paragraph>15.000+ işletme Stocker'a güveniyor</Paragraph>
+            <Paragraph>Stocker ERP'yi tercih eden işletmelerden geri bildirimler</Paragraph>
           </div>
 
           <Row gutter={[32, 32]}>
@@ -509,6 +937,7 @@ export const ModernLanding: React.FC = () => {
                 size="large"
                 ghost
                 className="cta-button-secondary"
+                onClick={() => window.location.href = 'mailto:info@stoocker.app'}
               >
                 İletişime Geçin
               </Button>
