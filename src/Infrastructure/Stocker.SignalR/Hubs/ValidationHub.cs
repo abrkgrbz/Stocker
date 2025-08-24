@@ -31,7 +31,15 @@ public class ValidationHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation("Client disconnected: {ConnectionId}", Context.ConnectionId);
+        if (exception != null)
+        {
+            _logger.LogError(exception, "Client disconnected with error: {ConnectionId}, Error: {ErrorMessage}", 
+                Context.ConnectionId, exception.Message);
+        }
+        else
+        {
+            _logger.LogInformation("Client disconnected normally: {ConnectionId}", Context.ConnectionId);
+        }
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -199,36 +207,55 @@ public class ValidationHub : Hub
     /// </summary>
     public async Task ValidateIdentity(string identityNumber)
     {
+        _logger.LogInformation("=== ValidateIdentity START ===");
+        _logger.LogInformation("ConnectionId: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("Input: {IdentityNumber}", identityNumber);
+        
         try
         {
+            _logger.LogInformation("Calling ValidationService.ValidateIdentityNumberAsync...");
             var identityResult = await _validationService.ValidateIdentityNumberAsync(identityNumber);
+            _logger.LogInformation("ValidationService returned: IsValid={IsValid}, Message={Message}, NumberType={NumberType}", 
+                identityResult?.IsValid, identityResult?.Message, identityResult?.NumberType);
+            
+            if (identityResult == null)
+            {
+                _logger.LogError("ValidationService returned NULL!");
+                await Clients.Caller.SendAsync("ValidationError", "Validation service returned null");
+                return;
+            }
             
             var result = new IdentityValidationResult
             {
                 IsValid = identityResult.IsValid,
-                Message = identityResult.Message,
-                NumberType = identityResult.NumberType,
-                Details = identityResult.Details
+                Message = identityResult.Message ?? "No message",
+                NumberType = identityResult.NumberType ?? "Unknown",
+                Details = identityResult.Details ?? new Dictionary<string, string>()
             };
 
             // Add formatted number if available
             if (!string.IsNullOrEmpty(identityResult.FormattedNumber))
             {
+                _logger.LogInformation("Adding formatted number: {FormattedNumber}", identityResult.FormattedNumber);
                 result.Details["formattedNumber"] = identityResult.FormattedNumber;
             }
             
             // Add test number warning if applicable
             if (identityResult.IsTestNumber)
             {
+                _logger.LogInformation("This is a test number");
                 result.Details["isTestNumber"] = "true";
             }
 
+            _logger.LogInformation("Sending IdentityValidated to client...");
             await Clients.Caller.SendAsync("IdentityValidated", result);
+            _logger.LogInformation("=== ValidateIdentity SUCCESS ===");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating identity number");
-            await Clients.Caller.SendAsync("ValidationError", "Kimlik/Vergi numarası kontrolü sırasında bir hata oluştu");
+            _logger.LogError(ex, "=== ValidateIdentity ERROR === {Message}", ex.Message);
+            _logger.LogError("StackTrace: {StackTrace}", ex.StackTrace);
+            await Clients.Caller.SendAsync("ValidationError", $"Hata: {ex.Message}");
         }
     }
 }

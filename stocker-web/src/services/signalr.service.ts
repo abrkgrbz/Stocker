@@ -149,22 +149,45 @@ class SignalRService {
 
   // Identity Validation (TC Kimlik No / Vergi No)
   async validateIdentity(identityNumber: string): Promise<void> {
-    console.log('SignalR validateIdentity called with:', identityNumber);
+    console.log('=== SignalR validateIdentity START ===');
+    console.log('Input:', identityNumber);
+    console.log('Connection state before:', this.validationConnection?.state);
     
     try {
       if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
         console.log('Connection not ready, starting validation connection...');
         await this.startValidationConnection();
+        console.log('Connection started, new state:', this.validationConnection?.state);
       }
       
-      console.log('Connection state:', this.validationConnection?.state);
-      console.log('Invoking ValidateIdentity on hub...');
+      console.log('Invoking ValidateIdentity on hub with:', identityNumber);
+      console.log('Connection object:', this.validationConnection);
       
       await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
-      console.log('ValidateIdentity invoke completed');
-    } catch (error) {
-      console.error('Error in validateIdentity:', error);
-      throw error;
+      console.log('=== ValidateIdentity invoke SUCCESS ===');
+    } catch (error: any) {
+      console.error('=== ValidateIdentity ERROR ===');
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      console.error('Full error object:', error);
+      
+      // Check if it's a connection error
+      if (error?.message?.includes('disconnect') || error?.message?.includes('close')) {
+        console.error('CONNECTION LOST during validateIdentity!');
+        console.log('Attempting to reconnect...');
+        try {
+          await this.startValidationConnection();
+          console.log('Reconnected, retrying validateIdentity...');
+          await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+          console.log('Retry successful');
+        } catch (retryError) {
+          console.error('Retry failed:', retryError);
+          throw retryError;
+        }
+      } else {
+        throw error;
+      }
     }
   }
 
