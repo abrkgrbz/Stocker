@@ -588,6 +588,7 @@ export const RegisterPage: React.FC = () => {
 
   const renderRegistrationForm = () => {
     console.log('Rendering ModernWizard component');
+    try {
     return (
       <ModernWizard 
         onComplete={handleWizardComplete}
@@ -599,6 +600,27 @@ export const RegisterPage: React.FC = () => {
         }}
       />
     );
+  } catch (error) {
+    console.error('RegisterPage error:', error);
+    return (
+      <div style={{ padding: 24, background: '#fff', minHeight: '100vh' }}>
+        <Alert
+          message="Hata Detayı"
+          description={
+            <div>
+              <p><strong>Hata:</strong> {String(error)}</p>
+              <p><strong>Stack:</strong></p>
+              <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+                {error instanceof Error ? error.stack : 'Stack bilgisi yok'}
+              </pre>
+            </div>
+          }
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
   };
 
   const renderPayment = () => (
