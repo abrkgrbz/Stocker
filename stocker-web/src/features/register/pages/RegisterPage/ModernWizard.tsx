@@ -22,9 +22,12 @@ import {
   GlobalOutlined,
   LoadingOutlined,
   EyeOutlined,
-  EyeInvisibleOutlined
+  EyeInvisibleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import './modern-wizard.css';
+import './modern-wizard-phone-validation.css';
 
 interface ModernWizardProps {
   onComplete: (data: any) => void;
@@ -1169,13 +1172,27 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   <span className="input-icon"><PhoneOutlined /></span>
                   <input
                     type="tel"
-                    className={`form-input form-input-icon ${validationErrors.phone ? 'input-error' : ''} ${validating.phone ? 'input-validating' : ''}`}
+                    className={`form-input form-input-icon ${validationErrors.phone ? 'input-error' : ''} ${validating.phone ? 'input-validating' : ''} ${phoneValidation?.isValid && !validating.phone ? 'input-success' : ''}`}
                     placeholder="5XX XXX XX XX"
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                   />
                   {validating.phone && <Spin size="small" className="input-spinner" />}
+                  {!validating.phone && phoneValidation && !validationErrors.phone && (
+                    <span className="validation-icon">
+                      {phoneValidation.isValid ? (
+                        <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '16px' }} />
+                      ) : (
+                        <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: '16px' }} />
+                      )}
+                    </span>
+                  )}
                   {validationErrors.phone && <span className="error-message">{validationErrors.phone}</span>}
+                  {!validating.phone && phoneValidation && phoneValidation.formattedNumber && phoneValidation.isValid && (
+                    <span className="success-hint" style={{ color: '#52c41a', fontSize: '12px', marginTop: '4px' }}>
+                      Formatlanmış: {phoneValidation.formattedNumber}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
