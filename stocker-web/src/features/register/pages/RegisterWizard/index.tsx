@@ -114,6 +114,13 @@ const RegisterWizard: React.FC = () => {
     setProgressPercent(percent);
   }, [currentStep]);
 
+  useEffect(() => {
+    if (identityValidation) {
+      console.log('RegisterWizard: Identity validation result:', identityValidation);
+      setIsValidating(false);
+    }
+  }, [identityValidation]);
+
   // Company name suggestions
   const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
   
@@ -641,13 +648,20 @@ const RegisterWizard: React.FC = () => {
                     isValidating ? <LoadingOutlined /> :
                     identityValidation?.isValid ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : null
                   }
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const value = e.target.value.replace(/\D/g, '');
                     form.setFieldsValue({ identityNumber: value });
                     if (value.length === (identityType === 'tc' ? 11 : 10)) {
                       setIsValidating(true);
-                      validateIdentity(value);
-                      setTimeout(() => setIsValidating(false), 500);
+                      console.log('RegisterWizard: Validating identity:', value);
+                      try {
+                        await validateIdentity(value);
+                        console.log('RegisterWizard: Validation completed');
+                      } catch (error) {
+                        console.error('RegisterWizard: Validation error:', error);
+                      } finally {
+                        setTimeout(() => setIsValidating(false), 1000);
+                      }
                     }
                   }}
                 />

@@ -406,6 +406,18 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   }, [phoneValidation]);
 
   useEffect(() => {
+    if (identityValidation) {
+      console.log('Identity validation result received:', identityValidation);
+      setValidating(prev => ({ ...prev, identityNumber: false }));
+      if (!identityValidation.isValid) {
+        setValidationErrors(prev => ({ ...prev, identityNumber: identityValidation.message || 'Geçersiz kimlik/vergi numarası' }));
+      } else {
+        setValidationErrors(prev => ({ ...prev, identityNumber: '' }));
+      }
+    }
+  }, [identityValidation]);
+
+  useEffect(() => {
     if (companyNameCheck) {
       setValidating(prev => ({ ...prev, companyName: false }));
       
@@ -584,11 +596,20 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
               setValidating(prev => ({ ...prev, identityNumber: true }));
               
               // Async validation with proper error handling
-              validateIdentity(cleanNumber).catch(error => {
-                console.error('Identity validation error:', error);
+              try {
+                console.log('Calling validateIdentity...');
+                validateIdentity(cleanNumber).then(() => {
+                  console.log('ValidateIdentity completed successfully');
+                }).catch(error => {
+                  console.error('Identity validation error:', error);
+                  setValidating(prev => ({ ...prev, identityNumber: false }));
+                  setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
+                });
+              } catch (error) {
+                console.error('Error calling validateIdentity:', error);
                 setValidating(prev => ({ ...prev, identityNumber: false }));
                 setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
-              });
+              }
             } else {
               console.log('SignalR not connected, using client-side validation');
               // SignalR bağlı değilse basit client-side validation yap
