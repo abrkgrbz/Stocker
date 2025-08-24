@@ -118,17 +118,34 @@ export const MasterTenantsPage: React.FC = () => {
   };
 
   const handleSuspend = (tenant: Tenant) => {
+    console.log('handleSuspend called for tenant:', tenant);
+    
+    const isSuspended = tenant.status === 'suspended' || !tenant.isActive;
+    const actionTitle = isSuspended ? 'Tenant\'ı Aktifleştir' : 'Tenant\'ı Askıya Al';
+    const actionContent = isSuspended 
+      ? `${tenant.name} adlı tenant'ı aktifleştirmek istediğinizden emin misiniz?`
+      : `${tenant.name} adlı tenant'ı askıya almak istediğinizden emin misiniz?`;
+    const okText = isSuspended ? 'Aktifleştir' : 'Askıya Al';
+    
     Modal.confirm({
-      title: 'Tenant\'ı Askıya Al',
-      content: `${tenant.name} adlı tenant'ı askıya almak istediğinizden emin misiniz?`,
-      okText: 'Askıya Al',
-      okType: 'danger',
+      title: actionTitle,
+      content: actionContent,
+      okText: okText,
+      okType: isSuspended ? 'primary' : 'danger',
       cancelText: 'İptal',
-      onOk: () => {
-        if (tenant.status === 'suspended') {
-          activateTenantMutation.mutate(tenant.id);
-        } else {
-          suspendTenantMutation.mutate({ id: tenant.id });
+      onOk: async () => {
+        console.log('Confirm OK clicked, isSuspended:', isSuspended);
+        try {
+          if (isSuspended) {
+            console.log('Activating tenant:', tenant.id);
+            await activateTenantMutation.mutateAsync(tenant.id);
+          } else {
+            console.log('Suspending tenant:', tenant.id);
+            await suspendTenantMutation.mutateAsync({ id: tenant.id });
+          }
+        } catch (error) {
+          console.error('Error in handleSuspend:', error);
+          message.error(`İşlem başarısız: ${error.message || 'Bilinmeyen hata'}`);
         }
       },
     });
@@ -150,8 +167,24 @@ export const MasterTenantsPage: React.FC = () => {
     });
   };
 
-  const handleLoginAsTenant = (tenant: Tenant) => {
-    loginAsTenantMutation.mutate(tenant.id);
+  const handleLoginAsTenant = async (tenant: Tenant) => {
+    console.log('handleLoginAsTenant called for tenant:', tenant);
+    
+    Modal.confirm({
+      title: 'Tenant\'a Giriş Yap',
+      content: `${tenant.name} tenant'ına giriş yapmak istediğinizden emin misiniz?`,
+      okText: 'Giriş Yap',
+      cancelText: 'İptal',
+      onOk: async () => {
+        console.log('Attempting to login as tenant:', tenant.id);
+        try {
+          await loginAsTenantMutation.mutateAsync(tenant.id);
+        } catch (error) {
+          console.error('Error in handleLoginAsTenant:', error);
+          message.error(`Tenant'a giriş yapılamadı: ${error.message || 'Bilinmeyen hata'}`);
+        }
+      },
+    });
   };
 
   const handleSave = () => {
@@ -284,7 +317,10 @@ export const MasterTenantsPage: React.FC = () => {
                 key: 'login',
                 label: 'Tenant\'a Giriş Yap',
                 icon: <KeyOutlined />,
-                onClick: () => handleLoginAsTenant(record),
+                onClick: () => {
+                  console.log('Dropdown menu item clicked - login as tenant');
+                  handleLoginAsTenant(record);
+                },
               },
               {
                 key: 'reset',
@@ -300,7 +336,10 @@ export const MasterTenantsPage: React.FC = () => {
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 icon: record.isActive ? <LockOutlined /> : <UnlockOutlined />,
                 danger: record.isActive,
-                onClick: () => handleSuspend(record),
+                onClick: () => {
+                  console.log('Dropdown menu item clicked - suspend/activate');
+                  handleSuspend(record);
+                },
               },
               {
                 key: 'delete',

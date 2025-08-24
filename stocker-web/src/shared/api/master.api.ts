@@ -55,11 +55,31 @@ export const masterTenantApi = {
   delete: (id: string) => 
     apiClient.delete(`/api/master/tenants/${id}`),
     
-  suspend: (id: string, reason?: string) => 
-    apiClient.post(`/api/master/tenants/${id}/suspend`, { reason }),
+  suspend: (id: string, reason?: string) => {
+    console.log('API call: Suspending tenant', id);
+    return apiClient.post(`/api/master/tenants/${id}/suspend`, { reason })
+      .then(response => {
+        console.log('Suspend API response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('Suspend API error:', error);
+        throw error;
+      });
+  },
     
-  activate: (id: string) => 
-    apiClient.post(`/api/master/tenants/${id}/activate`),
+  activate: (id: string) => {
+    console.log('API call: Activating tenant', id);
+    return apiClient.post(`/api/master/tenants/${id}/activate`)
+      .then(response => {
+        console.log('Activate API response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('Activate API error:', error);
+        throw error;
+      });
+  },
     
   resetPassword: (id: string) => 
     apiClient.post(`/api/master/tenants/${id}/reset-password`),
@@ -70,8 +90,18 @@ export const masterTenantApi = {
   getActivityLog: (id: string) => 
     apiClient.get(`/api/master/tenants/${id}/activity`),
     
-  loginAsTenant: (id: string) => 
-    apiClient.post(`/api/master/tenants/${id}/impersonate`),
+  loginAsTenant: (id: string) => {
+    console.log('API call: Login as tenant', id);
+    return apiClient.post(`/api/master/tenants/${id}/impersonate`)
+      .then(response => {
+        console.log('Login as tenant API response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('Login as tenant API error:', error);
+        throw error;
+      });
+  },
 };
 
 // Package Management API

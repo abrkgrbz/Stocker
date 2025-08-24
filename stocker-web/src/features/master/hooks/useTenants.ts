@@ -112,15 +112,20 @@ export const useSuspendTenant = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      masterTenantApi.suspend(id, reason),
-    onSuccess: (_, variables) => {
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => {
+      console.log('Suspending tenant:', id, 'Reason:', reason);
+      return masterTenantApi.suspend(id, reason);
+    },
+    onSuccess: (data, variables) => {
+      console.log('Tenant suspended successfully:', data);
       queryClient.invalidateQueries({ queryKey: tenantKeys.lists() });
       queryClient.invalidateQueries({ queryKey: tenantKeys.detail(variables.id) });
-      message.success('Tenant askıya alındı');
+      message.success('Tenant başarıyla askıya alındı');
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tenant askıya alınamadı');
+      console.error('Suspend tenant error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Tenant askıya alınamadı';
+      message.error(errorMessage);
     },
   });
 };
@@ -130,14 +135,20 @@ export const useActivateTenant = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: string) => masterTenantApi.activate(id),
-    onSuccess: (_, id) => {
+    mutationFn: (id: string) => {
+      console.log('Activating tenant:', id);
+      return masterTenantApi.activate(id);
+    },
+    onSuccess: (data, id) => {
+      console.log('Tenant activated successfully:', data);
       queryClient.invalidateQueries({ queryKey: tenantKeys.lists() });
       queryClient.invalidateQueries({ queryKey: tenantKeys.detail(id) });
-      message.success('Tenant aktifleştirildi');
+      message.success('Tenant başarıyla aktifleştirildi');
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tenant aktifleştirilemedi');
+      console.error('Activate tenant error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Tenant aktifleştirilemedi';
+      message.error(errorMessage);
     },
   });
 };
@@ -160,15 +171,41 @@ export const useLoginAsTenant = () => {
   return useMutation({
     mutationFn: (id: string) => masterTenantApi.loginAsTenant(id),
     onSuccess: (data) => {
+      console.log('Login as tenant success:', data);
       message.success('Tenant paneline yönlendiriliyorsunuz...');
+      
       // Handle impersonation token and redirect
-      if (data.data) {
-        localStorage.setItem('impersonation_token', data.data.token);
-        window.location.href = `/app/${data.data.tenantId}`;
+      if (data?.data) {
+        // Store impersonation token if provided
+        if (data.data.token) {
+          localStorage.setItem('impersonation_token', data.data.token);
+        }
+        
+        // Get tenant code for redirect
+        const tenantCode = data.data.tenantCode || data.data.code;
+        
+        // Redirect to tenant dashboard
+        setTimeout(() => {
+          if (tenantCode) {
+            // If we have tenant code, use it in subdomain or path
+            window.location.href = `/admin?tenant=${tenantCode}`;
+          } else if (data.data.tenantId) {
+            // Fallback to tenant ID
+            window.location.href = `/admin?tenantId=${data.data.tenantId}`;
+          } else {
+            // Last resort - just go to admin
+            window.location.href = '/admin';
+          }
+        }, 1000);
+      } else {
+        console.error('No data in response:', data);
+        message.error('Tenant bilgileri alınamadı');
       }
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Tenant paneline giriş yapılamadı');
+      console.error('Login as tenant error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Tenant paneline giriş yapılamadı';
+      message.error(errorMessage);
     },
   });
 };
