@@ -19,7 +19,10 @@ import {
   ArrowRightOutlined,
   BarChartOutlined,
   RiseOutlined,
-  GlobalOutlined
+  GlobalOutlined,
+  LoadingOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './modern-wizard.css';
 
@@ -29,9 +32,6 @@ interface ModernWizardProps {
 }
 
 export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selectedPackage }) => {
-  console.log('=== ModernWizard Component Render ===');
-  console.log('Props:', { onComplete: typeof onComplete, selectedPackage });
-  
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState<{ [key: string]: boolean }>({});
@@ -73,13 +73,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     hasSpecial: false
   });
 
-  console.log('Before useSignalRValidation hook');
-  
   // SignalR Validation Hook
-  const signalRValidation = useSignalRValidation();
-  
-  console.log('After useSignalRValidation hook, result:', signalRValidation);
-  
   const {
     isConnected,
     emailValidation,
@@ -95,7 +89,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     checkCompanyName,
     validateIdentity,
     error: validationError
-  } = signalRValidation;
+  } = useSignalRValidation();
 
   const steps = [
     { label: 'Şirket', icon: <ShopOutlined /> },

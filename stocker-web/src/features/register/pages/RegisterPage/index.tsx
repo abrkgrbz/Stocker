@@ -588,10 +588,6 @@ export const RegisterPage: React.FC = () => {
   };
 
   const renderRegistrationForm = () => {
-    console.log('=== RegisterPage Debug ===');
-    console.log('Rendering ModernWizard component');
-    console.log('selectedPackage:', selectedPackage);
-    
     return (
       <ErrorBoundary>
         <ModernWizard 
