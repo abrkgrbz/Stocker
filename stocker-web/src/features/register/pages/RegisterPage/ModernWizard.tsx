@@ -33,6 +33,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState<{ [key: string]: boolean }>({});
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [validationSuccess, setValidationSuccess] = useState<{ [key: string]: boolean }>({});
   const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
   const [companySuggestions, setCompanySuggestions] = useState<string[]>([]);
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
@@ -407,8 +408,11 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       setValidating(prev => ({ ...prev, companyName: false }));
       if (!companyNameCheck.isAvailable) {
         setValidationErrors(prev => ({ ...prev, companyName: companyNameCheck.message || 'Bu şirket adı kullanılıyor' }));
+        setValidationSuccess(prev => ({ ...prev, companyName: false }));
       } else {
+        // Company name is available - show success
         setValidationErrors(prev => ({ ...prev, companyName: '' }));
+        setValidationSuccess(prev => ({ ...prev, companyName: true }));
       }
     }
   }, [companyNameCheck]);
@@ -418,8 +422,10 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       setValidating(prev => ({ ...prev, companyCode: false }));
       if (!domainCheck.isAvailable) {
         setValidationErrors(prev => ({ ...prev, companyCode: 'Bu kod zaten kullanımda' }));
+        setValidationSuccess(prev => ({ ...prev, companyCode: false }));
       } else {
         setValidationErrors(prev => ({ ...prev, companyCode: '' }));
+        setValidationSuccess(prev => ({ ...prev, companyCode: true }));
       }
     }
   }, [domainCheck]);
@@ -469,8 +475,9 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear previous error
+    // Clear previous error and success states
     setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    setValidationSuccess(prev => ({ ...prev, [field]: false }));
     
     // Company name autocomplete - dinamik öneri oluştur
     if (field === 'companyName') {
@@ -762,7 +769,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   <span className="input-icon"><ShopOutlined /></span>
                   <input
                     type="text"
-                    className={`form-input form-input-icon ${validationErrors.companyName ? 'input-error' : ''} ${validating.companyName ? 'input-validating' : ''}`}
+                    className={`form-input form-input-icon ${validationErrors.companyName ? 'input-error' : ''} ${validationSuccess.companyName ? 'input-success' : ''} ${validating.companyName ? 'input-validating' : ''}`}
                     placeholder="Örn: ABC Teknoloji A.Ş."
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
@@ -815,6 +822,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   )}
                 </div>
                 {validationErrors.companyName && <span className="error-message">{validationErrors.companyName}</span>}
+                {validationSuccess.companyName && !validationErrors.companyName && <span className="success-message">✓ Şirket adı kullanılabilir</span>}
               </div>
 
               <div className="form-group">
@@ -825,13 +833,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   <span className="input-icon"><IdcardOutlined /></span>
                   <input
                     type="text"
-                    className={`form-input form-input-icon ${validationErrors.companyCode ? 'input-error' : ''} ${validating.companyCode ? 'input-validating' : ''}`}
+                    className={`form-input form-input-icon ${validationErrors.companyCode ? 'input-error' : ''} ${validationSuccess.companyCode ? 'input-success' : ''} ${validating.companyCode ? 'input-validating' : ''}`}
                     placeholder="Örn: abc-tech"
                     value={formData.companyCode}
                     onChange={(e) => handleInputChange('companyCode', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   />
                   {validating.companyCode && <Spin size="small" className="input-spinner" />}
                   {validationErrors.companyCode && <span className="error-message">{validationErrors.companyCode}</span>}
+                {validationSuccess.companyCode && !validationErrors.companyCode && <span className="success-message">✓ Şirket kodu kullanılabilir</span>}
                 </div>
               </div>
             </div>

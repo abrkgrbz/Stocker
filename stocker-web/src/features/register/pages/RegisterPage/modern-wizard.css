@@ -823,9 +823,23 @@
   background: #f0fdf4;
 }
 
+.form-input.input-success:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
 .error-message {
   display: block;
   color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  animation: slideDown 0.3s ease;
+  font-weight: 500;
+}
+
+.success-message {
+  display: block;
+  color: #10b981;
   font-size: 13px;
   margin-top: 6px;
   animation: slideDown 0.3s ease;
