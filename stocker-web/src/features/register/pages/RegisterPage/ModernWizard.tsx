@@ -411,8 +411,10 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       setValidating(prev => ({ ...prev, identityNumber: false }));
       if (!identityValidation.isValid) {
         setValidationErrors(prev => ({ ...prev, identityNumber: identityValidation.message || 'Geçersiz kimlik/vergi numarası' }));
+        setValidationSuccess(prev => ({ ...prev, identityNumber: false }));
       } else {
         setValidationErrors(prev => ({ ...prev, identityNumber: '' }));
+        setValidationSuccess(prev => ({ ...prev, identityNumber: true }));
       }
     }
   }, [identityValidation]);
@@ -461,19 +463,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       }
     }
   }, [domainCheck]);
-
-  useEffect(() => {
-    if (identityValidation) {
-      setValidating(prev => ({ ...prev, identityNumber: false }));
-      if (!identityValidation.isValid) {
-        setValidationErrors(prev => ({ ...prev, identityNumber: identityValidation.message || 'Geçersiz kimlik/vergi numarası' }));
-        setValidationSuccess(prev => ({ ...prev, identityNumber: false }));
-      } else {
-        setValidationErrors(prev => ({ ...prev, identityNumber: '' }));
-        setValidationSuccess(prev => ({ ...prev, identityNumber: true }));
-      }
-    }
-  }, [identityValidation]);
 
   useEffect(() => {
     if (signalRPasswordStrength) {
