@@ -38,16 +38,19 @@ export const LoginPage: React.FC = () => {
       // Close loading
       Swal.close();
       
-      // Get the user after login to check role
+      // Wait for auth store to be updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get the fresh user data after login
       const authStore = useAuthStore.getState();
       const userName = authStore.user?.firstName || authStore.user?.email || 'Kullanıcı';
-      
-      // Show success message
-      await showLoginSuccess(userName);
-      
-      // Redirect based on user role
       const userRole = authStore.user?.roles?.[0];
       const from = (location.state as any)?.from?.pathname;
+      
+      console.log('Login successful - User role:', userRole);
+      
+      // Show success message (non-blocking)
+      showLoginSuccess(userName);
       
       // Check if company exists for tenant users
       if (userRole !== 'SystemAdmin') {
@@ -60,7 +63,7 @@ export const LoginPage: React.FC = () => {
             );
             setTimeout(() => {
               navigate('/company-setup', { replace: true });
-            }, 2000);
+            }, 1000);
             return;
           }
         } catch (companyError) {
@@ -68,18 +71,19 @@ export const LoginPage: React.FC = () => {
         }
       }
       
-      // Navigate after a short delay
-      setTimeout(() => {
-        if (from) {
-          navigate(from, { replace: true });
-        } else if (userRole === 'SystemAdmin') {
-          navigate('/master', { replace: true });
-        } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/app/default', { replace: true });
-        }
-      }, 1500);
+      // Navigate immediately based on role
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (userRole === 'SystemAdmin') {
+        console.log('Navigating to /master');
+        navigate('/master', { replace: true });
+      } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
+        console.log('Navigating to /admin');
+        navigate('/admin', { replace: true });
+      } else {
+        console.log('Navigating to /app/default');
+        navigate('/app/default', { replace: true });
+      }
       
     } catch (error: any) {
       // Close loading
