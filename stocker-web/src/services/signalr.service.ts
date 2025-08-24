@@ -14,7 +14,11 @@ class SignalRService {
 
     this.validationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/validation`, {
-        transport: signalR.HttpTransportType.LongPolling
+        // Try WebSockets first, then SSE, then LongPolling
+        transport: signalR.HttpTransportType.WebSockets | 
+                  signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling,
+        withCredentials: false
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Debug)
@@ -54,7 +58,10 @@ class SignalRService {
     this.notificationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/notification`, {
         ...options,
-        transport: signalR.HttpTransportType.LongPolling
+        // Try WebSockets first, then SSE, then LongPolling
+        transport: signalR.HttpTransportType.WebSockets | 
+                  signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Debug)
