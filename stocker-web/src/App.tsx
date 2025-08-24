@@ -18,6 +18,7 @@ import { TenantLayout } from '@/layouts/TenantLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
 
 // Lazy load pages for better performance
+const ModernLanding = lazy(() => import('@/features/landing/pages/ModernLanding').then(m => ({ default: m.ModernLanding })));
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
@@ -139,7 +140,8 @@ function App() {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                 {/* Landing Page - No layout wrapper */}
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<ModernLanding />} />
+                <Route path="/old-landing" element={<LandingPage />} />
                 
                 {/* Register Page - No layout wrapper for full experience */}
                 <Route path="/register-old" element={<RegisterWizard />} />
