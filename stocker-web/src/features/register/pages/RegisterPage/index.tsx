@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { 
   Card, 
   Steps, 
@@ -587,40 +588,23 @@ export const RegisterPage: React.FC = () => {
   };
 
   const renderRegistrationForm = () => {
+    console.log('=== RegisterPage Debug ===');
     console.log('Rendering ModernWizard component');
-    try {
+    console.log('selectedPackage:', selectedPackage);
+    
     return (
-      <ModernWizard 
-        onComplete={handleWizardComplete}
-        selectedPackage={selectedPackage || {
-          id: 'default-package',
-          name: 'Profesyonel',
-          price: 999,
-          currency: '₺'
-        }}
-      />
-    );
-  } catch (error) {
-    console.error('RegisterPage error:', error);
-    return (
-      <div style={{ padding: 24, background: '#fff', minHeight: '100vh' }}>
-        <Alert
-          message="Hata Detayı"
-          description={
-            <div>
-              <p><strong>Hata:</strong> {String(error)}</p>
-              <p><strong>Stack:</strong></p>
-              <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
-                {error instanceof Error ? error.stack : 'Stack bilgisi yok'}
-              </pre>
-            </div>
-          }
-          type="error"
-          showIcon
+      <ErrorBoundary>
+        <ModernWizard 
+          onComplete={handleWizardComplete}
+          selectedPackage={selectedPackage || {
+            id: 'default-package',
+            name: 'Profesyonel',
+            price: 999,
+            currency: '₺'
+          }}
         />
-      </div>
+      </ErrorBoundary>
     );
-  }
   };
 
   const renderPayment = () => (
