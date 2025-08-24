@@ -1,0 +1,714 @@
+/* Neon Wizard - Ultra Modern Design */
+
+/* Main Container */
+.neon-wizard-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Animated Background */
+.neon-wizard-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: backgroundMove 20s linear infinite;
+}
+
+@keyframes backgroundMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* Floating Shapes */
+.floating-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.shape {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  animation: float 20s infinite;
+}
+
+.shape-1 {
+  width: 80px;
+  height: 80px;
+  left: 10%;
+  top: 20%;
+  border-radius: 50%;
+  animation-delay: 0s;
+}
+
+.shape-2 {
+  width: 120px;
+  height: 120px;
+  right: 10%;
+  top: 60%;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  animation-delay: 5s;
+}
+
+.shape-3 {
+  width: 100px;
+  height: 100px;
+  left: 80%;
+  bottom: 20%;
+  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+  animation-delay: 10s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-20px) rotate(90deg); }
+  50% { transform: translateY(0) rotate(180deg); }
+  75% { transform: translateY(20px) rotate(270deg); }
+}
+
+/* Main Card */
+.neon-wizard-card {
+  width: 100%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  box-shadow: 0 25px 100px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  min-height: 700px;
+}
+
+/* Left Panel - Steps */
+.neon-wizard-sidebar {
+  width: 350px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.neon-wizard-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1));
+}
+
+.wizard-logo {
+  margin-bottom: 50px;
+  z-index: 2;
+}
+
+.wizard-logo h2 {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.wizard-logo p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Steps Navigation */
+.neon-steps {
+  z-index: 2;
+  position: relative;
+}
+
+.neon-step {
+  display: flex;
+  align-items: center;
+  margin-bottom: 35px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.neon-step-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.neon-step-indicator span {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.neon-step-content h4 {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+.neon-step-content p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  margin: 2px 0 0 0;
+  transition: all 0.3s ease;
+}
+
+/* Active Step */
+.neon-step.active .neon-step-indicator {
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+.neon-step.active .neon-step-indicator span {
+  color: #667eea;
+}
+
+.neon-step.active .neon-step-content h4 {
+  color: white;
+}
+
+.neon-step.active .neon-step-content p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Completed Step */
+.neon-step.completed .neon-step-indicator {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.neon-step.completed .neon-step-indicator span {
+  color: white;
+}
+
+.neon-step-check {
+  color: white;
+  font-size: 24px;
+}
+
+/* Step Connector Line */
+.neon-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 25px;
+  top: 50px;
+  width: 2px;
+  height: 35px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.neon-step.completed:not(:last-child)::after {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Right Panel - Content */
+.neon-wizard-content {
+  flex: 1;
+  padding: 50px 60px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Progress Bar */
+.neon-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #f0f0f0;
+}
+
+.neon-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.5s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Form Header */
+.neon-form-header {
+  margin-bottom: 40px;
+  animation: slideUp 0.5s ease;
+}
+
+.neon-form-header h3 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 10px 0;
+  letter-spacing: -1px;
+}
+
+.neon-form-header p {
+  font-size: 16px;
+  color: #718096;
+  margin: 0;
+}
+
+/* Form Content */
+.neon-form-body {
+  flex: 1;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Form Fields */
+.neon-form-group {
+  margin-bottom: 28px;
+}
+
+.neon-form-label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 10px;
+}
+
+.neon-form-label-icon {
+  margin-right: 8px;
+  color: #667eea;
+  font-size: 16px;
+}
+
+.neon-input-wrapper {
+  position: relative;
+}
+
+.neon-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 20px 0 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #2d3748;
+  background: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.neon-input:hover {
+  border-color: #cbd5e0;
+}
+
+.neon-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.neon-input-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.neon-input:focus ~ .neon-input-icon {
+  color: #667eea;
+}
+
+/* Select Styling */
+.neon-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a0aec0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 20px;
+  padding-right: 45px;
+}
+
+/* Radio Group */
+.neon-radio-group {
+  display: flex;
+  gap: 15px;
+}
+
+.neon-radio-button {
+  flex: 1;
+  position: relative;
+}
+
+.neon-radio-button input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+}
+
+.neon-radio-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.neon-radio-label:hover {
+  border-color: #cbd5e0;
+  background: #f7fafc;
+}
+
+.neon-radio-button input[type="radio"]:checked + .neon-radio-label {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.neon-radio-icon {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* Info Alert */
+.neon-info-box {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 1px solid #667eea30;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.neon-info-icon {
+  color: #667eea;
+  font-size: 20px;
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+.neon-info-content h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  margin: 0 0 4px 0;
+}
+
+.neon-info-content p {
+  font-size: 13px;
+  color: #4a5568;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Password Strength */
+.neon-password-strength {
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.neon-password-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.neon-password-header-icon {
+  color: #667eea;
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.neon-password-header h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0;
+}
+
+.neon-password-requirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.neon-requirement {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #718096;
+  transition: all 0.3s ease;
+}
+
+.neon-requirement.valid {
+  color: #48bb78;
+}
+
+.neon-requirement-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Footer Actions */
+.neon-wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.neon-btn {
+  height: 52px;
+  padding: 0 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  outline: none;
+}
+
+.neon-btn-secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.neon-btn-secondary:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.neon-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  min-width: 150px;
+  justify-content: center;
+}
+
+.neon-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+}
+
+.neon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Step Dots */
+.neon-step-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.neon-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.neon-dot.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Loading State */
+.neon-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.neon-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.neon-loading-text {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #718096;
+}
+
+/* Success State */
+.neon-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.neon-success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(72, 187, 120, 0.3);
+}
+
+.neon-success-check {
+  color: white;
+  font-size: 40px;
+}
+
+.neon-success h3 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 12px 0;
+}
+
+.neon-success p {
+  font-size: 16px;
+  color: #718096;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .neon-wizard-card {
+    flex-direction: column;
+    max-width: 600px;
+  }
+  
+  .neon-wizard-sidebar {
+    width: 100%;
+    padding: 30px;
+  }
+  
+  .neon-steps {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .neon-step {
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 0;
+  }
+  
+  .neon-step-indicator {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .neon-step:not(:last-child)::after {
+    display: none;
+  }
+  
+  .neon-step-content p {
+    display: none;
+  }
+  
+  .neon-wizard-content {
+    padding: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .neon-radio-group {
+    flex-direction: column;
+  }
+  
+  .neon-password-requirements {
+    grid-template-columns: 1fr;
+  }
+  
+  .neon-wizard-footer {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .neon-btn {
+    width: 100%;
+  }
+  
+  .neon-step-dots {
+    order: -1;
+  }
+}

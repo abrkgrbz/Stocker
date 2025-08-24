@@ -46,6 +46,7 @@ import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { ModuleSelection } from './ModuleSelection';
 import { RegisterWizard } from './RegisterWizard';
+import { NeonWizard } from './NeonWizard';
 import './style.css';
 import './module-selection.css';
 
@@ -585,7 +586,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   const renderRegistrationForm = () => (
-    <RegisterWizard 
+    <NeonWizard 
       onComplete={handleWizardComplete}
       selectedPackage={selectedPackage}
     />
