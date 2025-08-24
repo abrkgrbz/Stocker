@@ -47,6 +47,7 @@ import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { ModuleSelection } from './ModuleSelection';
 import { RegisterWizard } from './RegisterWizard';
 import { NeonWizard } from './NeonWizard';
+import { ModernWizard } from './ModernWizard';
 import './style.css';
 import './module-selection.css';
 
@@ -585,17 +586,20 @@ export const RegisterPage: React.FC = () => {
     setCurrentStep(2);
   };
 
-  const renderRegistrationForm = () => (
-    <NeonWizard 
-      onComplete={handleWizardComplete}
-      selectedPackage={selectedPackage || {
-        id: 'default-package',
-        name: 'Profesyonel',
-        price: 999,
-        currency: '₺'
-      }}
-    />
-  );
+  const renderRegistrationForm = () => {
+    console.log('Rendering ModernWizard component');
+    return (
+      <ModernWizard 
+        onComplete={handleWizardComplete}
+        selectedPackage={selectedPackage || {
+          id: 'default-package',
+          name: 'Profesyonel',
+          price: 999,
+          currency: '₺'
+        }}
+      />
+    );
+  };
 
   const renderPayment = () => (
     <div className="payment-section">
@@ -706,6 +710,6 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 
-  // Directly render NeonWizard without the old wrapper
+  // Directly render ModernWizard without the old wrapper
   return renderRegistrationForm();
 };

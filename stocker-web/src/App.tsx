@@ -142,8 +142,8 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 
                 {/* Register Page - No layout wrapper for full experience */}
-                <Route path="/register-old" element={<RegisterPage />} />
-                <Route path="/register" element={<RegisterWizard />} />
+                <Route path="/register-old" element={<RegisterWizard />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/signalr-test" element={<SignalRTestPage />} />
                 <Route path="/test-sweetalert" element={<TestSweetAlert />} />

@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 24 Aralık 2024
+
+### Added
+- **Modern Registration Wizard System**
+  - ROI Calculator tarzında split-screen tasarım
+  - Sol tarafta form paneli (750px genişlik)
+  - Sağ tarafta animasyonlu görsel panel
+  - 3 adımlı kayıt süreci (Şirket, İletişim, Güvenlik)
+  - Adım bazlı dinamik animasyonlar ve içerik
+
+- **Real-time Validation System**
+  - SignalR entegrasyonu ile canlı doğrulama
+  - E-posta format ve kullanılabilirlik kontrolü
+  - Telefon numarası format validasyonu
+  - Şirket adı müsaitlik kontrolü
+  - Domain (şirket kodu) müsaitlik kontrolü
+  - Şifre güç analizi ve gerçek zamanlı geri bildirim
+  - Bağlantı durumu göstergesi
+
+- **Auto-complete System for Company Names**
+  - Dinamik öneri oluşturucu (kullanıcı ne yazarsa yazsın öneriler üretir)
+  - 2+ karakter: Temel şirket tipleri (A.Ş., Ltd. Şti.)
+  - 3+ karakter: Sektörel öneriler (Teknoloji, Yazılım, İnşaat vb.)
+  - 4+ karakter: Holding ve Grup şirket önerileri
+  - Otomatik şirket kodu oluşturma (şirket adından)
+  - Renkli badge'ler (Teknoloji, Yazılım, Holding vb.)
+  - İlk harf otomatik büyük harf dönüşümü
+
+- **React-Select Integration**
+  - Sektör ve çalışan sayısı için modern dropdown
+  - Özelleştirilmiş stiller (54px yükseklik, 14px border-radius)
+  - Arama özelliği (sektör seçiminde)
+  - Temizleme butonu (isClearable)
+  - Türkçe placeholder ve mesajlar
+  - Focus/hover animasyonları
+
+- **Enhanced Form Validation**
+  - Boş alan kontrolleri (tüm zorunlu alanlar)
+  - TC Kimlik No (11 haneli) validasyonu
+  - Vergi No (10 haneli) validasyonu
+  - E-posta format kontrolü
+  - Telefon format kontrolü (10-11 haneli)
+  - Şifre güç kontrolü (minimum skor: 3)
+  - Şifre eşleşme kontrolü
+  - Kullanım koşulları onay kontrolü
+  - Adım bazlı validasyon mesajları
+
+### Changed
+- RegisterPage artık ModernWizard kullanıyor (NeonWizard yerine)
+- App.tsx routing düzenlendi (/register → RegisterPage)
+- Input icon'ları düzgün hizalandı (dikey ortalama)
+- Form elemanları büyütüldü (54px yükseklik)
+- Visual panel sağa taşındı, form panel sola alındı
+
+### Fixed
+- Input içindeki logo hizalama sorunu çözüldü
+- Boş alan bırakıldığında validasyon uyarıları eklendi
+- Select alanlarının modern görünümü sağlandı
+- Wizard features alanının taşma sorunu düzeltildi
+- Error mesajlarının görünürlüğü iyileştirildi
+
+### UI/UX Improvements
+- **Animasyonlar**:
+  - Floating elements (yüzen daireler)
+  - Chart bars (grafik çubukları) animasyonu
+  - Step geçişlerinde içerik animasyonu
+  - Dropdown açılma animasyonları
+  - Error mesajı slideDown animasyonu
+
+- **Görsel İyileştirmeler**:
+  - Gradient arka planlar
+  - Glass morphism efektleri
+  - Box shadow'lar
+  - Hover efektleri
+  - Focus state'leri
+  - Loading spinner'lar
+
+- **Responsive Tasarım**:
+  - 1400px altında form panel 650px
+  - 1200px altında visual panel gizlenir
+  - Mobile uyumlu form elemanları
+  - Flex-wrap ile responsive feature items
+
+### Technical Details
+- Added react-select v5.x for modern dropdowns
+- Implemented custom select styles with TypeScript
+- Created generateCompanySuggestions function for dynamic suggestions
+- Added showCompanySuggestions state management
+- Implemented selectCompanySuggestion handler
+- Added validation error state management per field
+- Created custom CSS animations (float, slideDown, pulse, growBar)
+
+### Security Enhancements
+- Password strength requirements enforced
+- Real-time validation prevents weak passwords
+- TC/VKN validation for business verification
+- Email uniqueness check via SignalR
+- Domain availability check for company codes
+
 ## [1.1.0] - 23 Aralık 2024
 
 ### Added
