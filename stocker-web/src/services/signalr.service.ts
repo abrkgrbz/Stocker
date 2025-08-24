@@ -160,9 +160,8 @@ class SignalRService {
       console.log('Connection state:', this.validationConnection?.state);
       console.log('Invoking ValidateIdentity on hub...');
       
-      const result = await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
-      console.log('ValidateIdentity invoke completed:', result);
-      return result;
+      await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+      console.log('ValidateIdentity invoke completed');
     } catch (error) {
       console.error('Error in validateIdentity:', error);
       throw error;
