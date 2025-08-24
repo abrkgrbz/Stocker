@@ -588,7 +588,12 @@ export const RegisterPage: React.FC = () => {
   const renderRegistrationForm = () => (
     <NeonWizard 
       onComplete={handleWizardComplete}
-      selectedPackage={selectedPackage}
+      selectedPackage={selectedPackage || {
+        id: 'default-package',
+        name: 'Profesyonel',
+        price: 999,
+        currency: '₺'
+      }}
     />
   );
 
@@ -701,53 +706,6 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 
-  return (
-    <div className="register-page">
-      <div className="register-header">
-        <div className="container">
-          <Space size="large">
-            <RocketOutlined style={{ fontSize: 32, color: '#667eea' }} />
-            <Title level={2} style={{ margin: 0, color: '#fff' }}>
-              Stocker'a Kayıt Ol
-            </Title>
-          </Space>
-          <Button 
-            type="default" 
-            ghost 
-            onClick={() => navigate('/login')}
-            style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)' }}
-          >
-            Zaten hesabım var
-          </Button>
-        </div>
-      </div>
-
-      <div className="register-content">
-        <div className="container">
-          <Steps 
-            current={currentStep} 
-            style={{ marginBottom: 48 }}
-            items={[
-              {
-                title: 'Modül Seçimi',
-                icon: <ShoppingCartOutlined />
-              },
-              {
-                title: 'Bilgi Girişi',
-                icon: <UserOutlined />
-              },
-              {
-                title: 'Ödeme',
-                icon: <CreditCardOutlined />
-              }
-            ]}
-          />
-
-          {currentStep === 0 && renderModuleSelection()}
-          {currentStep === 1 && renderRegistrationForm()}
-          {currentStep === 2 && renderPayment()}
-        </div>
-      </div>
-    </div>
-  );
+  // Directly render NeonWizard without the old wrapper
+  return renderRegistrationForm();
 };
