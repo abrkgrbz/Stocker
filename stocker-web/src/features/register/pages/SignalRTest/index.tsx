@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Input, Form, Typography, Space, Alert, Badge, Tag, Spin, Row, Col, Button, Tabs, Divider } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, ApiOutlined, WifiOutlined } from '@ant-design/icons';
+import { Card, Input, Form, Typography, Space, Alert, Badge, Tag, Spin, Row, Col, Button, Tabs, Divider, Radio } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, ApiOutlined, WifiOutlined, IdcardOutlined } from '@ant-design/icons';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
 
@@ -16,12 +16,14 @@ export const SignalRTestPage: React.FC = () => {
     domainCheck,
     phoneValidation,
     companyNameCheck,
+    identityValidation,
     error,
     validateEmail,
     checkPasswordStrength,
     checkDomain,
     validatePhone,
     checkCompanyName,
+    validateIdentity,
   } = useSignalRValidation();
 
   // State for inputs
@@ -30,6 +32,8 @@ export const SignalRTestPage: React.FC = () => {
   const [domainInput, setDomainInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
   const [companyInput, setCompanyInput] = useState('');
+  const [identityInput, setIdentityInput] = useState('');
+  const [identityType, setIdentityType] = useState<'tc' | 'vkn'>('tc');
 
   // State for validation loading
   const [isValidatingEmail, setIsValidatingEmail] = useState(false);
@@ -37,6 +41,7 @@ export const SignalRTestPage: React.FC = () => {
   const [isValidatingDomain, setIsValidatingDomain] = useState(false);
   const [isValidatingPhone, setIsValidatingPhone] = useState(false);
   const [isValidatingCompany, setIsValidatingCompany] = useState(false);
+  const [isValidatingIdentity, setIsValidatingIdentity] = useState(false);
 
   // State for REST API results
   const [apiEmailResult, setApiEmailResult] = useState<any>(null);
@@ -44,6 +49,7 @@ export const SignalRTestPage: React.FC = () => {
   const [apiDomainResult, setApiDomainResult] = useState<any>(null);
   const [apiPhoneResult, setApiPhoneResult] = useState<any>(null);
   const [apiCompanyResult, setApiCompanyResult] = useState<any>(null);
+  const [apiIdentityResult, setApiIdentityResult] = useState<any>(null);
 
   // State for API loading
   const [apiEmailLoading, setApiEmailLoading] = useState(false);
@@ -51,6 +57,7 @@ export const SignalRTestPage: React.FC = () => {
   const [apiDomainLoading, setApiDomainLoading] = useState(false);
   const [apiPhoneLoading, setApiPhoneLoading] = useState(false);
   const [apiCompanyLoading, setApiCompanyLoading] = useState(false);
+  const [apiIdentityLoading, setApiIdentityLoading] = useState(false);
 
   // SignalR Handlers
   const handleEmailChange = async (value: string) => {
@@ -90,6 +97,25 @@ export const SignalRTestPage: React.FC = () => {
     if (value && value.length > 2) {
       setIsValidatingCompany(true);
       await checkCompanyName(value);
+    }
+  };
+
+  const handleIdentityChange = async (value: string) => {
+    setIdentityInput(value);
+    const cleanValue = value.replace(/\D/g, '');
+    const expectedLength = identityType === 'tc' ? 11 : 10;
+    
+    if (cleanValue.length === expectedLength) {
+      setIsValidatingIdentity(true);
+      console.log('=== SignalR Test Page - Validating Identity ===');
+      console.log('Type:', identityType);
+      console.log('Value:', cleanValue);
+      try {
+        await validateIdentity(cleanValue);
+        console.log('Validation call completed');
+      } catch (error) {
+        console.error('Validation call failed:', error);
+      }
     }
   };
 
@@ -196,6 +222,31 @@ export const SignalRTestPage: React.FC = () => {
     }
   };
 
+  const validateIdentityViaAPI = async () => {
+    const cleanValue = identityInput.replace(/\D/g, '');
+    const expectedLength = identityType === 'tc' ? 11 : 10;
+    
+    if (cleanValue.length !== expectedLength) {
+      return;
+    }
+    
+    setApiIdentityLoading(true);
+    try {
+      const response = await apiClient.post('/api/public/validate/identity', { 
+        identityNumber: cleanValue 
+      });
+      setApiIdentityResult(response.data);
+    } catch (error: any) {
+      setApiIdentityResult({ 
+        isValid: false,
+        message: error.response?.data?.message || 'API hatası',
+        numberType: identityType === 'tc' ? 'TCKimlik' : 'VergiNo'
+      });
+    } finally {
+      setApiIdentityLoading(false);
+    }
+  };
+
   // Reset loading states when results come in
   useEffect(() => {
     if (emailValidation) setIsValidatingEmail(false);
@@ -216,6 +267,10 @@ export const SignalRTestPage: React.FC = () => {
   useEffect(() => {
     if (companyNameCheck) setIsValidatingCompany(false);
   }, [companyNameCheck]);
+
+  useEffect(() => {
+    if (identityValidation) setIsValidatingIdentity(false);
+  }, [identityValidation]);
 
   const getPasswordStrengthColor = (level?: string) => {
     switch (level) {
@@ -497,7 +552,7 @@ export const SignalRTestPage: React.FC = () => {
           )}
         </Col>
 
-        <Col xs={24}>
+        <Col xs={24} md={12}>
           {renderValidationCard(
             "Company Name Validation",
             companyInput,
@@ -510,6 +565,140 @@ export const SignalRTestPage: React.FC = () => {
             apiCompanyLoading,
             "ABC Technology Inc."
           )}
+        </Col>
+
+        <Col xs={24} md={12}>
+          <Card title="TC Kimlik / Vergi No Validation">
+            <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+              <Radio.Group 
+                value={identityType} 
+                onChange={(e) => {
+                  setIdentityType(e.target.value);
+                  setIdentityInput('');
+                  setApiIdentityResult(null);
+                }}
+              >
+                <Radio.Button value="tc">TC Kimlik No</Radio.Button>
+                <Radio.Button value="vkn">Vergi No</Radio.Button>
+              </Radio.Group>
+            </Space>
+
+            <Tabs defaultActiveKey="signalr">
+              <TabPane
+                tab={
+                  <span>
+                    <WifiOutlined /> SignalR (Real-time)
+                  </span>
+                }
+                key="signalr"
+              >
+                <Form.Item
+                  label={`${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'} - SignalR`}
+                  validateStatus={
+                    isValidatingIdentity ? 'validating' :
+                    identityValidation ? (identityValidation.isValid ? 'success' : 'error') : ''
+                  }
+                  hasFeedback={isValidatingIdentity || !!identityValidation}
+                  help={identityValidation?.message}
+                >
+                  <Input
+                    placeholder={identityType === 'tc' ? '11111111110' : '1234567890'}
+                    value={identityInput}
+                    onChange={(e) => {
+                      setIdentityInput(e.target.value);
+                      handleIdentityChange(e.target.value);
+                    }}
+                    maxLength={identityType === 'tc' ? 11 : 10}
+                    prefix={<IdcardOutlined />}
+                    suffix={
+                      isValidatingIdentity ? <Spin indicator={<LoadingOutlined />} /> :
+                      identityValidation ? (
+                        identityValidation.isValid ? 
+                        <CheckCircleOutlined style={{ color: '#52c41a' }} /> :
+                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                      ) : null
+                    }
+                  />
+                </Form.Item>
+                
+                {identityValidation && (
+                  <Alert
+                    message="SignalR Result"
+                    description={
+                      <div>
+                        <p><strong>Type:</strong> {identityValidation.numberType}</p>
+                        <p><strong>Message:</strong> {identityValidation.message}</p>
+                        {identityValidation.details && Object.keys(identityValidation.details).length > 0 && (
+                          <details>
+                            <summary>Details</summary>
+                            <pre>{JSON.stringify(identityValidation.details, null, 2)}</pre>
+                          </details>
+                        )}
+                      </div>
+                    }
+                    type={identityValidation.isValid ? "success" : "warning"}
+                  />
+                )}
+              </TabPane>
+
+              <TabPane
+                tab={
+                  <span>
+                    <ApiOutlined /> REST API
+                  </span>
+                }
+                key="api"
+              >
+                <Form.Item
+                  label={`${identityType === 'tc' ? 'TC Kimlik No' : 'Vergi No'} - REST API`}
+                  validateStatus={
+                    apiIdentityLoading ? 'validating' :
+                    apiIdentityResult ? (apiIdentityResult.isValid ? 'success' : 'error') : ''
+                  }
+                  hasFeedback={apiIdentityLoading}
+                >
+                  <Space.Compact style={{ width: '100%' }}>
+                    <Input
+                      placeholder={identityType === 'tc' ? '11111111110' : '1234567890'}
+                      value={identityInput}
+                      onChange={(e) => setIdentityInput(e.target.value)}
+                      maxLength={identityType === 'tc' ? 11 : 10}
+                      prefix={<IdcardOutlined />}
+                    />
+                    <Button
+                      type="primary"
+                      onClick={validateIdentityViaAPI}
+                      loading={apiIdentityLoading}
+                    >
+                      Validate
+                    </Button>
+                  </Space.Compact>
+                </Form.Item>
+
+                {apiIdentityResult && (
+                  <Alert
+                    message="API Result"
+                    description={
+                      <div>
+                        <p><strong>Type:</strong> {apiIdentityResult.numberType}</p>
+                        <p><strong>Message:</strong> {apiIdentityResult.message}</p>
+                        {apiIdentityResult.formattedNumber && (
+                          <p><strong>Formatted:</strong> {apiIdentityResult.formattedNumber}</p>
+                        )}
+                        {apiIdentityResult.details && Object.keys(apiIdentityResult.details).length > 0 && (
+                          <details>
+                            <summary>Details</summary>
+                            <pre>{JSON.stringify(apiIdentityResult.details, null, 2)}</pre>
+                          </details>
+                        )}
+                      </div>
+                    }
+                    type={apiIdentityResult.isValid ? "success" : "warning"}
+                  />
+                )}
+              </TabPane>
+            </Tabs>
+          </Card>
         </Col>
       </Row>
 
@@ -577,6 +766,35 @@ export const SignalRTestPage: React.FC = () => {
               <li>Medium: Test123</li>
               <li>Strong: Test@123456</li>
               <li>Very Strong: MyP@ssw0rd!2024</li>
+            </ul>
+          </Col>
+        </Row>
+        <Row gutter={[24, 24]} style={{ marginTop: 16 }}>
+          <Col xs={24} md={8}>
+            <Text strong>TC Kimlik No Tests:</Text>
+            <ul>
+              <li>Valid Test: 11111111110</li>
+              <li>Valid Test: 10000000146</li>
+              <li>Invalid: 12345678901</li>
+              <li>Invalid: 00000000000</li>
+            </ul>
+          </Col>
+          <Col xs={24} md={8}>
+            <Text strong>Vergi No Tests:</Text>
+            <ul>
+              <li>Valid Test: 1234567890</li>
+              <li>Invalid: 1111111111</li>
+              <li>Invalid: 0000000000</li>
+              <li>Short: 123456</li>
+            </ul>
+          </Col>
+          <Col xs={24} md={8}>
+            <Text strong>Company Name Tests:</Text>
+            <ul>
+              <li>Available: MyUniqueCompany</li>
+              <li>Similar: Microsoft Tech</li>
+              <li>Premium: DataCloud</li>
+              <li>Short: AB</li>
             </ul>
           </Col>
         </Row>
