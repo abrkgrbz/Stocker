@@ -812,6 +812,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         billingPeriod: 'Monthly'
       };
 
+      console.log('Sending registration data:', registrationData);
       const response = await apiClient.post('/api/public/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
@@ -821,7 +822,49 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         message.error('Kayıt sırasında bir hata oluştu');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Kayıt işlemi başarısız');
+      console.error('Registration error:', error.response?.data);
+      
+      // Detaylı hata mesajı
+      let errorMessage = 'Kayıt işlemi başarısız';
+      
+      if (error.response?.data?.errors) {
+        // Validation hataları varsa
+        const errors = error.response.data.errors;
+        const errorList = Object.keys(errors).map(key => 
+          `${key}: ${Array.isArray(errors[key]) ? errors[key].join(', ') : errors[key]}`
+        ).join('\n');
+        
+        message.error({
+          content: (
+            <div>
+              <strong>Kayıt hatası:</strong>
+              <br />
+              {errorList}
+            </div>
+          ),
+          duration: 5
+        });
+      } else if (error.response?.data?.message) {
+        // Genel hata mesajı
+        errorMessage = error.response.data.message;
+        message.error(errorMessage, 5);
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Girdiğiniz bilgilerde hata var. Lütfen kontrol edin.';
+        message.error(errorMessage, 5);
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+        message.error(errorMessage, 5);
+      } else {
+        message.error(errorMessage, 5);
+      }
+      
+      // Debug için console'a detaylı bilgi
+      console.log('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.response?.data?.message,
+        errors: error.response?.data?.errors
+      });
     } finally {
       setLoading(false);
     }
