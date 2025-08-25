@@ -147,6 +147,7 @@ interface TenantCardProps {
 }
 
 export const MasterTenantsPage: React.FC = () => {
+  console.log('🏁 MasterTenantsPage component loaded!');
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -292,13 +293,18 @@ export const MasterTenantsPage: React.FC = () => {
 
   // Fetch tenants from API
   useEffect(() => {
+    console.log('🎬 useEffect triggered for initial load');
+    console.log('Page:', page, 'PageSize:', pageSize);
     fetchTenants();
   }, [page, pageSize]); // Removed searchText and filterStatus to prevent too many API calls
   
   // Debounced search effect
   useEffect(() => {
+    console.log('🔍 Search/Filter effect triggered');
+    console.log('SearchText:', searchText, 'FilterStatus:', filterStatus);
     const timer = setTimeout(() => {
       if (searchText !== '' || filterStatus !== 'all') {
+        console.log('⏰ Debounce timer executed, calling fetchTenants');
         fetchTenants();
       }
     }, 500);
@@ -307,6 +313,9 @@ export const MasterTenantsPage: React.FC = () => {
   }, [searchText, filterStatus]);
 
   const fetchTenants = async () => {
+    console.log('==================================');
+    console.log('🚀 fetchTenants FUNCTION CALLED!');
+    console.log('==================================');
     console.log('🔍 Fetching tenants with params:', {
       page,
       pageSize,
@@ -931,6 +940,10 @@ export const MasterTenantsPage: React.FC = () => {
     const matchesPlan = filterPlan === 'all' || tenant.plan === filterPlan;
     return matchesSearch && matchesStatus && matchesPlan;
   });
+
+  console.log('🎨 Rendering MasterTenantsPage');
+  console.log('Current tenants count:', tenants.length);
+  console.log('Loading state:', loading);
 
   return (
     <div className="master-tenants-page">
