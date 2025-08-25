@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(TOKEN_KEY);
     
-    console.log('🔑 API Request:', {
+    console.error('🔑 API Request:', {
       url: config.url,
       method: config.method,
       baseURL: config.baseURL,

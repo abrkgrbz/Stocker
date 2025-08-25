@@ -147,8 +147,10 @@ interface TenantCardProps {
 }
 
 export const MasterTenantsPage: React.FC = () => {
-  console.log('🏁 MasterTenantsPage component loaded!');
-  alert('TENANTS PAGE LOADED! Check console now!');
+  console.error('🏁 MasterTenantsPage component loaded!');
+  console.warn('⚠️ TENANTS PAGE MOUNTED');
+  console.info('ℹ️ Component initialized');
+  console.table({ component: 'MasterTenantsPage', status: 'loaded', time: new Date().toISOString() });
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -294,8 +296,8 @@ export const MasterTenantsPage: React.FC = () => {
 
   // Fetch tenants from API
   useEffect(() => {
-    console.log('🎬 useEffect triggered for initial load');
-    console.log('Page:', page, 'PageSize:', pageSize);
+    console.error('🎬 useEffect triggered for initial load');
+    console.warn('Page:', page, 'PageSize:', pageSize);
     fetchTenants();
   }, [page, pageSize]); // Removed searchText and filterStatus to prevent too many API calls
   
@@ -314,10 +316,10 @@ export const MasterTenantsPage: React.FC = () => {
   }, [searchText, filterStatus]);
 
   const fetchTenants = async () => {
-    console.log('==================================');
-    console.log('🚀 fetchTenants FUNCTION CALLED!');
-    console.log('==================================');
-    console.log('🔍 Fetching tenants with params:', {
+    console.error('==================================');
+    console.error('🚀 fetchTenants FUNCTION CALLED!');
+    console.error('==================================');
+    console.warn('🔍 Fetching tenants with params:', {
       page,
       pageSize,
       search: searchText || 'none',
@@ -327,7 +329,7 @@ export const MasterTenantsPage: React.FC = () => {
     
     setLoading(true);
     try {
-      console.log('📡 API Call: tenantsApi.getAll()');
+      console.error('📡 API Call: tenantsApi.getAll()');
       const response = await tenantsApi.getAll({
         page,
         pageSize,
