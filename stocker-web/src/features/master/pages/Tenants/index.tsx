@@ -307,8 +307,17 @@ export const MasterTenantsPage: React.FC = () => {
   }, [searchText, filterStatus]);
 
   const fetchTenants = async () => {
+    console.log('🔍 Fetching tenants with params:', {
+      page,
+      pageSize,
+      search: searchText || 'none',
+      filterStatus,
+      isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
+    });
+    
     setLoading(true);
     try {
+      console.log('📡 API Call: tenantsApi.getAll()');
       const response = await tenantsApi.getAll({
         page,
         pageSize,
@@ -316,10 +325,15 @@ export const MasterTenantsPage: React.FC = () => {
         isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
       });
       
-      console.log('API Response:', response.data);
+      console.log('✅ API Response:', response);
+      console.log('📦 Response Data:', response.data);
+      console.log('📊 Response Status:', response.status);
+      console.log('🔢 Total Count:', response.data?.totalCount);
+      console.log('📝 Items Count:', response.data?.items?.length);
       
       // Check if response has the expected structure
       if (response.data && response.data.items) {
+        console.log('✨ Processing', response.data.items.length, 'tenants');
         // Map API response to component format
         const mappedTenants = response.data.items.map((t: any) => ({
           id: t.id,
@@ -353,31 +367,48 @@ export const MasterTenantsPage: React.FC = () => {
           }
         }));
         
+        console.log('🗺️ Mapped Tenants:', mappedTenants);
         setTenants(mappedTenants);
         setTotalCount(response.data.totalCount || mappedTenants.length);
+        console.log('✅ Successfully set', mappedTenants.length, 'tenants');
       } else {
         // If API returns unexpected format, show error but don't use mock data
-        console.error('Unexpected API response format:', response.data);
+        console.error('❌ Unexpected API response format!');
+        console.error('Expected: { items: [], totalCount: number }');
+        console.error('Received:', response.data);
+        console.error('Full response:', response);
         message.warning('API veri formatı beklenenden farklı');
         setTenants([]);
         setTotalCount(0);
       }
     } catch (error: any) {
-      console.error('Error fetching tenants:', error);
+      console.error('🚨 Error fetching tenants!');
+      console.error('Error Object:', error);
+      console.error('Error Message:', error.message);
+      console.error('Error Response:', error.response);
+      console.error('Error Status:', error.response?.status);
+      console.error('Error Data:', error.response?.data);
+      console.error('Error Config:', error.config);
       
       // Check if it's a network error or auth error
       if (error.response?.status === 401) {
+        console.log('🔐 Authentication error - 401');
         message.error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın');
       } else if (error.response?.status === 403) {
+        console.log('🚫 Forbidden error - 403');
         message.error('Bu sayfaya erişim yetkiniz yok');
       } else if (error.code === 'ERR_NETWORK') {
+        console.log('🌐 Network error detected');
         message.error('Bağlantı hatası, lütfen internet bağlantınızı kontrol edin');
         // Use mock data only for network errors during development
         if (import.meta.env.DEV) {
+          console.log('🔧 DEV MODE: Using mock data');
           message.info('Geliştirme modunda mock data gösteriliyor');
           setTenants(mockTenants);
+          console.log('📌 Mock tenants set:', mockTenants.length, 'items');
         }
       } else {
+        console.log('❓ Unknown error type');
         message.error('Tenant listesi yüklenirken hata oluştu');
         setTenants([]);
       }
