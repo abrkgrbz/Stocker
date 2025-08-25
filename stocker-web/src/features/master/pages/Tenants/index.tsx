@@ -148,6 +148,7 @@ interface TenantCardProps {
 
 export const MasterTenantsPage: React.FC = () => {
   console.log('🏁 MasterTenantsPage component loaded!');
+  alert('TENANTS PAGE LOADED! Check console now!');
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
