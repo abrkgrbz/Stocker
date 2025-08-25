@@ -327,8 +327,8 @@ export const MasterTenantsPage: React.FC = () => {
           domain: t.identifier + '.stoocker.app',
           email: t.adminEmail,
           phone: t.phoneNumber || 'N/A',
-          plan: t.packageName || 'Free',
-          status: t.isActive ? 'active' : 'suspended',
+          plan: ['Free', 'Starter', 'Professional', 'Enterprise'].includes(t.packageName) ? t.packageName : 'Free',
+          status: t.isActive ? 'active' : t.isActive === false ? 'suspended' : 'pending',
           userCount: t.userCount || 0,
           maxUsers: t.maxUsers || 10,
           storageUsed: t.storageUsed || 0,
@@ -447,8 +447,19 @@ export const MasterTenantsPage: React.FC = () => {
     onLoginAs,
     onViewDetails,
   }) => {
-    const planInfo = planConfig[tenant.plan];
-    const statusInfo = statusConfig[tenant.status];
+    // Ensure plan exists in config, fallback to Free
+    const planInfo = planConfig[tenant.plan] || planConfig['Free'] || {
+      color: '#8c8c8c',
+      icon: <UserOutlined />,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    };
+    
+    // Ensure status exists in config, fallback to pending
+    const statusInfo = statusConfig[tenant.status] || statusConfig['pending'] || {
+      color: 'default',
+      text: 'Bilinmiyor',
+      icon: <InfoCircleOutlined />
+    };
 
     return (
       <motion.div
@@ -556,34 +567,34 @@ export const MasterTenantsPage: React.FC = () => {
             <Col span={12}>
               <Statistic
                 title="Kullanıcı"
-                value={tenant.userCount}
-                suffix={`/ ${tenant.maxUsers}`}
+                value={tenant.userCount || 0}
+                suffix={`/ ${tenant.maxUsers || 10}`}
                 prefix={<UserOutlined />}
                 valueStyle={{ fontSize: 14 }}
               />
               <Progress
-                percent={(tenant.userCount / tenant.maxUsers) * 100}
+                percent={tenant.maxUsers ? Math.min((tenant.userCount || 0) / tenant.maxUsers * 100, 100) : 0}
                 size="small"
                 showInfo={false}
-                strokeColor={planInfo.color}
+                strokeColor={planInfo?.color || '#1890ff'}
               />
             </Col>
             <Col span={12}>
               <Statistic
                 title="Depolama"
-                value={tenant.storageUsed}
-                suffix={`GB / ${tenant.maxStorage}GB`}
+                value={tenant.storageUsed || 0}
+                suffix={`GB / ${tenant.maxStorage || 10}GB`}
                 prefix={<DatabaseOutlined />}
                 valueStyle={{ fontSize: 14 }}
               />
               <Progress
-                percent={(tenant.storageUsed / tenant.maxStorage) * 100}
+                percent={tenant.maxStorage ? Math.min((tenant.storageUsed || 0) / tenant.maxStorage * 100, 100) : 0}
                 size="small"
                 showInfo={false}
                 strokeColor={
-                  (tenant.storageUsed / tenant.maxStorage) * 100 > 80
+                  tenant.maxStorage && (tenant.storageUsed / tenant.maxStorage) * 100 > 80
                     ? '#ff4d4f'
-                    : planInfo.color
+                    : planInfo?.color || '#1890ff'
                 }
               />
             </Col>
