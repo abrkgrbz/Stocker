@@ -149,7 +149,7 @@ export const MasterPackagesPage: React.FC = () => {
           new: false,
           maxUsers: p.maxUsers || 0,
           maxStorage: p.maxStorage || 0,
-          features: p.features || [],
+          features: p.features?.map((f: any) => f.featureName || f) || [],
           modules: ['CRM', 'Sales'], // Mock modules
           support: 'E-posta',
           apiCalls: 10000,
