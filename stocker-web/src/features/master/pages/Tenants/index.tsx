@@ -92,7 +92,9 @@ import {
 } from '@ant-design/icons';
 import { Line, Column, Pie, TinyLine, TinyColumn, Progress as TinyProgress } from '@ant-design/plots';
 import CountUp from 'react-countup';
-// import './styles.css';
+import '../../styles/master-inputs.css';
+import { tenantsApi } from '@/shared/api/tenants.api';
+import { Tenant as ApiTenant } from '@/shared/types';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -156,6 +158,9 @@ export const MasterTenantsPage: React.FC = () => {
   const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [form] = Form.useForm();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Mock data
   const mockTenants: Tenant[] = [
@@ -282,7 +287,67 @@ export const MasterTenantsPage: React.FC = () => {
     },
   ];
 
-  const [tenants, setTenants] = useState<Tenant[]>(mockTenants);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+
+  // Fetch tenants from API
+  useEffect(() => {
+    fetchTenants();
+  }, [page, pageSize, searchText, filterStatus]);
+
+  const fetchTenants = async () => {
+    setLoading(true);
+    try {
+      const response = await tenantsApi.getAll({
+        page,
+        pageSize,
+        search: searchText || undefined,
+        isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
+      });
+      
+      // Map API response to component format
+      const mappedTenants = response.data.items.map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        domain: t.identifier + '.stoocker.app',
+        email: t.adminEmail,
+        phone: t.phoneNumber || 'N/A',
+        plan: t.packageName || 'Free',
+        status: t.isActive ? 'active' : 'suspended',
+        userCount: t.userCount || 0,
+        maxUsers: t.maxUsers || 10,
+        storageUsed: t.storageUsed || 0,
+        maxStorage: t.maxStorage || 10,
+        createdAt: new Date(t.createdDate).toLocaleDateString('tr-TR'),
+        expiresAt: t.expiryDate ? new Date(t.expiryDate).toLocaleDateString('tr-TR') : 'N/A',
+        lastLogin: t.lastAccessDate ? new Date(t.lastAccessDate).toLocaleDateString('tr-TR') : 'Hiç giriş yok',
+        revenue: 0,
+        growth: 0,
+        modules: t.modules || [],
+        features: t.features || [],
+        owner: {
+          name: t.adminName || 'Admin',
+          email: t.adminEmail,
+          avatar: undefined
+        },
+        performance: {
+          cpu: 0,
+          memory: 0,
+          requests: 0,
+          errors: 0
+        }
+      }));
+      
+      setTenants(mappedTenants);
+      setTotalCount(response.data.totalCount);
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
+      message.error('Tenant listesi yüklenirken hata oluştu');
+      // Use mock data as fallback
+      setTenants(mockTenants);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Stats cards
   const stats = [
@@ -433,7 +498,7 @@ export const MasterTenantsPage: React.FC = () => {
               {tenant.name.substring(0, 2).toUpperCase()}
             </Avatar>
             <div className="tenant-info" style={{ flex: 1, minWidth: 0 }}>
-              <Title level={5} style={{ margin: 0, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Title level={5} style={{ margin: 0, fontSize: 14, width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {tenant.name}
               </Title>
               <Space size={2} style={{ marginTop: 4 }}>
@@ -508,28 +573,28 @@ export const MasterTenantsPage: React.FC = () => {
           <Divider style={{ margin: '8px 0' }} />
 
           {/* Revenue & Growth */}
-          <Row gutter={16}>
+          <Row gutter={8}>
             <Col span={12}>
-              <div className="metric-box">
-                <Text type="secondary">Gelir</Text>
-                <Title level={5} style={{ margin: 0, color: '#52c41a' }}>
+              <div className="metric-box" style={{ textAlign: 'center' }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>Gelir</Text>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#52c41a' }}>
                   ₺<CountUp end={tenant.revenue} separator="," />
-                </Title>
+                </div>
               </div>
             </Col>
             <Col span={12}>
-              <div className="metric-box">
-                <Text type="secondary">Büyüme</Text>
-                <Title
-                  level={5}
+              <div className="metric-box" style={{ textAlign: 'center' }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>Büyüme</Text>
+                <div
                   style={{
-                    margin: 0,
+                    fontSize: 13,
+                    fontWeight: 600,
                     color: tenant.growth > 0 ? '#52c41a' : '#ff4d4f',
                   }}
                 >
                   {tenant.growth > 0 ? '+' : ''}
                   {tenant.growth}%
-                </Title>
+                </div>
               </div>
             </Col>
           </Row>
@@ -910,7 +975,7 @@ export const MasterTenantsPage: React.FC = () => {
               />
               <Button
                 icon={<ReloadOutlined spin={loading} />}
-                onClick={() => setLoading(!loading)}
+                onClick={() => fetchTenants()}
               >
                 Yenile
               </Button>
@@ -963,9 +1028,15 @@ export const MasterTenantsPage: React.FC = () => {
                 rowKey="id"
                 loading={loading}
                 pagination={{
-                  pageSize: 10,
+                  current: page,
+                  pageSize: pageSize,
+                  total: totalCount || filteredTenants.length,
                   showSizeChanger: true,
                   showTotal: (total) => `Toplam ${total} tenant`,
+                  onChange: (newPage, newPageSize) => {
+                    setPage(newPage);
+                    if (newPageSize) setPageSize(newPageSize);
+                  },
                 }}
                 scroll={{ x: 1500 }}
                 rowSelection={{

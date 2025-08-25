@@ -66,7 +66,7 @@ import {
   ExperimentOutlined,
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
-// import './styles.css';
+import '../../styles/master-inputs.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
