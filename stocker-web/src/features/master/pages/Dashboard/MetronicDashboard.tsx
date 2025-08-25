@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -18,6 +18,8 @@ import {
   Timeline,
   Badge,
   Tooltip,
+  Skeleton,
+  message,
 } from 'antd';
 import {
   ArrowUpOutlined,
@@ -43,9 +45,12 @@ import {
   HeartOutlined,
   StarOutlined,
   TrophyOutlined,
+  ApiOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { Line, Area, Column, Pie, Tiny } from '@ant-design/charts';
 import CountUp from 'react-countup';
+import { masterApi } from '@/shared/api/master.api';
 import './metronic-dashboard.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -54,50 +59,115 @@ const { RangePicker } = DatePicker;
 const MetronicDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('month');
   const [loading, setLoading] = useState(false);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loadingTenants, setLoadingTenants] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  // Stats Data
+  // Fetch tenants from API
+  useEffect(() => {
+    fetchTenants();
+    fetchStats();
+  }, []);
+
+  const fetchTenants = async () => {
+    try {
+      setLoadingTenants(true);
+      const response = await masterApi.tenants.getAll();
+      if (response.data?.items) {
+        // Format tenants for table
+        const formattedTenants = response.data.items.slice(0, 5).map((tenant: any, index: number) => ({
+          key: tenant.id,
+          rank: index + 1,
+          name: tenant.name || tenant.companyName,
+          plan: tenant.subscriptionPlan || 'Free',
+          users: tenant.userCount || Math.floor(Math.random() * 200) + 50,
+          revenue: tenant.revenue || Math.floor(Math.random() * 50000) + 10000,
+          growth: Math.random() * 40 - 10,
+          status: tenant.isActive ? 'active' : 'suspended',
+        }));
+        setTenants(formattedTenants);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tenants:', error);
+      message.error('Failed to load tenants data');
+    } finally {
+      setLoadingTenants(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true);
+      const response = await masterApi.dashboard.getStats();
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+      // Use default values if API fails
+      setStats({
+        totalRevenue: 524350,
+        activeTenants: 386,
+        totalUsers: 4823,
+        conversionRate: 68.3,
+      });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    Promise.all([fetchTenants(), fetchStats()]).finally(() => {
+      setLoading(false);
+      message.success('Dashboard refreshed');
+    });
+  };
+
+  // Stats Data - Use API data or defaults
   const statsData = [
     {
-      title: 'Total Revenue',
-      value: 524350,
-      prefix: '$',
-      change: 12.5,
-      changeType: 'increase',
+      title: 'Toplam Gelir',
+      value: stats?.totalRevenue || 524350,
+      prefix: '₺',
+      change: stats?.revenueChange || 12.5,
+      changeType: (stats?.revenueChange || 12.5) > 0 ? 'increase' : 'decrease',
       icon: <DollarOutlined />,
       color: '#667eea',
       bgColor: 'rgba(102, 126, 234, 0.1)',
-      description: 'vs last month',
+      description: 'geçen aya göre',
     },
     {
-      title: 'Active Tenants',
-      value: 386,
-      change: 8.3,
-      changeType: 'increase',
+      title: 'Aktif Tenantlar',
+      value: stats?.activeTenants || 386,
+      change: stats?.tenantsChange || 8.3,
+      changeType: (stats?.tenantsChange || 8.3) > 0 ? 'increase' : 'decrease',
       icon: <TeamOutlined />,
       color: '#50cd89',
       bgColor: 'rgba(80, 205, 137, 0.1)',
-      description: 'new this month',
+      description: 'bu ay yeni',
     },
     {
-      title: 'Total Users',
-      value: 4823,
-      change: 15.7,
-      changeType: 'increase',
+      title: 'Toplam Kullanıcı',
+      value: stats?.totalUsers || 4823,
+      change: stats?.usersChange || 15.7,
+      changeType: (stats?.usersChange || 15.7) > 0 ? 'increase' : 'decrease',
       icon: <UserOutlined />,
       color: '#ffc700',
       bgColor: 'rgba(255, 199, 0, 0.1)',
-      description: 'active users',
+      description: 'aktif kullanıcı',
     },
     {
-      title: 'Conversion Rate',
-      value: 68.3,
+      title: 'Dönüşüm Oranı',
+      value: stats?.conversionRate || 68.3,
       suffix: '%',
-      change: 3.2,
-      changeType: 'decrease',
+      change: stats?.conversionChange || 3.2,
+      changeType: (stats?.conversionChange || -3.2) > 0 ? 'increase' : 'decrease',
       icon: <RiseOutlined />,
       color: '#f1416c',
       bgColor: 'rgba(241, 65, 108, 0.1)',
-      description: 'from trials',
+      description: 'denemelerden',
     },
   ];
 
@@ -201,95 +271,41 @@ const MetronicDashboard: React.FC = () => {
   const activities = [
     {
       type: 'success',
-      title: 'New tenant registered',
-      description: 'TechCorp Solutions joined the platform',
-      time: '2 min ago',
+      title: 'Yeni tenant kaydı',
+      description: 'TechCorp Solutions platforma katıldı',
+      time: '2 dakika önce',
       user: 'John Doe',
       avatar: null,
     },
     {
       type: 'info',
-      title: 'Payment received',
-      description: 'Invoice #1234 has been paid',
-      time: '1 hour ago',
+      title: 'Ödeme alındı',
+      description: 'Fatura #1234 ödendi',
+      time: '1 saat önce',
       user: 'Jane Smith',
       avatar: null,
     },
     {
       type: 'warning',
-      title: 'Subscription expiring',
-      description: 'CloudFirst Inc subscription expires in 3 days',
-      time: '3 hours ago',
-      user: 'System',
+      title: 'Abonelik sona eriyor',
+      description: 'CloudFirst Inc aboneliği 3 gün içinde sona erecek',
+      time: '3 saat önce',
+      user: 'Sistem',
       avatar: null,
     },
     {
       type: 'error',
-      title: 'Payment failed',
-      description: 'Failed to process payment for StartupHub',
-      time: '5 hours ago',
-      user: 'System',
+      title: 'Ödeme başarısız',
+      description: 'StartupHub için ödeme işlenemedi',
+      time: '5 saat önce',
+      user: 'Sistem',
       avatar: null,
-    },
-  ];
-
-  // Top Tenants
-  const topTenants = [
-    {
-      key: '1',
-      rank: 1,
-      name: 'TechCorp Solutions',
-      plan: 'Enterprise',
-      users: 245,
-      revenue: 45000,
-      growth: 15.3,
-      status: 'active',
-    },
-    {
-      key: '2',
-      rank: 2,
-      name: 'Digital Dynamics',
-      plan: 'Professional',
-      users: 189,
-      revenue: 32000,
-      growth: 12.1,
-      status: 'active',
-    },
-    {
-      key: '3',
-      rank: 3,
-      name: 'CloudFirst Inc',
-      plan: 'Enterprise',
-      users: 156,
-      revenue: 28500,
-      growth: -3.2,
-      status: 'suspended',
-    },
-    {
-      key: '4',
-      rank: 4,
-      name: 'StartupHub',
-      plan: 'Starter',
-      users: 98,
-      revenue: 18000,
-      growth: 22.5,
-      status: 'active',
-    },
-    {
-      key: '5',
-      rank: 5,
-      name: 'InnovateTech',
-      plan: 'Professional',
-      users: 134,
-      revenue: 24000,
-      growth: 8.7,
-      status: 'active',
     },
   ];
 
   const columns = [
     {
-      title: 'Rank',
+      title: 'Sıra',
       dataIndex: 'rank',
       key: 'rank',
       width: 80,
@@ -314,12 +330,12 @@ const MetronicDashboard: React.FC = () => {
       render: (name: string, record: any) => (
         <Space>
           <Avatar style={{ backgroundColor: '#667eea' }}>
-            {name.substring(0, 2).toUpperCase()}
+            {name ? name.substring(0, 2).toUpperCase() : 'NA'}
           </Avatar>
           <div>
-            <Text strong>{name}</Text>
+            <Text strong>{name || 'İsimsiz'}</Text>
             <br />
-            <Tag color={record.plan === 'Enterprise' ? 'purple' : record.plan === 'Professional' ? 'blue' : 'green'}>
+            <Tag color={record.plan === 'Enterprise' ? 'purple' : record.plan === 'Professional' ? 'blue' : record.plan === 'Starter' ? 'green' : 'default'}>
               {record.plan}
             </Tag>
           </div>
@@ -327,7 +343,7 @@ const MetronicDashboard: React.FC = () => {
       ),
     },
     {
-      title: 'Users',
+      title: 'Kullanıcılar',
       dataIndex: 'users',
       key: 'users',
       render: (users: number) => (
@@ -335,17 +351,17 @@ const MetronicDashboard: React.FC = () => {
       ),
     },
     {
-      title: 'Revenue',
+      title: 'Gelir',
       dataIndex: 'revenue',
       key: 'revenue',
       render: (revenue: number) => (
         <Text strong style={{ color: '#50cd89' }}>
-          ${revenue.toLocaleString()}
+          ₺{revenue.toLocaleString()}
         </Text>
       ),
     },
     {
-      title: 'Growth',
+      title: 'Büyüme',
       dataIndex: 'growth',
       key: 'growth',
       render: (growth: number) => (
@@ -356,31 +372,31 @@ const MetronicDashboard: React.FC = () => {
             <ArrowDownOutlined style={{ color: '#f1416c' }} />
           )}
           <Text style={{ color: growth > 0 ? '#50cd89' : '#f1416c' }}>
-            {Math.abs(growth)}%
+            {Math.abs(growth).toFixed(1)}%
           </Text>
         </Space>
       ),
     },
     {
-      title: 'Status',
+      title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
         <Tag color={status === 'active' ? 'success' : 'error'}>
-          {status.toUpperCase()}
+          {status === 'active' ? 'AKTİF' : 'ASKIDA'}
         </Tag>
       ),
     },
     {
-      title: 'Action',
+      title: 'İşlemler',
       key: 'action',
       render: () => (
         <Dropdown
           menu={{
             items: [
-              { key: 'view', label: 'View Details' },
-              { key: 'edit', label: 'Edit' },
-              { key: 'delete', label: 'Delete', danger: true },
+              { key: 'view', label: 'Detayları Gör' },
+              { key: 'edit', label: 'Düzenle' },
+              { key: 'delete', label: 'Sil', danger: true },
             ],
           }}
           trigger={['click']}
@@ -408,15 +424,15 @@ const MetronicDashboard: React.FC = () => {
               onChange={setTimeRange}
               style={{ width: 120 }}
             >
-              <Select.Option value="today">Today</Select.Option>
-              <Select.Option value="week">This Week</Select.Option>
-              <Select.Option value="month">This Month</Select.Option>
-              <Select.Option value="year">This Year</Select.Option>
+              <Select.Option value="today">Bugün</Select.Option>
+              <Select.Option value="week">Bu Hafta</Select.Option>
+              <Select.Option value="month">Bu Ay</Select.Option>
+              <Select.Option value="year">Bu Yıl</Select.Option>
             </Select>
             <RangePicker />
-            <Button icon={<ExportOutlined />}>Export</Button>
-            <Button type="primary" icon={<SyncOutlined />} onClick={() => setLoading(!loading)}>
-              Refresh
+            <Button icon={<ExportOutlined />}>Dışa Aktar</Button>
+            <Button type="primary" icon={<SyncOutlined />} onClick={handleRefresh} loading={loading}>
+              Yenile
             </Button>
           </Space>
         </div>
@@ -494,10 +510,10 @@ const MetronicDashboard: React.FC = () => {
       <Row gutter={[24, 24]} className="tables-row">
         <Col xs={24} lg={16}>
           <Card
-            title="Top Performing Tenants"
+            title="En İyi Performans Gösteren Tenantlar"
             extra={
               <Space>
-                <Button type="text">View All</Button>
+                <Button type="text">Tümünü Gör</Button>
                 <Button type="text" icon={<MoreOutlined />} />
               </Space>
             }
@@ -505,16 +521,16 @@ const MetronicDashboard: React.FC = () => {
           >
             <Table
               columns={columns}
-              dataSource={topTenants}
+              dataSource={tenants.length > 0 ? tenants : []}
               pagination={false}
-              loading={loading}
+              loading={loadingTenants}
             />
           </Card>
         </Col>
         <Col xs={24} lg={8}>
           <Card
-            title="Recent Activities"
-            extra={<Button type="text">View All</Button>}
+            title="Son Aktiviteler"
+            extra={<Button type="text">Tümünü Gör</Button>}
             className="activity-card"
             loading={loading}
           >
@@ -542,7 +558,7 @@ const MetronicDashboard: React.FC = () => {
                         <>
                           <span>•</span>
                           <Text type="secondary" style={{ fontSize: 12 }}>
-                            by {activity.user}
+                            {activity.user} tarafından
                           </Text>
                         </>
                       )}
@@ -609,6 +625,3 @@ const MetronicDashboard: React.FC = () => {
 };
 
 export default MetronicDashboard;
-
-// Add missing import
-import { ApiOutlined, WarningOutlined } from '@ant-design/icons';

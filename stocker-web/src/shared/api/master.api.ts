@@ -351,3 +351,13 @@ export const masterMonitoringApi = {
   restartService: (service: string) => 
     apiClient.post(`/api/master/monitoring/services/${service}/restart`),
 };
+
+// Export master API
+export const masterApi = {
+  dashboard: masterDashboardApi,
+  tenants: masterTenantApi,
+  packages: masterPackageApi,
+  subscriptions: masterSubscriptionApi,
+  settings: masterSettingsApi,
+  monitoring: masterMonitoringApi,
+};
