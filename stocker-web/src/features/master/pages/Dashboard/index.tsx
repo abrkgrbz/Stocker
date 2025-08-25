@@ -66,7 +66,7 @@ import {
   FilterOutlined,
   MoreOutlined,
 } from '@ant-design/icons';
-import './styles.css';
+// import './styles.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;

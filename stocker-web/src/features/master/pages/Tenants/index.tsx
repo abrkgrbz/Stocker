@@ -92,7 +92,7 @@ import {
 } from '@ant-design/icons';
 import { Line, Column, Pie, TinyLine, TinyColumn, Progress as TinyProgress } from '@ant-design/plots';
 import CountUp from 'react-countup';
-import './styles.css';
+// import './styles.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
