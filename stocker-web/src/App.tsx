@@ -12,6 +12,7 @@ import 'dayjs/locale/tr';
 import { useAuthStore } from '@/app/store/auth.store';
 
 // Layouts
+import MetronicLayout from '@/layouts/MetronicLayout';
 import { MasterLayout } from '@/layouts/MasterLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
@@ -173,7 +174,7 @@ function App() {
                   path="/master"
                   element={
                     <PrivateRoute roles={['SystemAdmin']}>
-                      <MasterLayout />
+                      <MetronicLayout />
                     </PrivateRoute>
                   }
                 >

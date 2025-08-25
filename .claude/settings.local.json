@@ -59,7 +59,9 @@
       "Bash(dotnet publish:*)",
       "Bash(del /Q \"C:\\Users\\PC\\source\\repos\\Stocker\\src\\Infrastructure\\Stocker.Persistence\\Migrations\\Master\\*.cs\")",
       "WebFetch(domain:coolify.io)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   }

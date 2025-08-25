@@ -95,7 +95,16 @@ interface Activity {
   icon: React.ReactNode;
 }
 
+import MetronicDashboard from './MetronicDashboard';
+
+export { MetronicDashboard };
+
 export const MasterDashboard: React.FC = () => {
+  // Use Metronic Dashboard
+  return <MetronicDashboard />;
+};
+
+const OldMasterDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState<string>('today');
   const [selectedMetric, setSelectedMetric] = useState<string>('revenue');
