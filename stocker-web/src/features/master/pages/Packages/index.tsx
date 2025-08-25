@@ -68,7 +68,7 @@ import {
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
 import '../../styles/master-layout.css';
-import { packagesApi } from '@/shared/api/packages.api';
+import { packagesApi, CreatePackageRequest, UpdatePackageRequest, PackageFeatureDto, PackageModuleDto } from '@/shared/api/packages.api';
 import { useEffect } from 'react';
 
 const { Title, Text, Paragraph } = Typography;
@@ -140,31 +140,31 @@ export const MasterPackagesPage: React.FC = () => {
           id: p.id,
           name: p.name,
           description: p.description || 'Açıklama yok',
-          price: p.price || 0,
+          price: p.basePrice?.amount || 0,
           discountedPrice: p.discountedPrice,
-          currency: p.currency || '₺',
-          billingCycle: p.billingPeriod?.toLowerCase() || 'monthly',
+          currency: p.basePrice?.currency || p.currency || 'TRY',
+          billingCycle: p.billingCycle?.toLowerCase() || 'monthly',
           popular: p.isPopular || false,
           recommended: false,
           new: false,
           maxUsers: p.maxUsers || 0,
           maxStorage: p.maxStorage || 0,
-          features: p.features?.map((f: any) => f.featureName || f) || [],
-          modules: ['CRM', 'Sales'], // Mock modules
+          features: p.features?.map((f: PackageFeatureDto) => f.featureName) || [],
+          modules: p.modules?.map((m: PackageModuleDto) => m.moduleName) || [],
           support: 'E-posta',
           apiCalls: 10000,
-          customDomain: p.price > 100,
-          whiteLabel: p.price > 500,
-          priority: p.sortOrder || 1,
+          customDomain: p.basePrice?.amount > 100,
+          whiteLabel: p.basePrice?.amount > 500,
+          priority: p.displayOrder || 1,
           color: getPackageColor(p.name),
           icon: getPackageIcon(p.name),
           gradient: getPackageGradient(p.name),
           subscriberCount: Math.floor(Math.random() * 1000),
-          revenue: p.price * Math.floor(Math.random() * 100),
+          revenue: (p.basePrice?.amount || 0) * Math.floor(Math.random() * 100),
           growth: Math.floor(Math.random() * 40) - 10,
           status: p.isActive ? 'active' : 'inactive',
-          createdAt: p.createdDate || new Date().toISOString(),
-          updatedAt: p.modifiedDate || new Date().toISOString()
+          createdAt: p.createdAt || new Date().toISOString(),
+          updatedAt: p.modifiedAt || new Date().toISOString()
         }));
         
         setPackages(mappedPackages);
@@ -832,21 +832,47 @@ export const MasterPackagesPage: React.FC = () => {
   const handleCreatePackage = async (values: any) => {
     setLoading(true);
     try {
+      // Prepare features and modules
+      const features: PackageFeatureDto[] = (values.features || []).map((f: string) => ({
+        featureCode: f.toLowerCase().replace(/\s+/g, '_'),
+        featureName: f,
+        isEnabled: true
+      }));
+      
+      const modules: PackageModuleDto[] = (values.modules || []).map((m: string) => ({
+        moduleCode: m.toLowerCase(),
+        moduleName: m,
+        isIncluded: true
+      }));
+      
       if (selectedPackage) {
         // Update existing package
-        await packagesApi.update(selectedPackage.id, {
-          ...values,
-          billingPeriod: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly'
-        });
+        const updateRequest: UpdatePackageRequest = {
+          id: selectedPackage.id,
+          name: values.name,
+          description: values.description,
+          basePrice: values.price,
+          billingCycle: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
+          maxUsers: values.maxUsers,
+          maxStorage: values.maxStorage,
+          isActive: values.status === 'active'
+        };
+        await packagesApi.update(selectedPackage.id, updateRequest);
         message.success('Paket güncellendi');
       } else {
         // Create new package
-        await packagesApi.create({
-          ...values,
-          billingPeriod: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
+        const createRequest: CreatePackageRequest = {
+          name: values.name,
+          description: values.description,
+          basePrice: values.price,
+          billingCycle: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
+          maxUsers: values.maxUsers,
+          maxStorage: values.maxStorage,
           isActive: true,
-          sortOrder: packages.length + 1
-        });
+          features,
+          modules
+        };
+        await packagesApi.create(createRequest);
         message.success('Paket oluşturuldu');
       }
       

@@ -1,20 +1,62 @@
 import { api } from './client';
 
+export interface MoneyDto {
+  amount: number;
+  currency: string;
+}
+
+export interface PackageFeatureDto {
+  featureCode: string;
+  featureName: string;
+  isEnabled: boolean;
+}
+
+export interface PackageModuleDto {
+  moduleCode: string;
+  moduleName: string;
+  isIncluded: boolean;
+}
+
 export interface Package {
   id: string;
   name: string;
   description?: string;
-  price: number;
+  basePrice: MoneyDto;
   currency: string;
-  billingPeriod: 'Monthly' | 'Yearly';
-  features: string[];
+  type?: string;
+  billingCycle: 'Monthly' | 'Yearly';
+  maxUsers: number;
+  maxStorage: number;
+  trialDays?: number;
+  isActive: boolean;
+  isPublic?: boolean;
+  displayOrder: number;
+  createdAt?: string;
+  features: PackageFeatureDto[];
+  modules: PackageModuleDto[];
+}
+
+export interface CreatePackageRequest {
+  name: string;
+  description?: string;
+  basePrice: number;
+  billingCycle: string;
+  maxUsers: number;
+  maxStorage: number;
+  isActive?: boolean;
+  features?: PackageFeatureDto[];
+  modules?: PackageModuleDto[];
+}
+
+export interface UpdatePackageRequest {
+  id: string;
+  name: string;
+  description?: string;
+  basePrice: number;
+  billingCycle: string;
   maxUsers: number;
   maxStorage: number;
   isActive: boolean;
-  isPopular?: boolean;
-  sortOrder: number;
-  createdDate?: string;
-  modifiedDate?: string;
 }
 
 export const packagesApi = {
@@ -24,10 +66,10 @@ export const packagesApi = {
   getById: (id: string) => 
     api.get<any>(`/api/master/Packages/${id}`),
     
-  create: (data: Partial<Package>) => 
+  create: (data: CreatePackageRequest) => 
     api.post<any>('/api/master/Packages', data),
     
-  update: (id: string, data: Partial<Package>) => 
+  update: (id: string, data: UpdatePackageRequest) => 
     api.put<any>(`/api/master/Packages/${id}`, data),
     
   delete: (id: string) => 
