@@ -68,6 +68,8 @@ import {
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
 import '../../styles/master-layout.css';
+import { packagesApi } from '@/shared/api/packages.api';
+import { useEffect } from 'react';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -119,8 +121,97 @@ export const MasterPackagesPage: React.FC = () => {
   const [showFeatureModal, setShowFeatureModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [loading, setLoading] = useState(false);
+  const [packages, setPackages] = useState<Package[]>([]);
   const [form] = Form.useForm();
   const [featureForm] = Form.useForm();
+
+  // Fetch packages from API
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      const response = await packagesApi.getAll({ isActive: true });
+      
+      if (response.data && response.data.success && response.data.data) {
+        const mappedPackages = response.data.data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || 'Açıklama yok',
+          price: p.price || 0,
+          discountedPrice: p.discountedPrice,
+          currency: p.currency || '₺',
+          billingCycle: p.billingPeriod?.toLowerCase() || 'monthly',
+          popular: p.isPopular || false,
+          recommended: false,
+          new: false,
+          maxUsers: p.maxUsers || 0,
+          maxStorage: p.maxStorage || 0,
+          features: p.features || [],
+          modules: ['CRM', 'Sales'], // Mock modules
+          support: 'E-posta',
+          apiCalls: 10000,
+          customDomain: p.price > 100,
+          whiteLabel: p.price > 500,
+          priority: p.sortOrder || 1,
+          color: getPackageColor(p.name),
+          icon: getPackageIcon(p.name),
+          gradient: getPackageGradient(p.name),
+          subscriberCount: Math.floor(Math.random() * 1000),
+          revenue: p.price * Math.floor(Math.random() * 100),
+          growth: Math.floor(Math.random() * 40) - 10,
+          status: p.isActive ? 'active' : 'inactive',
+          createdAt: p.createdDate || new Date().toISOString(),
+          updatedAt: p.modifiedDate || new Date().toISOString()
+        }));
+        
+        setPackages(mappedPackages);
+      } else {
+        // Use mock data as fallback
+        setPackages(mockPackages);
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+      message.error('Paket listesi yüklenirken hata oluştu');
+      // Use mock data as fallback
+      setPackages(mockPackages);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper functions for package styling
+  const getPackageColor = (name: string) => {
+    const colors: any = {
+      'Free': '#8c8c8c',
+      'Starter': '#52c41a',
+      'Professional': '#1890ff',
+      'Enterprise': '#722ed1'
+    };
+    return colors[name] || '#1890ff';
+  };
+
+  const getPackageIcon = (name: string) => {
+    const icons: any = {
+      'Free': <UserOutlined />,
+      'Starter': <RocketOutlined />,
+      'Professional': <ThunderboltOutlined />,
+      'Enterprise': <CrownOutlined />
+    };
+    return icons[name] || <AppstoreOutlined />;
+  };
+
+  const getPackageGradient = (name: string) => {
+    const gradients: any = {
+      'Free': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'Starter': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'Professional': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      'Enterprise': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    };
+    return gradients[name] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  };
 
   // Mock packages data
   const mockPackages: Package[] = [
@@ -270,7 +361,7 @@ export const MasterPackagesPage: React.FC = () => {
     },
   ];
 
-  const [packages, setPackages] = useState<Package[]>(mockPackages);
+  // Remove this line as packages state is already defined above
 
   // Mock features data
   const mockFeatures: Feature[] = [
@@ -669,9 +760,14 @@ export const MasterPackagesPage: React.FC = () => {
     setShowCreateModal(true);
   };
 
-  const handleDelete = (id: string) => {
-    setPackages(packages.filter((p) => p.id !== id));
-    message.success('Paket silindi');
+  const handleDelete = async (id: string) => {
+    try {
+      await packagesApi.delete(id);
+      setPackages(packages.filter((p) => p.id !== id));
+      message.success('Paket silindi');
+    } catch (error) {
+      message.error('Paket silinirken hata oluştu');
+    }
   };
 
   const handleDuplicate = (pkg: Package) => {
@@ -733,33 +829,38 @@ export const MasterPackagesPage: React.FC = () => {
     });
   };
 
-  const handleCreatePackage = (values: any) => {
-    if (selectedPackage) {
-      setPackages(
-        packages.map((p) =>
-          p.id === selectedPackage.id ? { ...p, ...values } : p
-        )
-      );
-      message.success('Paket güncellendi');
-    } else {
-      const newPackage: Package = {
-        ...values,
-        id: Date.now().toString(),
-        icon: <GiftOutlined />,
-        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        subscriberCount: 0,
-        revenue: 0,
-        growth: 0,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setPackages([...packages, newPackage]);
-      message.success('Paket oluşturuldu');
+  const handleCreatePackage = async (values: any) => {
+    setLoading(true);
+    try {
+      if (selectedPackage) {
+        // Update existing package
+        await packagesApi.update(selectedPackage.id, {
+          ...values,
+          billingPeriod: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly'
+        });
+        message.success('Paket güncellendi');
+      } else {
+        // Create new package
+        await packagesApi.create({
+          ...values,
+          billingPeriod: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
+          isActive: true,
+          sortOrder: packages.length + 1
+        });
+        message.success('Paket oluşturuldu');
+      }
+      
+      // Refresh packages list
+      await fetchPackages();
+      
+      setShowCreateModal(false);
+      setSelectedPackage(null);
+      form.resetFields();
+    } catch (error) {
+      message.error(selectedPackage ? 'Paket güncellenirken hata oluştu' : 'Paket oluşturulurken hata oluştu');
+    } finally {
+      setLoading(false);
     }
-    setShowCreateModal(false);
-    setSelectedPackage(null);
-    form.resetFields();
   };
 
   const handleCreateFeature = (values: any) => {
