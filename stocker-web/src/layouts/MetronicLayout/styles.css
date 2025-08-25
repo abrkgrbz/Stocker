@@ -242,12 +242,14 @@
 
 /* Search Bar */
 .header-search {
-  width: 300px;
-  height: 40px;
+  width: 250px;
+  height: 36px;
   border-radius: 8px;
   background: #f5f8fa;
   border: 1px solid transparent;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .header-search:hover {
@@ -276,10 +278,26 @@
 .header-search .ant-input {
   background: transparent;
   color: #3f4254;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 8px;
+  height: 100%;
 }
 
 .header-search .ant-input::placeholder {
   color: #b5b5c3 !important;
+}
+
+.header-search .ant-input-affix-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 12px;
+}
+
+.header-search .ant-input-clear-icon {
+  font-size: 12px;
+  color: #b5b5c3;
 }
 
 /* Header Buttons */
