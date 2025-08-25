@@ -198,7 +198,7 @@ const MetronicDashboard: React.FC = () => {
     },
     yAxis: {
       label: {
-        formatter: (v: string) => `$${parseInt(v) / 1000}k`,
+        formatter: (v: string) => `₺${parseInt(v) / 1000}k`,
       },
       grid: {
         line: {
@@ -215,8 +215,8 @@ const MetronicDashboard: React.FC = () => {
         return `<div style="padding: 8px;">
           <div style="margin-bottom: 4px; font-weight: 600;">${title}</div>
           ${items.map(item => 
-            `<div style="color: ${item.color};">Revenue: $${item.data.revenue.toLocaleString()}</div>
-             <div style="color: ${item.color};">Profit: $${item.data.profit.toLocaleString()}</div>`
+            `<div style="color: ${item.color};">Gelir: ₺${item.data.revenue.toLocaleString('tr-TR')}</div>
+             <div style="color: ${item.color};">Kar: ₺${item.data.profit.toLocaleString('tr-TR')}</div>`
           ).join('')}
         </div>`;
       },
@@ -260,7 +260,7 @@ const MetronicDashboard: React.FC = () => {
           fontSize: '24px',
           fontWeight: 'bold',
         },
-        content: '386\nTenants',
+        content: '386\nTenant',
       },
     },
     legend: {
@@ -441,7 +441,7 @@ const MetronicDashboard: React.FC = () => {
         <div className="header-content">
           <Title level={3} className="page-title">Dashboard</Title>
           <Paragraph className="page-description">
-            Welcome back! Here's what's happening with your platform today.
+            Hoş geldiniz! Platformunuzda bugün neler oluyor.
           </Paragraph>
         </div>
         <div className="header-actions">
@@ -508,10 +508,10 @@ const MetronicDashboard: React.FC = () => {
       <Row gutter={[24, 24]} className="charts-row">
         <Col xs={24} lg={16}>
           <Card
-            title="Revenue Overview"
+            title="Gelir Özeti"
             extra={
               <Space>
-                <Button type="text" icon={<FilterOutlined />}>Filter</Button>
+                <Button type="text" icon={<FilterOutlined />}>Filtrele</Button>
                 <Button type="text" icon={<MoreOutlined />} />
               </Space>
             }
@@ -523,7 +523,7 @@ const MetronicDashboard: React.FC = () => {
         </Col>
         <Col xs={24} lg={8}>
           <Card
-            title="Tenant Distribution"
+            title="Tenant Dağılımı"
             extra={<Button type="text" icon={<MoreOutlined />} />}
             className="chart-card"
             loading={loading}
@@ -604,46 +604,46 @@ const MetronicDashboard: React.FC = () => {
       {/* Quick Stats */}
       <Row gutter={[24, 24]} className="quick-stats-row">
         <Col xs={24}>
-          <Card title="Platform Performance" className="performance-card">
+          <Card title="Platform Performansı" className="performance-card">
             <Row gutter={[24, 24]}>
               <Col xs={24} sm={12} md={6}>
                 <div className="performance-metric">
                   <div className="metric-header">
-                    <Text type="secondary">Server Uptime</Text>
+                    <Text type="secondary">Sunucu Çalışma Süresi</Text>
                     <CheckCircleOutlined style={{ color: '#50cd89' }} />
                   </div>
                   <Progress percent={99.9} strokeColor="#50cd89" />
-                  <Text strong>99.9% Uptime</Text>
+                  <Text strong>%99.9 Çalışma</Text>
                 </div>
               </Col>
               <Col xs={24} sm={12} md={6}>
                 <div className="performance-metric">
                   <div className="metric-header">
-                    <Text type="secondary">Response Time</Text>
+                    <Text type="secondary">Yanıt Süresi</Text>
                     <ThunderboltOutlined style={{ color: '#ffc700' }} />
                   </div>
                   <Progress percent={85} strokeColor="#ffc700" />
-                  <Text strong>245ms Average</Text>
+                  <Text strong>245ms Ortalama</Text>
                 </div>
               </Col>
               <Col xs={24} sm={12} md={6}>
                 <div className="performance-metric">
                   <div className="metric-header">
-                    <Text type="secondary">API Calls</Text>
+                    <Text type="secondary">API Çağrıları</Text>
                     <ApiOutlined style={{ color: '#667eea' }} />
                   </div>
                   <Progress percent={68} strokeColor="#667eea" />
-                  <Text strong>1.2M Today</Text>
+                  <Text strong>Bugün 1.2M</Text>
                 </div>
               </Col>
               <Col xs={24} sm={12} md={6}>
                 <div className="performance-metric">
                   <div className="metric-header">
-                    <Text type="secondary">Error Rate</Text>
+                    <Text type="secondary">Hata Oranı</Text>
                     <WarningOutlined style={{ color: '#f1416c' }} />
                   </div>
                   <Progress percent={2} strokeColor="#f1416c" />
-                  <Text strong>0.02% Errors</Text>
+                  <Text strong>%0.02 Hata</Text>
                 </div>
               </Col>
             </Row>
