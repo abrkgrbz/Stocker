@@ -21,16 +21,6 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(TOKEN_KEY);
     
-    console.error('🔑 API Request:', {
-      url: config.url,
-      method: config.method,
-      baseURL: config.baseURL,
-      fullURL: config.baseURL + config.url,
-      hasToken: !!token,
-      token: token ? token.substring(0, 20) + '...' : 'NO TOKEN',
-      params: config.params,
-      headers: config.headers
-    });
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;

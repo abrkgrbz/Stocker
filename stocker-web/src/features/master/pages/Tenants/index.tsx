@@ -147,17 +147,6 @@ interface TenantCardProps {
 }
 
 export const MasterTenantsPage: React.FC = () => {
-  console.error('🏁 MasterTenantsPage component loaded!');
-  console.warn('⚠️ TENANTS PAGE MOUNTED');
-  console.info('ℹ️ Component initialized');
-  console.table({ component: 'MasterTenantsPage', status: 'loaded', time: new Date().toISOString() });
-  
-  // Debug panel for console issues
-  const debugDiv = document.createElement('div');
-  debugDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:5px;';
-  debugDiv.innerHTML = '🔴 TENANTS PAGE LOADED - ' + new Date().toLocaleTimeString();
-  document.body.appendChild(debugDiv);
-  setTimeout(() => debugDiv.remove(), 5000);
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -303,18 +292,13 @@ export const MasterTenantsPage: React.FC = () => {
 
   // Fetch tenants from API
   useEffect(() => {
-    console.error('🎬 useEffect triggered for initial load');
-    console.warn('Page:', page, 'PageSize:', pageSize);
     fetchTenants();
-  }, [page, pageSize]); // Removed searchText and filterStatus to prevent too many API calls
+  }, [page, pageSize]);
   
   // Debounced search effect
   useEffect(() => {
-    console.log('🔍 Search/Filter effect triggered');
-    console.log('SearchText:', searchText, 'FilterStatus:', filterStatus);
     const timer = setTimeout(() => {
       if (searchText !== '' || filterStatus !== 'all') {
-        console.log('⏰ Debounce timer executed, calling fetchTenants');
         fetchTenants();
       }
     }, 500);
@@ -323,34 +307,8 @@ export const MasterTenantsPage: React.FC = () => {
   }, [searchText, filterStatus]);
 
   const fetchTenants = async () => {
-    console.error('==================================');
-    console.error('🚀 fetchTenants FUNCTION CALLED!');
-    console.error('==================================');
-    
-    // Show API call in DOM
-    const apiDiv = document.createElement('div');
-    apiDiv.style.cssText = 'position:fixed;top:60px;right:10px;background:blue;color:white;padding:10px;z-index:9999;border-radius:5px;';
-    apiDiv.innerHTML = '🔵 API CALL STARTED - ' + new Date().toLocaleTimeString();
-    document.body.appendChild(apiDiv);
-    setTimeout(() => apiDiv.remove(), 5000);
-    
-    console.warn('🔍 Fetching tenants with params:', {
-      page,
-      pageSize,
-      search: searchText || 'none',
-      filterStatus,
-      isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
-    });
-    
     setLoading(true);
     try {
-      console.error('📡 API Call: tenantsApi.getAll()');
-      
-      // Show API request in DOM
-      const reqDiv = document.createElement('div');
-      reqDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:orange;color:white;padding:10px;z-index:9999;border-radius:5px;';
-      reqDiv.innerHTML = '🟠 SENDING REQUEST TO API...';
-      document.body.appendChild(reqDiv);
       
       const response = await tenantsApi.getAll({
         page,
@@ -359,48 +317,32 @@ export const MasterTenantsPage: React.FC = () => {
         isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
       });
       
-      // Remove request div
-      reqDiv.remove();
-      
-      // Show response in DOM
-      const resDiv = document.createElement('div');
-      resDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:green;color:white;padding:10px;z-index:9999;border-radius:5px;';
-      resDiv.innerHTML = `🟢 API RESPONSE OK - ${response.data?.items?.length || 0} items`;
-      document.body.appendChild(resDiv);
-      setTimeout(() => resDiv.remove(), 5000);
-      
-      console.log('✅ API Response:', response);
-      console.log('📦 Response Data:', response.data);
-      console.log('📊 Response Status:', response.status);
-      console.log('🔢 Total Count:', response.data?.totalCount);
-      console.log('📝 Items Count:', response.data?.items?.length);
       
       // Check if response has the expected structure
-      if (response.data && response.data.items) {
-        console.log('✨ Processing', response.data.items.length, 'tenants');
+      if (response.data && response.data.success && response.data.data) {
         // Map API response to component format
-        const mappedTenants = response.data.items.map((t: any) => ({
+        const mappedTenants = response.data.data.map((t: any) => ({
           id: t.id,
           name: t.name,
-          domain: t.identifier + '.stoocker.app',
-          email: t.adminEmail,
-          phone: t.phoneNumber || 'N/A',
+          domain: t.domain || `${t.code}.stoocker.app`,
+          email: t.contactEmail,
+          phone: 'N/A',
           plan: ['Free', 'Starter', 'Professional', 'Enterprise'].includes(t.packageName) ? t.packageName : 'Free',
-          status: t.isActive ? 'active' : t.isActive === false ? 'suspended' : 'pending',
+          status: t.isActive ? 'active' : 'suspended',
           userCount: t.userCount || 0,
-          maxUsers: t.maxUsers || 10,
-          storageUsed: t.storageUsed || 0,
-          maxStorage: t.maxStorage || 10,
+          maxUsers: 100, // Default max users
+          storageUsed: Math.floor(Math.random() * 50), // Mock storage
+          maxStorage: 100, // Default max storage
           createdAt: t.createdDate ? new Date(t.createdDate).toLocaleDateString('tr-TR') : 'N/A',
-          expiresAt: t.expiryDate ? new Date(t.expiryDate).toLocaleDateString('tr-TR') : 'N/A',
-          lastLogin: t.lastAccessDate ? new Date(t.lastAccessDate).toLocaleDateString('tr-TR') : 'Hiç giriş yok',
+          expiresAt: t.subscriptionEndDate ? new Date(t.subscriptionEndDate).toLocaleDateString('tr-TR') : 'N/A',
+          lastLogin: 'Bilinmiyor',
           revenue: Math.floor(Math.random() * 50000), // Mock revenue for demo
           growth: Math.floor(Math.random() * 40) - 10, // Mock growth for demo
-          modules: t.modules || ['CRM', 'Sales'],
-          features: t.features || ['API Access'],
+          modules: ['CRM', 'Sales'], // Mock modules
+          features: ['API Access'], // Mock features
           owner: {
-            name: t.adminName || 'Admin',
-            email: t.adminEmail,
+            name: 'Admin',
+            email: t.contactEmail,
             avatar: undefined
           },
           performance: {
@@ -411,55 +353,27 @@ export const MasterTenantsPage: React.FC = () => {
           }
         }));
         
-        console.log('🗺️ Mapped Tenants:', mappedTenants);
         setTenants(mappedTenants);
-        setTotalCount(response.data.totalCount || mappedTenants.length);
-        console.log('✅ Successfully set', mappedTenants.length, 'tenants');
+        setTotalCount(mappedTenants.length);
       } else {
-        // If API returns unexpected format, show error but don't use mock data
-        console.error('❌ Unexpected API response format!');
-        console.error('Expected: { items: [], totalCount: number }');
-        console.error('Received:', response.data);
-        console.error('Full response:', response);
         message.warning('API veri formatı beklenenden farklı');
         setTenants([]);
         setTotalCount(0);
       }
     } catch (error: any) {
-      // Show error in DOM
-      const errDiv = document.createElement('div');
-      errDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:5px;';
-      errDiv.innerHTML = `🔴 API ERROR: ${error.message || 'Unknown error'}`;
-      document.body.appendChild(errDiv);
-      setTimeout(() => errDiv.remove(), 10000);
       
-      console.error('🚨 Error fetching tenants!');
-      console.error('Error Object:', error);
-      console.error('Error Message:', error.message);
-      console.error('Error Response:', error.response);
-      console.error('Error Status:', error.response?.status);
-      console.error('Error Data:', error.response?.data);
-      console.error('Error Config:', error.config);
-      
-      // Check if it's a network error or auth error
       if (error.response?.status === 401) {
-        console.log('🔐 Authentication error - 401');
         message.error('Oturum süreniz dolmuş, lütfen tekrar giriş yapın');
       } else if (error.response?.status === 403) {
-        console.log('🚫 Forbidden error - 403');
         message.error('Bu sayfaya erişim yetkiniz yok');
       } else if (error.code === 'ERR_NETWORK') {
-        console.log('🌐 Network error detected');
         message.error('Bağlantı hatası, lütfen internet bağlantınızı kontrol edin');
         // Use mock data only for network errors during development
         if (import.meta.env.DEV) {
-          console.log('🔧 DEV MODE: Using mock data');
           message.info('Geliştirme modunda mock data gösteriliyor');
           setTenants(mockTenants);
-          console.log('📌 Mock tenants set:', mockTenants.length, 'items');
         }
       } else {
-        console.log('❓ Unknown error type');
         message.error('Tenant listesi yüklenirken hata oluştu');
         setTenants([]);
       }
@@ -982,10 +896,6 @@ export const MasterTenantsPage: React.FC = () => {
     const matchesPlan = filterPlan === 'all' || tenant.plan === filterPlan;
     return matchesSearch && matchesStatus && matchesPlan;
   });
-
-  console.log('🎨 Rendering MasterTenantsPage');
-  console.log('Current tenants count:', tenants.length);
-  console.log('Loading state:', loading);
 
   return (
     <div className="master-tenants-page">

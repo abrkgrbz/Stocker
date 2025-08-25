@@ -3,23 +3,23 @@ import { Tenant, CreateTenantRequest, PaginatedResponse } from '@/shared/types';
 
 export const tenantsApi = {
   getAll: (params?: { page?: number; pageSize?: number; search?: string; isActive?: boolean }) => 
-    api.get<PaginatedResponse<Tenant>>('/api/master/tenants', { params }),
+    api.get<any>('/api/masters/Tenants', { params }),
     
   getById: (id: string) => 
-    api.get<Tenant>(`/api/master/tenants/${id}`),
+    api.get<Tenant>(`/api/masters/Tenants/${id}`),
     
   create: (data: CreateTenantRequest) => 
-    api.post<Tenant>('/api/master/tenants', data),
+    api.post<Tenant>('/api/masters/Tenants', data),
     
   update: (id: string, data: Partial<CreateTenantRequest>) => 
-    api.put<Tenant>(`/api/master/tenants/${id}`, data),
+    api.put<Tenant>(`/api/masters/Tenants/${id}`, data),
     
   delete: (id: string) => 
-    api.delete(`/api/master/tenants/${id}`),
+    api.delete(`/api/masters/Tenants/${id}`),
     
   activate: (id: string) => 
-    api.post(`/api/master/tenants/${id}/activate`),
+    api.post(`/api/masters/Tenants/${id}/activate`),
     
   deactivate: (id: string) => 
-    api.post(`/api/master/tenants/${id}/deactivate`),
+    api.post(`/api/masters/Tenants/${id}/deactivate`),
 };
