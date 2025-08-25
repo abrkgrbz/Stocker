@@ -326,6 +326,14 @@ export const MasterTenantsPage: React.FC = () => {
     console.error('==================================');
     console.error('🚀 fetchTenants FUNCTION CALLED!');
     console.error('==================================');
+    
+    // Show API call in DOM
+    const apiDiv = document.createElement('div');
+    apiDiv.style.cssText = 'position:fixed;top:60px;right:10px;background:blue;color:white;padding:10px;z-index:9999;border-radius:5px;';
+    apiDiv.innerHTML = '🔵 API CALL STARTED - ' + new Date().toLocaleTimeString();
+    document.body.appendChild(apiDiv);
+    setTimeout(() => apiDiv.remove(), 5000);
+    
     console.warn('🔍 Fetching tenants with params:', {
       page,
       pageSize,
@@ -337,12 +345,29 @@ export const MasterTenantsPage: React.FC = () => {
     setLoading(true);
     try {
       console.error('📡 API Call: tenantsApi.getAll()');
+      
+      // Show API request in DOM
+      const reqDiv = document.createElement('div');
+      reqDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:orange;color:white;padding:10px;z-index:9999;border-radius:5px;';
+      reqDiv.innerHTML = '🟠 SENDING REQUEST TO API...';
+      document.body.appendChild(reqDiv);
+      
       const response = await tenantsApi.getAll({
         page,
         pageSize,
         search: searchText || undefined,
         isActive: filterStatus === 'active' ? true : filterStatus === 'suspended' ? false : undefined
       });
+      
+      // Remove request div
+      reqDiv.remove();
+      
+      // Show response in DOM
+      const resDiv = document.createElement('div');
+      resDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:green;color:white;padding:10px;z-index:9999;border-radius:5px;';
+      resDiv.innerHTML = `🟢 API RESPONSE OK - ${response.data?.items?.length || 0} items`;
+      document.body.appendChild(resDiv);
+      setTimeout(() => resDiv.remove(), 5000);
       
       console.log('✅ API Response:', response);
       console.log('📦 Response Data:', response.data);
@@ -401,6 +426,13 @@ export const MasterTenantsPage: React.FC = () => {
         setTotalCount(0);
       }
     } catch (error: any) {
+      // Show error in DOM
+      const errDiv = document.createElement('div');
+      errDiv.style.cssText = 'position:fixed;top:110px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:5px;';
+      errDiv.innerHTML = `🔴 API ERROR: ${error.message || 'Unknown error'}`;
+      document.body.appendChild(errDiv);
+      setTimeout(() => errDiv.remove(), 10000);
+      
       console.error('🚨 Error fetching tenants!');
       console.error('Error Object:', error);
       console.error('Error Message:', error.message);
