@@ -50,6 +50,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
 import './styles.css';
+import './sidebar-fix.css';
 
 const { Header, Sider, Content } = Layout;
 
