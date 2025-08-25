@@ -1,0 +1,286 @@
+/* Master Tenants Page Styles */
+.master-tenants-page {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+  min-height: 100vh;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.header-content {
+  flex: 1;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 !important;
+}
+
+.gradient-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.gradient-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Glass Morphism */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Stats Row */
+.stats-row {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.stat-trend {
+  margin-top: 8px;
+}
+
+/* Filters Card */
+.filters-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+}
+
+/* Tenant Card */
+.tenant-card {
+  height: 100%;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tenant-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.tenant-card:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
+.tenant-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tenant-info {
+  flex: 1;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-item .anticon {
+  color: #8c8c8c;
+}
+
+.metric-box {
+  text-align: center;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+.modules-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Table Card */
+.table-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-card .ant-table {
+  background: transparent;
+}
+
+.table-card .ant-table-thead > tr > th {
+  background: rgba(102, 126, 234, 0.05);
+  font-weight: 600;
+}
+
+.table-card .ant-table-tbody > tr:hover > td {
+  background: rgba(102, 126, 234, 0.03);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header,
+.stat-card,
+.filters-card,
+.tenant-card,
+.table-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .ant-space {
+    width: 100%;
+  }
+
+  .header-actions .ant-btn {
+    flex: 1;
+  }
+}
+
+/* Custom Scrollbar */
+.master-tenants-page ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.master-tenants-page ::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.master-tenants-page ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+.master-tenants-page ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a72d8 0%, #6a4196 100%);
+}
+
+/* Loading States */
+.ant-skeleton-element {
+  width: 100%;
+}
+
+/* Empty State */
+.ant-empty {
+  padding: 48px 0;
+}
+
+/* Modal & Drawer */
+.ant-modal-content,
+.ant-drawer-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ant-modal-header,
+.ant-drawer-header {
+  background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+/* Form Styles */
+.ant-form-item-label > label {
+  font-weight: 500;
+}
+
+/* Tag Styles */
+.ant-tag {
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-weight: 500;
+}
+
+/* Progress Styles */
+.ant-progress-line {
+  margin-bottom: 0;
+}
+
+.ant-progress-bg {
+  border-radius: 4px;
+}
+
+/* Button Hover Effects */
+.ant-btn-text:hover {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+/* Dropdown Menu */
+.ant-dropdown-menu-item:hover {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.ant-dropdown-menu-item-danger:hover {
+  background: rgba(255, 77, 79, 0.08);
+}

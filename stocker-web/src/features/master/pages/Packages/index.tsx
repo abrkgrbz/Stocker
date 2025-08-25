@@ -1,475 +1,555 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Card,
   Row,
   Col,
+  Card,
   Button,
-  Table,
-  Tag,
   Space,
+  Tag,
+  Typography,
   Modal,
   Form,
   Input,
   InputNumber,
   Select,
   Switch,
-  Tabs,
-  Badge,
-  Typography,
-  Tooltip,
-  Dropdown,
-  Avatar,
-  List,
-  Checkbox,
   Divider,
-  Alert,
+  Badge,
+  Tooltip,
+  Table,
+  Segmented,
+  message,
+  Popconfirm,
+  Checkbox,
+  List,
+  Avatar,
   Progress,
   Statistic,
   Timeline,
-  message,
-  Popconfirm,
-  Descriptions,
-  Segmented,
+  Alert,
+  Tabs,
 } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  DollarOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  StarOutlined,
-  ThunderboltOutlined,
   CrownOutlined,
   RocketOutlined,
+  ThunderboltOutlined,
+  UserOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  DollarOutlined,
   GiftOutlined,
-  TagOutlined,
-  PercentageOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  DatabaseOutlined,
-  ApiOutlined,
-  SafetyOutlined,
-  CustomerServiceOutlined,
-  FileTextOutlined,
-  SettingOutlined,
-  AppstoreOutlined,
-  CloudOutlined,
-  LockOutlined,
-  UnlockOutlined,
+  StarFilled,
   FireOutlined,
+  SafetyOutlined,
+  CloudServerOutlined,
+  ApiOutlined,
+  DatabaseOutlined,
+  MailOutlined,
+  CustomerServiceOutlined,
+  TeamOutlined,
+  AppstoreOutlined,
+  BarsOutlined,
+  CopyOutlined,
+  EyeOutlined,
+  SettingOutlined,
+  InfoCircleOutlined,
+  ExportOutlined,
+  ImportOutlined,
+  ReloadOutlined,
+  HeartFilled,
   TrophyOutlined,
-  UnorderedListOutlined,
+  BulbOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import './style.css';
+import CountUp from 'react-countup';
+import './styles.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
-const { TextArea } = Input;
 
+// Types
 interface Package {
   id: string;
   name: string;
-  displayName: string;
   description: string;
   price: number;
+  discountedPrice?: number;
+  currency: string;
   billingCycle: 'monthly' | 'yearly';
+  popular?: boolean;
+  recommended?: boolean;
+  new?: boolean;
+  maxUsers: number;
+  maxStorage: number;
   features: string[];
-  limits: {
-    users: number;
-    storage: number;
-    projects: number;
-    apiCalls: number;
-  };
   modules: string[];
-  isActive: boolean;
-  isPopular: boolean;
-  discount: number;
-  subscriberCount: number;
-  revenue: number;
+  support: string;
+  apiCalls: number;
+  customDomain: boolean;
+  whiteLabel: boolean;
+  priority: number;
   color: string;
   icon: React.ReactNode;
+  gradient: string;
+  subscriberCount: number;
+  revenue: number;
+  growth: number;
+  status: 'active' | 'inactive' | 'deprecated';
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Feature {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  packages: string[];
 }
 
 export const MasterPackagesPage: React.FC = () => {
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [featureForm] = Form.useForm();
 
   // Mock packages data
-  const packages: Package[] = [
+  const mockPackages: Package[] = [
     {
       id: '1',
-      name: 'free',
-      displayName: 'Ücretsiz',
-      description: 'Küçük işletmeler ve bireysel kullanıcılar için ideal başlangıç paketi',
+      name: 'Free',
+      description: 'Küçük işletmeler için mükemmel başlangıç',
       price: 0,
+      currency: '₺',
       billingCycle: 'monthly',
+      maxUsers: 5,
+      maxStorage: 5,
       features: [
-        'Temel stok yönetimi',
-        'Fatura oluşturma',
-        'Basit raporlama',
+        'Temel CRM özellikleri',
         'E-posta desteği',
+        '5 GB depolama',
+        'Temel raporlama',
+        'Mobil uygulama',
       ],
-      limits: {
-        users: 2,
-        storage: 1,
-        projects: 3,
-        apiCalls: 1000,
-      },
-      modules: ['inventory', 'invoicing'],
-      isActive: true,
-      isPopular: false,
-      discount: 0,
-      subscriberCount: 145,
-      revenue: 0,
+      modules: ['CRM'],
+      support: 'E-posta',
+      apiCalls: 1000,
+      customDomain: false,
+      whiteLabel: false,
+      priority: 1,
       color: '#8c8c8c',
-      icon: <GiftOutlined />,
+      icon: <UserOutlined />,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      subscriberCount: 150,
+      revenue: 0,
+      growth: 25,
+      status: 'active',
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
     },
     {
       id: '2',
-      name: 'starter',
-      displayName: 'Başlangıç',
-      description: 'Büyüyen işletmeler için gelişmiş özellikler ve daha fazla kullanıcı',
-      price: 499,
+      name: 'Starter',
+      description: 'Büyüyen işletmeler için ideal',
+      price: 299,
+      discountedPrice: 249,
+      currency: '₺',
       billingCycle: 'monthly',
+      new: true,
+      maxUsers: 25,
+      maxStorage: 25,
       features: [
-        'Gelişmiş stok yönetimi',
-        'CRM modülü',
-        'Detaylı raporlama',
-        'Telefon desteği',
+        'Tüm Free özellikleri',
+        'Gelişmiş CRM',
+        'Sales modülü',
+        '25 GB depolama',
+        'Özel raporlar',
+        'Öncelikli e-posta desteği',
         'API erişimi',
       ],
-      limits: {
-        users: 10,
-        storage: 10,
-        projects: 10,
-        apiCalls: 10000,
-      },
-      modules: ['inventory', 'invoicing', 'crm', 'reports'],
-      isActive: true,
-      isPopular: true,
-      discount: 20,
-      subscriberCount: 89,
-      revenue: 44411,
+      modules: ['CRM', 'Sales'],
+      support: 'E-posta + Telefon',
+      apiCalls: 10000,
+      customDomain: false,
+      whiteLabel: false,
+      priority: 2,
       color: '#52c41a',
       icon: <RocketOutlined />,
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      subscriberCount: 89,
+      revenue: 22211,
+      growth: 15,
+      status: 'active',
+      createdAt: '2024-01-01',
+      updatedAt: '2024-03-01',
     },
     {
       id: '3',
-      name: 'professional',
-      displayName: 'Profesyonel',
-      description: 'Orta ölçekli işletmeler için tam özellikli çözüm',
-      price: 999,
+      name: 'Professional',
+      description: 'Profesyonel ekipler için güçlü özellikler',
+      price: 599,
+      currency: '₺',
       billingCycle: 'monthly',
+      popular: true,
+      recommended: true,
+      maxUsers: 100,
+      maxStorage: 100,
       features: [
-        'Tüm modüller',
-        'Sınırsız fatura',
-        'Gelişmiş analizler',
-        '7/24 destek',
-        'Özel entegrasyonlar',
-        'Veri yedekleme',
+        'Tüm Starter özellikleri',
+        'Finance modülü',
+        'HR modülü',
+        '100 GB depolama',
+        'Gelişmiş analitik',
+        '7/24 telefon desteği',
+        'Özel domain',
+        'Webhook entegrasyonları',
+        'Bulk işlemler',
       ],
-      limits: {
-        users: 50,
-        storage: 50,
-        projects: 50,
-        apiCalls: 50000,
-      },
-      modules: ['inventory', 'invoicing', 'crm', 'reports', 'hr', 'finance'],
-      isActive: true,
-      isPopular: false,
-      discount: 15,
-      subscriberCount: 45,
-      revenue: 44955,
-      color: '#667eea',
-      icon: <CrownOutlined />,
+      modules: ['CRM', 'Sales', 'Finance', 'HR'],
+      support: '7/24 Telefon + Chat',
+      apiCalls: 50000,
+      customDomain: true,
+      whiteLabel: false,
+      priority: 3,
+      color: '#1890ff',
+      icon: <ThunderboltOutlined />,
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      subscriberCount: 156,
+      revenue: 93444,
+      growth: 32,
+      status: 'active',
+      createdAt: '2024-01-01',
+      updatedAt: '2024-02-15',
     },
     {
       id: '4',
-      name: 'enterprise',
-      displayName: 'Kurumsal',
-      description: 'Büyük ölçekli işletmeler için özelleştirilebilir kurumsal çözüm',
-      price: 2499,
+      name: 'Enterprise',
+      description: 'Büyük organizasyonlar için sınırsız güç',
+      price: 1299,
+      discountedPrice: 999,
+      currency: '₺',
       billingCycle: 'monthly',
+      maxUsers: 999999,
+      maxStorage: 999999,
       features: [
-        'Sınırsız kullanıcı',
+        'Tüm Professional özellikleri',
+        'Production modülü',
+        'Inventory modülü',
         'Sınırsız depolama',
-        'Özel modüller',
-        'Özel sunucu',
+        'Özel geliştirme',
+        'Dedike destek',
+        'White-label',
         'SLA garantisi',
         'Özel eğitim',
-        'Danışmanlık hizmeti',
+        'Veri yedekleme',
       ],
-      limits: {
-        users: -1,
-        storage: -1,
-        projects: -1,
-        apiCalls: -1,
-      },
-      modules: ['all'],
-      isActive: true,
-      isPopular: false,
-      discount: 0,
-      subscriberCount: 12,
-      revenue: 29988,
-      color: '#faad14',
-      icon: <TrophyOutlined />,
+      modules: ['CRM', 'Sales', 'Finance', 'HR', 'Production', 'Inventory'],
+      support: 'Dedike Account Manager',
+      apiCalls: 999999,
+      customDomain: true,
+      whiteLabel: true,
+      priority: 4,
+      color: '#722ed1',
+      icon: <CrownOutlined />,
+      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      subscriberCount: 45,
+      revenue: 44955,
+      growth: 18,
+      status: 'active',
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-20',
     },
   ];
 
-  const totalRevenue = packages.reduce((sum, pkg) => sum + pkg.revenue, 0);
-  const totalSubscribers = packages.reduce((sum, pkg) => sum + pkg.subscriberCount, 0);
+  const [packages, setPackages] = useState<Package[]>(mockPackages);
+
+  // Mock features data
+  const mockFeatures: Feature[] = [
+    { id: '1', name: 'CRM Modülü', description: 'Müşteri ilişkileri yönetimi', category: 'Modüller', packages: ['Free', 'Starter', 'Professional', 'Enterprise'] },
+    { id: '2', name: 'Sales Modülü', description: 'Satış yönetimi', category: 'Modüller', packages: ['Starter', 'Professional', 'Enterprise'] },
+    { id: '3', name: 'Finance Modülü', description: 'Finansal yönetim', category: 'Modüller', packages: ['Professional', 'Enterprise'] },
+    { id: '4', name: 'API Erişimi', description: 'REST API erişimi', category: 'Entegrasyon', packages: ['Starter', 'Professional', 'Enterprise'] },
+    { id: '5', name: 'Özel Domain', description: 'Kendi domain adresiniz', category: 'Özelleştirme', packages: ['Professional', 'Enterprise'] },
+    { id: '6', name: 'White Label', description: 'Marka özelleştirme', category: 'Özelleştirme', packages: ['Enterprise'] },
+  ];
+
+  const [features, setFeatures] = useState<Feature[]>(mockFeatures);
+
+  // Stats
+  const stats = [
+    {
+      title: 'Toplam Paket',
+      value: packages.length,
+      icon: <GiftOutlined />,
+      color: '#1890ff',
+      suffix: '',
+    },
+    {
+      title: 'Aktif Abonelik',
+      value: packages.reduce((sum, p) => sum + p.subscriberCount, 0),
+      icon: <TeamOutlined />,
+      color: '#52c41a',
+      suffix: '',
+    },
+    {
+      title: 'Aylık Gelir',
+      value: packages.reduce((sum, p) => sum + p.revenue, 0),
+      icon: <DollarOutlined />,
+      color: '#fa8c16',
+      prefix: '₺',
+    },
+    {
+      title: 'Ortalama Büyüme',
+      value: Math.round(packages.reduce((sum, p) => sum + p.growth, 0) / packages.length),
+      icon: <FireOutlined />,
+      color: '#722ed1',
+      suffix: '%',
+    },
+  ];
 
   // Package Card Component
-  const PackageCard = ({ pkg }: { pkg: Package }) => (
+  const PackageCard: React.FC<{ pkg: Package }> = ({ pkg }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      exit={{ opacity: 0, y: 20 }}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
     >
       <Card
-        className={`package-card ${pkg.isPopular ? 'popular' : ''}`}
-        style={{ borderTop: `4px solid ${pkg.color}` }}
-        actions={[
-          <Tooltip title="Düzenle" key="edit">
-            <EditOutlined onClick={() => handleEdit(pkg)} />
-          </Tooltip>,
-          <Tooltip title="Kopyala" key="copy">
-            <CopyOutlined onClick={() => handleDuplicate(pkg)} />
-          </Tooltip>,
-          <Tooltip title="Detaylar" key="view">
-            <EyeOutlined onClick={() => handleView(pkg)} />
-          </Tooltip>,
-          <Dropdown
-            key="more"
-            menu={{
-              items: [
-                {
-                  key: 'activate',
-                  label: pkg.isActive ? 'Deaktif Et' : 'Aktif Et',
-                  icon: pkg.isActive ? <LockOutlined /> : <UnlockOutlined />,
-                  onClick: () => handleToggleStatus(pkg),
-                },
-                {
-                  key: 'delete',
-                  label: 'Sil',
-                  icon: <DeleteOutlined />,
-                  danger: true,
-                  onClick: () => handleDelete(pkg),
-                },
-              ],
+        className={`package-card ${pkg.popular ? 'popular' : ''}`}
+        style={{
+          background: `linear-gradient(135deg, white 0%, ${pkg.color}05 100%)`,
+          borderTop: `4px solid ${pkg.color}`,
+          height: '100%',
+        }}
+      >
+        {/* Badges */}
+        {(pkg.popular || pkg.recommended || pkg.new) && (
+          <div className="package-badges">
+            {pkg.popular && (
+              <Badge.Ribbon text="Popüler" color="red">
+                <div />
+              </Badge.Ribbon>
+            )}
+            {pkg.recommended && (
+              <Tag color="green" icon={<StarFilled />}>
+                Önerilen
+              </Tag>
+            )}
+            {pkg.new && (
+              <Tag color="blue" icon={<FireOutlined />}>
+                Yeni
+              </Tag>
+            )}
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="package-header">
+          <Avatar
+            size={64}
+            style={{
+              background: pkg.gradient,
+              border: `3px solid ${pkg.color}20`,
             }}
           >
-            <MoreOutlined />
-          </Dropdown>,
-        ]}
-      >
-        {pkg.isPopular && (
-          <div className="popular-badge">
-            <FireOutlined /> En Popüler
-          </div>
-        )}
-        {pkg.discount > 0 && (
-          <div className="discount-badge">
-            -{pkg.discount}%
-          </div>
-        )}
-        
-        <div className="package-header">
-          <div className="package-icon" style={{ background: `${pkg.color}20`, color: pkg.color }}>
             {pkg.icon}
-          </div>
-          <Title level={4} style={{ margin: 0 }}>{pkg.displayName}</Title>
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            {pkg.description}
-          </Paragraph>
+          </Avatar>
+          <Title level={3} style={{ color: pkg.color, marginTop: 16 }}>
+            {pkg.name}
+          </Title>
+          <Paragraph type="secondary">{pkg.description}</Paragraph>
         </div>
 
-        <div className="package-price">
-          <Text type="secondary" style={{ textDecoration: pkg.discount > 0 ? 'line-through' : 'none' }}>
-            {pkg.discount > 0 && `₺${pkg.price}`}
-          </Text>
-          <div className="price-display">
-            <span className="currency">₺</span>
-            <span className="amount">
-              {pkg.discount > 0 
-                ? Math.floor(pkg.price * (1 - pkg.discount / 100))
-                : pkg.price}
-            </span>
-            <span className="period">/ay</span>
-          </div>
-        </div>
-
-        <Divider />
-
-        <div className="package-features">
-          <Space direction="vertical" size="small" style={{ width: '100%' }}>
-            {pkg.features.slice(0, 4).map((feature, index) => (
-              <div key={index} className="feature-item">
-                <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                <Text>{feature}</Text>
-              </div>
-            ))}
-            {pkg.features.length > 4 && (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                +{pkg.features.length - 4} daha fazla özellik
+        {/* Pricing */}
+        <div className="package-pricing">
+          {pkg.discountedPrice ? (
+            <>
+              <Text delete style={{ fontSize: 20, color: '#8c8c8c' }}>
+                {pkg.currency}{pkg.price}
               </Text>
-            )}
-          </Space>
+              <Title level={2} style={{ color: pkg.color, margin: '0 8px' }}>
+                {pkg.currency}{pkg.discountedPrice}
+              </Title>
+            </>
+          ) : (
+            <Title level={2} style={{ color: pkg.color }}>
+              {pkg.price === 0 ? 'Ücretsiz' : `${pkg.currency}${pkg.price}`}
+            </Title>
+          )}
+          {pkg.price > 0 && (
+            <Text type="secondary">
+              / {billingCycle === 'monthly' ? 'aylık' : 'yıllık'}
+            </Text>
+          )}
         </div>
 
         <Divider />
 
+        {/* Features */}
+        <div className="package-features">
+          <List
+            size="small"
+            dataSource={pkg.features}
+            renderItem={(feature) => (
+              <List.Item style={{ border: 'none', padding: '4px 0' }}>
+                <Space>
+                  <CheckOutlined style={{ color: '#52c41a' }} />
+                  <Text>{feature}</Text>
+                </Space>
+              </List.Item>
+            )}
+          />
+        </div>
+
+        <Divider />
+
+        {/* Limits */}
         <div className="package-limits">
           <Row gutter={[8, 8]}>
             <Col span={12}>
-              <Statistic
-                title={<span style={{ fontSize: 11 }}>Kullanıcı</span>}
-                value={pkg.limits.users === -1 ? '∞' : pkg.limits.users}
-                prefix={<UserOutlined style={{ fontSize: 14 }} />}
-                valueStyle={{ fontSize: 16 }}
-              />
+              <div className="limit-item">
+                <UserOutlined style={{ color: pkg.color }} />
+                <Text strong>
+                  {pkg.maxUsers === 999999 ? 'Sınırsız' : pkg.maxUsers}
+                </Text>
+                <Text type="secondary">Kullanıcı</Text>
+              </div>
             </Col>
             <Col span={12}>
-              <Statistic
-                title={<span style={{ fontSize: 11 }}>Depolama</span>}
-                value={pkg.limits.storage === -1 ? '∞' : pkg.limits.storage}
-                suffix={pkg.limits.storage !== -1 ? 'GB' : ''}
-                prefix={<DatabaseOutlined style={{ fontSize: 14 }} />}
-                valueStyle={{ fontSize: 16 }}
-              />
+              <div className="limit-item">
+                <DatabaseOutlined style={{ color: pkg.color }} />
+                <Text strong>
+                  {pkg.maxStorage === 999999 ? 'Sınırsız' : `${pkg.maxStorage}GB`}
+                </Text>
+                <Text type="secondary">Depolama</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div className="limit-item">
+                <ApiOutlined style={{ color: pkg.color }} />
+                <Text strong>
+                  {pkg.apiCalls === 999999 ? 'Sınırsız' : `${pkg.apiCalls / 1000}K`}
+                </Text>
+                <Text type="secondary">API Çağrı</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div className="limit-item">
+                <CustomerServiceOutlined style={{ color: pkg.color }} />
+                <Text strong>{pkg.support.split(' ')[0]}</Text>
+                <Text type="secondary">Destek</Text>
+              </div>
             </Col>
           </Row>
         </div>
 
         <Divider />
 
+        {/* Stats */}
         <div className="package-stats">
-          <Space direction="vertical" size="small" style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type="secondary">Abone Sayısı</Text>
-              <Badge count={pkg.subscriberCount} showZero color={pkg.color} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type="secondary">Aylık Gelir</Text>
-              <Text strong style={{ color: '#52c41a' }}>₺{pkg.revenue.toLocaleString()}</Text>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type="secondary">Durum</Text>
-              <Tag color={pkg.isActive ? 'success' : 'error'}>
-                {pkg.isActive ? 'Aktif' : 'Pasif'}
-              </Tag>
-            </div>
+          <Row gutter={[8, 8]}>
+            <Col span={8}>
+              <Statistic
+                value={pkg.subscriberCount}
+                valueStyle={{ fontSize: 16, color: pkg.color }}
+                prefix={<TeamOutlined />}
+                title="Abone"
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                value={pkg.revenue}
+                valueStyle={{ fontSize: 16, color: '#52c41a' }}
+                prefix="₺"
+                title="Gelir"
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                value={pkg.growth}
+                valueStyle={{
+                  fontSize: 16,
+                  color: pkg.growth > 0 ? '#52c41a' : '#ff4d4f',
+                }}
+                suffix="%"
+                prefix={pkg.growth > 0 ? '+' : ''}
+                title="Büyüme"
+              />
+            </Col>
+          </Row>
+        </div>
+
+        {/* Actions */}
+        <div className="package-actions">
+          <Button
+            type="primary"
+            block
+            size="large"
+            style={{
+              background: pkg.gradient,
+              border: 'none',
+              height: 48,
+            }}
+            onClick={() => handleEdit(pkg)}
+          >
+            Düzenle
+          </Button>
+          <Space style={{ marginTop: 12, width: '100%' }}>
+            <Button
+              block
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(pkg)}
+            >
+              Detaylar
+            </Button>
+            <Button
+              block
+              icon={<CopyOutlined />}
+              onClick={() => handleDuplicate(pkg)}
+            >
+              Kopyala
+            </Button>
+            <Popconfirm
+              title="Bu paketi silmek istediğinizden emin misiniz?"
+              onConfirm={() => handleDelete(pkg.id)}
+              okText="Sil"
+              cancelText="İptal"
+            >
+              <Button block danger icon={<DeleteOutlined />}>
+                Sil
+              </Button>
+            </Popconfirm>
           </Space>
         </div>
       </Card>
     </motion.div>
   );
 
-  const handleEdit = (pkg: Package) => {
-    setSelectedPackage(pkg);
-    form.setFieldsValue(pkg);
-    setModalVisible(true);
-  };
-
-  const handleDuplicate = (pkg: Package) => {
-    message.success(`${pkg.displayName} paketi kopyalandı`);
-  };
-
-  const handleView = (pkg: Package) => {
-    Modal.info({
-      title: `${pkg.displayName} Paket Detayları`,
-      width: 600,
-      content: (
-        <div>
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Paket Adı">{pkg.name}</Descriptions.Item>
-            <Descriptions.Item label="Görünen Ad">{pkg.displayName}</Descriptions.Item>
-            <Descriptions.Item label="Açıklama">{pkg.description}</Descriptions.Item>
-            <Descriptions.Item label="Fiyat">₺{pkg.price}/ay</Descriptions.Item>
-            <Descriptions.Item label="İndirim">%{pkg.discount}</Descriptions.Item>
-            <Descriptions.Item label="Abone Sayısı">{pkg.subscriberCount}</Descriptions.Item>
-            <Descriptions.Item label="Aylık Gelir">₺{pkg.revenue}</Descriptions.Item>
-            <Descriptions.Item label="Durum">
-              <Tag color={pkg.isActive ? 'success' : 'error'}>
-                {pkg.isActive ? 'Aktif' : 'Pasif'}
-              </Tag>
-            </Descriptions.Item>
-          </Descriptions>
-          
-          <Title level={5} style={{ marginTop: 16 }}>Özellikler</Title>
-          <List
-            dataSource={pkg.features}
-            renderItem={(item) => (
-              <List.Item>
-                <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                {item}
-              </List.Item>
-            )}
-          />
-          
-          <Title level={5} style={{ marginTop: 16 }}>Limitler</Title>
-          <Space wrap>
-            <Tag icon={<UserOutlined />}>
-              {pkg.limits.users === -1 ? 'Sınırsız' : pkg.limits.users} Kullanıcı
-            </Tag>
-            <Tag icon={<DatabaseOutlined />}>
-              {pkg.limits.storage === -1 ? 'Sınırsız' : `${pkg.limits.storage} GB`} Depolama
-            </Tag>
-            <Tag icon={<AppstoreOutlined />}>
-              {pkg.limits.projects === -1 ? 'Sınırsız' : pkg.limits.projects} Proje
-            </Tag>
-            <Tag icon={<ApiOutlined />}>
-              {pkg.limits.apiCalls === -1 ? 'Sınırsız' : pkg.limits.apiCalls} API Çağrısı
-            </Tag>
-          </Space>
-        </div>
-      ),
-    });
-  };
-
-  const handleToggleStatus = (pkg: Package) => {
-    message.success(`${pkg.displayName} paketi ${pkg.isActive ? 'deaktif' : 'aktif'} edildi`);
-  };
-
-  const handleDelete = (pkg: Package) => {
-    Modal.confirm({
-      title: 'Paketi Sil',
-      content: `${pkg.displayName} paketini silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => {
-        message.success('Paket silindi');
-      },
-    });
-  };
-
+  // Table columns
   const columns = [
     {
       title: 'Paket',
-      key: 'package',
-      render: (_: any, record: Package) => (
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string, record: Package) => (
         <Space>
-          <div className="package-icon-small" style={{ background: `${record.color}20`, color: record.color }}>
+          <Avatar style={{ background: record.gradient }}>
             {record.icon}
-          </div>
+          </Avatar>
           <div>
-            <Text strong>{record.displayName}</Text>
-            {record.isPopular && (
-              <Tag color="orange" style={{ marginLeft: 8 }}>
-                <FireOutlined /> Popüler
-              </Tag>
-            )}
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.name}</Text>
+            <Text strong>{text}</Text>
+            {record.popular && <Tag color="red">Popüler</Tag>}
+            {record.new && <Tag color="blue">Yeni</Tag>}
           </div>
         </Space>
       ),
@@ -477,21 +557,19 @@ export const MasterPackagesPage: React.FC = () => {
     {
       title: 'Fiyat',
       key: 'price',
-      render: (_: any, record: Package) => (
+      render: (record: Package) => (
         <div>
-          {record.discount > 0 && (
-            <Text delete type="secondary" style={{ fontSize: 12 }}>
-              ₺{record.price}
+          {record.discountedPrice ? (
+            <>
+              <Text delete>{record.currency}{record.price}</Text>
+              <Text strong style={{ marginLeft: 8, color: record.color }}>
+                {record.currency}{record.discountedPrice}
+              </Text>
+            </>
+          ) : (
+            <Text strong style={{ color: record.color }}>
+              {record.price === 0 ? 'Ücretsiz' : `${record.currency}${record.price}`}
             </Text>
-          )}
-          <Text strong style={{ fontSize: 16 }}>
-            ₺{record.discount > 0 
-              ? Math.floor(record.price * (1 - record.discount / 100))
-              : record.price}
-          </Text>
-          <Text type="secondary">/ay</Text>
-          {record.discount > 0 && (
-            <Tag color="red" style={{ marginLeft: 8 }}>-%{record.discount}</Tag>
           )}
         </div>
       ),
@@ -499,10 +577,10 @@ export const MasterPackagesPage: React.FC = () => {
     {
       title: 'Limitler',
       key: 'limits',
-      render: (_: any, record: Package) => (
-        <Space wrap>
-          <Tag>{record.limits.users === -1 ? '∞' : record.limits.users} kullanıcı</Tag>
-          <Tag>{record.limits.storage === -1 ? '∞' : `${record.limits.storage}GB`}</Tag>
+      render: (record: Package) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.maxUsers === 999999 ? 'Sınırsız' : record.maxUsers} kullanıcı</Text>
+          <Text>{record.maxStorage === 999999 ? 'Sınırsız' : `${record.maxStorage}GB`} depolama</Text>
         </Space>
       ),
     },
@@ -511,7 +589,7 @@ export const MasterPackagesPage: React.FC = () => {
       dataIndex: 'subscriberCount',
       key: 'subscriberCount',
       render: (count: number) => (
-        <Badge count={count} showZero style={{ backgroundColor: '#52c41a' }} />
+        <Badge count={count} style={{ backgroundColor: '#52c41a' }} />
       ),
     },
     {
@@ -525,253 +603,610 @@ export const MasterPackagesPage: React.FC = () => {
       ),
     },
     {
+      title: 'Büyüme',
+      dataIndex: 'growth',
+      key: 'growth',
+      render: (growth: number) => (
+        <Tag color={growth > 0 ? 'success' : 'error'}>
+          {growth > 0 ? '+' : ''}{growth}%
+        </Tag>
+      ),
+    },
+    {
       title: 'Durum',
+      dataIndex: 'status',
       key: 'status',
-      render: (_: any, record: Package) => (
-        <Tag color={record.isActive ? 'success' : 'error'}>
-          {record.isActive ? 'Aktif' : 'Pasif'}
+      render: (status: string) => (
+        <Tag color={status === 'active' ? 'success' : 'default'}>
+          {status === 'active' ? 'Aktif' : 'Pasif'}
         </Tag>
       ),
     },
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_: any, record: Package) => (
+      render: (record: Package) => (
         <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          <Button type="link" icon={<CopyOutlined />} onClick={() => handleDuplicate(record)} />
-          <Button type="link" icon={<EyeOutlined />} onClick={() => handleView(record)} />
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'activate',
-                  label: record.isActive ? 'Deaktif Et' : 'Aktif Et',
-                  icon: record.isActive ? <LockOutlined /> : <UnlockOutlined />,
-                  onClick: () => handleToggleStatus(record),
-                },
-                {
-                  key: 'delete',
-                  label: 'Sil',
-                  icon: <DeleteOutlined />,
-                  danger: true,
-                  onClick: () => handleDelete(record),
-                },
-              ],
-            }}
+          <Tooltip title="Düzenle">
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Kopyala">
+            <Button
+              type="text"
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={() => handleDuplicate(record)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Bu paketi silmek istediğinizden emin misiniz?"
+            onConfirm={() => handleDelete(record.id)}
           >
-            <Button type="link" icon={<MoreOutlined />} />
-          </Dropdown>
+            <Tooltip title="Sil">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+              />
+            </Tooltip>
+          </Popconfirm>
         </Space>
       ),
     },
   ];
 
+  // Handlers
+  const handleEdit = (pkg: Package) => {
+    setSelectedPackage(pkg);
+    form.setFieldsValue(pkg);
+    setShowCreateModal(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setPackages(packages.filter((p) => p.id !== id));
+    message.success('Paket silindi');
+  };
+
+  const handleDuplicate = (pkg: Package) => {
+    const newPackage = {
+      ...pkg,
+      id: Date.now().toString(),
+      name: `${pkg.name} (Kopya)`,
+      createdAt: new Date().toISOString(),
+    };
+    setPackages([...packages, newPackage]);
+    message.success('Paket kopyalandı');
+  };
+
+  const handleViewDetails = (pkg: Package) => {
+    Modal.info({
+      title: `${pkg.name} Paket Detayları`,
+      width: 600,
+      content: (
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Divider />
+          <Descriptions bordered column={2}>
+            <Descriptions.Item label="Fiyat" span={2}>
+              {pkg.currency}{pkg.discountedPrice || pkg.price} / {pkg.billingCycle === 'monthly' ? 'aylık' : 'yıllık'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Max Kullanıcı">
+              {pkg.maxUsers === 999999 ? 'Sınırsız' : pkg.maxUsers}
+            </Descriptions.Item>
+            <Descriptions.Item label="Max Depolama">
+              {pkg.maxStorage === 999999 ? 'Sınırsız' : `${pkg.maxStorage}GB`}
+            </Descriptions.Item>
+            <Descriptions.Item label="API Çağrı">
+              {pkg.apiCalls === 999999 ? 'Sınırsız' : pkg.apiCalls}
+            </Descriptions.Item>
+            <Descriptions.Item label="Destek">
+              {pkg.support}
+            </Descriptions.Item>
+            <Descriptions.Item label="Modüller" span={2}>
+              <Space wrap>
+                {pkg.modules.map((module) => (
+                  <Tag key={module} color="blue">{module}</Tag>
+                ))}
+              </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="Özellikler" span={2}>
+              <List
+                size="small"
+                dataSource={pkg.features}
+                renderItem={(feature) => (
+                  <List.Item style={{ padding: '4px 0' }}>
+                    <CheckOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                    {feature}
+                  </List.Item>
+                )}
+              />
+            </Descriptions.Item>
+          </Descriptions>
+        </Space>
+      ),
+    });
+  };
+
+  const handleCreatePackage = (values: any) => {
+    if (selectedPackage) {
+      setPackages(
+        packages.map((p) =>
+          p.id === selectedPackage.id ? { ...p, ...values } : p
+        )
+      );
+      message.success('Paket güncellendi');
+    } else {
+      const newPackage: Package = {
+        ...values,
+        id: Date.now().toString(),
+        icon: <GiftOutlined />,
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        subscriberCount: 0,
+        revenue: 0,
+        growth: 0,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setPackages([...packages, newPackage]);
+      message.success('Paket oluşturuldu');
+    }
+    setShowCreateModal(false);
+    setSelectedPackage(null);
+    form.resetFields();
+  };
+
+  const handleCreateFeature = (values: any) => {
+    const newFeature: Feature = {
+      ...values,
+      id: Date.now().toString(),
+    };
+    setFeatures([...features, newFeature]);
+    message.success('Özellik eklendi');
+    setShowFeatureModal(false);
+    featureForm.resetFields();
+  };
+
   return (
-    <div className="master-packages">
-      {/* Page Header */}
-      <div className="packages-header">
-        <div className="header-content">
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <AppstoreOutlined /> Paket Yönetimi
-            </Title>
-            <Text type="secondary">Abonelik paketlerini yönetin ve fiyatlandırın</Text>
-          </div>
+    <div className="master-packages-page">
+      {/* Header */}
+      <div className="page-header glass-morphism">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="header-content"
+        >
+          <Title level={2} className="gradient-text">
+            <GiftOutlined /> Paket Yönetimi
+          </Title>
+          <Text type="secondary">Abonelik paketlerini yönetin ve fiyatlandırın</Text>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="header-actions"
+        >
           <Space>
-            <Segmented
-              value={viewMode}
-              onChange={(value) => setViewMode(value as 'grid' | 'table')}
-              options={[
-                { label: 'Grid', value: 'grid', icon: <AppstoreOutlined /> },
-                { label: 'Tablo', value: 'table', icon: <UnorderedListOutlined /> },
-              ]}
-            />
-            <Button 
-              type="primary" 
+            <Button icon={<PlusOutlined />} onClick={() => setShowFeatureModal(true)}>
+              Özellik Ekle
+            </Button>
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
-              onClick={() => {
-                setSelectedPackage(null);
-                form.resetFields();
-                setModalVisible(true);
-              }}
+              onClick={() => setShowCreateModal(true)}
+              className="gradient-button"
             >
               Yeni Paket
             </Button>
           </Space>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Statistics */}
-      <Row gutter={[16, 16]} className="stats-row">
-        <Col xs={24} sm={8}>
-          <Card className="stat-card">
-            <Statistic
-              title="Toplam Paket"
-              value={packages.length}
-              prefix={<AppstoreOutlined />}
-              valueStyle={{ color: '#667eea' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="stat-card">
-            <Statistic
-              title="Toplam Abone"
-              value={totalSubscribers}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="stat-card">
-            <Statistic
-              title="Toplam Gelir"
-              value={totalRevenue}
-              prefix="₺"
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
+      {/* Stats */}
+      <Row gutter={[20, 20]} className="stats-row">
+        {stats.map((stat, index) => (
+          <Col xs={24} sm={12} lg={6} key={index}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="stat-card glass-morphism">
+                <Statistic
+                  title={stat.title}
+                  value={stat.value}
+                  prefix={
+                    <>
+                      {stat.prefix}
+                      <span className="stat-icon" style={{ color: stat.color }}>
+                        {stat.icon}
+                      </span>
+                    </>
+                  }
+                  suffix={stat.suffix}
+                  valueStyle={{ color: stat.color }}
+                />
+              </Card>
+            </motion.div>
+          </Col>
+        ))}
       </Row>
 
-      {/* Packages Grid/Table */}
-      {viewMode === 'grid' ? (
-        <Row gutter={[16, 16]} className="packages-grid">
-          {packages.map((pkg) => (
-            <Col key={pkg.id} xs={24} sm={12} lg={6}>
-              <PackageCard pkg={pkg} />
-            </Col>
-          ))}
+      {/* Controls */}
+      <Card className="controls-card glass-morphism">
+        <Row align="middle" justify="space-between">
+          <Col>
+            <Segmented
+              value={billingCycle}
+              onChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
+              options={[
+                { label: 'Aylık', value: 'monthly' },
+                { label: 'Yıllık', value: 'yearly', icon: <Tag color="green">-20%</Tag> },
+              ]}
+            />
+          </Col>
+          <Col>
+            <Space>
+              <Segmented
+                value={viewMode}
+                onChange={(value) => setViewMode(value as 'grid' | 'table')}
+                options={[
+                  { label: 'Grid', value: 'grid', icon: <AppstoreOutlined /> },
+                  { label: 'Tablo', value: 'table', icon: <BarsOutlined /> },
+                ]}
+              />
+              <Button icon={<ReloadOutlined spin={loading} />} onClick={() => setLoading(!loading)}>
+                Yenile
+              </Button>
+            </Space>
+          </Col>
         </Row>
-      ) : (
-        <Card className="packages-table">
-          <Table
-            columns={columns}
-            dataSource={packages}
-            rowKey="id"
-            pagination={false}
-          />
-        </Card>
-      )}
+      </Card>
 
-      {/* Edit/Create Modal */}
+      {/* Content */}
+      <AnimatePresence mode="wait">
+        {viewMode === 'grid' ? (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Row gutter={[20, 20]}>
+              {packages.map((pkg) => (
+                <Col xs={24} sm={12} lg={6} key={pkg.id}>
+                  <PackageCard pkg={pkg} />
+                </Col>
+              ))}
+            </Row>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className="table-card glass-morphism">
+              <Table
+                columns={columns}
+                dataSource={packages}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Toplam ${total} paket`,
+                }}
+              />
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create/Edit Package Modal */}
       <Modal
-        title={selectedPackage ? 'Paketi Düzenle' : 'Yeni Paket'}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        width={800}
-        footer={[
-          <Button key="cancel" onClick={() => setModalVisible(false)}>
-            İptal
-          </Button>,
-          <Button key="save" type="primary" onClick={() => {
-            form.validateFields().then((values) => {
-              console.log('Package saved:', values);
-              message.success('Paket kaydedildi');
-              setModalVisible(false);
-            });
-          }}>
-            Kaydet
-          </Button>,
-        ]}
+        title={selectedPackage ? 'Paket Düzenle' : 'Yeni Paket Oluştur'}
+        open={showCreateModal}
+        onCancel={() => {
+          setShowCreateModal(false);
+          setSelectedPackage(null);
+          form.resetFields();
+        }}
+        footer={null}
+        width={700}
       >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="name" label="Paket Kodu" rules={[{ required: true }]}>
-                <Input placeholder="free, starter, professional" />
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreatePackage}
+        >
+          <Tabs defaultActiveKey="1">
+            <TabPane tab="Genel Bilgiler" key="1">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="name"
+                    label="Paket Adı"
+                    rules={[{ required: true, message: 'Paket adı gerekli' }]}
+                  >
+                    <Input placeholder="Örn: Professional" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="billingCycle"
+                    label="Faturalandırma"
+                    rules={[{ required: true }]}
+                  >
+                    <Select>
+                      <Select.Option value="monthly">Aylık</Select.Option>
+                      <Select.Option value="yearly">Yıllık</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item
+                name="description"
+                label="Açıklama"
+                rules={[{ required: true, message: 'Açıklama gerekli' }]}
+              >
+                <Input.TextArea rows={3} placeholder="Paket açıklaması" />
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="displayName" label="Görünen Ad" rules={[{ required: true }]}>
-                <Input placeholder="Ücretsiz, Başlangıç, Profesyonel" />
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item
+                    name="price"
+                    label="Fiyat"
+                    rules={[{ required: true, message: 'Fiyat gerekli' }]}
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: '100%' }}
+                      addonBefore="₺"
+                      placeholder="599"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item
+                    name="discountedPrice"
+                    label="İndirimli Fiyat"
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: '100%' }}
+                      addonBefore="₺"
+                      placeholder="499"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item
+                    name="color"
+                    label="Renk"
+                    rules={[{ required: true }]}
+                  >
+                    <Input type="color" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item name="popular" valuePropName="checked">
+                    <Checkbox>Popüler</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="recommended" valuePropName="checked">
+                    <Checkbox>Önerilen</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item name="new" valuePropName="checked">
+                    <Checkbox>Yeni</Checkbox>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </TabPane>
+
+            <TabPane tab="Limitler" key="2">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="maxUsers"
+                    label="Maksimum Kullanıcı"
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber
+                      min={1}
+                      style={{ width: '100%' }}
+                      placeholder="100"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="maxStorage"
+                    label="Maksimum Depolama (GB)"
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber
+                      min={1}
+                      style={{ width: '100%' }}
+                      placeholder="100"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="apiCalls"
+                    label="API Çağrı Limiti"
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber
+                      min={0}
+                      style={{ width: '100%' }}
+                      placeholder="50000"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="support"
+                    label="Destek Seviyesi"
+                    rules={[{ required: true }]}
+                  >
+                    <Select>
+                      <Select.Option value="E-posta">E-posta</Select.Option>
+                      <Select.Option value="E-posta + Telefon">E-posta + Telefon</Select.Option>
+                      <Select.Option value="7/24 Telefon + Chat">7/24 Telefon + Chat</Select.Option>
+                      <Select.Option value="Dedike Account Manager">Dedike Account Manager</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="customDomain" valuePropName="checked">
+                    <Checkbox>Özel Domain Desteği</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="whiteLabel" valuePropName="checked">
+                    <Checkbox>White Label</Checkbox>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </TabPane>
+
+            <TabPane tab="Modüller" key="3">
+              <Form.Item name="modules" label="Aktif Modüller">
+                <Checkbox.Group>
+                  <Row>
+                    <Col span={8}>
+                      <Checkbox value="CRM">CRM</Checkbox>
+                    </Col>
+                    <Col span={8}>
+                      <Checkbox value="Sales">Sales</Checkbox>
+                    </Col>
+                    <Col span={8}>
+                      <Checkbox value="Finance">Finance</Checkbox>
+                    </Col>
+                    <Col span={8}>
+                      <Checkbox value="HR">HR</Checkbox>
+                    </Col>
+                    <Col span={8}>
+                      <Checkbox value="Production">Production</Checkbox>
+                    </Col>
+                    <Col span={8}>
+                      <Checkbox value="Inventory">Inventory</Checkbox>
+                    </Col>
+                  </Row>
+                </Checkbox.Group>
               </Form.Item>
-            </Col>
-          </Row>
-          
-          <Form.Item name="description" label="Açıklama">
-            <TextArea rows={2} placeholder="Paket açıklaması" />
+            </TabPane>
+
+            <TabPane tab="Özellikler" key="4">
+              <Form.Item name="features" label="Paket Özellikleri">
+                <Select
+                  mode="tags"
+                  style={{ width: '100%' }}
+                  placeholder="Özellik ekleyin"
+                  options={features.map((f) => ({ label: f.name, value: f.name }))}
+                />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
+
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => setShowCreateModal(false)}>İptal</Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                {selectedPackage ? 'Güncelle' : 'Oluştur'}
+              </Button>
+            </Space>
           </Form.Item>
-          
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="price" label="Fiyat (₺)" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="billingCycle" label="Faturalandırma" rules={[{ required: true }]}>
-                <Select>
-                  <Select.Option value="monthly">Aylık</Select.Option>
-                  <Select.Option value="yearly">Yıllık</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="discount" label="İndirim (%)">
-                <InputNumber min={0} max={100} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Divider>Limitler</Divider>
-          
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name={['limits', 'users']} label="Kullanıcı Sayısı">
-                <InputNumber min={-1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name={['limits', 'storage']} label="Depolama (GB)">
-                <InputNumber min={-1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name={['limits', 'projects']} label="Proje Sayısı">
-                <InputNumber min={-1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name={['limits', 'apiCalls']} label="API Çağrısı">
-                <InputNumber min={-1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Form.Item name="features" label="Özellikler">
-            <Select mode="tags" placeholder="Özellik ekleyin" />
+        </Form>
+      </Modal>
+
+      {/* Feature Modal */}
+      <Modal
+        title="Yeni Özellik Ekle"
+        open={showFeatureModal}
+        onCancel={() => {
+          setShowFeatureModal(false);
+          featureForm.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={featureForm}
+          layout="vertical"
+          onFinish={handleCreateFeature}
+        >
+          <Form.Item
+            name="name"
+            label="Özellik Adı"
+            rules={[{ required: true }]}
+          >
+            <Input placeholder="Örn: API Erişimi" />
           </Form.Item>
-          
-          <Form.Item name="modules" label="Modüller">
+          <Form.Item
+            name="description"
+            label="Açıklama"
+            rules={[{ required: true }]}
+          >
+            <Input.TextArea rows={2} placeholder="Özellik açıklaması" />
+          </Form.Item>
+          <Form.Item
+            name="category"
+            label="Kategori"
+            rules={[{ required: true }]}
+          >
+            <Select>
+              <Select.Option value="Modüller">Modüller</Select.Option>
+              <Select.Option value="Entegrasyon">Entegrasyon</Select.Option>
+              <Select.Option value="Özelleştirme">Özelleştirme</Select.Option>
+              <Select.Option value="Destek">Destek</Select.Option>
+              <Select.Option value="Güvenlik">Güvenlik</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="packages"
+            label="Paketler"
+            rules={[{ required: true }]}
+          >
             <Checkbox.Group>
               <Row>
-                <Col span={8}><Checkbox value="inventory">Stok Yönetimi</Checkbox></Col>
-                <Col span={8}><Checkbox value="invoicing">Faturalama</Checkbox></Col>
-                <Col span={8}><Checkbox value="crm">CRM</Checkbox></Col>
-                <Col span={8}><Checkbox value="reports">Raporlama</Checkbox></Col>
-                <Col span={8}><Checkbox value="hr">İnsan Kaynakları</Checkbox></Col>
-                <Col span={8}><Checkbox value="finance">Finans</Checkbox></Col>
+                {packages.map((pkg) => (
+                  <Col span={12} key={pkg.id}>
+                    <Checkbox value={pkg.name}>{pkg.name}</Checkbox>
+                  </Col>
+                ))}
               </Row>
             </Checkbox.Group>
           </Form.Item>
-          
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="isActive" valuePropName="checked" label="Durum">
-                <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="isPopular" valuePropName="checked" label="Popüler">
-                <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => setShowFeatureModal(false)}>İptal</Button>
+              <Button type="primary" htmlType="submit">
+                Ekle
+              </Button>
+            </Space>
+          </Form.Item>
         </Form>
       </Modal>
     </div>
   );
 };
+
+// Add missing import
+import { Descriptions } from 'antd';

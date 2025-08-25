@@ -1,321 +1,377 @@
-import React, { useState } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Progress, 
-  Table, 
-  Tag, 
-  Space, 
-  Avatar, 
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import CountUp from 'react-countup';
+import { Line, Area, Column, Pie, DualAxes, Gauge, Liquid } from '@ant-design/plots';
+import {
+  Row,
+  Col,
+  Card,
+  Statistic,
+  Progress,
+  Table,
+  Tag,
+  Space,
+  Avatar,
   Typography,
-  Select,
-  DatePicker,
   Button,
-  Tooltip,
+  Dropdown,
   Badge,
   Timeline,
   List,
+  Tooltip,
   Segmented,
+  Select,
+  DatePicker,
   Skeleton,
+  Alert,
+  Tabs,
+  Divider,
 } from 'antd';
-import { 
-  ArrowUpOutlined, 
-  ArrowDownOutlined,
+import {
+  DashboardOutlined,
   UserOutlined,
   TeamOutlined,
-  ShoppingOutlined,
+  ShoppingCartOutlined,
   DollarOutlined,
+  RiseOutlined,
+  FallOutlined,
+  SyncOutlined,
   CloudServerOutlined,
   DatabaseOutlined,
   ApiOutlined,
+  SafetyOutlined,
+  BellOutlined,
+  SettingOutlined,
+  ExportOutlined,
+  ReloadOutlined,
+  InfoCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  SyncOutlined,
-  ClockCircleOutlined,
   WarningOutlined,
-  RiseOutlined,
-  FallOutlined,
-  EyeOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  CalendarOutlined,
-  BellOutlined,
+  ClockCircleOutlined,
   FireOutlined,
   ThunderboltOutlined,
   RocketOutlined,
-  TrophyOutlined,
   CrownOutlined,
+  TrophyOutlined,
   StarOutlined,
+  GlobalOutlined,
+  BarChartOutlined,
+  LineChartOutlined,
+  PieChartOutlined,
+  AreaChartOutlined,
+  FundOutlined,
+  StockOutlined,
+  CalendarOutlined,
+  FilterOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
-import { Line, Area, Column, Pie, Gauge, DualAxes, Rose } from '@ant-design/plots';
-import CountUp from 'react-countup';
-import { motion } from 'framer-motion';
-import './style.css';
+import './styles.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
+const { TabPane } = Tabs;
+
+// Types
+interface StatCardProps {
+  title: string;
+  value: number;
+  prefix?: React.ReactNode;
+  suffix?: string;
+  trend?: 'up' | 'down';
+  trendValue?: number;
+  color: string;
+  icon: React.ReactNode;
+  loading?: boolean;
+  onClick?: () => void;
+}
+
+interface Activity {
+  id: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+  title: string;
+  description: string;
+  time: string;
+  icon: React.ReactNode;
+}
 
 export const MasterDashboard: React.FC = () => {
-  const [timeRange, setTimeRange] = useState('today');
   const [loading, setLoading] = useState(false);
+  const [timeRange, setTimeRange] = useState<string>('today');
+  const [selectedMetric, setSelectedMetric] = useState<string>('revenue');
 
-  // Animated stat card component
-  const StatCard = ({ 
-    title, 
-    value, 
-    prefix, 
-    suffix, 
-    trend, 
-    trendValue, 
-    color, 
-    icon, 
-    delay = 0 
-  }: any) => (
+  // Animated Stat Card Component
+  const StatCard: React.FC<StatCardProps> = ({
+    title,
+    value,
+    prefix,
+    suffix,
+    trend,
+    trendValue,
+    color,
+    icon,
+    loading,
+    onClick,
+  }) => (
     <motion.div
+      whileHover={{ scale: 1.02, translateY: -5 }}
+      whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.3 }}
     >
-      <Card 
-        className="stat-card"
-        style={{ 
-          background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
-          borderTop: `3px solid ${color}`,
+      <Card
+        className="stat-card glass-morphism"
+        style={{
+          background: `linear-gradient(135deg, ${color}08 0%, ${color}03 100%)`,
+          borderLeft: `4px solid ${color}`,
+          cursor: onClick ? 'pointer' : 'default',
         }}
+        onClick={onClick}
+        hoverable={!!onClick}
       >
-        <div className="stat-card-header">
-          <div className="stat-icon" style={{ background: `${color}20`, color }}>
-            {icon}
-          </div>
-          <div className="stat-trend">
-            {trend === 'up' ? (
-              <span style={{ color: '#52c41a' }}>
-                <ArrowUpOutlined /> {trendValue}%
-              </span>
-            ) : trend === 'down' ? (
-              <span style={{ color: '#ff4d4f' }}>
-                <ArrowDownOutlined /> {trendValue}%
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <div className="stat-content">
-          <Text type="secondary" className="stat-title">{title}</Text>
-          <div className="stat-value">
-            {prefix}
-            <CountUp
-              end={value}
-              duration={2}
-              separator=","
-              decimals={suffix === 'GB' ? 1 : 0}
-            />
-            {suffix}
-          </div>
-        </div>
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 2 }} />
+        ) : (
+          <>
+            <div className="stat-header">
+              <div className="stat-icon-wrapper" style={{ background: `${color}15` }}>
+                <div className="stat-icon" style={{ color }}>
+                  {icon}
+                </div>
+              </div>
+              {trend && (
+                <div className={`stat-trend ${trend}`}>
+                  {trend === 'up' ? <RiseOutlined /> : <FallOutlined />}
+                  <span>{trendValue}%</span>
+                </div>
+              )}
+            </div>
+            <div className="stat-content">
+              <Text className="stat-title">{title}</Text>
+              <div className="stat-value">
+                {prefix}
+                <CountUp
+                  end={value}
+                  duration={2}
+                  separator=","
+                  decimals={suffix === '%' ? 1 : 0}
+                />
+                {suffix}
+              </div>
+            </div>
+            <div className="stat-footer">
+              <Progress
+                percent={(trendValue || 0) + 50}
+                showInfo={false}
+                strokeColor={color}
+                trailColor={`${color}20`}
+                size="small"
+              />
+            </div>
+          </>
+        )}
       </Card>
     </motion.div>
   );
 
-  // Revenue chart data
-  const revenueData = [
-    { month: 'Oca', revenue: 45000, profit: 12000 },
-    { month: 'Şub', revenue: 52000, profit: 15000 },
-    { month: 'Mar', revenue: 48000, profit: 13000 },
-    { month: 'Nis', revenue: 61000, profit: 18000 },
-    { month: 'May', revenue: 72000, profit: 22000 },
-    { month: 'Haz', revenue: 85000, profit: 28000 },
-    { month: 'Tem', revenue: 92000, profit: 32000 },
-    { month: 'Ağu', revenue: 88000, profit: 30000 },
-    { month: 'Eyl', revenue: 95000, profit: 35000 },
-    { month: 'Eki', revenue: 102000, profit: 38000 },
-    { month: 'Kas', revenue: 98000, profit: 36000 },
-    { month: 'Ara', revenue: 115000, profit: 42000 },
+  // Mock Data
+  const statsData = [
+    {
+      title: 'Toplam Gelir',
+      value: 524350,
+      prefix: '₺',
+      trend: 'up' as const,
+      trendValue: 12.5,
+      color: '#52c41a',
+      icon: <DollarOutlined />,
+    },
+    {
+      title: 'Aktif Tenantlar',
+      value: 386,
+      trend: 'up' as const,
+      trendValue: 8.3,
+      color: '#1890ff',
+      icon: <TeamOutlined />,
+    },
+    {
+      title: 'Toplam Kullanıcı',
+      value: 4823,
+      trend: 'up' as const,
+      trendValue: 15.7,
+      color: '#722ed1',
+      icon: <UserOutlined />,
+    },
+    {
+      title: 'Sistem Uptime',
+      value: 99.9,
+      suffix: '%',
+      trend: 'up' as const,
+      trendValue: 0.1,
+      color: '#13c2c2',
+      icon: <ThunderboltOutlined />,
+    },
   ];
 
-  const revenueConfig = {
+  // Revenue Chart Data
+  const revenueData = [
+    { month: 'Ocak', revenue: 320000, growth: 12 },
+    { month: 'Şubat', revenue: 385000, growth: 15 },
+    { month: 'Mart', revenue: 412000, growth: 8 },
+    { month: 'Nisan', revenue: 445000, growth: 11 },
+    { month: 'Mayıs', revenue: 478000, growth: 9 },
+    { month: 'Haziran', revenue: 524350, growth: 13 },
+  ];
+
+  const revenueChartConfig = {
     data: [revenueData, revenueData],
     xField: 'month',
-    yField: ['revenue', 'profit'],
+    yField: ['revenue', 'growth'],
     geometryOptions: [
       {
         geometry: 'column',
-        color: '#667eea',
+        color: '#5B8FF9',
         columnWidthRatio: 0.4,
+        label: {
+          position: 'middle',
+        },
       },
       {
         geometry: 'line',
-        color: '#52c41a',
+        color: '#5AD8A6',
+        smooth: true,
         lineStyle: {
-          lineWidth: 2,
+          lineWidth: 3,
+          shadowColor: 'rgba(0,0,0,0.1)',
+          shadowBlur: 10,
+        },
+        point: {
+          size: 5,
+          shape: 'circle',
+          style: {
+            fill: 'white',
+            stroke: '#5AD8A6',
+            lineWidth: 2,
+          },
         },
       },
     ],
+    interactions: [{ type: 'element-active' }],
     legend: {
       position: 'top-right',
     },
   };
 
-  // Tenant distribution data
+  // Tenant Distribution
   const tenantDistribution = [
-    { type: 'Aktif', value: 245, color: '#52c41a' },
-    { type: 'Deneme', value: 85, color: '#faad14' },
-    { type: 'Pasif', value: 32, color: '#ff4d4f' },
-    { type: 'Askıda', value: 18, color: '#8c8c8c' },
+    { type: 'Enterprise', value: 45, color: '#5B8FF9' },
+    { type: 'Professional', value: 125, color: '#5AD8A6' },
+    { type: 'Starter', value: 186, color: '#5D7092' },
+    { type: 'Free', value: 30, color: '#FF9845' },
   ];
 
   const pieConfig = {
     data: tenantDistribution,
     angleField: 'value',
     colorField: 'type',
-    radius: 0.8,
+    radius: 1,
     innerRadius: 0.6,
     label: {
-      type: 'outer',
-      content: '{name} {percentage}',
+      type: 'inner',
+      offset: '-50%',
+      content: '{value}',
+      style: {
+        textAlign: 'center',
+        fontSize: 14,
+        fill: '#fff',
+      },
     },
     interactions: [
-      {
-        type: 'pie-legend-active',
-      },
-      {
-        type: 'element-active',
-      },
+      { type: 'element-selected' },
+      { type: 'element-active' },
     ],
     statistic: {
       title: {
-        offsetY: -8,
         content: 'Toplam',
         style: {
           fontSize: '14px',
+          color: '#8c8c8c',
         },
       },
       content: {
-        offsetY: 4,
         style: {
           fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#262626',
         },
-        formatter: () => '380',
+        content: '386',
       },
     },
   };
 
-  // System health data
-  const systemHealthData = [
-    { name: 'CPU Kullanımı', value: 65, status: 'normal' },
-    { name: 'Bellek Kullanımı', value: 78, status: 'warning' },
+  // System Metrics
+  const systemMetrics = [
+    { name: 'CPU Kullanımı', value: 68, status: 'normal' },
+    { name: 'RAM Kullanımı', value: 75, status: 'warning' },
     { name: 'Disk Kullanımı', value: 45, status: 'normal' },
-    { name: 'API Yanıt Süresi', value: 92, status: 'normal' },
-    { name: 'Database Bağlantı', value: 98, status: 'normal' },
+    { name: 'Network I/O', value: 82, status: 'warning' },
+    { name: 'Database Connections', value: 35, status: 'normal' },
   ];
 
-  // Recent activities
-  const recentActivities = [
+  // Recent Activities
+  const recentActivities: Activity[] = [
     {
-      id: 1,
-      type: 'tenant',
-      action: 'Yeni tenant kaydı',
-      description: 'ABC Teknoloji Ltd. Şti. sisteme kaydoldu',
+      id: '1',
+      type: 'success',
+      title: 'Yeni Tenant Kaydı',
+      description: 'TechCorp Solutions sisteme katıldı',
       time: '5 dakika önce',
-      icon: <TeamOutlined />,
-      color: '#52c41a',
+      icon: <CheckCircleOutlined />,
     },
     {
-      id: 2,
-      type: 'payment',
-      action: 'Ödeme alındı',
-      description: 'XYZ Şirketi - Professional Plan - ₺2,500',
-      time: '15 dakika önce',
-      icon: <DollarOutlined />,
-      color: '#667eea',
-    },
-    {
-      id: 3,
-      type: 'alert',
-      action: 'Sistem uyarısı',
-      description: 'Disk kullanımı %80\'i aştı',
+      id: '2',
+      type: 'info',
+      title: 'Sistem Güncellemesi',
+      description: 'v2.4.1 başarıyla yüklendi',
       time: '1 saat önce',
-      icon: <WarningOutlined />,
-      color: '#faad14',
+      icon: <InfoCircleOutlined />,
     },
     {
-      id: 4,
-      type: 'user',
-      action: 'Yeni admin kullanıcı',
-      description: 'admin@example.com eklendi',
+      id: '3',
+      type: 'warning',
+      title: 'Yüksek CPU Kullanımı',
+      description: 'Server-3 CPU %85 üzerinde',
       time: '2 saat önce',
-      icon: <UserOutlined />,
-      color: '#13c2c2',
+      icon: <WarningOutlined />,
+    },
+    {
+      id: '4',
+      type: 'error',
+      title: 'Ödeme Hatası',
+      description: 'ABC Corp ödeme başarısız',
+      time: '3 saat önce',
+      icon: <CloseCircleOutlined />,
     },
   ];
 
-  // Top tenants data
-  const topTenants = [
-    { 
-      rank: 1, 
-      name: 'TechCorp Solutions', 
-      users: 145, 
-      storage: '25.3 GB', 
-      revenue: '₺12,500',
-      growth: 15,
-      status: 'active'
-    },
-    { 
-      rank: 2, 
-      name: 'Global Industries', 
-      users: 98, 
-      storage: '18.7 GB', 
-      revenue: '₺8,900',
-      growth: 8,
-      status: 'active'
-    },
-    { 
-      rank: 3, 
-      name: 'StartUp Hub', 
-      users: 76, 
-      storage: '12.4 GB', 
-      revenue: '₺6,200',
-      growth: -3,
-      status: 'trial'
-    },
-    { 
-      rank: 4, 
-      name: 'Digital Agency Pro', 
-      users: 65, 
-      storage: '9.8 GB', 
-      revenue: '₺5,400',
-      growth: 12,
-      status: 'active'
-    },
-    { 
-      rank: 5, 
-      name: 'Cloud Systems Inc', 
-      users: 54, 
-      storage: '7.2 GB', 
-      revenue: '₺4,100',
-      growth: 5,
-      status: 'active'
-    },
-  ];
-
-  const columns = [
+  // Top Tenants Table Columns
+  const tenantColumns = [
     {
       title: 'Sıra',
       dataIndex: 'rank',
       key: 'rank',
-      width: 60,
+      width: 80,
       render: (rank: number) => {
-        const icon = rank === 1 ? <CrownOutlined /> : 
-                     rank === 2 ? <TrophyOutlined /> :
-                     rank === 3 ? <StarOutlined /> : null;
+        const icons = {
+          1: <CrownOutlined style={{ color: '#ffd700' }} />,
+          2: <TrophyOutlined style={{ color: '#c0c0c0' }} />,
+          3: <StarOutlined style={{ color: '#cd7f32' }} />,
+        };
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {icon && <span style={{ color: '#faad14' }}>{icon}</span>}
-            <span style={{ fontWeight: rank <= 3 ? 'bold' : 'normal' }}>
-              {rank}
-            </span>
-          </div>
+          <Space>
+            {icons[rank as keyof typeof icons]}
+            <Text strong>#{rank}</Text>
+          </Space>
         );
       },
     },
@@ -325,47 +381,35 @@ export const MasterDashboard: React.FC = () => {
       key: 'name',
       render: (name: string, record: any) => (
         <Space>
-          <Avatar style={{ backgroundColor: '#667eea' }}>
+          <Avatar style={{ backgroundColor: record.color }}>
             {name.substring(0, 2).toUpperCase()}
           </Avatar>
           <div>
             <Text strong>{name}</Text>
             <br />
-            <Tag color={record.status === 'active' ? 'success' : 'warning'} style={{ fontSize: '10px' }}>
-              {record.status === 'active' ? 'Aktif' : 'Deneme'}
-            </Tag>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.plan}
+            </Text>
           </div>
         </Space>
       ),
     },
     {
-      title: 'Kullanıcılar',
+      title: 'Kullanıcı',
       dataIndex: 'users',
       key: 'users',
       render: (users: number) => (
-        <Space>
-          <UserOutlined />
-          <span>{users}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Depolama',
-      dataIndex: 'storage',
-      key: 'storage',
-      render: (storage: string) => (
-        <Space>
-          <DatabaseOutlined />
-          <span>{storage}</span>
-        </Space>
+        <Badge count={users} style={{ backgroundColor: '#52c41a' }} />
       ),
     },
     {
       title: 'Gelir',
       dataIndex: 'revenue',
       key: 'revenue',
-      render: (revenue: string) => (
-        <Text strong style={{ color: '#52c41a' }}>{revenue}</Text>
+      render: (revenue: number) => (
+        <Text strong style={{ color: '#52c41a' }}>
+          ₺{revenue.toLocaleString()}
+        </Text>
       ),
     },
     {
@@ -373,349 +417,295 @@ export const MasterDashboard: React.FC = () => {
       dataIndex: 'growth',
       key: 'growth',
       render: (growth: number) => (
-        <span style={{ color: growth > 0 ? '#52c41a' : '#ff4d4f' }}>
-          {growth > 0 ? <RiseOutlined /> : <FallOutlined />}
-          {Math.abs(growth)}%
-        </span>
+        <Tag color={growth > 0 ? 'success' : 'error'}>
+          {growth > 0 ? '+' : ''}{growth}%
+        </Tag>
       ),
     },
   ];
 
-  // API usage data
-  const apiUsageData = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i}:00`,
-    calls: Math.floor(Math.random() * 1000) + 200,
-  }));
-
-  const apiUsageConfig = {
-    data: apiUsageData,
-    xField: 'hour',
-    yField: 'calls',
-    smooth: true,
-    areaStyle: {
-      fill: 'l(270) 0:#ffffff 0.5:#667eea 1:#764ba2',
-    },
-    line: {
-      color: '#667eea',
-    },
-  };
+  const topTenantsData = [
+    { rank: 1, name: 'TechCorp Solutions', plan: 'Enterprise', users: 245, revenue: 45000, growth: 15, color: '#1890ff' },
+    { rank: 2, name: 'Digital Dynamics', plan: 'Professional', users: 189, revenue: 32000, growth: 12, color: '#52c41a' },
+    { rank: 3, name: 'CloudFirst Inc', plan: 'Enterprise', users: 156, revenue: 28500, growth: -3, color: '#722ed1' },
+    { rank: 4, name: 'DataDrive Systems', plan: 'Professional', users: 134, revenue: 24000, growth: 8, color: '#fa8c16' },
+    { rank: 5, name: 'InnovateTech', plan: 'Starter', users: 98, revenue: 18000, growth: 22, color: '#eb2f96' },
+  ];
 
   return (
     <div className="master-dashboard">
-      {/* Page Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <RocketOutlined /> Master Dashboard
-            </Title>
-            <Text type="secondary">Sistem genelinde özet ve performans metrikleri</Text>
-          </div>
+      {/* Header */}
+      <div className="dashboard-header glass-morphism">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="header-left"
+        >
+          <Title level={2} className="gradient-text">
+            <DashboardOutlined /> Master Dashboard
+          </Title>
+          <Text type="secondary">Sistem geneli özet ve performans metrikleri</Text>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="header-right"
+        >
           <Space size="middle">
             <Segmented
               value={timeRange}
               onChange={setTimeRange}
               options={[
-                { label: 'Bugün', value: 'today' },
+                { label: 'Bugün', value: 'today', icon: <CalendarOutlined /> },
                 { label: 'Bu Hafta', value: 'week' },
                 { label: 'Bu Ay', value: 'month' },
                 { label: 'Bu Yıl', value: 'year' },
               ]}
             />
             <RangePicker />
-            <Button icon={<ReloadOutlined />} onClick={() => setLoading(!loading)}>
+            <Button
+              icon={<ReloadOutlined spin={loading} />}
+              onClick={() => setLoading(!loading)}
+            >
               Yenile
             </Button>
             <Button type="primary" icon={<ExportOutlined />}>
-              Rapor Al
+              Rapor İndir
             </Button>
           </Space>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Key Metrics */}
-      <Row gutter={[16, 16]} className="metrics-row">
-        <Col xs={24} sm={12} md={6}>
-          <StatCard
-            title="Toplam Tenant"
-            value={380}
-            color="#667eea"
-            icon={<TeamOutlined />}
-            trend="up"
-            trendValue={12.5}
-            delay={0}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <StatCard
-            title="Aktif Kullanıcılar"
-            value={2845}
-            color="#52c41a"
-            icon={<UserOutlined />}
-            trend="up"
-            trendValue={8.3}
-            delay={0.1}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <StatCard
-            title="Aylık Gelir"
-            value={115000}
-            prefix="₺"
-            color="#faad14"
-            icon={<DollarOutlined />}
-            trend="up"
-            trendValue={18.7}
-            delay={0.2}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <StatCard
-            title="Sistem Uptime"
-            value={99.9}
-            suffix="%"
-            color="#13c2c2"
-            icon={<ThunderboltOutlined />}
-            trend="up"
-            trendValue={0.2}
-            delay={0.3}
-          />
-        </Col>
+      {/* Stats Cards */}
+      <Row gutter={[20, 20]} className="stats-row">
+        {statsData.map((stat, index) => (
+          <Col xs={24} sm={12} lg={6} key={index}>
+            <StatCard {...stat} loading={loading} />
+          </Col>
+        ))}
       </Row>
 
-      {/* Charts Row */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      {/* Charts Section */}
+      <Row gutter={[20, 20]} className="charts-row">
         <Col xs={24} lg={16}>
-          <Card 
-            title={
-              <Space>
-                <FireOutlined style={{ color: '#667eea' }} />
-                <span>Gelir ve Kar Analizi</span>
-              </Space>
-            }
-            extra={
-              <Select defaultValue="2024" style={{ width: 100 }}>
-                <Select.Option value="2024">2024</Select.Option>
-                <Select.Option value="2023">2023</Select.Option>
-              </Select>
-            }
-            className="chart-card"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            {loading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : (
-              <DualAxes {...revenueConfig} height={300} />
-            )}
-          </Card>
+            <Card
+              title={
+                <Space>
+                  <BarChartOutlined className="card-icon" />
+                  <span>Gelir Analizi</span>
+                </Space>
+              }
+              extra={
+                <Select
+                  value={selectedMetric}
+                  onChange={setSelectedMetric}
+                  style={{ width: 120 }}
+                >
+                  <Select.Option value="revenue">Gelir</Select.Option>
+                  <Select.Option value="users">Kullanıcı</Select.Option>
+                  <Select.Option value="growth">Büyüme</Select.Option>
+                </Select>
+              }
+              className="chart-card glass-morphism"
+            >
+              {loading ? (
+                <Skeleton.Node active style={{ width: '100%', height: 300 }}>
+                  <BarChartOutlined style={{ fontSize: 40, color: '#bfbfbf' }} />
+                </Skeleton.Node>
+              ) : (
+                <DualAxes {...revenueChartConfig} height={300} />
+              )}
+            </Card>
+          </motion.div>
         </Col>
         <Col xs={24} lg={8}>
-          <Card 
-            title={
-              <Space>
-                <TeamOutlined style={{ color: '#667eea' }} />
-                <span>Tenant Dağılımı</span>
-              </Space>
-            }
-            className="chart-card"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
           >
-            {loading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : (
-              <Pie {...pieConfig} height={300} />
-            )}
-          </Card>
+            <Card
+              title={
+                <Space>
+                  <PieChartOutlined className="card-icon" />
+                  <span>Tenant Dağılımı</span>
+                </Space>
+              }
+              className="chart-card glass-morphism"
+            >
+              {loading ? (
+                <Skeleton.Node active style={{ width: '100%', height: 300 }}>
+                  <PieChartOutlined style={{ fontSize: 40, color: '#bfbfbf' }} />
+                </Skeleton.Node>
+              ) : (
+                <Pie {...pieConfig} height={300} />
+              )}
+            </Card>
+          </motion.div>
         </Col>
       </Row>
 
-      {/* System Health and API Usage */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      {/* System Health & Activities */}
+      <Row gutter={[20, 20]} className="info-row">
         <Col xs={24} md={12}>
-          <Card 
-            title={
-              <Space>
-                <CloudServerOutlined style={{ color: '#667eea' }} />
-                <span>Sistem Sağlığı</span>
-              </Space>
-            }
-            extra={
-              <Badge status="processing" text="Canlı" />
-            }
-            className="chart-card"
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
           >
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              {systemHealthData.map((item, index) => (
-                <div key={index}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text>{item.name}</Text>
-                    <Text strong>{item.value}%</Text>
-                  </div>
-                  <Progress
-                    percent={item.value}
-                    strokeColor={
-                      item.value > 80 ? '#ff4d4f' : 
-                      item.value > 60 ? '#faad14' : 
-                      '#52c41a'
-                    }
-                    showInfo={false}
-                  />
-                </div>
-              ))}
-            </Space>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card 
-            title={
-              <Space>
-                <ApiOutlined style={{ color: '#667eea' }} />
-                <span>API Kullanımı (Son 24 Saat)</span>
-              </Space>
-            }
-            extra={
-              <Text type="secondary">Toplam: 18,432 çağrı</Text>
-            }
-            className="chart-card"
-          >
-            {loading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : (
-              <Area {...apiUsageConfig} height={250} />
-            )}
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Top Tenants and Recent Activities */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={14}>
-          <Card 
-            title={
-              <Space>
-                <TrophyOutlined style={{ color: '#faad14' }} />
-                <span>En İyi Tenant'lar</span>
-              </Space>
-            }
-            extra={
-              <Button type="link" icon={<EyeOutlined />}>
-                Tümünü Gör
-              </Button>
-            }
-            className="chart-card"
-          >
-            <Table
-              columns={columns}
-              dataSource={topTenants}
-              pagination={false}
-              size="small"
-              loading={loading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card 
-            title={
-              <Space>
-                <BellOutlined style={{ color: '#667eea' }} />
-                <span>Son Aktiviteler</span>
-              </Space>
-            }
-            extra={
-              <Badge count={4} />
-            }
-            className="chart-card"
-          >
-            <Timeline>
-              {recentActivities.map((activity) => (
-                <Timeline.Item
-                  key={activity.id}
-                  dot={
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: `${activity.color}20`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: activity.color,
-                      }}
-                    >
-                      {activity.icon}
+            <Card
+              title={
+                <Space>
+                  <CloudServerOutlined className="card-icon" />
+                  <span>Sistem Sağlığı</span>
+                </Space>
+              }
+              extra={<Badge status="processing" text="Canlı" />}
+              className="system-health-card glass-morphism"
+            >
+              <Space direction="vertical" style={{ width: '100%' }} size="large">
+                {systemMetrics.map((metric, index) => (
+                  <div key={index} className="metric-item">
+                    <div className="metric-header">
+                      <Text>{metric.name}</Text>
+                      <Text strong>{metric.value}%</Text>
                     </div>
-                  }
-                >
-                  <div>
-                    <Text strong>{activity.action}</Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {activity.description}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      <ClockCircleOutlined /> {activity.time}
-                    </Text>
+                    <Progress
+                      percent={metric.value}
+                      strokeColor={{
+                        '0%': metric.status === 'warning' ? '#faad14' : '#52c41a',
+                        '100%': metric.status === 'warning' ? '#fa8c16' : '#73d13d',
+                      }}
+                      showInfo={false}
+                    />
                   </div>
-                </Timeline.Item>
-              ))}
-            </Timeline>
-          </Card>
+                ))}
+              </Space>
+            </Card>
+          </motion.div>
+        </Col>
+        <Col xs={24} md={12}>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card
+              title={
+                <Space>
+                  <BellOutlined className="card-icon" />
+                  <span>Son Aktiviteler</span>
+                </Space>
+              }
+              extra={
+                <Button type="link" size="small">
+                  Tümünü Gör
+                </Button>
+              }
+              className="activities-card glass-morphism"
+            >
+              <Timeline>
+                {recentActivities.map((activity) => (
+                  <Timeline.Item
+                    key={activity.id}
+                    dot={
+                      <div className={`activity-dot ${activity.type}`}>
+                        {activity.icon}
+                      </div>
+                    }
+                  >
+                    <div className="activity-content">
+                      <Text strong>{activity.title}</Text>
+                      <br />
+                      <Text type="secondary">{activity.description}</Text>
+                      <br />
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        <ClockCircleOutlined /> {activity.time}
+                      </Text>
+                    </div>
+                  </Timeline.Item>
+                ))}
+              </Timeline>
+            </Card>
+          </motion.div>
         </Col>
       </Row>
+
+      {/* Top Tenants Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card
+          title={
+            <Space>
+              <TrophyOutlined className="card-icon" style={{ color: '#faad14' }} />
+              <span>En İyi 5 Tenant</span>
+            </Space>
+          }
+          extra={
+            <Space>
+              <Button icon={<FilterOutlined />}>Filtrele</Button>
+              <Button type="primary" icon={<ExportOutlined />}>
+                Excel
+              </Button>
+            </Space>
+          }
+          className="table-card glass-morphism"
+        >
+          <Table
+            columns={tenantColumns}
+            dataSource={topTenantsData}
+            pagination={false}
+            loading={loading}
+            rowKey="rank"
+          />
+        </Card>
+      </motion.div>
 
       {/* Quick Actions */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col span={24}>
-          <Card title="Hızlı İşlemler" className="quick-actions-card">
-            <Row gutter={[16, 16]}>
-              <Col xs={12} sm={6}>
-                <Button 
-                  type="default" 
-                  icon={<TeamOutlined />} 
-                  size="large" 
-                  block
-                  className="action-button"
-                >
-                  Yeni Tenant
-                </Button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="quick-actions"
+      >
+        <Card className="glass-morphism gradient-border">
+          <Title level={4}>Hızlı İşlemler</Title>
+          <Row gutter={[16, 16]}>
+            {[
+              { icon: <TeamOutlined />, title: 'Yeni Tenant', color: '#1890ff' },
+              { icon: <UserOutlined />, title: 'Kullanıcı Ekle', color: '#52c41a' },
+              { icon: <DatabaseOutlined />, title: 'Backup Al', color: '#722ed1' },
+              { icon: <SettingOutlined />, title: 'Ayarlar', color: '#fa8c16' },
+            ].map((action, index) => (
+              <Col xs={12} sm={6} key={index}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    className="action-button"
+                    icon={action.icon}
+                    size="large"
+                    block
+                    style={{
+                      height: 80,
+                      background: `linear-gradient(135deg, ${action.color}15 0%, ${action.color}05 100%)`,
+                      border: `1px solid ${action.color}30`,
+                    }}
+                  >
+                    <div style={{ marginTop: 8 }}>{action.title}</div>
+                  </Button>
+                </motion.div>
               </Col>
-              <Col xs={12} sm={6}>
-                <Button 
-                  type="default" 
-                  icon={<UserOutlined />} 
-                  size="large" 
-                  block
-                  className="action-button"
-                >
-                  Kullanıcı Ekle
-                </Button>
-              </Col>
-              <Col xs={12} sm={6}>
-                <Button 
-                  type="default" 
-                  icon={<DatabaseOutlined />} 
-                  size="large" 
-                  block
-                  className="action-button"
-                >
-                  Backup Al
-                </Button>
-              </Col>
-              <Col xs={12} sm={6}>
-                <Button 
-                  type="default" 
-                  icon={<ApiOutlined />} 
-                  size="large" 
-                  block
-                  className="action-button"
-                >
-                  API Monitör
-                </Button>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
+            ))}
+          </Row>
+        </Card>
+      </motion.div>
     </div>
   );
 };
