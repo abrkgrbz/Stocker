@@ -756,7 +756,11 @@ export const MasterPackagesPage: React.FC = () => {
   // Handlers
   const handleEdit = (pkg: Package) => {
     setSelectedPackage(pkg);
-    form.setFieldsValue(pkg);
+    form.setFieldsValue({
+      ...pkg,
+      billingCycle: pkg.billingCycle,
+      isActive: pkg.status === 'active'
+    });
     setShowCreateModal(true);
   };
 
@@ -855,7 +859,7 @@ export const MasterPackagesPage: React.FC = () => {
           billingCycle: values.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
           maxUsers: values.maxUsers,
           maxStorage: values.maxStorage,
-          isActive: values.status === 'active'
+          isActive: values.isActive !== undefined ? values.isActive : true
         };
         await packagesApi.update(selectedPackage.id, updateRequest);
         message.success('Paket güncellendi');
@@ -1125,19 +1129,24 @@ export const MasterPackagesPage: React.FC = () => {
                 </Col>
               </Row>
               <Row gutter={16}>
-                <Col span={8}>
+                <Col span={6}>
                   <Form.Item name="popular" valuePropName="checked">
                     <Checkbox>Popüler</Checkbox>
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                   <Form.Item name="recommended" valuePropName="checked">
                     <Checkbox>Önerilen</Checkbox>
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                   <Form.Item name="new" valuePropName="checked">
                     <Checkbox>Yeni</Checkbox>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="isActive" valuePropName="checked" initialValue={true}>
+                    <Checkbox>Aktif</Checkbox>
                   </Form.Item>
                 </Col>
               </Row>
