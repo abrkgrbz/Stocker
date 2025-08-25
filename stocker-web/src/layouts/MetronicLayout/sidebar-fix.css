@@ -102,6 +102,37 @@
 .metronic-menu .ant-menu-sub .ant-menu-item {
   padding-left: 52px !important;
   padding-right: 20px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Sub menu item text */
+.metronic-menu .ant-menu-sub .ant-menu-item .ant-menu-title-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Sub menu item span */
+.metronic-menu .ant-menu-sub .ant-menu-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: calc(100% - 20px);
+}
+
+/* Sub menu item icon fix */
+.metronic-menu .ant-menu-sub .ant-menu-item .anticon {
+  min-width: 16px !important;
+  margin-right: 8px !important;
+  flex-shrink: 0;
+  font-size: 14px !important;
 }
 
 /* Master layout specific fixes */
