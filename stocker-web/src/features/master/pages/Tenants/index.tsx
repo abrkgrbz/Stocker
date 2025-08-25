@@ -93,6 +93,7 @@ import {
 import { Line, Column, Pie, TinyLine, TinyColumn, Progress as TinyProgress } from '@ant-design/plots';
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
+import '../../styles/master-layout.css';
 import { tenantsApi } from '@/shared/api/tenants.api';
 import { Tenant as ApiTenant } from '@/shared/types';
 

@@ -1,0 +1,266 @@
+/* Master Tenants Page Layout Fixes */
+
+.master-tenants-page {
+  padding: 24px;
+  background: #f5f8fa;
+  min-height: 100vh;
+}
+
+/* Page Header */
+.master-tenants-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.master-tenants-page .page-header .header-content {
+  flex: 1;
+}
+
+.master-tenants-page .page-header .header-actions {
+  flex-shrink: 0;
+}
+
+/* Stats Row */
+.master-tenants-page .stats-row {
+  margin-bottom: 24px !important;
+}
+
+.master-tenants-page .stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: none;
+  height: 100%;
+}
+
+.master-tenants-page .stat-card .ant-card-body {
+  padding: 20px;
+}
+
+.master-tenants-page .stat-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.master-tenants-page .stat-trend {
+  margin-top: 8px;
+}
+
+/* Filters Card */
+.master-tenants-page .filters-card {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: none;
+}
+
+.master-tenants-page .filters-card .ant-card-body {
+  padding: 16px 24px;
+}
+
+/* Table Card */
+.master-tenants-page .table-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: none;
+  overflow: hidden;
+}
+
+.master-tenants-page .table-card .ant-card-body {
+  padding: 0;
+}
+
+/* Tenant Cards Grid */
+.master-tenants-page .tenant-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e8e8e8;
+  height: 100%;
+}
+
+.master-tenants-page .tenant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.master-tenants-page .tenant-card .ant-card-body {
+  padding: 16px;
+}
+
+.master-tenants-page .tenant-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.master-tenants-page .tenant-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.master-tenants-page .info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.master-tenants-page .info-item .anticon {
+  font-size: 14px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+}
+
+.master-tenants-page .metric-box {
+  text-align: center;
+  padding: 4px;
+}
+
+.master-tenants-page .modules-section {
+  margin-top: 12px;
+  min-height: 24px;
+}
+
+/* Fix gradient text */
+.master-tenants-page .gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+/* Fix glass morphism */
+.master-tenants-page .glass-morphism {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Fix gradient button */
+.master-tenants-page .gradient-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 500;
+}
+
+.master-tenants-page .gradient-button:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  color: white;
+}
+
+/* Fix Ant Design overrides */
+.master-tenants-page .ant-divider {
+  margin: 8px 0;
+}
+
+.master-tenants-page .ant-statistic-title {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.master-tenants-page .ant-statistic-content {
+  font-size: 14px;
+}
+
+.master-tenants-page .ant-statistic-content-prefix {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.master-tenants-page .ant-statistic-content-suffix {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.master-tenants-page .ant-progress {
+  margin-top: 4px;
+}
+
+.master-tenants-page .ant-tag {
+  margin: 0 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .master-tenants-page {
+    padding: 16px;
+  }
+  
+  .master-tenants-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .master-tenants-page .page-header .header-actions {
+    width: 100%;
+  }
+  
+  .master-tenants-page .page-header .header-actions .ant-space {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Fix overlapping issues */
+.master-tenants-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.master-tenants-page .ant-row {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+}
+
+.master-tenants-page .ant-col {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+/* Ensure proper spacing between sections */
+.master-tenants-page > div:not(:last-child) {
+  margin-bottom: 24px;
+}
+
+/* Fix modal z-index issues */
+.ant-modal-wrap {
+  z-index: 1050 !important;
+}
+
+.ant-drawer {
+  z-index: 1050 !important;
+}
+
+/* Master Packages Page - Same styles apply */
+.master-packages-page {
+  padding: 24px;
+  background: #f5f8fa;
+  min-height: 100vh;
+}
+
+.master-packages-page .page-header,
+.master-packages-page .stats-row,
+.master-packages-page .filters-card,
+.master-packages-page .table-card,
+.master-packages-page .glass-morphism,
+.master-packages-page .gradient-text,
+.master-packages-page .gradient-button {
+  /* Inherit same styles as tenants page */
+}
