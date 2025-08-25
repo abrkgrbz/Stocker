@@ -348,7 +348,7 @@ const MetronicLayout: React.FC = () => {
             {/* Search Bar */}
             <Input
               prefix={<SearchOutlined />}
-              placeholder="Search..."
+              placeholder="Ara..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="header-search"

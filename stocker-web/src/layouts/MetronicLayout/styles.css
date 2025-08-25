@@ -266,6 +266,22 @@
   color: #b5b5c3;
 }
 
+.header-search::placeholder,
+.header-search input::placeholder,
+.ant-input::placeholder {
+  color: #b5b5c3 !important;
+  opacity: 1 !important;
+}
+
+.header-search .ant-input {
+  background: transparent;
+  color: #3f4254;
+}
+
+.header-search .ant-input::placeholder {
+  color: #b5b5c3 !important;
+}
+
 /* Header Buttons */
 .header-btn {
   width: 40px;
