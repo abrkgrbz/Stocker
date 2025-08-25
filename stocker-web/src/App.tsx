@@ -27,7 +27,7 @@ const RegisterPage = lazy(() => import('@/features/register/pages/RegisterPage')
 const RegisterWizard = lazy(() => import('@/features/register/pages/RegisterWizard'));
 const SignalRTestPage = lazy(() => import('@/features/register/pages/SignalRTest').then(m => ({ default: m.SignalRTestPage })));
 const PaymentPage = lazy(() => import('@/features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
-const MasterDashboard = lazy(() => import('@/features/dashboard/pages/MasterDashboard').then(m => ({ default: m.MasterDashboard })));
+const MasterDashboard = lazy(() => import('@/features/master/pages/Dashboard').then(m => ({ default: m.MasterDashboard })));
 const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
 const TenantsPage = lazy(() => import('@/features/tenants/pages/TenantsPage').then(m => ({ default: m.TenantsPage })));
