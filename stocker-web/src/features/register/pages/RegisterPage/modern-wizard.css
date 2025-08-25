@@ -13,6 +13,32 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
 }
 
+/* Fix placeholder visibility for all wizard inputs */
+.modern-wizard .ant-input::placeholder,
+.modern-wizard input::placeholder,
+.wizard-content .ant-input::placeholder,
+.wizard-content input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+.modern-wizard .ant-input-affix-wrapper .ant-input {
+  height: 100%;
+  border: none;
+  box-shadow: none;
+}
+
+.modern-wizard .ant-input-affix-wrapper {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.modern-wizard .ant-input-prefix {
+  margin-right: 8px;
+  color: #667eea;
+}
+
 /* Right Side - Visual Panel */
 .wizard-visual-panel {
   flex: 1;

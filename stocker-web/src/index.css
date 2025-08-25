@@ -48,3 +48,25 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* Global fix for Ant Design input placeholders */
+.ant-input::placeholder,
+.ant-input-affix-wrapper .ant-input::placeholder,
+.ant-input-password .ant-input::placeholder,
+.ant-select-selection-placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* Fix for input wrapper overflow */
+.ant-input-affix-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ant-input-affix-wrapper .ant-input {
+  flex: 1;
+  min-width: 0;
+}

@@ -155,6 +155,48 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Fix placeholder visibility */
+.login-form .ant-input::placeholder,
+.login-form input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+.login-form .ant-input {
+  padding: 12px;
+  height: 48px;
+  font-size: 15px;
+}
+
+.login-form .ant-input-affix-wrapper {
+  padding: 0 12px;
+  height: 48px;
+  font-size: 15px;
+  border-radius: 12px;
+  border: 2px solid #e1e8ed;
+  transition: all 0.3s;
+}
+
+.login-form .ant-input-affix-wrapper:hover {
+  border-color: #667eea;
+}
+
+.login-form .ant-input-affix-wrapper:focus,
+.login-form .ant-input-affix-wrapper-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.login-form .ant-input-affix-wrapper .ant-input {
+  height: 100%;
+  border: none;
+  box-shadow: none;
+}
+
+.login-form .ant-input-prefix {
+  margin-right: 8px;
+}
+
 .login-button {
   height: 48px;
   font-size: 16px;
