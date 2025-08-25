@@ -147,7 +147,7 @@ export const MasterTenantsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -359,9 +359,11 @@ export const MasterTenantsPage: React.FC = () => {
       >
         <Card
           className="tenant-card glass-morphism"
+          size="small"
           style={{
             background: `linear-gradient(135deg, white 0%, ${planInfo.color}08 100%)`,
             borderTop: `3px solid ${planInfo.color}`,
+            height: '100%',
           }}
           actions={[
             <Tooltip title="Detaylar">
@@ -430,32 +432,32 @@ export const MasterTenantsPage: React.FC = () => {
             >
               {tenant.name.substring(0, 2).toUpperCase()}
             </Avatar>
-            <div className="tenant-info">
-              <Title level={5} style={{ margin: 0 }}>
+            <div className="tenant-info" style={{ flex: 1, minWidth: 0 }}>
+              <Title level={5} style={{ margin: 0, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {tenant.name}
               </Title>
-              <Space size="small">
-                <Tag color={planInfo.color} icon={planInfo.icon}>
+              <Space size={2} style={{ marginTop: 4 }}>
+                <Tag color={planInfo.color} style={{ margin: 0, fontSize: 10 }}>
                   {tenant.plan}
                 </Tag>
-                <Tag color={statusInfo.color} icon={statusInfo.icon}>
-                  {statusInfo.text}
+                <Tag color={statusInfo.color} style={{ margin: 0, fontSize: 10 }}>
+                  {statusInfo.text === 'Aktif' ? 'Aktif' : 'Askıda'}
                 </Tag>
               </Space>
             </div>
           </div>
 
-          <Divider style={{ margin: '12px 0' }} />
+          <Divider style={{ margin: '8px 0' }} />
 
           {/* Stats */}
           <Row gutter={[8, 8]}>
             <Col span={12}>
               <Statistic
-                title="Kullanıcılar"
+                title="Kullanıcı"
                 value={tenant.userCount}
                 suffix={`/ ${tenant.maxUsers}`}
                 prefix={<UserOutlined />}
-                valueStyle={{ fontSize: 16 }}
+                valueStyle={{ fontSize: 14 }}
               />
               <Progress
                 percent={(tenant.userCount / tenant.maxUsers) * 100}
@@ -470,7 +472,7 @@ export const MasterTenantsPage: React.FC = () => {
                 value={tenant.storageUsed}
                 suffix={`GB / ${tenant.maxStorage}GB`}
                 prefix={<DatabaseOutlined />}
-                valueStyle={{ fontSize: 16 }}
+                valueStyle={{ fontSize: 14 }}
               />
               <Progress
                 percent={(tenant.storageUsed / tenant.maxStorage) * 100}
@@ -485,7 +487,7 @@ export const MasterTenantsPage: React.FC = () => {
             </Col>
           </Row>
 
-          <Divider style={{ margin: '12px 0' }} />
+          <Divider style={{ margin: '8px 0' }} />
 
           {/* Info */}
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
@@ -503,7 +505,7 @@ export const MasterTenantsPage: React.FC = () => {
             </div>
           </Space>
 
-          <Divider style={{ margin: '12px 0' }} />
+          <Divider style={{ margin: '8px 0' }} />
 
           {/* Revenue & Growth */}
           <Row gutter={16}>
@@ -533,13 +535,18 @@ export const MasterTenantsPage: React.FC = () => {
           </Row>
 
           {/* Modules */}
-          <div className="modules-section">
-            <Space size={4} wrap>
-              {tenant.modules.map((module) => (
-                <Tag key={module} color="blue">
+          <div className="modules-section" style={{ marginTop: 12 }}>
+            <Space size={[4, 4]} wrap style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {tenant.modules.slice(0, 3).map((module) => (
+                <Tag key={module} color="blue" style={{ margin: 0, fontSize: 11 }}>
                   {module}
                 </Tag>
               ))}
+              {tenant.modules.length > 3 && (
+                <Tag color="default" style={{ margin: 0, fontSize: 11 }}>
+                  +{tenant.modules.length - 3}
+                </Tag>
+              )}
             </Space>
           </div>
         </Card>
@@ -897,8 +904,8 @@ export const MasterTenantsPage: React.FC = () => {
                 value={viewMode}
                 onChange={(value) => setViewMode(value as 'grid' | 'table')}
                 options={[
-                  { label: 'Grid', value: 'grid', icon: <AppstoreOutlined /> },
                   { label: 'Tablo', value: 'table', icon: <BarsOutlined /> },
+                  { label: 'Grid', value: 'grid', icon: <AppstoreOutlined /> },
                 ]}
               />
               <Button
@@ -921,9 +928,9 @@ export const MasterTenantsPage: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Row gutter={[20, 20]}>
+            <Row gutter={[16, 16]}>
               {filteredTenants.map((tenant) => (
-                <Col xs={24} sm={12} lg={8} xl={6} key={tenant.id}>
+                <Col xs={24} sm={12} md={8} lg={6} xl={6} xxl={4} key={tenant.id}>
                   <TenantCard
                     tenant={tenant}
                     onEdit={handleEdit}
