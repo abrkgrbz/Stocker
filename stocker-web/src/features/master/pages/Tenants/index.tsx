@@ -151,6 +151,13 @@ export const MasterTenantsPage: React.FC = () => {
   console.warn('⚠️ TENANTS PAGE MOUNTED');
   console.info('ℹ️ Component initialized');
   console.table({ component: 'MasterTenantsPage', status: 'loaded', time: new Date().toISOString() });
+  
+  // Debug panel for console issues
+  const debugDiv = document.createElement('div');
+  debugDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:5px;';
+  debugDiv.innerHTML = '🔴 TENANTS PAGE LOADED - ' + new Date().toLocaleTimeString();
+  document.body.appendChild(debugDiv);
+  setTimeout(() => debugDiv.remove(), 5000);
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
