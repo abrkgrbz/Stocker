@@ -157,44 +157,77 @@
 
 /* Fix placeholder visibility */
 .login-form .ant-input::placeholder,
-.login-form input::placeholder {
+.login-form input::placeholder,
+.login-form .ant-input-password input::placeholder,
+.login-input::placeholder,
+.login-input input::placeholder {
   color: #9ca3af !important;
   opacity: 1 !important;
+  font-size: 14px;
 }
 
-.login-form .ant-input {
-  padding: 12px;
-  height: 48px;
-  font-size: 15px;
+/* Direct input styles */
+.login-input.ant-input,
+.login-input.ant-input-affix-wrapper,
+.login-input.ant-input-password {
+  height: 48px !important;
+  font-size: 15px !important;
+  border-radius: 12px !important;
+  border: 2px solid #e1e8ed !important;
+  transition: all 0.3s !important;
+  background: white !important;
 }
 
-.login-form .ant-input-affix-wrapper {
-  padding: 0 12px;
-  height: 48px;
-  font-size: 15px;
-  border-radius: 12px;
-  border: 2px solid #e1e8ed;
-  transition: all 0.3s;
+/* Input hover states */
+.login-input.ant-input:hover,
+.login-input.ant-input-affix-wrapper:hover,
+.login-input.ant-input-password:hover {
+  border-color: #667eea !important;
 }
 
-.login-form .ant-input-affix-wrapper:hover {
-  border-color: #667eea;
+/* Input focus states */
+.login-input.ant-input:focus,
+.login-input.ant-input-affix-wrapper-focused,
+.login-input.ant-input-password-focused {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  outline: none !important;
 }
 
-.login-form .ant-input-affix-wrapper:focus,
-.login-form .ant-input-affix-wrapper-focused {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+/* Inner input in affix wrapper */
+.login-input.ant-input-affix-wrapper .ant-input,
+.login-input.ant-input-password .ant-input {
+  height: 100% !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
 }
 
-.login-form .ant-input-affix-wrapper .ant-input {
-  height: 100%;
-  border: none;
-  box-shadow: none;
+/* Input prefix and suffix */
+.login-input .ant-input-prefix,
+.login-input.ant-input-affix-wrapper .ant-input-prefix,
+.login-input.ant-input-password .ant-input-prefix {
+  margin-right: 12px;
+  color: #667eea;
 }
 
-.login-form .ant-input-prefix {
-  margin-right: 8px;
+.login-input.ant-input-password .ant-input-suffix {
+  margin-left: 8px;
+}
+
+/* Input with prefix padding */
+.login-input.ant-input-affix-wrapper,
+.login-input.ant-input-password {
+  padding: 0 15px !important;
+}
+
+/* Ensure text is visible */
+.login-form .ant-input,
+.login-input.ant-input-affix-wrapper .ant-input,
+.login-input.ant-input-password .ant-input {
+  color: #1a1a1a !important;
+  font-size: 15px !important;
 }
 
 .login-button {
