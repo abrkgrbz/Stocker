@@ -67,6 +67,7 @@ import {
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
+import '../../styles/master-layout.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
