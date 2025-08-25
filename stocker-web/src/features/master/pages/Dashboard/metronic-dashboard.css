@@ -151,6 +151,7 @@
   border: none !important;
   border-radius: 12px !important;
   height: 100%;
+  overflow: hidden;
 }
 
 .table-card .ant-card-head {
@@ -160,10 +161,20 @@
 
 .table-card .ant-card-body {
   padding: 0 !important;
+  overflow-x: auto;
 }
 
 .table-card .ant-table {
   border-radius: 0 0 12px 12px;
+  min-width: 100%;
+}
+
+.table-card .ant-table-wrapper {
+  overflow-x: auto;
+}
+
+.table-card .ant-table-container {
+  overflow-x: auto;
 }
 
 .table-card .ant-table-thead > tr > th {
@@ -173,14 +184,16 @@
   font-size: 12px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
-  padding: 16px 20px !important;
+  padding: 12px 16px !important;
   border-bottom: none !important;
+  white-space: nowrap;
 }
 
 .table-card .ant-table-tbody > tr > td {
-  padding: 16px 20px !important;
+  padding: 12px 16px !important;
   color: #3f4254 !important;
   border-bottom: 1px solid #eff2f5 !important;
+  vertical-align: middle;
 }
 
 .table-card .ant-table-tbody > tr:last-child > td {
@@ -189,6 +202,29 @@
 
 .table-card .ant-table-tbody > tr:hover > td {
   background: #f5f8fa !important;
+}
+
+/* Fix dropdown overflow */
+.ant-dropdown {
+  z-index: 1050 !important;
+}
+
+.ant-table-cell .ant-dropdown-trigger {
+  cursor: pointer;
+}
+
+/* Responsive table */
+@media (max-width: 992px) {
+  .table-card .ant-table-tbody > tr > td,
+  .table-card .ant-table-thead > tr > th {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  .table-card .ant-table-wrapper {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Activity Card */

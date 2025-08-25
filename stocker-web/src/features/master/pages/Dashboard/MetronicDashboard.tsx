@@ -47,6 +47,8 @@ import {
   TrophyOutlined,
   ApiOutlined,
   WarningOutlined,
+  SettingOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { Line, Area, Column, Pie, Tiny } from '@ant-design/charts';
 import CountUp from 'react-countup';
@@ -305,20 +307,21 @@ const MetronicDashboard: React.FC = () => {
 
   const columns = [
     {
-      title: 'Sıra',
+      title: '#',
       dataIndex: 'rank',
       key: 'rank',
-      width: 80,
+      width: 60,
+      fixed: 'left' as const,
       render: (rank: number) => {
-        const medals = {
-          1: <TrophyOutlined style={{ color: '#ffd700', fontSize: 18 }} />,
-          2: <TrophyOutlined style={{ color: '#c0c0c0', fontSize: 18 }} />,
-          3: <TrophyOutlined style={{ color: '#cd7f32', fontSize: 18 }} />,
+        const icons = {
+          1: <TrophyOutlined style={{ color: '#ffd700', fontSize: 16 }} />,
+          2: <TrophyOutlined style={{ color: '#c0c0c0', fontSize: 16 }} />,
+          3: <TrophyOutlined style={{ color: '#cd7f32', fontSize: 16 }} />,
         };
         return (
-          <Space>
-            {medals[rank as keyof typeof medals]}
-            <Text strong>#{rank}</Text>
+          <Space size="small">
+            {icons[rank as keyof typeof icons]}
+            <span>#{rank}</span>
           </Space>
         );
       },
@@ -327,15 +330,19 @@ const MetronicDashboard: React.FC = () => {
       title: 'Tenant',
       dataIndex: 'name',
       key: 'name',
+      width: 200,
+      ellipsis: true,
       render: (name: string, record: any) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#667eea' }}>
+        <Space size="small">
+          <Avatar size="small" style={{ backgroundColor: '#667eea' }}>
             {name ? name.substring(0, 2).toUpperCase() : 'NA'}
           </Avatar>
-          <div>
-            <Text strong>{name || 'İsimsiz'}</Text>
-            <br />
-            <Tag color={record.plan === 'Enterprise' ? 'purple' : record.plan === 'Professional' ? 'blue' : record.plan === 'Starter' ? 'green' : 'default'}>
+          <div style={{ lineHeight: 1.2 }}>
+            <div style={{ fontWeight: 500 }}>{name || 'İsimsiz'}</div>
+            <Tag 
+              style={{ marginTop: 4, fontSize: 11 }}
+              color={record.plan === 'Enterprise' ? 'purple' : record.plan === 'Professional' ? 'blue' : record.plan === 'Starter' ? 'green' : 'default'}
+            >
               {record.plan}
             </Tag>
           </div>
@@ -343,65 +350,85 @@ const MetronicDashboard: React.FC = () => {
       ),
     },
     {
-      title: 'Kullanıcılar',
+      title: 'Kullanıcı',
       dataIndex: 'users',
       key: 'users',
+      width: 100,
+      align: 'center' as const,
       render: (users: number) => (
-        <Badge count={users} showZero style={{ backgroundColor: '#667eea' }} />
+        <Badge count={users} showZero overflowCount={999} style={{ backgroundColor: '#667eea' }} />
       ),
     },
     {
       title: 'Gelir',
       dataIndex: 'revenue',
       key: 'revenue',
+      width: 120,
+      align: 'right' as const,
       render: (revenue: number) => (
-        <Text strong style={{ color: '#50cd89' }}>
-          ₺{revenue.toLocaleString()}
-        </Text>
+        <span style={{ color: '#50cd89', fontWeight: 500 }}>
+          ₺{revenue.toLocaleString('tr-TR')}
+        </span>
       ),
     },
     {
       title: 'Büyüme',
       dataIndex: 'growth',
       key: 'growth',
+      width: 100,
+      align: 'center' as const,
       render: (growth: number) => (
-        <Space>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
           {growth > 0 ? (
-            <ArrowUpOutlined style={{ color: '#50cd89' }} />
+            <ArrowUpOutlined style={{ color: '#50cd89', fontSize: 12 }} />
           ) : (
-            <ArrowDownOutlined style={{ color: '#f1416c' }} />
+            <ArrowDownOutlined style={{ color: '#f1416c', fontSize: 12 }} />
           )}
-          <Text style={{ color: growth > 0 ? '#50cd89' : '#f1416c' }}>
+          <span style={{ color: growth > 0 ? '#50cd89' : '#f1416c', fontWeight: 500 }}>
             {Math.abs(growth).toFixed(1)}%
-          </Text>
-        </Space>
+          </span>
+        </div>
       ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
+      width: 90,
+      align: 'center' as const,
       render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'error'}>
+        <Tag 
+          style={{ margin: 0, fontSize: 11 }}
+          color={status === 'active' ? 'success' : 'error'}
+        >
           {status === 'active' ? 'AKTİF' : 'ASKIDA'}
         </Tag>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'action',
+      width: 50,
+      fixed: 'right' as const,
       render: () => (
         <Dropdown
           menu={{
             items: [
-              { key: 'view', label: 'Detayları Gör' },
-              { key: 'edit', label: 'Düzenle' },
-              { key: 'delete', label: 'Sil', danger: true },
+              { key: 'view', label: 'Detaylar', icon: <FileTextOutlined /> },
+              { key: 'edit', label: 'Düzenle', icon: <SettingOutlined /> },
+              { type: 'divider' },
+              { key: 'delete', label: 'Sil', icon: <DeleteOutlined />, danger: true },
             ],
           }}
           trigger={['click']}
+          placement="bottomRight"
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button 
+            type="text" 
+            size="small"
+            icon={<MoreOutlined />} 
+            style={{ padding: '4px 8px' }}
+          />
         </Dropdown>
       ),
     },
@@ -524,10 +551,13 @@ const MetronicDashboard: React.FC = () => {
               dataSource={tenants.length > 0 ? tenants : []}
               pagination={false}
               loading={loadingTenants}
+              scroll={{ x: 800 }}
+              size="small"
+              rowClassName="table-row-hover"
             />
           </Card>
         </Col>
-        <Col xs={24} lg={8}>
+        <Col xs={24} xl={8} lg={24}>
           <Card
             title="Son Aktiviteler"
             extra={<Button type="text">Tümünü Gör</Button>}

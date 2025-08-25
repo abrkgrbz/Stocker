@@ -89,23 +89,23 @@ const MetronicLayout: React.FC = () => {
     {
       key: 'apps',
       icon: <AppstoreOutlined className="menu-icon" />,
-      label: 'Apps',
+      label: 'Uygulamalar',
       children: [
         {
           key: '/master/tenants',
           icon: <TeamOutlined className="menu-icon" />,
-          label: 'Tenants',
+          label: 'Tenantlar',
           badge: 23,
         },
         {
           key: '/master/packages',
           icon: <GiftOutlined className="menu-icon" />,
-          label: 'Packages',
+          label: 'Paketler',
         },
         {
           key: '/master/users',
           icon: <UserOutlined className="menu-icon" />,
-          label: 'Users',
+          label: 'Kullanıcılar',
           badge: 5,
         },
       ],
@@ -113,45 +113,45 @@ const MetronicLayout: React.FC = () => {
     {
       key: 'finance',
       icon: <DollarOutlined className="menu-icon" />,
-      label: 'Finance',
+      label: 'Finans',
       children: [
         {
           key: '/master/subscriptions',
           icon: <CrownOutlined className="menu-icon" />,
-          label: 'Subscriptions',
+          label: 'Abonelikler',
         },
         {
           key: '/master/invoices',
           icon: <FileTextOutlined className="menu-icon" />,
-          label: 'Invoices',
+          label: 'Faturalar',
           badge: 12,
         },
         {
           key: '/master/payments',
           icon: <ShoppingCartOutlined className="menu-icon" />,
-          label: 'Payments',
+          label: 'Ödemeler',
         },
       ],
     },
     {
       key: 'monitoring',
       icon: <BarChartOutlined className="menu-icon" />,
-      label: 'Monitoring',
+      label: 'İzleme',
       children: [
         {
           key: '/master/analytics',
           icon: <BarChartOutlined className="menu-icon" />,
-          label: 'Analytics',
+          label: 'Analitik',
         },
         {
           key: '/master/performance',
           icon: <ThunderboltOutlined className="menu-icon" />,
-          label: 'Performance',
+          label: 'Performans',
         },
         {
           key: '/master/logs',
           icon: <FileTextOutlined className="menu-icon" />,
-          label: 'System Logs',
+          label: 'Sistem Logları',
         },
       ],
     },
@@ -162,7 +162,7 @@ const MetronicLayout: React.FC = () => {
     {
       key: '/master/settings',
       icon: <SettingOutlined className="menu-icon" />,
-      label: 'Settings',
+      label: 'Ayarlar',
     },
   ];
 
@@ -171,12 +171,12 @@ const MetronicLayout: React.FC = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'My Profile',
+      label: 'Profilim',
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Account Settings',
+      label: 'Hesap Ayarları',
     },
     {
       key: 'divider',
@@ -185,7 +185,7 @@ const MetronicLayout: React.FC = () => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Sign Out',
+      label: 'Çıkış Yap',
       danger: true,
     },
   ];
@@ -194,9 +194,9 @@ const MetronicLayout: React.FC = () => {
   const notifications = [
     {
       id: 1,
-      title: 'New tenant registered',
-      description: 'TechCorp Solutions just signed up',
-      time: '5 min ago',
+      title: 'Yeni tenant kaydı',
+      description: 'TechCorp Solutions kayıt oldu',
+      time: '5 dakika önce',
       type: 'success',
       icon: <TeamOutlined />,
     },
