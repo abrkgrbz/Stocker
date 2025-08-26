@@ -81,10 +81,28 @@ services:
     networks:
       - stocker-network
 
+  # Seq - Centralized Log Server
+  seq:
+    image: datalust/seq:latest
+    container_name: stocker-seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=StockerSeq2024!
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    volumes:
+      - seq-data:/data
+    networks:
+      - stocker-network
+
 networks:
   stocker-network:
     driver: bridge
 
 volumes:
   redis-data:
+    driver: local
+  seq-data:
     driver: local
