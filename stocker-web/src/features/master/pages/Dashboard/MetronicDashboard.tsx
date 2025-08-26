@@ -53,6 +53,7 @@ import {
 import { Line, Area, Column, Pie, Tiny } from '@ant-design/charts';
 import CountUp from 'react-countup';
 import { masterApi } from '@/shared/api/master.api';
+import { dashboardApi } from '@/shared/api/dashboard.api';
 import './metronic-dashboard.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -75,18 +76,18 @@ const MetronicDashboard: React.FC = () => {
   const fetchTenants = async () => {
     try {
       setLoadingTenants(true);
-      const response = await masterApi.tenants.getAll();
-      if (response.data?.items) {
+      const response = await dashboardApi.topTenants.get();
+      if (response.data?.success && response.data?.data) {
         // Format tenants for table
-        const formattedTenants = response.data.items.slice(0, 5).map((tenant: any, index: number) => ({
+        const formattedTenants = response.data.data.map((tenant: any, index: number) => ({
           key: tenant.id,
           rank: index + 1,
-          name: tenant.name || tenant.companyName,
-          plan: tenant.subscriptionPlan || 'Free',
-          users: tenant.userCount || Math.floor(Math.random() * 200) + 50,
-          revenue: tenant.revenue || Math.floor(Math.random() * 50000) + 10000,
-          growth: Math.random() * 40 - 10,
-          status: tenant.isActive ? 'active' : 'suspended',
+          name: tenant.name,
+          plan: tenant.plan,
+          users: tenant.users,
+          revenue: tenant.revenue,
+          growth: tenant.growth,
+          status: tenant.status,
         }));
         setTenants(formattedTenants);
       }
@@ -101,9 +102,21 @@ const MetronicDashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
-      const response = await masterApi.dashboard.getStats();
-      if (response.data) {
-        setStats(response.data);
+      const response = await dashboardApi.stats.get();
+      if (response.data?.success && response.data?.data) {
+        const data = response.data.data;
+        setStats({
+          totalRevenue: data.totalRevenue,
+          activeTenants: data.activeTenants,
+          totalUsers: data.totalUsers,
+          activeUsers: data.activeUsers,
+          conversionRate: 68.3, // Mock for now
+          revenueChange: data.growth.revenue,
+          tenantsChange: data.growth.tenants,
+          usersChange: data.growth.users,
+          systemHealth: data.systemHealth,
+          packageDistribution: data.packageDistribution
+        });
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error);

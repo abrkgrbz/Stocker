@@ -1,167 +1,214 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stocker.Application.DTOs.Dashboard;
-using Stocker.Application.Features.Dashboard.Queries.GetDashboardStatistics;
-using Stocker.Application.Features.Dashboard.Queries.GetRevenueReport;
-using Stocker.Application.Features.Dashboard.Queries.GetTenantGrowth;
-using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Persistence.Contexts;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Dashboard & Analytics - System-wide metrics and reporting")]
-public class DashboardController : MasterControllerBase
+[ApiController]
+[Route("api/master/dashboard")]
+[Authorize(Policy = "RequireMasterAccess")]
+public class DashboardController : ControllerBase
 {
-    public DashboardController(IMediator mediator, ILogger<DashboardController> logger) 
-        : base(mediator, logger)
+    private readonly MasterDbContext _context;
+    private readonly IMediator _mediator;
+
+    public DashboardController(MasterDbContext context, IMediator mediator)
     {
+        _context = context;
+        _mediator = mediator;
     }
 
-    /// <summary>
-    /// Get overall dashboard statistics
-    /// </summary>
-    [HttpGet("statistics")]
-    [SwaggerOperation(
-        Summary = "Get dashboard statistics",
-        Description = "Returns comprehensive dashboard statistics including tenant counts, revenue, and activity",
-        Tags = new[] { "Dashboard" }
-    )]
-    [ProducesResponseType(typeof(ApiResponse<DashboardStatisticsDto>), 200)]
-    public async Task<IActionResult> GetStatistics()
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
     {
-        _logger.LogInformation("Getting dashboard statistics");
+        var totalTenants = await _context.Tenants.CountAsync();
+        var activeTenants = await _context.Tenants.CountAsync(t => t.IsActive);
+        var totalUsers = await _context.MasterUsers.CountAsync();
+        var activeUsers = await _context.MasterUsers.CountAsync(u => u.IsActive);
         
-        var query = new GetDashboardStatisticsQuery();
-        var statistics = await _mediator.Send(query);
-        
-        return Ok(new ApiResponse<DashboardStatisticsDto>
-        {
-            Success = true,
-            Data = statistics,
-            Message = "Dashboard statistics retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
-    }
+        // Calculate revenue (mock data for now)
+        var totalRevenue = await _context.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Active)
+            .SumAsync(s => s.Price.Amount);
 
-    /// <summary>
-    /// Get revenue report
-    /// </summary>
-    [HttpGet("revenue")]
-    [ProducesResponseType(typeof(ApiResponse<RevenueReportDto>), 200)]
-    public async Task<IActionResult> GetRevenueReport([FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
-    {
-        _logger.LogInformation("Getting revenue report from {FromDate} to {ToDate}", fromDate, toDate);
-        
-        var query = new GetRevenueReportQuery
+        // Get package distribution
+        var packageDistribution = await _context.Subscriptions
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Active)
+            .GroupBy(s => s.Package.Name)
+            .Select(g => new { Package = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        // Calculate growth rates (mock for now)
+        var lastMonthTenants = totalTenants - 5; // Mock data
+        var tenantGrowth = lastMonthTenants > 0 ? ((totalTenants - lastMonthTenants) / (double)lastMonthTenants) * 100 : 0;
+
+        var lastMonthUsers = totalUsers - 10; // Mock data
+        var userGrowth = lastMonthUsers > 0 ? ((totalUsers - lastMonthUsers) / (double)lastMonthUsers) * 100 : 0;
+
+        var lastMonthRevenue = totalRevenue * 0.9m; // Mock data
+        var revenueGrowth = lastMonthRevenue > 0 ? ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+
+        var stats = new
         {
-            FromDate = fromDate,
-            ToDate = toDate
+            success = true,
+            data = new
+            {
+                totalTenants,
+                activeTenants,
+                totalUsers,
+                activeUsers,
+                totalRevenue,
+                packageDistribution,
+                growth = new
+                {
+                    tenants = Math.Round(tenantGrowth, 1),
+                    users = Math.Round(userGrowth, 1),
+                    revenue = Math.Round((double)revenueGrowth, 1)
+                },
+                systemHealth = new
+                {
+                    uptime = 99.9,
+                    cpu = 45,
+                    memory = 62,
+                    disk = 38,
+                    activeConnections = 156
+                }
+            }
         };
-        var report = await _mediator.Send(query);
-        
-        return Ok(new ApiResponse<RevenueReportDto>
-        {
-            Success = true,
-            Data = report,
-            Message = "Revenue report retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
+
+        return Ok(stats);
     }
 
-    /// <summary>
-    /// Get tenant growth metrics
-    /// </summary>
-    [HttpGet("tenant-growth")]
-    [ProducesResponseType(typeof(ApiResponse<TenantGrowthDto>), 200)]
-    public async Task<IActionResult> GetTenantGrowth([FromQuery] int months = 6)
+    [HttpGet("recent-activities")]
+    public async Task<IActionResult> GetRecentActivities()
     {
-        _logger.LogInformation("Getting tenant growth metrics for last {Months} months", months);
-        
-        var query = new GetTenantGrowthQuery
-        {
-            Months = months
-        };
-        var growth = await _mediator.Send(query);
-        
-        return Ok(new ApiResponse<TenantGrowthDto>
-        {
-            Success = true,
-            Data = growth,
-            Message = "Tenant growth metrics retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
+        var activities = new List<object>();
+
+        // Get recent tenants
+        var recentTenants = await _context.Tenants
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(3)
+            .Select(t => new
+            {
+                type = "tenant",
+                title = "Yeni Tenant",
+                description = $"{t.Name} sisteme katıldı",
+                time = t.CreatedAt,
+                status = "success"
+            })
+            .ToListAsync();
+
+        activities.AddRange(recentTenants);
+
+        // Get recent users
+        var recentUsers = await _context.MasterUsers
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(2)
+            .Select(u => new
+            {
+                type = "user",
+                title = "Yeni Kullanıcı",
+                description = $"{u.FirstName} {u.LastName} kayıt oldu",
+                time = u.CreatedAt,
+                status = "info"
+            })
+            .ToListAsync();
+
+        activities.AddRange(recentUsers);
+
+        // Sort by time and take top 10
+        var sortedActivities = activities
+            .OrderByDescending(a => ((dynamic)a).time)
+            .Take(10)
+            .Select(a => new
+            {
+                ((dynamic)a).type,
+                ((dynamic)a).title,
+                ((dynamic)a).description,
+                time = GetRelativeTime(((dynamic)a).time),
+                ((dynamic)a).status
+            });
+
+        return Ok(new { success = true, data = sortedActivities });
     }
 
-    /// <summary>
-    /// Get subscription metrics
-    /// </summary>
-    [HttpGet("subscription-metrics")]
-    [ProducesResponseType(typeof(ApiResponse<SubscriptionMetricsDto>), 200)]
-    public async Task<IActionResult> GetSubscriptionMetrics()
+    [HttpGet("revenue-chart")]
+    public async Task<IActionResult> GetRevenueChart([FromQuery] string period = "month")
     {
-        _logger.LogInformation("Getting subscription metrics");
-        
-        // TODO: Implement GetSubscriptionMetricsQuery
-        var metrics = new SubscriptionMetricsDto
+        var data = new List<object>();
+
+        if (period == "month")
         {
-            TotalSubscriptions = 0,
-            ActiveSubscriptions = 0,
-            TrialSubscriptions = 0,
-            CancelledSubscriptions = 0,
-            SuspendedSubscriptions = 0,
-            ConversionRate = 0,
-            AverageSubscriptionValue = 0,
-            SubscriptionsByPackage = new List<PackageSubscriptionDto>(),
-            UpcomingRenewals = new List<UpcomingRenewalDto>()
-        };
-        
-        return Ok(new ApiResponse<SubscriptionMetricsDto>
+            // Last 30 days
+            for (int i = 29; i >= 0; i--)
+            {
+                var date = DateTime.UtcNow.AddDays(-i);
+                data.Add(new
+                {
+                    date = date.ToString("dd MMM"),
+                    revenue = Random.Shared.Next(8000, 15000),
+                    tenants = Random.Shared.Next(1, 5)
+                });
+            }
+        }
+        else if (period == "year")
         {
-            Success = true,
-            Data = metrics,
-            Message = "Subscription metrics retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
+            // Last 12 months
+            var months = new[] { "Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara" };
+            for (int i = 0; i < 12; i++)
+            {
+                data.Add(new
+                {
+                    date = months[i],
+                    revenue = Random.Shared.Next(80000, 150000),
+                    tenants = Random.Shared.Next(10, 50)
+                });
+            }
+        }
+
+        return Ok(new { success = true, data });
     }
 
-    /// <summary>
-    /// Get top performing tenants
-    /// </summary>
     [HttpGet("top-tenants")]
-    [ProducesResponseType(typeof(ApiResponse<List<TopTenantDto>>), 200)]
-    public async Task<IActionResult> GetTopTenants([FromQuery] int count = 10)
+    public async Task<IActionResult> GetTopTenants()
     {
-        _logger.LogInformation("Getting top {Count} tenants", count);
-        
-        // TODO: Implement GetTopTenantsQuery
-        var topTenants = new List<TopTenantDto>();
-        
-        return Ok(new ApiResponse<List<TopTenantDto>>
-        {
-            Success = true,
-            Data = topTenants,
-            Message = "Top tenants retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
+        var tenants = await _context.Tenants
+            .Where(t => t.IsActive)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(5)
+            .Select(t => new
+            {
+                id = t.Id,
+                name = t.Name,
+                plan = t.Subscriptions.FirstOrDefault() != null ? t.Subscriptions.First().Package.Name : "Free",
+                users = 0, // Will be calculated later when tenant user access is properly implemented
+                revenue = t.Subscriptions.Sum(s => s.Price.Amount),
+                growth = Random.Shared.Next(-10, 30),
+                status = t.IsActive ? "active" : "inactive",
+                createdAt = t.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, data = tenants });
     }
 
-    /// <summary>
-    /// Get recent system activity
-    /// </summary>
-    [HttpGet("recent-activity")]
-    [ProducesResponseType(typeof(ApiResponse<List<ActivityDto>>), 200)]
-    public async Task<IActionResult> GetRecentActivity([FromQuery] int count = 20)
+    private string GetRelativeTime(DateTime dateTime)
     {
-        _logger.LogInformation("Getting recent {Count} activities", count);
-        
-        // TODO: Implement GetRecentActivityQuery
-        var activities = new List<ActivityDto>();
-        
-        return Ok(new ApiResponse<List<ActivityDto>>
-        {
-            Success = true,
-            Data = activities,
-            Message = "Recent activities retrieved successfully",
-            Timestamp = DateTime.UtcNow
-        });
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "Az önce";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} dakika önce";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} saat önce";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)timeSpan.TotalDays} gün önce";
+        if (timeSpan.TotalDays < 365)
+            return $"{(int)(timeSpan.TotalDays / 30)} ay önce";
+
+        return $"{(int)(timeSpan.TotalDays / 365)} yıl önce";
     }
 }
