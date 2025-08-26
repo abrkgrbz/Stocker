@@ -61,7 +61,8 @@
       "WebFetch(domain:coolify.io)",
       "Bash(docker build:*)",
       "Bash(npx tailwindcss init:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(ssh:*)"
     ],
     "deny": []
   }

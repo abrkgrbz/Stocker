@@ -23,7 +23,7 @@ public static class SerilogConfiguration
         Console.WriteLine($"[SERILOG] Environment: {environment}");
         Console.WriteLine($"[SERILOG] Seq URL: {seqUrl}");
         
-        Log.Logger = new LoggerConfiguration()
+        var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
@@ -51,14 +51,19 @@ public static class SerilogConfiguration
                 retainedFileCountLimit: 30,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             // Seq - Merkezi log server
-            .WriteTo.Seq(seqUrl, apiKey: seqApiKey)
-            // Database sink for critical logs
-            .WriteTo.MSSqlServer(
+            .WriteTo.Seq(seqUrl, apiKey: seqApiKey);
+        
+        // Database sink only in non-production environments
+        if (environment != "Production")
+        {
+            loggerConfig = loggerConfig.WriteTo.MSSqlServer(
                 connectionString: configuration.GetConnectionString("MasterConnection"),
                 tableName: "Logs",
                 autoCreateSqlTable: true,
-                restrictedToMinimumLevel: LogEventLevel.Warning)
-            .CreateLogger();
+                restrictedToMinimumLevel: LogEventLevel.Warning);
+        }
+        
+        Log.Logger = loggerConfig.CreateLogger();
 
         hostBuilder.UseSerilog();
     }
