@@ -18,6 +18,8 @@ services:
       timeout: 5s
       retries: 20
       start_period: 60s
+    networks:
+      - stocker-network
 
   redis:
     image: redis:7-alpine
@@ -31,6 +33,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - stocker-network
 
   seq:
     image: datalust/seq:latest
@@ -49,6 +53,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - stocker-network
 
 volumes:
   mssql_data:
@@ -59,3 +65,7 @@ volumes:
     driver: local
   seq_data:
     driver: local
+
+networks:
+  stocker-network:
+    driver: bridge

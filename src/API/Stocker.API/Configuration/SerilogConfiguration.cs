@@ -13,9 +13,10 @@ public static class SerilogConfiguration
         var seqApiKey = configuration["Logging:Seq:ApiKey"];
         
         Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .Enrich.WithEnvironmentUserName()
             .Enrich.WithMachineName()
@@ -38,10 +39,8 @@ public static class SerilogConfiguration
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 30,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-            // Seq - Merkezi log server (opsiyonel)
-            .WriteTo.Conditional(
-                logEvent => !string.IsNullOrEmpty(seqUrl),
-                wt => wt.Seq(seqUrl, apiKey: seqApiKey))
+            // Seq - Merkezi log server
+            .WriteTo.Seq(seqUrl, apiKey: seqApiKey)
             // Database sink for critical logs
             .WriteTo.MSSqlServer(
                 connectionString: configuration.GetConnectionString("MasterConnection"),

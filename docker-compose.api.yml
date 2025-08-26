@@ -50,10 +50,24 @@ services:
       - Hangfire__RetryAttempts=3
       - Hangfire__JobExpirationCheckInterval=01:00:00
       - Hangfire__CountersAggregateInterval=00:05:00
+      # Seq Logging Settings
+      - Logging__Seq__ServerUrl=http://seq:5341
+      - Logging__Seq__ApiKey=
+      - Logging__Seq__MinimumLevel=Information
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - stocker-network
+    depends_on:
+      - database
+      - redis
+      - seq
+
+networks:
+  stocker-network:
+    external: true
  
