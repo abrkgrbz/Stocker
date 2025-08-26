@@ -102,6 +102,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             // Try tenant user login if tenant context exists
             if (tenantId.HasValue)
             {
+                _logger.LogDebug("Searching for tenant user in tenant {TenantId}: {Username}", tenantId.Value, request.Username);
                 var tenantUser = await _userManagementService.FindTenantUserAsync(tenantId.Value, request.Username);
                 
                 if (tenantUser != null)

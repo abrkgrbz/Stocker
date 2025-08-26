@@ -40,12 +40,12 @@ public class UserManagementService : IUserManagementService
             .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email.Value == usernameOrEmail);
     }
 
-    public async Task<TenantUser?> FindTenantUserAsync(Guid tenantId, string username)
+    public async Task<TenantUser?> FindTenantUserAsync(Guid tenantId, string usernameOrEmail)
     {
         await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
         return await tenantContext.TenantUsers
             .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.Username == username && u.TenantId == tenantId);
+            .FirstOrDefaultAsync(u => (u.Username == usernameOrEmail || u.Email == usernameOrEmail) && u.TenantId == tenantId);
     }
 
     public async Task<MasterUser> CreateMasterUserAsync(

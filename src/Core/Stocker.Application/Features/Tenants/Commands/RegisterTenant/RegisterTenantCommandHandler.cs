@@ -21,19 +21,22 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly ILogger<RegisterTenantCommandHandler> _logger;
+    private readonly IBackgroundJobService _backgroundJobService;
 
     public RegisterTenantCommandHandler(
         IMasterUnitOfWork unitOfWork,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
         IMapper mapper,
-        ILogger<RegisterTenantCommandHandler> logger)
+        ILogger<RegisterTenantCommandHandler> logger,
+        IBackgroundJobService backgroundJobService)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _emailService = emailService;
         _mapper = mapper;
         _logger = logger;
+        _backgroundJobService = backgroundJobService;
     }
 
     public async Task<Result<TenantDto>> Handle(RegisterTenantCommand request, CancellationToken cancellationToken)
@@ -168,10 +171,14 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             await _unitOfWork.Subscriptions().AddAsync(subscription, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Don't send activation email yet - wait for payment
+            // Trigger tenant database provisioning in background
+            _logger.LogInformation("Triggering tenant database provisioning for: {TenantId}", tenant.Id);
+            _backgroundJobService.EnqueueTenantProvisioning(tenant.Id, tenant.Name);
+
+            // Don't send activation email yet - wait for database provisioning
             // await SendActivationEmail(tenant, masterUser);
 
-            _logger.LogInformation("Tenant pre-registered successfully (awaiting payment): {TenantId}", tenant.Id);
+            _logger.LogInformation("Tenant registered successfully, database provisioning started: {TenantId}", tenant.Id);
 
             return Result<TenantDto>.Success(_mapper.Map<TenantDto>(tenant));
         }
