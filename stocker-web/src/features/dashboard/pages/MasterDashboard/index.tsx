@@ -213,8 +213,7 @@ export const MasterDashboard: React.FC = () => {
             <Statistic
               title="Aylık Gelir"
               value={235000}
-              prefix={<DollarOutlined />}
-              suffix="₺"
+              prefix="₺"
               valueStyle={{ color: '#faad14' }}
             />
             <Progress percent={85} showInfo={false} strokeColor="#faad14" />
