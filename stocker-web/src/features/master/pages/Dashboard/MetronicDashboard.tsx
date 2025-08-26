@@ -145,10 +145,10 @@ const MetronicDashboard: React.FC = () => {
     {
       title: 'Toplam Gelir',
       value: stats?.totalRevenue || 524350,
-      prefix: '₺',
+      prefix: '',
       change: stats?.revenueChange || 12.5,
       changeType: (stats?.revenueChange || 12.5) > 0 ? 'increase' : 'decrease',
-      icon: <DollarOutlined />,
+      icon: <span style={{ fontSize: 24, fontWeight: 600 }}>₺</span>,
       color: '#667eea',
       bgColor: 'rgba(102, 126, 234, 0.1)',
       description: 'geçen aya göre',
