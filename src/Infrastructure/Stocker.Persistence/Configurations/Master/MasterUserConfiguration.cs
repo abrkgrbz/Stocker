@@ -140,20 +140,18 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
         });
 
         // Relationships - Use backing fields for collections
-        builder.HasMany(u => u.Tenants)
+        builder.HasMany(u => u.UserTenants)
             .WithOne()
             .HasForeignKey(ut => ut.UserId)
-            .OnDelete(DeleteBehavior.Cascade)
-            .Metadata.PrincipalToDependent?.SetPropertyAccessMode(PropertyAccessMode.Field);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.LoginHistory)
             .WithOne()
             .HasForeignKey(h => h.UserId)
-            .OnDelete(DeleteBehavior.Cascade)
-            .Metadata.PrincipalToDependent?.SetPropertyAccessMode(PropertyAccessMode.Field);
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure navigation property names
-        builder.Navigation(u => u.Tenants).HasField("_tenants");
+        // Configure navigation property to use backing fields
+        builder.Navigation(u => u.UserTenants).HasField("_tenants");
         builder.Navigation(u => u.LoginHistory).HasField("_loginHistory");
 
         // Indexes

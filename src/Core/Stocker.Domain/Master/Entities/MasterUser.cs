@@ -36,7 +36,6 @@ public sealed class MasterUser : AggregateRoot
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiry { get; private set; }
     public IReadOnlyList<ValueObjects.RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
-    public IReadOnlyList<UserTenant> Tenants => _tenants.AsReadOnly();
     public IReadOnlyList<UserLoginHistory> LoginHistory => _loginHistory.AsReadOnly();
 
     private MasterUser() { } // EF Constructor
