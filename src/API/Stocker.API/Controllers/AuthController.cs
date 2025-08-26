@@ -32,12 +32,25 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public IActionResult TestSeq()
     {
-        _logger.LogDebug("TEST: Debug log from AuthController");
-        _logger.LogInformation("TEST: Information log from AuthController");
-        _logger.LogWarning("TEST: Warning log from AuthController");
-        _logger.LogError("TEST: Error log from AuthController (not a real error)");
+        var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
         
-        return Ok(new { message = "Seq test logs sent. Check http://95.217.219.4:5341" });
+        _logger.LogDebug("TEST DEBUG: {Timestamp} - Debug log from AuthController", timestamp);
+        _logger.LogInformation("TEST INFO: {Timestamp} - Information log from AuthController", timestamp);
+        _logger.LogWarning("TEST WARNING: {Timestamp} - Warning log from AuthController", timestamp);
+        _logger.LogError("TEST ERROR: {Timestamp} - Error log from AuthController (not a real error)", timestamp);
+        
+        // Direct Serilog kullanımı
+        Serilog.Log.Debug("DIRECT DEBUG: {Timestamp} - Direct Serilog debug", timestamp);
+        Serilog.Log.Information("DIRECT INFO: {Timestamp} - Direct Serilog information", timestamp);
+        Serilog.Log.Warning("DIRECT WARNING: {Timestamp} - Direct Serilog warning", timestamp);
+        Serilog.Log.Error("DIRECT ERROR: {Timestamp} - Direct Serilog error (test)", timestamp);
+        
+        return Ok(new { 
+            message = "Seq test logs sent", 
+            seqUrl = "http://95.217.219.4:5341",
+            timestamp = timestamp,
+            environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+        });
     }
 
     /// <summary>

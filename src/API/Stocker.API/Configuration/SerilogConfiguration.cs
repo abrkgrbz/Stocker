@@ -9,8 +9,19 @@ public static class SerilogConfiguration
 {
     public static void ConfigureLogging(IConfiguration configuration, IHostBuilder hostBuilder)
     {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         var seqUrl = configuration["Logging:Seq:ServerUrl"] ?? "http://localhost:5341";
+        
+        // Production'da direkt IP kullan
+        if (environment == "Production")
+        {
+            seqUrl = "http://95.217.219.4:5341";
+        }
+        
         var seqApiKey = configuration["Logging:Seq:ApiKey"];
+        
+        Console.WriteLine($"[SERILOG] Environment: {environment}");
+        Console.WriteLine($"[SERILOG] Seq URL: {seqUrl}");
         
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
@@ -40,7 +51,13 @@ public static class SerilogConfiguration
                 retainedFileCountLimit: 30,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             // Seq - Merkezi log server
-            .WriteTo.Seq(seqUrl, apiKey: seqApiKey)
+            .WriteTo.Seq(seqUrl, 
+                apiKey: seqApiKey,
+                controlLevelSwitch: null,
+                messageHandler: null,
+                retainedInvalidPayloadsLimitBytes: null,
+                compact: false,
+                queueSizeLimit: 10000)
             // Database sink for critical logs
             .WriteTo.MSSqlServer(
                 connectionString: configuration.GetConnectionString("MasterConnection"),
