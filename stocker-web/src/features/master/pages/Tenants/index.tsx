@@ -863,6 +863,7 @@ export const MasterTenantsPage: React.FC = () => {
   };
 
   const handleViewDetails = (tenant: Tenant) => {
+    console.log('Opening details for tenant:', tenant);
     setSelectedTenant(tenant);
     setShowDetailsDrawer(true);
   };
@@ -1236,8 +1237,11 @@ export const MasterTenantsPage: React.FC = () => {
           setShowDetailsDrawer(false);
           setSelectedTenant(null);
         }}
+        destroyOnClose={true}
+        maskClosable={true}
+        style={{ zIndex: 1050 }}
       >
-        {selectedTenant && (
+        {selectedTenant ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* Tenant Info */}
             <Card className="glass-morphism">
@@ -1364,6 +1368,8 @@ export const MasterTenantsPage: React.FC = () => {
               </Button>
             </Space>
           </Space>
+        ) : (
+          <Empty description="Tenant seçilmedi" />
         )}
       </Drawer>
     </div>
