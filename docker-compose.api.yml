@@ -62,10 +62,6 @@ services:
       start_period: 40s
     networks:
       - stocker-network
-    depends_on:
-      - database
-      - redis
-      - seq
 
 networks:
   stocker-network:
