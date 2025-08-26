@@ -60,7 +60,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                     return new AuthenticationResult
                     {
                         Success = false,
-                        Errors = new List<string> { "Invalid username or password" }
+                        Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
                     };
                 }
 
@@ -71,7 +71,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                     return new AuthenticationResult
                     {
                         Success = false,
-                        Errors = new List<string> { "User account is inactive" }
+                        Errors = new List<string> { "Kullanıcı hesabı aktif değil" }
                     };
                 }
 
@@ -108,7 +108,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "Invalid username or password" }
+                            Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
                         };
                     }
 
@@ -119,7 +119,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "Invalid username or password" }
+                            Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
                         };
                     }
 
@@ -130,7 +130,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "User account is inactive" }
+                            Errors = new List<string> { "Kullanıcı hesabı aktif değil" }
                         };
                     }
 
@@ -158,7 +158,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             return new AuthenticationResult
             {
                 Success = false,
-                Errors = new List<string> { "An error occurred during login" }
+                Errors = new List<string> { "Giriş sırasında bir hata oluştu" }
             };
         }
     }
@@ -174,7 +174,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new List<string> { "Invalid access token" }
+                    Errors = new List<string> { "Geçersiz erişim token'ı" }
                 };
             }
 
@@ -185,7 +185,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new List<string> { "Invalid token claims" }
+                    Errors = new List<string> { "Geçersiz token bilgileri" }
                 };
             }
 
@@ -199,7 +199,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new List<string> { "User not found" }
+                    Errors = new List<string> { "Kullanıcı bulunamadı" }
                 };
             }
 
@@ -210,7 +210,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new List<string> { "Invalid or expired refresh token" }
+                    Errors = new List<string> { "Geçersiz veya süresi dolmuş yenileme token'ı" }
                 };
             }
 
@@ -231,7 +231,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             return new AuthenticationResult
             {
                 Success = false,
-                Errors = new List<string> { "An error occurred during token refresh" }
+                Errors = new List<string> { "Token yenileme sırasında bir hata oluştu" }
             };
         }
     }
@@ -275,7 +275,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             return new AuthenticationResult
             {
                 Success = false,
-                Errors = new List<string> { "An error occurred during registration" }
+                Errors = new List<string> { "Kayıt sırasında bir hata oluştu" }
             };
         }
     }
@@ -301,7 +301,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             var tenantUser = await _userManagementService.FindTenantUserAsync(tenantId, request.Username);
             if (tenantUser == null)
             {
-                throw new InvalidOperationException("Failed to create tenant user");
+                throw new InvalidOperationException("Kiracı kullanıcısı oluşturulamadı");
             }
 
             return await _tokenGenerationService.GenerateForTenantUserAsync(tenantUser, masterUser);
@@ -321,7 +321,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
             return new AuthenticationResult
             {
                 Success = false,
-                Errors = new List<string> { "An error occurred during registration" }
+                Errors = new List<string> { "Kayıt sırasında bir hata oluştu" }
             };
         }
     }
