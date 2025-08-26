@@ -473,6 +473,7 @@ export const MasterTenantsPage: React.FC = () => {
             background: `linear-gradient(135deg, white 0%, ${planInfo.color}08 100%)`,
             borderTop: `3px solid ${planInfo.color}`,
             height: '100%',
+            minHeight: '320px',
           }}
           actions={[
             <Tooltip title="Detaylar">
@@ -1037,9 +1038,9 @@ export const MasterTenantsPage: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Row gutter={[16, 16]}>
+            <Row gutter={[24, 24]}>
               {filteredTenants.map((tenant) => (
-                <Col xs={24} sm={12} md={8} lg={6} xl={6} xxl={4} key={tenant.id}>
+                <Col xs={24} sm={24} md={12} lg={8} xl={8} xxl={6} key={tenant.id}>
                   <TenantCard
                     tenant={tenant}
                     onEdit={handleEdit}

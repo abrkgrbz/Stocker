@@ -422,6 +422,7 @@ export const MasterPackagesPage: React.FC = () => {
           background: `linear-gradient(135deg, white 0%, ${pkg.color}05 100%)`,
           borderTop: `4px solid ${pkg.color}`,
           height: '100%',
+          minHeight: '450px',
         }}
       >
         {/* Badges */}
@@ -942,7 +943,7 @@ export const MasterPackagesPage: React.FC = () => {
       {/* Stats */}
       <Row gutter={[20, 20]} className="stats-row">
         {stats.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
+          <Col xs={24} sm={12} md={12} lg={6} key={index}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1011,7 +1012,7 @@ export const MasterPackagesPage: React.FC = () => {
           >
             <Row gutter={[20, 20]}>
               {packages.map((pkg) => (
-                <Col xs={24} sm={12} lg={6} key={pkg.id}>
+                <Col xs={24} sm={24} md={12} lg={8} xl={8} xxl={6} key={pkg.id}>
                   <PackageCard pkg={pkg} />
                 </Col>
               ))}
