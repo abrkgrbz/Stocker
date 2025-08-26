@@ -56,3 +56,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Seq - Centralized Log Server
+  seq:
+    image: datalust/seq:latest
+    container_name: stocker-seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=StockerSeq2024!
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    volumes:
+      - seq-data:/data
+    networks:
+      - stocker-network
