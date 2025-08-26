@@ -41,6 +41,7 @@ import {
   DownloadOutlined,
   FilterOutlined,
   SearchOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { subscriptionsApi, SubscriptionDto } from '@/shared/api/subscriptions.api';

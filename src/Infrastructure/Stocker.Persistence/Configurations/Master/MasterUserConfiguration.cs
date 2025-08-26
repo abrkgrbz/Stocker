@@ -139,16 +139,22 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .HasDatabaseName("IX_MasterUserRefreshTokens_Token");
         });
 
-        // Relationships
+        // Relationships - Use backing fields for collections
         builder.HasMany(u => u.Tenants)
             .WithOne()
             .HasForeignKey(ut => ut.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .Metadata.PrincipalToDependent?.SetPropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasMany(u => u.LoginHistory)
             .WithOne()
             .HasForeignKey(h => h.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .Metadata.PrincipalToDependent?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+        // Configure navigation property names
+        builder.Navigation(u => u.Tenants).HasField("_tenants");
+        builder.Navigation(u => u.LoginHistory).HasField("_loginHistory");
 
         // Indexes
         builder.HasIndex(u => u.Username)
