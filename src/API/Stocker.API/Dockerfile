@@ -11,6 +11,8 @@ COPY src/Core/Stocker.SharedKernel/*.csproj ./src/Core/Stocker.SharedKernel/
 COPY src/Infrastructure/Stocker.Infrastructure/*.csproj ./src/Infrastructure/Stocker.Infrastructure/
 COPY src/Infrastructure/Stocker.Persistence/*.csproj ./src/Infrastructure/Stocker.Persistence/
 COPY src/Infrastructure/Stocker.Identity/*.csproj ./src/Infrastructure/Stocker.Identity/
+COPY src/Infrastructure/Stocker.SignalR/*.csproj ./src/Infrastructure/Stocker.SignalR/
+COPY src/Modules/Stocker.Modules.CRM/*.csproj ./src/Modules/Stocker.Modules.CRM/
 
 # Restore dependencies
 RUN dotnet restore
@@ -23,8 +25,8 @@ RUN dotnet tool install --global dotnet-ef
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Build and publish
-WORKDIR /src/src/API/Stocker.API
-RUN dotnet publish -c Release -o /app/publish
+WORKDIR /src
+RUN dotnet publish src/API/Stocker.API/Stocker.API.csproj -c Release -o /app/publish
 
 # Generate migration bundle (self-contained migration executable)
 WORKDIR /src
