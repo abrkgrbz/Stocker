@@ -17,9 +17,8 @@ public static class SerilogConfiguration
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .Enrich.WithEnvironmentName()
+            .Enrich.WithEnvironmentUserName()
             .Enrich.WithMachineName()
-            .Enrich.WithThreadId()
             .Enrich.WithProperty("Application", "Stocker.API")
             // Console output
             .WriteTo.Console(
@@ -41,7 +40,7 @@ public static class SerilogConfiguration
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             // Seq - Merkezi log server (opsiyonel)
             .WriteTo.Conditional(
-                () => !string.IsNullOrEmpty(seqUrl),
+                logEvent => !string.IsNullOrEmpty(seqUrl),
                 wt => wt.Seq(seqUrl, apiKey: seqApiKey))
             // Database sink for critical logs
             .WriteTo.MSSqlServer(
