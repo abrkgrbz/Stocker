@@ -1,9 +1,9 @@
-using Stocker.SharedKernel;
+using Stocker.SharedKernel.Primitives;
 using System.Text.Json;
 
 namespace Stocker.Domain.Entities.Settings;
 
-public class SystemSettings : BaseEntity<Guid>
+public class SystemSettings : Entity
 {
     public string Category { get; private set; } = string.Empty;
     public string Key { get; private set; } = string.Empty;
@@ -17,20 +17,17 @@ public class SystemSettings : BaseEntity<Guid>
     
     public SystemSettings(string category, string key, string value, string? description = null, bool isSystem = false, bool isEncrypted = false)
     {
-        Id = Guid.NewGuid();
         Category = category;
         Key = key;
         Value = value;
         Description = description;
         IsSystem = isSystem;
         IsEncrypted = isEncrypted;
-        CreatedAt = DateTime.UtcNow;
     }
     
     public void UpdateValue(string value)
     {
         Value = value;
-        UpdatedAt = DateTime.UtcNow;
     }
     
     public T GetValue<T>()
@@ -58,7 +55,6 @@ public class SystemSettings : BaseEntity<Guid>
             DataType = typeof(T).Name.ToLower();
         }
         
-        UpdatedAt = DateTime.UtcNow;
     }
 }
 

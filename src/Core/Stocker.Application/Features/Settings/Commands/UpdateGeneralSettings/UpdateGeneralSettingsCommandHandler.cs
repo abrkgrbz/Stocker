@@ -1,16 +1,16 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Entities.Settings;
+using Stocker.Persistence.Contexts;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Settings.Commands.UpdateGeneralSettings;
 
 public class UpdateGeneralSettingsCommandHandler : IRequestHandler<UpdateGeneralSettingsCommand, Result<bool>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly MasterDbContext _context;
 
-    public UpdateGeneralSettingsCommandHandler(IMasterDbContext context)
+    public UpdateGeneralSettingsCommandHandler(MasterDbContext context)
     {
         _context = context;
     }
@@ -38,7 +38,7 @@ public class UpdateGeneralSettingsCommandHandler : IRequestHandler<UpdateGeneral
         }
         catch (Exception ex)
         {
-            return Result<bool>.Failure($"Failed to update general settings: {ex.Message}");
+            return Result<bool>.Failure(new SharedKernel.Results.Error("UpdateSettings.Failed", $"Failed to update general settings: {ex.Message}"));
         }
     }
 

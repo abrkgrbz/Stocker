@@ -6,6 +6,7 @@ using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Master.ValueObjects;
 using Stocker.Persistence.Contexts;
+using Stocker.Persistence.Seeds.Master;
 using Stocker.SharedKernel.Settings;
 
 namespace Stocker.Persistence.SeedData;
@@ -31,6 +32,7 @@ public class MasterDataSeeder
         await SeedPackagesAsync();
         await SeedSystemAdminAsync();
         await SeedTenantAdminAsync();
+        await SystemSettingsSeed.SeedAsync(_context);
         await _context.SaveChangesAsync();
     }
 
