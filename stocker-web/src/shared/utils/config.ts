@@ -2,7 +2,7 @@
 
 export const getApiUrl = (): string => {
   // Check environment variables
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5104';
+  const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
   
   // Remove trailing slash if exists
   return apiUrl.replace(/\/$/, '');
