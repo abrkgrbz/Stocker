@@ -59,9 +59,9 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     public async Task<TenantDbContext> CreateDbContextAsync(Guid tenantId)
     {
         var tenant = await _masterDbContext.Tenants.FindAsync(tenantId);
-        if (tenant == null || !tenant.IsActive)
+        if (tenant == null)
         {
-            throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found or not active.");
+            throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
         }
 
         // Set current tenant in the service
@@ -76,9 +76,9 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         var tenant = _masterDbContext.Tenants
             .FirstOrDefault(t => t.Code == tenantIdentifier);
 
-        if (tenant == null || !tenant.IsActive)
+        if (tenant == null)
         {
-            throw new InvalidOperationException($"Tenant with identifier '{tenantIdentifier}' not found or not active.");
+            throw new InvalidOperationException($"Tenant with identifier '{tenantIdentifier}' not found.");
         }
 
         // Set current tenant in the service
