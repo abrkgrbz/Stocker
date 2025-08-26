@@ -63,7 +63,10 @@ public class AuthenticationService : IAuthenticationService
             // Password kontrolü
             if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
             {
-                _logger.LogWarning("Password verification failed for user {Username}", masterUser.Username);
+                _logger.LogWarning("Password verification failed for user {Username}. User has password: {HasPassword}, Password hash length: {HashLength}", 
+                    masterUser.Username, 
+                    masterUser.Password != null,
+                    masterUser.Password?.Hash?.Length ?? 0);
                 return new AuthenticationResult
                 {
                     Success = false,

@@ -59,11 +59,15 @@ export const useAuthStore = create<AuthState>()(
         login: async (credentials) => {
           set({ isLoading: true, error: null });
           try {
+            console.log('Login attempt with:', { email: credentials.email, tenantCode: credentials.tenantCode });
+            
             const response = await authApi.login(credentials);
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
             const { accessToken, refreshToken, user } = loginData;
+            
+            console.log('Login successful, user:', user);
             
             localStorage.setItem(TOKEN_KEY, accessToken);
             localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
@@ -76,8 +80,19 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: true,
             });
           } catch (error: any) {
+            console.error('Login failed:', error);
+            console.error('Error response:', error.response);
+            console.error('Error response data:', error.response?.data);
+            
+            // Extract detailed error message
+            const errorMessage = error.response?.data?.errors?.General?.[0] || 
+                               error.response?.data?.message || 
+                               error.response?.data || 
+                               error.message || 
+                               'Login failed';
+            
             set({
-              error: error.response?.data?.message || error.message || 'Login failed',
+              error: errorMessage,
               isLoading: false,
             });
             throw error;

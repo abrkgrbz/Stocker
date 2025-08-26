@@ -69,6 +69,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         // You can implement more sophisticated logic here
         // For now, checking if email domain is for system admins
         return email.EndsWith("@stocker.com", StringComparison.OrdinalIgnoreCase) ||
-               email.EndsWith("@admin.stocker.com", StringComparison.OrdinalIgnoreCase);
+               email.EndsWith("@admin.stocker.com", StringComparison.OrdinalIgnoreCase) ||
+               email.EndsWith("@stoocker.app", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -3,8 +3,24 @@ import { LoginRequest, LoginResponse, User } from '@/shared/types';
 
 // Tenant kullanıcıları için auth API
 export const authApi = {
-  login: (data: LoginRequest) => 
-    apiClient.post<LoginResponse>('/api/auth/login', data),
+  login: (data: LoginRequest) => {
+    console.log('AUTH API - Login request:', {
+      url: `${apiClient.defaults.baseURL}/api/auth/login`,
+      email: data.email,
+      tenantCode: data.tenantCode,
+      hasPassword: !!data.password
+    });
+    
+    return apiClient.post<LoginResponse>('/api/auth/login', data).catch((error) => {
+      console.error('AUTH API - Login error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      throw error;
+    });
+  },
     
   logout: () => 
     apiClient.post('/api/auth/logout'),
