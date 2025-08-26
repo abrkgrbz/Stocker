@@ -192,7 +192,15 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
     private string GenerateConnectionString(string companyCode)
     {
-        // In production, this would generate a proper connection string
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        
+        if (environment == "Production")
+        {
+            // Production'da Docker network üzerinden SQL Server'a bağlan
+            return $"Server=database-xoosgscggos08gc0oc08ckk4-224200859222;Database=Stocker_Tenant_{companyCode};User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;";
+        }
+        
+        // Local development
         return $"Server=localhost;Database=Stocker_Tenant_{companyCode};Trusted_Connection=true;TrustServerCertificate=true;";
     }
 
