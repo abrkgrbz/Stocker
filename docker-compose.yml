@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: stocker-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./stocker-web/dist:/usr/share/nginx/html:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - api
+      - dozzle
+    networks:
+      - stocker-network
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stocker-api
+    container_name: stocker-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MasterConnection=${MASTER_CONNECTION_STRING}
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION_STRING}
+      - JwtSettings__Secret=${JWT_SECRET}
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
+      - DatabaseSettings__ServerName=${DB_SERVER}
+      - DatabaseSettings__UserId=${DB_USER}
+      - DatabaseSettings__Password=${DB_PASSWORD}
+    expose:
+      - "8080"
+    networks:
+      - stocker-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stocker-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - stocker-network
+
+  # Dozzle - Container Log Viewer
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: stocker-dozzle
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOZZLE_LEVEL=info
+      - DOZZLE_TAILSIZE=300
+      - DOZZLE_FILTER=status=running
+      - DOZZLE_HOSTNAME=Stocker-Logs
+      - DOZZLE_BASE=/
+      - DOZZLE_NO_ANALYTICS=true
+    expose:
+      - "8080"
+    networks:
+      - stocker-network
+
+networks:
+  stocker-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

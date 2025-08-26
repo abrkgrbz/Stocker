@@ -1,0 +1,30 @@
+# Certbot SSL Sertifikası Kurulum Komutları
+
+# 1. Certbot'u yükle (eğer yoksa)
+sudo apt update
+sudo apt install certbot python3-certbot-nginx -y
+
+# 2. SSL sertifikası oluştur
+sudo certbot certonly --standalone -d dozzle.stoocker.app --email info@stoocker.app --agree-tos --non-interactive
+
+# 3. Nginx config dosyasını kopyala
+sudo cp nginx-ssl.conf /etc/nginx/sites-available/dozzle.conf
+
+# 4. Site'ı aktif et
+sudo ln -s /etc/nginx/sites-available/dozzle.conf /etc/nginx/sites-enabled/
+
+# 5. Nginx config'i test et
+sudo nginx -t
+
+# 6. Nginx'i yeniden başlat
+sudo systemctl reload nginx
+
+# 7. Otomatik yenileme için cron job ekle (opsiyonel)
+sudo certbot renew --dry-run
+
+# NOT: Eğer Coolify kullanıyorsanız ve port 80/443 meşgulse:
+# Önce Coolify proxy'yi durdurun:
+docker stop coolify-proxy
+
+# Sertifika oluşturduktan sonra tekrar başlatın:
+docker start coolify-proxy
