@@ -1,4 +1,5 @@
 using Serilog;
+using Stocker.API.Configuration;
 using Stocker.API.Filters;
 using Stocker.Application;
 using Stocker.Identity.Extensions;
@@ -23,14 +24,8 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 }
 
-// Configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug() // Debug seviyesine çektik
-    .WriteTo.Console()
-    .WriteTo.File("logs/stocker-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-
-builder.Host.UseSerilog();
+// Configure Serilog with Seq
+SerilogConfiguration.ConfigureLogging(builder.Configuration, builder.Host);
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -388,6 +383,9 @@ app.UseSwaggerUI(c =>
 
 // Add Global Exception Handling Middleware - En başta olmalı
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// Configure Serilog Request Logging
+SerilogConfiguration.ConfigureRequestLogging(app);
 
 // Use Request Localization
 app.UseRequestLocalization();
