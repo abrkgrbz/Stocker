@@ -474,11 +474,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Add health check endpoints
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
-   .WithName("HealthCheck")
-   .WithTags("Health");
-
+// Health check endpoints are handled by HealthController
+// SignalR health check
 app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
    .WithName("SignalRHealthCheck")
    .WithTags("Health");
