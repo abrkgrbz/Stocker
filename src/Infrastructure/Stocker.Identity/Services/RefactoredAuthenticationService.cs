@@ -43,16 +43,24 @@ public class RefactoredAuthenticationService : IAuthenticationService
 
     public async Task<AuthenticationResult> LoginAsync(LoginRequest request)
     {
+        _logger.LogInformation("Login attempt started for username: {Username}, Email: {Email}, TenantId: {TenantId}", 
+            request.Username, request.Username, request.TenantId);
+        
         try
         {
             // Get tenant context from middleware or request
             var tenantId = request.TenantId ?? _tenantService.GetCurrentTenantId();
+            _logger.LogDebug("Tenant context resolved: {TenantId}", tenantId);
             
             // Try to find master user
+            _logger.LogDebug("Searching for master user: {Username}", request.Username);
             var masterUser = await _userManagementService.FindMasterUserAsync(request.Username);
             
             if (masterUser != null)
             {
+                _logger.LogDebug("Master user found: Id={UserId}, Email={Email}, IsActive={IsActive}, UserType={UserType}", 
+                    masterUser.Id, masterUser.Email, masterUser.IsActive, masterUser.UserType);
+                
                 // Verify password
                 if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
                 {
@@ -145,11 +153,12 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 }
             }
 
-            _logger.LogWarning("Login attempt failed for username {Username}", request.Username);
+            _logger.LogWarning("User not found in both Master and Tenant databases. Username: {Username}, TenantId: {TenantId}", 
+                request.Username, tenantId);
             return new AuthenticationResult
             {
                 Success = false,
-                Errors = new List<string> { "Invalid username or password" }
+                Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
             };
         }
         catch (Exception ex)
