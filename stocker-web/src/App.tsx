@@ -35,6 +35,7 @@ const TenantsPage = lazy(() => import('@/features/tenants/pages/TenantsPage').th
 const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').then(m => ({ default: m.MasterTenantsPage })));
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
+const MasterSubscriptionsPage = lazy(() => import('@/features/master/pages/Subscriptions').then(m => ({ default: m.MasterSubscriptionsPage })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -180,7 +181,7 @@ function App() {
                 >
                   <Route index element={<MasterDashboard />} />
                   <Route path="tenants/*" element={<MasterTenantsPage />} />
-                  <Route path="subscriptions/*" element={<SubscriptionsPage />} />
+                  <Route path="subscriptions/*" element={<MasterSubscriptionsPage />} />
                   <Route path="packages" element={<MasterPackagesPage />} />
                   <Route path="modules" element={<div>Modules Management</div>} />
                   <Route path="users" element={<UsersPage />} />
