@@ -197,7 +197,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
         if (environment == "Production")
         {
             // Production'da Docker network üzerinden SQL Server'a bağlan
-            return $"Server=database-xoosgscggos08gc0oc08ckk4-224200859222;Database=Stocker_Tenant_{companyCode};User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;";
+            return $"Server=coolify.stoocker.app;Database=Stocker_Tenant_{companyCode};User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;";
         }
         
         // Local development
