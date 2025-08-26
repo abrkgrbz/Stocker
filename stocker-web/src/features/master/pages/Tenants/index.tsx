@@ -674,7 +674,7 @@ export const MasterTenantsPage: React.FC = () => {
       width: 250,
       render: (text: string, record: Tenant) => (
         <Space>
-          <Avatar style={{ backgroundColor: planConfig[record.plan].color }}>
+          <Avatar style={{ backgroundColor: planConfig[record.plan]?.color || '#8c8c8c' }}>
             {text.substring(0, 2).toUpperCase()}
           </Avatar>
           <div>
@@ -693,7 +693,7 @@ export const MasterTenantsPage: React.FC = () => {
       key: 'plan',
       width: 120,
       render: (plan: Tenant['plan']) => (
-        <Tag color={planConfig[plan].color} icon={planConfig[plan].icon}>
+        <Tag color={planConfig[plan]?.color || '#8c8c8c'} icon={planConfig[plan]?.icon || <UserOutlined />}>
           {plan}
         </Tag>
       ),
@@ -1242,17 +1242,17 @@ export const MasterTenantsPage: React.FC = () => {
             {/* Tenant Info */}
             <Card className="glass-morphism">
               <Space align="start">
-                <Avatar size={64} style={{ background: planConfig[selectedTenant.plan].gradient }}>
+                <Avatar size={64} style={{ background: planConfig[selectedTenant.plan]?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
                   {selectedTenant.name.substring(0, 2).toUpperCase()}
                 </Avatar>
                 <div>
                   <Title level={4}>{selectedTenant.name}</Title>
                   <Space>
-                    <Tag color={planConfig[selectedTenant.plan].color}>
+                    <Tag color={planConfig[selectedTenant.plan]?.color || '#8c8c8c'}>
                       {selectedTenant.plan}
                     </Tag>
-                    <Tag color={statusConfig[selectedTenant.status].color}>
-                      {statusConfig[selectedTenant.status].text}
+                    <Tag color={statusConfig[selectedTenant.status]?.color || 'default'}>
+                      {statusConfig[selectedTenant.status]?.text || selectedTenant.status}
                     </Tag>
                   </Space>
                 </div>
