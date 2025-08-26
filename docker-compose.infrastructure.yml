@@ -32,10 +32,30 @@ services:
       timeout: 3s
       retries: 5
 
+  seq:
+    image: datalust/seq:latest
+    container_name: stocker-seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=StockerSeq2024!
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   mssql_data:
     driver: local
   mssql_backup:
     driver: local
   redis_data:
+    driver: local
+  seq_data:
     driver: local
