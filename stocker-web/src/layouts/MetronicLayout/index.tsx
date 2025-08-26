@@ -312,7 +312,7 @@ const MetronicLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={['apps']}
+          defaultOpenKeys={['apps', 'finance']}
           items={menuItems}
           onClick={handleMenuClick}
           className="metronic-menu"
