@@ -42,6 +42,9 @@
   border-radius: 12px !important;
   transition: all 0.3s ease;
   height: 100%;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-card:hover {
@@ -51,6 +54,10 @@
 
 .stat-card .ant-card-body {
   padding: 25px !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .stat-card-content {
@@ -90,6 +97,21 @@
   color: #3f4254;
   line-height: 1.2;
   margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.stat-value .currency-symbol {
+  font-size: 20px;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.stat-value .stat-suffix {
+  font-size: 20px;
+  font-weight: 500;
+  margin-left: 2px;
 }
 
 .stat-change {
@@ -125,6 +147,7 @@
   border: none !important;
   border-radius: 12px !important;
   height: 100%;
+  min-height: 400px;
 }
 
 .chart-card .ant-card-head {
@@ -151,6 +174,7 @@
   border: none !important;
   border-radius: 12px !important;
   height: 100%;
+  min-height: 500px;
   overflow: hidden;
 }
 

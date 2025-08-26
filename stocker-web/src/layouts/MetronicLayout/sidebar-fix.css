@@ -7,6 +7,30 @@
   white-space: nowrap !important;
   display: flex !important;
   align-items: center !important;
+  position: relative !important;
+}
+
+/* Active item effect containment */
+.metronic-menu .ant-menu-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 8px;
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.metronic-menu .ant-menu-item-selected::after,
+.metronic-menu .ant-menu-item:hover::after {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.metronic-menu .ant-menu-item-active {
+  background-color: transparent !important;
 }
 
 .metronic-menu .ant-menu-submenu-title {
@@ -15,6 +39,13 @@
   white-space: nowrap !important;
   display: flex !important;
   align-items: center !important;
+  position: relative !important;
+}
+
+/* Submenu active state */
+.metronic-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background-color: rgba(102, 126, 234, 0.08) !important;
+  border-radius: 8px;
 }
 
 /* Menu item content wrapper */
@@ -84,6 +115,17 @@
   max-width: 265px !important;
   min-width: 265px !important;
   width: 265px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Prevent click effect overflow */
+.metronic-sidebar .ant-menu {
+  overflow: hidden !important;
+}
+
+.metronic-sidebar .ant-menu-inline {
+  border-right: none !important;
 }
 
 .metronic-sidebar.ant-layout-sider-collapsed {
@@ -99,6 +141,10 @@
 }
 
 /* Sub menu items */
+.metronic-menu .ant-menu-sub {
+  background: transparent !important;
+}
+
 .metronic-menu .ant-menu-sub .ant-menu-item {
   padding-left: 52px !important;
   padding-right: 20px !important;
@@ -107,6 +153,13 @@
   white-space: nowrap !important;
   display: flex !important;
   align-items: center !important;
+  margin: 4px 12px !important;
+  width: calc(100% - 24px) !important;
+  border-radius: 8px !important;
+}
+
+.metronic-menu .ant-menu-sub .ant-menu-item-selected {
+  background-color: rgba(102, 126, 234, 0.08) !important;
 }
 
 /* Sub menu item text */

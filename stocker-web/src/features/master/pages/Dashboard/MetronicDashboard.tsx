@@ -490,14 +490,14 @@ const MetronicDashboard: React.FC = () => {
                 <div className="stat-details">
                   <Text className="stat-title">{stat.title}</Text>
                   <div className="stat-value">
-                    {stat.prefix}
+                    {stat.prefix && <span className="currency-symbol">{stat.prefix}</span>}
                     <CountUp
                       end={stat.value}
                       duration={2}
                       separator=","
                       decimals={stat.suffix === '%' ? 1 : 0}
                     />
-                    {stat.suffix}
+                    {stat.suffix && <span className="stat-suffix">{stat.suffix}</span>}
                   </div>
                   <div className="stat-change">
                     {stat.changeType === 'increase' ? (

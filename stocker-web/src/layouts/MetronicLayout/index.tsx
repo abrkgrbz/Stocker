@@ -51,6 +51,7 @@ import {
 import { useAuthStore } from '@/app/store/auth.store';
 import './styles.css';
 import './sidebar-fix.css';
+import './global-fixes.css';
 
 const { Header, Sider, Content } = Layout;
 
