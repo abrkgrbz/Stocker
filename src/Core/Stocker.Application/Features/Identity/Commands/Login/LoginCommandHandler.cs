@@ -66,16 +66,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
 
     private bool IsMasterAdminEmail(string email)
     {
-        // Check for known admin emails or admin domains
-        var adminEmails = new[] {
-            "anilberk1997@hotmail.com",
-            "info@stoocker.app"
-        };
-        
-        if (adminEmails.Contains(email, StringComparer.OrdinalIgnoreCase))
-            return true;
-        
-        // Check for admin domains
+        // You can implement more sophisticated logic here
+        // For now, checking if email domain is for system admins
         return email.EndsWith("@stocker.com", StringComparison.OrdinalIgnoreCase) ||
                email.EndsWith("@admin.stocker.com", StringComparison.OrdinalIgnoreCase) ||
                email.EndsWith("@stoocker.app", StringComparison.OrdinalIgnoreCase);
