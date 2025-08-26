@@ -45,7 +45,7 @@ public class UserManagementService : IUserManagementService
         await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
         return await tenantContext.TenantUsers
             .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => (u.Username == usernameOrEmail || u.Email == usernameOrEmail) && u.TenantId == tenantId);
+            .FirstOrDefaultAsync(u => u.Username == usernameOrEmail && u.TenantId == tenantId);
     }
 
     public async Task<MasterUser> CreateMasterUserAsync(

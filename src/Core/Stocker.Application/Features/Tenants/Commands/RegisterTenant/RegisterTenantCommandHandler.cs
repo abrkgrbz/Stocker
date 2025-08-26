@@ -173,7 +173,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
             // Trigger tenant database provisioning in background
             _logger.LogInformation("Triggering tenant database provisioning for: {TenantId}", tenant.Id);
-            _backgroundJobService.EnqueueTenantProvisioning(tenant.Id, tenant.Name);
+            _backgroundJobService.Enqueue<ITenantProvisioningJob>(job => job.ProvisionNewTenantAsync(tenant.Id));
 
             // Don't send activation email yet - wait for database provisioning
             // await SendActivationEmail(tenant, masterUser);
