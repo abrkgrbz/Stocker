@@ -102,8 +102,25 @@ export const MasterSettingsPage: React.FC = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      // Mock data for now
-      const mockSettings = {
+      const response = await settingsApi.getAll();
+      
+      if (response.data?.success && response.data?.data) {
+        const settings = response.data.data;
+        setSettings(settings);
+        
+        // Set form values
+        generalForm.setFieldsValue(settings.general);
+        emailForm.setFieldsValue(settings.email);
+        securityForm.setFieldsValue(settings.security);
+        backupForm.setFieldsValue({
+          ...settings.backup,
+          time: dayjs(settings.backup.time, 'HH:mm'),
+        });
+        maintenanceForm.setFieldsValue(settings.maintenance);
+        notificationForm.setFieldsValue(settings.notifications);
+      } else {
+        // Use mock data as fallback
+        const mockSettings = {
         general: {
           siteName: 'Stocker',
           siteUrl: 'https://stoocker.app',
@@ -174,18 +191,19 @@ export const MasterSettingsPage: React.FC = () => {
         },
       };
 
-      setSettings(mockSettings);
-      
-      // Set form values
-      generalForm.setFieldsValue(mockSettings.general);
-      emailForm.setFieldsValue(mockSettings.email);
-      securityForm.setFieldsValue(mockSettings.security);
-      backupForm.setFieldsValue({
-        ...mockSettings.backup,
-        time: dayjs(mockSettings.backup.time, 'HH:mm'),
-      });
-      maintenanceForm.setFieldsValue(mockSettings.maintenance);
-      notificationForm.setFieldsValue(mockSettings.notifications);
+        setSettings(mockSettings);
+        
+        // Set form values
+        generalForm.setFieldsValue(mockSettings.general);
+        emailForm.setFieldsValue(mockSettings.email);
+        securityForm.setFieldsValue(mockSettings.security);
+        backupForm.setFieldsValue({
+          ...mockSettings.backup,
+          time: dayjs(mockSettings.backup.time, 'HH:mm'),
+        });
+        maintenanceForm.setFieldsValue(mockSettings.maintenance);
+        notificationForm.setFieldsValue(mockSettings.notifications);
+      }
     } catch (error) {
       message.error('Ayarlar yüklenirken hata oluştu');
     } finally {
@@ -196,7 +214,7 @@ export const MasterSettingsPage: React.FC = () => {
   const handleGeneralSubmit = async (values: GeneralSettings) => {
     setSaving(true);
     try {
-      // await settingsApi.updateGeneral(values);
+      await settingsApi.updateGeneral(values);
       message.success('Genel ayarlar güncellendi');
     } catch (error) {
       message.error('Ayarlar güncellenirken hata oluştu');
@@ -208,7 +226,7 @@ export const MasterSettingsPage: React.FC = () => {
   const handleEmailSubmit = async (values: EmailSettings) => {
     setSaving(true);
     try {
-      // await settingsApi.updateEmail(values);
+      await settingsApi.updateEmail(values);
       message.success('E-posta ayarları güncellendi');
     } catch (error) {
       message.error('Ayarlar güncellenirken hata oluştu');
@@ -220,7 +238,7 @@ export const MasterSettingsPage: React.FC = () => {
   const handleSecuritySubmit = async (values: SecuritySettings) => {
     setSaving(true);
     try {
-      // await settingsApi.updateSecurity(values);
+      await settingsApi.updateSecurity(values);
       message.success('Güvenlik ayarları güncellendi');
     } catch (error) {
       message.error('Ayarlar güncellenirken hata oluştu');
@@ -236,7 +254,7 @@ export const MasterSettingsPage: React.FC = () => {
         ...values,
         time: values.time.format('HH:mm'),
       };
-      // await settingsApi.updateBackup(backupSettings);
+      await settingsApi.updateBackup(backupSettings);
       message.success('Yedekleme ayarları güncellendi');
     } catch (error) {
       message.error('Ayarlar güncellenirken hata oluştu');
@@ -257,7 +275,7 @@ export const MasterSettingsPage: React.FC = () => {
       ),
       onOk: async () => {
         try {
-          // await settingsApi.testEmailSettings({ to, subject: 'Test', body: 'Test email' });
+          // await settingsApi.testEmailSettings({ to: 'test@example.com', subject: 'Test', body: 'Test email' });
           message.success('Test e-postası gönderildi');
         } catch (error) {
           message.error('E-posta gönderilemedi');
@@ -272,7 +290,7 @@ export const MasterSettingsPage: React.FC = () => {
       content: 'Şimdi manuel yedekleme yapmak istediğinizden emin misiniz?',
       onOk: async () => {
         try {
-          // await settingsApi.backupNow();
+          await settingsApi.backupNow();
           notification.success({
             message: 'Yedekleme Başlatıldı',
             description: 'Yedekleme işlemi arka planda başlatıldı. Tamamlandığında bildirim alacaksınız.',
@@ -290,7 +308,7 @@ export const MasterSettingsPage: React.FC = () => {
       content: 'Tüm sistem önbelleğini temizlemek istediğinizden emin misiniz?',
       onOk: async () => {
         try {
-          // await settingsApi.clearCache();
+          await settingsApi.clearCache();
           message.success('Önbellek temizlendi');
         } catch (error) {
           message.error('Önbellek temizlenemedi');

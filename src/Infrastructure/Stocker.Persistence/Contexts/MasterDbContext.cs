@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;  
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Entities.Settings;
 
 namespace Stocker.Persistence.Contexts;
 
@@ -31,6 +32,9 @@ public class MasterDbContext : BaseDbContext
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
     public DbSet<UserTenant> UserTenants => Set<UserTenant>();
     public DbSet<UserLoginHistory> UserLoginHistories => Set<UserLoginHistory>();
+    
+    // System Settings
+    public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
