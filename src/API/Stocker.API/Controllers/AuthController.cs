@@ -24,6 +24,21 @@ public class AuthController : ControllerBase
         _mediator = mediator;
         _logger = logger;
     }
+    
+    /// <summary>
+    /// Test Seq logging
+    /// </summary>
+    [HttpGet("test-seq")]
+    [AllowAnonymous]
+    public IActionResult TestSeq()
+    {
+        _logger.LogDebug("TEST: Debug log from AuthController");
+        _logger.LogInformation("TEST: Information log from AuthController");
+        _logger.LogWarning("TEST: Warning log from AuthController");
+        _logger.LogError("TEST: Error log from AuthController (not a real error)");
+        
+        return Ok(new { message = "Seq test logs sent. Check http://95.217.219.4:5341" });
+    }
 
     /// <summary>
     /// Login with email and password

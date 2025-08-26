@@ -51,7 +51,7 @@ services:
       - Hangfire__JobExpirationCheckInterval=01:00:00
       - Hangfire__CountersAggregateInterval=00:05:00
       # Seq Logging Settings
-      - Logging__Seq__ServerUrl=http://seq:5341
+      - Logging__Seq__ServerUrl=http://95.217.219.4:5341
       - Logging__Seq__ApiKey=
       - Logging__Seq__MinimumLevel=Information
     healthcheck:

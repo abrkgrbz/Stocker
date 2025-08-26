@@ -456,6 +456,12 @@ using (var scope = app.Services.CreateScope())
         await migrationService.MigrateMasterDatabaseAsync();
         await migrationService.SeedMasterDataAsync();
         app.Logger.LogInformation("Database migration completed successfully");
+        
+        // Test Seq logging
+        app.Logger.LogInformation("🚀 Stocker API started successfully");
+        app.Logger.LogDebug("Debug: Seq connection test");
+        app.Logger.LogWarning("Warning: This is a test warning for Seq");
+        app.Logger.LogError("Error: This is a test error for Seq (not a real error)");
     }
     catch (Exception ex)
     {
