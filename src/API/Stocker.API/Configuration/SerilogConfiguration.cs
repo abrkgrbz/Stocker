@@ -19,19 +19,38 @@ public static class SerilogConfiguration
         }
         
         var seqApiKey = configuration["Logging:Seq:ApiKey"];
+        var minimumLevel = configuration["Logging:Seq:MinimumLevel"] ?? "Information";
         
         Console.WriteLine($"[SERILOG] Environment: {environment}");
         Console.WriteLine($"[SERILOG] Seq URL: {seqUrl}");
+        Console.WriteLine($"[SERILOG] Minimum Level: {minimumLevel}");
+        
+        // Parse minimum level from configuration
+        var logLevel = Enum.TryParse<LogEventLevel>(minimumLevel, out var parsedLevel) 
+            ? parsedLevel 
+            : LogEventLevel.Information;
         
         var loggerConfig = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Is(logLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", 
+                environment == "Development" ? LogEventLevel.Information : LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
+                environment == "Development" ? LogEventLevel.Debug : LogEventLevel.Warning)
+            .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+            // Application namespaces - always log at configured level
+            .MinimumLevel.Override("Stocker", logLevel)
             .Enrich.FromLogContext()
             .Enrich.WithEnvironmentUserName()
             .Enrich.WithMachineName()
             .Enrich.WithProperty("Application", "Stocker.API")
+            .Enrich.WithProperty("Environment", environment)
+            .Enrich.WithThreadId()
+            .Enrich.WithProcessId()
+            .Enrich.WithProcessName()
             // Console output
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
@@ -51,7 +70,10 @@ public static class SerilogConfiguration
                 retainedFileCountLimit: 30,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             // Seq - Merkezi log server
-            .WriteTo.Seq(seqUrl, apiKey: seqApiKey);
+            .WriteTo.Seq(
+                seqUrl, 
+                apiKey: seqApiKey,
+                restrictedToMinimumLevel: logLevel);
         
         // Database sink only in non-production environments
         if (environment != "Production")
@@ -70,10 +92,27 @@ public static class SerilogConfiguration
     
     public static void ConfigureRequestLogging(WebApplication app)
     {
+        var environment = app.Environment.EnvironmentName;
+        
         app.UseSerilogRequestLogging(options =>
         {
             options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-            options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;
+            options.GetLevel = (httpContext, elapsed, ex) => 
+            {
+                // Exception durumunda Error
+                if (ex != null) return LogEventLevel.Error;
+                
+                // 4xx hataları Warning
+                if (httpContext.Response.StatusCode >= 400 && httpContext.Response.StatusCode < 500)
+                    return LogEventLevel.Warning;
+                
+                // 5xx hataları Error
+                if (httpContext.Response.StatusCode >= 500) 
+                    return LogEventLevel.Error;
+                
+                // Development'ta Debug, diğerlerinde Information
+                return environment == "Development" ? LogEventLevel.Debug : LogEventLevel.Information;
+            };
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
