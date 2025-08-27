@@ -15,7 +15,7 @@ public class CompanyProfile : Profile
             .ForMember(dest => dest.Fax, opt => opt.MapFrom(src => src.Fax != null ? src.Fax.Value : null))
             .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address));
 
-        CreateMap<Address, AddressDto>()
+        CreateMap<CompanyAddress, AddressDto>()
             .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Country))
             .ForMember(dest => dest.City, opt => opt.MapFrom(src => src.City))
             .ForMember(dest => dest.District, opt => opt.MapFrom(src => src.District))

@@ -73,7 +73,7 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
                 fax = faxResult.Value;
             }
 
-            var addressResult = Address.Create(
+            var addressResult = CompanyAddress.Create(
                 country: request.Address.Country,
                 city: request.Address.City,
                 district: request.Address.District,
@@ -82,8 +82,7 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
             
             if (addressResult.IsFailure)
             {
-                return Result<CompanyDto>.Failure(
-                    Error.Validation("Company.InvalidAddress", "Geçersiz adres bilgisi"));
+                return Result<CompanyDto>.Failure(addressResult.Error);
             }
 
             // Calculate founded date

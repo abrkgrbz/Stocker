@@ -80,40 +80,29 @@ public class CompanyConfiguration : BaseEntityTypeConfiguration<Company>
 
         builder.OwnsOne(c => c.Address, address =>
         {
-            address.Property(a => a.Street)
+            address.Property(a => a.Country)
                 .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnName("AddressStreet");
-
-            address.Property(a => a.Building)
                 .HasMaxLength(100)
-                .HasColumnName("AddressBuilding");
-
-            address.Property(a => a.Floor)
-                .HasMaxLength(50)
-                .HasColumnName("AddressFloor");
-
-            address.Property(a => a.Apartment)
-                .HasMaxLength(50)
-                .HasColumnName("AddressApartment");
+                .HasColumnName("AddressCountry");
 
             address.Property(a => a.City)
                 .IsRequired()
                 .HasMaxLength(100)
                 .HasColumnName("AddressCity");
 
-            address.Property(a => a.State)
-                .HasMaxLength(100)
-                .HasColumnName("AddressState");
-
-            address.Property(a => a.Country)
+            address.Property(a => a.District)
                 .IsRequired()
                 .HasMaxLength(100)
-                .HasColumnName("AddressCountry");
+                .HasColumnName("AddressDistrict");
 
             address.Property(a => a.PostalCode)
                 .HasMaxLength(20)
                 .HasColumnName("AddressPostalCode");
+
+            address.Property(a => a.AddressLine)
+                .IsRequired()
+                .HasMaxLength(500)
+                .HasColumnName("AddressLine");
         });
 
         // Relationships

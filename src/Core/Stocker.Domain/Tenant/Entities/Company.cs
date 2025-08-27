@@ -20,7 +20,7 @@ public sealed class Company : TenantAggregateRoot
     public Email Email { get; private set; }
     public PhoneNumber Phone { get; private set; }
     public PhoneNumber? Fax { get; private set; }
-    public Address Address { get; private set; }
+    public CompanyAddress Address { get; private set; }
     public string? Website { get; private set; }
     public string? LogoUrl { get; private set; }
     public string? Sector { get; private set; }
@@ -42,7 +42,7 @@ public sealed class Company : TenantAggregateRoot
         string code,
         Email email,
         PhoneNumber phone,
-        Address address,
+        CompanyAddress address,
         string currency,
         string? legalName = null,
         string? identityType = null,
@@ -87,7 +87,7 @@ public sealed class Company : TenantAggregateRoot
         string code,
         string taxNumber,
         Email email,
-        Address address,
+        CompanyAddress address,
         PhoneNumber? phone = null,
         PhoneNumber? fax = null,
         string? identityType = null,
@@ -137,7 +137,7 @@ public sealed class Company : TenantAggregateRoot
         string name,
         Email email,
         PhoneNumber phone,
-        Address address,
+        CompanyAddress address,
         string? legalName = null,
         string? taxNumber = null,
         string? tradeRegisterNumber = null,
