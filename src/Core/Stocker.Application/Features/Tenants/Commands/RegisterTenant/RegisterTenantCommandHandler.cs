@@ -17,7 +17,6 @@ namespace Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantCommand, Result<TenantDto>>
 {
     private readonly IMasterUnitOfWork _unitOfWork;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly ILogger<RegisterTenantCommandHandler> _logger;
@@ -25,14 +24,12 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
     public RegisterTenantCommandHandler(
         IMasterUnitOfWork unitOfWork,
-        IPasswordHasher passwordHasher,
         IEmailService emailService,
         IMapper mapper,
         ILogger<RegisterTenantCommandHandler> logger,
         IBackgroundJobService backgroundJobService)
     {
         _unitOfWork = unitOfWork;
-        _passwordHasher = passwordHasher;
         _emailService = emailService;
         _mapper = mapper;
         _logger = logger;
@@ -118,7 +115,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             // This is just a safety check
             
             // Create master user for tenant admin
-            var hashedPassword = _passwordHasher.HashPassword(request.Password);
+            // DON'T hash the password here - MasterUser.Create will do it
             
             // Parse name parts
             var nameParts = request.ContactName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -128,9 +125,10 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             var masterUser = MasterUser.Create(
                 username: request.ContactEmail, // Use email as username
                 email: contactEmail.Value,
-                passwordHash: hashedPassword,
+                plainPassword: request.Password,  // ✅ DOĞRU! plainPassword kullan
                 firstName: firstName,
                 lastName: lastName,
+                userType: UserType.TenantOwner,
                 phoneNumber: contactPhone?.Value
             );
 
