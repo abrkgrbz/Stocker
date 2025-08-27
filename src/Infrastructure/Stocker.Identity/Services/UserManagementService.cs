@@ -83,7 +83,7 @@ public class UserManagementService : IUserManagementService
             }
             phoneNumberValue = phoneResult.Value;
         }
-
+ 
         // Create master user with plain password (it will hash internally)
         var masterUser = MasterUser.Create(
             username: username,
