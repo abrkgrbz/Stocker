@@ -57,7 +57,7 @@ export interface Company {
 
 class CompanyService {
   async createCompany(data: CompanyData): Promise<Company> {
-    const response = await api.post<Company>('/api/companies', {
+    const response = await api.post<Company>('/api/tenant/companies', {
       name: data.name,
       code: data.code,
       taxNumber: data.taxNumber,
@@ -86,7 +86,7 @@ class CompanyService {
 
   async getCompany(): Promise<Company | null> {
     try {
-      const response = await api.get<Company>('/api/companies/current');
+      const response = await api.get<Company>('/api/tenant/companies/current');
       return response.data;
     } catch (error) {
       return null;
@@ -126,7 +126,7 @@ class CompanyService {
       if (data.addressLine !== undefined) updateData.address.addressLine = data.addressLine;
     }
     
-    const response = await api.put<Company>(`/api/companies/${id}`, updateData);
+    const response = await api.put<Company>(`/api/tenant/companies/${id}`, updateData);
     return response.data;
   }
 
@@ -143,7 +143,7 @@ class CompanyService {
     const formData = new FormData();
     formData.append('logo', file);
     
-    const response = await api.post<{ logoUrl: string }>('/api/companies/logo', formData, {
+    const response = await api.post<{ logoUrl: string }>('/api/tenant/companies/logo', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

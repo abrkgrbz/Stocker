@@ -13,8 +13,8 @@ namespace Stocker.API.Controllers.Tenant;
 
 [Authorize]
 [ApiController]
-[Route("api/companies")]
-[SwaggerTag("Company Management - Manage company information")]
+[Route("api/tenant/companies")]
+[SwaggerTag("Tenant - Company Management")]
 public class CompaniesController : ApiController
 {
     /// <summary>
