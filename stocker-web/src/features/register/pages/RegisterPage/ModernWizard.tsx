@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import './modern-wizard.css';
 import './modern-wizard-phone-validation.css';
+import './package-selection.css';
 
 interface ModernWizardProps {
   onComplete: (data: any) => void;
@@ -1435,146 +1436,102 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         
       case 3:
         return (
-          <div className="form-fields">
+          <div className="form-fields package-selection-step">
             <div className="form-header">
               <h2 className="form-title">Paket Seçimi</h2>
               <p className="form-subtitle">İşletmenize en uygun paketi seçin</p>
             </div>
             
+            {/* Billing Period Toggle - Üstte */}
+            <div className="billing-toggle-container">
+              <div className="billing-toggle">
+                <button 
+                  className={`billing-toggle-btn ${formData.billingPeriod === 'Monthly' ? 'active' : ''}`}
+                  onClick={() => handleInputChange('billingPeriod', 'Monthly')}
+                >
+                  Aylık
+                </button>
+                <button 
+                  className={`billing-toggle-btn ${formData.billingPeriod === 'Yearly' ? 'active' : ''}`}
+                  onClick={() => handleInputChange('billingPeriod', 'Yearly')}
+                >
+                  Yıllık
+                  <span className="discount-badge">%20 İndirim</span>
+                </button>
+              </div>
+            </div>
+            
             {loadingPackages ? (
-              <div className="packages-loading" style={{ textAlign: 'center', padding: '40px' }}>
+              <div className="packages-loading">
                 <Spin size="large" />
-                <p style={{ marginTop: '16px', color: '#6b7280' }}>Paketler yükleniyor...</p>
+                <p>Paketler yükleniyor...</p>
               </div>
             ) : (
-              <>
-                <div className="packages-grid" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: '20px',
-                  marginBottom: '24px' 
-                }}>
-                  {packages.map((pkg) => (
-                    <div 
-                      key={pkg.id}
-                      className={`package-card ${formData.packageId === pkg.id ? 'selected' : ''} ${pkg.isPopular ? 'popular' : ''}`}
-                      style={{
-                        padding: '20px',
-                        border: formData.packageId === pkg.id ? '2px solid #667eea' : '1px solid #e5e7eb',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        background: formData.packageId === pkg.id ? '#f0f4ff' : '#fff'
-                      }}
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          packageId: pkg.id,
-                          packageName: pkg.name
-                        }));
-                      }}
-                    >
-                      {pkg.isPopular && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '-10px',
-                          right: '20px',
-                          background: '#ef4444',
-                          color: '#fff',
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}>
-                          EN POPÜLER
-                        </div>
-                      )}
-                      
-                      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                        <div style={{ fontSize: '32px', marginBottom: '8px', color: '#667eea' }}>
+              <div className="packages-container">
+                {packages.map((pkg) => (
+                  <div 
+                    key={pkg.id}
+                    className={`package-item ${formData.packageId === pkg.id ? 'selected' : ''} ${pkg.isPopular ? 'popular' : ''}`}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        packageId: pkg.id,
+                        packageName: pkg.name
+                      }));
+                    }}
+                  >
+                    {pkg.isPopular && (
+                      <div className="package-badge">
+                        <span>EN POPÜLER</span>
+                      </div>
+                    )}
+                    
+                    <div className="package-content">
+                      <div className="package-header">
+                        <div className="package-icon">
                           {pkg.type === 'Starter' && <RocketOutlined />}
                           {pkg.type === 'Professional' && <CrownOutlined />}
                           {pkg.type === 'Enterprise' && <GlobalOutlined />}
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>{pkg.name}</h3>
-                        <p style={{ color: '#6b7280', fontSize: '14px' }}>{pkg.description}</p>
+                        <div className="package-info">
+                          <h3 className="package-name">{pkg.name}</h3>
+                          <p className="package-description">{pkg.description}</p>
+                        </div>
                       </div>
                       
-                      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                        <span style={{ fontSize: '14px', color: '#6b7280' }}>{pkg.currency}</span>
-                        <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#111' }}>{pkg.price}</span>
-                        <span style={{ fontSize: '14px', color: '#6b7280' }}>/ay</span>
+                      <div className="package-price">
+                        <span className="price-amount">
+                          {pkg.currency}{formData.billingPeriod === 'Yearly' 
+                            ? Math.floor(pkg.price * 12 * 0.8 / 12) 
+                            : pkg.price}
+                        </span>
+                        <span className="price-period">/ay</span>
+                        {formData.billingPeriod === 'Yearly' && (
+                          <span className="price-original">{pkg.currency}{pkg.price}</span>
+                        )}
                       </div>
                       
-                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        {pkg.features?.slice(0, 5).map((feature, idx) => (
-                          <li key={idx} style={{ 
-                            padding: '8px 0', 
-                            fontSize: '14px',
-                            color: '#4b5563',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                          }}>
-                            <CheckOutlined style={{ color: '#10b981' }} /> {feature}
+                      <ul className="package-features">
+                        {pkg.features?.slice(0, 4).map((feature, idx) => (
+                          <li key={idx}>
+                            <CheckOutlined /> {feature}
                           </li>
                         ))}
                       </ul>
+                      
+                      <div className="package-select">
+                        <div className={`package-radio ${formData.packageId === pkg.id ? 'checked' : ''}`}>
+                          {formData.packageId === pkg.id && <CheckOutlined />}
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                
-                <div className="billing-period-selector" style={{ marginTop: '24px' }}>
-                  <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
-                    Faturalandırma Dönemi
-                  </label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: formData.billingPeriod === 'Monthly' ? '2px solid #667eea' : '1px solid #e5e7eb',
-                        background: formData.billingPeriod === 'Monthly' ? '#f0f4ff' : '#fff',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: formData.billingPeriod === 'Monthly' ? 'bold' : 'normal'
-                      }}
-                      onClick={() => handleInputChange('billingPeriod', 'Monthly')}
-                    >
-                      Aylık
-                    </button>
-                    <button 
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: formData.billingPeriod === 'Yearly' ? '2px solid #667eea' : '1px solid #e5e7eb',
-                        background: formData.billingPeriod === 'Yearly' ? '#f0f4ff' : '#fff',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: formData.billingPeriod === 'Yearly' ? 'bold' : 'normal',
-                        position: 'relative'
-                      }}
-                      onClick={() => handleInputChange('billingPeriod', 'Yearly')}
-                    >
-                      Yıllık 
-                      <span style={{
-                        background: '#10b981',
-                        color: '#fff',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        marginLeft: '8px'
-                      }}>
-                        %20 İndirim
-                      </span>
-                    </button>
                   </div>
-                </div>
-              </>
+                ))}
+              </div>
             )}
             
             {validationErrors.packageId && (
-              <span className="error-message" style={{marginTop: '16px', display: 'block', color: '#ef4444'}}>
+              <span className="error-message package-error">
                 {validationErrors.packageId}
               </span>
             )}

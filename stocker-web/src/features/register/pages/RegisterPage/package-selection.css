@@ -1,0 +1,317 @@
+/* Package Selection Styles */
+.package-selection-step {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.package-selection-step::-webkit-scrollbar {
+  width: 6px;
+}
+
+.package-selection-step::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.package-selection-step::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.package-selection-step::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.billing-toggle-container {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.billing-toggle {
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 4px;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.billing-toggle-btn {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.billing-toggle-btn.active {
+  background: white;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.billing-toggle-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.discount-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-left: 8px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.packages-loading {
+  text-align: center;
+  padding: 60px;
+  color: #6b7280;
+}
+
+.packages-loading p {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.packages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.package-item {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  background: white;
+}
+
+.package-item:hover {
+  border-color: #d1d5db;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.package-item.selected {
+  border-color: #667eea;
+  background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.package-item.popular {
+  border-color: #667eea;
+  box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.2);
+}
+
+.package-badge {
+  position: absolute;
+  top: -12px;
+  right: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.package-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.package-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.package-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.package-item.selected .package-icon {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.package-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.package-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #111827;
+}
+
+.package-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.package-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.price-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.price-period {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.price-original {
+  font-size: 14px;
+  color: #9ca3af;
+  text-decoration: line-through;
+  margin-left: 8px;
+}
+
+.package-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.package-features li {
+  font-size: 13px;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.package-features li svg {
+  color: #10b981;
+  font-size: 14px;
+}
+
+.package-select {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.package-radio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.package-radio.checked {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+  animation: checkPulse 0.3s ease-out;
+}
+
+@keyframes checkPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.package-radio svg {
+  font-size: 14px;
+}
+
+.package-error {
+  margin-top: 16px;
+  display: block;
+  text-align: center;
+  color: #ef4444;
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .package-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .package-header {
+    width: 100%;
+  }
+
+  .package-features {
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .package-price {
+    margin-top: 12px;
+  }
+
+  .package-select {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  .billing-toggle-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .discount-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
