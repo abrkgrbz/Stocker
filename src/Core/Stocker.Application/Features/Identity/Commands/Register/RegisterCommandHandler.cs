@@ -74,6 +74,13 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 userType: Domain.Master.Enums.UserType.TenantAdmin,
                 phoneNumber: null);
 
+            // Log the generated hash for debugging
+            _logger.LogWarning("Registration Debug - Username: {Username}, Password Length: {PasswordLength}, Hash (first 10): {HashPrefix}, Salt (first 10): {SaltPrefix}",
+                request.Username,
+                request.Password?.Length ?? 0,
+                masterUser.Password?.Hash?.Substring(0, Math.Min(10, masterUser.Password?.Hash?.Length ?? 0)) ?? "N/A",
+                masterUser.Password?.Salt?.Substring(0, Math.Min(10, masterUser.Password?.Salt?.Length ?? 0)) ?? "N/A");
+
             // Generate email verification token
             var emailVerificationToken = masterUser.GenerateEmailVerificationToken();
 
