@@ -75,6 +75,18 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         masterUser.Password.Hash?.Substring(0, Math.Min(10, masterUser.Password.Hash?.Length ?? 0)) ?? "N/A");
                 }
                 
+                // Debug: Log exact password being verified
+                _logger.LogWarning("LOGIN PASSWORD DEBUG - Username: {Username}, Password: [{Password}], Length: {Length}, FirstChar: {First}, LastChar: {Last}",
+                    request.Username,
+                    request.Password,
+                    request.Password?.Length ?? 0,
+                    request.Password?.Length > 0 ? (int)request.Password[0] : -1,
+                    request.Password?.Length > 0 ? (int)request.Password[request.Password.Length - 1] : -1);
+                
+                _logger.LogWarning("LOGIN HASH FROM DB - Hash: {Hash}, Salt: {Salt}",
+                    masterUser.Password?.Hash,
+                    masterUser.Password?.Salt);
+                
                 // Verify password
                 if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
                 {

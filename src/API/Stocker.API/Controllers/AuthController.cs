@@ -62,6 +62,8 @@ public class AuthController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
+        _logger.LogWarning("API LOGIN REQUEST - Email: {Email}, Password: [{Password}], Length: {Length}", 
+            command.Email, command.Password, command.Password?.Length ?? 0);
         _logger.LogInformation("Login attempt for email: {Email}", command.Email);
         
         var result = await _mediator.Send(command);
@@ -112,6 +114,8 @@ public class AuthController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command)
     {
+        _logger.LogWarning("API REGISTER REQUEST - Username: {Username}, Password: [{Password}], Length: {Length}, Email: {Email}", 
+            command.Username, command.Password, command.Password?.Length ?? 0, command.Email);
         _logger.LogInformation("Registration attempt for company: {CompanyName}, user: {Username}", 
             command.CompanyName, command.Username);
         

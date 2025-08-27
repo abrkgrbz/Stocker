@@ -64,6 +64,14 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             await _masterUnitOfWork.Repository<Tenant>().AddAsync(tenant, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
+            // Debug: Log exact password being used
+            _logger.LogWarning("REGISTER PASSWORD DEBUG - Username: {Username}, Password: [{Password}], Length: {Length}, FirstChar: {First}, LastChar: {Last}",
+                request.Username,
+                request.Password,
+                request.Password?.Length ?? 0,
+                request.Password?.Length > 0 ? (int)request.Password[0] : -1,
+                request.Password?.Length > 0 ? (int)request.Password[request.Password.Length - 1] : -1);
+            
             // Create master user
             var masterUser = MasterUser.Create(
                 username: request.Username,
@@ -73,6 +81,11 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 lastName: request.LastName,
                 userType: Domain.Master.Enums.UserType.TenantAdmin,
                 phoneNumber: null);
+            
+            // Debug: Log generated hash
+            _logger.LogWarning("REGISTER HASH GENERATED - Hash: {Hash}, Salt: {Salt}",
+                masterUser.Password?.Hash,
+                masterUser.Password?.Salt);
 
            
 
