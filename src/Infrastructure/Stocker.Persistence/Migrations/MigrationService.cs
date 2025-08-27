@@ -135,10 +135,14 @@ public class MigrationService : IMigrationService
     {
         using var scope = _serviceProvider.CreateScope();
         var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+        var tenantService = scope.ServiceProvider.GetRequiredService<ITenantService>();
 
         try
         {
             _logger.LogInformation("Starting tenant data seeding for tenant {TenantId}...", tenantId);
+            
+            // Set tenant context for this scope
+            await tenantService.SetCurrentTenant(tenantId);
             
             using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<TenantDataSeeder>>();
