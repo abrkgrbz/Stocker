@@ -9,18 +9,25 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 interface CompanyFormData {
+  // Ticari Bilgiler
+  tradeRegisterNumber?: string;
+  sector?: string;
+  
   // Vergi Bilgileri (Zorunlu)
   taxNumber: string;
-  taxOffice?: string;
+  taxOffice: string;
   
   // Adres (Zorunlu fatura için)
   country: string;
   city: string;
   district: string;
+  postalCode?: string;
   addressLine: string;
   
-  // İsteğe Bağlı
+  // Ek Bilgiler
   website?: string;
+  employeeCount?: string;
+  foundedYear?: number;
   currency: string;
   timezone: string;
 }
@@ -33,6 +40,7 @@ const CompanySetup: React.FC = () => {
   
   const [formData, setFormData] = useState<CompanyFormData>({
     taxNumber: '',
+    taxOffice: '',
     country: 'Türkiye',
     city: '',
     district: '',
@@ -43,15 +51,15 @@ const CompanySetup: React.FC = () => {
 
   const steps = [
     {
-      title: 'Vergi Bilgileri',
+      title: 'Ticari Bilgiler',
       icon: <BankOutlined />,
     },
     {
-      title: 'Adres',
+      title: 'Adres Bilgileri',
       icon: <GlobalOutlined />,
     },
     {
-      title: 'Tercihler',
+      title: 'Ek Bilgiler',
       icon: <CheckCircleOutlined />,
     },
   ];
@@ -99,18 +107,22 @@ const CompanySetup: React.FC = () => {
       case 0:
         return (
           <div className="step-content">
-            <h3>Vergi Bilgileri</h3>
+            <h3>Ticari ve Vergi Bilgileri</h3>
             <p style={{ marginBottom: 24, color: '#666' }}>
-              Fatura kesebilmek için vergi bilgileriniz gereklidir
+              Fatura ve resmi işlemler için gerekli bilgiler
             </p>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   name="taxNumber"
                   label="Vergi Numarası"
-                  rules={[{ required: true, message: 'Vergi numarası zorunludur' }]}
+                  rules={[
+                    { required: true, message: 'Vergi numarası zorunludur' },
+                    { pattern: /^\d{10,11}$/, message: 'Vergi numarası 10 veya 11 haneli olmalıdır' }
+                  ]}
+                  tooltip="10 haneli vergi no veya 11 haneli TC kimlik no"
                 >
-                  <Input size="large" placeholder="Vergi numaranız" />
+                  <Input size="large" placeholder="Vergi numaranız" maxLength={11} />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -123,6 +135,41 @@ const CompanySetup: React.FC = () => {
                 </Form.Item>
               </Col>
             </Row>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="tradeRegisterNumber"
+                  label="Ticaret Sicil No"
+                  tooltip="Ticaret odasına kayıtlı sicil numaranız"
+                >
+                  <Input size="large" placeholder="Ticaret sicil numarası (opsiyonel)" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="sector"
+                  label="Sektör"
+                  rules={[{ required: true, message: 'Sektör seçimi zorunludur' }]}
+                >
+                  <Select size="large" placeholder="Sektör seçiniz">
+                    <Option value="Teknoloji">Teknoloji</Option>
+                    <Option value="Üretim">Üretim</Option>
+                    <Option value="Hizmet">Hizmet</Option>
+                    <Option value="Ticaret">Ticaret</Option>
+                    <Option value="İnşaat">İnşaat</Option>
+                    <Option value="Sağlık">Sağlık</Option>
+                    <Option value="Eğitim">Eğitim</Option>
+                    <Option value="Gıda">Gıda</Option>
+                    <Option value="Tekstil">Tekstil</Option>
+                    <Option value="Lojistik">Lojistik</Option>
+                    <Option value="Turizm">Turizm</Option>
+                    <Option value="Danışmanlık">Danışmanlık</Option>
+                    <Option value="Diğer">Diğer</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
           </div>
         );
         
@@ -131,7 +178,7 @@ const CompanySetup: React.FC = () => {
           <div className="step-content">
             <h3>Adres Bilgileri</h3>
             <p style={{ marginBottom: 24, color: '#666' }}>
-              Faturalarınızda görünecek adres bilgileri
+              Faturalarınızda görünecek resmi adres bilgileri
             </p>
             <Row gutter={16}>
               <Col span={12}>
@@ -143,6 +190,7 @@ const CompanySetup: React.FC = () => {
                 >
                   <Select size="large">
                     <Option value="Türkiye">Türkiye</Option>
+                    <Option value="KKTC">KKTC</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -167,17 +215,31 @@ const CompanySetup: React.FC = () => {
                   <Input size="large" placeholder="Örn: Kadıköy" />
                 </Form.Item>
               </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="postalCode"
+                  label="Posta Kodu"
+                  tooltip="5 haneli posta kodunuz"
+                >
+                  <Input size="large" placeholder="34000" maxLength={5} />
+                </Form.Item>
+              </Col>
             </Row>
             
             <Form.Item
               name="addressLine"
               label="Açık Adres"
-              rules={[{ required: true, message: 'Adres zorunludur' }]}
+              rules={[
+                { required: true, message: 'Adres zorunludur' },
+                { min: 20, message: 'Adres en az 20 karakter olmalıdır' }
+              ]}
             >
               <TextArea 
                 size="large" 
                 rows={3} 
-                placeholder="Cadde, sokak, bina no vb. detaylı adres bilgisi" 
+                placeholder="Mahalle, cadde, sokak, bina no, daire no vb. detaylı adres bilgisi"
+                showCount
+                maxLength={250}
               />
             </Form.Item>
           </div>
@@ -186,15 +248,53 @@ const CompanySetup: React.FC = () => {
       case 2:
         return (
           <div className="step-content">
-            <h3>Tercihler</h3>
+            <h3>Ek Bilgiler</h3>
             <p style={{ marginBottom: 24, color: '#666' }}>
-              İsteğe bağlı ayarlar - daha sonra da değiştirebilirsiniz
+              Şirketiniz hakkında ek bilgiler (bazı alanlar opsiyonel)
             </p>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="employeeCount"
+                  label="Çalışan Sayısı"
+                  tooltip="Yaklaşık çalışan sayınız"
+                >
+                  <Select size="large" placeholder="Çalışan sayısı seçiniz">
+                    <Option value="1-5">1-5</Option>
+                    <Option value="6-10">6-10</Option>
+                    <Option value="11-25">11-25</Option>
+                    <Option value="26-50">26-50</Option>
+                    <Option value="51-100">51-100</Option>
+                    <Option value="101-250">101-250</Option>
+                    <Option value="250+">250+</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="foundedYear"
+                  label="Kuruluş Yılı"
+                  tooltip="Şirketinizin kuruluş yılı"
+                >
+                  <InputNumber 
+                    size="large" 
+                    min={1900} 
+                    max={new Date().getFullYear()} 
+                    style={{ width: '100%' }} 
+                    placeholder={String(new Date().getFullYear())}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   name="website"
                   label="Web Sitesi"
+                  rules={[
+                    { type: 'url', message: 'Geçerli bir URL giriniz' }
+                  ]}
                 >
                   <Input size="large" prefix={<GlobalOutlined />} placeholder="https://www.example.com" />
                 </Form.Item>
@@ -206,12 +306,14 @@ const CompanySetup: React.FC = () => {
                 <Form.Item
                   name="currency"
                   label="Para Birimi"
+                  rules={[{ required: true, message: 'Para birimi seçimi zorunludur' }]}
                   initialValue="TRY"
                 >
                   <Select size="large">
                     <Option value="TRY">Türk Lirası (TRY)</Option>
                     <Option value="USD">ABD Doları (USD)</Option>
                     <Option value="EUR">Euro (EUR)</Option>
+                    <Option value="GBP">İngiliz Sterlini (GBP)</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -219,10 +321,14 @@ const CompanySetup: React.FC = () => {
                 <Form.Item
                   name="timezone"
                   label="Saat Dilimi"
+                  rules={[{ required: true, message: 'Saat dilimi seçimi zorunludur' }]}
                   initialValue="Europe/Istanbul"
                 >
                   <Select size="large">
                     <Option value="Europe/Istanbul">Türkiye (UTC+3)</Option>
+                    <Option value="Europe/London">Londra (UTC+0)</Option>
+                    <Option value="Europe/Berlin">Berlin (UTC+1)</Option>
+                    <Option value="America/New_York">New York (UTC-5)</Option>
                     <Option value="UTC">UTC</Option>
                   </Select>
                 </Form.Item>
@@ -230,7 +336,6 @@ const CompanySetup: React.FC = () => {
             </Row>
           </div>
         );
-        
         
       default:
         return null;
@@ -241,8 +346,8 @@ const CompanySetup: React.FC = () => {
     <div className="company-setup-container">
       <Card className="company-setup-card">
         <div className="setup-header">
-          <h1><BankOutlined /> Şirket Kurulumu</h1>
-          <p>Fatura kesebilmek için vergi ve adres bilgilerinizi tamamlayın</p>
+          <h1><BankOutlined /> Şirket Bilgileri</h1>
+          <p>Şirketinizle ilgili detaylı bilgileri tamamlayarak kurulumu bitirin</p>
         </div>
         
         <Steps current={currentStep} className="setup-steps">
