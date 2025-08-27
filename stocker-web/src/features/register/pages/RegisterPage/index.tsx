@@ -180,10 +180,7 @@ export const RegisterPage: React.FC = () => {
         }));
         
         setPackages(packages);
-        // Auto-select first package
-        if (packages.length > 0 && !selectedPackage) {
-          setSelectedPackage(packages[0]);
-        }
+        // Don't auto-select - let user choose
       } else {
         // Fallback to mock packages if API fails
         const mockPackages: Package[] = [
@@ -251,10 +248,7 @@ export const RegisterPage: React.FC = () => {
         }
       ];
         setPackages(mockPackages);
-        // Auto-select first package
-        if (mockPackages.length > 0 && !selectedPackage) {
-          setSelectedPackage(mockPackages[0]);
-        }
+        // Don't auto-select - let user choose
       }
     } catch (error: any) {
       message.error('Paketler API\'den yüklenemedi, mock data kullanılıyor');
@@ -300,10 +294,7 @@ export const RegisterPage: React.FC = () => {
         }
       ];
       setPackages(mockPackages);
-      // Auto-select first package
-      if (mockPackages.length > 0 && !selectedPackage) {
-        setSelectedPackage(mockPackages[0]);
-      }
+      // Don't auto-select - let user choose
     }
   };
 
@@ -590,12 +581,7 @@ export const RegisterPage: React.FC = () => {
     return (
       <ModernWizard 
         onComplete={handleWizardComplete}
-        selectedPackage={selectedPackage || {
-          id: 'default-package',
-          name: 'Profesyonel',
-          price: 999,
-          currency: '₺'
-        }}
+        selectedPackage={selectedPackage}
       />
     );
   };
@@ -709,6 +695,10 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 
-  // Directly render ModernWizard without the old wrapper
+  // Render package selection or registration form based on state
+  if (!selectedPackage) {
+    return renderPackageSelection();
+  }
+  
   return renderRegistrationForm();
 };
