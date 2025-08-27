@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.SeedData;
+using Stocker.Persistence.Services;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 
@@ -135,15 +136,38 @@ public class MigrationService : IMigrationService
     public async Task SeedTenantDataAsync(Guid tenantId)
     {
         using var scope = _serviceProvider.CreateScope();
-        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+        
+        // Create a background tenant service for this operation
+        var backgroundTenantService = new BackgroundTenantService();
+        backgroundTenantService.SetTenantInfo(tenantId);
+        
+        // Get the tenant and package info
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+        var tenant = await masterDbContext.Tenants
+            .Include(t => t.Subscriptions)
+                .ThenInclude(s => s.Package)
+            .FirstOrDefaultAsync(t => t.Id == tenantId);
+        
+        if (tenant == null)
+        {
+            _logger.LogError("Tenant {TenantId} not found", tenantId);
+            return;
+        }
 
         try
         {
             _logger.LogInformation("Starting tenant data seeding for tenant {TenantId}...", tenantId);
             
-            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
+            // Get package name for seed data
+            var packageName = tenant.Subscriptions?.FirstOrDefault()?.Package?.Name ?? "Starter";
+            
+            // Create DbContext with the background tenant service
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            
+            using var context = new TenantDbContext(optionsBuilder.Options, backgroundTenantService);
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<TenantDataSeeder>>();
-            var seeder = new TenantDataSeeder(context, logger, tenantId);
+            var seeder = new TenantDataSeeder(context, logger, tenantId, packageName);
             await seeder.SeedAsync();
             
             _logger.LogInformation("Tenant data seeding completed successfully for tenant {TenantId}.", tenantId);
