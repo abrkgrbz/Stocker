@@ -100,12 +100,15 @@ public class PasswordService : IPasswordService
             var testHashStr = Convert.ToBase64String(testHash);
             
             // Warning level logging for production debug
-            _logger.LogWarning("Password verification debug - StoredHash (first 10): {StoredHashPrefix}, TestHash (first 10): {TestHashPrefix}, Match: {IsMatch}, Iterations: {Iterations}, PasswordLength: {PasswordLength}",
+            var saltStr = Convert.ToBase64String(salt);
+            _logger.LogWarning("Password verification debug - Salt: {Salt}, StoredHash (first 10): {StoredHashPrefix}, TestHash (first 10): {TestHashPrefix}, Match: {IsMatch}, Iterations: {Iterations}, PasswordLength: {PasswordLength}, InputPassword (first 3): {PasswordPrefix}",
+                saltStr.Substring(0, Math.Min(10, saltStr.Length)),
                 storedHashStr.Substring(0, Math.Min(10, storedHashStr.Length)),
                 testHashStr.Substring(0, Math.Min(10, testHashStr.Length)),
                 storedHashStr == testHashStr,
                 Iterations,
-                plainPassword.Length);
+                plainPassword.Length,
+                plainPassword.Substring(0, Math.Min(3, plainPassword.Length)));
             
             // Compare hashes
             var result = CryptographicOperations.FixedTimeEquals(storedHash, testHash);
