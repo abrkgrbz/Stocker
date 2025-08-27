@@ -74,21 +74,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 userType: Domain.Master.Enums.UserType.TenantAdmin,
                 phoneNumber: null);
 
-            // Log the generated hash for debugging - ENHANCED
-            _logger.LogWarning("REGISTER HASH DEBUG - Username: {Username}, PasswordFirst3: {PasswordPrefix}, PasswordLength: {PasswordLength}, HashFirst20: {HashPrefix}, SaltFirst20: {SaltPrefix}, FullHash: {FullHash}, FullSalt: {FullSalt}",
-                request.Username,
-                request.Password?.Substring(0, Math.Min(3, request.Password?.Length ?? 0)) ?? "N/A",
-                request.Password?.Length ?? 0,
-                masterUser.Password?.Hash?.Substring(0, Math.Min(20, masterUser.Password?.Hash?.Length ?? 0)) ?? "N/A",
-                masterUser.Password?.Salt?.Substring(0, Math.Min(20, masterUser.Password?.Salt?.Length ?? 0)) ?? "N/A",
-                masterUser.Password?.Hash ?? "N/A",
-                masterUser.Password?.Salt ?? "N/A");
-            
-            // Verify immediately after creation
-            var immediateVerify = masterUser.Password.Verify(request.Password);
-            _logger.LogWarning("REGISTER VERIFICATION TEST - Password: {Password}, Immediate verification: {ImmediateVerify}",
-                request.Password?.Substring(0, Math.Min(3, request.Password?.Length ?? 0)) ?? "N/A",
-                immediateVerify);
+           
 
             // Generate email verification token
             var emailVerificationToken = masterUser.GenerateEmailVerificationToken();
