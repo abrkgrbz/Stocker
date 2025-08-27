@@ -1,0 +1,35 @@
+### Test Register - Yeni kullanıcı oluştur
+POST https://localhost:7021/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser2024",
+  "email": "testuser2024@test.com",
+  "password": "SecurePass@2024!",
+  "firstName": "Test",
+  "lastName": "User",
+  "companyName": "Test Company 2024",
+  "identityType": "Individual",
+  "identityNumber": "12345678901",
+  "sector": "Technology",
+  "employeeCount": "1-10",
+  "domain": "testcompany2024"
+}
+
+### Test Login - Az önce oluşturulan kullanıcı ile giriş yap
+POST https://localhost:7021/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser2024@test.com",
+  "password": "SecurePass@2024!"
+}
+
+### Production Test - Mevcut kullanıcı
+POST https://api.stoocker.app/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "anilberk1997@hotmail.com",
+  "password": "Test123456!"
+}
