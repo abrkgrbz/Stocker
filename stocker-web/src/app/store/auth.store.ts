@@ -65,8 +65,14 @@ export const useAuthStore = create<AuthState>()(
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
-            const { accessToken, refreshToken, user } = loginData;
             
+            // Handle both camelCase and PascalCase field names from backend
+            const accessToken = loginData.accessToken || loginData.AccessToken;
+            const refreshToken = loginData.refreshToken || loginData.RefreshToken;
+            const user = loginData.user || loginData.User;
+            
+            console.log('Login response:', loginData);
+            console.log('Extracted token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NO TOKEN');
             console.log('Login successful, user:', user);
             
             localStorage.setItem(TOKEN_KEY, accessToken);

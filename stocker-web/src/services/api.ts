@@ -17,14 +17,20 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Get token from localStorage or session
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('stocker_token');
+    
+    console.log('API Request Interceptor:', {
+      url: config.url,
+      token: token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN',
+      headers: config.headers
+    });
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
     // Add tenant ID if available
-    const tenantId = localStorage.getItem('tenant_id');
+    const tenantId = localStorage.getItem('stocker_tenant');
     if (tenantId) {
       config.headers['X-Tenant-Id'] = tenantId;
     }
@@ -49,8 +55,9 @@ axiosInstance.interceptors.response.use(
         case 401:
           // Handle unauthorized access
           message.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('stocker_token');
+          localStorage.removeItem('stocker_refresh_token');
+          localStorage.removeItem('stocker_tenant');
           window.location.href = '/login';
           break;
         
