@@ -58,8 +58,8 @@ public class RefactoredAuthenticationService : IAuthenticationService
             
             if (masterUser != null)
             {
-                _logger.LogDebug("Master user found: Id={UserId}, Email={Email}, IsActive={IsActive}, UserType={UserType}", 
-                    masterUser.Id, masterUser.Email, masterUser.IsActive, masterUser.UserType);
+                _logger.LogWarning("Master user found: Id={UserId}, Email={Email}, IsActive={IsActive}, UserType={UserType}, EmailVerified={EmailVerified}", 
+                    masterUser.Id, masterUser.Email.Value, masterUser.IsActive, masterUser.UserType, masterUser.IsEmailVerified);
                 
                 // Debug password information
                 _logger.LogDebug("Password object exists: {HasPassword}, Hash exists: {HasHash}, Salt exists: {HasSalt}",
