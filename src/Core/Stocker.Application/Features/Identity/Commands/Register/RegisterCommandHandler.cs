@@ -36,6 +36,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     {
         try
         {
+            _logger.LogWarning("REGISTER START - Company: {Company}, Username: {Username}, Email: {Email}", 
+                request.CompanyName, request.Username, request.Email);
             _logger.LogInformation("Starting registration for company: {CompanyName}", request.CompanyName);
 
             // Create tenant - use provided domain or generate from company name
@@ -174,6 +176,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "REGISTER ERROR - Company: {CompanyName}, Error: {Error}", 
+                request.CompanyName, ex.Message);
             _logger.LogError(ex, "Error during registration for company: {CompanyName}", request.CompanyName);
             return Result<RegisterResponse>.Failure(Error.Failure("Register.Failed", "Kayıt işlemi sırasında bir hata oluştu"));
         }
