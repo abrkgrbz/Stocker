@@ -11,11 +11,13 @@ public class TenantDataSeeder
 {
     private readonly TenantDbContext _context;
     private readonly ILogger<TenantDataSeeder> _logger;
+    private readonly Guid _tenantId;
 
-    public TenantDataSeeder(TenantDbContext context, ILogger<TenantDataSeeder> logger)
+    public TenantDataSeeder(TenantDbContext context, ILogger<TenantDataSeeder> logger, Guid tenantId)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _tenantId = tenantId;
     }
 
     public async Task SeedAsync()
@@ -33,8 +35,7 @@ public class TenantDataSeeder
             return;
         }
 
-        var tenantId = _context.ChangeTracker.Entries<TenantEntities.Role>()
-            .FirstOrDefault()?.Entity.TenantId ?? Guid.Empty;
+        var tenantId = _tenantId;
 
         if (tenantId == Guid.Empty)
         {

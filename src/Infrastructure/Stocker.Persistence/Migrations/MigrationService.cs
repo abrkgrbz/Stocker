@@ -142,7 +142,7 @@ public class MigrationService : IMigrationService
             
             using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<TenantDataSeeder>>();
-            var seeder = new TenantDataSeeder(context, logger);
+            var seeder = new TenantDataSeeder(context, logger, tenantId);
             await seeder.SeedAsync();
             
             _logger.LogInformation("Tenant data seeding completed successfully for tenant {TenantId}.", tenantId);
