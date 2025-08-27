@@ -62,8 +62,8 @@ public sealed class MasterUser : AggregateRoot
         TwoFactorEnabled = false;
         CreatedAt = DateTime.UtcNow;
         FailedLoginAttempts = 0;
-        PreferredLanguage = "en";
-        Timezone = "UTC";
+        PreferredLanguage = "tr";
+        Timezone = "UTC+3 (Istanbul)";
 
         RaiseDomainEvent(new MasterUserCreatedDomainEvent(Id, username, email.Value, userType));
     }
@@ -415,7 +415,7 @@ public sealed class MasterUser : AggregateRoot
     }
 
     // Helper methods for Identity layer
-    public string PasswordHash => Password.Value;
+    public string PasswordHash => Password.Hash;
     public string? RefreshToken => _refreshTokens.OrderByDescending(t => t.CreatedAt).FirstOrDefault()?.Token;
     public DateTime? RefreshTokenExpiryTime => _refreshTokens.OrderByDescending(t => t.CreatedAt).FirstOrDefault()?.ExpiresAt;
 

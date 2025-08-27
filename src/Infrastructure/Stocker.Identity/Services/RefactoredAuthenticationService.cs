@@ -48,7 +48,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
         
         try
         {
-            // Get tenant context from middleware or request
+            // Get tenant context from middleware or request 
             var tenantId = request.TenantId ?? _tenantService.GetCurrentTenantId();
             _logger.LogDebug("Tenant context resolved: {TenantId}", tenantId);
             
@@ -57,47 +57,12 @@ public class RefactoredAuthenticationService : IAuthenticationService
             var masterUser = await _userManagementService.FindMasterUserAsync(request.Username);
             
             if (masterUser != null)
-            {
-                _logger.LogWarning("Master user found: Id={UserId}, Email={Email}, IsActive={IsActive}, UserType={UserType}, EmailVerified={EmailVerified}", 
-                    masterUser.Id, masterUser.Email.Value, masterUser.IsActive, masterUser.UserType, masterUser.IsEmailVerified);
-                
-                // Debug password information
-                _logger.LogDebug("Password object exists: {HasPassword}, Hash exists: {HasHash}, Salt exists: {HasSalt}",
-                    masterUser.Password != null,
-                    masterUser.Password?.Hash != null,
-                    masterUser.Password?.Salt != null);
-                
-                if (masterUser.Password != null)
-                {
-                    _logger.LogDebug("Password hash length: {HashLength}, Salt length: {SaltLength}, First 10 chars of hash: {HashPrefix}",
-                        masterUser.Password.Hash?.Length ?? 0,
-                        masterUser.Password.Salt?.Length ?? 0,
-                        masterUser.Password.Hash?.Substring(0, Math.Min(10, masterUser.Password.Hash?.Length ?? 0)) ?? "N/A");
-                }
-                
-                // Debug: Log exact password being verified
-                _logger.LogWarning("LOGIN PASSWORD DEBUG - Username: {Username}, Password: [{Password}], Length: {Length}, FirstChar: {First}, LastChar: {Last}",
-                    request.Username,
-                    request.Password,
-                    request.Password?.Length ?? 0,
-                    request.Password?.Length > 0 ? (int)request.Password[0] : -1,
-                    request.Password?.Length > 0 ? (int)request.Password[request.Password.Length - 1] : -1);
-                
-                _logger.LogWarning("LOGIN HASH FROM DB - Hash: {Hash}, Salt: {Salt}",
-                    masterUser.Password?.Hash,
-                    masterUser.Password?.Salt);
+            { 
                 
                 // Verify password
                 if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
                 {
-                    _logger.LogWarning("Invalid password attempt for user {Username}. Password object exists: {HasPassword}, Hash exists: {HasHash}, Salt exists: {HasSalt}, Hash length: {HashLength}, Salt length: {SaltLength}", 
-                        request.Username,
-                        masterUser.Password != null,
-                        masterUser.Password?.Hash != null,
-                        masterUser.Password?.Salt != null,
-                        masterUser.Password?.Hash?.Length ?? 0,
-                        masterUser.Password?.Salt?.Length ?? 0);
-                    _logger.LogDebug("Password verification failed. Input password length: {Length}", request.Password?.Length ?? 0);
+          
                     return new AuthenticationResult
                     {
                         Success = false,

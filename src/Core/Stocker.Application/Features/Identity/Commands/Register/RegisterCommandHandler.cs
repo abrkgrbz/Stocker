@@ -64,13 +64,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             await _masterUnitOfWork.Repository<Tenant>().AddAsync(tenant, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Debug: Log exact password being used
-            _logger.LogWarning("REGISTER PASSWORD DEBUG - Username: {Username}, Password: [{Password}], Length: {Length}, FirstChar: {First}, LastChar: {Last}",
-                request.Username,
-                request.Password,
-                request.Password?.Length ?? 0,
-                request.Password?.Length > 0 ? (int)request.Password[0] : -1,
-                request.Password?.Length > 0 ? (int)request.Password[request.Password.Length - 1] : -1);
+      
             
             // Create master user
             var masterUser = MasterUser.Create(
