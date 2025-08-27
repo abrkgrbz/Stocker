@@ -92,11 +92,22 @@ public class PasswordService : IPasswordService
                 iterationCount: Iterations,
                 numBytesRequested: KeySize);
 
+            // Debug logging
+            var storedHashStr = Convert.ToBase64String(storedHash);
+            var testHashStr = Convert.ToBase64String(testHash);
+            
+            // Log first 10 chars for debugging (safe to log partial hash)
+            System.Diagnostics.Debug.WriteLine($"Stored Hash (first 10): {storedHashStr.Substring(0, Math.Min(10, storedHashStr.Length))}");
+            System.Diagnostics.Debug.WriteLine($"Test Hash (first 10): {testHashStr.Substring(0, Math.Min(10, testHashStr.Length))}");
+            System.Diagnostics.Debug.WriteLine($"Iterations used: {Iterations}");
+            System.Diagnostics.Debug.WriteLine($"Password length: {plainPassword.Length}");
+            
             // Compare hashes
             return CryptographicOperations.FixedTimeEquals(storedHash, testHash);
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"VerifyPassword exception: {ex.Message}");
             return false;
         }
     }
