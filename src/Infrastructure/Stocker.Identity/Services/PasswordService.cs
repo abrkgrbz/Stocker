@@ -3,6 +3,7 @@ using Stocker.Domain.Master.ValueObjects;
 using System.Security.Cryptography;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
+using Microsoft.Extensions.Logging;
 
 namespace Stocker.Identity.Services;
 
@@ -13,16 +14,18 @@ public class PasswordService : IPasswordService
 {
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordValidator _passwordValidator;
+    private readonly ILogger<PasswordService> _logger;
 
     private const int SaltSize = 128 / 8; // 128 bit
     private const int KeySize = 256 / 8; // 256 bit
     private const int Iterations = 600000; // OWASP 2023 recommendation for PBKDF2-HMAC-SHA256
 
 
-    public PasswordService(IPasswordHasher passwordHasher, IPasswordValidator? passwordValidator = null)
+    public PasswordService(IPasswordHasher passwordHasher, IPasswordValidator? passwordValidator = null, ILogger<PasswordService>? logger = null)
     {
         _passwordHasher = passwordHasher;
         _passwordValidator = passwordValidator ?? new PasswordValidator(new SharedKernel.Settings.PasswordPolicy());
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PasswordService>.Instance;
     }
 
     /// <summary>
@@ -96,18 +99,22 @@ public class PasswordService : IPasswordService
             var storedHashStr = Convert.ToBase64String(storedHash);
             var testHashStr = Convert.ToBase64String(testHash);
             
-            // Log first 10 chars for debugging (safe to log partial hash)
-            System.Diagnostics.Debug.WriteLine($"Stored Hash (first 10): {storedHashStr.Substring(0, Math.Min(10, storedHashStr.Length))}");
-            System.Diagnostics.Debug.WriteLine($"Test Hash (first 10): {testHashStr.Substring(0, Math.Min(10, testHashStr.Length))}");
-            System.Diagnostics.Debug.WriteLine($"Iterations used: {Iterations}");
-            System.Diagnostics.Debug.WriteLine($"Password length: {plainPassword.Length}");
+            // Warning level logging for production debug
+            _logger.LogWarning("Password verification debug - StoredHash (first 10): {StoredHashPrefix}, TestHash (first 10): {TestHashPrefix}, Match: {IsMatch}, Iterations: {Iterations}, PasswordLength: {PasswordLength}",
+                storedHashStr.Substring(0, Math.Min(10, storedHashStr.Length)),
+                testHashStr.Substring(0, Math.Min(10, testHashStr.Length)),
+                storedHashStr == testHashStr,
+                Iterations,
+                plainPassword.Length);
             
             // Compare hashes
-            return CryptographicOperations.FixedTimeEquals(storedHash, testHash);
+            var result = CryptographicOperations.FixedTimeEquals(storedHash, testHash);
+            _logger.LogWarning("Password verification result: {Result}", result);
+            return result;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"VerifyPassword exception: {ex.Message}");
+            _logger.LogError(ex, "VerifyPassword exception");
             return false;
         }
     }
