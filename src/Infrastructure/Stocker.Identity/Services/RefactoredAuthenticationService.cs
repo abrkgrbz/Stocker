@@ -78,7 +78,13 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 // Verify password
                 if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
                 {
-                    _logger.LogWarning("Invalid password attempt for user {Username}", request.Username);
+                    _logger.LogWarning("Invalid password attempt for user {Username}. Password object exists: {HasPassword}, Hash exists: {HasHash}, Salt exists: {HasSalt}, Hash length: {HashLength}, Salt length: {SaltLength}", 
+                        request.Username,
+                        masterUser.Password != null,
+                        masterUser.Password?.Hash != null,
+                        masterUser.Password?.Salt != null,
+                        masterUser.Password?.Hash?.Length ?? 0,
+                        masterUser.Password?.Salt?.Length ?? 0);
                     _logger.LogDebug("Password verification failed. Input password length: {Length}", request.Password?.Length ?? 0);
                     return new AuthenticationResult
                     {
