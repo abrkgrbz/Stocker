@@ -77,7 +77,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 phoneNumber: null);
             
             // CRITICAL DEBUG: Before SaveChanges
-            _logger.LogCritical("BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+            _logger.LogWarning("BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
                 masterUser.Username,
                 masterUser.Password?.Hash,
                 masterUser.Password?.Salt,
@@ -94,7 +94,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             var reloadedUser = await _masterUnitOfWork.Repository<MasterUser>()
                 .SingleOrDefaultAsync(u => u.Id == masterUser.Id, cancellationToken);
                 
-            _logger.LogCritical("AFTER SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+            _logger.LogWarning("AFTER SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
                 reloadedUser?.Username,
                 reloadedUser?.Password?.Hash,
                 reloadedUser?.Password?.Salt,

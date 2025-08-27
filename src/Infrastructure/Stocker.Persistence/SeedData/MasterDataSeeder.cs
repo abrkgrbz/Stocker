@@ -171,7 +171,7 @@ public class MasterDataSeeder
         systemAdmin.VerifyEmail();
         
         // CRITICAL DEBUG: Before SaveChanges  
-        _logger.LogCritical("SEED BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+        _logger.LogWarning("SEED BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
             systemAdmin.Username,
             systemAdmin.Password?.Hash,
             systemAdmin.Password?.Salt,
