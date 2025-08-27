@@ -3,6 +3,9 @@ import api from './api';
 export interface CompanyData {
   name: string;
   code: string;
+  legalName?: string;
+  identityType?: string;
+  identityNumber?: string;
   taxNumber: string;
   taxOffice?: string;
   tradeRegisterNumber?: string;
@@ -13,6 +16,7 @@ export interface CompanyData {
   sector?: string;
   employeeCount?: number;
   foundedYear?: number;
+  foundedDate?: string;
   currency: string;
   timezone: string;
   country: string;
@@ -60,24 +64,27 @@ class CompanyService {
     const response = await api.post<Company>('/api/tenant/companies', {
       name: data.name,
       code: data.code,
+      legalName: data.legalName || data.name,
+      identityType: data.identityType || 'TaxNumber',
+      identityNumber: data.identityNumber || data.taxNumber,
       taxNumber: data.taxNumber,
       taxOffice: data.taxOffice,
       tradeRegisterNumber: data.tradeRegisterNumber,
       email: data.email,
       phone: data.phone,
-      fax: data.fax,
+      fax: data.fax || '',
       website: data.website,
       sector: data.sector,
       employeeCount: data.employeeCount,
       foundedYear: data.foundedYear,
-      foundedDate: data.foundedYear ? new Date(data.foundedYear, 0, 1).toISOString() : new Date().toISOString(),
+      foundedDate: data.foundedDate || (data.foundedYear ? `${data.foundedYear}-01-01` : new Date().toISOString().split('T')[0]),
       currency: data.currency,
       timezone: data.timezone,
       address: {
         country: data.country,
         city: data.city,
         district: data.district,
-        postalCode: data.postalCode,
+        postalCode: data.postalCode || '',
         addressLine: data.addressLine
       }
     });
@@ -99,6 +106,9 @@ class CompanyService {
     // Map fields that exist in data
     if (data.name !== undefined) updateData.name = data.name;
     if (data.code !== undefined) updateData.code = data.code;
+    if (data.legalName !== undefined) updateData.legalName = data.legalName;
+    if (data.identityType !== undefined) updateData.identityType = data.identityType;
+    if (data.identityNumber !== undefined) updateData.identityNumber = data.identityNumber;
     if (data.taxNumber !== undefined) updateData.taxNumber = data.taxNumber;
     if (data.taxOffice !== undefined) updateData.taxOffice = data.taxOffice;
     if (data.tradeRegisterNumber !== undefined) updateData.tradeRegisterNumber = data.tradeRegisterNumber;
@@ -110,8 +120,9 @@ class CompanyService {
     if (data.employeeCount !== undefined) updateData.employeeCount = data.employeeCount;
     if (data.foundedYear !== undefined) {
       updateData.foundedYear = data.foundedYear;
-      updateData.foundedDate = new Date(data.foundedYear, 0, 1).toISOString();
+      updateData.foundedDate = `${data.foundedYear}-01-01`;
     }
+    if (data.foundedDate !== undefined) updateData.foundedDate = data.foundedDate;
     if (data.currency !== undefined) updateData.currency = data.currency;
     if (data.timezone !== undefined) updateData.timezone = data.timezone;
     
@@ -122,7 +133,7 @@ class CompanyService {
       if (data.country !== undefined) updateData.address.country = data.country;
       if (data.city !== undefined) updateData.address.city = data.city;
       if (data.district !== undefined) updateData.address.district = data.district;
-      if (data.postalCode !== undefined) updateData.address.postalCode = data.postalCode;
+      if (data.postalCode !== undefined) updateData.address.postalCode = data.postalCode || '';
       if (data.addressLine !== undefined) updateData.address.addressLine = data.addressLine;
     }
     

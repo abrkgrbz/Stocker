@@ -131,21 +131,26 @@ const CompanySetup: React.FC = () => {
       // Get user info from auth store or localStorage
       const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
       
-      // Prepare company data
+      // Prepare company data matching backend format
       const companyData = {
         name: currentUser.companyName || currentUser.tenant?.name || 'Şirket',
         code: currentUser.tenant?.code || `company_${Date.now()}`,
+        legalName: currentUser.companyName || currentUser.tenant?.name || 'Şirket', // Legal name same as company name initially
+        identityType: 'TaxNumber', // Default to TaxNumber
+        identityNumber: formData.taxNumber, // Use tax number as identity number
         taxNumber: formData.taxNumber,
         taxOffice: formData.taxOffice,
         tradeRegisterNumber: formData.tradeRegisterNumber,
         email: currentUser.email || '',
         phone: currentUser.phone || '',
+        fax: '', // Optional, leave empty
         website: formData.website,
         sector: formData.sector,
         employeeCount: formData.employeeCount ? parseInt(formData.employeeCount.split('-')[0]) : undefined,
         foundedYear: formData.foundedYear,
+        foundedDate: formData.foundedYear ? `${formData.foundedYear}-01-01` : new Date().toISOString().split('T')[0],
         currency: formData.currency,
-        timezone: formData.timezone,
+        timezone: formData.timezone, // This will be a timezone string like 'Europe/Istanbul'
         country: formData.country,
         city: formData.city,
         district: formData.district,
