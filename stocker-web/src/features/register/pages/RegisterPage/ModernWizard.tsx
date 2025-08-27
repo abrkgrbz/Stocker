@@ -24,7 +24,10 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  ShoppingCartOutlined,
+  CrownOutlined,
+  RocketOutlined
 } from '@ant-design/icons';
 import './modern-wizard.css';
 import './modern-wizard-phone-validation.css';
@@ -37,6 +40,8 @@ interface ModernWizardProps {
 export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selectedPackage }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
   const [validating, setValidating] = useState<{ [key: string]: boolean }>({});
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
   const [validationSuccess, setValidationSuccess] = useState<{ [key: string]: boolean }>({});
@@ -64,7 +69,12 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     // Step 3 - Security
     password: '',
     confirmPassword: '',
-    termsAccepted: false
+    termsAccepted: false,
+    
+    // Step 4 - Package
+    packageId: '',
+    packageName: '',
+    billingPeriod: 'Monthly'
   });
   
   const [passwordStrength, setPasswordStrength] = useState({
@@ -97,7 +107,8 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const steps = [
     { label: 'Şirket', icon: <ShopOutlined /> },
     { label: 'İletişim', icon: <UserOutlined /> },
-    { label: 'Güvenlik', icon: <LockOutlined /> }
+    { label: 'Güvenlik', icon: <LockOutlined /> },
+    { label: 'Paket', icon: <ShoppingCartOutlined /> }
   ];
 
   // Şirket tipleri ve sektörler için öneriler
@@ -376,6 +387,72 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         color: '#667eea'
       }
     })
+  };
+
+  // Fetch packages when step 3 is reached
+  useEffect(() => {
+    if (currentStep === 3 && packages.length === 0) {
+      fetchPackages();
+    }
+  }, [currentStep]);
+
+  const fetchPackages = async () => {
+    setLoadingPackages(true);
+    try {
+      const response = await apiClient.get('/api/public/packages');
+      
+      if (response.data?.success && response.data?.data) {
+        const packagesData = response.data.data.map((pkg: any) => ({
+          id: pkg.id,
+          name: pkg.name,
+          description: pkg.description,
+          price: pkg.basePrice?.amount || 0,
+          currency: pkg.basePrice?.currency || '₺',
+          type: pkg.type,
+          features: pkg.features?.map((f: any) => f.featureName || f.name || f) || [],
+          maxUsers: pkg.maxUsers || 0,
+          maxStorage: pkg.maxStorage || 0,
+          modules: pkg.modules?.map((m: any) => m.moduleName || m) || [],
+          isPopular: pkg.type === 'Professional',
+          trialDays: pkg.trialDays || 14
+        }));
+        setPackages(packagesData);
+      }
+    } catch (error) {
+      // Fallback to mock data
+      setPackages([
+        {
+          id: 'starter-package',
+          name: 'Başlangıç',
+          description: 'Küçük işletmeler için',
+          price: 499,
+          currency: '₺',
+          features: ['5 Kullanıcı', '10 GB Depolama', 'Temel Raporlama'],
+          type: 'Starter'
+        },
+        {
+          id: 'professional-package',
+          name: 'Profesyonel',
+          description: 'Büyüyen işletmeler için',
+          price: 999,
+          currency: '₺',
+          features: ['20 Kullanıcı', '50 GB Depolama', 'Gelişmiş Raporlama'],
+          isPopular: true,
+          type: 'Professional'
+        },
+        {
+          id: 'enterprise-package',
+          name: 'Enterprise',
+          description: 'Kurumsal çözümler',
+          price: 2499,
+          currency: '₺',
+          features: ['Sınırsız Kullanıcı', '500 GB Depolama', 'Özel Raporlama'],
+          type: 'Enterprise'
+        }
+      ]);
+    } finally {
+      setLoadingPackages(false);
+    }
   };
 
   useEffect(() => {
@@ -764,6 +841,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         }
         return true;
         
+      case 3:
+        if (!formData.packageId) {
+          setValidationErrors(prev => ({ ...prev, packageId: 'Lütfen bir paket seçin' }));
+          message.error('Lütfen bir paket seçin');
+          return false;
+        }
+        return true;
+        
       default:
         return true;
     }
@@ -808,8 +893,8 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         lastName: lastName,
         password: formData.password,
         domain: formData.companyCode,
-        packageId: selectedPackage?.id,
-        billingPeriod: 'Monthly'
+        packageId: formData.packageId || selectedPackage?.id,
+        billingPeriod: formData.billingPeriod || 'Monthly'
       };
 
       console.log('Sending registration data:', registrationData);
@@ -1347,6 +1432,154 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
             </div>
           </div>
         );
+        
+      case 3:
+        return (
+          <div className="form-fields">
+            <div className="form-header">
+              <h2 className="form-title">Paket Seçimi</h2>
+              <p className="form-subtitle">İşletmenize en uygun paketi seçin</p>
+            </div>
+            
+            {loadingPackages ? (
+              <div className="packages-loading" style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <p style={{ marginTop: '16px', color: '#6b7280' }}>Paketler yükleniyor...</p>
+              </div>
+            ) : (
+              <>
+                <div className="packages-grid" style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '20px',
+                  marginBottom: '24px' 
+                }}>
+                  {packages.map((pkg) => (
+                    <div 
+                      key={pkg.id}
+                      className={`package-card ${formData.packageId === pkg.id ? 'selected' : ''} ${pkg.isPopular ? 'popular' : ''}`}
+                      style={{
+                        padding: '20px',
+                        border: formData.packageId === pkg.id ? '2px solid #667eea' : '1px solid #e5e7eb',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        background: formData.packageId === pkg.id ? '#f0f4ff' : '#fff'
+                      }}
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          packageId: pkg.id,
+                          packageName: pkg.name
+                        }));
+                      }}
+                    >
+                      {pkg.isPopular && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '-10px',
+                          right: '20px',
+                          background: '#ef4444',
+                          color: '#fff',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}>
+                          EN POPÜLER
+                        </div>
+                      )}
+                      
+                      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                        <div style={{ fontSize: '32px', marginBottom: '8px', color: '#667eea' }}>
+                          {pkg.type === 'Starter' && <RocketOutlined />}
+                          {pkg.type === 'Professional' && <CrownOutlined />}
+                          {pkg.type === 'Enterprise' && <GlobalOutlined />}
+                        </div>
+                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>{pkg.name}</h3>
+                        <p style={{ color: '#6b7280', fontSize: '14px' }}>{pkg.description}</p>
+                      </div>
+                      
+                      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>{pkg.currency}</span>
+                        <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#111' }}>{pkg.price}</span>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>/ay</span>
+                      </div>
+                      
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {pkg.features?.slice(0, 5).map((feature, idx) => (
+                          <li key={idx} style={{ 
+                            padding: '8px 0', 
+                            fontSize: '14px',
+                            color: '#4b5563',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            <CheckOutlined style={{ color: '#10b981' }} /> {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="billing-period-selector" style={{ marginTop: '24px' }}>
+                  <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
+                    Faturalandırma Dönemi
+                  </label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        border: formData.billingPeriod === 'Monthly' ? '2px solid #667eea' : '1px solid #e5e7eb',
+                        background: formData.billingPeriod === 'Monthly' ? '#f0f4ff' : '#fff',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: formData.billingPeriod === 'Monthly' ? 'bold' : 'normal'
+                      }}
+                      onClick={() => handleInputChange('billingPeriod', 'Monthly')}
+                    >
+                      Aylık
+                    </button>
+                    <button 
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        border: formData.billingPeriod === 'Yearly' ? '2px solid #667eea' : '1px solid #e5e7eb',
+                        background: formData.billingPeriod === 'Yearly' ? '#f0f4ff' : '#fff',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: formData.billingPeriod === 'Yearly' ? 'bold' : 'normal',
+                        position: 'relative'
+                      }}
+                      onClick={() => handleInputChange('billingPeriod', 'Yearly')}
+                    >
+                      Yıllık 
+                      <span style={{
+                        background: '#10b981',
+                        color: '#fff',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        marginLeft: '8px'
+                      }}>
+                        %20 İndirim
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+            
+            {validationErrors.packageId && (
+              <span className="error-message" style={{marginTop: '16px', display: 'block', color: '#ef4444'}}>
+                {validationErrors.packageId}
+              </span>
+            )}
+          </div>
+        );
 
       default:
         return null;
@@ -1362,6 +1595,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       case 0: return 'Şirket Profili Oluşturun';
       case 1: return 'İletişim Bilgilerini Tamamlayın';
       case 2: return 'Güvenlik Ayarlarını Yapın';
+      case 3: return 'Paket Seçimi Yapın';
       default: return 'İşletmenizi Güçlendirin';
     }
   };
@@ -1371,6 +1605,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       case 0: return 'Şirketinizin temel bilgilerini girerek profilinizi oluşturun. Bu bilgiler faturalama ve yasal süreçlerde kullanılacaktır.';
       case 1: return 'Hesap yöneticisi bilgilerinizi ekleyin. Size özel destek ve güncellemeler için iletişim bilgileriniz önemlidir.';
       case 2: return 'Güçlü bir şifre belirleyerek hesabınızı koruma altına alın. Verilerinizin güvenliği bizim için önceliklidir.';
+      case 3: return 'İhtiyaçlarınıza en uygun paketi seçin. Her pakette farklı özellikler ve limitler bulunur.';
       default: return 'Modern CRM ve stok yönetimi çözümleriyle işletmenizin verimliliğini artırın.';
     }
   };

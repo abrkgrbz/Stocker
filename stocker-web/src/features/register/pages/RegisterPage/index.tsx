@@ -695,10 +695,6 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 
-  // Render package selection or registration form based on state
-  if (!selectedPackage) {
-    return renderPackageSelection();
-  }
-  
+  // Directly render the wizard with integrated package selection
   return renderRegistrationForm();
 };
