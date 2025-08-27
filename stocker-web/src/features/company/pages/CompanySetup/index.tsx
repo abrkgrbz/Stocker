@@ -93,7 +93,26 @@ const CompanySetup: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       message.success('Şirket kurulumu başarıyla tamamlandı!');
-      navigate('/dashboard');
+      
+      // Navigate based on user role
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const userRole = user.roles?.[0];
+        const tenantId = user.tenantId || user.tenant?.id;
+        
+        if (userRole === 'SystemAdmin') {
+          navigate('/master');
+        } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
+          navigate('/admin');
+        } else if (tenantId) {
+          navigate(`/app/${tenantId}/dashboard`);
+        } else {
+          navigate('/app/default');
+        }
+      } else {
+        navigate('/admin');
+      }
     } catch (error) {
       message.error('Şirket kurulumu sırasında bir hata oluştu.');
       console.error('Error:', error);
