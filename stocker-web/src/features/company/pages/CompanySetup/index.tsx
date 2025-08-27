@@ -4,6 +4,7 @@ import { Button, Form, Input, Select, Steps, Card, Row, Col, message, InputNumbe
 import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import companyService from '@/services/companyService';
 import { useAuthStore } from '@/app/store/auth.store';
+import { getCitiesForSelect, getDistrictsByCityForSelect } from '@/data/turkey-cities';
 import './style.css';
 
 const { Step } = Steps;
@@ -52,6 +53,8 @@ const CompanySetup: React.FC = () => {
     timezone: 'Europe/Istanbul'
   });
 
+  const [districts, setDistricts] = useState<{ label: string; value: string }[]>([]);
+
   // Check if company already exists on mount
   useEffect(() => {
     const checkExistingCompany = async () => {
@@ -81,6 +84,12 @@ const CompanySetup: React.FC = () => {
 
     checkExistingCompany();
   }, [navigate, user]);
+
+  // Handle city change to update districts
+  const handleCityChange = (cityName: string) => {
+    form.setFieldsValue({ district: undefined }); // Reset district
+    setDistricts(getDistrictsByCityForSelect(cityName));
+  };
 
   const steps = [
     {
@@ -265,10 +274,19 @@ const CompanySetup: React.FC = () => {
               <Col span={12}>
                 <Form.Item
                   name="city"
-                  label="Şehir"
-                  rules={[{ required: true, message: 'Şehir zorunludur' }]}
+                  label="İl"
+                  rules={[{ required: true, message: 'İl seçimi zorunludur' }]}
                 >
-                  <Input size="large" placeholder="Örn: İstanbul" />
+                  <Select 
+                    size="large" 
+                    placeholder="İl seçiniz"
+                    onChange={handleCityChange}
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={getCitiesForSelect()}
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -278,9 +296,18 @@ const CompanySetup: React.FC = () => {
                 <Form.Item
                   name="district"
                   label="İlçe"
-                  rules={[{ required: true, message: 'İlçe zorunludur' }]}
+                  rules={[{ required: true, message: 'İlçe seçimi zorunludur' }]}
                 >
-                  <Input size="large" placeholder="Örn: Kadıköy" />
+                  <Select
+                    size="large"
+                    placeholder="Önce il seçiniz"
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={districts}
+                    disabled={districts.length === 0}
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
