@@ -169,6 +169,14 @@ public class MasterDataSeeder
 
         systemAdmin.Activate();
         systemAdmin.VerifyEmail();
+        
+        // CRITICAL DEBUG: Before SaveChanges  
+        _logger.LogCritical("SEED BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+            systemAdmin.Username,
+            systemAdmin.Password?.Hash,
+            systemAdmin.Password?.Salt,
+            systemAdmin.Password?.Value,
+            systemAdmin.PasswordHash);
 
         await _context.MasterUsers.AddAsync(systemAdmin);
         _logger.LogInformation("Seeded system administrator.");

@@ -76,18 +76,30 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 userType: Domain.Master.Enums.UserType.TenantAdmin,
                 phoneNumber: null);
             
-            // Debug: Log generated hash
-            _logger.LogWarning("REGISTER HASH GENERATED - Hash: {Hash}, Salt: {Salt}",
+            // CRITICAL DEBUG: Before SaveChanges
+            _logger.LogCritical("BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+                masterUser.Username,
                 masterUser.Password?.Hash,
-                masterUser.Password?.Salt);
-
-           
+                masterUser.Password?.Salt,
+                masterUser.Password?.Value,
+                masterUser.PasswordHash);
 
             // Generate email verification token
             var emailVerificationToken = masterUser.GenerateEmailVerificationToken();
 
             await _masterUnitOfWork.Repository<MasterUser>().AddAsync(masterUser, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
+            
+            // CRITICAL DEBUG: Reload from database
+            var reloadedUser = await _masterUnitOfWork.Repository<MasterUser>()
+                .SingleOrDefaultAsync(u => u.Id == masterUser.Id, cancellationToken);
+                
+            _logger.LogCritical("AFTER SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
+                reloadedUser?.Username,
+                reloadedUser?.Password?.Hash,
+                reloadedUser?.Password?.Salt,
+                reloadedUser?.Password?.Value,
+                reloadedUser?.PasswordHash);
 
             // Create user-tenant relationship
             var userTenant = new UserTenant(
