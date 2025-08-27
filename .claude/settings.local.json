@@ -62,7 +62,8 @@
       "Bash(docker build:*)",
       "Bash(npx tailwindcss init:*)",
       "Bash(npm uninstall:*)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(CreateTestUser.exe)"
     ],
     "deny": []
   }

@@ -58,7 +58,19 @@ public class AuthenticationService : IAuthenticationService
         {
             // Debug logging
             _logger.LogInformation("Attempting to verify password for user {Username}", masterUser.Username);
-           
+            _logger.LogDebug("User details - Id: {UserId}, Email: {Email}, UserType: {UserType}", 
+                masterUser.Id, masterUser.Email.Value, masterUser.UserType);
+            _logger.LogDebug("Password object exists: {HasPassword}, Hash exists: {HasHash}, Salt exists: {HasSalt}", 
+                masterUser.Password != null,
+                masterUser.Password?.Hash != null,
+                masterUser.Password?.Salt != null);
+            
+            if (masterUser.Password != null)
+            {
+                _logger.LogDebug("Password hash length: {HashLength}, Salt length: {SaltLength}", 
+                    masterUser.Password.Hash?.Length ?? 0,
+                    masterUser.Password.Salt?.Length ?? 0);
+            }
             
             // Password kontrolü
             if (!_passwordService.VerifyPassword(masterUser.Password, request.Password))
@@ -67,6 +79,12 @@ public class AuthenticationService : IAuthenticationService
                     masterUser.Username, 
                     masterUser.Password != null,
                     masterUser.Password?.Hash?.Length ?? 0);
+                
+                // Additional debug info
+                _logger.LogDebug("Failed password verification details - Hash first 10 chars: {HashPrefix}, Salt first 10 chars: {SaltPrefix}",
+                    masterUser.Password?.Hash?.Substring(0, Math.Min(10, masterUser.Password?.Hash?.Length ?? 0)) ?? "N/A",
+                    masterUser.Password?.Salt?.Substring(0, Math.Min(10, masterUser.Password?.Salt?.Length ?? 0)) ?? "N/A");
+                
                 return new AuthenticationResult
                 {
                     Success = false,
@@ -270,13 +288,14 @@ public class AuthenticationService : IAuthenticationService
             phoneNumber = phoneResult.Value;
         }
          
-        var hashedPassword = _passwordHasher.HashPassword(request.Password);
+        // Use the overload that accepts plainPassword instead of passwordHash
         var masterUser = MasterUser.Create(
             username: request.Username,
             email: emailResult.Value,
-            passwordHash: hashedPassword,
+            plainPassword: request.Password,
             firstName: request.FirstName,
             lastName: request.LastName,
+            userType: UserType.TenantOwner, // Default to TenantOwner for registration
             phoneNumber: phoneNumber
         );
 
