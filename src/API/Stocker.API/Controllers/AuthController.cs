@@ -64,6 +64,13 @@ public class AuthController : ControllerBase
     {
         _logger.LogInformation("Login attempt for email: {Email}", command.Email);
         
+        // Debug: Log the password details
+        _logger.LogWarning("Login Debug - Email: {Email}, Password Length: {Length}, Password First 3: {PasswordPrefix}, Password Bytes: {Bytes}",
+            command.Email,
+            command.Password?.Length ?? 0,
+            command.Password?.Length >= 3 ? command.Password.Substring(0, 3) : "N/A",
+            command.Password != null ? string.Join(",", System.Text.Encoding.UTF8.GetBytes(command.Password).Take(5)) : "N/A");
+        
         var result = await _mediator.Send(command);
         
         if (result.IsSuccess)
