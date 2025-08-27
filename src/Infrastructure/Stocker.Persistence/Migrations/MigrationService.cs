@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.SeedData;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 
 namespace Stocker.Persistence.Migrations;
