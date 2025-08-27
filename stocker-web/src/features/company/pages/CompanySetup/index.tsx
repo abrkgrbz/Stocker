@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Select, Steps, Card, Row, Col, message, InputNumber } from 'antd';
 import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import companyService from '@/services/companyService';
+import { useAuthStore } from '@/app/store/auth.store';
 import './style.css';
 
 const { Step } = Steps;
@@ -37,6 +39,7 @@ const CompanySetup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   
   const [formData, setFormData] = useState<CompanyFormData>({
     taxNumber: '',
@@ -48,6 +51,36 @@ const CompanySetup: React.FC = () => {
     currency: 'TRY',
     timezone: 'Europe/Istanbul'
   });
+
+  // Check if company already exists on mount
+  useEffect(() => {
+    const checkExistingCompany = async () => {
+      try {
+        const hasCompany = await companyService.checkCompanyExists();
+        if (hasCompany) {
+          message.info('Şirket bilgileriniz zaten mevcut, yönlendiriliyorsunuz...');
+          
+          const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
+          const userRole = currentUser.roles?.[0];
+          const tenantId = currentUser.tenantId || currentUser.tenant?.id;
+          
+          if (userRole === 'SystemAdmin') {
+            navigate('/master');
+          } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
+            navigate('/admin');
+          } else if (tenantId) {
+            navigate(`/app/${tenantId}/dashboard`);
+          } else {
+            navigate('/app/default');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking existing company:', error);
+      }
+    };
+
+    checkExistingCompany();
+  }, [navigate, user]);
 
   const steps = [
     {
@@ -86,36 +119,52 @@ const CompanySetup: React.FC = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // TODO: API call to save company data
-      console.log('Company data:', formData);
+      // Get user info from auth store or localStorage
+      const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
       
-      // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Prepare company data
+      const companyData = {
+        name: currentUser.companyName || currentUser.tenant?.name || 'Şirket',
+        code: currentUser.tenant?.code || `company_${Date.now()}`,
+        taxNumber: formData.taxNumber,
+        taxOffice: formData.taxOffice,
+        tradeRegisterNumber: formData.tradeRegisterNumber,
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        website: formData.website,
+        sector: formData.sector,
+        employeeCount: formData.employeeCount ? parseInt(formData.employeeCount.split('-')[0]) : undefined,
+        foundedYear: formData.foundedYear,
+        currency: formData.currency,
+        timezone: formData.timezone,
+        country: formData.country,
+        city: formData.city,
+        district: formData.district,
+        postalCode: formData.postalCode,
+        addressLine: formData.addressLine
+      };
+      
+      // Create company via API
+      await companyService.createCompany(companyData);
       
       message.success('Şirket kurulumu başarıyla tamamlandı!');
       
       // Navigate based on user role
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        const userRole = user.roles?.[0];
-        const tenantId = user.tenantId || user.tenant?.id;
-        
-        if (userRole === 'SystemAdmin') {
-          navigate('/master');
-        } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
-          navigate('/admin');
-        } else if (tenantId) {
-          navigate(`/app/${tenantId}/dashboard`);
-        } else {
-          navigate('/app/default');
-        }
-      } else {
+      const userRole = currentUser.roles?.[0];
+      const tenantId = currentUser.tenantId || currentUser.tenant?.id;
+      
+      if (userRole === 'SystemAdmin') {
+        navigate('/master');
+      } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
         navigate('/admin');
+      } else if (tenantId) {
+        navigate(`/app/${tenantId}/dashboard`);
+      } else {
+        navigate('/app/default');
       }
-    } catch (error) {
-      message.error('Şirket kurulumu sırasında bir hata oluştu.');
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Company setup error:', error);
+      message.error(error.response?.data?.message || 'Şirket kurulumu sırasında bir hata oluştu.');
     } finally {
       setLoading(false);
     }
