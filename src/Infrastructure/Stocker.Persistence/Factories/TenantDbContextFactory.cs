@@ -36,6 +36,9 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public TenantDbContext CreateDbContext(string connectionString)
     {
+        _logger.LogWarning("CreateDbContext called with connection string: {ConnectionString}", 
+            connectionString?.Replace("Password", "***HIDDEN***") ?? "NULL");
+        
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
         {
@@ -67,15 +70,27 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             _logger.LogInformation("TenantDbContextFactory.CreateDbContextAsync started for tenant {TenantId}", tenantId);
             
             _logger.LogInformation("Finding tenant {TenantId} in MasterDb", tenantId);
-            var tenant = await _masterDbContext.Tenants.FindAsync(tenantId);
+            _logger.LogInformation("MasterDb connection state: {State}", _masterDbContext.Database.GetConnectionString()?.Replace("Password", "***"));
+            
+            // Include gerekli değil, OwnsOne otomatik yükler
+            var tenant = await _masterDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
             if (tenant == null)
             {
                 _logger.LogError("Tenant with ID '{TenantId}' not found in MasterDb", tenantId);
                 throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
             }
             
-            _logger.LogWarning("Tenant {TenantId} found. Connection string: {ConnectionString}", 
-                tenantId, tenant.ConnectionString?.Value?.Replace("Password", "***HIDDEN***") ?? "NULL");
+            _logger.LogWarning("Tenant {TenantId} found. Name: {TenantName}, Code: {TenantCode}", 
+                tenantId, tenant.Name, tenant.Code);
+            _logger.LogWarning("Tenant connection string: {ConnectionString}", 
+                tenant.ConnectionString?.Value?.Replace("Password", "***HIDDEN***") ?? "NULL");
+
+            if (tenant.ConnectionString == null || string.IsNullOrEmpty(tenant.ConnectionString.Value))
+            {
+                _logger.LogError("Tenant {TenantId} has no connection string configured", tenantId);
+                throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured");
+            }
 
             // Set current tenant in the service
             _logger.LogInformation("Setting current tenant in TenantService for tenant {TenantId}", tenantId);
@@ -87,13 +102,26 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             
             // Test connection
             _logger.LogInformation("Testing database connection for tenant {TenantId}", tenantId);
-            var canConnect = await context.Database.CanConnectAsync();
-            _logger.LogInformation("Database connection test for tenant {TenantId}: {Result}", 
-                tenantId, canConnect ? "SUCCESS" : "FAILED");
+            _logger.LogInformation("Attempting to connect to database: {DatabaseName}", 
+                context.Database.GetConnectionString()?.Split(';')
+                    .FirstOrDefault(s => s.StartsWith("Database="))?.Replace("Database=", "") ?? "UNKNOWN");
             
-            if (!canConnect)
+            try
             {
-                throw new InvalidOperationException($"Cannot connect to tenant database for tenant {tenantId}");
+                var canConnect = await context.Database.CanConnectAsync();
+                _logger.LogInformation("Database connection test for tenant {TenantId}: {Result}", 
+                    tenantId, canConnect ? "SUCCESS" : "FAILED");
+                
+                if (!canConnect)
+                {
+                    throw new InvalidOperationException($"Cannot connect to tenant database for tenant {tenantId}");
+                }
+            }
+            catch (Exception connEx)
+            {
+                _logger.LogError(connEx, "Connection test failed for tenant {TenantId}. Error: {Error}", 
+                    tenantId, connEx.Message);
+                throw;
             }
             
             return context;

@@ -104,7 +104,8 @@ public static class ServiceCollectionExtensions
                 if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
                 {
                     logger?.LogInformation("Creating TenantUnitOfWork for tenant {TenantId}", currentTenantId.Value);
-                    var unitOfWork = factory.CreateAsync(currentTenantId.Value).GetAwaiter().GetResult();
+                    // Task.Run ile deadlock'ı önle
+                    var unitOfWork = Task.Run(async () => await factory.CreateAsync(currentTenantId.Value)).GetAwaiter().GetResult();
                     logger?.LogInformation("TenantUnitOfWork created successfully for tenant {TenantId}", currentTenantId.Value);
                     return unitOfWork;
                 }
@@ -113,7 +114,8 @@ public static class ServiceCollectionExtensions
                 // Create with a default/empty context
                 logger?.LogWarning("No tenant ID available, attempting to create default context with Guid.Empty");
                 var contextFactory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
-                var defaultContext = contextFactory.CreateDbContextAsync(Guid.Empty).GetAwaiter().GetResult();
+                // Task.Run ile deadlock'ı önle
+                var defaultContext = Task.Run(async () => await contextFactory.CreateDbContextAsync(Guid.Empty)).GetAwaiter().GetResult();
                 logger?.LogWarning("Default TenantUnitOfWork created with empty tenant ID - this may cause issues!");
                 return new TenantUnitOfWork(defaultContext);
             }
