@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
 using Stocker.Application.DTOs.Company;
@@ -16,7 +15,6 @@ namespace Stocker.API.Controllers.Tenant;
 [ApiController]
 [Route("api/tenant/companies")]
 [SwaggerTag("Tenant - Company Management")]
-[EnableCors("Production")]
 public class CompaniesController : ApiController
 {
     /// <summary>

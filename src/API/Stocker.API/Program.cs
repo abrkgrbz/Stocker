@@ -51,15 +51,22 @@ builder.Services.AddCors(options =>
                   .SetIsOriginAllowed(_ => true);
         });
     
-    // Production için policy - Açık ve net
+    // Production için daha güvenli bir policy
     options.AddPolicy("Production",
         policy =>
         {
-            policy.SetIsOriginAllowed(origin => true) // Tüm originlere izin ver
+            policy.WithOrigins(
+                    "https://stoocker.app", 
+                    "https://www.stoocker.app",
+                    "https://api.stoocker.app",
+                    "http://stoocker.app",
+                    "http://www.stoocker.app",
+                    "http://localhost:3000") // Development için
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .WithExposedHeaders("Content-Length", "Content-Type", "Authorization", "X-Requested-With", "*");
+                  .SetIsOriginAllowed(origin => true) // Geçici olarak tüm originlere izin ver
+                  .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
 
@@ -387,54 +394,30 @@ SerilogConfiguration.ConfigureRequestLogging(app);
 // Use Request Localization
 app.UseRequestLocalization();
 
-// Handle OPTIONS requests explicitly
-app.Use(async (context, next) =>
-{
-    if (context.Request.Method == "OPTIONS")
-    {
-        context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
-        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-TenantId");
-        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-        context.Response.Headers.Append("Access-Control-Max-Age", "86400");
-        context.Response.StatusCode = 204;
-        return;
-    }
-    await next();
-});
-
-// CORS MUST be before HTTPS redirection and Security Headers
-// Use CORS - En önce CORS middleware'i gelir
-if (app.Environment.IsProduction())
-{
-    app.UseCors("Production");
-    app.Logger.LogInformation("Using Production CORS policy");
-}
-else
-{
-    app.UseCors("AllowAll");
-    app.Logger.LogInformation("Using AllowAll CORS policy");
-}
-
 // HTTPS redirect'i sadece production'da kullan
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
-// Add Security Headers - CORS'tan sonra gelmelidir
+// Use CORS - Authentication'dan önce olmalı
+if (app.Environment.IsProduction())
+{
+    app.UseCors("Production");
+}
+else
+{
+    app.UseCors("AllowAll");
+}
+
+// Add Security Headers
 app.Use(async (context, next) =>
 {
-    // CORS preflight request'leri için security header'ları ekleme
-    if (context.Request.Method != "OPTIONS")
-    {
-        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-        context.Response.Headers.Append("X-Frame-Options", "DENY");
-        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-        // Content-Security-Policy CORS'u etkileyebilir, geçici olarak kaldırıyoruz
-        // context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
-    }
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
     await next();
 });
 
