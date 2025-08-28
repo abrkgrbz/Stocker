@@ -65,7 +65,7 @@ public class CompaniesController : ApiController
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to create company", 
                 GetUserEmail(), userRole);
-            return Forbid("Bu işlem için yetkiniz yok");
+            return StatusCode(403, new { message = "Bu işlem için yetkiniz yok" });
         }
 
         command.TenantId = tenantId.Value;
@@ -106,7 +106,7 @@ public class CompaniesController : ApiController
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to update company", 
                 GetUserEmail(), userRole);
-            return Forbid("Bu işlem için yetkiniz yok");
+            return StatusCode(403, new { message = "Bu işlem için yetkiniz yok" });
         }
 
         command.Id = id;
