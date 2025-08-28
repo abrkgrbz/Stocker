@@ -59,10 +59,14 @@ builder.Services.AddCors(options =>
                     "https://stoocker.app", 
                     "https://www.stoocker.app",
                     "https://api.stoocker.app",
+                    "http://stoocker.app",
+                    "http://www.stoocker.app",
                     "http://localhost:3000") // Development için
                   .AllowAnyMethod()
                   .AllowAnyHeader()
-                  .AllowCredentials();
+                  .AllowCredentials()
+                  .SetIsOriginAllowed(origin => true) // Geçici olarak tüm originlere izin ver
+                  .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
 
