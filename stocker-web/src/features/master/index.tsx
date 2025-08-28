@@ -6,3 +6,4 @@ export * from './pages/Settings';
 export * from './pages/Reports';
 export * from './pages/Monitoring';
 export * from './pages/Modules';
+export * from './pages/Migrations';

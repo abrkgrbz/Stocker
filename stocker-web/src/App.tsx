@@ -36,6 +36,7 @@ const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').t
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
 const MasterSubscriptionsPage = lazy(() => import('@/features/master/pages/Subscriptions').then(m => ({ default: m.MasterSubscriptionsPage })));
+const MasterMigrationsPage = lazy(() => import('@/features/master/pages/Migrations').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -188,6 +189,7 @@ function App() {
                   <Route path="monitoring/*" element={<div>System Monitoring</div>} />
                   <Route path="reports/*" element={<div>Reports</div>} />
                   <Route path="settings/*" element={<MasterSettingsPage />} />
+                  <Route path="migrations" element={<MasterMigrationsPage />} />
                 </Route>
 
                 {/* Admin Routes - For Tenant Admins */}

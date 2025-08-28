@@ -18,6 +18,7 @@ import {
   FileTextOutlined,
   BellOutlined,
   ControlOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar, Badge, Space, Tag } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -81,6 +82,11 @@ const menuItems = [
     path: '/master/users',
     name: 'Sistem Kullanıcıları',
     icon: <UserOutlined />,
+  },
+  {
+    path: '/master/migrations',
+    name: 'Migration Yönetimi',
+    icon: <DatabaseOutlined />,
   },
   {
     path: '/master/monitoring',
