@@ -40,13 +40,14 @@ public class MigrationController : ApiController
         try
         {
             var tenants = await _masterDbContext.Tenants
+                .AsNoTracking()
                 .Where(t => t.IsActive)
                 .Select(t => new
                 {
                     t.Id,
                     t.Name,
                     t.Code,
-                    t.ConnectionString
+                    ConnectionString = t.ConnectionString.Value
                 })
                 .ToListAsync();
 
@@ -57,7 +58,7 @@ public class MigrationController : ApiController
                 try
                 {
                     var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-                    optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+                    optionsBuilder.UseSqlServer(tenant.ConnectionString);
 
                     using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
                     
