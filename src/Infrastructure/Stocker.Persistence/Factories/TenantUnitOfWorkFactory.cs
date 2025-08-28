@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Repositories;
 
@@ -12,21 +13,54 @@ public interface ITenantUnitOfWorkFactory
 public class TenantUnitOfWorkFactory : ITenantUnitOfWorkFactory
 {
     private readonly ITenantDbContextFactory _contextFactory;
+    private readonly ILogger<TenantUnitOfWorkFactory> _logger;
 
-    public TenantUnitOfWorkFactory(ITenantDbContextFactory contextFactory)
+    public TenantUnitOfWorkFactory(
+        ITenantDbContextFactory contextFactory,
+        ILogger<TenantUnitOfWorkFactory> logger)
     {
         _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<ITenantUnitOfWork> CreateAsync(Guid tenantId)
     {
-        var context = await _contextFactory.CreateDbContextAsync(tenantId);
-        return new TenantUnitOfWork(context);
+        try
+        {
+            _logger.LogInformation("TenantUnitOfWorkFactory.CreateAsync started for tenant {TenantId}", tenantId);
+            
+            _logger.LogInformation("Creating TenantDbContext for tenant {TenantId}", tenantId);
+            var context = await _contextFactory.CreateDbContextAsync(tenantId);
+            
+            _logger.LogInformation("TenantDbContext created, now creating TenantUnitOfWork for tenant {TenantId}", tenantId);
+            var unitOfWork = new TenantUnitOfWork(context);
+            
+            _logger.LogInformation("TenantUnitOfWork created successfully for tenant {TenantId}", tenantId);
+            return unitOfWork;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create TenantUnitOfWork for tenant {TenantId}: {Message}", 
+                tenantId, ex.Message);
+            throw;
+        }
     }
 
     public async Task<ITenantUnitOfWork> CreateAsync(string tenantIdentifier)
     {
-        var context = await _contextFactory.CreateDbContextAsync(tenantIdentifier);
-        return new TenantUnitOfWork(context);
+        try
+        {
+            _logger.LogInformation("TenantUnitOfWorkFactory.CreateAsync started for tenant identifier {TenantIdentifier}", tenantIdentifier);
+            var context = await _contextFactory.CreateDbContextAsync(tenantIdentifier);
+            var unitOfWork = new TenantUnitOfWork(context);
+            _logger.LogInformation("TenantUnitOfWork created successfully for tenant identifier {TenantIdentifier}", tenantIdentifier);
+            return unitOfWork;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create TenantUnitOfWork for tenant identifier {TenantIdentifier}: {Message}", 
+                tenantIdentifier, ex.Message);
+            throw;
+        }
     }
 }
