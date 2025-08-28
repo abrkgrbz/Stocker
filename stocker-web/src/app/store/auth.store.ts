@@ -78,6 +78,15 @@ export const useAuthStore = create<AuthState>()(
             localStorage.setItem(TOKEN_KEY, accessToken);
             localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
             
+            // Save tenant ID if available
+            if (user?.tenantId) {
+              localStorage.setItem('stocker_tenant', user.tenantId);
+              console.log('Tenant ID saved:', user.tenantId);
+            } else if (user?.tenant?.id) {
+              localStorage.setItem('stocker_tenant', user.tenant.id);
+              console.log('Tenant ID saved from tenant object:', user.tenant.id);
+            }
+            
             set({
               user,
               token: accessToken,
@@ -140,6 +149,14 @@ export const useAuthStore = create<AuthState>()(
           try {
             const response = await authApi.getCurrentUser();
             const userData = response.data || response;
+            
+            // Save tenant ID if available
+            if (userData?.tenantId) {
+              localStorage.setItem('stocker_tenant', userData.tenantId);
+            } else if (userData?.tenant?.id) {
+              localStorage.setItem('stocker_tenant', userData.tenant.id);
+            }
+            
             set({
               user: userData,
               token,
