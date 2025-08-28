@@ -74,7 +74,7 @@ public class TenantDbContextFactory : ITenantDbContextFactory
                 throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
             }
             
-            _logger.LogInformation("Tenant {TenantId} found. Connection string: {ConnectionString}", 
+            _logger.LogWarning("Tenant {TenantId} found. Connection string: {ConnectionString}", 
                 tenantId, tenant.ConnectionString?.Value?.Replace("Password", "***HIDDEN***") ?? "NULL");
 
             // Set current tenant in the service
