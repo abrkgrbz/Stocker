@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber } from 'antd';
+import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber, message } from 'antd';
 import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import companyService from '@/services/companyService';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -155,11 +155,14 @@ const CompanySetup: React.FC = () => {
         foundedDate: formData.foundedYear ? `${formData.foundedYear}-01-01` : new Date().toISOString().split('T')[0],
         currency: formData.currency,
         timezone: formData.timezone, // This will be a timezone string like 'Europe/Istanbul'
-        country: formData.country,
-        city: formData.city,
-        district: formData.district,
-        postalCode: formData.postalCode,
-        addressLine: formData.addressLine
+        // Address should be a nested object
+        address: {
+          country: formData.country,
+          city: formData.city,
+          district: formData.district,
+          postalCode: formData.postalCode,
+          addressLine: formData.addressLine
+        }
       };
       
       // Create company via API
