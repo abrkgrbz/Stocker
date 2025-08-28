@@ -98,9 +98,19 @@ public static class ServiceCollectionExtensions
                 
                 if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
                 {
-                    // Task.Run ile deadlock'ı önle
-                    var unitOfWork = Task.Run(async () => await factory.CreateAsync(currentTenantId.Value)).GetAwaiter().GetResult();
-                    return unitOfWork;
+                    logger?.LogWarning("ITenantUnitOfWork creating for tenant {TenantId}...", currentTenantId.Value);
+                    try
+                    {
+                        // Task.Run ile deadlock'ı önle
+                        var unitOfWork = Task.Run(async () => await factory.CreateAsync(currentTenantId.Value)).GetAwaiter().GetResult();
+                        logger?.LogWarning("ITenantUnitOfWork created successfully for tenant {TenantId}", currentTenantId.Value);
+                        return unitOfWork;
+                    }
+                    catch (Exception factoryEx)
+                    {
+                        logger?.LogError(factoryEx, "Failed to create TenantUnitOfWork via factory: {Message}", factoryEx.Message);
+                        throw;
+                    }
                 }
                 
                 // For non-tenant specific operations or when tenant is not yet resolved
