@@ -96,7 +96,8 @@ public sealed class Company : TenantAggregateRoot
         int? employeeCount = null,
         string? taxOffice = null,
         string? tradeRegisterNumber = null,
-        string? website = null)
+        string? website = null,
+        DateTime? foundedDate = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -130,7 +131,8 @@ public sealed class Company : TenantAggregateRoot
             fax,
             website,
             sector,
-            employeeCount);
+            employeeCount,
+            foundedDate);
     }
 
     public void Update(

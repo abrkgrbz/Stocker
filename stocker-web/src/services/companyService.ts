@@ -87,6 +87,8 @@ class CompanyService {
         postalCode: data.postalCode || '',
         addressLine: data.addressLine
       }
+    }, {
+      timeout: 120000 // 2 minutes for company creation
     });
     return response.data;
   }

@@ -7,7 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000, // Increased to 60 seconds for long operations
   headers: {
     'Content-Type': 'application/json',
   },
