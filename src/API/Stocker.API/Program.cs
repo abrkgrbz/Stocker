@@ -51,22 +51,14 @@ builder.Services.AddCors(options =>
                   .SetIsOriginAllowed(_ => true);
         });
     
-    // Production için daha güvenli bir policy
+    // Production için geçici olarak tüm origin'lere izin ver
     options.AddPolicy("Production",
         policy =>
         {
             policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(origin =>
-                  {
-                      // Allow all stoocker.app subdomains and localhost for development
-                      var uri = new Uri(origin);
-                      return uri.Host.EndsWith("stoocker.app") || 
-                             uri.Host == "stoocker.app" ||
-                             uri.Host == "localhost" ||
-                             uri.Host == "127.0.0.1";
-                  })
+                  .SetIsOriginAllowed(_ => true) // Tüm origin'lere izin ver
                   .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
@@ -386,22 +378,7 @@ app.UseSwaggerUI(c =>
     c.DocumentTitle = "Stocker API Documentation";
 });
 
-// Add Global Exception Handling Middleware - En başta olmalı
-app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-
-// Configure Serilog Request Logging
-SerilogConfiguration.ConfigureRequestLogging(app);
-
-// Use Request Localization
-app.UseRequestLocalization();
-
-// HTTPS redirect'i sadece production'da kullan
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-
-// Use CORS - Authentication'dan önce olmalı
+// Use CORS - En başta olmalı
 // Check for production domains in the current host
 var currentHost = app.Configuration["ASPNETCORE_URLS"] ?? "";
 var isProductionDomain = currentHost.Contains("stoocker.app") || 
@@ -416,6 +393,21 @@ else
 {
     app.Logger.LogInformation("Using AllowAll CORS policy");
     app.UseCors("AllowAll");
+}
+
+// Add Global Exception Handling Middleware
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// Configure Serilog Request Logging
+SerilogConfiguration.ConfigureRequestLogging(app);
+
+// Use Request Localization
+app.UseRequestLocalization();
+
+// HTTPS redirect'i sadece production'da kullan
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
 }
 
 // Add Security Headers
