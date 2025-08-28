@@ -90,23 +90,16 @@ public static class ServiceCollectionExtensions
             
             try
             {
-                logger?.LogInformation("Creating ITenantUnitOfWork instance...");
-                
                 var tenantService = serviceProvider.GetService<ITenantService>();
                 var factory = serviceProvider.GetRequiredService<ITenantUnitOfWorkFactory>();
                 
                 // Get current tenant ID from tenant service
                 var currentTenantId = tenantService?.GetCurrentTenantId();
                 
-                logger?.LogInformation("Current tenant ID from service: {TenantId}", 
-                    currentTenantId?.ToString() ?? "NULL");
-                
                 if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
                 {
-                    logger?.LogInformation("Creating TenantUnitOfWork for tenant {TenantId}", currentTenantId.Value);
                     // Task.Run ile deadlock'ı önle
                     var unitOfWork = Task.Run(async () => await factory.CreateAsync(currentTenantId.Value)).GetAwaiter().GetResult();
-                    logger?.LogInformation("TenantUnitOfWork created successfully for tenant {TenantId}", currentTenantId.Value);
                     return unitOfWork;
                 }
                 

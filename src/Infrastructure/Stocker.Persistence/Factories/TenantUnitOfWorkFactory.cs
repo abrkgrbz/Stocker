@@ -27,15 +27,10 @@ public class TenantUnitOfWorkFactory : ITenantUnitOfWorkFactory
     {
         try
         {
-            _logger.LogInformation("TenantUnitOfWorkFactory.CreateAsync started for tenant {TenantId}", tenantId);
-            
-            _logger.LogInformation("Creating TenantDbContext for tenant {TenantId}", tenantId);
             var context = await _contextFactory.CreateDbContextAsync(tenantId);
             
-            _logger.LogInformation("TenantDbContext created, now creating TenantUnitOfWork for tenant {TenantId}", tenantId);
             var unitOfWork = new TenantUnitOfWork(context);
             
-            _logger.LogInformation("TenantUnitOfWork created successfully for tenant {TenantId}", tenantId);
             return unitOfWork;
         }
         catch (Exception ex)

@@ -55,17 +55,18 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Production",
         policy =>
         {
-            policy.WithOrigins(
-                    "https://stoocker.app", 
-                    "https://www.stoocker.app",
-                    "https://api.stoocker.app",
-                    "http://stoocker.app",
-                    "http://www.stoocker.app",
-                    "http://localhost:3000") // Development için
-                  .AllowAnyMethod()
+            policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(origin => true) // Geçici olarak tüm originlere izin ver
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      // Allow all stoocker.app subdomains and localhost for development
+                      var uri = new Uri(origin);
+                      return uri.Host.EndsWith("stoocker.app") || 
+                             uri.Host == "stoocker.app" ||
+                             uri.Host == "localhost" ||
+                             uri.Host == "127.0.0.1";
+                  })
                   .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
@@ -401,12 +402,19 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Use CORS - Authentication'dan önce olmalı
-if (app.Environment.IsProduction())
+// Check for production domains in the current host
+var currentHost = app.Configuration["ASPNETCORE_URLS"] ?? "";
+var isProductionDomain = currentHost.Contains("stoocker.app") || 
+                        app.Environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase);
+
+if (isProductionDomain)
 {
+    app.Logger.LogInformation("Using Production CORS policy");
     app.UseCors("Production");
 }
 else
 {
+    app.Logger.LogInformation("Using AllowAll CORS policy");
     app.UseCors("AllowAll");
 }
 
