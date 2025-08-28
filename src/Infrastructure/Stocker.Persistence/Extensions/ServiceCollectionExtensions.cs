@@ -86,22 +86,42 @@ public static class ServiceCollectionExtensions
         // Register ITenantUnitOfWork as a scoped service
         services.AddScoped<ITenantUnitOfWork>(serviceProvider =>
         {
-            var tenantService = serviceProvider.GetService<ITenantService>();
-            var factory = serviceProvider.GetRequiredService<ITenantUnitOfWorkFactory>();
+            var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<TenantUnitOfWork>>();
             
-            // Get current tenant ID from tenant service
-            var currentTenantId = tenantService?.GetCurrentTenantId();
-            
-            if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
+            try
             {
-                return factory.CreateAsync(currentTenantId.Value).GetAwaiter().GetResult();
+                logger?.LogInformation("Creating ITenantUnitOfWork instance...");
+                
+                var tenantService = serviceProvider.GetService<ITenantService>();
+                var factory = serviceProvider.GetRequiredService<ITenantUnitOfWorkFactory>();
+                
+                // Get current tenant ID from tenant service
+                var currentTenantId = tenantService?.GetCurrentTenantId();
+                
+                logger?.LogInformation("Current tenant ID from service: {TenantId}", 
+                    currentTenantId?.ToString() ?? "NULL");
+                
+                if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
+                {
+                    logger?.LogInformation("Creating TenantUnitOfWork for tenant {TenantId}", currentTenantId.Value);
+                    var unitOfWork = factory.CreateAsync(currentTenantId.Value).GetAwaiter().GetResult();
+                    logger?.LogInformation("TenantUnitOfWork created successfully for tenant {TenantId}", currentTenantId.Value);
+                    return unitOfWork;
+                }
+                
+                // For non-tenant specific operations or when tenant is not yet resolved
+                // Create with a default/empty context
+                logger?.LogWarning("No tenant ID available, attempting to create default context with Guid.Empty");
+                var contextFactory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
+                var defaultContext = contextFactory.CreateDbContextAsync(Guid.Empty).GetAwaiter().GetResult();
+                logger?.LogWarning("Default TenantUnitOfWork created with empty tenant ID - this may cause issues!");
+                return new TenantUnitOfWork(defaultContext);
             }
-            
-            // For non-tenant specific operations or when tenant is not yet resolved
-            // Create with a default/empty context
-            var contextFactory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
-            var defaultContext = contextFactory.CreateDbContextAsync(Guid.Empty).GetAwaiter().GetResult();
-            return new TenantUnitOfWork(defaultContext);
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Failed to create ITenantUnitOfWork: {Message}", ex.Message);
+                throw;
+            }
         });
 
         // Add Tenant Services
