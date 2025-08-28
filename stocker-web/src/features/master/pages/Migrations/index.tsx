@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Space, Tag, message, Modal, Spin, Alert, Tooltip, Badge, Divider } from 'antd';
 import { SyncOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DatabaseOutlined, HistoryOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import api from '@/services/api';
+import Swal from 'sweetalert2';
 import './styles.css';
 
 interface TenantMigration {
@@ -48,104 +49,139 @@ const MigrationsPage: React.FC = () => {
   };
 
   const applyMigrationToTenant = async (tenantId: string, tenantName: string) => {
-    Modal.confirm({
+    console.log('Migration uygula clicked:', { tenantId, tenantName });
+    
+    const result = await Swal.fire({
       title: 'Migration Uygula',
-      content: (
+      html: `
         <div>
-          <p><strong>{tenantName}</strong> tenant'ına migration'lar uygulanacak.</p>
-          <Alert
-            message="Dikkat"
-            description="Bu işlem database şemasını değiştirecektir. İşlem geri alınamaz!"
-            type="warning"
-            showIcon
-            style={{ marginTop: 12 }}
-          />
+          <p><strong>${tenantName}</strong> tenant'ına migration'lar uygulanacak.</p>
+          <div style="background-color: #fff2e8; border: 1px solid #faad14; border-radius: 4px; padding: 12px; margin-top: 12px;">
+            <strong style="color: #faad14;">⚠️ Dikkat</strong><br/>
+            Bu işlem database şemasını değiştirecektir. İşlem geri alınamaz!
+          </div>
         </div>
-      ),
-      okText: 'Uygula',
-      cancelText: 'İptal',
-      okType: 'danger',
-      onOk: async () => {
-        setApplyingTo(tenantId);
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Uygula',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#ff4d4f',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        console.log('PreConfirm started for tenant:', tenantId);
         try {
           const response = await api.post(`/api/master/migrations/apply/${tenantId}`);
-          message.success(response.data.message || 'Migration başarıyla uygulandı');
-          await fetchMigrations();
+          console.log('API Response:', response.data);
+          return response.data;
         } catch (error: any) {
-          message.error(error.response?.data?.message || 'Migration uygulanamadı');
-          console.error('Error applying migration:', error);
-        } finally {
-          setApplyingTo(null);
+          console.error('API Error:', error);
+          Swal.showValidationMessage(
+            `Hata: ${error.response?.data?.message || error.message || 'Migration uygulanamadı'}`
+          );
+          throw error;
         }
-      }
+      },
+      allowOutsideClick: () => !Swal.isLoading()
     });
+
+    if (result.isConfirmed) {
+      setApplyingTo(tenantId);
+      
+      await Swal.fire({
+        title: 'Başarılı!',
+        html: `
+          <div>
+            <p>${result.value.message || 'Migration başarıyla uygulandı'}</p>
+            ${result.value.appliedMigrations && result.value.appliedMigrations.length > 0 ? `
+              <div style="margin-top: 12px; text-align: left;">
+                <strong>Uygulanan Migration'lar:</strong>
+                <ul style="margin-top: 8px;">
+                  ${result.value.appliedMigrations.map((m: string) => `<li>${m}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `,
+        icon: 'success',
+        confirmButtonColor: '#52c41a'
+      });
+      
+      await fetchMigrations();
+      setApplyingTo(null);
+    }
   };
 
   const applyMigrationsToAll = async () => {
-    Modal.confirm({
+    const result = await Swal.fire({
       title: 'Tüm Tenantlara Migration Uygula',
-      content: (
+      html: `
         <div>
           <p>Tüm aktif tenant'lara bekleyen migration'lar uygulanacak.</p>
-          <Alert
-            message="Kritik İşlem"
-            description="Bu işlem TÜM tenant database'lerini güncelleyecektir. İşlem geri alınamaz ve uzun sürebilir!"
-            type="error"
-            showIcon
-            style={{ marginTop: 12 }}
-          />
+          <div style="background-color: #fff1f0; border: 1px solid #ff4d4f; border-radius: 4px; padding: 12px; margin-top: 12px;">
+            <strong style="color: #ff4d4f;">🚨 Kritik İşlem</strong><br/>
+            Bu işlem TÜM tenant database'lerini güncelleyecektir. İşlem geri alınamaz ve uzun sürebilir!
+          </div>
         </div>
-      ),
-      okText: 'Tümüne Uygula',
-      cancelText: 'İptal',
-      okType: 'danger',
-      onOk: async () => {
-        const hide = message.loading('Migrationlar uygulanıyor...', 0);
-        setLoading(true);
+      `,
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonText: 'Tümüne Uygula',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#ff4d4f',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
         try {
           const response = await api.post('/api/master/migrations/apply-all');
-          hide();
-          
-          // Show results modal
-          Modal.info({
-            title: 'Migration Sonuçları',
-            width: 800,
-            content: (
-              <div>
-                <p>{response.data.message}</p>
-                <Divider />
-                <div style={{ maxHeight: 400, overflow: 'auto' }}>
-                  {response.data.results.map((result: MigrationResult) => (
-                    <div key={result.tenantId} style={{ marginBottom: 12 }}>
-                      <Tag color={result.success ? 'success' : 'error'}>
-                        {result.success ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
-                      </Tag>
-                      <strong>{result.tenantName}:</strong> {result.message}
-                      {result.error && (
-                        <Alert
-                          message={result.error}
-                          type="error"
-                          style={{ marginTop: 4 }}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ),
-            okText: 'Tamam'
-          });
-          
-          await fetchMigrations();
+          return response.data;
         } catch (error: any) {
-          hide();
-          message.error(error.response?.data?.message || 'Migrationlar uygulanamadı');
-          console.error('Error applying migrations to all:', error);
-        } finally {
-          setLoading(false);
+          Swal.showValidationMessage(
+            `Hata: ${error.response?.data?.message || error.message || 'Migrationlar uygulanamadı'}`
+          );
+          throw error;
         }
-      }
+      },
+      allowOutsideClick: () => !Swal.isLoading()
     });
+
+    if (result.isConfirmed) {
+      setLoading(true);
+      
+      // Show results
+      let resultsHtml = `<p>${result.value.message}</p><hr/>`;
+      resultsHtml += '<div style="max-height: 400px; overflow: auto; text-align: left;">';
+      
+      result.value.results.forEach((res: MigrationResult) => {
+        const icon = res.success ? '✅' : '❌';
+        const color = res.success ? '#52c41a' : '#ff4d4f';
+        resultsHtml += `
+          <div style="margin-bottom: 12px; padding: 8px; border-left: 3px solid ${color};">
+            <span>${icon}</span>
+            <strong>${res.tenantName}:</strong> ${res.message}
+            ${res.error ? `<div style="color: #ff4d4f; margin-top: 4px; font-size: 12px;">${res.error}</div>` : ''}
+            ${res.appliedMigrations && res.appliedMigrations.length > 0 ? `
+              <div style="margin-top: 4px; font-size: 12px;">
+                <em>Uygulanan: ${res.appliedMigrations.join(', ')}</em>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      resultsHtml += '</div>';
+      
+      await Swal.fire({
+        title: 'Migration Sonuçları',
+        html: resultsHtml,
+        icon: result.value.failureCount > 0 ? 'warning' : 'success',
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: result.value.failureCount > 0 ? '#faad14' : '#52c41a',
+        width: 800
+      });
+      
+      await fetchMigrations();
+      setLoading(false);
+    }
   };
 
   const showMigrationHistory = async (tenant: TenantMigration) => {
