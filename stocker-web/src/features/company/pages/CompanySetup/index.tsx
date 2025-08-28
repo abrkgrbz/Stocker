@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Form, Input, Select, Steps, Card, Row, Col, message, InputNumber } from 'antd';
+import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber } from 'antd';
 import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import companyService from '@/services/companyService';
 import { useAuthStore } from '@/app/store/auth.store';
 import { getCitiesForSelect, getDistrictsByCityForSelect } from '@/data/turkey-cities';
+import { showApiResponse } from '@/shared/utils/sweetAlert';
+import Swal from 'sweetalert2';
 import './style.css';
 
 const { Step } = Steps;
@@ -126,7 +128,9 @@ const CompanySetup: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
+    // Show loading
+    showApiResponse.loading('Şirket bilgileri kaydediliyor...');
+    
     try {
       // Get user info from auth store or localStorage
       const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
@@ -161,7 +165,24 @@ const CompanySetup: React.FC = () => {
       // Create company via API
       await companyService.createCompany(companyData);
       
-      message.success('Şirket kurulumu başarıyla tamamlandı!');
+      // Show success message
+      await Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: 'Şirket kurulumu başarıyla tamamlandı.',
+        html: `
+          <div style="text-align: left;">
+            <p><strong>Şirket Adı:</strong> ${companyData.name}</p>
+            <p><strong>Vergi No:</strong> ${companyData.taxNumber}</p>
+            <p><strong>Vergi Dairesi:</strong> ${companyData.taxOffice || '-'}</p>
+            <p style="margin-top: 10px;">Yönlendiriliyorsunuz...</p>
+          </div>
+        `,
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: '#667eea',
+        timer: 3000,
+        timerProgressBar: true
+      });
       
       // Navigate based on user role
       const userRole = currentUser.roles?.[0];
@@ -178,7 +199,67 @@ const CompanySetup: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Company setup error:', error);
-      message.error(error.response?.data?.message || 'Şirket kurulumu sırasında bir hata oluştu.');
+      
+      // Close loading
+      Swal.close();
+      
+      // Prepare error details
+      let errorMessage = 'Şirket kurulumu sırasında bir hata oluştu.';
+      let errorDetails = '';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        
+        // Check for validation errors
+        if (data.errors) {
+          errorDetails = '<div style="text-align: left; margin-top: 10px;">';
+          if (typeof data.errors === 'object') {
+            Object.keys(data.errors).forEach(field => {
+              const fieldErrors = Array.isArray(data.errors[field]) ? data.errors[field] : [data.errors[field]];
+              fieldErrors.forEach((err: string) => {
+                errorDetails += `<p style="margin: 5px 0;"><strong>${field}:</strong> ${err}</p>`;
+              });
+            });
+          } else if (Array.isArray(data.errors)) {
+            data.errors.forEach((err: string) => {
+              errorDetails += `<p style="margin: 5px 0;">• ${err}</p>`;
+            });
+          } else {
+            errorDetails += `<p>${data.errors}</p>`;
+          }
+          errorDetails += '</div>';
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (data.detail) {
+          errorMessage = data.detail;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Show detailed error message
+      await Swal.fire({
+        icon: 'error',
+        title: 'Hata!',
+        text: errorMessage,
+        html: errorDetails || undefined,
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: '#667eea',
+        footer: error.response?.status === 403 ? 
+          '<p style="color: #666;">Bu işlem için yetkiniz bulunmuyor.</p>' : 
+          error.response?.status === 401 ? 
+          '<p style="color: #666;">Oturum süreniz dolmuş olabilir. Lütfen tekrar giriş yapın.</p>' : 
+          undefined
+      });
+      
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }

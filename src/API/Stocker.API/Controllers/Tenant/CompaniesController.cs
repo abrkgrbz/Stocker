@@ -61,11 +61,21 @@ public class CompaniesController : ApiController
 
         // Check user role
         var userRole = GetUserRole();
-        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin")
+        var userEmail = GetUserEmail();
+        
+        Logger.LogInformation("CreateCompany - User: {Email}, Role: {Role}, TenantId: {TenantId}", 
+            userEmail, userRole ?? "NO_ROLE", tenantId);
+        
+        // TenantOwner role'ünü de ekleyelim (RegisterTenantCommandHandler'da bu role veriliyor)
+        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin" && userRole != "TenantOwner")
         {
-            Logger.LogWarning("User {Email} with role {Role} attempted to create company", 
-                GetUserEmail(), userRole);
-            return StatusCode(403, new { message = "Bu işlem için yetkiniz yok" });
+            Logger.LogWarning("User {Email} with role {Role} attempted to create company - DENIED", 
+                userEmail, userRole ?? "NO_ROLE");
+            return StatusCode(403, new { 
+                message = "Bu işlem için yetkiniz yok",
+                currentRole = userRole ?? "NO_ROLE",
+                allowedRoles = new[] { "TenantAdmin", "Admin", "SystemAdmin", "TenantOwner" }
+            });
         }
 
         command.TenantId = tenantId.Value;
@@ -102,11 +112,18 @@ public class CompaniesController : ApiController
 
         // Check user role
         var userRole = GetUserRole();
-        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin")
+        var userEmail = GetUserEmail();
+        
+        // TenantOwner role'ünü de ekleyelim
+        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin" && userRole != "TenantOwner")
         {
-            Logger.LogWarning("User {Email} with role {Role} attempted to update company", 
-                GetUserEmail(), userRole);
-            return StatusCode(403, new { message = "Bu işlem için yetkiniz yok" });
+            Logger.LogWarning("User {Email} with role {Role} attempted to update company - DENIED", 
+                userEmail, userRole ?? "NO_ROLE");
+            return StatusCode(403, new { 
+                message = "Bu işlem için yetkiniz yok",
+                currentRole = userRole ?? "NO_ROLE",
+                allowedRoles = new[] { "TenantAdmin", "Admin", "SystemAdmin", "TenantOwner" }
+            });
         }
 
         command.Id = id;
