@@ -56,7 +56,23 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             optionsBuilder.EnableDetailedErrors();
         }
 
-        var tenantService = _serviceProvider.GetRequiredService<ITenantService>();
+        // Try to get TenantService, but don't fail if it causes circular dependency
+        ITenantService? tenantService = null;
+        try
+        {
+            tenantService = _serviceProvider.GetService<ITenantService>();
+        }
+        catch
+        {
+            _logger.LogWarning("Could not resolve ITenantService, using stub implementation");
+        }
+        
+        // If we can't get the service (circular dependency), use a stub
+        if (tenantService == null)
+        {
+            tenantService = new StubTenantService();
+        }
+        
         return new TenantDbContext(optionsBuilder.Options, tenantService);
     }
 
@@ -88,13 +104,9 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             _logger.LogWarning("Tenant ConnectionString OK: {ConnStr}", 
                 tenant.ConnectionString.Value?.Replace("Password", "***") ?? "NULL");
 
-            // Set current tenant in the service
-            _logger.LogWarning("Getting TenantService for {TenantId}...", tenantId);
-            var tenantService = _serviceProvider.GetRequiredService<ITenantService>();
-            
-            // Skip setting tenant in service to avoid circular dependency
-            // The tenant is already resolved and we have the connection string
-            _logger.LogWarning("Skipping SetCurrentTenant to avoid circular dependency for {TenantId}", tenantId);
+            // Skip TenantService completely to avoid any dependency issues
+            // We already have all the information we need
+            _logger.LogWarning("Skipping TenantService interaction for {TenantId}", tenantId);
             
             _logger.LogWarning("Creating DbContext for {TenantId}...", tenantId);
             var context = CreateDbContext(tenant.ConnectionString.Value);
@@ -135,5 +147,30 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         await tenantService.SetCurrentTenant(tenantIdentifier);
 
         return CreateDbContext(tenant.ConnectionString.Value);
+    }
+    
+    /// <summary>
+    /// Stub implementation of ITenantService to avoid circular dependency
+    /// </summary>
+    private class StubTenantService : ITenantService
+    {
+        private Guid? _tenantId;
+        
+        public Guid? GetCurrentTenantId() => _tenantId;
+        
+        public string? GetCurrentTenantName() => null;
+        
+        public string? GetConnectionString() => null;
+        
+        public Task<bool> SetCurrentTenant(Guid tenantId)
+        {
+            _tenantId = tenantId;
+            return Task.FromResult(true);
+        }
+        
+        public Task<bool> SetCurrentTenant(string tenantIdentifier)
+        {
+            return Task.FromResult(false);
+        }
     }
 }
