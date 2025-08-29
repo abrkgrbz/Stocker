@@ -76,12 +76,18 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
                 fax = faxResult.Value;
             }
 
+            // Provide default values if missing
+            var country = !string.IsNullOrWhiteSpace(request.Address?.Country) ? request.Address.Country : "Türkiye";
+            var city = !string.IsNullOrWhiteSpace(request.Address?.City) ? request.Address.City : "İstanbul";
+            var district = !string.IsNullOrWhiteSpace(request.Address?.District) ? request.Address.District : "Merkez";
+            var addressLine = !string.IsNullOrWhiteSpace(request.Address?.AddressLine) ? request.Address.AddressLine : "Adres bilgisi girilmemiş";
+            
             var addressResult = CompanyAddress.Create(
-                country: request.Address.Country,
-                city: request.Address.City,
-                district: request.Address.District,
-                postalCode: request.Address.PostalCode,
-                addressLine: request.Address.AddressLine);
+                country: country,
+                city: city,
+                district: district,
+                postalCode: request.Address?.PostalCode,
+                addressLine: addressLine);
             
             if (addressResult.IsFailure)
             {
