@@ -41,7 +41,6 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     
     private TenantDbContext CreateDbContextWithTenantId(string connectionString, Guid? tenantId)
     {
-        _logger.LogWarning("CreateDbContext: Building options...");
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
         {
@@ -64,16 +63,13 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
         // Always use StubTenantService to avoid circular dependency
         // TenantService depends on MasterDbContext which may not be fully initialized yet
-        _logger.LogWarning("CreateDbContext: Using StubTenantService to avoid circular dependency");
         var stubService = new StubTenantService();
         if (tenantId.HasValue)
         {
             stubService.SetTenantId(tenantId.Value);
         }
         
-        _logger.LogWarning("CreateDbContext: Creating TenantDbContext instance...");
         var context = new TenantDbContext(optionsBuilder.Options, stubService);
-        _logger.LogWarning("CreateDbContext: TenantDbContext instance created");
         return context;
     }
 
@@ -81,14 +77,8 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     {
         try
         {
-            _logger.LogWarning("CreateDbContextAsync START for tenant {TenantId}", tenantId);
-            
-            // Include gerekli değil, OwnsOne otomatik yükler
-            _logger.LogWarning("Querying MasterDb for tenant {TenantId}...", tenantId);
             var tenant = await _masterDbContext.Tenants
                 .FirstOrDefaultAsync(t => t.Id == tenantId);
-            
-            _logger.LogWarning("Query completed. Tenant found: {Found}", tenant != null);
             
             if (tenant == null)
             {
@@ -96,28 +86,16 @@ public class TenantDbContextFactory : ITenantDbContextFactory
                 throw new InvalidOperationException($"Tenant with ID '{tenantId}' not found.");
             }
             
-            _logger.LogWarning("Tenant ConnectionString check for {TenantId}...", tenantId);
             if (tenant.ConnectionString == null || string.IsNullOrEmpty(tenant.ConnectionString.Value))
             {
                 _logger.LogError("Tenant {TenantId} has no connection string configured", tenantId);
                 throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured");
             }
-            _logger.LogWarning("Tenant ConnectionString OK: {ConnStr}", 
-                tenant.ConnectionString.Value?.Replace("Password", "***") ?? "NULL");
 
-            // Skip TenantService completely to avoid any dependency issues
-            // We already have all the information we need
-            _logger.LogWarning("Skipping TenantService interaction for {TenantId}", tenantId);
-            
-            _logger.LogWarning("Creating DbContext for {TenantId}...", tenantId);
             var context = CreateDbContextWithTenantId(tenant.ConnectionString.Value, tenantId);
-            _logger.LogWarning("DbContext created for {TenantId}", tenantId);
             
             // Test connection
-            _logger.LogWarning("Testing connection for {TenantId}...", tenantId);
             var canConnect = await context.Database.CanConnectAsync();
-            _logger.LogWarning("Connection test result for {TenantId}: {Result}", tenantId, canConnect);
-            
             if (!canConnect)
             {
                 throw new InvalidOperationException($"Cannot connect to tenant database for tenant {tenantId}");

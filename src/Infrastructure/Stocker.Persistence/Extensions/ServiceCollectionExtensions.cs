@@ -98,12 +98,10 @@ public static class ServiceCollectionExtensions
                 
                 if (currentTenantId.HasValue && currentTenantId.Value != Guid.Empty)
                 {
-                    logger?.LogWarning("ITenantUnitOfWork creating for tenant {TenantId}...", currentTenantId.Value);
                     try
                     {
                         // Task.Run ile deadlock'ı önle
                         var unitOfWork = Task.Run(async () => await factory.CreateAsync(currentTenantId.Value)).GetAwaiter().GetResult();
-                        logger?.LogWarning("ITenantUnitOfWork created successfully for tenant {TenantId}", currentTenantId.Value);
                         return unitOfWork;
                     }
                     catch (Exception factoryEx)

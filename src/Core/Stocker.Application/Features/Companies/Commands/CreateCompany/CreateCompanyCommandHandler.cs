@@ -30,10 +30,7 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
     {
         try
         {
-            _logger.LogInformation("Starting CreateCompanyCommand handler for TenantId: {TenantId}", request.TenantId);
-            
             // Check if company already exists for this tenant
-            _logger.LogInformation("Checking for existing company...");
             var existingCompany = await _unitOfWork.Repository<Company>()
                 .AsQueryable()
                 .FirstOrDefaultAsync(c => c.TenantId == request.TenantId, cancellationToken);
@@ -101,7 +98,6 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
                     : DateTime.UtcNow);
 
             // Create company
-            _logger.LogInformation("Creating company entity...");
             var company = Company.Create(
                 tenantId: request.TenantId,
                 name: request.Name,
@@ -121,13 +117,8 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
                 foundedDate: foundedDate);
 
             // Save to database
-            _logger.LogInformation("Adding company to repository...");
             await _unitOfWork.Repository<Company>().AddAsync(company, cancellationToken);
-            
-            _logger.LogInformation("Saving changes to database...");
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Company created successfully for tenant {TenantId}", request.TenantId);
 
             var dto = _mapper.Map<CompanyDto>(company);
             return Result<CompanyDto>.Success(dto);
