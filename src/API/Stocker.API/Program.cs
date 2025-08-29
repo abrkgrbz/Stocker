@@ -309,11 +309,11 @@ builder.Services.AddAuthorization(options =>
 {
     // System Admin - Full system access
     options.AddPolicy("SystemAdminPolicy", policy =>
-        policy.RequireRole("SystemAdmin"));
+        policy.RequireRole("SistemYoneticisi"));
     
     // Tenant Admin - Tenant-scoped access
     options.AddPolicy("TenantAdminPolicy", policy =>
-        policy.RequireRole("TenantAdmin", "SystemAdmin"));
+        policy.RequireRole("FirmaYoneticisi", "SistemYoneticisi"));
     
     // Regular User
     options.AddPolicy("UserPolicy", policy =>
