@@ -246,7 +246,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
     private async Task SendVerificationEmail(Tenant tenant, MasterUser user, EmailVerificationToken verificationToken)
     {
         var baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" 
-            ? "https://app.stoocker.app" 
+            ? "https://stoocker.app" 
             : "http://localhost:3000";
         
         var emailContent = $@"
