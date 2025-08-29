@@ -36,6 +36,11 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public TenantDbContext CreateDbContext(string connectionString)
     {
+        return CreateDbContextWithTenantId(connectionString, null);
+    }
+    
+    private TenantDbContext CreateDbContextWithTenantId(string connectionString, Guid? tenantId)
+    {
         _logger.LogWarning("CreateDbContext: Building options...");
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
@@ -57,28 +62,17 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             optionsBuilder.EnableDetailedErrors();
         }
 
-        _logger.LogWarning("CreateDbContext: Getting TenantService...");
-        // Try to get TenantService, but don't fail if it causes circular dependency
-        ITenantService? tenantService = null;
-        try
+        // Always use StubTenantService to avoid circular dependency
+        // TenantService depends on MasterDbContext which may not be fully initialized yet
+        _logger.LogWarning("CreateDbContext: Using StubTenantService to avoid circular dependency");
+        var stubService = new StubTenantService();
+        if (tenantId.HasValue)
         {
-            tenantService = _serviceProvider.GetService<ITenantService>();
-            _logger.LogWarning("CreateDbContext: TenantService resolved: {Result}", tenantService != null);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not resolve ITenantService, using stub implementation");
-        }
-        
-        // If we can't get the service (circular dependency), use a stub
-        if (tenantService == null)
-        {
-            _logger.LogWarning("CreateDbContext: Using StubTenantService");
-            tenantService = new StubTenantService();
+            stubService.SetTenantId(tenantId.Value);
         }
         
         _logger.LogWarning("CreateDbContext: Creating TenantDbContext instance...");
-        var context = new TenantDbContext(optionsBuilder.Options, tenantService);
+        var context = new TenantDbContext(optionsBuilder.Options, stubService);
         _logger.LogWarning("CreateDbContext: TenantDbContext instance created");
         return context;
     }
@@ -116,7 +110,7 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             _logger.LogWarning("Skipping TenantService interaction for {TenantId}", tenantId);
             
             _logger.LogWarning("Creating DbContext for {TenantId}...", tenantId);
-            var context = CreateDbContext(tenant.ConnectionString.Value);
+            var context = CreateDbContextWithTenantId(tenant.ConnectionString.Value, tenantId);
             _logger.LogWarning("DbContext created for {TenantId}", tenantId);
             
             // Test connection
@@ -162,6 +156,11 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     private class StubTenantService : ITenantService
     {
         private Guid? _tenantId;
+        
+        public void SetTenantId(Guid tenantId)
+        {
+            _tenantId = tenantId;
+        }
         
         public Guid? GetCurrentTenantId() => _tenantId;
         
