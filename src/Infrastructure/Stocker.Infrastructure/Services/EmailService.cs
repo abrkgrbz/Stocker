@@ -76,6 +76,12 @@ public class EmailService : IEmailService
             // Configure SSL/TLS
             smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
             
+            // Set timeout to 30 seconds
+            smtp.Timeout = 30000;
+            
+            // Log connection attempt
+            _logger.LogInformation("Attempting to connect to SMTP server {Host}:{Port}", _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+            
             await smtp.ConnectAsync(
                 _emailSettings.SmtpHost, 
                 _emailSettings.SmtpPort, 

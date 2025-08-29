@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.Features.Packages.Queries.GetPublicPackages;
@@ -18,11 +19,16 @@ public class PublicController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PublicController> _logger;
+    private readonly IEmailService _emailService;
 
-    public PublicController(IMediator mediator, ILogger<PublicController> logger)
+    public PublicController(
+        IMediator mediator, 
+        ILogger<PublicController> logger,
+        IEmailService emailService)
     {
         _mediator = mediator;
         _logger = logger;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -167,4 +173,70 @@ public class PublicController : ControllerBase
             message = isAvailable ? "Domain kullanılabilir" : "Bu domain zaten kullanımda"
         });
     }
+
+    /// <summary>
+    /// Test email service connectivity and configuration
+    /// </summary>
+    [HttpPost("test-email")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> TestEmail([FromBody] TestEmailRequest request)
+    {
+        _logger.LogInformation("Testing email service to: {Email}", request.Email);
+        
+        try
+        {
+            var emailMessage = new EmailMessage
+            {
+                To = request.Email,
+                Subject = "Stocker Email Test",
+                Body = $@"
+                    <h2>Email Test Başarılı!</h2>
+                    <p>Bu bir test emailidir.</p>
+                    <p>Eğer bu emaili aldıysanız, email servisi çalışıyor demektir.</p>
+                    <br>
+                    <p><strong>Test Bilgileri:</strong></p>
+                    <ul>
+                        <li>Gönderim Zamanı: {DateTime.Now:dd.MM.yyyy HH:mm:ss}</li>
+                        <li>Server: {Environment.MachineName}</li>
+                        <li>Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}</li>
+                    </ul>
+                    <br>
+                    <p>Saygılarımızla,<br>Stocker Ekibi</p>
+                ",
+                IsHtml = true
+            };
+            
+            await _emailService.SendAsync(emailMessage);
+            
+            _logger.LogInformation("Test email sent successfully to: {Email}", request.Email);
+            
+            return Ok(new 
+            { 
+                success = true,
+                message = $"Test emaili başarıyla {request.Email} adresine gönderildi. Lütfen inbox ve spam klasörünüzü kontrol edin.",
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send test email to: {Email}", request.Email);
+            
+            return StatusCode(500, new 
+            { 
+                success = false,
+                message = "Email gönderilemedi. Hata detayları log'larda mevcut.",
+                error = ex.Message,
+                innerError = ex.InnerException?.Message,
+                stackTrace = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" 
+                    ? ex.StackTrace 
+                    : null
+            });
+        }
+    }
+}
+
+public class TestEmailRequest
+{
+    public string Email { get; set; } = string.Empty;
 }
