@@ -36,6 +36,7 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public TenantDbContext CreateDbContext(string connectionString)
     {
+        _logger.LogWarning("CreateDbContext: Building options...");
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
         {
@@ -56,24 +57,30 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             optionsBuilder.EnableDetailedErrors();
         }
 
+        _logger.LogWarning("CreateDbContext: Getting TenantService...");
         // Try to get TenantService, but don't fail if it causes circular dependency
         ITenantService? tenantService = null;
         try
         {
             tenantService = _serviceProvider.GetService<ITenantService>();
+            _logger.LogWarning("CreateDbContext: TenantService resolved: {Result}", tenantService != null);
         }
-        catch
+        catch (Exception ex)
         {
-            _logger.LogWarning("Could not resolve ITenantService, using stub implementation");
+            _logger.LogWarning(ex, "Could not resolve ITenantService, using stub implementation");
         }
         
         // If we can't get the service (circular dependency), use a stub
         if (tenantService == null)
         {
+            _logger.LogWarning("CreateDbContext: Using StubTenantService");
             tenantService = new StubTenantService();
         }
         
-        return new TenantDbContext(optionsBuilder.Options, tenantService);
+        _logger.LogWarning("CreateDbContext: Creating TenantDbContext instance...");
+        var context = new TenantDbContext(optionsBuilder.Options, tenantService);
+        _logger.LogWarning("CreateDbContext: TenantDbContext instance created");
+        return context;
     }
 
     public async Task<TenantDbContext> CreateDbContextAsync(Guid tenantId)
