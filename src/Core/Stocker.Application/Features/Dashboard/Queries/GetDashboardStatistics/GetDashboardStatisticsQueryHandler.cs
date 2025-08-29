@@ -31,8 +31,8 @@ public class GetDashboardStatisticsQueryHandler : IRequestHandler<GetDashboardSt
             .Include(s => s.Package);
         var allSubscriptions = await subscriptionsQuery.ToListAsync(cancellationToken);
 
-        var activeSubscriptions = allSubscriptions.Count(s => s.Status == SubscriptionStatus.Active);
-        var trialSubscriptions = allSubscriptions.Count(s => s.Status == SubscriptionStatus.Trial);
+        var activeSubscriptions = allSubscriptions.Count(s => s.Status == SubscriptionStatus.Aktif);
+        var trialSubscriptions = allSubscriptions.Count(s => s.Status == SubscriptionStatus.Deneme);
 
         // Get all users (Master Users)
         var userRepo = _unitOfWork.Repository<Domain.Master.Entities.MasterUser>();
@@ -45,13 +45,13 @@ public class GetDashboardStatisticsQueryHandler : IRequestHandler<GetDashboardSt
 
         // Get payments for revenue calculation using BasePrice.Amount
         var monthlyRevenue = allSubscriptions
-            .Where(s => s.Status == SubscriptionStatus.Active && 
+            .Where(s => s.Status == SubscriptionStatus.Aktif && 
                        s.CurrentPeriodStart.Month == currentMonth && 
                        s.CurrentPeriodStart.Year == currentYear)
             .Sum(s => s.Price?.Amount ?? 0); // Use subscription's Price property
 
         var yearlyRevenue = allSubscriptions
-            .Where(s => s.Status == SubscriptionStatus.Active && 
+            .Where(s => s.Status == SubscriptionStatus.Aktif && 
                        s.CurrentPeriodStart.Year == currentYear)
             .Sum(s => s.Price?.Amount ?? 0);
 

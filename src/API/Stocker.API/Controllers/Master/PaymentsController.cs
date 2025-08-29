@@ -180,7 +180,7 @@ public class PaymentsController : MasterControllerBase
         
         var query = new GetPaymentsListQuery 
         { 
-            Status = Domain.Master.Enums.PaymentStatus.Failed,
+            Status = Domain.Master.Enums.PaymentStatus.Basarisiz,
             FromDate = fromDate ?? DateTime.UtcNow.AddDays(-30)
         };
         

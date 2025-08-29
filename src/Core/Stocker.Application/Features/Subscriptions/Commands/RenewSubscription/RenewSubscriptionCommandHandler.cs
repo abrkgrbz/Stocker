@@ -42,7 +42,7 @@ public class RenewSubscriptionCommandHandler : IRequestHandler<RenewSubscription
             }
 
             // Check if subscription can be renewed
-            if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Cancelled)
+            if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.IptalEdildi)
             {
                 return Result<SubscriptionDto>.Failure(
                     Error.Conflict("Subscription.CannotRenewCancelled", "İptal edilmiş abonelik yenilenemez"));

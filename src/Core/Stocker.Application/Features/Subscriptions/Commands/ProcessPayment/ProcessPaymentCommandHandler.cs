@@ -64,7 +64,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
             tenant.Activate();
             
             // For suspended subscriptions, we need to use StartTrial first, then Activate
-            if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Suspended)
+            if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Askida)
             {
                 // Start trial period from now
                 var trialDays = 14; // Default trial period

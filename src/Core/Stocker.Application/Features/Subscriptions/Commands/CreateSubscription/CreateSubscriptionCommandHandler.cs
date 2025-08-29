@@ -51,8 +51,8 @@ public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscripti
             // Check if tenant already has an active subscription
             var existingSubscription = await _context.Subscriptions
                 .AnyAsync(s => s.TenantId == request.TenantId && 
-                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Active || 
-                     s.Status == Domain.Master.Enums.SubscriptionStatus.Trial), cancellationToken);
+                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif || 
+                     s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme), cancellationToken);
 
             if (existingSubscription)
             {

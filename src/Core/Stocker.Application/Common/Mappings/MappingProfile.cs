@@ -15,7 +15,7 @@ public class MappingProfile : Profile
         // Tenant Mappings
         CreateMap<Tenant, TenantDto>()
             .ForMember(dest => dest.Domain, opt => opt.MapFrom(src => src.Domains.FirstOrDefault(d => d.IsPrimary) != null ? src.Domains.FirstOrDefault(d => d.IsPrimary)!.DomainName : null))
-            .ForMember(dest => dest.Subscription, opt => opt.MapFrom(src => src.Subscriptions.FirstOrDefault(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Active) ?? src.Subscriptions.FirstOrDefault()));
+            .ForMember(dest => dest.Subscription, opt => opt.MapFrom(src => src.Subscriptions.FirstOrDefault(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif) ?? src.Subscriptions.FirstOrDefault()));
 
         CreateMap<Tenant, TenantListDto>()
             .ForMember(dest => dest.Domain, opt => opt.MapFrom(src => 
@@ -24,11 +24,11 @@ public class MappingProfile : Profile
                     : string.Empty))
             .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => 
                 src.Subscriptions.Any() 
-                    ? (src.Subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Active) ?? src.Subscriptions.FirstOrDefault())!.Package.Name 
+                    ? (src.Subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Aktif) ?? src.Subscriptions.FirstOrDefault())!.Package.Name 
                     : string.Empty))
             .ForMember(dest => dest.SubscriptionEndDate, opt => opt.MapFrom(src => 
                 src.Subscriptions.Any() 
-                    ? (src.Subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Active) ?? src.Subscriptions.FirstOrDefault())!.CurrentPeriodEnd 
+                    ? (src.Subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Aktif) ?? src.Subscriptions.FirstOrDefault())!.CurrentPeriodEnd 
                     : (DateTime?)null))
             .ForMember(dest => dest.ContactEmail, opt => opt.MapFrom(src => src.ContactEmail.Value))
             .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedAt))

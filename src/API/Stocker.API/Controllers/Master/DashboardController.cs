@@ -30,12 +30,12 @@ public class DashboardController : ControllerBase
         
         // Calculate revenue (mock data for now)
         var totalRevenue = await _context.Subscriptions
-            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Active)
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif)
             .SumAsync(s => s.Price.Amount);
 
         // Get package distribution
         var packageDistribution = await _context.Subscriptions
-            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Active)
+            .Where(s => s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif)
             .GroupBy(s => s.Package.Name)
             .Select(g => new { Package = g.Key, Count = g.Count() })
             .ToListAsync();

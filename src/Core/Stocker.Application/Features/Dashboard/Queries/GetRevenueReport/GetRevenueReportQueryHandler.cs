@@ -25,7 +25,7 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
         var subscriptions = await subscriptionRepo.AsQueryable()
             .Include(s => s.Package)
             .Include(s => s.Tenant)
-            .Where(s => s.Status == SubscriptionStatus.Active &&
+            .Where(s => s.Status == SubscriptionStatus.Aktif &&
                        s.CurrentPeriodStart >= fromDate &&
                        s.CurrentPeriodStart <= toDate)
             .ToListAsync(cancellationToken);

@@ -51,7 +51,7 @@ public class CreatePackageCommandHandler : IRequestHandler<CreatePackageCommand,
             // Use factory method to create Package
             var package = Package.Create(
                 name: request.Name,
-                type: PackageType.Starter, // Default type
+                type: PackageType.Baslangic, // Default type
                 basePrice: basePrice,
                 limits: limits,
                 description: request.Description,

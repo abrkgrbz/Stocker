@@ -38,8 +38,8 @@ public class DeleteTenantCommandHandler : IRequestHandler<DeleteTenantCommand, R
             var hasActiveSubscription = await _unitOfWork.Subscriptions()
                 .AsQueryable()
                 .AnyAsync(s => s.TenantId == request.TenantId && 
-                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Active ||
-                     s.Status == Domain.Master.Enums.SubscriptionStatus.Trial), 
+                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
+                     s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme), 
                     cancellationToken);
 
             if (hasActiveSubscription)
@@ -53,7 +53,7 @@ public class DeleteTenantCommandHandler : IRequestHandler<DeleteTenantCommand, R
             var hasUnpaidInvoices = await _unitOfWork.Invoices()
                 .AsQueryable()
                 .AnyAsync(i => i.TenantId == request.TenantId && 
-                    i.Status != Domain.Master.Enums.InvoiceStatus.Paid, 
+                    i.Status != Domain.Master.Enums.InvoiceStatus.Odendi, 
                     cancellationToken);
 
             if (hasUnpaidInvoices)

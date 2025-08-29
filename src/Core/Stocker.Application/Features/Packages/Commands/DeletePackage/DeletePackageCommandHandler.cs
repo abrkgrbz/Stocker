@@ -37,8 +37,8 @@ public class DeletePackageCommandHandler : IRequestHandler<DeletePackageCommand,
             var hasActiveSubscriptions = await _unitOfWork.Subscriptions()
                 .AsQueryable()
                 .AnyAsync(s => s.PackageId == request.PackageId && 
-                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Active ||
-                     s.Status == Domain.Master.Enums.SubscriptionStatus.Trial), 
+                    (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
+                     s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme), 
                     cancellationToken);
 
             if (hasActiveSubscriptions)

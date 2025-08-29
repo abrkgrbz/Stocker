@@ -175,7 +175,7 @@ public class InvoicesController : MasterControllerBase
         
         var query = new GetInvoicesListQuery 
         { 
-            Status = Domain.Master.Enums.InvoiceStatus.Overdue,
+            Status = Domain.Master.Enums.InvoiceStatus.Gecikti,
             ToDate = DateTime.UtcNow
         };
         
