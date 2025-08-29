@@ -38,6 +38,9 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
     public async Task<Result<TenantDto>> Handle(RegisterTenantCommand request, CancellationToken cancellationToken)
     {
+        // Transaction başlat
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        
         try
         {
             // Check if company code is unique
@@ -171,13 +174,26 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             await _unitOfWork.MasterUsers().AddAsync(masterUser, cancellationToken);
             await _unitOfWork.Subscriptions().AddAsync(subscription, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
+            // Transaction'ı commit et
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             // Trigger tenant database provisioning in background
             _logger.LogInformation("Triggering tenant database provisioning for: {TenantId}", tenant.Id);
             _backgroundJobService.Enqueue<ITenantProvisioningJob>(job => job.ProvisionNewTenantAsync(tenant.Id));
 
             // Send verification email immediately
-            await SendVerificationEmail(tenant, masterUser, verificationToken);
+            try
+            {
+                await SendVerificationEmail(tenant, masterUser, verificationToken);
+                _logger.LogInformation("Verification email sent successfully to: {Email}", masterUser.Email.Value);
+            }
+            catch (Exception emailEx)
+            {
+                // Email gönderimi başarısız olsa bile kayıt işlemi başarılı
+                // Kullanıcı daha sonra email doğrulama linkini tekrar isteyebilir
+                _logger.LogError(emailEx, "Failed to send verification email to: {Email}", masterUser.Email.Value);
+            }
 
             _logger.LogInformation("Tenant registered successfully, database provisioning started: {TenantId}", tenant.Id);
 
@@ -188,8 +204,28 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error registering tenant");
+            
+            // Transaction'ı geri al
+            if (_unitOfWork.HasActiveTransaction)
+            {
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                _logger.LogInformation("Transaction rolled back due to registration error");
+            }
+            
+            // Daha detaylı hata mesajı
+            var errorMessage = "Kayıt işlemi başarısız oldu";
+            if (ex.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) || 
+                ex.Message.Contains("unique", StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = "Bu bilgiler ile daha önce kayıt yapılmış";
+            }
+            else if (ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = "Veritabanı bağlantı hatası";
+            }
+            
             return Result<TenantDto>.Failure(
-                Error.Failure("Registration.Failed", "Kayıt işlemi başarısız oldu"));
+                Error.Failure("Registration.Failed", errorMessage));
         }
     }
 
