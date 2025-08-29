@@ -20,6 +20,7 @@ import {
 } from 'antd';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { showRegistrationSuccess, showApiResponse } from '../../../../shared/utils/sweetAlert';
 import {
   UserOutlined,
   ShopOutlined,
@@ -138,69 +139,23 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
       const response = await apiClient.post('/api/public/register', registrationData);
       
       if (response.data?.success) {
-        // Başarılı kayıt alert'i
-        await MySwal.fire({
-          icon: 'success',
-          title: 'Kayıt Başarılı!',
-          html: `
-            <div style="text-align: left; padding: 10px;">
-              <p><strong>Hoş geldiniz, ${allValues.contactName}!</strong></p>
-              <hr style="margin: 15px 0; border: none; border-top: 1px solid #e8e8e8;" />
-              <p style="margin: 10px 0;"><strong>Şirket:</strong> ${allValues.companyName}</p>
-              <p style="margin: 10px 0;"><strong>Domain:</strong> ${allValues.companyCode}.stocker.app</p>
-              <p style="margin: 10px 0;"><strong>E-posta:</strong> ${allValues.email}</p>
-              <p style="margin: 10px 0;"><strong>Paket:</strong> ${selectedPackage?.name || 'Standart'}</p>
-              <hr style="margin: 15px 0; border: none; border-top: 1px solid #e8e8e8;" />
-              <p style="color: #52c41a; font-weight: 500;">✓ Hesabınız başarıyla oluşturuldu</p>
-              <p style="color: #52c41a; font-weight: 500;">✓ 14 günlük ücretsiz deneme süresi başladı</p>
-              <p style="color: #1890ff; margin-top: 15px;">E-postanıza aktivasyon linki gönderildi.</p>
-            </div>
-          `,
-          confirmButtonText: 'Giriş Sayfasına Git',
-          confirmButtonColor: '#667eea',
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown'
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp'
-          }
-        });
+        // Başarılı kayıt alert'i - sweetAlert utility'sini kullan
+        await showRegistrationSuccess(allValues.email);
+        
+        }
         
         onComplete(response.data.data);
       } else {
-        // Hata alert'i
-        await MySwal.fire({
-          icon: 'error',
-          title: 'Kayıt Başarısız',
-          text: response.data?.message || 'Kayıt işlemi sırasında bir hata oluştu.',
-          confirmButtonText: 'Tamam',
-          confirmButtonColor: '#667eea'
-        });
+        // Hata alert'i - sweetAlert utility'sini kullan
+        await showApiResponse.error(
+          response.data?.message || 'Kayıt işlemi sırasında bir hata oluştu.',
+          'Kayıt Başarısız'
+        );
       }
     } catch (error: any) {
-      // Detaylı hata alert'i
-      const errorMessage = error.response?.data?.message || 'Bir hata oluştu';
-      const errorDetails = error.response?.data?.errors || [];
-      
-      let htmlContent = `<p>${errorMessage}</p>`;
-      
-      if (errorDetails.length > 0) {
-        htmlContent += '<ul style="text-align: left; margin-top: 10px;">';
-        errorDetails.forEach((err: any) => {
-          htmlContent += `<li>${err}</li>`;
-        });
-        htmlContent += '</ul>';
-      }
-      
-      await MySwal.fire({
-        icon: 'error',
-        title: 'İşlem Başarısız',
-        html: htmlContent,
-        confirmButtonText: 'Düzelt',
-        confirmButtonColor: '#667eea',
-        showClass: {
-          popup: 'animate__animated animate__shakeX'
-        }
+      // Detaylı hata alert'i - sweetAlert utility'sini kullan
+      await showApiResponse.error(error, 'Kayıt işlemi sırasında bir hata oluştu');
+      console.error('Registration error:', error);
       });
     } finally {
       setLoading(false);
