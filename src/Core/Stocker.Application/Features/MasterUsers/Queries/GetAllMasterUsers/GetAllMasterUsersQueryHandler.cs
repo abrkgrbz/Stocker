@@ -54,7 +54,7 @@ public class GetAllMasterUsersQueryHandler : IRequestHandler<GetAllMasterUsersQu
             // Filter by role
             if (!string.IsNullOrWhiteSpace(request.Role))
             {
-                query = query.Where(u => u.UserTenants.Any(ut => ut.Role == request.Role));
+                query = query.Where(u => u.UserTenants.Any(ut => ut.UserType.ToString() == request.Role));
             }
 
             // Filter by tenant

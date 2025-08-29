@@ -133,7 +133,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             );
 
             // Assign user to tenant with TenantAdmin role
-            masterUser.AssignToTenant(tenant.Id, "TenantAdmin");
+            masterUser.AssignToTenant(tenant.Id, UserType.TenantAdmin);
 
             // Create subscription but mark it as PENDING (not active until payment)
             var billingCycle = request.BillingPeriod == "Yearly" 

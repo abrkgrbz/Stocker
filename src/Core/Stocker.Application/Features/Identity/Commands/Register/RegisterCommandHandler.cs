@@ -107,7 +107,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             var userTenant = new UserTenant(
                 userId: masterUser.Id,
                 tenantId: tenant.Id,
-                role: "TenantAdmin");
+                userType: Domain.Master.Enums.UserType.TenantAdmin);
 
             await _masterUnitOfWork.Repository<UserTenant>().AddAsync(userTenant, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);

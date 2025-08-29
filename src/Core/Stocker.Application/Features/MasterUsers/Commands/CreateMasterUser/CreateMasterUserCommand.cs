@@ -16,5 +16,5 @@ public class CreateMasterUserCommand : IRequest<Result<MasterUserDto>>
     public UserType UserType { get; set; } = UserType.TenantOwner;
     public bool IsSystemAdmin { get; set; } = false;
     public Guid? TenantId { get; set; }
-    public string? TenantRole { get; set; }
+    public UserType? TenantUserType { get; set; }
 }

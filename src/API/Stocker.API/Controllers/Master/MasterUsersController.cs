@@ -163,8 +163,8 @@ public class MasterUsersController : MasterControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> AssignToTenant(Guid id, [FromBody] AssignToTenantCommand command)
     {
-        _logger.LogInformation("Assigning user {UserId} to tenant {TenantId} with role {Role}", 
-            id, command.TenantId, command.Role);
+        _logger.LogInformation("Assigning user {UserId} to tenant {TenantId} with role {UserType}", 
+            id, command.TenantId, command.UserType);
         
         command.UserId = id;
         command.AssignedBy = CurrentUserId;

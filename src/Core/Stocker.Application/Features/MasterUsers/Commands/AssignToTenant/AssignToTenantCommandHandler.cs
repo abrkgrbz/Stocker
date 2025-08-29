@@ -52,13 +52,13 @@ public class AssignToTenantCommandHandler : IRequestHandler<AssignToTenantComman
             }
 
             // Assign user to tenant
-            user.AssignToTenant(request.TenantId, request.Role);
+            user.AssignToTenant(request.TenantId, request.UserType);
 
             await _unitOfWork.MasterUsers().UpdateAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("User {UserId} assigned to tenant {TenantId} with role {Role} by {AssignedBy}", 
-                request.UserId, request.TenantId, request.Role, request.AssignedBy);
+            _logger.LogInformation("User {UserId} assigned to tenant {TenantId} with role {UserType} by {AssignedBy}", 
+                request.UserId, request.TenantId, request.UserType, request.AssignedBy);
 
             return Result<bool>.Success(true);
         }

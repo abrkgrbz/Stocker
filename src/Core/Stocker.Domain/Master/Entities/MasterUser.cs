@@ -359,14 +359,14 @@ public sealed class MasterUser : AggregateRoot
         return LockoutEndAt.HasValue && LockoutEndAt.Value > DateTime.UtcNow;
     }
 
-    public void AssignToTenant(Guid tenantId, string role)
+    public void AssignToTenant(Guid tenantId, UserType userType)
     {
         if (_tenants.Any(t => t.TenantId == tenantId))
         {
             throw new InvalidOperationException($"User is already assigned to tenant '{tenantId}'.");
         }
 
-        _tenants.Add(new UserTenant(Id, tenantId, role));
+        _tenants.Add(new UserTenant(Id, tenantId, userType));
     }
 
     public void RemoveFromTenant(Guid tenantId)
@@ -457,7 +457,7 @@ public sealed class MasterUser : AggregateRoot
         {
             return;
         }
-        _tenants.Add(new UserTenant(Id, tenantId, isActive ? "User" : "Inactive"));
+        _tenants.Add(new UserTenant(Id, tenantId, UserType.Regular));
     }
 
     public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();

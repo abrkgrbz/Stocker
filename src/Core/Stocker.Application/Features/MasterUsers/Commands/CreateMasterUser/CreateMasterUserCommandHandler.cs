@@ -106,14 +106,14 @@ public class CreateMasterUserCommandHandler : IRequestHandler<CreateMasterUserCo
             await _unitOfWork.MasterUsers().AddAsync(user, cancellationToken);
 
             // If tenant is specified, assign user to tenant
-            if (request.TenantId.HasValue && !string.IsNullOrEmpty(request.TenantRole))
+            if (request.TenantId.HasValue && request.TenantUserType.HasValue)
             {
                 var tenant = await _unitOfWork.Tenants()
                     .GetByIdAsync(request.TenantId.Value, cancellationToken);
 
                 if (tenant != null)
                 {
-                    user.AssignToTenant(request.TenantId.Value, request.TenantRole);
+                    user.AssignToTenant(request.TenantId.Value, request.TenantUserType.Value);
                 }
             }
 
