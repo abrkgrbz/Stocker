@@ -9,7 +9,7 @@ public record CreateSubscriptionCommand : IRequest<Result<SubscriptionDto>>
 {
     public Guid TenantId { get; init; }
     public Guid PackageId { get; init; }
-    public BillingCycle BillingCycle { get; init; } = BillingCycle.Monthly;
+    public BillingCycle BillingCycle { get; init; } = BillingCycle.Aylik;
     public decimal? CustomPrice { get; init; } // Null ise Package fiyatını kullan
     public string Currency { get; init; } = "TRY";
     public DateTime? StartDate { get; init; }

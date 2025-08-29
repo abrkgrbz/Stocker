@@ -2,11 +2,11 @@ namespace Stocker.Domain.Master.Enums;
 
 public enum PaymentStatus
 {
-    Pending = 0,
-    Processing = 1,
-    Completed = 2,
-    Failed = 3,
-    Refunded = 4,
-    PartiallyRefunded = 5,
-    Cancelled = 6
+    Beklemede = 0,
+    Isleniyor = 1,
+    Tamamlandi = 2,
+    Basarisiz = 3,
+    IadeEdildi = 4,
+    KismiIade = 5,
+    IptalEdildi = 6
 }

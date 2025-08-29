@@ -137,8 +137,8 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
             // Create subscription but mark it as PENDING (not active until payment)
             var billingCycle = request.BillingPeriod == "Yearly" 
-                ? BillingCycle.Annually 
-                : BillingCycle.Monthly;
+                ? BillingCycle.Yillik 
+                : BillingCycle.Aylik;
              
             var price = package.BasePrice;
             // Set a minimal trial period (1 day) to avoid validation error

@@ -12,5 +12,5 @@ public record CreateTenantCommand : IRequest<Result<TenantDto>>
     public string Domain { get; init; } = string.Empty;
     public string? ContactEmail { get; init; }
     public Guid PackageId { get; init; }
-    public BillingCycle BillingCycle { get; init; } = BillingCycle.Monthly; // Default to monthly
+    public BillingCycle BillingCycle { get; init; } = BillingCycle.Aylik; // Default to monthly
 }

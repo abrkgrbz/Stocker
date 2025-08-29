@@ -2,8 +2,8 @@ namespace Stocker.Domain.Master.Enums;
 
 public enum BillingCycle
 {
-    Monthly = 1,
-    Quarterly = 3,
-    SemiAnnually = 6,
-    Annually = 12
+    Aylik = 1,
+    UcAylik = 3,
+    AltiAylik = 6,
+    Yillik = 12
 }

@@ -49,7 +49,7 @@ public class MasterDataSeeder
         // Başlangıç Package
         var starterPackage = Package.Create(
             name: "Başlangıç",
-            type: PackageType.Starter,
+            type: PackageType.Baslangic,
             basePrice: Money.Create(499m, "TRY"),
             limits: PackageLimit.Create(
                 maxUsers: 5,
@@ -80,7 +80,7 @@ public class MasterDataSeeder
         // Profesyonel Package
         var professionalPackage = Package.Create(
             name: "Profesyonel",
-            type: PackageType.Professional,
+            type: PackageType.Profesyonel,
             basePrice: Money.Create(999m, "TRY"),
             limits: PackageLimit.Create(
                 maxUsers: 20,
@@ -115,7 +115,7 @@ public class MasterDataSeeder
         // Enterprise Package
         var enterprisePackage = Package.Create(
             name: "Enterprise",
-            type: PackageType.Enterprise,
+            type: PackageType.Kurumsal,
             basePrice: Money.Create(2499m, "TRY"),
             limits: PackageLimit.Unlimited(),
             description: "Büyük ölçekli işletmeler için kurumsal paket",

@@ -164,10 +164,10 @@ public sealed class Package : AggregateRoot
     {
         var multiplier = cycle switch
         {
-            BillingCycle.Monthly => 1m,
-            BillingCycle.Quarterly => 2.7m, // 10% discount
-            BillingCycle.SemiAnnually => 5.1m, // 15% discount
-            BillingCycle.Annually => 9.6m, // 20% discount
+            BillingCycle.Aylik => 1m,
+            BillingCycle.UcAylik => 2.7m, // 10% indirim
+            BillingCycle.AltiAylik => 5.1m, // 15% indirim
+            BillingCycle.Yillik => 9.6m, // 20% indirim
             _ => 1m
         };
 

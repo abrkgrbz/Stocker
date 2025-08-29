@@ -2,11 +2,11 @@ namespace Stocker.Domain.Master.Enums;
 
 public enum InvoiceStatus
 {
-    Draft = 0,
-    Sent = 1,
-    Paid = 2,
-    PartiallyPaid = 3,
-    Overdue = 4,
-    Cancelled = 5,
-    Refunded = 6
+    Taslak = 0,
+    Gonderildi = 1,
+    Odendi = 2,
+    KismiOdendi = 3,
+    Gecikti = 4,
+    IptalEdildi = 5,
+    IadeEdildi = 6
 }

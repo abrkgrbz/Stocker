@@ -2,9 +2,9 @@ namespace Stocker.Domain.Master.Enums;
 
 public enum PackageType
 {
-    Starter = 0,
-    Professional = 1,
-    Business = 2,
-    Enterprise = 3,
-    Custom = 4
+    Baslangic = 0,
+    Profesyonel = 1,
+    Isletme = 2,
+    Kurumsal = 3,
+    Ozel = 4
 }

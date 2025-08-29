@@ -42,7 +42,7 @@ public sealed class Invoice : AggregateRoot
         TenantId = tenantId;
         SubscriptionId = subscriptionId;
         InvoiceNumber = GenerateInvoiceNumber();
-        Status = InvoiceStatus.Draft;
+        Status = InvoiceStatus.Taslak;
         TaxRate = taxRate;
         Subtotal = totalAmount;
         TaxAmount = totalAmount.Multiply(taxRate / 100);
@@ -79,7 +79,7 @@ public sealed class Invoice : AggregateRoot
 
     public void AddItem(string description, int quantity, Money unitPrice)
     {
-        if (Status != InvoiceStatus.Draft)
+        if (Status != InvoiceStatus.Taslak)
         {
             throw new InvalidOperationException("Items can only be added to draft invoices.");
         }
@@ -92,7 +92,7 @@ public sealed class Invoice : AggregateRoot
 
     public void RemoveItem(Guid itemId)
     {
-        if (Status != InvoiceStatus.Draft)
+        if (Status != InvoiceStatus.Taslak)
         {
             throw new InvalidOperationException("Items can only be removed from draft invoices.");
         }
@@ -109,7 +109,7 @@ public sealed class Invoice : AggregateRoot
 
     public void Send()
     {
-        if (Status != InvoiceStatus.Draft)
+        if (Status != InvoiceStatus.Taslak)
         {
             throw new InvalidOperationException("Only draft invoices can be sent.");
         }
@@ -119,12 +119,12 @@ public sealed class Invoice : AggregateRoot
             throw new InvalidOperationException("Cannot send an invoice without items.");
         }
 
-        Status = InvoiceStatus.Sent;
+        Status = InvoiceStatus.Gonderildi;
     }
 
     public void AddPayment(PaymentMethod method, Money amount, string? transactionId = null, string? notes = null)
     {
-        if (Status == InvoiceStatus.Cancelled || Status == InvoiceStatus.Refunded)
+        if (Status == InvoiceStatus.IptalEdildi || Status == InvoiceStatus.IadeEdildi)
         {
             throw new InvalidOperationException("Cannot add payment to cancelled or refunded invoices.");
         }
@@ -143,19 +143,19 @@ public sealed class Invoice : AggregateRoot
 
     public void MarkAsPaid()
     {
-        if (Status == InvoiceStatus.Paid)
+        if (Status == InvoiceStatus.Odendi)
         {
             throw new InvalidOperationException("Invoice is already paid.");
         }
 
-        Status = InvoiceStatus.Paid;
+        Status = InvoiceStatus.Odendi;
         PaidDate = DateTime.UtcNow;
         PaidAmount = TotalAmount;
     }
 
     public void MarkAsOverdue()
     {
-        if (Status != InvoiceStatus.Sent && Status != InvoiceStatus.PartiallyPaid)
+        if (Status != InvoiceStatus.Gonderildi && Status != InvoiceStatus.KismiOdendi)
         {
             throw new InvalidOperationException("Only sent or partially paid invoices can be marked as overdue.");
         }
@@ -165,22 +165,22 @@ public sealed class Invoice : AggregateRoot
             throw new InvalidOperationException("Invoice is not yet overdue.");
         }
 
-        Status = InvoiceStatus.Overdue;
+        Status = InvoiceStatus.Gecikti;
     }
 
     public void Cancel()
     {
-        if (Status == InvoiceStatus.Paid || Status == InvoiceStatus.Refunded)
+        if (Status == InvoiceStatus.Odendi || Status == InvoiceStatus.IadeEdildi)
         {
             throw new InvalidOperationException("Cannot cancel paid or refunded invoices.");
         }
 
-        Status = InvoiceStatus.Cancelled;
+        Status = InvoiceStatus.IptalEdildi;
     }
 
     public void Refund(Money amount, string reason)
     {
-        if (Status != InvoiceStatus.Paid)
+        if (Status != InvoiceStatus.Odendi)
         {
             throw new InvalidOperationException("Only paid invoices can be refunded.");
         }
@@ -194,7 +194,7 @@ public sealed class Invoice : AggregateRoot
         _payments.Add(payment);
 
         PaidAmount = PaidAmount.Subtract(amount);
-        Status = PaidAmount.IsZero() ? InvoiceStatus.Refunded : InvoiceStatus.PartiallyPaid;
+        Status = PaidAmount.IsZero() ? InvoiceStatus.IadeEdildi : InvoiceStatus.KismiOdendi;
     }
 
     private void RecalculateTotals()
@@ -209,12 +209,12 @@ public sealed class Invoice : AggregateRoot
     {
         if (PaidAmount.Equals(TotalAmount))
         {
-            Status = InvoiceStatus.Paid;
+            Status = InvoiceStatus.Odendi;
             PaidDate = DateTime.UtcNow;
         }
         else if (PaidAmount.Amount > 0 && PaidAmount.Amount < TotalAmount.Amount)
         {
-            Status = InvoiceStatus.PartiallyPaid;
+            Status = InvoiceStatus.KismiOdendi;
         }
     }
 

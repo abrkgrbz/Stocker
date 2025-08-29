@@ -30,7 +30,7 @@ public sealed class Payment : Entity
         Id = Guid.NewGuid();
         InvoiceId = invoiceId;
         Method = method;
-        Status = PaymentStatus.Completed;
+        Status = PaymentStatus.Tamamlandi;
         Amount = amount;
         TransactionId = transactionId;
         Notes = notes;
@@ -71,7 +71,7 @@ public sealed class Payment : Entity
 
         return new Payment(
             invoiceId,
-            PaymentMethod.Other,
+            PaymentMethod.Diger,
             amount,
             isRefund: true,
             refundReason: reason);
@@ -79,23 +79,23 @@ public sealed class Payment : Entity
 
     public void MarkAsFailed(string reason)
     {
-        if (Status != PaymentStatus.Pending && Status != PaymentStatus.Processing)
+        if (Status != PaymentStatus.Beklemede && Status != PaymentStatus.Isleniyor)
         {
             throw new InvalidOperationException("Only pending or processing payments can be marked as failed.");
         }
 
-        Status = PaymentStatus.Failed;
+        Status = PaymentStatus.Basarisiz;
         Notes = $"Failed: {reason}";
     }
 
     public void MarkAsCompleted(string? transactionId = null)
     {
-        if (Status != PaymentStatus.Pending && Status != PaymentStatus.Processing)
+        if (Status != PaymentStatus.Beklemede && Status != PaymentStatus.Isleniyor)
         {
             throw new InvalidOperationException("Only pending or processing payments can be marked as completed.");
         }
 
-        Status = PaymentStatus.Completed;
+        Status = PaymentStatus.Tamamlandi;
         ProcessedAt = DateTime.UtcNow;
         
         if (!string.IsNullOrWhiteSpace(transactionId))

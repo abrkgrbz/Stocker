@@ -45,7 +45,7 @@ public sealed class Subscription : AggregateRoot
         TenantId = tenantId;
         PackageId = packageId;
         SubscriptionNumber = GenerateSubscriptionNumber();
-        Status = trialEndDate.HasValue ? SubscriptionStatus.Trial : SubscriptionStatus.Active;
+        Status = trialEndDate.HasValue ? SubscriptionStatus.Deneme : SubscriptionStatus.Aktif;
         BillingCycle = billingCycle;
         Price = price;
         StartDate = startDate;
@@ -76,7 +76,7 @@ public sealed class Subscription : AggregateRoot
 
     public void StartTrial(DateTime trialEndDate)
     {
-        if (Status != SubscriptionStatus.Suspended && Status != SubscriptionStatus.Pending)
+        if (Status != SubscriptionStatus.Askida && Status != SubscriptionStatus.Beklemede)
         {
             throw new InvalidOperationException("Can only start trial from Suspended or Pending status.");
         }
@@ -86,7 +86,7 @@ public sealed class Subscription : AggregateRoot
             throw new ArgumentException("Trial end date must be in the future.", nameof(trialEndDate));
         }
 
-        Status = SubscriptionStatus.Trial;
+        Status = SubscriptionStatus.Deneme;
         TrialEndDate = trialEndDate;
         StartDate = DateTime.UtcNow;
         CurrentPeriodStart = DateTime.UtcNow;
@@ -95,45 +95,45 @@ public sealed class Subscription : AggregateRoot
 
     public void Activate()
     {
-        if (Status != SubscriptionStatus.Trial)
+        if (Status != SubscriptionStatus.Deneme)
         {
             throw new InvalidOperationException("Only trial subscriptions can be activated.");
         }
 
-        Status = SubscriptionStatus.Active;
+        Status = SubscriptionStatus.Aktif;
         RaiseDomainEvent(new SubscriptionActivatedDomainEvent(Id, TenantId));
     }
 
     public void Suspend(string reason)
     {
-        if (Status == SubscriptionStatus.Cancelled || Status == SubscriptionStatus.Expired)
+        if (Status == SubscriptionStatus.IptalEdildi || Status == SubscriptionStatus.SuresiDoldu)
         {
             throw new InvalidOperationException("Cannot suspend cancelled or expired subscriptions.");
         }
 
-        Status = SubscriptionStatus.Suspended;
+        Status = SubscriptionStatus.Askida;
         RaiseDomainEvent(new SubscriptionSuspendedDomainEvent(Id, TenantId, reason));
     }
 
     public void Reactivate()
     {
-        if (Status != SubscriptionStatus.Suspended && Status != SubscriptionStatus.PastDue)
+        if (Status != SubscriptionStatus.Askida && Status != SubscriptionStatus.OdemesiGecikti)
         {
             throw new InvalidOperationException("Only suspended or past due subscriptions can be reactivated.");
         }
 
-        Status = SubscriptionStatus.Active;
+        Status = SubscriptionStatus.Aktif;
         RaiseDomainEvent(new SubscriptionReactivatedDomainEvent(Id, TenantId));
     }
 
     public void Cancel(string reason)
     {
-        if (Status == SubscriptionStatus.Cancelled || Status == SubscriptionStatus.Expired)
+        if (Status == SubscriptionStatus.IptalEdildi || Status == SubscriptionStatus.SuresiDoldu)
         {
             throw new InvalidOperationException("Subscription is already cancelled or expired.");
         }
 
-        Status = SubscriptionStatus.Cancelled;
+        Status = SubscriptionStatus.IptalEdildi;
         CancelledAt = DateTime.UtcNow;
         CancellationReason = reason;
         AutoRenew = false;
@@ -143,22 +143,22 @@ public sealed class Subscription : AggregateRoot
 
     public void MarkAsPastDue()
     {
-        if (Status != SubscriptionStatus.Active)
+        if (Status != SubscriptionStatus.Aktif)
         {
             throw new InvalidOperationException("Only active subscriptions can be marked as past due.");
         }
 
-        Status = SubscriptionStatus.PastDue;
+        Status = SubscriptionStatus.OdemesiGecikti;
     }
 
     public void Expire()
     {
-        if (Status == SubscriptionStatus.Expired)
+        if (Status == SubscriptionStatus.SuresiDoldu)
         {
             throw new InvalidOperationException("Subscription is already expired.");
         }
 
-        Status = SubscriptionStatus.Expired;
+        Status = SubscriptionStatus.SuresiDoldu;
         AutoRenew = false;
 
         RaiseDomainEvent(new SubscriptionExpiredDomainEvent(Id, TenantId));
@@ -166,14 +166,14 @@ public sealed class Subscription : AggregateRoot
 
     public void Renew()
     {
-        if (Status != SubscriptionStatus.Active && Status != SubscriptionStatus.PastDue)
+        if (Status != SubscriptionStatus.Aktif && Status != SubscriptionStatus.OdemesiGecikti)
         {
             throw new InvalidOperationException("Only active or past due subscriptions can be renewed.");
         }
 
         CurrentPeriodStart = CurrentPeriodEnd;
         CurrentPeriodEnd = CalculateNextBillingDate(CurrentPeriodStart, BillingCycle);
-        Status = SubscriptionStatus.Active;
+        Status = SubscriptionStatus.Aktif;
 
         RaiseDomainEvent(new SubscriptionRenewedDomainEvent(Id, TenantId, CurrentPeriodEnd));
     }
@@ -228,23 +228,23 @@ public sealed class Subscription : AggregateRoot
 
     public bool IsInTrial()
     {
-        return Status == SubscriptionStatus.Trial && TrialEndDate.HasValue && TrialEndDate.Value > DateTime.UtcNow;
+        return Status == SubscriptionStatus.Deneme && TrialEndDate.HasValue && TrialEndDate.Value > DateTime.UtcNow;
     }
 
     public bool IsExpired()
     {
-        return Status == SubscriptionStatus.Expired || 
-               (Status == SubscriptionStatus.Cancelled && CurrentPeriodEnd < DateTime.UtcNow);
+        return Status == SubscriptionStatus.SuresiDoldu || 
+               (Status == SubscriptionStatus.IptalEdildi && CurrentPeriodEnd < DateTime.UtcNow);
     }
 
     private static DateTime CalculateNextBillingDate(DateTime fromDate, BillingCycle cycle)
     {
         return cycle switch
         {
-            BillingCycle.Monthly => fromDate.AddMonths(1),
-            BillingCycle.Quarterly => fromDate.AddMonths(3),
-            BillingCycle.SemiAnnually => fromDate.AddMonths(6),
-            BillingCycle.Annually => fromDate.AddYears(1),
+            BillingCycle.Aylik => fromDate.AddMonths(1),
+            BillingCycle.UcAylik => fromDate.AddMonths(3),
+            BillingCycle.AltiAylik => fromDate.AddMonths(6),
+            BillingCycle.Yillik => fromDate.AddYears(1),
             _ => fromDate.AddMonths(1)
         };
     }
