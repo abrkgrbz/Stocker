@@ -212,7 +212,7 @@ public class MasterDataSeeder
             firstName: "Tenant",
             lastName: "Administrator",
             phoneNumber: phoneResult.Value,
-            userType: UserType.FirmaSahibi);
+            userType: UserType.FirmaYoneticisi);
 
         tenantAdmin.Activate();
         tenantAdmin.VerifyEmail();

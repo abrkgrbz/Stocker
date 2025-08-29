@@ -93,7 +93,7 @@ public class AuthenticationService : IAuthenticationService
             }
 
             // Eğer MasterUser bir tenant context'inde giriş yapıyorsa ve henüz o tenant'ta TenantUser'ı yoksa, otomatik oluştur
-            if (tenantId.HasValue && masterUser.UserType == UserType.FirmaSahibi)
+            if (tenantId.HasValue && masterUser.UserType == UserType.FirmaYoneticisi)
             {
                 await EnsureTenantUserExistsAsync(masterUser, tenantId.Value);
             }
@@ -295,7 +295,7 @@ public class AuthenticationService : IAuthenticationService
             plainPassword: request.Password,
             firstName: request.FirstName,
             lastName: request.LastName,
-            userType: UserType.FirmaSahibi, // Default to FirmaSahibi for registration
+            userType: UserType.FirmaYoneticisi, // Default to FirmaSahibi for registration
             phoneNumber: phoneNumber
         );
 

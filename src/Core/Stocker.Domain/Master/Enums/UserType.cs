@@ -2,9 +2,9 @@ namespace Stocker.Domain.Master.Enums;
 
 public enum UserType
 {
-    SistemYoneticisi = 0,    // Tüm tenant'ları ve sistem ayarlarını yönetebilir
-    FirmaSahibi = 1,         // Bir veya daha fazla tenant'ın sahibi
-    Destek = 2,              // Sınırlı erişime sahip destek personeli
-    Kullanici = 3,           // Normal kullanıcı
-    FirmaYoneticisi = 4,     // Belirli bir tenant için yönetici
+    SistemYoneticisi = 0,    // Tüm sistemin yöneticisi (platform sahibi)
+    FirmaYoneticisi = 1,     // Tenant sahibi ve yöneticisi (müşteriler)
+    Personel = 2,            // Firma çalışanı (müşterilerin çalışanları)
+    Destek = 3,              // Destek personeli (platform destek ekibi)
+    Misafir = 4,             // Sınırlı erişimli kullanıcı
 }

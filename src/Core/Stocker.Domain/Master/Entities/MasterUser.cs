@@ -122,7 +122,7 @@ public sealed class MasterUser : AggregateRoot
 
         var hashedPassword = HashedPassword.CreateFromHash(passwordHash);
 
-        return new MasterUser(username, email, hashedPassword, firstName, lastName, UserType.Kullanici, phoneNumber);
+        return new MasterUser(username, email, hashedPassword, firstName, lastName, UserType.Personel, phoneNumber);
     }
 
     public void Activate()
@@ -457,7 +457,7 @@ public sealed class MasterUser : AggregateRoot
         {
             return;
         }
-        _tenants.Add(new UserTenant(Id, tenantId, UserType.Kullanici));
+        _tenants.Add(new UserTenant(Id, tenantId, UserType.Personel));
     }
 
     public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();

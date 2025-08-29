@@ -112,14 +112,14 @@ public class TokenGenerationService : ITokenGenerationService
             case UserType.FirmaYoneticisi:
                 claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
                 break;
-            case UserType.FirmaSahibi:
-                claims.Add(new Claim(ClaimTypes.Role, "FirmaSahibi"));
-                break;
             case UserType.Destek:
                 claims.Add(new Claim(ClaimTypes.Role, "Destek"));
                 break;
-            case UserType.Kullanici:
-                claims.Add(new Claim(ClaimTypes.Role, "Kullanici"));
+            case UserType.Personel:
+                claims.Add(new Claim(ClaimTypes.Role, "Personel"));
+                break;
+            case UserType.Misafir:
+                claims.Add(new Claim(ClaimTypes.Role, "Misafir"));
                 break;
         }
 
@@ -172,9 +172,9 @@ public class TokenGenerationService : ITokenGenerationService
         {
             UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi" },
             UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi" },
-            UserType.FirmaSahibi => new List<string> { "FirmaSahibi" },
             UserType.Destek => new List<string> { "Destek" },
-            UserType.Kullanici => new List<string> { "Kullanici" },
+            UserType.Personel => new List<string> { "Personel" },
+            UserType.Misafir => new List<string> { "Misafir" },
             _ => new List<string>()
         };
     }

@@ -13,7 +13,7 @@ public class CreateMasterUserCommand : IRequest<Result<MasterUserDto>>
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public UserType UserType { get; set; } = UserType.FirmaSahibi;
+    public UserType UserType { get; set; } = UserType.FirmaYoneticisi;
     public bool IsSystemAdmin { get; set; } = false;
     public Guid? TenantId { get; set; }
     public UserType? TenantUserType { get; set; }

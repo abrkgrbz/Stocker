@@ -128,7 +128,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
                 plainPassword: request.Password,  // ✅ DOĞRU! plainPassword kullan
                 firstName: firstName,
                 lastName: lastName,
-                userType: UserType.FirmaSahibi,
+                userType: UserType.FirmaYoneticisi,
                 phoneNumber: contactPhone?.Value
             );
 
