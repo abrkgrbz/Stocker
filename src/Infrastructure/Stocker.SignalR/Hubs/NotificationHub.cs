@@ -78,7 +78,7 @@ public class NotificationHub : Hub
     /// <summary>
     /// Send notification to specific user
     /// </summary>
-    [Authorize(Roles = "SystemAdmin,TenantAdmin")]
+    [Authorize(Roles = "SistemYoneticisi,FirmaYoneticisi")]
     public async Task SendToUser(string userId, NotificationMessage notification)
     {
         try
@@ -96,7 +96,7 @@ public class NotificationHub : Hub
     /// <summary>
     /// Send notification to all users in a tenant
     /// </summary>
-    [Authorize(Roles = "SystemAdmin,TenantAdmin")]
+    [Authorize(Roles = "SistemYoneticisi,FirmaYoneticisi")]
     public async Task SendToTenant(string tenantId, NotificationMessage notification)
     {
         try
@@ -114,7 +114,7 @@ public class NotificationHub : Hub
     /// <summary>
     /// Broadcast notification to all connected users
     /// </summary>
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SistemYoneticisi")]
     public async Task BroadcastNotification(NotificationMessage notification)
     {
         try
@@ -158,7 +158,7 @@ public class NotificationHub : Hub
     /// <summary>
     /// Get online users count
     /// </summary>
-    [Authorize(Roles = "SystemAdmin,TenantAdmin")]
+    [Authorize(Roles = "SistemYoneticisi,FirmaYoneticisi")]
     public async Task GetOnlineUsers()
     {
         try

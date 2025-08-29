@@ -67,14 +67,14 @@ public class CompaniesController : ApiController
             userEmail, userRole ?? "NO_ROLE", tenantId);
         
         // TenantOwner role'ünü de ekleyelim (RegisterTenantCommandHandler'da bu role veriliyor)
-        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin" && userRole != "TenantOwner")
+        if (userRole != "FirmaYoneticisi" && userRole != "SistemYoneticisi")
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to create company - DENIED", 
                 userEmail, userRole ?? "NO_ROLE");
             return StatusCode(403, new { 
                 message = "Bu işlem için yetkiniz yok",
                 currentRole = userRole ?? "NO_ROLE",
-                allowedRoles = new[] { "TenantAdmin", "Admin", "SystemAdmin", "TenantOwner" }
+                allowedRoles = new[] { "FirmaYoneticisi", "SistemYoneticisi" }
             });
         }
 
@@ -115,14 +115,14 @@ public class CompaniesController : ApiController
         var userEmail = GetUserEmail();
         
         // TenantOwner role'ünü de ekleyelim
-        if (userRole != "TenantAdmin" && userRole != "Admin" && userRole != "SystemAdmin" && userRole != "TenantOwner")
+        if (userRole != "FirmaYoneticisi" && userRole != "SistemYoneticisi")
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to update company - DENIED", 
                 userEmail, userRole ?? "NO_ROLE");
             return StatusCode(403, new { 
                 message = "Bu işlem için yetkiniz yok",
                 currentRole = userRole ?? "NO_ROLE",
-                allowedRoles = new[] { "TenantAdmin", "Admin", "SystemAdmin", "TenantOwner" }
+                allowedRoles = new[] { "FirmaYoneticisi", "SistemYoneticisi" }
             });
         }
 

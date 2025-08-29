@@ -22,10 +22,9 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
         // TODO: Remove this after testing and uncomment the code below
         return true;
 
-        // Production'da sadece Admin ve SuperAdmin rollerine izin ver
+        // Production'da sadece SistemYoneticisi ve FirmaYoneticisi rollerine izin ver
         // return httpContext.User.Identity?.IsAuthenticated == true &&
-        //        (httpContext.User.IsInRole("Admin") || 
-        //         httpContext.User.IsInRole("SuperAdmin") ||
-        //         httpContext.User.IsInRole("TenantAdmin"));
+        //        (httpContext.User.IsInRole("SistemYoneticisi") || 
+        //         httpContext.User.IsInRole("FirmaYoneticisi"));
     }
 }
