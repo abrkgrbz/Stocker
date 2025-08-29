@@ -92,8 +92,9 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             _logger.LogWarning("Getting TenantService for {TenantId}...", tenantId);
             var tenantService = _serviceProvider.GetRequiredService<ITenantService>();
             
-            _logger.LogWarning("Setting current tenant {TenantId}...", tenantId);
-            await tenantService.SetCurrentTenant(tenantId);
+            // Skip setting tenant in service to avoid circular dependency
+            // The tenant is already resolved and we have the connection string
+            _logger.LogWarning("Skipping SetCurrentTenant to avoid circular dependency for {TenantId}", tenantId);
             
             _logger.LogWarning("Creating DbContext for {TenantId}...", tenantId);
             var context = CreateDbContext(tenant.ConnectionString.Value);
