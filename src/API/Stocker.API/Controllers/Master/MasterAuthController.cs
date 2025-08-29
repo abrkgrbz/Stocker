@@ -5,6 +5,7 @@ using Stocker.API.Controllers.Base;
 using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
+using Stocker.Application.Features.Identity.Commands.VerifyEmail;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
@@ -90,6 +91,32 @@ public class MasterAuthController : ApiController
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Verify email address
+    /// </summary>
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<VerifyEmailResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+    {
+        _logger.LogInformation("Email verification attempt for: {Email}", command.Email);
+        
+        var result = await Mediator.Send(command);
+        
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Email verified successfully for: {Email}", command.Email);
+        }
+        else
+        {
+            _logger.LogWarning("Email verification failed for: {Email} - {Error}", 
+                command.Email, result.Error?.Description);
+        }
+        
+        return HandleResult(result);
+    }
+    
     /// <summary>
     /// Validate master admin token
     /// </summary>

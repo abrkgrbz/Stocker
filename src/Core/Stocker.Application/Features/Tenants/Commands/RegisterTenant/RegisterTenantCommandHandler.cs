@@ -134,6 +134,9 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
 
             // Assign user to tenant with TenantAdmin role
             masterUser.AssignToTenant(tenant.Id, UserType.FirmaYoneticisi);
+            
+            // Generate email verification token
+            var verificationToken = masterUser.GenerateEmailVerificationToken();
 
             // Create subscription but mark it as PENDING (not active until payment)
             var billingCycle = request.BillingPeriod == "Yearly" 
@@ -173,12 +176,14 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             _logger.LogInformation("Triggering tenant database provisioning for: {TenantId}", tenant.Id);
             _backgroundJobService.Enqueue<ITenantProvisioningJob>(job => job.ProvisionNewTenantAsync(tenant.Id));
 
-            // Don't send activation email yet - wait for database provisioning
-            // await SendActivationEmail(tenant, masterUser);
+            // Send verification email immediately
+            await SendVerificationEmail(tenant, masterUser, verificationToken);
 
             _logger.LogInformation("Tenant registered successfully, database provisioning started: {TenantId}", tenant.Id);
 
-            return Result<TenantDto>.Success(_mapper.Map<TenantDto>(tenant));
+            // Return success with message for frontend
+            var result = _mapper.Map<TenantDto>(tenant);
+            return Result<TenantDto>.Success(result);
         }
         catch (Exception ex)
         {
@@ -202,20 +207,21 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
         return $"Server=localhost;Database=Stocker_Tenant_{companyCode};Trusted_Connection=true;TrustServerCertificate=true;";
     }
 
-    private async Task SendActivationEmail(Tenant tenant, MasterUser user)
+    private async Task SendVerificationEmail(Tenant tenant, MasterUser user, EmailVerificationToken verificationToken)
     {
-        // Generate activation token
-        var activationToken = Guid.NewGuid().ToString();
-        
-        // In real implementation, save token to database
+        var baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" 
+            ? "https://app.stoocker.app" 
+            : "http://localhost:3000";
         
         var emailContent = $@"
             <h2>Stocker'a Hoş Geldiniz!</h2>
             <p>Sayın {user.FirstName} {user.LastName},</p>
             <p>{tenant.Name} için Stocker hesabınız başarıyla oluşturuldu.</p>
             <p>Hesabınızı aktifleştirmek için aşağıdaki linke tıklayın:</p>
-            <a href='http://localhost:3000/verify-email?token={activationToken}'>Hesabımı Aktifleştir</a>
-            <p>14 günlük ücretsiz deneme süreniz başlamıştır.</p>
+            <a href='{baseUrl}/verify-email?token={verificationToken.Token}&email={Uri.EscapeDataString(user.Email.Value)}' style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Hesabımı Aktifleştir</a>
+            <p>Bu link 24 saat geçerlidir.</p>
+            <p>Eğer link çalışmıyorsa, aşağıdaki URL'yi tarayıcınıza kopyalayın:</p>
+            <p>{baseUrl}/verify-email?token={verificationToken.Token}&email={Uri.EscapeDataString(user.Email.Value)}</p>
             <br>
             <p>Saygılarımızla,<br>Stocker Ekibi</p>
         ";
