@@ -82,7 +82,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 }
 
                 // Handle tenant context for tenant owners
-                if (tenantId.HasValue && masterUser.UserType == UserType.TenantOwner)
+                if (tenantId.HasValue && masterUser.UserType == UserType.FirmaSahibi)
                 {
                     await _userManagementService.EnsureTenantUserExistsAsync(masterUser, tenantId.Value);
                 }
@@ -255,7 +255,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 firstName: request.FirstName,
                 lastName: request.LastName,
                 phoneNumber: request.PhoneNumber,
-                userType: UserType.TenantOwner);
+                userType: UserType.FirmaSahibi);
 
             return await _tokenGenerationService.GenerateForMasterUserAsync(masterUser);
         }
@@ -300,7 +300,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 firstName: request.FirstName,
                 lastName: request.LastName,
                 phoneNumber: request.PhoneNumber,
-                userType: UserType.TenantAdmin);
+                userType: UserType.FirmaYoneticisi);
 
             // Then ensure tenant user exists
             await _userManagementService.EnsureTenantUserExistsAsync(masterUser, tenantId);

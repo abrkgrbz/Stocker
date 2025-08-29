@@ -128,12 +128,12 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
                 plainPassword: request.Password,  // ✅ DOĞRU! plainPassword kullan
                 firstName: firstName,
                 lastName: lastName,
-                userType: UserType.TenantOwner,
+                userType: UserType.FirmaSahibi,
                 phoneNumber: contactPhone?.Value
             );
 
             // Assign user to tenant with TenantAdmin role
-            masterUser.AssignToTenant(tenant.Id, UserType.TenantAdmin);
+            masterUser.AssignToTenant(tenant.Id, UserType.FirmaYoneticisi);
 
             // Create subscription but mark it as PENDING (not active until payment)
             var billingCycle = request.BillingPeriod == "Yearly" 

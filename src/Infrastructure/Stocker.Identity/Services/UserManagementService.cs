@@ -55,7 +55,7 @@ public class UserManagementService : IUserManagementService
         string firstName,
         string lastName,
         string? phoneNumber = null,
-        UserType userType = UserType.TenantOwner)
+        UserType userType = UserType.FirmaSahibi)
     {
         // Check if user already exists
         var existingUser = await _masterContext.MasterUsers
@@ -201,7 +201,7 @@ public interface IUserManagementService
         string firstName,
         string lastName,
         string? phoneNumber = null,
-        UserType userType = UserType.TenantOwner);
+        UserType userType = UserType.FirmaSahibi);
     Task EnsureTenantUserExistsAsync(MasterUser masterUser, Guid tenantId);
     Task UpdateLastLoginAsync(MasterUser user);
     Task UpdateLastLoginAsync(TenantUser user);

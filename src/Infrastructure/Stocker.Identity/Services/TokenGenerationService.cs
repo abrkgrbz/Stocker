@@ -105,15 +105,21 @@ public class TokenGenerationService : ITokenGenerationService
         // Add role claims based on UserType
         switch (user.UserType)
         {
-            case UserType.SystemAdmin:
-                claims.Add(new Claim(ClaimTypes.Role, "SystemAdmin"));
+            case UserType.SistemYoneticisi:
+                claims.Add(new Claim(ClaimTypes.Role, "SistemYoneticisi"));
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 break;
-            case UserType.TenantAdmin:
-                claims.Add(new Claim(ClaimTypes.Role, "TenantAdmin"));
+            case UserType.FirmaYoneticisi:
+                claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
                 break;
-            case UserType.TenantOwner:
-                claims.Add(new Claim(ClaimTypes.Role, "TenantOwner"));
+            case UserType.FirmaSahibi:
+                claims.Add(new Claim(ClaimTypes.Role, "FirmaSahibi"));
+                break;
+            case UserType.Destek:
+                claims.Add(new Claim(ClaimTypes.Role, "Destek"));
+                break;
+            case UserType.Kullanici:
+                claims.Add(new Claim(ClaimTypes.Role, "Kullanici"));
                 break;
         }
 
@@ -164,9 +170,11 @@ public class TokenGenerationService : ITokenGenerationService
     {
         return userType switch
         {
-            UserType.SystemAdmin => new List<string> { "SystemAdmin" },
-            UserType.TenantAdmin => new List<string> { "TenantAdmin" },
-            UserType.TenantOwner => new List<string> { "TenantOwner" },
+            UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi" },
+            UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi" },
+            UserType.FirmaSahibi => new List<string> { "FirmaSahibi" },
+            UserType.Destek => new List<string> { "Destek" },
+            UserType.Kullanici => new List<string> { "Kullanici" },
             _ => new List<string>()
         };
     }

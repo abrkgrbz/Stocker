@@ -75,7 +75,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 plainPassword: request.Password,
                 firstName: request.FirstName,
                 lastName: request.LastName,
-                userType: Domain.Master.Enums.UserType.TenantAdmin,
+                userType: Domain.Master.Enums.UserType.FirmaYoneticisi,
                 phoneNumber: null);
             
             // CRITICAL DEBUG: Before SaveChanges
@@ -107,7 +107,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             var userTenant = new UserTenant(
                 userId: masterUser.Id,
                 tenantId: tenant.Id,
-                userType: Domain.Master.Enums.UserType.TenantAdmin);
+                userType: Domain.Master.Enums.UserType.FirmaYoneticisi);
 
             await _masterUnitOfWork.Repository<UserTenant>().AddAsync(userTenant, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);

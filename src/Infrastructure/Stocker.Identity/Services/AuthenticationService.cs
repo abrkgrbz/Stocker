@@ -93,7 +93,7 @@ public class AuthenticationService : IAuthenticationService
             }
 
             // Eğer MasterUser bir tenant context'inde giriş yapıyorsa ve henüz o tenant'ta TenantUser'ı yoksa, otomatik oluştur
-            if (tenantId.HasValue && masterUser.UserType == UserType.TenantOwner)
+            if (tenantId.HasValue && masterUser.UserType == UserType.FirmaSahibi)
             {
                 await EnsureTenantUserExistsAsync(masterUser, tenantId.Value);
             }
@@ -295,7 +295,7 @@ public class AuthenticationService : IAuthenticationService
             plainPassword: request.Password,
             firstName: request.FirstName,
             lastName: request.LastName,
-            userType: UserType.TenantOwner, // Default to TenantOwner for registration
+            userType: UserType.FirmaSahibi, // Default to FirmaSahibi for registration
             phoneNumber: phoneNumber
         );
 
@@ -423,16 +423,16 @@ public class AuthenticationService : IAuthenticationService
         };
 
         // Add role claim based on UserType
-        if (user.UserType == UserType.SystemAdmin)
+        if (user.UserType == UserType.SistemYoneticisi)
         {
-            claims.Add(new Claim(ClaimTypes.Role, "SystemAdmin"));
+            claims.Add(new Claim(ClaimTypes.Role, "SistemYoneticisi"));
             claims.Add(new Claim("IsSuperAdmin", "true"));
-            _logger.LogInformation("Adding SystemAdmin role to token for user {Username}", user.Username);
+            _logger.LogInformation("Adding SistemYoneticisi role to token for user {Username}", user.Username);
         }
-        else if (user.UserType == UserType.TenantAdmin)
+        else if (user.UserType == UserType.FirmaYoneticisi)
         {
-            claims.Add(new Claim(ClaimTypes.Role, "TenantAdmin"));
-            _logger.LogInformation("Adding TenantAdmin role to token for user {Username}", user.Username);
+            claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
+            _logger.LogInformation("Adding FirmaYoneticisi role to token for user {Username}", user.Username);
         }
         
         _logger.LogInformation("User {Username} has UserType: {UserType}", user.Username, user.UserType);
@@ -473,8 +473,8 @@ public class AuthenticationService : IAuthenticationService
                 TenantName = tenantId.HasValue ? 
                     (await _masterContext.Tenants.FindAsync(tenantId.Value))?.Name : null,
                 IsMasterUser = true,
-                Roles = user.UserType == UserType.SystemAdmin ? new List<string> { "SystemAdmin" } : 
-                        user.UserType == UserType.TenantAdmin ? new List<string> { "TenantAdmin" } : 
+                Roles = user.UserType == UserType.SistemYoneticisi ? new List<string> { "SistemYoneticisi" } : 
+                        user.UserType == UserType.FirmaYoneticisi ? new List<string> { "FirmaYoneticisi" } : 
                         new List<string>()
             }
         };

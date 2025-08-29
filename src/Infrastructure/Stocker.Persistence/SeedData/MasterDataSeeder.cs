@@ -146,7 +146,7 @@ public class MasterDataSeeder
 
     private async Task SeedSystemAdminAsync()
     {
-        if (await _context.MasterUsers.AnyAsync(u => u.UserType == UserType.SystemAdmin))
+        if (await _context.MasterUsers.AnyAsync(u => u.UserType == UserType.SistemYoneticisi))
         {
             _logger.LogInformation("System admin already seeded.");
             return;
@@ -165,7 +165,7 @@ public class MasterDataSeeder
             plainPassword: _adminCredentials.DefaultAdminPassword,
             firstName: _adminCredentials.DefaultAdminFirstName,
             lastName: _adminCredentials.DefaultAdminLastName,
-            userType: UserType.SystemAdmin);
+            userType: UserType.SistemYoneticisi);
 
         systemAdmin.Activate();
         systemAdmin.VerifyEmail();
@@ -212,7 +212,7 @@ public class MasterDataSeeder
             firstName: "Tenant",
             lastName: "Administrator",
             phoneNumber: phoneResult.Value,
-            userType: UserType.TenantOwner);
+            userType: UserType.FirmaSahibi);
 
         tenantAdmin.Activate();
         tenantAdmin.VerifyEmail();

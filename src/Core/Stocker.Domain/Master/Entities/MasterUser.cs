@@ -122,7 +122,7 @@ public sealed class MasterUser : AggregateRoot
 
         var hashedPassword = HashedPassword.CreateFromHash(passwordHash);
 
-        return new MasterUser(username, email, hashedPassword, firstName, lastName, UserType.Regular, phoneNumber);
+        return new MasterUser(username, email, hashedPassword, firstName, lastName, UserType.Kullanici, phoneNumber);
     }
 
     public void Activate()
@@ -411,7 +411,7 @@ public sealed class MasterUser : AggregateRoot
 
     public bool HasAccessToTenant(Guid tenantId)
     {
-        return UserType == UserType.SystemAdmin || _tenants.Any(t => t.TenantId == tenantId);
+        return UserType == UserType.SistemYoneticisi || _tenants.Any(t => t.TenantId == tenantId);
     }
 
     // Helper methods for Identity layer
@@ -457,7 +457,7 @@ public sealed class MasterUser : AggregateRoot
         {
             return;
         }
-        _tenants.Add(new UserTenant(Id, tenantId, UserType.Regular));
+        _tenants.Add(new UserTenant(Id, tenantId, UserType.Kullanici));
     }
 
     public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();

@@ -8,6 +8,6 @@ public class AssignToTenantCommand : IRequest<Result<bool>>
 {
     public Guid UserId { get; set; }
     public Guid TenantId { get; set; }
-    public UserType UserType { get; set; } = UserType.Regular;
+    public UserType UserType { get; set; } = UserType.Kullanici;
     public string? AssignedBy { get; set; }
 }
