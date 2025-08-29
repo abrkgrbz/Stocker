@@ -71,7 +71,8 @@ public class MigrationService : IMigrationService
                 throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
             }
             
-            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
+            // Skip connection test since we're creating the database
+            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId, skipConnectionTest: true);
             
             // MigrateAsync will create the database if it doesn't exist and apply all migrations
             _logger.LogInformation("Creating database and applying migrations for tenant {TenantId}...", tenantId);

@@ -12,6 +12,7 @@ public interface ITenantDbContextFactory
 {
     TenantDbContext CreateDbContext(string connectionString);
     Task<TenantDbContext> CreateDbContextAsync(Guid tenantId);
+    Task<TenantDbContext> CreateDbContextAsync(Guid tenantId, bool skipConnectionTest);
     Task<TenantDbContext> CreateDbContextAsync(string tenantIdentifier);
 }
 
@@ -75,6 +76,11 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public async Task<TenantDbContext> CreateDbContextAsync(Guid tenantId)
     {
+        return await CreateDbContextAsync(tenantId, skipConnectionTest: false);
+    }
+    
+    public async Task<TenantDbContext> CreateDbContextAsync(Guid tenantId, bool skipConnectionTest)
+    {
         try
         {
             var tenant = await _masterDbContext.Tenants
@@ -94,11 +100,14 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
             var context = CreateDbContextWithTenantId(tenant.ConnectionString.Value, tenantId);
             
-            // Test connection
-            var canConnect = await context.Database.CanConnectAsync();
-            if (!canConnect)
+            // Test connection only if not skipped (needed for initial migrations)
+            if (!skipConnectionTest)
             {
-                throw new InvalidOperationException($"Cannot connect to tenant database for tenant {tenantId}");
+                var canConnect = await context.Database.CanConnectAsync();
+                if (!canConnect)
+                {
+                    throw new InvalidOperationException($"Cannot connect to tenant database for tenant {tenantId}");
+                }
             }
             
             return context;
