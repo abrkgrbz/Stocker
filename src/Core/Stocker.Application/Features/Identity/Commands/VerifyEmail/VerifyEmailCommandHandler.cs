@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.Repositories;
 
 namespace Stocker.Application.Features.Identity.Commands.VerifyEmail;
 
@@ -33,10 +34,9 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             }
 
             // Find user by email
-            var user = await _unitOfWork.MasterUsers()
+            var user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                 .AsQueryable()
                 .Include(u => u.UserTenants)
-                    .ThenInclude(ut => ut.Tenant)
                 .FirstOrDefaultAsync(u => u.Email == emailResult.Value, cancellationToken);
 
             if (user == null)
@@ -51,6 +51,15 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             {
                 _logger.LogInformation("Email already verified for user: {UserId}", user.Id);
                 var userTenant = user.UserTenants.FirstOrDefault();
+                string? existingTenantName = null;
+                
+                if (userTenant != null)
+                {
+                    var existingTenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
+                        .AsQueryable()
+                        .FirstOrDefaultAsync(t => t.Id == userTenant.TenantId, cancellationToken);
+                    existingTenantName = existingTenant?.Name;
+                }
                 
                 return Result<VerifyEmailResponse>.Success(new VerifyEmailResponse
                 {
@@ -58,7 +67,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                     Message = "Email adresiniz zaten doğrulanmış. Giriş yapabilirsiniz.",
                     RedirectUrl = "/login",
                     TenantId = userTenant?.TenantId,
-                    TenantName = userTenant?.Tenant?.Name
+                    TenantName = existingTenantName
                 });
             }
 
@@ -78,14 +87,24 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
 
             // Get tenant information
             var userTenantInfo = user.UserTenants.FirstOrDefault();
+            Domain.Master.Entities.Tenant? tenant = null;
+            string? tenantName = null;
+            
             if (userTenantInfo != null)
             {
-                // Activate tenant as well
-                var tenant = userTenantInfo.Tenant;
-                if (tenant != null && tenant.Status == Domain.Master.Enums.TenantStatus.Beklemede)
+                // Load tenant separately
+                tenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
+                    .AsQueryable()
+                    .FirstOrDefaultAsync(t => t.Id == userTenantInfo.TenantId, cancellationToken);
+                
+                if (tenant != null)
                 {
-                    tenant.Activate();
-                    _logger.LogInformation("Tenant activated after email verification: {TenantId}", tenant.Id);
+                    tenantName = tenant.Name;
+                    if (!tenant.IsActive)
+                    {
+                        tenant.Activate();
+                        _logger.LogInformation("Tenant activated after email verification: {TenantId}", tenant.Id);
+                    }
                 }
             }
 
@@ -99,7 +118,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 Message = "Email adresiniz başarıyla doğrulandı! Şirket bilgilerinizi tamamlayarak başlayabilirsiniz.",
                 RedirectUrl = "/company-setup",
                 TenantId = userTenantInfo?.TenantId,
-                TenantName = userTenantInfo?.Tenant?.Name
+                TenantName = tenantName
             });
         }
         catch (Exception ex)
