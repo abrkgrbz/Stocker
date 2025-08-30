@@ -1,0 +1,112 @@
+# ===============================================
+# NGINX FOR COOLIFY WITH DOCKERFILE
+# ===============================================
+# This configuration builds nginx with config files
+# included in the image to avoid mount issues
+# ===============================================
+
+version: '3.8'
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: stocker-nginx
+    restart: unless-stopped
+    ports:
+      - "8090:8090"   # HTTP (internal)
+      - "8453:8453"   # HTTPS (internal)
+    environment:
+      - NGINX_HTTP_PORT=8090
+      - NGINX_HTTPS_PORT=8453
+    volumes:
+      # Only mount logs and cache, not config files
+      - nginx_logs:/var/log/nginx
+      - nginx_cache:/var/cache/nginx
+    networks:
+      - stocker-network
+    labels:
+      # Coolify/Traefik labels for routing
+      - "traefik.enable=true"
+      - "traefik.docker.network=stocker-network"
+      
+      # Main app routing
+      - "traefik.http.routers.nginx-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.nginx-main.entrypoints=websecure"
+      - "traefik.http.routers.nginx-main.tls=true"
+      - "traefik.http.routers.nginx-main.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-main.loadbalancer.server.port=8090"
+      
+      # API routing
+      - "traefik.http.routers.nginx-api.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.nginx-api.entrypoints=websecure"
+      - "traefik.http.routers.nginx-api.tls=true"
+      - "traefik.http.routers.nginx-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-api.loadbalancer.server.port=8090"
+      
+      # MinIO Console
+      - "traefik.http.routers.nginx-minio.rule=Host(`minio.stoocker.app`)"
+      - "traefik.http.routers.nginx-minio.entrypoints=websecure"
+      - "traefik.http.routers.nginx-minio.tls=true"
+      - "traefik.http.routers.nginx-minio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-minio.loadbalancer.server.port=8090"
+      
+      # S3 API
+      - "traefik.http.routers.nginx-s3.rule=Host(`s3.stoocker.app`)"
+      - "traefik.http.routers.nginx-s3.entrypoints=websecure"
+      - "traefik.http.routers.nginx-s3.tls=true"
+      - "traefik.http.routers.nginx-s3.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-s3.loadbalancer.server.port=8090"
+      
+      # Grafana
+      - "traefik.http.routers.nginx-grafana.rule=Host(`grafana.stoocker.app`)"
+      - "traefik.http.routers.nginx-grafana.entrypoints=websecure"
+      - "traefik.http.routers.nginx-grafana.tls=true"
+      - "traefik.http.routers.nginx-grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-grafana.loadbalancer.server.port=8090"
+      
+      # RabbitMQ
+      - "traefik.http.routers.nginx-rabbitmq.rule=Host(`rabbitmq.stoocker.app`)"
+      - "traefik.http.routers.nginx-rabbitmq.entrypoints=websecure"
+      - "traefik.http.routers.nginx-rabbitmq.tls=true"
+      - "traefik.http.routers.nginx-rabbitmq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-rabbitmq.loadbalancer.server.port=8090"
+      
+      # Kibana
+      - "traefik.http.routers.nginx-kibana.rule=Host(`kibana.stoocker.app`)"
+      - "traefik.http.routers.nginx-kibana.entrypoints=websecure"
+      - "traefik.http.routers.nginx-kibana.tls=true"
+      - "traefik.http.routers.nginx-kibana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-kibana.loadbalancer.server.port=8090"
+      
+      # Seq
+      - "traefik.http.routers.nginx-seq.rule=Host(`seq.stoocker.app`)"
+      - "traefik.http.routers.nginx-seq.entrypoints=websecure"
+      - "traefik.http.routers.nginx-seq.tls=true"
+      - "traefik.http.routers.nginx-seq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-seq.loadbalancer.server.port=8090"
+      
+      # Prometheus
+      - "traefik.http.routers.nginx-prometheus.rule=Host(`prometheus.stoocker.app`)"
+      - "traefik.http.routers.nginx-prometheus.entrypoints=websecure"
+      - "traefik.http.routers.nginx-prometheus.tls=true"
+      - "traefik.http.routers.nginx-prometheus.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-prometheus.loadbalancer.server.port=8090"
+      
+      # Alerts
+      - "traefik.http.routers.nginx-alerts.rule=Host(`alerts.stoocker.app`)"
+      - "traefik.http.routers.nginx-alerts.entrypoints=websecure"
+      - "traefik.http.routers.nginx-alerts.tls=true"
+      - "traefik.http.routers.nginx-alerts.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-alerts.loadbalancer.server.port=8090"
+
+volumes:
+  nginx_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  stocker-network:
+    external: true
