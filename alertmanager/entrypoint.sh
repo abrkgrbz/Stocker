@@ -1,9 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
+# Create config directory if it doesn't exist
+mkdir -p /tmp
+
 # Function to replace environment variables in template
-envsubst_config() {
-    # Use sed to replace environment variables since envsubst might not be available
+process_config() {
+    # Copy template to temp location
     cp /etc/alertmanager/config.yml.template /tmp/config.yml
     
     # Replace environment variables with their values or defaults
@@ -18,17 +21,17 @@ envsubst_config() {
     sed -i "s|\${BACKEND_ALERT_EMAIL:-backend-team@stoocker.app}|${BACKEND_ALERT_EMAIL:-backend-team@stoocker.app}|g" /tmp/config.yml
     sed -i "s|\${OPS_ALERT_EMAIL:-ops-team@stoocker.app}|${OPS_ALERT_EMAIL:-ops-team@stoocker.app}|g" /tmp/config.yml
     
-    # Move the processed config to the correct location
-    mv /tmp/config.yml /etc/alertmanager/config.yml
+    # Copy processed config to final location
+    cp /tmp/config.yml /etc/alertmanager/config.yml
     
     echo "AlertManager configuration processed successfully"
 }
 
 # Process the configuration template
-envsubst_config
+process_config
 
 # Start AlertManager with the processed config
-exec /bin/alertmanager \
+exec /usr/bin/alertmanager \
     --config.file=/etc/alertmanager/config.yml \
     --storage.path=/alertmanager \
     --web.external-url=${EXTERNAL_URL:-https://alerts.stoocker.app} \
