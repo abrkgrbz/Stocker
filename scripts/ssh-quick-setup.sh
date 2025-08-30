@@ -35,10 +35,13 @@ else
     echo -e "${YELLOW}Coolify services directory not found. Trying current directory...${NC}"
 fi
 
-# Check if we're in the right place
-if [ ! -f "docker-compose.nginx-coolify.yml" ] && [ ! -f "scripts/setup-coolify-services.sh" ]; then
-    echo -e "${RED}This doesn't look like the Stocker project directory!${NC}"
+# Check if we're in the right place - Coolify uses source directory
+if [ ! -f "docker-compose.yml" ] && [ ! -f "src/Web/Stocker.Web.Portal/package.json" ] && [ ! -f "docker-compose.nginx-coolify.yml" ]; then
+    echo -e "${YELLOW}Warning: This doesn't look like the Stocker project directory!${NC}"
     echo "Current directory: $(pwd)"
+    echo ""
+    echo "Looking for project files..."
+    ls -la | head -20
     echo ""
     read -p "Do you want to continue anyway? (y/N) " -n 1 -r
     echo
