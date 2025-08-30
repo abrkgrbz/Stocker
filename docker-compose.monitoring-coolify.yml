@@ -30,7 +30,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3001:3000"
+      - "3005:3000"
     environment:
       # Admin credentials
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
