@@ -11,18 +11,17 @@ EMAIL="admin@stoocker.app"
 STAGING=0 # Set to 1 for testing with Let's Encrypt staging server
 
 # Subdomains to include in the certificate
-# Note: mail.stoocker.app removed as it points to external email service
 SUBDOMAINS=(
     "www.stoocker.app"
     "api.stoocker.app"
-    # "minio.stoocker.app"      # Uncomment when DNS points to server
-    # "s3.stoocker.app"         # Uncomment when DNS points to server
-    # "grafana.stoocker.app"    # Uncomment when DNS points to server
-    # "prometheus.stoocker.app" # Uncomment when DNS points to server
-    # "alerts.stoocker.app"     # Uncomment when DNS points to server
-    # "rabbitmq.stoocker.app"   # Uncomment when DNS points to server
-    # "kibana.stoocker.app"     # Uncomment when DNS points to server
-    # "seq.stoocker.app"        # Uncomment when DNS points to server
+    "minio.stoocker.app"
+    "s3.stoocker.app"
+    "grafana.stoocker.app"
+    "prometheus.stoocker.app"
+    "alerts.stoocker.app"
+    "rabbitmq.stoocker.app"
+    "kibana.stoocker.app"
+    "seq.stoocker.app" 
 )
 
 # Colors for output
@@ -281,8 +280,6 @@ echo ""
 echo -e "${GREEN}Your services are now available at:${NC}"
 echo -e "  Main App:     https://${DOMAIN}"
 echo -e "  API:          https://api.${DOMAIN}"
-echo ""
-echo -e "${YELLOW}Other services will be available when DNS is configured:${NC}"
 echo -e "  MinIO:        https://minio.${DOMAIN}"
 echo -e "  Grafana:      https://grafana.${DOMAIN}"
 echo -e "  Prometheus:   https://prometheus.${DOMAIN}"
