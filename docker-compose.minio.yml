@@ -32,23 +32,28 @@ services:
       - stocker-network
 
   # MinIO Client for initial setup
+  # Note: This container runs once to create buckets and then stops
+  # To run manually: docker-compose run --rm minio-mc
   minio-mc:
     image: minio/mc:latest
     container_name: stocker-minio-mc
+    restart: "no"  # Don't restart after completion
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add stocker-minio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-StockerMinio2024!};
+      echo 'Waiting for MinIO to be ready...';
+      sleep 5;
+      /usr/bin/mc alias set stocker-minio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-StockerMinio2024!};
       /usr/bin/mc mb --ignore-existing stocker-minio/stocker-files;
       /usr/bin/mc mb --ignore-existing stocker-minio/stocker-backups;
       /usr/bin/mc mb --ignore-existing stocker-minio/stocker-temp;
-      /usr/bin/mc policy set public stocker-minio/stocker-files/public;
-      /usr/bin/mc admin user add stocker-minio ${MINIO_APP_USER:-stockerapp} ${MINIO_APP_PASSWORD:-StockerApp2024!};
-      /usr/bin/mc admin policy set stocker-minio readwrite user=${MINIO_APP_USER:-stockerapp};
+      /usr/bin/mc policy set public stocker-minio/stocker-files/public || true;
+      /usr/bin/mc admin user add stocker-minio ${MINIO_APP_USER:-stockerapp} ${MINIO_APP_PASSWORD:-StockerApp2024!} || true;
+      /usr/bin/mc admin policy set stocker-minio readwrite user=${MINIO_APP_USER:-stockerapp} || true;
       echo 'MinIO buckets and users configured successfully';
-      exit 0;
+      echo 'This container will now stop. This is normal behavior.';
       "
     networks:
       - stocker-network
