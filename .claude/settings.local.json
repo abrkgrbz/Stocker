@@ -63,7 +63,8 @@
       "Bash(npx tailwindcss init:*)",
       "Bash(npm uninstall:*)",
       "Bash(ssh:*)",
-      "Bash(CreateTestUser.exe)"
+      "Bash(CreateTestUser.exe)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }
