@@ -1,3 +1,11 @@
+# ===============================================
+# NGINX WITH COOLIFY TRAEFIK INTEGRATION
+# ===============================================
+# This configuration works alongside Coolify's Traefik
+# Nginx runs on alternative ports (8080/8443)
+# Traefik handles SSL and routes to Nginx
+# ===============================================
+
 version: '3.8'
 
 services:
@@ -6,70 +14,93 @@ services:
     container_name: stocker-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      # Alternative ports to avoid conflict with Traefik
+      - "8080:8080"   # HTTP (internal)
+      - "8443:8443"   # HTTPS (internal)
+    environment:
+      - NGINX_HTTP_PORT=8080
+      - NGINX_HTTPS_PORT=8443
     volumes:
       # Nginx configuration
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/nginx-coolify.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d-coolify:/etc/nginx/conf.d:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
-      # SSL certificates
+      # Self-signed certs for internal HTTPS (optional)
       - ./nginx/certs:/etc/nginx/certs:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
       # Logs
       - ./nginx/logs:/var/log/nginx
       # Static files cache
       - nginx_cache:/var/cache/nginx
-    depends_on:
-      - certbot
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     networks:
       - stocker-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  certbot:
-    image: certbot/certbot:latest
-    container_name: stocker-certbot
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/logs:/var/log/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    networks:
-      - stocker-network
-
-  # Nginx Proxy Manager (Alternative - Optional)
-  # nginx-proxy-manager:
-  #   image: jc21/nginx-proxy-manager:latest
-  #   container_name: stocker-npm
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #     - "81:81"  # Admin Panel
-  #   environment:
-  #     DB_SQLITE_FILE: "/data/database.sqlite"
-  #     DISABLE_IPV6: 'true'
-  #   volumes:
-  #     - npm_data:/data
-  #     - npm_letsencrypt:/etc/letsencrypt
-  #   networks:
-  #     - stocker-network
+    labels:
+      # Coolify/Traefik labels for routing
+      - "traefik.enable=true"
+      - "traefik.docker.network=stocker-network"
+      
+      # Main app routing
+      - "traefik.http.routers.nginx-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.nginx-main.entrypoints=websecure"
+      - "traefik.http.routers.nginx-main.tls=true"
+      - "traefik.http.routers.nginx-main.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-main.loadbalancer.server.port=8080"
+      
+      # API routing
+      - "traefik.http.routers.nginx-api.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.nginx-api.entrypoints=websecure"
+      - "traefik.http.routers.nginx-api.tls=true"
+      - "traefik.http.routers.nginx-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-api.loadbalancer.server.port=8080"
+      
+      # MinIO Console
+      - "traefik.http.routers.nginx-minio.rule=Host(`minio.stoocker.app`)"
+      - "traefik.http.routers.nginx-minio.entrypoints=websecure"
+      - "traefik.http.routers.nginx-minio.tls=true"
+      - "traefik.http.routers.nginx-minio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-minio.loadbalancer.server.port=8080"
+      
+      # S3 API
+      - "traefik.http.routers.nginx-s3.rule=Host(`s3.stoocker.app`)"
+      - "traefik.http.routers.nginx-s3.entrypoints=websecure"
+      - "traefik.http.routers.nginx-s3.tls=true"
+      - "traefik.http.routers.nginx-s3.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-s3.loadbalancer.server.port=8080"
+      
+      # Grafana
+      - "traefik.http.routers.nginx-grafana.rule=Host(`grafana.stoocker.app`)"
+      - "traefik.http.routers.nginx-grafana.entrypoints=websecure"
+      - "traefik.http.routers.nginx-grafana.tls=true"
+      - "traefik.http.routers.nginx-grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-grafana.loadbalancer.server.port=8080"
+      
+      # Other services...
+      - "traefik.http.routers.nginx-rabbitmq.rule=Host(`rabbitmq.stoocker.app`)"
+      - "traefik.http.routers.nginx-rabbitmq.entrypoints=websecure"
+      - "traefik.http.routers.nginx-rabbitmq.tls=true"
+      - "traefik.http.routers.nginx-rabbitmq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-rabbitmq.loadbalancer.server.port=8080"
+      
+      - "traefik.http.routers.nginx-kibana.rule=Host(`kibana.stoocker.app`)"
+      - "traefik.http.routers.nginx-kibana.entrypoints=websecure"
+      - "traefik.http.routers.nginx-kibana.tls=true"
+      - "traefik.http.routers.nginx-kibana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-kibana.loadbalancer.server.port=8080"
+      
+      - "traefik.http.routers.nginx-seq.rule=Host(`seq.stoocker.app`)"
+      - "traefik.http.routers.nginx-seq.entrypoints=websecure"
+      - "traefik.http.routers.nginx-seq.tls=true"
+      - "traefik.http.routers.nginx-seq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx-seq.loadbalancer.server.port=8080"
 
 volumes:
   nginx_cache:
     driver: local
-  # npm_data:
-  #   driver: local
-  # npm_letsencrypt:
-  #   driver: local
 
 networks:
   stocker-network:
