@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: stocker-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"     # API Port
+      - "9001:9001"     # Console Port
+    environment:
+      # Admin credentials
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-StockerMinio2024!}
+      # Default region
+      - MINIO_REGION_NAME=${MINIO_REGION:-us-east-1}
+      # Enable browser
+      - MINIO_BROWSER=on
+      # Console address
+      - MINIO_CONSOLE_ADDRESS=:9001
+    volumes:
+      - minio_data:/data
+      - minio_config:/root/.minio
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - stocker-network
+    labels:
+      # Coolify/Traefik labels for automatic SSL
+      - "traefik.enable=true"
+      # MinIO Console
+      - "traefik.http.routers.minio-console.rule=Host(`minio.${DOMAIN:-stoocker.app}`)"
+      - "traefik.http.routers.minio-console.entrypoints=https"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # MinIO S3 API
+      - "traefik.http.routers.minio-s3.rule=Host(`s3.${DOMAIN:-stoocker.app}`)"
+      - "traefik.http.routers.minio-s3.entrypoints=https"
+      - "traefik.http.routers.minio-s3.tls=true"
+      - "traefik.http.routers.minio-s3.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minio-s3.loadbalancer.server.port=9000"
+
+  # MinIO Client for initial setup - runs once then exits
+  # This is a one-time setup container, not a service
+  # To re-run: docker-compose -f docker-compose.minio-coolify.yml run --rm minio-init
+  minio-init:
+    image: minio/mc:latest
+    container_name: stocker-minio-init
+    restart: "no"  # Never restart
+    depends_on:
+      minio:
+        condition: service_healthy
+    profiles: ["setup"]  # Only run when explicitly called
+    entrypoint: >
+      /bin/sh -c "
+      echo '=== MinIO Initial Setup ===';
+      echo 'Waiting for MinIO to be ready...';
+      sleep 5;
+      
+      echo 'Setting up MinIO alias...';
+      /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-StockerMinio2024!};
+      
+      echo 'Creating buckets...';
+      /usr/bin/mc mb --ignore-existing local/stocker-files;
+      /usr/bin/mc mb --ignore-existing local/stocker-backups;
+      /usr/bin/mc mb --ignore-existing local/stocker-temp;
+      
+      echo 'Setting bucket policies...';
+      /usr/bin/mc policy set public local/stocker-files/public || true;
+      
+      echo 'Creating application user...';
+      /usr/bin/mc admin user add local ${MINIO_APP_USER:-stockerapp} ${MINIO_APP_PASSWORD:-StockerApp2024!} || true;
+      /usr/bin/mc admin policy set local readwrite user=${MINIO_APP_USER:-stockerapp} || true;
+      
+      echo '=== MinIO Setup Complete ===';
+      echo 'MinIO Console: http://localhost:9001';
+      echo 'Username: ${MINIO_ROOT_USER:-admin}';
+      echo 'Password: ${MINIO_ROOT_PASSWORD:-StockerMinio2024!}';
+      echo '';
+      echo 'Application credentials:';
+      echo 'Username: ${MINIO_APP_USER:-stockerapp}';
+      echo 'Password: ${MINIO_APP_PASSWORD:-StockerApp2024!}';
+      echo '';
+      echo 'This setup container will now exit. This is normal.';
+      "
+    networks:
+      - stocker-network
+
+volumes:
+  minio_data:
+    driver: local
+  minio_config:
+    driver: local
+
+networks:
+  stocker-network:
+    external: true
