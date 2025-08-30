@@ -1,0 +1,18 @@
+FROM prom/alertmanager:latest
+
+# Copy simple configuration (no environment variables)
+COPY config-simple.yml /etc/alertmanager/config.yml
+
+# Create storage directory
+USER root
+RUN mkdir -p /alertmanager && \
+    chown -R nobody:nobody /alertmanager
+
+USER nobody
+
+EXPOSE 9093
+
+ENTRYPOINT ["/bin/alertmanager"]
+CMD ["--config.file=/etc/alertmanager/config.yml", \
+     "--storage.path=/alertmanager", \
+     "--web.external-url=http://localhost:9093"]
