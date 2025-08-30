@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  init-setup:
+    image: alpine:latest
+    container_name: stocker-init-setup
+    volumes:
+      - ./scripts:/scripts:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - POSTGRES_CONNECTION=${POSTGRES_CONNECTION}
+      - REDIS_CONNECTION=${REDIS_CONNECTION}
+    command: |
+      sh -c "
+        apk add --no-cache bash docker-cli
+        echo 'Running Coolify setup scripts...'
+        bash /scripts/setup-coolify-services.sh
+        echo 'Setup complete!'
+        sleep 10
+      "
+    networks:
+      - stocker-network
+
+networks:
+  stocker-network:
+    external: true

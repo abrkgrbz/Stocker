@@ -1,0 +1,64 @@
+name: Coolify Setup
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'docker-compose.*.yml'
+      - 'nginx/**'
+      - 'prometheus/**'
+      - 'grafana/**'
+      - 'alertmanager/**'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+      - name: Execute setup script on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SERVICE_PATH: ${{ secrets.COOLIFY_SERVICE_PATH }}
+        run: |
+          ssh $SSH_USER@$SSH_HOST << 'EOF'
+            cd $SERVICE_PATH
+            git pull
+            bash scripts/setup-coolify-services.sh
+          EOF
+
+      - name: Build and push Docker images
+        if: github.event_name == 'push'
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME --password-stdin
+          
+          # Build and push images
+          docker build -t $DOCKER_REGISTRY/stocker-nginx:latest ./nginx/
+          docker push $DOCKER_REGISTRY/stocker-nginx:latest
+          
+          docker build -t $DOCKER_REGISTRY/stocker-prometheus:latest ./prometheus/
+          docker push $DOCKER_REGISTRY/stocker-prometheus:latest
+          
+          docker build -t $DOCKER_REGISTRY/stocker-grafana:latest ./grafana/
+          docker push $DOCKER_REGISTRY/stocker-grafana:latest
+          
+          docker build -t $DOCKER_REGISTRY/stocker-alertmanager:latest ./alertmanager/
+          docker push $DOCKER_REGISTRY/stocker-alertmanager:latest
