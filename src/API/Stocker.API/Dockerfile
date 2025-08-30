@@ -61,8 +61,24 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Create startup script that runs migrations then starts the app
 RUN echo '#!/bin/bash\n\
 echo "Running database migrations..."\n\
-./efbundle --connection "${ConnectionStrings__MasterDatabase}"\n\
-echo "Migrations completed. Starting application..."\n\
+if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
+    echo "Using MasterConnection for migrations"\n\
+    ./efbundle --connection "$ConnectionStrings__MasterConnection"\n\
+elif [ -n "$MASTER_DB_CONNECTION" ]; then\n\
+    echo "Using MASTER_DB_CONNECTION for migrations"\n\
+    ./efbundle --connection "$MASTER_DB_CONNECTION"\n\
+else\n\
+    echo "Building connection string from environment variables"\n\
+    CONNECTION_STRING="Server=${DB_HOST:-database};Database=${MASTER_DB_NAME:-StockerMasterDb};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"\n\
+    echo "Using constructed connection string for migrations"\n\
+    ./efbundle --connection "$CONNECTION_STRING"\n\
+fi\n\
+MIGRATION_EXIT_CODE=$?\n\
+if [ $MIGRATION_EXIT_CODE -ne 0 ]; then\n\
+    echo "Migration failed with exit code $MIGRATION_EXIT_CODE"\n\
+    echo "Continuing anyway - database might already be up to date"\n\
+fi\n\
+echo "Starting application..."\n\
 exec dotnet Stocker.API.dll' > /app/startup.sh && chmod +x /app/startup.sh
 
 # Start the application with migration
