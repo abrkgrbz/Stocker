@@ -230,31 +230,49 @@ docker cp /tmp/ssl.conf $NGINX_CONTAINER:/etc/nginx/conf.d/
 # Check if container has access to certificates
 echo -e "${YELLOW}Checking certificate access...${NC}"
 docker exec $NGINX_CONTAINER ls -la /etc/letsencrypt/live/${DOMAIN}/ 2>/dev/null || {
-    echo -e "${YELLOW}Container doesn't have access to certificates. Recreating with volume mount...${NC}"
+    echo -e "${YELLOW}Container doesn't have access to certificates. Adding certificates...${NC}"
     
-    # Get container image
-    IMAGE=$(docker inspect $NGINX_CONTAINER --format='{{.Config.Image}}')
+    # Method 1: Try to copy certificates directly (safer for Coolify)
+    echo -e "${YELLOW}Copying SSL certificates to container...${NC}"
+    docker exec $NGINX_CONTAINER mkdir -p /etc/letsencrypt
+    docker cp /etc/letsencrypt/. $NGINX_CONTAINER:/etc/letsencrypt/
     
-    # Get container network
-    NETWORK=$(docker inspect $NGINX_CONTAINER --format='{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' | head -1)
-    
-    # Stop and remove old container
-    docker stop $NGINX_CONTAINER
-    docker rm $NGINX_CONTAINER
-    
-    # Recreate with SSL volume
-    docker run -d \
-        --name $NGINX_CONTAINER \
-        --network $NETWORK \
-        -p 80:80 \
-        -p 443:443 \
-        -p 8090:8090 \
-        -v /etc/letsencrypt:/etc/letsencrypt:ro \
-        $IMAGE
-    
-    # Copy SSL config again
-    sleep 5
-    docker cp /tmp/ssl.conf $NGINX_CONTAINER:/etc/nginx/conf.d/
+    # Check if copy was successful
+    if docker exec $NGINX_CONTAINER ls /etc/letsencrypt/live/${DOMAIN}/fullchain.pem >/dev/null 2>&1; then
+        echo -e "${GREEN}Certificates copied successfully${NC}"
+        # Copy SSL config again to ensure it exists
+        docker cp /tmp/ssl.conf $NGINX_CONTAINER:/etc/nginx/conf.d/
+    else
+        echo -e "${YELLOW}Direct copy failed. Trying volume mount method...${NC}"
+        
+        # Get container image
+        IMAGE=$(docker inspect $NGINX_CONTAINER --format='{{.Config.Image}}')
+        
+        # Get container networks (handle multiple networks)
+        NETWORKS=$(docker inspect $NGINX_CONTAINER --format='{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}')
+        NETWORK=$(echo "$NETWORKS" | head -1 | tr -d '\n')
+        
+        echo -e "${YELLOW}Using network: $NETWORK${NC}"
+        
+        # Get existing port mappings
+        PORTS=$(docker inspect $NGINX_CONTAINER --format='{{range $p, $conf := .NetworkSettings.Ports}}{{if $conf}}-p {{(index $conf 0).HostPort}}:{{$p}} {{end}}{{end}}')
+        
+        # Stop and remove old container
+        docker stop $NGINX_CONTAINER
+        docker rm $NGINX_CONTAINER
+        
+        # Recreate with SSL volume
+        docker run -d \
+            --name $NGINX_CONTAINER \
+            --network "$NETWORK" \
+            $PORTS \
+            -v /etc/letsencrypt:/etc/letsencrypt:ro \
+            $IMAGE
+        
+        # Copy SSL config again
+        sleep 5
+        docker cp /tmp/ssl.conf $NGINX_CONTAINER:/etc/nginx/conf.d/
+    fi
 }
 
 # Reload Nginx configuration
