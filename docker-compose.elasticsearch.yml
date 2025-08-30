@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: stocker-elasticsearch
+    restart: unless-stopped
+    environment:
+      # Cluster configuration
+      - cluster.name=stocker-cluster
+      - node.name=stocker-es-node-1
+      - discovery.type=single-node
+      # Security settings (disable for development, enable for production)
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      # Memory settings
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # License
+      - xpack.license.self_generated.type=basic
+      # Network settings
+      - network.host=0.0.0.0
+      - http.port=9200
+      # CORS settings for browser access
+      - http.cors.enabled=true
+      - http.cors.allow-origin="*"
+      - http.cors.allow-headers=Authorization,X-Requested-With,Content-Type,Content-Length
+    ports:
+      - "9200:9200"     # REST API
+      - "9300:9300"     # Node communication
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_logs:/usr/share/elasticsearch/logs
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - stocker-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: stocker-kibana
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      # Elasticsearch connection
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME:-}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD:-}
+      # Server settings
+      - SERVER_NAME=stocker-kibana
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=5601
+      # Base path for reverse proxy
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      # Security
+      - XPACK_SECURITY_ENABLED=false
+      # Monitoring
+      - MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true
+      # Telemetry
+      - TELEMETRY_ENABLED=false
+    ports:
+      - "5601:5601"     # Web UI
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - stocker-network
+
+  # Optional: Logstash for log processing pipeline
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:8.11.0
+  #   container_name: stocker-logstash
+  #   restart: unless-stopped
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   environment:
+  #     - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   ports:
+  #     - "5044:5044"   # Beats input
+  #     - "5000:5000"   # TCP input
+  #     - "9600:9600"   # API endpoint
+  #   volumes:
+  #     - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+  #     - logstash_data:/usr/share/logstash/data
+  #   networks:
+  #     - stocker-network
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  elasticsearch_logs:
+    driver: local
+  kibana_data:
+    driver: local
+  # logstash_data:
+  #   driver: local
+
+networks:
+  stocker-network:
+    external: true

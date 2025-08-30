@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: stocker-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx configuration
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      # SSL certificates
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      # Logs
+      - ./nginx/logs:/var/log/nginx
+      # Static files cache
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: stocker-certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/logs:/var/log/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - stocker-network
+
+  # Nginx Proxy Manager (Alternative - Optional)
+  # nginx-proxy-manager:
+  #   image: jc21/nginx-proxy-manager:latest
+  #   container_name: stocker-npm
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "81:81"  # Admin Panel
+  #   environment:
+  #     DB_SQLITE_FILE: "/data/database.sqlite"
+  #     DISABLE_IPV6: 'true'
+  #   volumes:
+  #     - npm_data:/data
+  #     - npm_letsencrypt:/etc/letsencrypt
+  #   networks:
+  #     - stocker-network
+
+volumes:
+  nginx_cache:
+    driver: local
+  # npm_data:
+  #   driver: local
+  # npm_letsencrypt:
+  #   driver: local
+
+networks:
+  stocker-network:
+    external: true

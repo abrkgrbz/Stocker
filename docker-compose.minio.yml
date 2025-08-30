@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: stocker-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"     # API Port
+      - "9001:9001"     # Console Port
+    environment:
+      # Admin credentials
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-StockerMinio2024!}
+      # Default region
+      - MINIO_REGION_NAME=${MINIO_REGION:-us-east-1}
+      # Enable browser
+      - MINIO_BROWSER=on
+      # Console address
+      - MINIO_CONSOLE_ADDRESS=:9001
+    volumes:
+      - minio_data:/data
+      - minio_config:/root/.minio
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - stocker-network
+
+  # MinIO Client for initial setup
+  minio-mc:
+    image: minio/mc:latest
+    container_name: stocker-minio-mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add stocker-minio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-StockerMinio2024!};
+      /usr/bin/mc mb --ignore-existing stocker-minio/stocker-files;
+      /usr/bin/mc mb --ignore-existing stocker-minio/stocker-backups;
+      /usr/bin/mc mb --ignore-existing stocker-minio/stocker-temp;
+      /usr/bin/mc policy set public stocker-minio/stocker-files/public;
+      /usr/bin/mc admin user add stocker-minio ${MINIO_APP_USER:-stockerapp} ${MINIO_APP_PASSWORD:-StockerApp2024!};
+      /usr/bin/mc admin policy set stocker-minio readwrite user=${MINIO_APP_USER:-stockerapp};
+      echo 'MinIO buckets and users configured successfully';
+      exit 0;
+      "
+    networks:
+      - stocker-network
+
+volumes:
+  minio_data:
+    driver: local
+  minio_config:
+    driver: local
+
+networks:
+  stocker-network:
+    external: true

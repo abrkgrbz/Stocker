@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: stocker-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"     # SMTP Port
+      - "8025:8025"     # Web UI Port
+    environment:
+      # Storage configuration
+      - MH_STORAGE=memory
+      # UI Configuration
+      - MH_UI_WEB_PATH=/mailhog
+      # Hostname
+      - MH_HOSTNAME=mailhog.stoocker.local
+      # SMTP Configuration
+      - MH_SMTP_BIND_ADDR=0.0.0.0:1025
+      # API Configuration
+      - MH_API_BIND_ADDR=0.0.0.0:8025
+      # Optional: Basic Auth for Web UI (uncomment to enable)
+      # - MH_AUTH_FILE=/auth/.htpasswd
+    # volumes:
+      # Optional: Mount auth file for basic authentication
+      # - ./mailhog-auth:/auth:ro
+      # Optional: Persist emails to disk instead of memory
+      # - mailhog_data:/maildir
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1025"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - stocker-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: Volume for persistent email storage
+# volumes:
+#   mailhog_data:
+#     driver: local
+
+networks:
+  stocker-network:
+    external: true
