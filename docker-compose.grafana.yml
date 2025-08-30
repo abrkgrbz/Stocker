@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    container_name: stocker-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      # Admin credentials
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-StockerGrafana2024!}
+      # Server configuration
+      - GF_SERVER_ROOT_URL=https://grafana.stoocker.app
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # Database (using SQLite by default)
+      - GF_DATABASE_TYPE=sqlite3
+      # Authentication
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      # SMTP Configuration (optional)
+      - GF_SMTP_ENABLED=${GRAFANA_SMTP_ENABLED:-false}
+      - GF_SMTP_HOST=${SMTP_HOST:-smtp.sendgrid.net:587}
+      - GF_SMTP_USER=${SMTP_USERNAME:-apikey}
+      - GF_SMTP_PASSWORD=${SENDGRID_API_KEY:-}
+      - GF_SMTP_FROM_ADDRESS=${FROM_EMAIL:-alerts@stoocker.app}
+      - GF_SMTP_FROM_NAME=Stocker Alerts
+      # Install plugins
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+    volumes:
+      # Only data volume, provisioning is in Docker image
+      - grafana_data:/var/lib/grafana
+    networks:
+      - stocker-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  grafana_data:
+    driver: local
+
+networks:
+  stocker-network:
+    external: true
