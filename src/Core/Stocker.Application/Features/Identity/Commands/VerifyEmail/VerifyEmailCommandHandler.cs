@@ -41,10 +41,11 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             
             try
             {
-                // Try using owned entity navigation
+                // Try using owned entity navigation with split query for better performance
                 _logger.LogDebug("Attempting to query with owned entity navigation");
                 user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                     .AsQueryable()
+                    .AsSplitQuery() // Split query for better performance with multiple includes
                     .Include(u => u.UserTenants)
                     .FirstOrDefaultAsync(u => u.Email.Value == emailValue, cancellationToken);
             }
@@ -56,6 +57,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 _logger.LogDebug("Using in-memory filtering as fallback");
                 var allUsers = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                     .AsQueryable()
+                    .AsSplitQuery() // Split query for better performance
                     .Include(u => u.UserTenants)
                     .ToListAsync(cancellationToken);
                 
