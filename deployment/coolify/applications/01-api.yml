@@ -50,10 +50,6 @@ services:
       - Storage__MinIO__BucketName=stocker-files
       - Storage__MinIO__UseSSL=false
       
-    depends_on:
-      - mssql
-      - redis
-      - seq
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
