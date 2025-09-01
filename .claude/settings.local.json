@@ -64,7 +64,9 @@
       "Bash(npm uninstall:*)",
       "Bash(ssh:*)",
       "Bash(CreateTestUser.exe)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(ping:*)",
+      "Bash(nslookup:*)"
     ],
     "deny": []
   }

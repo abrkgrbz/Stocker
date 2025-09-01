@@ -12,13 +12,20 @@ class SignalRService {
       return;
     }
 
+    // Get tenant from localStorage or use default
+    const tenantId = localStorage.getItem('X-Tenant-Id') || 'master';
+    
     this.validationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/validation`, {
         // Try WebSockets first, then SSE, then LongPolling
         transport: signalR.HttpTransportType.WebSockets | 
                   signalR.HttpTransportType.ServerSentEvents | 
                   signalR.HttpTransportType.LongPolling,
-        withCredentials: false
+        withCredentials: false,
+        headers: {
+          'X-Tenant-Id': tenantId,
+          'X-Bypass-Rate-Limit': 'true'
+        }
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Debug)
