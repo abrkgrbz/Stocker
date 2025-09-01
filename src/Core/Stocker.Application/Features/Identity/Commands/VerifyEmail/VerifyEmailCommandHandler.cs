@@ -37,7 +37,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             var user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                 .AsQueryable()
                 .Include(u => u.UserTenants)
-                .FirstOrDefaultAsync(u => u.Email == emailResult.Value, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email.Value == emailResult.Value.Value, cancellationToken);
 
             if (user == null)
             {
