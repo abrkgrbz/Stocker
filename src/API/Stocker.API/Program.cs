@@ -39,7 +39,17 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:5107")
+            policy.WithOrigins(
+                    "http://localhost:3000", 
+                    "http://localhost:3001", 
+                    "http://localhost:3002", 
+                    "http://localhost:3003", 
+                    "http://localhost:5107",
+                    "https://stoocker.app",
+                    "https://www.stoocker.app",
+                    "https://master.stoocker.app",
+                    "https://api.stoocker.app"
+                  )
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
@@ -50,7 +60,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SignalRPolicy",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003")
+            policy.WithOrigins(
+                    "http://localhost:3000", 
+                    "http://localhost:3001", 
+                    "http://localhost:3002", 
+                    "http://localhost:3003",
+                    "https://stoocker.app",
+                    "https://www.stoocker.app",
+                    "https://master.stoocker.app",
+                    "https://api.stoocker.app"
+                  )
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
@@ -473,19 +492,20 @@ app.UseHangfireDashboard(app.Configuration);
 app.MapControllers();
 
 // Map SignalR Hubs with CORS
+var corsPolicy = isProductionDomain ? "Production" : "AllowAll";
 app.MapHub<ValidationHub>("/hubs/validation", options =>
 {
     options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-}).RequireCors("AllowAll");
+}).RequireCors(corsPolicy);
 
 app.MapHub<NotificationHub>("/hubs/notification", options =>
 {
     options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-}).RequireCors("AllowAll");
+}).RequireCors(corsPolicy);
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())
