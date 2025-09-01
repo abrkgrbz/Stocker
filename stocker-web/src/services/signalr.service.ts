@@ -32,8 +32,10 @@ class SignalRService {
     console.log('Creating new ValidationHub connection');
     this.validationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/validation`, {
-        // Force Long Polling until WebSocket issue is fixed in Coolify
-        transport: signalR.HttpTransportType.LongPolling,
+        // Try WebSockets first, then SSE, then LongPolling
+        transport: signalR.HttpTransportType.WebSockets | 
+                  signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling,
         withCredentials: false,
         headers: {
           'X-Tenant-Id': tenantId,

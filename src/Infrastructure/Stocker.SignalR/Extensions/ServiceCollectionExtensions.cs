@@ -15,10 +15,10 @@ public static class ServiceCollectionExtensions
             // Enable detailed errors in development
             options.EnableDetailedErrors = true;
             
-            // Configure timeouts
-            options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
-            options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-            options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+            // Configure timeouts - Increased for better stability
+            options.ClientTimeoutInterval = TimeSpan.FromSeconds(120); // Increased from 60
+            options.HandshakeTimeout = TimeSpan.FromSeconds(30); // Increased from 15
+            options.KeepAliveInterval = TimeSpan.FromSeconds(30); // Increased from 15 to prevent disconnections
             
             // Configure message size limits
             options.MaximumReceiveMessageSize = 32 * 1024; // 32KB

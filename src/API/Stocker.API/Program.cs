@@ -434,10 +434,12 @@ else
     app.UseCors("AllowAll");
 }
 
-// Enable WebSockets for SignalR
+// Enable WebSockets for SignalR with proper configuration
 app.UseWebSockets(new WebSocketOptions
 {
-    KeepAliveInterval = TimeSpan.FromSeconds(30)
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
+    ReceiveBufferSize = 4 * 1024, // 4KB
+    AllowedOrigins = { "https://stoocker.app", "https://www.stoocker.app", "https://master.stoocker.app" }
 });
 
 // Add Global Exception Handling Middleware
