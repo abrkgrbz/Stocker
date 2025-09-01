@@ -330,9 +330,22 @@ builder.Services.AddAuthorization(options =>
 // Add Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    // Global limiter
+    // Global limiter (skip for SignalR and public endpoints)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
+    {
+        // Skip rate limiting for SignalR hubs
+        if (httpContext.Request.Path.StartsWithSegments("/hubs"))
+        {
+            return RateLimitPartition.GetNoLimiter("signalr");
+        }
+        
+        // Skip rate limiting for public endpoints
+        if (httpContext.Request.Path.StartsWithSegments("/api/public"))
+        {
+            return RateLimitPartition.GetNoLimiter("public");
+        }
+        
+        return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
             factory: partition => new FixedWindowRateLimiterOptions
             {
@@ -340,7 +353,8 @@ builder.Services.AddRateLimiter(options =>
                 PermitLimit = 100,
                 QueueLimit = 0,
                 Window = TimeSpan.FromMinutes(1)
-            }));
+            });
+    });
 
     // Specific limiter for auth endpoints
     options.AddPolicy("auth", httpContext =>
@@ -422,25 +436,35 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Add Security Headers
+// Add Security Headers (Skip for SignalR hubs)
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Append("X-Frame-Options", "DENY");
-    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
+    // Skip security headers for SignalR hubs to allow WebSocket connections
+    if (!context.Request.Path.StartsWithSegments("/hubs"))
+    {
+        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
+        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+        // Update CSP to allow WebSocket connections
+        context.Response.Headers.Append("Content-Security-Policy", 
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "connect-src 'self' wss: ws: https: http:;");
+    }
     await next();
 });
 
-// Add Rate Limiting
-app.UseRateLimiter();
-
 // Add Tenant Resolution Middleware - Authentication'dan önce olmalı
+// SignalR hub'ları için kontrol middleware'da yapılıyor
 app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add Rate Limiting - Authentication'dan sonra olmalı
+app.UseRateLimiter();
 
 // Add Hangfire Dashboard (after authentication to secure it)
 app.UseHangfireDashboard(app.Configuration);
