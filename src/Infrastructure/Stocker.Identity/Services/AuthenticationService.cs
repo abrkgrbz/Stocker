@@ -52,7 +52,8 @@ public class AuthenticationService : IAuthenticationService
         var masterUser = await _masterContext.MasterUsers
             .Include(u => u.UserTenants)
             .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email.Value == request.Username);
+            .Where(u => u.Username == request.Username || EF.Property<string>(u, "Email") == request.Username)
+            .FirstOrDefaultAsync();
        
         if (masterUser != null)
         {

@@ -57,7 +57,8 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             // Check if email is unique
             var existingUser = await _unitOfWork.MasterUsers()
                 .AsQueryable()
-                .FirstOrDefaultAsync(u => u.Email.Value == request.ContactEmail, cancellationToken);
+                .Where(u => EF.Property<string>(u, "Email") == request.ContactEmail)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (existingUser != null)
             {

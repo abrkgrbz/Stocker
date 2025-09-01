@@ -33,11 +33,13 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                     Error.Validation("VerifyEmail.InvalidEmail", "Geçersiz email adresi"));
             }
 
-            // Find user by email
+            // Find user by email - Query by email string directly
+            var emailValue = emailResult.Value.Value;
             var user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                 .AsQueryable()
                 .Include(u => u.UserTenants)
-                .FirstOrDefaultAsync(u => u.Email.Value == emailResult.Value.Value, cancellationToken);
+                .Where(u => EF.Property<string>(u, "Email") == emailValue)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (user == null)
             {

@@ -37,7 +37,8 @@ public class UserManagementService : IUserManagementService
             .Include(u => u.UserTenants) 
             .Include(u => u.RefreshTokens)
             .Include(x=>x.LoginHistory)
-            .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email.Value == usernameOrEmail);
+            .Where(u => u.Username == usernameOrEmail || EF.Property<string>(u, "Email") == usernameOrEmail)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<TenantUser?> FindTenantUserAsync(Guid tenantId, string usernameOrEmail)
