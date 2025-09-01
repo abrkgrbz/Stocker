@@ -33,12 +33,26 @@ public class UserManagementService : IUserManagementService
 
     public async Task<MasterUser?> FindMasterUserAsync(string usernameOrEmail)
     {
-        return await _masterContext.MasterUsers
+        // First try to find by username
+        var user = await _masterContext.MasterUsers
             .Include(u => u.UserTenants) 
             .Include(u => u.RefreshTokens)
-            .Include(x=>x.LoginHistory)
-            .Where(u => u.Username == usernameOrEmail || EF.Property<string>(u, "Email") == usernameOrEmail)
+            .Include(x => x.LoginHistory)
+            .Where(u => u.Username == usernameOrEmail)
             .FirstOrDefaultAsync();
+
+        // If not found by username, try to find by email
+        if (user == null)
+        {
+            user = await _masterContext.MasterUsers
+                .Include(u => u.UserTenants)
+                .Include(u => u.RefreshTokens)
+                .Include(x => x.LoginHistory)
+                .AsEnumerable() // Switch to client-side evaluation for Email value object
+                .FirstOrDefault(u => u.Email.Value == usernameOrEmail);
+        }
+
+        return user;
     }
 
     public async Task<TenantUser?> FindTenantUserAsync(Guid tenantId, string usernameOrEmail)
