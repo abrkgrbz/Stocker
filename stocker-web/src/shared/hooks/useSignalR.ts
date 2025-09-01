@@ -19,19 +19,29 @@ export const useSignalRValidation = () => {
   const [useMockService, setUseMockService] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    let connectionAttempted = false;
+    
     const initConnection = async () => {
+      // Prevent multiple connection attempts
+      if (connectionAttempted) return;
+      connectionAttempted = true;
+      
       const service = useMockService ? mockSignalRService : signalRService;
       
       try {
         // Try real service first
         if (!useMockService) {
           await signalRService.startValidationConnection();
-          console.log('✅ Connected to real SignalR validation service at', 'http://localhost:5104');
+          console.log('✅ Connected to real SignalR validation service');
         } else {
           await mockSignalRService.startValidationConnection();
           console.log('🔧 Using mock SignalR validation service');
         }
-        setIsConnected(true);
+        
+        if (isMounted) {
+          setIsConnected(true);
+        }
 
         // Set up event listeners
         service.onEmailValidated((result) => {
@@ -83,13 +93,14 @@ export const useSignalRValidation = () => {
     initConnection();
 
     return () => {
+      isMounted = false;
       if (useMockService) {
         mockSignalRService.stopValidationConnection();
       } else {
         signalRService.stopValidationConnection();
       }
     };
-  }, [useMockService]);
+  }, []); // Remove useMockService from dependencies to prevent reconnection
 
   const service = useMockService ? mockSignalRService : signalRService;
 

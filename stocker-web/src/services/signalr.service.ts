@@ -27,7 +27,7 @@ class SignalRService {
           'X-Bypass-Rate-Limit': 'true'
         }
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+      .withAutomaticReconnect([2000, 5000, 10000, 30000]) // Remove 0ms to prevent immediate reconnect
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
@@ -73,7 +73,7 @@ class SignalRService {
                   signalR.HttpTransportType.ServerSentEvents | 
                   signalR.HttpTransportType.LongPolling
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+      .withAutomaticReconnect([2000, 5000, 10000, 30000]) // Remove 0ms to prevent immediate reconnect
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
