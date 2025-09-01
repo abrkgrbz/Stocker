@@ -32,13 +32,15 @@ services:
       - JwtSettings__Issuer=https://api.stoocker.app
       - JwtSettings__Audience=https://stoocker.app
       
-      # Email (SendGrid)
-      - EmailSettings__SmtpHost=smtp.sendgrid.net
-      - EmailSettings__SmtpPort=587
-      - EmailSettings__SmtpUsername=apikey
-      - EmailSettings__SmtpPassword=${SENDGRID_API_KEY:-}
+      # Email (Namecheap Private Email)
+      - EmailSettings__SmtpHost=mail.privateemail.com
+      - EmailSettings__SmtpPort=465
+      - EmailSettings__SmtpUsername=info@stoocker.app
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD:-A.bg010203}
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__UseStartTls=false
       
       # MinIO
       - Storage__Provider=MinIO

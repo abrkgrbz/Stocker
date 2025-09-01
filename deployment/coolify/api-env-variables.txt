@@ -22,15 +22,15 @@ JwtSettings__Audience=https://stoocker.app
 JwtSettings__AccessTokenExpirationMinutes=60
 JwtSettings__RefreshTokenExpirationDays=7
 
-# Email Settings (SendGrid)
-EmailSettings__SmtpHost=smtp.sendgrid.net
-EmailSettings__SmtpPort=587
-EmailSettings__SmtpUsername=apikey
-EmailSettings__SmtpPassword=dm9Y6NmTSk67ltU35zEFQA
+# Email Settings (Namecheap Private Email)
+EmailSettings__SmtpHost=mail.privateemail.com
+EmailSettings__SmtpPort=465
+EmailSettings__SmtpUsername=info@stoocker.app
+EmailSettings__SmtpPassword=A.bg010203
 EmailSettings__EnableSsl=true
 EmailSettings__FromEmail=info@stoocker.app
 EmailSettings__FromName=Stoocker
-EmailSettings__UseStartTls=true
+EmailSettings__UseStartTls=false
 EmailSettings__EnableEmail=true
 EmailSettings__BaseUrl=https://stoocker.app
 EmailSettings__TemplatesPath=EmailTemplates
