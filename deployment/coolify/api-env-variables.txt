@@ -1,0 +1,96 @@
+# Stocker API - Coolify Environment Variables
+# Copy these to Coolify UI -> Environment Variables section
+
+# ASP.NET Core Settings
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://+:5000
+
+# Database Connections
+ConnectionStrings__DefaultConnection=Server=95.217.219.4,1433;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+ConnectionStrings__MasterConnection=Server=95.217.219.4,1433;Database=StockerMasterDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+ConnectionStrings__TenantConnection=Server=95.217.219.4,1433;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+
+# Database Settings (for dynamic tenant database creation)
+DatabaseSettings__ServerName=95.217.219.4,1433
+DatabaseSettings__UserId=sa
+DatabaseSettings__Password=YourStrongPassword123!
+
+# JWT Settings
+JwtSettings__Secret=df7d992cdade60241c0c2443c421101028c4e2eeb5eb9e5f17da82fca026c73a
+JwtSettings__Issuer=https://api.stoocker.app
+JwtSettings__Audience=https://stoocker.app
+JwtSettings__AccessTokenExpirationMinutes=60
+JwtSettings__RefreshTokenExpirationDays=7
+
+# Email Settings (SendGrid)
+EmailSettings__SmtpHost=smtp.sendgrid.net
+EmailSettings__SmtpPort=587
+EmailSettings__SmtpUsername=apikey
+EmailSettings__SmtpPassword=YOUR_SENDGRID_API_KEY_HERE
+EmailSettings__EnableSsl=true
+EmailSettings__FromEmail=info@stoocker.app
+EmailSettings__FromName=Stoocker
+EmailSettings__UseStartTls=true
+EmailSettings__EnableEmail=true
+EmailSettings__BaseUrl=https://stoocker.app
+EmailSettings__TemplatesPath=EmailTemplates
+EmailSettings__Timeout=30000
+
+# Redis Connection (if using Redis)
+ConnectionStrings__Redis=redis-k0c8okggk0scs8kww0wk48g0-004457165320:6379
+Redis__ConnectionString=redis-k0c8okggk0scs8kww0wk48g0-004457165320:6379
+
+# Hangfire Settings
+Hangfire__DashboardPath=/hangfire
+Hangfire__ServerName=Stocker-Production
+Hangfire__WorkerCount=8
+Hangfire__Queues__0=critical
+Hangfire__Queues__1=default
+Hangfire__Queues__2=low
+Hangfire__RetryAttempts=3
+Hangfire__JobExpirationCheckInterval=01:00:00
+Hangfire__CountersAggregateInterval=00:05:00
+
+# Seq Logging Settings
+Logging__Seq__ServerUrl=http://95.217.219.4:5341
+Logging__Seq__ApiKey=
+Logging__Seq__MinimumLevel=Information
+
+# Serilog Settings
+Serilog__MinimumLevel__Default=Information
+Serilog__MinimumLevel__Override__Microsoft=Warning
+Serilog__MinimumLevel__Override__Microsoft.AspNetCore=Warning
+Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore=Warning
+Serilog__MinimumLevel__Override__System=Warning
+Serilog__WriteTo__0__Name=Seq
+Serilog__WriteTo__0__Args__serverUrl=http://95.217.219.4:5341
+Serilog__WriteTo__0__Args__apiKey=
+
+# Password Policy
+PasswordPolicy__MinimumLength=8
+PasswordPolicy__MaximumLength=128
+PasswordPolicy__RequireUppercase=true
+PasswordPolicy__RequireLowercase=true
+PasswordPolicy__RequireDigit=true
+PasswordPolicy__RequireNonAlphanumeric=true
+PasswordPolicy__RequiredUniqueChars=4
+PasswordPolicy__PreventCommonPasswords=true
+PasswordPolicy__PreventUserInfoInPassword=true
+PasswordPolicy__PasswordHistoryCount=5
+PasswordPolicy__PasswordExpirationDays=90
+PasswordPolicy__MaxFailedAccessAttempts=5
+PasswordPolicy__LockoutDurationMinutes=15
+PasswordPolicy__MinimumStrengthScore=3
+PasswordPolicy__SpecialCharacters=!@#$%^&*()_+-=[]{}|;:,.<>?
+
+# Service URLs
+SERVICE_FQDN_API=api.stoocker.app
+SERVICE_URL_API=https://api.stoocker.app
+
+# CORS Settings (Additional)
+Cors__AllowedOrigins__0=https://stoocker.app
+Cors__AllowedOrigins__1=https://www.stoocker.app
+Cors__AllowedOrigins__2=https://master.stoocker.app
+Cors__AllowedOrigins__3=https://api.stoocker.app
+Cors__AllowedOrigins__4=http://localhost:3000
+Cors__AllowedOrigins__5=http://localhost:3001
