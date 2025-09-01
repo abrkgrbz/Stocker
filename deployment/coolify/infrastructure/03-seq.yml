@@ -12,7 +12,7 @@ services:
       - ACCEPT_EULA=Y
       - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_PASSWORD:-StockerSeq2024!}
       - SEQ_CACHE_SYSTEMRAMTARGET=${SEQ_RAM_TARGET:-0.2}
-      - SEQ_STORAGE_SECRETKEY=${SEQ_SECRET_KEY:-}
+      - SEQ_STORAGE_SECRETKEY=${SEQ_SECRET_KEY:-PleaseGenerateASecretKeyForEncryptionOfDataAtRest}
     ports:
       - "5341:80"      # Web UI
       - "5342:5341"    # Ingestion API
