@@ -37,6 +37,10 @@ const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages')
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
 const MasterSubscriptionsPage = lazy(() => import('@/features/master/pages/Subscriptions').then(m => ({ default: m.MasterSubscriptionsPage })));
 const MasterMigrationsPage = lazy(() => import('@/features/master/pages/Migrations').then(m => ({ default: m.default })));
+const MasterUsersPage = lazy(() => import('@/features/master/pages/Users').then(m => ({ default: m.MasterUsersPage })));
+const MasterModulesPage = lazy(() => import('@/features/master/pages/Modules').then(m => ({ default: m.MasterModulesPage })));
+const MasterMonitoringPage = lazy(() => import('@/features/master/pages/Monitoring').then(m => ({ default: m.MasterMonitoringPage })));
+const MasterReportsPage = lazy(() => import('@/features/master/pages/Reports').then(m => ({ default: m.MasterReportsPage })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -184,10 +188,10 @@ function App() {
                   <Route path="tenants/*" element={<MasterTenantsPage />} />
                   <Route path="subscriptions/*" element={<MasterSubscriptionsPage />} />
                   <Route path="packages" element={<MasterPackagesPage />} />
-                  <Route path="modules" element={<div>Modules Management</div>} />
-                  <Route path="users" element={<UsersPage />} />
-                  <Route path="monitoring/*" element={<div>System Monitoring</div>} />
-                  <Route path="reports/*" element={<div>Reports</div>} />
+                  <Route path="modules" element={<MasterModulesPage />} />
+                  <Route path="users" element={<MasterUsersPage />} />
+                  <Route path="monitoring/*" element={<MasterMonitoringPage />} />
+                  <Route path="reports/*" element={<MasterReportsPage />} />
                   <Route path="settings/*" element={<MasterSettingsPage />} />
                   <Route path="migrations" element={<MasterMigrationsPage />} />
                 </Route>

@@ -110,6 +110,11 @@ const MetronicLayout: React.FC = () => {
           label: 'Kullanıcılar',
           badge: 5,
         },
+        {
+          key: '/master/modules',
+          icon: <AppstoreOutlined className="menu-icon" />,
+          label: 'Modüller',
+        },
       ],
     },
     {
@@ -140,6 +145,16 @@ const MetronicLayout: React.FC = () => {
       icon: <BarChartOutlined className="menu-icon" />,
       label: 'İzleme',
       children: [
+        {
+          key: '/master/monitoring',
+          icon: <CloudServerOutlined className="menu-icon" />,
+          label: 'Sistem İzleme',
+        },
+        {
+          key: '/master/reports',
+          icon: <BarChartOutlined className="menu-icon" />,
+          label: 'Raporlar',
+        },
         {
           key: '/master/analytics',
           icon: <BarChartOutlined className="menu-icon" />,

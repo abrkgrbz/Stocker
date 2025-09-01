@@ -1,4 +1,0 @@
-{
-  "buildPack": "compose",
-  "composeFile": "docker-compose.coolify.yml"
-}

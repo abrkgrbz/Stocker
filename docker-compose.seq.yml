@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  seq:
+    image: datalust/seq:latest
+    container_name: stocker-seq
+    restart: unless-stopped
+    ports:
+      - "5341:80"      # Web UI
+      - "5342:5341"    # Ingestion API
+    environment:
+      # Seq Settings
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINUSERNAME=${SEQ_ADMIN_USER:-admin}
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-StockerSeq2024!}
+      - SEQ_LICENSE=${SEQ_LICENSE:-}
+      
+      # Storage Settings
+      - SEQ_STORAGE_FLARE_INDEXERRAM=512  # MB of RAM for indexing
+      - SEQ_STORAGE_SECRETKEY=${SEQ_SECRET_KEY:-StockerSeqSecretKey2024!}
+      
+      # API Keys (for different services)
+      - SEQ_API_CANONICALURI=https://seq.${DOMAIN:-stoocker.app}
+      
+      # Cache Settings
+      - SEQ_CACHE_SYSTEMRAMTARGET=0.5  # Use 50% of system RAM for caching
+      
+      # Retention Policy (optional)
+      - SEQ_RETENTION_POLICY_DAYS=${SEQ_RETENTION_DAYS:-30}  # Keep logs for 30 days
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      # Coolify/Traefik labels for automatic SSL
+      - "traefik.enable=true"
+      - "traefik.http.routers.seq.rule=Host(`seq.${DOMAIN:-stoocker.app}`)"
+      - "traefik.http.routers.seq.entrypoints=websecure"
+      - "traefik.http.routers.seq.tls=true"
+      - "traefik.http.routers.seq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.seq.loadbalancer.server.port=80"
+      # Health check
+      - "traefik.http.services.seq.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.seq.loadbalancer.healthcheck.interval=10s"
+
+  # Optional: Seq CLI for management tasks
+  seqcli:
+    image: datalust/seqcli:latest
+    container_name: stocker-seqcli
+    profiles: ["management"]  # Only run when explicitly called
+    depends_on:
+      - seq
+    environment:
+      - SEQ_SERVER_URL=http://seq:5341
+      - SEQ_API_KEY=${SEQ_API_KEY:-}
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for Seq to be ready...';
+      sleep 10;
+      
+      echo 'Creating API Keys for services...';
+      
+      # API Key for Backend API
+      seqcli apikey create -t 'Stocker API' -p api --token='${SEQ_API_KEY_BACKEND:-stocker-api-key-2024}' || true;
+      
+      # API Key for Frontend (if needed)
+      seqcli apikey create -t 'Stocker Frontend' -p frontend --token='${SEQ_API_KEY_FRONTEND:-stocker-frontend-key-2024}' || true;
+      
+      # API Key for Background Jobs
+      seqcli apikey create -t 'Stocker Jobs' -p jobs --token='${SEQ_API_KEY_JOBS:-stocker-jobs-key-2024}' || true;
+      
+      echo 'Creating retention policies...';
+      seqcli retention create --after 30d --delete-all || true;
+      
+      echo 'Seq setup complete!';
+      "
+
+volumes:
+  seq_data:
+    driver: local
+
+networks:
+  default:
+    name: stocker-network
+    external: true
