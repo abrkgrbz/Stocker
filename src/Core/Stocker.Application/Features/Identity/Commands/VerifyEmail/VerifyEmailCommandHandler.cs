@@ -108,8 +108,16 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             // Verify email
             user.VerifyEmail();
             
-            // Activate user
-            user.Activate();
+            // Activate user if not already active
+            if (!user.IsActive)
+            {
+                user.Activate();
+                _logger.LogInformation("User activated after email verification: {UserId}", user.Id);
+            }
+            else
+            {
+                _logger.LogInformation("User was already active: {UserId}", user.Id);
+            }
 
             // Get tenant information
             var userTenantInfo = user.UserTenants.FirstOrDefault();
