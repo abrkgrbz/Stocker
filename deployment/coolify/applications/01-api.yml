@@ -7,8 +7,8 @@ version: '3.8'
 services:
   api:
     build:
-      context: ../../../
-      dockerfile: src/API/Stocker.API/Dockerfile
+      context: .
+      dockerfile: ./src/API/Stocker.API/Dockerfile
     container_name: stocker-api
     restart: unless-stopped
     ports:
