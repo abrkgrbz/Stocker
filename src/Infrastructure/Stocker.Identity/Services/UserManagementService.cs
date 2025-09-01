@@ -44,12 +44,13 @@ public class UserManagementService : IUserManagementService
         // If not found by username, try to find by email
         if (user == null)
         {
-            user = await _masterContext.MasterUsers
+            var users = await _masterContext.MasterUsers
                 .Include(u => u.UserTenants)
                 .Include(u => u.RefreshTokens)
                 .Include(x => x.LoginHistory)
-                .AsEnumerable() // Switch to client-side evaluation for Email value object
-                .FirstOrDefault(u => u.Email.Value == usernameOrEmail);
+                .ToListAsync();
+            
+            user = users.FirstOrDefault(u => u.Email.Value == usernameOrEmail);
         }
 
         return user;
