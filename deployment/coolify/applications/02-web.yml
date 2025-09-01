@@ -1,11 +1,13 @@
 version: '3.8'
 
 # Stocker Web Application
-# Frontend React application
+# Frontend React application - Built from source by Coolify
 
 services:
   web:
-    image: ghcr.io/abrkgrbz/stocker-web:latest
+    build:
+      context: .
+      dockerfile: ./stocker-web/Dockerfile
     container_name: stocker-web
     restart: unless-stopped
     ports:
