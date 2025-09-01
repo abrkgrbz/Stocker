@@ -116,23 +116,26 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
       const lastName = lastNameParts.join(' ') || firstName;
       
       const registrationData = {
+        // Company Info
         companyName: allValues.companyName,
         companyCode: allValues.companyCode,
-        identityType: allValues.identityType,
-        identityNumber: allValues.identityNumber,
-        sector: allValues.sector,
-        employeeCount: allValues.employeeCount,
+        domain: allValues.companyCode, // Use company code as subdomain
+        
+        // Contact Info
         contactName: allValues.contactName,
         contactEmail: allValues.email,
         contactPhone: allValues.phone,
-        contactTitle: allValues.title,
-        email: allValues.email,
-        username: allValues.email?.split('@')[0] || allValues.companyCode,
-        firstName: firstName,
-        lastName: lastName,
+        
+        // Address (optional fields)
+        address: allValues.address || null,
+        city: allValues.city || null,
+        country: allValues.country || null,
+        
+        // Account
         password: allValues.password,
-        domain: allValues.companyCode,
-        packageId: selectedPackage?.id,
+        
+        // Package
+        packageId: selectedPackage?.id || 'basic', // Default to basic if no package selected
         billingPeriod: 'Monthly'
       };
 
