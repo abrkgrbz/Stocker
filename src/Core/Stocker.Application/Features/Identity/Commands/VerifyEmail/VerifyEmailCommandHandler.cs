@@ -33,13 +33,35 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                     Error.Validation("VerifyEmail.InvalidEmail", "Geçersiz email adresi"));
             }
 
-            // Find user by email - Query by email string directly
+            // Find user by email - Add detailed logging
             var emailValue = emailResult.Value.Value;
-            var user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
-                .AsQueryable()
-                .Include(u => u.UserTenants)
-                .Where(u => EF.Property<string>(u, "Email") == emailValue)
-                .FirstOrDefaultAsync(cancellationToken);
+            _logger.LogInformation("Searching for user with email: {Email}", emailValue);
+            
+            Domain.Master.Entities.MasterUser? user = null;
+            
+            try
+            {
+                // Try using owned entity navigation
+                _logger.LogDebug("Attempting to query with owned entity navigation");
+                user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
+                    .AsQueryable()
+                    .Include(u => u.UserTenants)
+                    .FirstOrDefaultAsync(u => u.Email.Value == emailValue, cancellationToken);
+            }
+            catch (Exception queryEx)
+            {
+                _logger.LogError(queryEx, "Owned entity query failed, trying alternative approach. Error: {ErrorMessage}", queryEx.Message);
+                
+                // Fallback: Load all users and filter in memory
+                _logger.LogDebug("Using in-memory filtering as fallback");
+                var allUsers = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
+                    .AsQueryable()
+                    .Include(u => u.UserTenants)
+                    .ToListAsync(cancellationToken);
+                
+                _logger.LogDebug("Loaded {Count} users, filtering by email", allUsers.Count);
+                user = allUsers.FirstOrDefault(u => u.Email?.Value == emailValue);
+            }
 
             if (user == null)
             {
