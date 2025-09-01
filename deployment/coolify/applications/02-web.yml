@@ -11,8 +11,7 @@ services:
     container_name: stocker-web
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "3000:80"
     environment:
       - VITE_API_URL=https://api.stoocker.app
       - VITE_APP_URL=https://stoocker.app
