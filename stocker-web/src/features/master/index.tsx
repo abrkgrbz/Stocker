@@ -7,3 +7,7 @@ export * from './pages/Reports';
 export * from './pages/Monitoring';
 export * from './pages/Modules';
 export * from './pages/Migrations';
+export * from './pages/Invoices';
+export * from './pages/Payments';
+export * from './pages/Analytics';
+export * from './pages/Performance';

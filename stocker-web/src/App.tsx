@@ -41,6 +41,10 @@ const MasterUsersPage = lazy(() => import('@/features/master/pages/Users').then(
 const MasterModulesPage = lazy(() => import('@/features/master/pages/Modules').then(m => ({ default: m.MasterModulesPage })));
 const MasterMonitoringPage = lazy(() => import('@/features/master/pages/Monitoring').then(m => ({ default: m.MasterMonitoringPage })));
 const MasterReportsPage = lazy(() => import('@/features/master/pages/Reports').then(m => ({ default: m.MasterReportsPage })));
+const MasterInvoicesPage = lazy(() => import('@/features/master/pages/Invoices').then(m => ({ default: m.default })));
+const MasterPaymentsPage = lazy(() => import('@/features/master/pages/Payments').then(m => ({ default: m.default })));
+const MasterAnalyticsPage = lazy(() => import('@/features/master/pages/Analytics').then(m => ({ default: m.default })));
+const MasterPerformancePage = lazy(() => import('@/features/master/pages/Performance').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -194,6 +198,10 @@ function App() {
                   <Route path="reports/*" element={<MasterReportsPage />} />
                   <Route path="settings/*" element={<MasterSettingsPage />} />
                   <Route path="migrations" element={<MasterMigrationsPage />} />
+                  <Route path="invoices" element={<MasterInvoicesPage />} />
+                  <Route path="payments" element={<MasterPaymentsPage />} />
+                  <Route path="analytics" element={<MasterAnalyticsPage />} />
+                  <Route path="performance" element={<MasterPerformancePage />} />
                 </Route>
 
                 {/* Admin Routes - For Tenant Admins */}
