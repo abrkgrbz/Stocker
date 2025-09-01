@@ -67,7 +67,8 @@
       "Bash(git restore:*)",
       "Bash(ping:*)",
       "Bash(nslookup:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
