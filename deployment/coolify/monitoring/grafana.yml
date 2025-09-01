@@ -1,0 +1,36 @@
+version: '3.8'
+
+# Grafana Dashboard
+# Visualization for metrics
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-GrafanaAdmin123!}
+      - GF_SERVER_ROOT_URL=https://grafana.stoocker.app
+      - GF_INSTALL_PLUGINS=redis-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - coolify
+    labels:
+      - "com.stocker.service=monitoring"
+      - "com.stocker.tier=infrastructure"
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.stoocker.app`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+volumes:
+  grafana_data:
+    driver: local
+
+networks:
+  coolify:
+    external: true

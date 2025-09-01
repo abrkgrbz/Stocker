@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Simple backup service for SQL Server
+  mssql-backup:
+    image: mcr.microsoft.com/mssql-tools:latest
+    container_name: mssql-backup
+    volumes:
+      - ./backups:/backups
+      - mssql-data:/var/opt/mssql:ro
+    environment:
+      - SA_PASSWORD=YourStrongPassword123!
+    entrypoint: |
+      /bin/bash -c "
+      while true; do
+        echo 'Starting backup at' $$(date)
+        
+        # Create backup directory with date
+        BACKUP_DIR=/backups/$$(date +%Y%m%d_%H%M%S)
+        mkdir -p $$BACKUP_DIR
+        
+        # Backup Master Database
+        /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P '$$SA_PASSWORD' \
+          -Q \"BACKUP DATABASE StockerMasterDb TO DISK='$$BACKUP_DIR/StockerMasterDb.bak' WITH FORMAT, INIT\" || true
+        
+        # Backup Tenant Database  
+        /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P '$$SA_PASSWORD' \
+          -Q \"BACKUP DATABASE StockerTenantDb TO DISK='$$BACKUP_DIR/StockerTenantDb.bak' WITH FORMAT, INIT\" || true
+        
+        # Keep only last 7 days of backups
+        find /backups -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
+        
+        echo 'Backup completed at' $$(date)
+        
+        # Sleep for 24 hours
+        sleep 86400
+      done
+      "
+    networks:
+      - coolify
+    restart: unless-stopped
+
+volumes:
+  mssql-data:
+    external: true
+
+networks:
+  coolify:
+    external: true

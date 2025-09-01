@@ -1,0 +1,39 @@
+version: '3.8'
+
+# Redis Cache Service
+# Used for caching and SignalR backplane
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: >
+      redis-server 
+      --appendonly yes 
+      --requirepass ${REDIS_PASSWORD:-RedisPassword123!}
+      --maxmemory ${REDIS_MAX_MEMORY:-256mb}
+      --maxmemory-policy ${REDIS_EVICTION_POLICY:-allkeys-lru}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-RedisPassword123!}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - coolify
+    labels:
+      - "com.stocker.service=cache"
+      - "com.stocker.tier=infrastructure"
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  coolify:
+    external: true

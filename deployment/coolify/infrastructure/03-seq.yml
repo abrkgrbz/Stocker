@@ -1,0 +1,41 @@
+version: '3.8'
+
+# Seq Centralized Logging Service
+# Collects and displays application logs
+
+services:
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_PASSWORD:-StockerSeq2024!}
+      - SEQ_CACHE_SYSTEMRAMTARGET=${SEQ_RAM_TARGET:-0.2}
+      - SEQ_STORAGE_SECRETKEY=${SEQ_SECRET_KEY:-}
+    ports:
+      - "5341:80"      # Web UI
+      - "5342:5341"    # Ingestion API
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - coolify
+    labels:
+      - "com.stocker.service=logging"
+      - "com.stocker.tier=infrastructure"
+      - "traefik.enable=true"
+      - "traefik.http.routers.seq.rule=Host(`seq.stoocker.app`)"
+      - "traefik.http.services.seq.loadbalancer.server.port=80"
+
+volumes:
+  seq_data:
+    driver: local
+
+networks:
+  coolify:
+    external: true
