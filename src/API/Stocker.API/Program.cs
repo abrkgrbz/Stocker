@@ -401,6 +401,12 @@ else
     app.UseCors("AllowAll");
 }
 
+// Enable WebSockets for SignalR
+app.UseWebSockets(new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30)
+});
+
 // Add Global Exception Handling Middleware
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 

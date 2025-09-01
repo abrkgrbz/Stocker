@@ -29,6 +29,14 @@ public class TenantResolutionMiddleware
             return;
         }
 
+        // Skip tenant resolution for SignalR hubs (they handle their own tenant resolution)
+        if (context.Request.Path.StartsWithSegments("/hubs"))
+        {
+            _logger.LogDebug("Skipping tenant resolution for SignalR hub: {Path}", context.Request.Path);
+            await _next(context);
+            return;
+        }
+
         var tenantService = context.RequestServices.GetRequiredService<ITenantService>();
         
         // Debug logging - gelen header'ları görelim
