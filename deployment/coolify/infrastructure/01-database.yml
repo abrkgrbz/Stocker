@@ -20,7 +20,6 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
       - mssql_backup:/var/opt/mssql/backup
-      - ./init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${SA_PASSWORD:-YourStrongPassword123!}' -Q 'SELECT 1' -b -o /dev/null"]
       interval: 15s
