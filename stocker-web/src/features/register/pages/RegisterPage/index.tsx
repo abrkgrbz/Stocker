@@ -582,6 +582,22 @@ export const RegisterPage: React.FC = () => {
       <ModernWizard 
         onComplete={handleWizardComplete}
         selectedPackage={selectedPackage}
+        signalRValidation={{
+          isConnected,
+          emailValidation,
+          passwordStrength: signalRPasswordStrength,
+          domainCheck,
+          phoneValidation,
+          companyNameCheck,
+          identityValidation,
+          validateEmail,
+          checkPasswordStrength,
+          checkDomain,
+          validatePhone,
+          checkCompanyName,
+          validateIdentity,
+          error: validationError
+        }}
       />
     );
   };

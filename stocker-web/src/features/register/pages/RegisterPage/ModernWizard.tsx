@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { message, Spin } from 'antd';
 import Select from 'react-select';
 import { apiClient } from '@/shared/api/client';
-import { useSignalRValidation } from '@/shared/hooks/useSignalR';
+// SignalR validation will be passed as props from parent component
 import {
   ShopOutlined,
   UserOutlined,
@@ -36,9 +36,25 @@ import './package-selection.css';
 interface ModernWizardProps {
   onComplete: (data: any) => void;
   selectedPackage?: any;
+  signalRValidation?: {
+    isConnected: boolean;
+    emailValidation: any;
+    passwordStrength: any;
+    domainCheck: any;
+    phoneValidation: any;
+    companyNameCheck: any;
+    identityValidation: any;
+    validateEmail: (email: string) => Promise<void>;
+    checkPasswordStrength: (password: string) => Promise<void>;
+    checkDomain: (domain: string) => Promise<void>;
+    validatePhone: (phone: string, countryCode?: string) => Promise<void>;
+    checkCompanyName: (name: string) => Promise<void>;
+    validateIdentity: (identityNumber: string) => Promise<void>;
+    error: string | null;
+  };
 }
 
-export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selectedPackage }) => {
+export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selectedPackage, signalRValidation }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [packages, setPackages] = useState<any[]>([]);
@@ -87,23 +103,23 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     hasSpecial: false
   });
 
-  // SignalR Validation Hook
+  // Use SignalR validation from props if provided
   const {
-    isConnected,
-    emailValidation,
-    passwordStrength: signalRPasswordStrength,
-    domainCheck,
-    phoneValidation,
-    companyNameCheck,
-    identityValidation,
-    validateEmail,
-    checkPasswordStrength: checkSignalRPasswordStrength,
-    checkDomain,
-    validatePhone,
-    checkCompanyName,
-    validateIdentity,
-    error: validationError
-  } = useSignalRValidation();
+    isConnected = false,
+    emailValidation = null,
+    passwordStrength: signalRPasswordStrength = null,
+    domainCheck = null,
+    phoneValidation = null,
+    companyNameCheck = null,
+    identityValidation = null,
+    validateEmail = async () => {},
+    checkPasswordStrength: checkSignalRPasswordStrength = async () => {},
+    checkDomain = async () => {},
+    validatePhone = async () => {},
+    checkCompanyName = async () => {},
+    validateIdentity = async () => {},
+    error: validationError = null
+  } = signalRValidation || {};
 
   const steps = [
     { label: 'Şirket', icon: <ShopOutlined /> },

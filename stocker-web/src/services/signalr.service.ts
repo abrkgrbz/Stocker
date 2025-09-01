@@ -8,13 +8,28 @@ class SignalRService {
 
   // Validation Hub Methods
   async startValidationConnection(): Promise<void> {
+    // Check if already connected or connecting
     if (this.validationConnection?.state === signalR.HubConnectionState.Connected) {
+      console.log('ValidationHub already connected');
       return;
+    }
+    
+    if (this.validationConnection?.state === signalR.HubConnectionState.Connecting) {
+      console.log('ValidationHub already connecting...');
+      return;
+    }
+
+    // If we have an existing connection that's not connected, stop it first
+    if (this.validationConnection) {
+      console.log('Stopping existing ValidationHub connection');
+      await this.validationConnection.stop();
+      this.validationConnection = null;
     }
 
     // Get tenant from localStorage or use default
     const tenantId = localStorage.getItem('X-Tenant-Id') || 'master';
     
+    console.log('Creating new ValidationHub connection');
     this.validationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/validation`, {
         // Try WebSockets first, then SSE, then LongPolling
@@ -27,7 +42,8 @@ class SignalRService {
           'X-Bypass-Rate-Limit': 'true'
         }
       })
-      .withAutomaticReconnect([2000, 5000, 10000, 30000]) // Remove 0ms to prevent immediate reconnect
+      // Disable automatic reconnect for now to debug the issue
+      // .withAutomaticReconnect([2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
