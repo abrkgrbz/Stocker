@@ -26,7 +26,7 @@ JwtSettings__RefreshTokenExpirationDays=7
 EmailSettings__SmtpHost=smtp.sendgrid.net
 EmailSettings__SmtpPort=587
 EmailSettings__SmtpUsername=apikey
-EmailSettings__SmtpPassword=YOUR_SENDGRID_API_KEY_HERE
+EmailSettings__SmtpPassword=dm9Y6NmTSk67ltU35zEFQA
 EmailSettings__EnableSsl=true
 EmailSettings__FromEmail=info@stoocker.app
 EmailSettings__FromName=Stoocker
@@ -86,6 +86,9 @@ PasswordPolicy__SpecialCharacters=!@#$%^&*()_+-=[]{}|;:,.<>?
 # Service URLs
 SERVICE_FQDN_API=api.stoocker.app
 SERVICE_URL_API=https://api.stoocker.app
+
+# Traefik Labels for WebSocket Support (Coolify)
+COOLIFY_TRAEFIK_LABELS=traefik.http.services.api.loadbalancer.server.port=5000,traefik.http.routers.api.middlewares=websocket-headers,traefik.http.middlewares.websocket-headers.headers.customrequestheaders.X-Forwarded-Proto=https,traefik.http.middlewares.websocket-headers.headers.customrequestheaders.Connection=keep-alive,traefik.http.middlewares.websocket-headers.headers.customrequestheaders.Upgrade=websocket
 
 # CORS Settings (Additional)
 Cors__AllowedOrigins__0=https://stoocker.app
