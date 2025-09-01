@@ -6,53 +6,8 @@ services:
       context: .
       dockerfile: src/API/Stocker.API/Dockerfile
     ports:
-      - "5000:5000" 
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:5000
-      # Database connections
-      - ConnectionStrings__DefaultConnection=Server=${DB_HOST:-database};Database=${DB_NAME:-StockerTenantDb};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__MasterConnection=Server=${DB_HOST:-database};Database=${MASTER_DB_NAME:-StockerMasterDb};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=${DB_HOST:-database};Database=${TENANT_DB_NAME:-StockerTenantDb};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
-      # Database Settings for dynamic tenant database creation
-      - DatabaseSettings__ServerName=${DB_HOST:-database}
-      - DatabaseSettings__UserId=${DB_USER:-sa}
-      - DatabaseSettings__Password=${DB_PASSWORD}
-      # JWT Settings
-      - JwtSettings__Secret=${JWT_SECRET}
-      - JwtSettings__Issuer=${JWT_ISSUER:-https://api.stoocker.app}
-      - JwtSettings__Audience=${JWT_AUDIENCE:-https://stoocker.app}
-      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRATION:-60}
-      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRATION:-7}
-      # Email Settings (SendGrid)
-      - EmailSettings__SmtpHost=${SMTP_HOST:-smtp.sendgrid.net}
-      - EmailSettings__SmtpPort=${SMTP_PORT:-587}
-      - EmailSettings__SmtpUsername=${SMTP_USERNAME:-apikey}
-      - EmailSettings__SmtpPassword=${SENDGRID_API_KEY}
-      - EmailSettings__EnableSsl=${SMTP_ENABLE_SSL:-true}
-      - EmailSettings__FromEmail=${FROM_EMAIL:-info@stoocker.app}
-      - EmailSettings__FromName=${FROM_NAME:-Stoocker}
-      - EmailSettings__UseStartTls=${SMTP_USE_STARTTLS:-true}
-      - EmailSettings__EnableEmail=${ENABLE_EMAIL:-true}
-      - EmailSettings__BaseUrl=${BASE_URL:-https://stoocker.app}
-      - EmailSettings__TemplatesPath=EmailTemplates
-      - EmailSettings__Timeout=${EMAIL_TIMEOUT:-30000}
-      # Redis connection
-      - Redis__ConnectionString=${REDIS_CONNECTION:-redis:6379}
-      - ConnectionStrings__Redis=${REDIS_CONNECTION:-redis:6379}
-      # Hangfire Settings
-      - Hangfire__DashboardPath=/hangfire
-      - Hangfire__ServerName=${HANGFIRE_SERVER_NAME:-Stocker-Production}
-      - Hangfire__WorkerCount=${HANGFIRE_WORKERS:-8}
-      - Hangfire__Queues__0=critical
-      - Hangfire__Queues__1=default
-      - Hangfire__Queues__2=low
-      - Hangfire__RetryAttempts=${HANGFIRE_RETRY:-3}
-      - Hangfire__JobExpirationCheckInterval=01:00:00
-      - Hangfire__CountersAggregateInterval=00:05:00
-      # Seq Logging Settings
-      - Logging__Seq__ServerUrl=${SEQ_URL:-http://seq:5341}
-      - Logging__Seq__ApiKey=${SEQ_API_KEY}
-      - Logging__Seq__MinimumLevel=${LOG_LEVEL:-Information}
+      - "5000:5000"
+     
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
