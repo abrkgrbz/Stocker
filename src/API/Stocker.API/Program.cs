@@ -336,6 +336,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("SystemAdminPolicy", policy =>
         policy.RequireRole("SistemYoneticisi"));
     
+    // Master Access - For master panel operations
+    options.AddPolicy("RequireMasterAccess", policy =>
+        policy.RequireRole("SistemYoneticisi"));
+    
     // Tenant Admin - Tenant-scoped access
     options.AddPolicy("TenantAdminPolicy", policy =>
         policy.RequireRole("FirmaYoneticisi", "SistemYoneticisi"));
