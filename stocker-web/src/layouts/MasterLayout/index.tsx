@@ -24,6 +24,7 @@ import {
 import { Dropdown, Avatar, Badge, Space, Tag } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import NotificationManager from '@/shared/components/NotificationManager';
 import './style.css';
 
 const menuItems = [
@@ -234,9 +235,7 @@ export const MasterLayout: React.FC = () => {
           </Tag>
           
           {/* Notifications */}
-          <Badge count={5} size="small">
-            <BellOutlined style={{ fontSize: 18, color: 'white', cursor: 'pointer' }} />
-          </Badge>
+          <NotificationManager />
 
           {/* User Menu */}
           <Dropdown
