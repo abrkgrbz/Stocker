@@ -37,9 +37,15 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor chunks
           if (id.includes('node_modules')) {
-            // Core React ecosystem
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
+            // Core React ecosystem - MUST load first
+            if (id.includes('react-dom')) {
+              return 'react-dom';
+            }
+            if (id.includes('react') && !id.includes('react-dom') && !id.includes('react-router') && !id.includes('@ant-design')) {
+              return 'react';
+            }
+            if (id.includes('react-router')) {
+              return 'react-router';
             }
             
             // Ant Design core
@@ -47,7 +53,7 @@ export default defineConfig({
               return 'antd-core';
             }
             
-            // Ant Design icons separate chunk
+            // Ant Design icons separate chunk - depends on React
             if (id.includes('@ant-design/icons')) {
               return 'antd-icons';
             }
