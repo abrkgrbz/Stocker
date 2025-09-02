@@ -1,15 +1,17 @@
 node_modules
-package-lock.json
 npm-debug.log
-# dist - removed to include in Docker build
+dist
 .git
 .gitignore
 README.md
-.env
-.env.*
+.env.local
+.env.*.local
 .vscode
 .idea
 coverage
 .nyc_output
 .DS_Store
 *.log
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
