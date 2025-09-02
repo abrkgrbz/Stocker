@@ -22,41 +22,122 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
-    // Chunk splitting for better caching - simplified for stability
+    // Enhanced chunk splitting for better caching and smaller bundles
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Keep React ecosystem together to prevent context issues
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Ant Design components
-          'antd': ['antd', '@ant-design/icons', '@ant-design/pro-components'],
-          // Charts and visualization
-          'charts': ['@ant-design/charts', '@ant-design/plots', 'recharts'],
-          // Utilities
-          'utils': ['axios', 'dayjs', 'zustand', '@tanstack/react-query'],
-          // Other heavy libraries
-          'libs': ['@microsoft/signalr', 'i18next', 'react-i18next', 'sweetalert2']
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            // Core React ecosystem
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            
+            // Ant Design core
+            if (id.includes('antd') || id.includes('@ant-design/icons')) {
+              return 'antd-core';
+            }
+            
+            // Ant Design Pro and extras
+            if (id.includes('@ant-design/pro') || id.includes('rc-')) {
+              return 'antd-extra';
+            }
+            
+            // Charts and visualization
+            if (id.includes('chart') || id.includes('recharts') || id.includes('@ant-design/plots') || id.includes('g2') || id.includes('d3')) {
+              return 'charts';
+            }
+            
+            // Animation libraries
+            if (id.includes('framer-motion') || id.includes('react-spring')) {
+              return 'animations';
+            }
+            
+            // SignalR and real-time
+            if (id.includes('signalr')) {
+              return 'signalr';
+            }
+            
+            // State management
+            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
+              return 'state-management';
+            }
+            
+            // Utilities
+            if (id.includes('axios') || id.includes('dayjs') || id.includes('moment') || id.includes('lodash')) {
+              return 'utils';
+            }
+            
+            // Virtual scrolling
+            if (id.includes('react-window') || id.includes('react-virtualized')) {
+              return 'virtual';
+            }
+            
+            // Internationalization
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'i18n';
+            }
+            
+            // Other UI libraries
+            if (id.includes('sweetalert') || id.includes('react-hot-toast')) {
+              return 'ui-libs';
+            }
+            
+            // Default vendor chunk for remaining
+            return 'vendor';
+          }
+          
+          // Application chunks
+          if (id.includes('src/features/master')) {
+            return 'master';
+          }
+          
+          if (id.includes('src/features/tenant')) {
+            return 'tenant';
+          }
+          
+          if (id.includes('src/shared/components')) {
+            return 'components';
+          }
+          
+          if (id.includes('src/services')) {
+            return 'services';
+          }
+          
+          if (id.includes('src/shared/api')) {
+            return 'api';
+          }
         },
         // Better chunk naming
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `assets/js/${facadeModuleId}-[hash].js`;
-        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
       onwarn(warning, warn) {
         // Skip certain warnings
         if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+        if (warning.code === 'CIRCULAR_DEPENDENCY') return
         warn(warning)
       }
     },
     // Chunk size warnings
-    chunkSizeWarningLimit: 600, // 600KB warning threshold
-    // Source maps for production debugging
-    sourcemap: true,
+    chunkSizeWarningLimit: 500, // 500KB warning threshold
+    // Source maps for production debugging (disable for smaller builds)
+    sourcemap: false,
     // Assets inlining threshold
     assetsInlineLimit: 4096, // 4kb
+    // CSS code splitting
+    cssCodeSplit: true,
+    // Report compressed size
+    reportCompressedSize: true,
   },
   // Optimize dependencies
   optimizeDeps: {

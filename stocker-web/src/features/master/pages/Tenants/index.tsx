@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,6 +40,8 @@ import {
   InputNumber,
   Skeleton,
 } from 'antd';
+import { VirtualList } from '@/shared/components/VirtualList';
+import { VirtualTable } from '@/shared/components/VirtualTable';
 import {
   TeamOutlined,
   UserOutlined,
@@ -1265,25 +1267,51 @@ export const MasterTenantsPage: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Row gutter={[24, 24]}>
-              {filteredTenants.map((tenant) => (
-                <Col xs={24} sm={24} md={12} lg={8} xl={8} xxl={6} key={tenant.id}>
-                  <TenantCard
-                    tenant={tenant}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onToggleStatus={handleToggleStatus}
-                    onLoginAs={handleLoginAs}
-                    onViewDetails={handleViewDetails}
+            {filteredTenants.length > 20 ? (
+              // Use virtual scrolling for large datasets
+              <div style={{ height: 'calc(100vh - 350px)' }}>
+                <VirtualList
+                  items={filteredTenants}
+                  itemHeight={350}
+                  renderItem={(tenant) => (
+                    <div style={{ padding: '12px' }}>
+                      <TenantCard
+                        tenant={tenant}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
+                        onLoginAs={handleLoginAs}
+                        onViewDetails={handleViewDetails}
+                      />
+                    </div>
+                  )}
+                  emptyText="Tenant bulunamadı"
+                />
+              </div>
+            ) : (
+              // Use regular rendering for small datasets
+              <>
+                <Row gutter={[24, 24]}>
+                  {filteredTenants.map((tenant) => (
+                    <Col xs={24} sm={24} md={12} lg={8} xl={8} xxl={6} key={tenant.id}>
+                      <TenantCard
+                        tenant={tenant}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onToggleStatus={handleToggleStatus}
+                        onLoginAs={handleLoginAs}
+                        onViewDetails={handleViewDetails}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+                {filteredTenants.length === 0 && (
+                  <Empty
+                    description="Tenant bulunamadı"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
                   />
-                </Col>
-              ))}
-            </Row>
-            {filteredTenants.length === 0 && (
-              <Empty
-                description="Tenant bulunamadı"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
+                )}
+              </>
             )}
           </motion.div>
         ) : (
@@ -1294,28 +1322,44 @@ export const MasterTenantsPage: React.FC = () => {
             exit={{ opacity: 0 }}
           >
             <Card className="table-card glass-morphism">
-              <Table
-                columns={columns}
-                dataSource={filteredTenants}
-                rowKey="id"
-                loading={loading}
-                pagination={{
-                  current: page,
-                  pageSize: pageSize,
-                  total: totalCount || filteredTenants.length,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Toplam ${total} tenant`,
-                  onChange: (newPage, newPageSize) => {
-                    setPage(newPage);
-                    if (newPageSize) setPageSize(newPageSize);
-                  },
-                }}
-                scroll={{ x: 1500 }}
-                rowSelection={{
-                  selectedRowKeys: selectedTenants,
-                  onChange: setSelectedTenants,
-                }}
-              />
+              {filteredTenants.length > 50 ? (
+                // Use virtual table for large datasets
+                <div style={{ height: 'calc(100vh - 350px)' }}>
+                  <VirtualTable
+                    columns={columns}
+                    dataSource={filteredTenants}
+                    rowKey="id"
+                    loading={loading}
+                    selectable={true}
+                    onSelectionChange={setSelectedTenants}
+                    onRowClick={handleViewDetails}
+                  />
+                </div>
+              ) : (
+                // Use regular table for small datasets
+                <Table
+                  columns={columns}
+                  dataSource={filteredTenants}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={{
+                    current: page,
+                    pageSize: pageSize,
+                    total: totalCount || filteredTenants.length,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Toplam ${total} tenant`,
+                    onChange: (newPage, newPageSize) => {
+                      setPage(newPage);
+                      if (newPageSize) setPageSize(newPageSize);
+                    },
+                  }}
+                  scroll={{ x: 1500 }}
+                  rowSelection={{
+                    selectedRowKeys: selectedTenants,
+                    onChange: setSelectedTenants,
+                  }}
+                />
+              )}
             </Card>
           </motion.div>
         )}
