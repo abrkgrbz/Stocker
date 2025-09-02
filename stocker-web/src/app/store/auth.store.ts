@@ -94,17 +94,27 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               isInitialized: true,
             });
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('Login failed:', error);
-            console.error('Error response:', error.response);
-            console.error('Error response data:', error.response?.data);
             
             // Extract detailed error message
-            const errorMessage = error.response?.data?.errors?.General?.[0] || 
-                               error.response?.data?.message || 
-                               error.response?.data || 
-                               error.message || 
-                               'Login failed';
+            let errorMessage = 'Login failed';
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { data?: Record<string, unknown> } };
+              const data = axiosError.response?.data;
+              if (data && typeof data === 'object') {
+                const errors = (data as Record<string, unknown>).errors as Record<string, unknown>;
+                if (errors?.General && Array.isArray(errors.General)) {
+                  errorMessage = (errors.General as string[])[0] || 'Login failed';
+                } else if (data.message && typeof data.message === 'string') {
+                  errorMessage = data.message;
+                } else {
+                  errorMessage = String(data) || 'Login failed';
+                }
+              }
+            } else if (error instanceof Error) {
+              errorMessage = error.message || 'Login failed';
+            }
             
             set({
               error: errorMessage,
@@ -164,7 +174,7 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               isInitialized: true,
             });
-          } catch (error) {
+          } catch {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(REFRESH_TOKEN_KEY);
             set({

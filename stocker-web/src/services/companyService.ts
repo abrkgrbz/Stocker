@@ -97,13 +97,13 @@ class CompanyService {
     try {
       const response = await api.get<Company>('/api/tenant/companies/current');
       return response.data;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
 
   async updateCompany(id: string, data: Partial<CompanyData>): Promise<Company> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     // Map fields that exist in data
     if (data.name !== undefined) updateData.name = data.name;

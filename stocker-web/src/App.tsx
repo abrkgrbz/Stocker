@@ -13,7 +13,6 @@ import { useAuthStore } from '@/app/store/auth.store';
 
 // Layouts
 import MetronicLayout from '@/layouts/MetronicLayout';
-import { MasterLayout } from '@/layouts/MasterLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';

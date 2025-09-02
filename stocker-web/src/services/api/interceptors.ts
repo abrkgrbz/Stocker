@@ -50,10 +50,10 @@ const tokenManager = {
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null): void => {
+const processQueue = (error: unknown, token: string | null = null): void => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
@@ -67,7 +67,7 @@ const processQueue = (error: any, token: string | null = null): void => {
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig): any => {
+  (config: AxiosRequestConfig): AxiosRequestConfig => {
     // Add auth token
     const token = tokenManager.getAccessToken();
     if (token) {
@@ -128,7 +128,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest: any = error.config;
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     
     // Log error
     logger.error('API Error', error, 'API');
@@ -189,28 +189,28 @@ apiClient.interceptors.response.use(
 
 // API methods
 export const api = {
-  get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  get: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return apiClient.get<T>(url, config);
   },
   
-  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return apiClient.post<T>(url, data, config);
   },
   
-  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return apiClient.put<T>(url, data, config);
   },
   
-  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return apiClient.patch<T>(url, data, config);
   },
   
-  delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  delete: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return apiClient.delete<T>(url, config);
   },
   
   // File upload
-  upload: <T = any>(url: string, formData: FormData, onProgress?: (progress: number) => void): Promise<AxiosResponse<T>> => {
+  upload: <T = unknown>(url: string, formData: FormData, onProgress?: (progress: number) => void): Promise<AxiosResponse<T>> => {
     return apiClient.post<T>(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

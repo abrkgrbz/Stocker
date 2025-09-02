@@ -7,10 +7,9 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
 } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 
 export const AdminDashboard: React.FC = () => {

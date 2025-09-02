@@ -1,24 +1,17 @@
 import React from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Row, Col, Statistic, Progress, Typography, Tag, Table, Timeline, Alert, Space, Badge, List, Avatar } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Typography, Tag, Table, Timeline, Alert, Space, Badge } from 'antd';
 import {
   TeamOutlined,
-  AppstoreOutlined,
   CreditCardOutlined,
-  DollarOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
   CloudServerOutlined,
   DatabaseOutlined,
   ApiOutlined,
-  ClockCircleOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   CloseCircleOutlined,
-  SyncOutlined,
   UserOutlined,
-  RiseOutlined,
-  FallOutlined,
 } from '@ant-design/icons';
 import { Line, Pie } from '@ant-design/charts';
 

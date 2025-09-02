@@ -755,7 +755,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   };
 
   const validateStep = (step: number): boolean => {
-    let errors: { [key: string]: string } = {};
+    const errors: { [key: string]: string } = {};
     let hasError = false;
 
     switch (step) {

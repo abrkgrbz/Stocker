@@ -176,7 +176,7 @@ class MockSignalRService {
       const isValid = !containsRestricted && companyName.length >= 3;
       
       let message = '';
-      let details: Record<string, string> = {};
+      const details: Record<string, string> = {};
       
       if (containsRestricted) {
         message = "Şirket adı kısıtlı kelimeler içeriyor";
@@ -296,31 +296,31 @@ class MockSignalRService {
     const digits = vergiNo.split('').map(Number);
     
     // Vergi No algorithm
-    let v1 = (digits[0] + 9) % 10;
+    const v1 = (digits[0] + 9) % 10;
     let v2 = (v1 * 2) % 9;
     if (v1 !== 0 && v2 === 0) v2 = 9;
-    let v3 = (digits[1] + 8) % 10;
+    const v3 = (digits[1] + 8) % 10;
     let v4 = (v3 * 4) % 9;
     if (v3 !== 0 && v4 === 0) v4 = 9;
-    let v5 = (digits[2] + 7) % 10;
+    const v5 = (digits[2] + 7) % 10;
     let v6 = (v5 * 8) % 9;
     if (v5 !== 0 && v6 === 0) v6 = 9;
-    let v7 = (digits[3] + 6) % 10;
+    const v7 = (digits[3] + 6) % 10;
     let v8 = (v7 * 16) % 9;
     if (v7 !== 0 && v8 === 0) v8 = 9;
-    let v9 = (digits[4] + 5) % 10;
+    const v9 = (digits[4] + 5) % 10;
     let v10 = (v9 * 32) % 9;
     if (v9 !== 0 && v10 === 0) v10 = 9;
-    let v11 = (digits[5] + 4) % 10;
+    const v11 = (digits[5] + 4) % 10;
     let v12 = (v11 * 64) % 9;
     if (v11 !== 0 && v12 === 0) v12 = 9;
-    let v13 = (digits[6] + 3) % 10;
+    const v13 = (digits[6] + 3) % 10;
     let v14 = (v13 * 128) % 9;
     if (v13 !== 0 && v14 === 0) v14 = 9;
-    let v15 = (digits[7] + 2) % 10;
+    const v15 = (digits[7] + 2) % 10;
     let v16 = (v15 * 256) % 9;
     if (v15 !== 0 && v16 === 0) v16 = 9;
-    let v17 = (digits[8] + 1) % 10;
+    const v17 = (digits[8] + 1) % 10;
     let v18 = (v17 * 512) % 9;
     if (v17 !== 0 && v18 === 0) v18 = 9;
 

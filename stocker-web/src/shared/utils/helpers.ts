@@ -14,7 +14,7 @@ export const deepClone = <T>(obj: T): T => {
 };
 
 // Check if object is empty
-export const isEmpty = (obj: any): boolean => {
+export const isEmpty = (obj: unknown): boolean => {
   if (obj === null || obj === undefined) return true;
   if (typeof obj === 'string') return obj.trim().length === 0;
   if (Array.isArray(obj)) return obj.length === 0;
@@ -60,7 +60,7 @@ export const uniqueArray = <T>(array: T[], key?: keyof T): T[] => {
 };
 
 // Debounce function
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
@@ -73,7 +73,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 };
 
 // Throttle function
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
@@ -101,7 +101,7 @@ export const parseQueryString = (queryString: string): Record<string, string> =>
 };
 
 // Build query string
-export const buildQueryString = (params: Record<string, any>): string => {
+export const buildQueryString = (params: Record<string, unknown>): string => {
   const searchParams = new URLSearchParams();
   
   Object.entries(params).forEach(([key, value]) => {
@@ -168,7 +168,7 @@ export const isProduction = (): boolean => {
 };
 
 // Safe JSON parse
-export const safeJsonParse = <T = any>(json: string, fallback: T): T => {
+export const safeJsonParse = <T = unknown>(json: string, fallback: T): T => {
   try {
     return JSON.parse(json);
   } catch {
@@ -177,10 +177,19 @@ export const safeJsonParse = <T = any>(json: string, fallback: T): T => {
 };
 
 // Get error message from any error type
-export const getErrorMessage = (error: any): string => {
+export const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error;
-  if (error?.message) return error.message;
-  if (error?.response?.data?.message) return error.response.data.message;
-  if (error?.response?.data?.error) return error.response.data.error;
+  if (error && typeof error === 'object') {
+    const err = error as Record<string, unknown>;
+    if (err.message && typeof err.message === 'string') return err.message;
+    if (err.response && typeof err.response === 'object') {
+      const response = err.response as Record<string, unknown>;
+      if (response.data && typeof response.data === 'object') {
+        const data = response.data as Record<string, unknown>;
+        if (data.message && typeof data.message === 'string') return data.message;
+        if (data.error && typeof data.error === 'string') return data.error;
+      }
+    }
+  }
   return 'Beklenmeyen bir hata oluştu';
 };

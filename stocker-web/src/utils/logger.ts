@@ -11,7 +11,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: Date;
-  data?: any;
+  data?: unknown;
   error?: Error;
   context?: string;
 }
@@ -54,7 +54,7 @@ class Logger {
     return `[${timestamp}] [${levelStr}]${contextStr} ${message}`;
   }
 
-  private log(level: LogLevel, message: string, data?: any, context?: string): void {
+  private log(level: LogLevel, message: string, data?: unknown, context?: string): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -112,19 +112,19 @@ class Logger {
     }
   }
 
-  debug(message: string, data?: any, context?: string): void {
+  debug(message: string, data?: unknown, context?: string): void {
     this.log(LogLevel.DEBUG, message, data, context);
   }
 
-  info(message: string, data?: any, context?: string): void {
+  info(message: string, data?: unknown, context?: string): void {
     this.log(LogLevel.INFO, message, data, context);
   }
 
-  warn(message: string, data?: any, context?: string): void {
+  warn(message: string, data?: unknown, context?: string): void {
     this.log(LogLevel.WARN, message, data, context);
   }
 
-  error(message: string, error?: Error | any, context?: string): void {
+  error(message: string, error?: Error | unknown, context?: string): void {
     const entry: LogEntry = {
       level: LogLevel.ERROR,
       message,
@@ -186,7 +186,7 @@ class Logger {
   }
 
   // Table logging for structured data
-  table(data: any[], columns?: string[]): void {
+  table(data: unknown[], columns?: string[]): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       console.table(data, columns);
     }

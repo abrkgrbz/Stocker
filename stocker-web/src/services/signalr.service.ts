@@ -188,15 +188,13 @@ class SignalRService {
       
       await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
       console.log('=== ValidateIdentity invoke SUCCESS ===');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('=== ValidateIdentity ERROR ===');
-      console.error('Error type:', error?.constructor?.name);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
       console.error('Full error object:', error);
       
       // Check if it's a connection error
-      if (error?.message?.includes('disconnect') || error?.message?.includes('close')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('disconnect') || errorMessage.includes('close')) {
         console.error('CONNECTION LOST during validateIdentity!');
         console.log('Attempting to reconnect...');
         try {

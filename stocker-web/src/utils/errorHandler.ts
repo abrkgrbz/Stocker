@@ -5,7 +5,7 @@ import env from '@/config/env';
 export interface AppError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   statusCode?: number;
   timestamp: Date;
   path?: string;
@@ -14,10 +14,10 @@ export interface AppError {
 export class ApplicationError extends Error {
   public code: string;
   public statusCode: number;
-  public details?: any;
+  public details?: unknown;
   public timestamp: Date;
 
-  constructor(message: string, code: string = 'APP_ERROR', statusCode: number = 500, details?: any) {
+  constructor(message: string, code: string = 'APP_ERROR', statusCode: number = 500, details?: unknown) {
     super(message);
     this.name = 'ApplicationError';
     this.code = code;
@@ -33,42 +33,42 @@ export class ApplicationError extends Error {
 }
 
 export class ValidationError extends ApplicationError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'VALIDATION_ERROR', 400, details);
     this.name = 'ValidationError';
   }
 }
 
 export class AuthenticationError extends ApplicationError {
-  constructor(message: string = 'Authentication failed', details?: any) {
+  constructor(message: string = 'Authentication failed', details?: unknown) {
     super(message, 'AUTH_ERROR', 401, details);
     this.name = 'AuthenticationError';
   }
 }
 
 export class AuthorizationError extends ApplicationError {
-  constructor(message: string = 'Access denied', details?: any) {
+  constructor(message: string = 'Access denied', details?: unknown) {
     super(message, 'AUTHZ_ERROR', 403, details);
     this.name = 'AuthorizationError';
   }
 }
 
 export class NotFoundError extends ApplicationError {
-  constructor(message: string = 'Resource not found', details?: any) {
+  constructor(message: string = 'Resource not found', details?: unknown) {
     super(message, 'NOT_FOUND', 404, details);
     this.name = 'NotFoundError';
   }
 }
 
 export class NetworkError extends ApplicationError {
-  constructor(message: string = 'Network error occurred', details?: any) {
+  constructor(message: string = 'Network error occurred', details?: unknown) {
     super(message, 'NETWORK_ERROR', 0, details);
     this.name = 'NetworkError';
   }
 }
 
 export class ServerError extends ApplicationError {
-  constructor(message: string = 'Server error occurred', details?: any) {
+  constructor(message: string = 'Server error occurred', details?: unknown) {
     super(message, 'SERVER_ERROR', 500, details);
     this.name = 'ServerError';
   }
@@ -107,7 +107,7 @@ export class ErrorHandler {
     this.errorMessages[code] = message;
   }
 
-  handle(error: any, showNotification: boolean = true): AppError {
+  handle(error: unknown, showNotification: boolean = true): AppError {
     let appError: AppError;
 
     // Convert different error types to AppError
@@ -214,7 +214,7 @@ export class ErrorHandler {
   }
 
   // React error boundary error handler
-  handleBoundaryError(error: Error, _errorInfo: any): void {
+  handleBoundaryError(error: Error, _errorInfo: unknown): void {
     logger.error('React Error Boundary', error, 'ErrorBoundary');
     
     if (env.app.isProduction) {
