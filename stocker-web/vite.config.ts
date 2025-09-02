@@ -34,99 +34,22 @@ export default defineConfig({
     // Enhanced chunk splitting for better caching and smaller bundles
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Vendor chunks
-          if (id.includes('node_modules')) {
-            // Core React ecosystem - MUST load first
-            if (id.includes('react-dom')) {
-              return 'react-dom';
-            }
-            if (id.includes('react') && !id.includes('react-dom') && !id.includes('react-router') && !id.includes('@ant-design')) {
-              return 'react';
-            }
-            if (id.includes('react-router')) {
-              return 'react-router';
-            }
-            
-            // Ant Design core
-            if (id.includes('antd') && !id.includes('@ant-design/icons') && !id.includes('@ant-design/pro')) {
-              return 'antd-core';
-            }
-            
-            // Ant Design icons separate chunk - depends on React
-            if (id.includes('@ant-design/icons')) {
-              return 'antd-icons';
-            }
-            
-            // Ant Design Pro and extras
-            if (id.includes('@ant-design/pro') || id.includes('rc-')) {
-              return 'antd-extra';
-            }
-            
-            // Charts and visualization
-            if (id.includes('chart') || id.includes('recharts') || id.includes('@ant-design/plots') || id.includes('g2') || id.includes('d3')) {
-              return 'charts';
-            }
-            
-            // Animation libraries
-            if (id.includes('framer-motion') || id.includes('react-spring')) {
-              return 'animations';
-            }
-            
-            // SignalR and real-time
-            if (id.includes('signalr')) {
-              return 'signalr';
-            }
-            
-            // State management
-            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
-              return 'state-management';
-            }
-            
-            // Utilities
-            if (id.includes('axios') || id.includes('dayjs') || id.includes('moment') || id.includes('lodash')) {
-              return 'utils';
-            }
-            
-            // Virtual scrolling
-            if (id.includes('react-window') || id.includes('react-virtualized')) {
-              return 'virtual';
-            }
-            
-            // Internationalization
-            if (id.includes('i18next') || id.includes('react-i18next')) {
-              return 'i18n';
-            }
-            
-            // Other UI libraries
-            if (id.includes('sweetalert') || id.includes('react-hot-toast')) {
-              return 'ui-libs';
-            }
-            
-            // Default vendor chunk for remaining
-            return 'vendor';
-          }
-          
-          // Application chunks
-          if (id.includes('src/features/master')) {
-            return 'master';
-          }
-          
-          if (id.includes('src/features/tenant')) {
-            return 'tenant';
-          }
-          
-          if (id.includes('src/shared/components')) {
-            return 'components';
-          }
-          
-          if (id.includes('src/services')) {
-            return 'services';
-          }
-          
-          if (id.includes('src/shared/api')) {
-            return 'api';
-          }
+        manualChunks: {
+          // Core vendor bundle - React MUST be in a single chunk
+          vendor: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            'react/jsx-runtime'
+          ],
+          // Ant Design core (without icons)
+          'antd-core': ['antd'],
+          // Ant Design icons in separate chunk
+          'antd-icons': ['@ant-design/icons'],
+          // Other large libraries
+          charts: ['recharts'],
+          utils: ['lodash', 'axios', 'dayjs'],
+          'state-management': ['zustand'],
         },
         // Better chunk naming
         chunkFileNames: 'assets/js/[name]-[hash].js',
