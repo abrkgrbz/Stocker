@@ -47,7 +47,13 @@ export const LoginPage: React.FC = () => {
       const userRole = authStore.user?.roles?.[0];
       const from = (location.state as any)?.from?.pathname;
       
-      console.log('Login successful - User role:', userRole);
+      console.log('[LoginPage] Login successful:', {
+        user: authStore.user,
+        roles: authStore.user?.roles,
+        userRole: userRole,
+        from: from,
+        isAuthenticated: authStore.isAuthenticated
+      });
       
       // Check if company exists for tenant users BEFORE navigation
       if (userRole !== 'SystemAdmin') {
@@ -71,20 +77,28 @@ export const LoginPage: React.FC = () => {
       // Navigate FIRST, immediately based on role
       let targetPath = '/';
       if (from) {
+        console.log('[LoginPage] Redirecting to original requested path:', from);
         targetPath = from;
       } else if (userRole === 'SystemAdmin') {
-        console.log('Navigating to /master');
+        console.log('[LoginPage] SystemAdmin detected, navigating to /master');
         targetPath = '/master';
       } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
-        console.log('Navigating to /admin');
+        console.log('[LoginPage] TenantAdmin/Admin detected, navigating to /admin');
         targetPath = '/admin';
       } else {
-        console.log('Navigating to /app/default');
-        targetPath = '/app/default';
+        // For regular users, we need to use the tenant ID
+        const tenantId = authStore.user?.tenantId || localStorage.getItem('stocker_tenant') || 'default';
+        console.log('[LoginPage] Regular user, navigating to /app/' + tenantId);
+        targetPath = `/app/${tenantId}`;
       }
+      
+      console.log('[LoginPage] Final navigation target:', targetPath);
+      console.log('[LoginPage] About to navigate...');
       
       // Navigate immediately
       navigate(targetPath, { replace: true });
+      
+      console.log('[LoginPage] Navigation called');
       
       // Show success message AFTER navigation (non-blocking toast)
       setTimeout(() => {

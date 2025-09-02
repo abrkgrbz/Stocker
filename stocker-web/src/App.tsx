@@ -88,15 +88,26 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { initializeAuth, isInitialized, isLoading } = useAuthStore();
+  const { initializeAuth, isInitialized, isLoading, isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
+    console.log('[App] Initializing auth state...');
     // Initialize auth state on app load
     initializeAuth();
   }, [initializeAuth]);
 
+  useEffect(() => {
+    console.log('[App] Auth state changed:', {
+      isInitialized,
+      isLoading,
+      isAuthenticated,
+      userRoles: user?.roles
+    });
+  }, [isInitialized, isLoading, isAuthenticated, user]);
+
   // Show loading spinner while checking initial auth state
   if (!isInitialized || isLoading) {
+    console.log('[App] Still initializing auth...', { isInitialized, isLoading });
     return (
       <div style={{ 
         display: 'flex', 

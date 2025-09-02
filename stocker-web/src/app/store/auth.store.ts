@@ -36,8 +36,16 @@ export const useAuthStore = create<AuthState>()(
           const token = localStorage.getItem(TOKEN_KEY);
           const state = get();
           
+          console.log('[AuthStore] initializeAuth called:', {
+            hasToken: !!token,
+            hasUser: !!state.user,
+            hasStateToken: !!state.token,
+            userRoles: state.user?.roles
+          });
+          
           // If we already have a user and token from persisted state, we're good
           if (state.user && state.token) {
+            console.log('[AuthStore] Already authenticated from persisted state');
             set({ 
               isAuthenticated: true,
               isInitialized: true,
@@ -45,9 +53,11 @@ export const useAuthStore = create<AuthState>()(
             });
           } else if (token) {
             // We have a token but no user, need to fetch user data
+            console.log('[AuthStore] Token found but no user, fetching user data...');
             get().checkAuth();
           } else {
             // No token, not authenticated
+            console.log('[AuthStore] No authentication found');
             set({ 
               isAuthenticated: false,
               isInitialized: true,
