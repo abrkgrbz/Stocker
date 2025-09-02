@@ -196,26 +196,62 @@
   border-radius: 4px !important;
 }
 
-/* Drawer Styles */
-.ant-drawer-header {
+/* Drawer Styles - Fix z-index issues */
+.master-tenants-page .ant-drawer {
+  position: fixed !important;
+}
+
+.master-tenants-page .ant-drawer-mask {
+  position: fixed !important;
+  z-index: 999 !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+}
+
+.master-tenants-page .ant-drawer-wrap {
+  position: fixed !important;
+  z-index: 1000 !important;
+}
+
+.master-tenants-page .ant-drawer-content-wrapper {
+  position: fixed !important;
+  z-index: 1000 !important;
+}
+
+.master-tenants-page .ant-drawer-content {
+  position: relative !important;
+  z-index: 1001 !important;
+  background: white !important;
+}
+
+.master-tenants-page .ant-drawer-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-bottom: none !important;
+  position: relative !important;
+  z-index: 1002 !important;
 }
 
-.ant-drawer-title {
+.master-tenants-page .ant-drawer-title {
   color: white !important;
   font-size: 18px !important;
   font-weight: 600 !important;
 }
 
-.ant-drawer-close {
+.master-tenants-page .ant-drawer-close {
   color: white !important;
+  position: relative !important;
+  z-index: 1003 !important;
 }
 
-.ant-drawer-body {
+.master-tenants-page .ant-drawer-close:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.master-tenants-page .ant-drawer-body {
   background: #f5f7fa;
   padding: 24px !important;
+  position: relative !important;
+  z-index: 1001 !important;
 }
 
 /* Glass Morphism Effect */

@@ -864,9 +864,10 @@ export const MasterTenantsPage: React.FC = () => {
   };
 
   const handleViewDetails = (tenant: Tenant) => {
-    console.log('Opening details for tenant:', tenant);
     setSelectedTenant(tenant);
-    setShowDetailsDrawer(true);
+    setTimeout(() => {
+      setShowDetailsDrawer(true);
+    }, 100);
   };
 
   const handleTableAction = (key: string, record: Tenant) => {
@@ -1253,7 +1254,8 @@ export const MasterTenantsPage: React.FC = () => {
         }}
         destroyOnClose={true}
         maskClosable={true}
-        style={{ zIndex: 1050 }}
+        zIndex={1000}
+        getContainer={false}
       >
         {selectedTenant ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
