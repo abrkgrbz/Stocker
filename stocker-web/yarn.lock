@@ -4120,7 +4120,7 @@ i18next-http-backend@^3.0.2:
   dependencies:
     cross-fetch "4.0.0"
 
-i18next@^25.3.4, "i18next@>= 25.4.1":
+i18next@^25.4.2, "i18next@>= 25.4.1":
   version "25.4.2"
   resolved "https://registry.npmjs.org/i18next/-/i18next-25.4.2.tgz"
   integrity sha512-gD4T25a6ovNXsfXY1TwHXXXLnD/K2t99jyYMCSimSCBnBRJVQr5j+VAaU83RJCPzrTGhVQ6dqIga66xO2rtd5g==
@@ -5376,7 +5376,7 @@ react-dom@*, "react-dom@^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0 || ^19.0.
     loose-envify "^1.1.0"
     scheduler "^0.23.2"
 
-react-i18next@^15.6.1:
+react-i18next@^15.7.3:
   version "15.7.3"
   resolved "https://registry.npmjs.org/react-i18next/-/react-i18next-15.7.3.tgz"
   integrity sha512-AANws4tOE+QSq/IeMF/ncoHlMNZaVLxpa5uUGW1wjike68elVYr0018L9xYoqBr1OFO7G7boDPrbn0HpMCJxTw==

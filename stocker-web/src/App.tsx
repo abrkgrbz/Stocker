@@ -22,6 +22,9 @@ import { initSentry, setUser, trackPageView } from '@/services/monitoring';
 import { analytics } from '@/services/analytics';
 import { initWebVitals } from '@/services/web-vitals';
 
+// i18n
+import '@/i18n/config';
+
 // Layouts
 import MetronicLayout from '@/layouts/MetronicLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
@@ -56,6 +59,7 @@ const MasterPaymentsPage = lazy(() => import('@/features/master/pages/Payments')
 const MasterAnalyticsPage = lazy(() => import('@/features/master/pages/Analytics').then(m => ({ default: m.default })));
 const MasterPerformancePage = lazy(() => import('@/features/master/pages/Performance').then(m => ({ default: m.default })));
 const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.default })));
+const I18nDemo = lazy(() => import('@/pages/I18nDemo').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -260,6 +264,7 @@ function App() {
                   <Route path="analytics" element={<MasterAnalyticsPage />} />
                   <Route path="performance" element={<MasterPerformancePage />} />
                   <Route path="pwa-demo" element={<PWADemo />} />
+                  <Route path="i18n-demo" element={<I18nDemo />} />
                 </Route>
 
                 {/* Admin Routes - For Tenant Admins */}

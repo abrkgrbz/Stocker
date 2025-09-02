@@ -49,6 +49,7 @@ import {
   StarOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import './styles.css';
 import './sidebar-fix.css';
 import './global-fixes.css';
@@ -377,9 +378,7 @@ const MetronicLayout: React.FC = () => {
             {/* Quick Actions */}
             <Space size="middle">
               {/* Language Switcher */}
-              <Tooltip title="Language">
-                <Button type="text" icon={<TranslationOutlined />} className="header-btn" />
-              </Tooltip>
+              <LanguageSwitcher mode="dropdown" showName={false} />
 
               {/* Theme Switcher */}
               <Tooltip title={darkMode ? 'Light Mode' : 'Dark Mode'}>
