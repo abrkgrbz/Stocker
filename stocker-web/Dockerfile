@@ -9,16 +9,15 @@ WORKDIR /app
 COPY stocker-web/package.json ./
 
 # Clean everything and fresh install for Alpine Linux
-RUN rm -rf node_modules package-lock.json .vite && \
+RUN rm -rf node_modules package-lock.json && \
     npm cache clean --force && \
-    npm install --legacy-peer-deps --no-optional
+    npm install --legacy-peer-deps
 
 # Copy all source files
 COPY stocker-web/ .
 
-# Clean build cache and build the application
-RUN rm -rf dist node_modules/.vite && \
-    npm run build
+# Build the application
+RUN npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
