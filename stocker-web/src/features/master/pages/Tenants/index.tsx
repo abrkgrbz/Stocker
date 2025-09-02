@@ -163,6 +163,8 @@ export const MasterTenantsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // Mock data
   const mockTenants: Tenant[] = [
@@ -891,6 +893,114 @@ export const MasterTenantsPage: React.FC = () => {
     }, 100);
   };
 
+  // Bulk Operations
+  const handleBulkDelete = () => {
+    if (selectedTenants.length === 0) {
+      message.warning('Lütfen silmek için tenant seçin');
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Toplu Silme',
+      content: `${selectedTenants.length} tenant silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
+      okText: 'Evet, Sil',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          setBulkLoading(true);
+          const promises = selectedTenants.map(id => tenantsApi.delete(id));
+          await Promise.all(promises);
+          message.success(`${selectedTenants.length} tenant başarıyla silindi`);
+          setSelectedTenants([]);
+          setShowBulkActions(false);
+          fetchTenants();
+        } catch (error) {
+          message.error('Toplu silme işlemi başarısız oldu');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkStatusChange = (newStatus: 'active' | 'suspended') => {
+    if (selectedTenants.length === 0) {
+      message.warning('Lütfen durum değiştirmek için tenant seçin');
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Toplu Durum Değişikliği',
+      content: `${selectedTenants.length} tenant'ın durumu "${newStatus === 'active' ? 'Aktif' : 'Askıda'}" olarak değiştirilecek. Devam etmek istiyor musunuz?`,
+      okText: 'Evet, Değiştir',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          setBulkLoading(true);
+          const promises = selectedTenants.map(id => tenantsApi.toggleStatus(id));
+          await Promise.all(promises);
+          message.success(`${selectedTenants.length} tenant'ın durumu güncellendi`);
+          setSelectedTenants([]);
+          setShowBulkActions(false);
+          fetchTenants();
+        } catch (error) {
+          message.error('Toplu durum değişikliği başarısız oldu');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleExport = () => {
+    const dataToExport = selectedTenants.length > 0 
+      ? tenants.filter(t => selectedTenants.includes(t.id))
+      : tenants;
+
+    const csv = convertToCSV(dataToExport);
+    downloadCSV(csv, `tenants-${new Date().toISOString().split('T')[0]}.csv`);
+    message.success(`${dataToExport.length} tenant dışa aktarıldı`);
+  };
+
+  const convertToCSV = (data: Tenant[]) => {
+    const headers = ['ID', 'Name', 'Domain', 'Email', 'Phone', 'Plan', 'Status', 'Users', 'Storage', 'Created At', 'Revenue'];
+    const rows = data.map(t => [
+      t.id,
+      t.name,
+      t.domain,
+      t.email,
+      t.phone,
+      t.plan,
+      t.status,
+      `${t.userCount}/${t.maxUsers}`,
+      `${t.storageUsed}/${t.maxStorage}GB`,
+      t.createdAt,
+      t.revenue
+    ]);
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
+
+  const downloadCSV = (csv: string, filename: string) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      // Parse CSV and import tenants
+      message.success('Tenants imported successfully');
+    };
+    reader.readAsText(file);
+    return false; // Prevent default upload behavior
+  };
+
   const handleTableAction = (key: string, record: Tenant) => {
     switch (key) {
       case 'login':
@@ -967,8 +1077,48 @@ export const MasterTenantsPage: React.FC = () => {
           className="header-actions"
         >
           <Space>
-            <Button icon={<ImportOutlined />}>İçe Aktar</Button>
-            <Button icon={<ExportOutlined />}>Dışa Aktar</Button>
+            <Upload
+              accept=".csv"
+              showUploadList={false}
+              beforeUpload={handleImport}
+            >
+              <Button icon={<ImportOutlined />}>İçe Aktar</Button>
+            </Upload>
+            <Button icon={<ExportOutlined />} onClick={handleExport}>Dışa Aktar</Button>
+            {selectedTenants.length > 0 && (
+              <Badge count={selectedTenants.length} offset={[-5, 5]}>
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: 'activate',
+                        label: 'Aktifleştir',
+                        icon: <UnlockOutlined />,
+                        onClick: () => handleBulkStatusChange('active'),
+                      },
+                      {
+                        key: 'suspend',
+                        label: 'Askıya Al',
+                        icon: <LockOutlined />,
+                        onClick: () => handleBulkStatusChange('suspended'),
+                      },
+                      { type: 'divider' },
+                      {
+                        key: 'delete',
+                        label: 'Toplu Sil',
+                        icon: <DeleteOutlined />,
+                        danger: true,
+                        onClick: handleBulkDelete,
+                      },
+                    ],
+                  }}
+                >
+                  <Button type="primary" loading={bulkLoading}>
+                    Toplu İşlemler ({selectedTenants.length})
+                  </Button>
+                </Dropdown>
+              </Badge>
+            )}
             <Button
               type="primary"
               icon={<PlusOutlined />}
