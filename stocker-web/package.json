@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.1",
-    "@ant-design/icons": "^6.0.0",
+    "@ant-design/icons": "^5.6.1",
     "@ant-design/plots": "^2.6.3",
     "@ant-design/pro-components": "^2.8.10",
     "@microsoft/signalr": "^9.0.6",
