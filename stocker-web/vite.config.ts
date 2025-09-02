@@ -24,12 +24,44 @@ export default defineConfig({
     // Chunk splitting for better caching
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'antd-vendor': ['antd', '@ant-design/icons', '@ant-design/pro-components'],
-          'utils-vendor': ['dayjs', 'axios', 'zustand'],
-          'signalr-vendor': ['@microsoft/signalr'],
+        manualChunks: (id) => {
+          // Node modules chunks
+          if (id.includes('node_modules')) {
+            // React ecosystem
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // Ant Design
+            if (id.includes('antd') || id.includes('@ant-design')) {
+              return 'antd-vendor';
+            }
+            // Chart libraries
+            if (id.includes('recharts') || id.includes('d3') || id.includes('victory')) {
+              return 'charts-vendor';
+            }
+            // Form libraries
+            if (id.includes('react-hook-form') || id.includes('@hookform')) {
+              return 'forms-vendor';
+            }
+            // SignalR
+            if (id.includes('@microsoft/signalr')) {
+              return 'signalr-vendor';
+            }
+            // Utilities
+            if (id.includes('dayjs') || id.includes('axios') || id.includes('zustand') || id.includes('lodash')) {
+              return 'utils-vendor';
+            }
+            // i18n
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'i18n-vendor';
+            }
+            // Other large libraries
+            if (id.includes('sweetalert2')) {
+              return 'sweetalert-vendor';
+            }
+            // Default vendor chunk for other node_modules
+            return 'vendor';
+          }
         },
         // Better chunk naming
         chunkFileNames: (chunkInfo) => {
@@ -44,7 +76,7 @@ export default defineConfig({
       }
     },
     // Chunk size warnings
-    chunkSizeWarningLimit: 1000, // 1MB
+    chunkSizeWarningLimit: 500, // 500KB - daha agresif uyarı
     // Source maps for production (optional, can be disabled for security)
     sourcemap: false,
     // Assets inlining threshold
