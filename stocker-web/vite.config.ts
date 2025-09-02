@@ -84,8 +84,21 @@ export default defineConfig({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'antd', 'dayjs'],
+    include: [
+      'react', 
+      'react-dom', 
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'antd', 
+      'dayjs',
+      '@ant-design/icons',
+      '@ant-design/pro-components',
+      'zustand'
+    ],
     exclude: ['@tanstack/react-query-devtools'],
+    esbuildOptions: {
+      target: 'es2020',
+    }
   },
   server: {
     port: 3000,
