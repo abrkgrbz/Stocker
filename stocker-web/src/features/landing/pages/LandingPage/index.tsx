@@ -27,6 +27,8 @@ import { PricingSection } from '../../components/PricingSection';
 import { TestimonialsSection } from '../../components/TestimonialsSection';
 import { StatsSection } from '../../components/StatsSection';
 import { FloatingActionButton } from '../../components/FloatingActionButton';
+import { FAQSection } from '../../components/FAQSection';
+import { SolutionsSection } from '../../components/SolutionsSection';
 import { mainModules } from '../../data/modules';
 import './style.css';
 import './corporate-style.css';
@@ -68,10 +70,10 @@ export const LandingPage: React.FC = () => {
           </div>
           <nav className="nav-menu">
             <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>Özellikler</a>
+            <a href="#solutions" onClick={(e) => { e.preventDefault(); document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' }); }}>Çözümler</a>
             <a href="#modules" onClick={(e) => { e.preventDefault(); document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' }); }}>Modüller</a>
             <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}>Fiyatlandırma</a>
-            <a href="#testimonials" onClick={(e) => { e.preventDefault(); document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' }); }}>Referanslar</a>
-            <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>İletişim</a>
+            <a href="#faq" onClick={(e) => { e.preventDefault(); document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }); }}>SSS</a>
           </nav>
           <div className="header-actions">
             <Button 
@@ -116,6 +118,9 @@ export const LandingPage: React.FC = () => {
         {/* Features Section */}
         <FeaturesSection />
 
+        {/* Solutions Section */}
+        <SolutionsSection />
+
         {/* Main Modules Section */}
         <section id="modules" className="modules-section">
           <div className="section-container">
@@ -159,6 +164,9 @@ export const LandingPage: React.FC = () => {
 
         {/* Testimonials Section */}
         <TestimonialsSection />
+
+        {/* FAQ Section */}
+        <FAQSection />
 
         {/* Integration Section */}
         <section className="integration-section">
@@ -274,10 +282,10 @@ export const LandingPage: React.FC = () => {
                 <Typography.Title level={5}>Ürün</Typography.Title>
                 <ul className="footer-links">
                   <li><a href="#features">Özellikler</a></li>
+                  <li><a href="#solutions">Çözümler</a></li>
                   <li><a href="#modules">Modüller</a></li>
                   <li><a href="#pricing">Fiyatlandırma</a></li>
-                  <li><a href="#">API Dokümantasyon</a></li>
-                  <li><a href="#">Güncelleme Notları</a></li>
+                  <li><a href="#faq">SSS</a></li>
                 </ul>
               </div>
             </Col>
