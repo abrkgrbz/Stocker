@@ -421,10 +421,10 @@ export const MasterTenantsPage: React.FC = () => {
 
   // Plan colors and icons
   const planConfig = {
-    Free: { color: '#8c8c8c', icon: <UserOutlined />, gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    Starter: { color: '#52c41a', icon: <RocketOutlined />, gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-    Professional: { color: '#1890ff', icon: <ThunderboltOutlined />, gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-    Enterprise: { color: '#722ed1', icon: <CrownOutlined />, gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+    Free: { color: '#8c8c8c', icon: <UserOutlined /> },
+    Starter: { color: '#52c41a', icon: <RocketOutlined /> },
+    Professional: { color: '#1890ff', icon: <ThunderboltOutlined /> },
+    Enterprise: { color: '#722ed1', icon: <CrownOutlined /> },
   };
 
   // Status config
@@ -447,8 +447,7 @@ export const MasterTenantsPage: React.FC = () => {
     // Ensure plan exists in config, fallback to Free
     const planInfo = planConfig[tenant.plan] || planConfig['Free'] || {
       color: '#8c8c8c',
-      icon: <UserOutlined />,
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      icon: <UserOutlined />
     };
     
     // Ensure status exists in config, fallback to pending
@@ -471,7 +470,6 @@ export const MasterTenantsPage: React.FC = () => {
           className="tenant-card glass-morphism"
           size="small"
           style={{
-            background: `linear-gradient(135deg, white 0%, ${planInfo.color}08 100%)`,
             borderTop: `3px solid ${planInfo.color}`,
             height: '100%',
             minHeight: '320px',
@@ -537,7 +535,7 @@ export const MasterTenantsPage: React.FC = () => {
             <Avatar
               size={48}
               style={{
-                background: planInfo.gradient,
+                background: planInfo.color,
                 border: `2px solid ${planInfo.color}20`,
               }}
             >
@@ -927,7 +925,22 @@ export const MasterTenantsPage: React.FC = () => {
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => setShowCreateModal(true)}
-              className="gradient-button"
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                height: 40,
+                borderRadius: 10,
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+              }}
             >
               Yeni Tenant
             </Button>
@@ -951,7 +964,7 @@ export const MasterTenantsPage: React.FC = () => {
                     width: 60, 
                     height: 60, 
                     borderRadius: 14,
-                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    background: `${stat.color}15`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1262,7 +1275,7 @@ export const MasterTenantsPage: React.FC = () => {
             {/* Tenant Info */}
             <Card className="glass-morphism">
               <Space align="start">
-                <Avatar size={64} style={{ background: planConfig[selectedTenant.plan]?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                <Avatar size={64} style={{ background: planConfig[selectedTenant.plan]?.color || '#667eea' }}>
                   {selectedTenant.name.substring(0, 2).toUpperCase()}
                 </Avatar>
                 <div>
