@@ -5,11 +5,17 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env': {}
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     // Optimize bundle size
@@ -27,9 +33,13 @@ export default defineConfig({
         manualChunks: (id) => {
           // Node modules chunks
           if (id.includes('node_modules')) {
-            // React ecosystem
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // React ecosystem - Bundle React, React-DOM and JSX runtime together
+            if (id.includes('react/jsx') || id.includes('react-dom') || id.includes('react') && !id.includes('react-router') && !id.includes('react-i18next') && !id.includes('react-select')) {
               return 'react-vendor';
+            }
+            // React Router separately
+            if (id.includes('react-router')) {
+              return 'react-router-vendor';
             }
             // Ant Design
             if (id.includes('antd') || id.includes('@ant-design')) {
