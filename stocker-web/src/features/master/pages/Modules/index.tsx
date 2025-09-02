@@ -23,6 +23,7 @@ import {
   Avatar,
   Progress,
   Alert,
+  Segmented,
 } from 'antd';
 import {
   AppstoreOutlined,
@@ -45,10 +46,19 @@ import {
   InfoCircleOutlined,
   PlusOutlined,
   MinusOutlined,
+  TableOutlined,
+  AppstoreAddOutlined,
+  CrownOutlined,
+  FireOutlined,
+  StarOutlined,
+  TrophyOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import CountUp from 'react-countup';
 import { masterApi } from '@/shared/api/master.api';
 import '../../styles/master-layout.css';
+import './modules.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -393,151 +403,220 @@ export const MasterModulesPage: React.FC = () => {
         ? modules.filter(m => m.isPremium)
         : modules;
 
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
   return (
     <div className="master-modules-page">
       {/* Header */}
-      <div className="page-header glass-morphism">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-content"
-        >
-          <Title level={2} className="gradient-text">
-            <AppstoreOutlined /> Modül Yönetimi
-          </Title>
-          <Text type="secondary">Sistem modüllerini yönetin ve yapılandırın</Text>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-actions"
-        >
+      <motion.div 
+        className="modules-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1>
+          <AppstoreOutlined /> Modül Yönetimi
+        </h1>
+        <p className="subtitle">Sistem modüllerini yönetin, yapılandırın ve özelleştirin</p>
+        <Space size="large">
+          <Button
+            type="primary"
+            icon={<AppstoreAddOutlined />}
+            size="large"
+            className="gradient-button"
+          >
+            Yeni Modül Ekle
+          </Button>
           <Button
             icon={<ReloadOutlined />}
             onClick={fetchModules}
             loading={loading}
+            size="large"
           >
             Yenile
           </Button>
-        </motion.div>
-      </div>
+        </Space>
+      </motion.div>
 
       {/* Stats */}
-      <Row gutter={[20, 20]} className="stats-row">
+      <Row gutter={[24, 24]} className="modules-stats">
         {stats.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
             >
-              <Card className="stat-card glass-morphism">
-                <Statistic
-                  title={stat.title}
-                  value={stat.value}
-                  prefix={
-                    <span style={{ color: stat.color, marginRight: 8 }}>
-                      {stat.icon}
-                    </span>
-                  }
-                  valueStyle={{ color: stat.color }}
-                />
+              <Card className="module-stat-card">
+                <div className="stat-icon-wrapper" style={{
+                  background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`
+                }}>
+                  {stat.icon}
+                </div>
+                <div className="stat-number">
+                  <CountUp end={stat.value} separator="," duration={2} />
+                </div>
+                <div className="stat-title">{stat.title}</div>
+                <div className="stat-change">
+                  <Tag color="success">+12%</Tag>
+                  <Text type="secondary" style={{ fontSize: 12 }}>Bu ay</Text>
+                </div>
               </Card>
             </motion.div>
           </Col>
         ))}
       </Row>
 
-      {/* Module Cards Grid */}
-      <Card className="content-card glass-morphism">
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="Tüm Modüller" key="all" />
-          <TabPane tab="Aktif Modüller" key="active" />
-          <TabPane tab="Premium Modüller" key="premium" />
-        </Tabs>
-
-        <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
-          {filteredModules.map((module, index) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={module.id}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card
-                  className="module-card glass-morphism"
-                  hoverable
-                  style={{ height: '100%' }}
-                >
-                  <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                    <Avatar
-                      size={64}
-                      style={{ backgroundColor: moduleColors[module.name] }}
-                      icon={moduleIcons[module.name]}
-                    />
-                    <Title level={4} style={{ marginTop: 12, marginBottom: 4 }}>
-                      {module.displayName}
-                    </Title>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {module.description}
-                    </Text>
-                  </div>
-
-                  <div style={{ marginBottom: 16 }}>
-                    <Progress
-                      percent={Math.round((module.usageCount / 300) * 100)}
-                      size="small"
-                      format={() => `${module.usageCount} Kullanıcı`}
-                    />
-                  </div>
-
-                  <Space direction="vertical" style={{ width: '100%' }} size="small">
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">Versiyon:</Text>
-                      <Tag>{module.version}</Tag>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">Fiyat:</Text>
-                      {module.isPremium ? (
-                        <Text strong style={{ color: '#722ed1' }}>${module.price}/ay</Text>
-                      ) : (
-                        <Tag color="green">Ücretsiz</Tag>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">Durum:</Text>
-                      <Switch
-                        size="small"
-                        checked={module.isActive}
-                        onChange={() => handleToggleStatus(module)}
-                      />
-                    </div>
-                  </Space>
-
-                  <div style={{ marginTop: 16, textAlign: 'center' }}>
-                    <Space>
-                      <Button
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(module)}
-                      >
-                        Düzenle
-                      </Button>
-                      <Button
-                        size="small"
-                        icon={<SettingOutlined />}
-                        onClick={() => handleManageFeatures(module)}
-                      >
-                        Özellikler
-                      </Button>
-                    </Space>
-                  </div>
-                </Card>
-              </motion.div>
-            </Col>
-          ))}
+      {/* Controls */}
+      <Card className="controls-card">
+        <Row align="middle" justify="space-between">
+          <Col>
+            <Space size="middle">
+              <Tabs activeKey={activeTab} onChange={setActiveTab} style={{ marginBottom: 0 }}>
+                <TabPane tab="Tüm Modüller" key="all" />
+                <TabPane tab="Aktif Modüller" key="active" />
+                <TabPane tab="Premium Modüller" key="premium" />
+              </Tabs>
+            </Space>
+          </Col>
+          <Col>
+            <Segmented
+              options={[
+                { label: 'Kart Görünümü', value: 'grid', icon: <AppstoreOutlined /> },
+                { label: 'Tablo Görünümü', value: 'table', icon: <TableOutlined /> },
+              ]}
+              value={viewMode}
+              onChange={(value) => setViewMode(value as 'grid' | 'table')}
+              className="view-toggle"
+            />
+          </Col>
         </Row>
       </Card>
+
+      {/* Module Cards Grid */}
+      {viewMode === 'grid' ? (
+        <Card style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+
+          <Row gutter={[24, 24]}>
+            {filteredModules.map((module, index) => (
+              <Col xs={24} sm={12} lg={8} xl={6} key={module.id}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card
+                    className={`module-card ${module.isPremium ? 'premium' : ''}`}
+                    hoverable
+                    style={{ borderColor: moduleColors[module.name] }}
+                  >
+                    <div className="module-header">
+                      <div className="module-icon-box" style={{
+                        background: `linear-gradient(135deg, ${moduleColors[module.name]}20 0%, ${moduleColors[module.name]}10 100%)`,
+                        color: moduleColors[module.name]
+                      }}>
+                        {moduleIcons[module.name]}
+                      </div>
+                      <div className="module-info">
+                        <h3 className="module-name">
+                          {module.displayName}
+                        </h3>
+                        <p className="module-description">
+                          {module.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="module-badges">
+                      {module.isPremium && (
+                        <span className="module-badge badge-premium">
+                          <CrownOutlined /> Premium
+                        </span>
+                      )}
+                      {module.isActive ? (
+                        <span className="module-badge badge-active">Aktif</span>
+                      ) : (
+                        <span className="module-badge badge-inactive">Pasif</span>
+                      )}
+                      {module.version === '2.1.0' && (
+                        <span className="module-badge badge-new">
+                          <FireOutlined /> Yeni
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="module-features">
+                      <ul className="feature-list">
+                        {module.features.slice(0, 3).map((feature, idx) => (
+                          <li key={idx} className="feature-item">
+                            <span className="feature-icon">
+                              <CheckCircleOutlined />
+                            </span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="module-progress">
+                      <Progress
+                        percent={Math.round((module.usageCount / 300) * 100)}
+                        size="small"
+                        format={() => `${module.usageCount} Kullanıcı`}
+                      />
+                    </div>
+
+                    <div className="module-footer">
+                      <div>
+                        {module.isPremium ? (
+                          <div className="module-price">${module.price}/ay</div>
+                        ) : (
+                          <Tag color="green" style={{ fontSize: 14 }}>Ücretsiz</Tag>
+                        )}
+                      </div>
+                      <div className="module-actions">
+                        <Switch
+                          className="module-toggle"
+                          checked={module.isActive}
+                          onChange={() => handleToggleStatus(module)}
+                        />
+                        <Tooltip title="Düzenle">
+                          <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEdit(module)}
+                          />
+                        </Tooltip>
+                        <Tooltip title="Özellikler">
+                          <Button
+                            type="text"
+                            icon={<SettingOutlined />}
+                            onClick={() => handleManageFeatures(module)}
+                          />
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      ) : (
+        <Card className="modules-table-card">
+          <Table
+            columns={columns}
+            dataSource={filteredModules}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showTotal: (total) => `Toplam ${total} modül`,
+            }}
+          />
+        </Card>
+      )}
 
       {/* Edit Modal */}
       <Modal

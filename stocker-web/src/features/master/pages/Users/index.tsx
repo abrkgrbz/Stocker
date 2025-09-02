@@ -64,6 +64,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { usersApi, MasterUser, CreateUserRequest, UpdateUserRequest } from '@/shared/api/users.api';
 import '../../styles/master-layout.css';
+import './users.css';
+import CountUp from 'react-countup';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -162,26 +164,30 @@ export const MasterUsersPage: React.FC = () => {
     {
       title: 'Toplam Kullanıcı',
       value: users.length,
-      icon: <TeamOutlined />,
+      icon: <TeamOutlined style={{ color: '#1890ff' }} />,
       color: '#1890ff',
+      trend: 12,
     },
     {
       title: 'Aktif Kullanıcı',
       value: users.filter(u => u.isActive).length,
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
       color: '#52c41a',
+      trend: 8,
     },
     {
       title: 'Admin Kullanıcı',
       value: users.filter(u => u.role === 'Admin' || u.role === 'SuperAdmin').length,
-      icon: <SafetyOutlined />,
+      icon: <SafetyOutlined style={{ color: '#722ed1' }} />,
       color: '#722ed1',
+      trend: -3,
     },
     {
       title: '2FA Aktif',
       value: users.filter(u => u.isTwoFactorEnabled).length,
-      icon: <LockOutlined />,
+      icon: <LockOutlined style={{ color: '#fa8c16' }} />,
       color: '#fa8c16',
+      trend: 25,
     },
   ];
 
@@ -465,58 +471,70 @@ export const MasterUsersPage: React.FC = () => {
   return (
     <div className="master-users-page">
       {/* Header */}
-      <div className="page-header glass-morphism">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-content"
-        >
-          <Title level={2} className="gradient-text">
+      <motion.div 
+        className="users-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="users-header-content">
+          <Title level={1}>
             <TeamOutlined /> Kullanıcı Yönetimi
           </Title>
-          <Text type="secondary">Sistem kullanıcılarını yönetin</Text>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-actions"
-        >
-          <Space>
-            <Button icon={<ExportOutlined />}>
-              Dışa Aktar
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              className="gradient-button"
-            >
-              Yeni Kullanıcı
-            </Button>
-          </Space>
-        </motion.div>
-      </div>
+          <Paragraph>Sistem kullanıcılarını yönetin ve yetkilendirin</Paragraph>
+        </div>
+        <div className="users-header-actions">
+          <Button 
+            icon={<ExportOutlined />}
+            size="large"
+          >
+            Dışa Aktar
+          </Button>
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={handleCreate}
+            className="gradient-btn"
+            size="large"
+          >
+            Yeni Kullanıcı
+          </Button>
+        </div>
+      </motion.div>
 
       {/* Stats */}
-      <Row gutter={[20, 20]} className="stats-row">
+      <Row gutter={[24, 24]} className="users-stats">
         {stats.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
             >
-              <Card className="stat-card glass-morphism">
-                <Statistic
-                  title={stat.title}
-                  value={stat.value}
-                  prefix={
-                    <span style={{ color: stat.color, marginRight: 8 }}>
-                      {stat.icon}
-                    </span>
-                  }
-                  valueStyle={{ color: stat.color }}
-                />
+              <Card className="user-stat-card">
+                <div className="stat-icon-box" style={{
+                  background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`
+                }}>
+                  {stat.icon}
+                </div>
+                <div className="stat-value">
+                  <CountUp end={stat.value} separator="," duration={2} />
+                </div>
+                <div className="stat-label">{stat.title}</div>
+                {stat.trend && (
+                  <div className="stat-trend">
+                    <Tag 
+                      color={stat.trend > 0 ? 'success' : 'error'}
+                      style={{ fontSize: 12 }}
+                    >
+                      {stat.trend > 0 ? '↑' : '↓'} {Math.abs(stat.trend)}%
+                    </Tag>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      geçen aya göre
+                    </Text>
+                  </div>
+                )}
               </Card>
             </motion.div>
           </Col>
