@@ -267,16 +267,12 @@ export const showRegistrationSuccess = async (email: string) => {
 };
 
 // Helper function for login success
-export const showLoginSuccess = async (userName: string) => {
-  return Swal.fire({
+export const showLoginSuccess = (userName: string) => {
+  // Use toast for non-blocking notification
+  return Toast.fire({
     icon: 'success',
-    title: 'Hoş Geldiniz!',
-    text: `Merhaba ${userName}, başarıyla giriş yaptınız.`,
-    confirmButtonText: 'Tamam',
-    confirmButtonColor: '#667eea',
-    timer: 3000,
-    timerProgressBar: true,
-    showConfirmButton: false
+    title: `Hoş geldiniz ${userName}!`,
+    text: 'Başarıyla giriş yaptınız.'
   });
 };
 

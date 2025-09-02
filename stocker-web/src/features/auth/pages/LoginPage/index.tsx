@@ -49,10 +49,7 @@ export const LoginPage: React.FC = () => {
       
       console.log('Login successful - User role:', userRole);
       
-      // Show success message (non-blocking)
-      showLoginSuccess(userName);
-      
-      // Check if company exists for tenant users
+      // Check if company exists for tenant users BEFORE navigation
       if (userRole !== 'SystemAdmin') {
         try {
           const hasCompany = await companyService.checkCompanyExists();
@@ -71,19 +68,28 @@ export const LoginPage: React.FC = () => {
         }
       }
       
-      // Navigate immediately based on role
+      // Navigate FIRST, immediately based on role
+      let targetPath = '/';
       if (from) {
-        navigate(from, { replace: true });
+        targetPath = from;
       } else if (userRole === 'SystemAdmin') {
         console.log('Navigating to /master');
-        navigate('/master', { replace: true });
+        targetPath = '/master';
       } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
         console.log('Navigating to /admin');
-        navigate('/admin', { replace: true });
+        targetPath = '/admin';
       } else {
         console.log('Navigating to /app/default');
-        navigate('/app/default', { replace: true });
+        targetPath = '/app/default';
       }
+      
+      // Navigate immediately
+      navigate(targetPath, { replace: true });
+      
+      // Show success message AFTER navigation (non-blocking toast)
+      setTimeout(() => {
+        showLoginSuccess(userName);
+      }, 100);
       
     } catch (error: any) {
       // Close loading
