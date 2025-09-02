@@ -7,7 +7,7 @@ namespace Stocker.API.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/tenant-migration")]
-[Authorize(Roles = "SystemAdmin")]
+[Authorize(Policy = "RequireMasterAccess")]
 [SwaggerTag("Tenant Migration - Manage tenant database migrations")]
 public class TenantMigrationController : ControllerBase
 {

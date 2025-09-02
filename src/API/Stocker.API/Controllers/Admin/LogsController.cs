@@ -7,7 +7,7 @@ namespace Stocker.API.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/[controller]")]
-[Authorize(Roles = "SystemAdmin,Admin")]
+[Authorize(Roles = "SistemYoneticisi,Admin")]
 public class LogsController : ControllerBase
 {
     private readonly MasterDbContext _context;
@@ -244,7 +244,7 @@ public class LogsController : ControllerBase
     /// Clear old logs
     /// </summary>
     [HttpDelete("clear")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "RequireMasterAccess")]
     public async Task<IActionResult> ClearOldLogs([FromQuery] int daysToKeep = 30)
     {
         try

@@ -40,7 +40,7 @@ public class MasterAuthController : ApiController
         if (result.IsSuccess)
         {
             // Verify this is actually a master admin
-            if (result.Value.User.Roles.Contains("SystemAdmin"))
+            if (result.Value.User.Roles.Contains("SistemYoneticisi") || result.Value.User.Roles.Contains("SystemAdmin"))
             {
                 _logger.LogInformation("Master admin {Email} logged in successfully", command.Email);
                 return HandleResult(result);
@@ -72,7 +72,7 @@ public class MasterAuthController : ApiController
     /// Master admin logout
     /// </summary>
     [HttpPost("logout")]
-    [Authorize(Policy = "SystemAdminPolicy")]
+    [Authorize(Policy = "RequireMasterAccess")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout()
     {
@@ -121,7 +121,7 @@ public class MasterAuthController : ApiController
     /// Validate master admin token
     /// </summary>
     [HttpGet("validate-token")]
-    [Authorize(Policy = "SystemAdminPolicy")]
+    [Authorize(Policy = "RequireMasterAccess")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public IActionResult ValidateToken()
     {
@@ -141,7 +141,7 @@ public class MasterAuthController : ApiController
     /// Get current user info
     /// </summary>
     [HttpGet("me")]
-    [Authorize(Policy = "SystemAdminPolicy")]
+    [Authorize(Policy = "RequireMasterAccess")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public IActionResult GetCurrentUser()
     {

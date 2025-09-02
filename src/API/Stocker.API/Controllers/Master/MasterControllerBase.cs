@@ -8,7 +8,7 @@ namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/[controller]")]
-[Authorize(Policy = "SystemAdminPolicy")]
+[Authorize(Policy = "RequireMasterAccess")]
 public abstract class MasterControllerBase : ControllerBase
 {
     protected readonly IMediator _mediator;

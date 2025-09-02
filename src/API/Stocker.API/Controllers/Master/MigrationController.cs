@@ -8,7 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[Authorize(Roles = "SystemAdmin")]
+[Authorize(Policy = "RequireMasterAccess")]
 [ApiController]
 [Route("api/master/migrations")]
 [SwaggerTag("Master - Database Migration Management")]
