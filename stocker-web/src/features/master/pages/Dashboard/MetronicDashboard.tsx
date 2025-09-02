@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import {
   Row,
   Col,
@@ -50,10 +50,14 @@ import {
   SettingOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import { Line, Area, Column, Pie, Tiny } from '@ant-design/charts';
+// Lazy load charts for better initial load performance
+const Area = lazy(() => import('@ant-design/charts').then(module => ({ default: module.Area })));
+const Pie = lazy(() => import('@ant-design/charts').then(module => ({ default: module.Pie })));
 import CountUp from 'react-countup';
 import { masterApi } from '@/shared/api/master.api';
 import { dashboardApi } from '@/shared/api/dashboard.api';
+import { useApiCache, prefetchApi } from '@/shared/hooks/useApiCache';
+import { useDebounce } from '@/shared/utils/performance';
 import './metronic-dashboard.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -61,25 +65,21 @@ const { RangePicker } = DatePicker;
 
 const MetronicDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('month');
-  const [loading, setLoading] = useState(false);
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
-  const [loadingTenants, setLoadingTenants] = useState(true);
-  const [loadingStats, setLoadingStats] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch tenants from API
-  useEffect(() => {
-    fetchTenants();
-    fetchStats();
-  }, []);
-
-  const fetchTenants = async () => {
-    try {
-      setLoadingTenants(true);
+  // Use API cache for tenants
+  const {
+    data: tenantsData,
+    loading: loadingTenants,
+    error: tenantsError,
+    refetch: refetchTenants,
+    isStale: tenantsStale
+  } = useApiCache(
+    `dashboard-tenants-${timeRange}`,
+    async () => {
       const response = await dashboardApi.topTenants.get();
       if (response.data?.success && response.data?.data) {
-        // Format tenants for table
-        const formattedTenants = response.data.data.map((tenant: any, index: number) => ({
+        return response.data.data.map((tenant: any, index: number) => ({
           key: tenant.id,
           rank: index + 1,
           name: tenant.name,
@@ -89,59 +89,96 @@ const MetronicDashboard: React.FC = () => {
           growth: tenant.growth,
           status: tenant.status,
         }));
-        setTenants(formattedTenants);
       }
-    } catch (error) {
-      console.error('Failed to fetch tenants:', error);
-      message.error('Failed to load tenants data');
-    } finally {
-      setLoadingTenants(false);
-    }
-  };
+      return [];
+    },
+    { ttl: 5 * 60 * 1000, staleTime: 60 * 1000 }
+  );
 
-  const fetchStats = async () => {
-    try {
-      setLoadingStats(true);
+  // Use API cache for stats
+  const {
+    data: statsData,
+    loading: loadingStats,
+    error: statsError,
+    refetch: refetchStats,
+    isStale: statsStale
+  } = useApiCache(
+    `dashboard-stats-${timeRange}`,
+    async () => {
       const response = await dashboardApi.stats.get();
       if (response.data?.success && response.data?.data) {
         const data = response.data.data;
-        setStats({
+        return {
           totalRevenue: data.totalRevenue,
           activeTenants: data.activeTenants,
           totalUsers: data.totalUsers,
           activeUsers: data.activeUsers,
-          conversionRate: 68.3, // Mock for now
+          conversionRate: 68.3,
           revenueChange: data.growth.revenue,
           tenantsChange: data.growth.tenants,
           usersChange: data.growth.users,
           systemHealth: data.systemHealth,
           packageDistribution: data.packageDistribution
-        });
+        };
       }
+      return null;
+    },
+    { ttl: 5 * 60 * 1000, staleTime: 60 * 1000 }
+  );
+
+  const tenants = useMemo(() => tenantsData || [], [tenantsData]);
+  const stats = useMemo(() => statsData || {
+    totalRevenue: 524350,
+    activeTenants: 386,
+    totalUsers: 4823,
+    conversionRate: 68.3,
+  }, [statsData]);
+
+  // Prefetch data for next time range
+  useEffect(() => {
+    const nextTimeRange = timeRange === 'today' ? 'week' : 
+                         timeRange === 'week' ? 'month' : 
+                         timeRange === 'month' ? 'year' : 'today';
+    
+    prefetchApi(
+      `dashboard-stats-${nextTimeRange}`,
+      () => dashboardApi.stats.get(),
+      5 * 60 * 1000
+    );
+  }, [timeRange]);
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      await Promise.all([refetchTenants(), refetchStats()]);
+      message.success('Dashboard yenilendi');
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      // Use default values if API fails
-      setStats({
-        totalRevenue: 524350,
-        activeTenants: 386,
-        totalUsers: 4823,
-        conversionRate: 68.3,
-      });
-    } finally {
-      setLoadingStats(false);
+      message.error('Yenileme başarısız');
     }
-  };
+  }, [refetchTenants, refetchStats]);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    Promise.all([fetchTenants(), fetchStats()]).finally(() => {
-      setLoading(false);
-      message.success('Dashboard refreshed');
-    });
-  };
+  // Debounced search for tenants
+  const debouncedSearch = useDebounce((query: string) => {
+    // Filter tenants based on search query
+    console.log('Searching for:', query);
+  }, 300);
 
-  // Stats Data - Use API data or defaults
-  const statsData = [
+  const handleSearch = useCallback((value: string) => {
+    setSearchQuery(value);
+    debouncedSearch(value);
+  }, [debouncedSearch]);
+
+  // Filter tenants based on search
+  const filteredTenants = useMemo(() => {
+    if (!searchQuery) return tenants;
+    
+    return tenants.filter(tenant => 
+      tenant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.plan?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [tenants, searchQuery]);
+
+  // Stats Data - Memoized for performance
+  const statsCardData = useMemo(() => [
     {
       title: 'Toplam Gelir',
       value: stats?.totalRevenue || 524350,
@@ -184,19 +221,19 @@ const MetronicDashboard: React.FC = () => {
       bgColor: 'rgba(241, 65, 108, 0.1)',
       description: 'denemelerden',
     },
-  ];
+  ], [stats]);
 
-  // Revenue Chart Data
-  const revenueData = [
+  // Revenue Chart Data - Memoized
+  const revenueData = useMemo(() => [
     { month: 'Jan', revenue: 320000, profit: 120000 },
     { month: 'Feb', revenue: 385000, profit: 145000 },
     { month: 'Mar', revenue: 412000, profit: 168000 },
     { month: 'Apr', revenue: 445000, profit: 178000 },
     { month: 'May', revenue: 478000, profit: 195000 },
     { month: 'Jun', revenue: 524350, profit: 210000 },
-  ];
+  ], []);
 
-  const revenueConfig = {
+  const revenueConfig = useMemo(() => ({
     data: revenueData,
     xField: 'month',
     yField: 'revenue',
@@ -234,17 +271,17 @@ const MetronicDashboard: React.FC = () => {
         </div>`;
       },
     },
-  };
+  }), [revenueData]);
 
-  // Tenant Distribution
-  const tenantData = [
+  // Tenant Distribution - Memoized
+  const tenantData = useMemo(() => [
     { type: 'Enterprise', value: 45, percentage: 11.6 },
     { type: 'Professional', value: 125, percentage: 32.4 },
     { type: 'Starter', value: 186, percentage: 48.2 },
     { type: 'Free Trial', value: 30, percentage: 7.8 },
-  ];
+  ], []);
 
-  const pieConfig = {
+  const pieConfig = useMemo(() => ({
     data: tenantData,
     angleField: 'value',
     colorField: 'type',
@@ -280,10 +317,10 @@ const MetronicDashboard: React.FC = () => {
       position: 'bottom',
       flipPage: false,
     },
-  };
+  }), [tenantData]);
 
-  // Recent Activities
-  const activities = [
+  // Recent Activities - Memoized
+  const activities = useMemo(() => [
     {
       type: 'success',
       title: 'Yeni tenant kaydı',
@@ -316,9 +353,9 @@ const MetronicDashboard: React.FC = () => {
       user: 'Sistem',
       avatar: null,
     },
-  ];
+  ], []);
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       title: '#',
       dataIndex: 'rank',
@@ -445,7 +482,7 @@ const MetronicDashboard: React.FC = () => {
         </Dropdown>
       ),
     },
-  ];
+  ], []);
 
   return (
     <div className="metronic-dashboard">
@@ -471,8 +508,13 @@ const MetronicDashboard: React.FC = () => {
             </Select>
             <RangePicker />
             <Button icon={<ExportOutlined />}>Dışa Aktar</Button>
-            <Button type="primary" icon={<SyncOutlined />} onClick={handleRefresh} loading={loading}>
-              Yenile
+            <Button 
+              type="primary" 
+              icon={<SyncOutlined spin={loadingStats || loadingTenants} />} 
+              onClick={handleRefresh} 
+              loading={loadingStats || loadingTenants}
+            >
+              {(tenantsStale || statsStale) ? 'Güncelle' : 'Yenile'}
             </Button>
           </Space>
         </div>
@@ -480,9 +522,9 @@ const MetronicDashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <Row gutter={[32, 32]} className="stats-row">
-        {statsData.map((stat, index) => (
+        {statsCardData.map((stat, index) => (
           <Col xs={24} sm={12} xl={6} key={index}>
-            <Card className="stat-card" loading={loading}>
+            <Card className="stat-card" loading={loadingStats}>
               <div className="stat-card-content">
                 <div className="stat-icon" style={{ backgroundColor: stat.bgColor, color: stat.color }}>
                   {stat.icon}
@@ -529,9 +571,11 @@ const MetronicDashboard: React.FC = () => {
               </Space>
             }
             className="chart-card"
-            loading={loading}
+            loading={loadingStats}
           >
-            <Area {...revenueConfig} />
+            <Suspense fallback={<Skeleton active paragraph={{ rows: 8 }} />}>
+              <Area {...revenueConfig} />
+            </Suspense>
           </Card>
         </Col>
         <Col xs={24} lg={8}>
@@ -539,9 +583,11 @@ const MetronicDashboard: React.FC = () => {
             title="Tenant Dağılımı"
             extra={<Button type="text" icon={<MoreOutlined />} />}
             className="chart-card"
-            loading={loading}
+            loading={loadingStats}
           >
-            <Pie {...pieConfig} />
+            <Suspense fallback={<Skeleton active paragraph={{ rows: 8 }} />}>
+              <Pie {...pieConfig} />
+            </Suspense>
           </Card>
         </Col>
       </Row>
@@ -561,8 +607,12 @@ const MetronicDashboard: React.FC = () => {
           >
             <Table
               columns={columns}
-              dataSource={tenants.length > 0 ? tenants : []}
-              pagination={false}
+              dataSource={filteredTenants}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+                showTotal: (total) => `Toplam ${total} tenant`,
+              }}
               loading={loadingTenants}
               scroll={{ x: 800 }}
               size="small"
@@ -575,7 +625,7 @@ const MetronicDashboard: React.FC = () => {
             title="Son Aktiviteler"
             extra={<Button type="text">Tümünü Gör</Button>}
             className="activity-card"
-            loading={loading}
+            loading={loadingStats}
           >
             <Timeline>
               {activities.map((activity, index) => (

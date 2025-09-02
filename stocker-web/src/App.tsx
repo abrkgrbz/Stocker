@@ -17,6 +17,11 @@ import { useAuthStore } from '@/app/store/auth.store';
 // Styles
 import '@/styles/dark-mode.css';
 
+// Monitoring & Analytics
+import { initSentry, setUser, trackPageView } from '@/services/monitoring';
+import { analytics } from '@/services/analytics';
+import { initWebVitals } from '@/services/web-vitals';
+
 // Layouts
 import MetronicLayout from '@/layouts/MetronicLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
@@ -82,6 +87,18 @@ import './App.css';
 
 dayjs.locale('tr');
 
+// Initialize monitoring services
+if (import.meta.env.PROD) {
+  initSentry();
+  initWebVitals();
+  
+  analytics.initialize({
+    measurementId: import.meta.env.VITE_GA_MEASUREMENT_ID,
+    enabled: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
+    debug: import.meta.env.DEV,
+  });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -98,6 +115,28 @@ function App() {
 
   useEffect(() => {
     console.log('[App] Initializing auth state...');
+    
+    // Set user for monitoring
+    if (user) {
+      setUser({
+        id: user.id,
+        email: user.email,
+        username: user.userName,
+        tenant: user.tenantId,
+      });
+      
+      analytics.setUserId(user.id);
+      analytics.setUserProperties({
+        tenant: user.tenantId,
+        roles: user.roles?.join(','),
+      });
+    } else {
+      setUser(null);
+      analytics.setUserId(null);
+    }
+  }, [user]);
+  
+  useEffect(() => {
     // Initialize auth state on app load
     initializeAuth();
   }, [initializeAuth]);

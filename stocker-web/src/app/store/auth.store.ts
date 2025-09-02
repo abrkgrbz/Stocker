@@ -3,22 +3,27 @@ import { devtools, persist } from 'zustand/middleware';
 import { User, LoginRequest } from '@/shared/types';
 import { authApi } from '@/shared/api/auth.api';
 import { TOKEN_KEY, REFRESH_TOKEN_KEY, TENANT_KEY } from '@/config/constants';
+import { isTokenExpired, resetSessionTimeout } from '@/shared/utils/auth-interceptor';
 
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
+  lastActivity: number;
   
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshAuthToken: () => Promise<void>;
   initializeAuth: () => void;
   clearError: () => void;
   setTenant: (tenantId: string) => void;
+  updateActivity: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,10 +32,12 @@ export const useAuthStore = create<AuthState>()(
       (set, get) => ({
         user: null,
         token: null,
+        refreshToken: null,
         isAuthenticated: false,
         isLoading: false,
         isInitialized: false,
         error: null,
+        lastActivity: Date.now(),
 
         initializeAuth: () => {
           const token = localStorage.getItem(TOKEN_KEY);
@@ -43,14 +50,20 @@ export const useAuthStore = create<AuthState>()(
             userRoles: state.user?.roles
           });
           
-          // If we already have a user and token from persisted state, we're good
+          // If we already have a user and token from persisted state, check if expired
           if (state.user && state.token) {
-            console.log('[AuthStore] Already authenticated from persisted state');
-            set({ 
-              isAuthenticated: true,
-              isInitialized: true,
-              isLoading: false 
-            });
+            if (!isTokenExpired(state.token)) {
+              console.log('[AuthStore] Already authenticated from persisted state');
+              resetSessionTimeout();
+              set({ 
+                isAuthenticated: true,
+                isInitialized: true,
+                isLoading: false 
+              });
+            } else {
+              console.log('[AuthStore] Token expired, attempting refresh');
+              get().refreshAuthToken();
+            }
           } else if (token) {
             // We have a token but no user, need to fetch user data
             console.log('[AuthStore] Token found but no user, fetching user data...');
@@ -97,12 +110,16 @@ export const useAuthStore = create<AuthState>()(
               console.log('Tenant ID saved from tenant object:', user.tenant.id);
             }
             
+            resetSessionTimeout();
+            
             set({
               user,
               token: accessToken,
+              refreshToken,
               isAuthenticated: true,
               isLoading: false,
               isInitialized: true,
+              lastActivity: Date.now(),
             });
           } catch (error: unknown) {
             console.error('Login failed:', error);
@@ -147,7 +164,9 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: null,
               token: null,
+              refreshToken: null,
               isAuthenticated: false,
+              lastActivity: Date.now(),
             });
           }
         },
@@ -197,10 +216,44 @@ export const useAuthStore = create<AuthState>()(
           }
         },
 
+        refreshAuthToken: async () => {
+          const refreshTokenValue = get().refreshToken || localStorage.getItem(REFRESH_TOKEN_KEY);
+          
+          if (!refreshTokenValue) {
+            get().logout();
+            return;
+          }
+
+          set({ isLoading: true });
+          try {
+            const response = await authApi.refreshToken(refreshTokenValue);
+            const { accessToken, refreshToken: newRefreshToken } = response.data;
+            
+            localStorage.setItem(TOKEN_KEY, accessToken);
+            localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+            resetSessionTimeout();
+            
+            set({
+              token: accessToken,
+              refreshToken: newRefreshToken,
+              isLoading: false,
+              lastActivity: Date.now(),
+            });
+          } catch (error) {
+            console.error('Token refresh failed:', error);
+            get().logout();
+          }
+        },
+
         clearError: () => set({ error: null }),
 
         setTenant: (tenantId) => {
           localStorage.setItem(TENANT_KEY, tenantId);
+        },
+
+        updateActivity: () => {
+          set({ lastActivity: Date.now() });
+          resetSessionTimeout();
         },
       }),
       {
@@ -208,7 +261,9 @@ export const useAuthStore = create<AuthState>()(
         partialize: (state) => ({
           user: state.user,
           token: state.token,
+          refreshToken: state.refreshToken,
           isAuthenticated: state.isAuthenticated,
+          lastActivity: state.lastActivity,
         }),
       }
     )
