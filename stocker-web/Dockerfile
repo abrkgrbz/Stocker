@@ -1,22 +1,21 @@
 # Multi-stage build for React app
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files (only package.json, not lock file)
-COPY stocker-web/package.json ./
+# Copy package files
+COPY stocker-web/package*.json ./
 
-# Clean everything and fresh install for Alpine Linux
-RUN rm -rf node_modules package-lock.json && \
-    npm cache clean --force && \
-    npm install --legacy-peer-deps
+# Install dependencies with exact versions
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Copy all source files
 COPY stocker-web/ .
 
-# Build the application
+# Set NODE_ENV and build the application
+ENV NODE_ENV=production
 RUN npm run build
 
 # Stage 2: Serve with nginx
