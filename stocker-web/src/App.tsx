@@ -55,6 +55,7 @@ const MasterInvoicesPage = lazy(() => import('@/features/master/pages/Invoices')
 const MasterPaymentsPage = lazy(() => import('@/features/master/pages/Payments').then(m => ({ default: m.default })));
 const MasterAnalyticsPage = lazy(() => import('@/features/master/pages/Analytics').then(m => ({ default: m.default })));
 const MasterPerformancePage = lazy(() => import('@/features/master/pages/Performance').then(m => ({ default: m.default })));
+const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
@@ -258,6 +259,7 @@ function App() {
                   <Route path="payments" element={<MasterPaymentsPage />} />
                   <Route path="analytics" element={<MasterAnalyticsPage />} />
                   <Route path="performance" element={<MasterPerformancePage />} />
+                  <Route path="pwa-demo" element={<PWADemo />} />
                 </Route>
 
                 {/* Admin Routes - For Tenant Admins */}
