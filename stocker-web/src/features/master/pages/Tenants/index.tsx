@@ -94,6 +94,7 @@ import { Line, Column, Pie, TinyLine, TinyColumn, Progress as TinyProgress } fro
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
 import '../../styles/master-layout.css';
+import './tenants.css';
 import { tenantsApi } from '@/shared/api/tenants.api';
 import { Tenant as ApiTenant } from '@/shared/types';
 
@@ -934,36 +935,49 @@ export const MasterTenantsPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <Row gutter={[20, 20]} className="stats-row">
+      <Row gutter={[24, 24]} className="stats-row">
         {stats.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
             >
-              <Card className="stat-card glass-morphism">
-                <Statistic
-                  title={stat.title}
-                  value={stat.value}
-                  prefix={
-                    <>
-                      {stat.prefix}
-                      <span className="stat-icon" style={{ color: stat.color }}>
-                        {stat.icon}
-                      </span>
-                    </>
-                  }
-                  suffix={stat.suffix}
-                  valueStyle={{ color: stat.color }}
-                />
-                {stat.trend && (
-                  <div className="stat-trend">
-                    <Tag color={stat.trend > 0 ? 'success' : 'error'}>
-                      {stat.trend > 0 ? '+' : ''}{stat.trend}%
-                    </Tag>
+              <Card className="stat-card glass-morphism" bodyStyle={{ padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div className="stat-icon-wrapper" style={{ 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: 14,
+                    background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 26,
+                    color: stat.color,
+                    boxShadow: `0 4px 12px ${stat.color}20`
+                  }}>
+                    {stat.icon}
                   </div>
-                )}
+                  <div style={{ flex: 1 }}>
+                    <Text type="secondary" style={{ fontSize: 13, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.title}</Text>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a', marginTop: 4 }}>
+                      {stat.prefix}<CountUp end={stat.value} separator="," duration={2} />{stat.suffix}
+                    </div>
+                    {stat.trend && (
+                      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Tag 
+                          color={stat.trend > 0 ? 'success' : 'error'} 
+                          style={{ fontSize: 12 }}
+                        >
+                          {stat.trend > 0 ? '↑' : '↓'} {Math.abs(stat.trend)}%
+                        </Tag>
+                        <Text type="secondary" style={{ fontSize: 12 }}>geçen aya göre</Text>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </Card>
             </motion.div>
           </Col>
