@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { Dropdown, Avatar, Badge, Space, Tag } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import './style.css';
 
 const menuItems = [
@@ -226,6 +227,7 @@ export const MasterLayout: React.FC = () => {
     rightContentRender: () => (
       <div style={{ paddingRight: 16 }}>
         <Space size="middle">
+          <ThemeToggle />
           {/* System Status */}
           <Tag color="success" icon={<SafetyOutlined />}>
             System Online

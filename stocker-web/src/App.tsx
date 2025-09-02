@@ -8,8 +8,14 @@ import trTR from 'antd/locale/tr_TR';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
+// Contexts
+import { ThemeProvider } from '@/contexts/ThemeContext';
+
 // Stores
 import { useAuthStore } from '@/app/store/auth.store';
+
+// Styles
+import '@/styles/dark-mode.css';
 
 // Layouts
 import MetronicLayout from '@/layouts/MetronicLayout';
@@ -128,27 +134,28 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ConfigProvider
-        locale={trTR}
-        theme={{
-          token: {
-            colorPrimary: '#667eea',
-            borderRadius: 8,
-            colorLink: '#667eea',
-            colorSuccess: '#52c41a',
-            colorWarning: '#faad14',
-            colorError: '#ff4d4f',
-            fontSize: 14,
-            colorBgContainer: '#ffffff',
-          },
-          components: {
-            Button: {
-              controlHeight: 40,
+        <ThemeProvider>
+          <ConfigProvider
+          locale={trTR}
+          theme={{
+            token: {
+              colorPrimary: '#667eea',
               borderRadius: 8,
+              colorLink: '#667eea',
+              colorSuccess: '#52c41a',
+              colorWarning: '#faad14',
+              colorError: '#ff4d4f',
+              fontSize: 14,
+              colorBgContainer: '#ffffff',
             },
-            Input: {
-              controlHeight: 40,
-              borderRadius: 8,
+            components: {
+              Button: {
+                controlHeight: 40,
+                borderRadius: 8,
+              },
+              Input: {
+                controlHeight: 40,
+                borderRadius: 8,
             },
             Card: {
               borderRadius: 12,
@@ -266,8 +273,9 @@ function App() {
           </AntApp>
         </ProConfigProvider>
       </ConfigProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+        </ThemeProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }
