@@ -68,6 +68,7 @@ import {
 import CountUp from 'react-countup';
 import '../../styles/master-inputs.css';
 import '../../styles/master-layout.css';
+import './packages.css';
 import { packagesApi, CreatePackageRequest, UpdatePackageRequest, PackageFeatureDto, PackageModuleDto } from '@/shared/api/packages.api';
 import { useEffect } from 'react';
 
@@ -380,30 +381,34 @@ export const MasterPackagesPage: React.FC = () => {
     {
       title: 'Toplam Paket',
       value: packages.length,
-      icon: <GiftOutlined />,
+      icon: <GiftOutlined style={{ color: '#1890ff' }} />,
       color: '#1890ff',
       suffix: '',
+      trend: 0,
     },
     {
       title: 'Aktif Abonelik',
       value: packages.reduce((sum, p) => sum + p.subscriberCount, 0),
-      icon: <TeamOutlined />,
+      icon: <TeamOutlined style={{ color: '#52c41a' }} />,
       color: '#52c41a',
       suffix: '',
+      trend: 15,
     },
     {
       title: 'Aylık Gelir',
       value: packages.reduce((sum, p) => sum + p.revenue, 0),
-      icon: <DollarOutlined />,
+      icon: <DollarOutlined style={{ color: '#fa8c16' }} />,
       color: '#fa8c16',
       prefix: '₺',
+      trend: 22,
     },
     {
       title: 'Ortalama Büyüme',
-      value: Math.round(packages.reduce((sum, p) => sum + p.growth, 0) / packages.length),
-      icon: <FireOutlined />,
+      value: Math.round(packages.reduce((sum, p) => sum + p.growth, 0) / packages.length) || 0,
+      icon: <FireOutlined style={{ color: '#722ed1' }} />,
       color: '#722ed1',
       suffix: '%',
+      trend: 8,
     },
   ];
 
@@ -908,62 +913,92 @@ export const MasterPackagesPage: React.FC = () => {
   return (
     <div className="master-packages-page">
       {/* Header */}
-      <div className="page-header glass-morphism">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-content"
-        >
-          <Title level={2} className="gradient-text">
-            <GiftOutlined /> Paket Yönetimi
-          </Title>
-          <Text type="secondary">Abonelik paketlerini yönetin ve fiyatlandırın</Text>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="header-actions"
-        >
-          <Space>
-            <Button icon={<PlusOutlined />} onClick={() => setShowFeatureModal(true)}>
-              Özellik Ekle
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setShowCreateModal(true)}
-              className="gradient-button"
-            >
-              Yeni Paket
-            </Button>
-          </Space>
-        </motion.div>
-      </div>
+      <motion.div 
+        className="packages-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Title level={1}>
+          Fiyatlandırma & Paketler
+        </Title>
+        <Paragraph className="subtitle">
+          İşletmenizin ihtiyaçlarına uygun paketi seçin ve hemen başlayın
+        </Paragraph>
+        
+        <div className="billing-toggle">
+          <Segmented
+            value={billingCycle}
+            onChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
+            options={[
+              { label: 'Aylık Ödeme', value: 'monthly' },
+              { 
+                label: (
+                  <span>
+                    Yıllık Ödeme
+                    <span className="billing-badge">%20 İndirim</span>
+                  </span>
+                ), 
+                value: 'yearly' 
+              },
+            ]}
+            size="large"
+          />
+        </div>
+        
+        <Space style={{ marginTop: 24 }}>
+          <Button 
+            icon={<PlusOutlined />} 
+            onClick={() => setShowFeatureModal(true)}
+            size="large"
+          >
+            Özellik Ekle
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowCreateModal(true)}
+            className="package-action-btn primary"
+            size="large"
+          >
+            Yeni Paket Oluştur
+          </Button>
+        </Space>
+      </motion.div>
 
       {/* Stats */}
-      <Row gutter={[20, 20]} className="stats-row">
+      <Row gutter={[24, 24]} className="packages-stats">
         {stats.map((stat, index) => (
           <Col xs={24} sm={12} md={12} lg={6} key={index}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
             >
-              <Card className="stat-card glass-morphism">
-                <Statistic
-                  title={stat.title}
-                  value={stat.value}
-                  prefix={
-                    <>
-                      {stat.prefix}
-                      <span className="stat-icon" style={{ color: stat.color }}>
-                        {stat.icon}
-                      </span>
-                    </>
-                  }
-                  suffix={stat.suffix}
-                  valueStyle={{ color: stat.color }}
-                />
+              <Card className="package-stat-card">
+                <div className="stat-icon-wrapper" style={{
+                  background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`
+                }}>
+                  {stat.icon}
+                </div>
+                <Title level={3} style={{ margin: '8px 0' }}>
+                  {stat.prefix}<CountUp end={stat.value} separator="," duration={2} />{stat.suffix}
+                </Title>
+                <Text type="secondary" style={{ fontSize: 14 }}>{stat.title}</Text>
+                {stat.trend && (
+                  <div style={{ marginTop: 12 }}>
+                    <Tag 
+                      color={stat.trend > 0 ? 'success' : 'error'}
+                      style={{ fontSize: 12 }}
+                    >
+                      {stat.trend > 0 ? '↑' : '↓'} {Math.abs(stat.trend)}%
+                    </Tag>
+                    <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                      geçen aya göre
+                    </Text>
+                  </div>
+                )}
               </Card>
             </motion.div>
           </Col>
