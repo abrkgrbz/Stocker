@@ -16,19 +16,38 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 40px;
-  padding: 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   flex-wrap: wrap;
   gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
 }
 
 .header-content .page-title {
-  margin: 0 0 8px 0;
-  color: #3f4254;
-  font-size: 24px;
-  font-weight: 600;
+  margin: 0 0 12px 0;
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .header-content .page-description {
@@ -51,18 +70,46 @@
 /* Stat Card */
 .stat-card {
   border: none !important;
-  border-radius: 16px !important;
-  transition: all 0.3s ease;
+  border-radius: 20px !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   height: 100%;
   min-height: 200px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 48px 0 rgba(82, 63, 105, 0.18) !important;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 .stat-card .ant-card-body {
@@ -161,15 +208,19 @@
 
 .chart-card {
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   height: 100%;
   min-height: 450px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
 }
 
 .chart-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
 .chart-card .ant-card-head {
@@ -195,16 +246,20 @@
 
 .table-card {
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   height: 100%;
   min-height: 550px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
 }
 
 .table-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
 .table-card .ant-card-head {
@@ -283,15 +338,19 @@
 /* Activity Card */
 .activity-card {
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   height: 100%;
   min-height: 450px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
 }
 
 .activity-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
 .activity-card .ant-card-head {
@@ -320,13 +379,17 @@
 /* Performance Card */
 .performance-card {
   border: none !important;
-  border-radius: 16px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
 }
 
 .performance-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
 .performance-card .ant-card-head {
@@ -520,14 +583,25 @@
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
+    padding: 24px;
   }
 
   .header-actions {
     width: 100%;
+    justify-content: flex-end;
   }
 
   .header-actions .ant-space {
     flex-wrap: wrap;
+  }
+  
+  .chart-card,
+  .activity-card {
+    min-height: 400px;
+  }
+  
+  .table-card {
+    min-height: 500px;
   }
 }
 
@@ -552,6 +626,15 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-header {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .header-content .page-title {
+    font-size: 28px;
+  }
+  
   .stat-card {
     min-height: 160px;
   }
@@ -585,5 +668,59 @@
   
   .table-card {
     min-height: 450px;
+  }
+  
+  .stats-row,
+  .charts-row,
+  .tables-row {
+    margin-bottom: 24px;
+  }
+  
+  /* Mobile optimized table */
+  .table-card .ant-table-thead > tr > th {
+    font-size: 11px !important;
+    padding: 10px 12px !important;
+  }
+  
+  .table-card .ant-table-tbody > tr > td {
+    font-size: 12px !important;
+    padding: 10px 12px !important;
+  }
+  
+  /* Mobile optimized buttons */
+  .metronic-dashboard .ant-btn {
+    height: 36px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Mobile optimized select and datepicker */
+  .metronic-dashboard .ant-select-selector,
+  .metronic-dashboard .ant-picker {
+    height: 36px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-content .page-title {
+    font-size: 24px;
+  }
+  
+  .stat-card {
+    min-height: 140px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+  }
+  
+  .performance-metric {
+    margin-bottom: 20px;
   }
 }
