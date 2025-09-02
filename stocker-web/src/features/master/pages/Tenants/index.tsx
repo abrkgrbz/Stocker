@@ -834,26 +834,49 @@ export const MasterTenantsPage: React.FC = () => {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Tenant Sil',
-      content: 'Bu tenant\'ı silmek istediğinizden emin misiniz?',
+      content: 'Bu tenant\'ı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
-      onOk: () => {
-        setTenants(tenants.filter(t => t.id !== id));
-        message.success('Tenant silindi');
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const response = await tenantsApi.delete(id);
+          if (response.data?.success) {
+            message.success('Tenant başarıyla silindi');
+            fetchTenants(); // Refresh the list
+          } else {
+            message.error(response.data?.message || 'Tenant silinemedi');
+          }
+        } catch (error: any) {
+          console.error('Delete tenant error:', error);
+          message.error(error.response?.data?.message || 'Tenant silinirken hata oluştu');
+        } finally {
+          setLoading(false);
+        }
       },
     });
   };
 
-  const handleToggleStatus = (id: string) => {
-    setTenants(
-      tenants.map(t =>
-        t.id === id
-          ? { ...t, status: t.status === 'active' ? 'suspended' : 'active' }
-          : t
-      )
-    );
-    message.success('Tenant durumu güncellendi');
+  const handleToggleStatus = async (id: string) => {
+    try {
+      setLoading(true);
+      const tenant = tenants.find(t => t.id === id);
+      if (!tenant) return;
+      
+      const response = await tenantsApi.toggleStatus(id);
+      if (response.data?.success) {
+        message.success(`Tenant ${tenant.status === 'active' ? 'askıya alındı' : 'aktifleştirildi'}`);
+        fetchTenants(); // Refresh the list
+      } else {
+        message.error(response.data?.message || 'Tenant durumu güncellenemedi');
+      }
+    } catch (error: any) {
+      console.error('Toggle tenant status error:', error);
+      message.error(error.response?.data?.message || 'Tenant durumu güncellenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLoginAs = (tenant: Tenant) => {
@@ -882,11 +905,36 @@ export const MasterTenantsPage: React.FC = () => {
     }
   };
 
-  const handleCreateTenant = (values: any) => {
-    console.log('Creating tenant:', values);
-    setShowCreateModal(false);
-    form.resetFields();
-    message.success('Tenant oluşturuldu');
+  const handleCreateTenant = async (values: any) => {
+    try {
+      setLoading(true);
+      
+      const tenantData = {
+        name: values.name,
+        code: values.domain,
+        contactEmail: values.email,
+        contactPhone: values.phone,
+        packageId: values.plan === 'Enterprise' ? '1' : values.plan === 'Professional' ? '2' : values.plan === 'Starter' ? '3' : '4',
+        maxUsers: values.maxUsers || 10,
+        modules: values.modules || [],
+      };
+      
+      const response = await tenantsApi.create(tenantData);
+      
+      if (response.data?.success) {
+        message.success('Tenant başarıyla oluşturuldu');
+        setShowCreateModal(false);
+        form.resetFields();
+        fetchTenants(); // Refresh the list
+      } else {
+        message.error(response.data?.message || 'Tenant oluşturulamadı');
+      }
+    } catch (error: any) {
+      console.error('Create tenant error:', error);
+      message.error(error.response?.data?.message || 'Tenant oluşturulurken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Filtered tenants
