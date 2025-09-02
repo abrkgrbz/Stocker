@@ -479,9 +479,9 @@ const MetronicDashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <Row gutter={[24, 24]} className="stats-row">
+      <Row gutter={[32, 32]} className="stats-row">
         {statsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
+          <Col xs={24} sm={12} xl={6} key={index}>
             <Card className="stat-card" loading={loading}>
               <div className="stat-card-content">
                 <div className="stat-icon" style={{ backgroundColor: stat.bgColor, color: stat.color }}>
@@ -518,7 +518,7 @@ const MetronicDashboard: React.FC = () => {
       </Row>
 
       {/* Charts Row */}
-      <Row gutter={[24, 24]} className="charts-row">
+      <Row gutter={[32, 32]} className="charts-row">
         <Col xs={24} lg={16}>
           <Card
             title="Gelir Özeti"
@@ -547,7 +547,7 @@ const MetronicDashboard: React.FC = () => {
       </Row>
 
       {/* Tables Row */}
-      <Row gutter={[24, 24]} className="tables-row">
+      <Row gutter={[32, 32]} className="tables-row">
         <Col xs={24} lg={16}>
           <Card
             title="En İyi Performans Gösteren Tenantlar"

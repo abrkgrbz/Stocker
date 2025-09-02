@@ -19,6 +19,7 @@ import {
   BellOutlined,
   ControlOutlined,
   DatabaseOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar, Badge, Space, Tag } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -84,11 +85,6 @@ const menuItems = [
     icon: <UserOutlined />,
   },
   {
-    path: '/master/migrations',
-    name: 'Migration Yönetimi',
-    icon: <DatabaseOutlined />,
-  },
-  {
     path: '/master/monitoring',
     name: 'İzleme',
     icon: <MonitorOutlined />,
@@ -129,6 +125,11 @@ const menuItems = [
         name: 'Büyüme Analizi',
       },
     ],
+  },
+  {
+    path: '/master/migrations',
+    name: 'Migration Yönetimi',
+    icon: <SyncOutlined style={{ color: '#faad14' }} />,
   },
   {
     path: '/master/settings',
