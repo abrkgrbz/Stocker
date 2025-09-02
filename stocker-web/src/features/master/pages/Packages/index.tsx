@@ -926,27 +926,7 @@ export const MasterPackagesPage: React.FC = () => {
           İşletmenizin ihtiyaçlarına uygun paketi seçin ve hemen başlayın
         </Paragraph>
         
-        <div className="billing-toggle">
-          <Segmented
-            value={billingCycle}
-            onChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
-            options={[
-              { label: 'Aylık Ödeme', value: 'monthly' },
-              { 
-                label: (
-                  <span>
-                    Yıllık Ödeme
-                    <span className="billing-badge">%20 İndirim</span>
-                  </span>
-                ), 
-                value: 'yearly' 
-              },
-            ]}
-            size="large"
-          />
-        </div>
-        
-        <Space style={{ marginTop: 24 }}>
+        <Space style={{ marginTop: 32 }}>
           <Button 
             icon={<PlusOutlined />} 
             onClick={() => setShowFeatureModal(true)}
@@ -1006,17 +986,31 @@ export const MasterPackagesPage: React.FC = () => {
       </Row>
 
       {/* Controls */}
-      <Card className="controls-card glass-morphism">
+      <Card className="controls-card glass-morphism" style={{ marginBottom: 32 }}>
         <Row align="middle" justify="space-between">
           <Col>
-            <Segmented
-              value={billingCycle}
-              onChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
-              options={[
-                { label: 'Aylık', value: 'monthly' },
-                { label: 'Yıllık', value: 'yearly', icon: <Tag color="green">-20%</Tag> },
-              ]}
-            />
+            <Space size="large">
+              <Text strong style={{ fontSize: 16 }}>Faturalama Dönemi:</Text>
+              <Segmented
+                value={billingCycle}
+                onChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}
+                options={[
+                  { label: 'Aylık Ödeme', value: 'monthly' },
+                  { 
+                    label: (
+                      <Space>
+                        <span>Yıllık Ödeme</span>
+                        <Tag color="success" style={{ marginLeft: 4 }}>
+                          %20 İNDİRİM
+                        </Tag>
+                      </Space>
+                    ), 
+                    value: 'yearly' 
+                  },
+                ]}
+                size="large"
+              />
+            </Space>
           </Col>
           <Col>
             <Space>
@@ -1028,7 +1022,7 @@ export const MasterPackagesPage: React.FC = () => {
                   { label: 'Tablo', value: 'table', icon: <BarsOutlined /> },
                 ]}
               />
-              <Button icon={<ReloadOutlined spin={loading} />} onClick={() => setLoading(!loading)}>
+              <Button icon={<ReloadOutlined spin={loading} />} onClick={() => fetchPackages()}>
                 Yenile
               </Button>
             </Space>
