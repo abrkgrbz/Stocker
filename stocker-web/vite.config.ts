@@ -43,8 +43,13 @@ export default defineConfig({
             }
             
             // Ant Design core
-            if (id.includes('antd') || id.includes('@ant-design/icons')) {
+            if (id.includes('antd') && !id.includes('@ant-design/icons') && !id.includes('@ant-design/pro')) {
               return 'antd-core';
+            }
+            
+            // Ant Design icons separate chunk
+            if (id.includes('@ant-design/icons')) {
+              return 'antd-icons';
             }
             
             // Ant Design Pro and extras
