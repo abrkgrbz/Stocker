@@ -11,3 +11,5 @@ export * from './pages/Invoices';
 export * from './pages/Payments';
 export * from './pages/Analytics';
 export * from './pages/Performance';
+export * from './pages/Backup';
+export * from './pages/EmailTemplates';

@@ -16,6 +16,7 @@ import { useAuthStore } from '@/app/store/auth.store';
 
 // Styles
 import '@/styles/dark-mode.css';
+import '@/features/master/styles/dark-mode-mui.css';
 
 // Monitoring & Analytics
 import { initSentry, setUser, trackPageView } from '@/services/monitoring';
@@ -65,6 +66,8 @@ const MasterApiManagementPage = lazy(() => import('@/features/master/pages/ApiMa
 const MasterAuditLogsPage = lazy(() => import('@/features/master/pages/AuditLogs').then(m => ({ default: m.default })));
 const MasterBillingPage = lazy(() => import('@/features/master/pages/Billing').then(m => ({ default: m.default })));
 const MasterSystemMonitoringPage = lazy(() => import('@/features/master/pages/Monitoring/SystemMonitoring').then(m => ({ default: m.default })));
+const MasterBackupPage = lazy(() => import('@/features/master/pages/Backup').then(m => ({ default: m.default })));
+const MasterEmailTemplatesPage = lazy(() => import('@/features/master/pages/EmailTemplates').then(m => ({ default: m.default })));
 const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.default })));
 const I18nDemo = lazy(() => import('@/pages/I18nDemo').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
@@ -277,6 +280,8 @@ function App() {
                   <Route path="audit-logs" element={<MasterAuditLogsPage />} />
                   <Route path="billing" element={<MasterBillingPage />} />
                   <Route path="monitoring/system" element={<MasterSystemMonitoringPage />} />
+                  <Route path="backup" element={<MasterBackupPage />} />
+                  <Route path="email-templates" element={<MasterEmailTemplatesPage />} />
                   <Route path="pwa-demo" element={<PWADemo />} />
                   <Route path="i18n-demo" element={<I18nDemo />} />
                 </Route>
