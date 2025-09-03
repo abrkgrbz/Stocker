@@ -25,6 +25,8 @@ import { Dropdown, Avatar, Badge, Space, Tag } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import NotificationManager from '@/shared/components/NotificationManager';
+import { NotificationProvider } from '@/features/master/contexts/NotificationContext';
+import { NotificationBell } from '@/features/master/components/NotificationBell';
 import './style.css';
 
 const menuItems = [
@@ -158,6 +160,10 @@ const menuItems = [
         path: '/master/settings/security',
         name: 'Güvenlik',
       },
+      {
+        path: '/master/notification-settings',
+        name: 'Bildirim Ayarları',
+      },
     ],
   },
 ];
@@ -237,7 +243,10 @@ export const MasterLayout: React.FC = () => {
             <span>System Online</span>
           </div>
           
-          {/* Notifications */}
+          {/* Master Notifications */}
+          <NotificationBell />
+          
+          {/* System Notifications */}
           <NotificationManager />
 
           {/* User Menu */}
@@ -322,10 +331,12 @@ export const MasterLayout: React.FC = () => {
   };
 
   return (
-    <ProLayout {...settings}>
-      <div className="master-content">
-        <Outlet />
-      </div>
-    </ProLayout>
+    <NotificationProvider>
+      <ProLayout {...settings}>
+        <div className="master-content">
+          <Outlet />
+        </div>
+      </ProLayout>
+    </NotificationProvider>
   );
 };

@@ -47,9 +47,16 @@ import {
   FireOutlined,
   HeartOutlined,
   StarOutlined,
+  SyncOutlined,
+  ControlOutlined,
+  MonitorOutlined,
+  WarningOutlined,
+  CreditCardOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { NotificationProvider } from '@/features/master/contexts/NotificationContext';
+import { NotificationBell } from '@/features/master/components/NotificationBell';
 import './styles.css';
 import './sidebar-fix.css';
 import './global-fixes.css';
@@ -82,7 +89,7 @@ const MetronicLayout: React.FC = () => {
     {
       key: '/master',
       icon: <DashboardOutlined className="menu-icon" />,
-      label: 'Dashboard',
+      label: 'Kontrol Paneli',
       badge: 0,
     },
     {
@@ -97,8 +104,22 @@ const MetronicLayout: React.FC = () => {
         {
           key: '/master/tenants',
           icon: <TeamOutlined className="menu-icon" />,
-          label: 'Tenantlar',
+          label: 'Kiracılar',
           badge: 23,
+          children: [
+            {
+              key: '/master/tenants/list',
+              label: 'Tüm Tenantlar',
+            },
+            {
+              key: '/master/tenants/pending',
+              label: 'Onay Bekleyenler',
+            },
+            {
+              key: '/master/tenants/suspended',
+              label: 'Askıya Alınanlar',
+            },
+          ],
         },
         {
           key: '/master/packages',
@@ -108,12 +129,12 @@ const MetronicLayout: React.FC = () => {
         {
           key: '/master/users',
           icon: <UserOutlined className="menu-icon" />,
-          label: 'Kullanıcılar',
+          label: 'Sistem Kullanıcıları',
           badge: 5,
         },
         {
           key: '/master/modules',
-          icon: <AppstoreOutlined className="menu-icon" />,
+          icon: <ControlOutlined className="menu-icon" />,
           label: 'Modüller',
         },
       ],
@@ -127,6 +148,20 @@ const MetronicLayout: React.FC = () => {
           key: '/master/subscriptions',
           icon: <CrownOutlined className="menu-icon" />,
           label: 'Abonelikler',
+          children: [
+            {
+              key: '/master/subscriptions/active',
+              label: 'Aktif Abonelikler',
+            },
+            {
+              key: '/master/subscriptions/expired',
+              label: 'Süresi Dolanlar',
+            },
+            {
+              key: '/master/subscriptions/invoices',
+              label: 'Abonelik Faturaları',
+            },
+          ],
         },
         {
           key: '/master/invoices',
@@ -139,6 +174,11 @@ const MetronicLayout: React.FC = () => {
           icon: <ShoppingCartOutlined className="menu-icon" />,
           label: 'Ödemeler',
         },
+        {
+          key: '/master/billing',
+          icon: <DollarOutlined className="menu-icon" />,
+          label: 'Faturalama Yönetimi',
+        },
       ],
     },
     {
@@ -148,13 +188,45 @@ const MetronicLayout: React.FC = () => {
       children: [
         {
           key: '/master/monitoring',
-          icon: <CloudServerOutlined className="menu-icon" />,
+          icon: <MonitorOutlined className="menu-icon" />,
           label: 'Sistem İzleme',
+          children: [
+            {
+              key: '/master/monitoring/system',
+              label: 'Sistem Durumu',
+            },
+            {
+              key: '/master/monitoring/performance',
+              label: 'Performans',
+            },
+            {
+              key: '/master/monitoring/logs',
+              label: 'Loglar',
+            },
+            {
+              key: '/master/monitoring/errors',
+              label: 'Hatalar',
+            },
+          ],
         },
         {
           key: '/master/reports',
           icon: <BarChartOutlined className="menu-icon" />,
           label: 'Raporlar',
+          children: [
+            {
+              key: '/master/reports/revenue',
+              label: 'Gelir Raporu',
+            },
+            {
+              key: '/master/reports/usage',
+              label: 'Kullanım Raporu',
+            },
+            {
+              key: '/master/reports/growth',
+              label: 'Büyüme Analizi',
+            },
+          ],
         },
         {
           key: '/master/analytics',
@@ -167,11 +239,21 @@ const MetronicLayout: React.FC = () => {
           label: 'Performans',
         },
         {
-          key: '/master/logs',
+          key: '/master/audit-logs',
           icon: <FileTextOutlined className="menu-icon" />,
-          label: 'Sistem Logları',
+          label: 'Denetim Günlükleri',
+        },
+        {
+          key: '/master/api-management',
+          icon: <ApiOutlined className="menu-icon" />,
+          label: 'API Yönetimi',
         },
       ],
+    },
+    {
+      key: '/master/migrations',
+      icon: <SyncOutlined className="menu-icon" />,
+      label: 'Migration Yönetimi',
     },
     {
       key: 'divider-2',
@@ -180,7 +262,34 @@ const MetronicLayout: React.FC = () => {
     {
       key: '/master/settings',
       icon: <SettingOutlined className="menu-icon" />,
-      label: 'Ayarlar',
+      label: 'Sistem Ayarları',
+      children: [
+        {
+          key: '/master/settings/general',
+          label: 'Genel Ayarlar',
+        },
+        {
+          key: '/master/settings/email',
+          label: 'E-posta Ayarları',
+        },
+        {
+          key: '/master/settings/integrations',
+          label: 'Entegrasyonlar',
+        },
+        {
+          key: '/master/settings/backup',
+          label: 'Yedekleme',
+        },
+        {
+          key: '/master/settings/security',
+          label: 'Güvenlik',
+        },
+      ],
+    },
+    {
+      key: '/master/notification-settings',
+      icon: <BellOutlined className="menu-icon" />,
+      label: 'Bildirim Ayarları',
     },
   ];
 
@@ -294,7 +403,8 @@ const MetronicLayout: React.FC = () => {
   );
 
   return (
-    <Layout className="metronic-layout">
+    <NotificationProvider>
+      <Layout className="metronic-layout">
       {/* Sidebar */}
       <Sider
         trigger={null}
@@ -400,16 +510,8 @@ const MetronicLayout: React.FC = () => {
                 />
               </Tooltip>
 
-              {/* Notifications */}
-              <Dropdown
-                overlay={notificationMenu}
-                placement="bottomRight"
-                trigger={['click']}
-              >
-                <Badge count={notifications.length} size="small">
-                  <Button type="text" icon={<BellOutlined />} className="header-btn" />
-                </Badge>
-              </Dropdown>
+              {/* Master Notifications */}
+              <NotificationBell />
 
               {/* User Menu */}
               <Dropdown
@@ -461,6 +563,7 @@ const MetronicLayout: React.FC = () => {
         />
       </Drawer>
     </Layout>
+    </NotificationProvider>
   );
 };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Row, Col, Statistic, Progress, Typography, Tag, Table, Timeline, Alert, Space, Badge } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Typography, Tag, Table, Timeline, Alert, Space, Badge, Button } from 'antd';
+import { useNotifications } from '@/features/master/contexts/NotificationContext';
 import {
   TeamOutlined,
   CreditCardOutlined,
@@ -19,6 +20,17 @@ import './style.css';
 const { Title, Text, Paragraph } = Typography;
 
 export const MasterDashboard: React.FC = () => {
+  const { addNotification } = useNotifications();
+  
+  const sendTestNotification = () => {
+    addNotification({
+      type: 'info',
+      title: 'Test Bildirimi',
+      message: 'Bu bir test bildirimidir. Sistem normal çalışıyor.',
+      priority: 'medium',
+      category: 'system'
+    });
+  };
   // System Health Data
   const systemHealth = {
     cpu: 45,
@@ -151,6 +163,9 @@ export const MasterDashboard: React.FC = () => {
       title="Master Dashboard"
       subTitle="Sistem yönetimi ve izleme paneli"
       extra={[
+        <Button key="test-notif" type="primary" onClick={sendTestNotification}>
+          Test Bildirimi Gönder
+        </Button>,
         <Tag key="env" color="blue" icon={<CloudServerOutlined />}>Production</Tag>,
         <Tag key="version" color="green">v2.4.1</Tag>,
       ]}

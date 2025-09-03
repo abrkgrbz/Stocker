@@ -58,6 +58,11 @@ const MasterInvoicesPage = lazy(() => import('@/features/master/pages/Invoices')
 const MasterPaymentsPage = lazy(() => import('@/features/master/pages/Payments').then(m => ({ default: m.default })));
 const MasterAnalyticsPage = lazy(() => import('@/features/master/pages/Analytics').then(m => ({ default: m.default })));
 const MasterPerformancePage = lazy(() => import('@/features/master/pages/Performance').then(m => ({ default: m.default })));
+const MasterNotificationSettingsPage = lazy(() => import('@/features/master/pages/NotificationSettings').then(m => ({ default: m.default })));
+const MasterApiManagementPage = lazy(() => import('@/features/master/pages/ApiManagement').then(m => ({ default: m.default })));
+const MasterAuditLogsPage = lazy(() => import('@/features/master/pages/AuditLogs').then(m => ({ default: m.default })));
+const MasterBillingPage = lazy(() => import('@/features/master/pages/Billing').then(m => ({ default: m.default })));
+const MasterSystemMonitoringPage = lazy(() => import('@/features/master/pages/Monitoring/SystemMonitoring').then(m => ({ default: m.default })));
 const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.default })));
 const I18nDemo = lazy(() => import('@/pages/I18nDemo').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
@@ -263,6 +268,11 @@ function App() {
                   <Route path="payments" element={<MasterPaymentsPage />} />
                   <Route path="analytics" element={<MasterAnalyticsPage />} />
                   <Route path="performance" element={<MasterPerformancePage />} />
+                  <Route path="notification-settings" element={<MasterNotificationSettingsPage />} />
+                  <Route path="api-management" element={<MasterApiManagementPage />} />
+                  <Route path="audit-logs" element={<MasterAuditLogsPage />} />
+                  <Route path="billing" element={<MasterBillingPage />} />
+                  <Route path="monitoring/system" element={<MasterSystemMonitoringPage />} />
                   <Route path="pwa-demo" element={<PWADemo />} />
                   <Route path="i18n-demo" element={<I18nDemo />} />
                 </Route>
