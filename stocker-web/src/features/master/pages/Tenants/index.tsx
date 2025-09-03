@@ -1351,6 +1351,10 @@ export const MasterTenantsPage: React.FC = () => {
                     },
                   }}
                   scroll={{ x: 1500 }}
+                  onRow={(record) => ({
+                    onClick: () => handleViewDetails(record),
+                    style: { cursor: 'pointer' }
+                  })}
                   rowSelection={{
                     selectedRowKeys: selectedTenants,
                     onChange: setSelectedTenants,
