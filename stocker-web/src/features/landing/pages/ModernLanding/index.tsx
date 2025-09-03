@@ -48,7 +48,6 @@ import { FAQSection } from '../../components/FAQSection';
 import { SolutionsSection } from '../../components/SolutionsSection';
 import { BlogSection } from '../../components/BlogSection';
 import { PartnersSection } from '../../components/PartnersSection';
-import { NewsletterSection } from '../../components/NewsletterSection';
 import { ComparisonTable } from '../../components/ComparisonTable';
 import { DemoBooking } from '../../components/DemoBooking';
 import { VideoSection } from '../../components/VideoSection';
@@ -1024,8 +1023,6 @@ export const ModernLanding: React.FC = () => {
       {/* FAQ Section */}
       <FAQSection />
 
-      {/* Newsletter Section */}
-      <NewsletterSection />
 
       {/* CTA Section */}
       <section className="cta-section">

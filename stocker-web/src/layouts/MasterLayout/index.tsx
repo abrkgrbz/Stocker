@@ -228,11 +228,14 @@ export const MasterLayout: React.FC = () => {
     rightContentRender: () => (
       <div style={{ paddingRight: 16 }}>
         <Space size="middle">
+          {/* Theme Toggle */}
           <ThemeToggle />
+          
           {/* System Status */}
-          <Tag color="success" icon={<SafetyOutlined />}>
-            System Online
-          </Tag>
+          <div className="system-status-badge">
+            <SafetyOutlined />
+            <span>System Online</span>
+          </div>
           
           {/* Notifications */}
           <NotificationManager />
@@ -244,9 +247,10 @@ export const MasterLayout: React.FC = () => {
                 {
                   key: 'info',
                   label: (
-                    <div>
-                      <div><strong>{user?.fullName || user?.username}</strong></div>
-                      <div style={{ fontSize: 12, color: '#8c8c8c' }}>System Administrator</div>
+                    <div style={{ padding: '8px 0' }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{user?.fullName || user?.username}</div>
+                      <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4 }}>System Administrator</div>
+                      <div style={{ fontSize: 11, color: '#bfbfbf', marginTop: 2 }}>{user?.email}</div>
                     </div>
                   ),
                   disabled: true,
@@ -281,16 +285,22 @@ export const MasterLayout: React.FC = () => {
                 },
               ],
             }}
+            placement="bottomRight"
           >
-            <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="user-dropdown-trigger">
               <Avatar 
-                size="small" 
-                style={{ backgroundColor: '#ff4d4f' }}
+                size={32}
+                style={{ 
+                  background: 'linear-gradient(135deg, #ff4d4f, #ff7875)',
+                  border: '2px solid rgba(255, 255, 255, 0.2)'
+                }}
                 icon={<CloudServerOutlined />}
               >
                 {user?.email?.[0]?.toUpperCase()}
               </Avatar>
-              <span style={{ color: 'white' }}>{user?.fullName || user?.username}</span>
+              <span style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>
+                {user?.fullName || user?.username}
+              </span>
             </div>
           </Dropdown>
         </Space>

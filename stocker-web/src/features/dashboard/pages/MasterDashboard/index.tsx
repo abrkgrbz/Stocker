@@ -14,6 +14,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Line, Pie } from '@ant-design/charts';
+import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
 
