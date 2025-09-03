@@ -38,7 +38,7 @@ public class UpdateMasterUserCommandHandler : IRequestHandler<UpdateMasterUserCo
             {
                 var existingUser = await _unitOfWork.MasterUsers()
                     .AsQueryable()
-                    .Where(u => EF.Property<string>(u, "Email") == request.Email && u.Id != request.UserId)
+                    .Where(u => u.Email.Value == request.Email && u.Id != request.UserId)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 if (existingUser != null)

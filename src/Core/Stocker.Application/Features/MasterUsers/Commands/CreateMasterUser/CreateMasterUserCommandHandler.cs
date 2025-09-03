@@ -52,7 +52,7 @@ public class CreateMasterUserCommandHandler : IRequestHandler<CreateMasterUserCo
             // Check if email already exists
             existingUser = await _unitOfWork.MasterUsers()
                 .AsQueryable()
-                .Where(u => EF.Property<string>(u, "Email") == request.Email)
+                .Where(u => u.Email.Value == request.Email)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (existingUser != null)
