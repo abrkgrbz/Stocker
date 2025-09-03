@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Row,
@@ -93,6 +93,8 @@ import {
 import { Area, Line, Column, Pie, Gauge, Liquid, DualAxes } from '@ant-design/charts';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { masterTenantApi } from '@/shared/api/master.api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import './tenant-detail-enhanced.css';
 
 dayjs.extend(relativeTime);
@@ -158,93 +160,89 @@ interface TenantDetailData {
 const EnhancedTenantDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [tenant, setTenant] = useState<TenantDetailData | null>(null);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [actionDrawerVisible, setActionDrawerVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [form] = Form.useForm();
 
-  // Mock data - gerçek API'den gelecek
-  const mockTenant: TenantDetailData = {
-    id: '1',
-    name: 'TechnoSoft Solutions Ltd.',
-    code: 'TECH001',
-    domain: 'technosoft.example.com',
-    email: 'info@technosoft.com',
-    phone: '+90 212 555 1234',
-    address: 'Maslak Mah. Ahi Evran Cad. No:1',
-    city: 'İstanbul',
-    country: 'Türkiye',
-    status: 'active',
-    plan: 'Kurumsal',
-    maxUsers: 100,
-    currentUsers: 67,
-    storage: {
-      used: 45.2,
-      total: 100,
-    },
-    createdAt: '2023-01-15T10:00:00Z',
-    expiresAt: '2025-01-15T10:00:00Z',
-    lastLogin: '2024-01-10T15:30:00Z',
-    modules: ['CRM', 'Muhasebe', 'E-ticaret', 'İnsan Kaynakları', 'Proje Yönetimi'],
-    subscription: {
-      id: 'SUB001',
-      plan: 'Kurumsal',
-      price: 2999,
-      period: 'monthly',
-      startDate: '2023-01-15T10:00:00Z',
-      endDate: '2025-01-15T10:00:00Z',
-      autoRenew: true,
-    },
-    billing: {
-      totalPaid: 71976,
-      outstandingBalance: 0,
-      nextPayment: '2024-02-15T10:00:00Z',
-      paymentMethod: 'Kredi Kartı',
-    },
-    usage: {
-      apiCalls: 1250000,
-      bandwidth: 850, // GB
-      transactions: 45000,
-      emails: 12500,
-    },
-    admins: [
-      {
-        id: '1',
-        name: 'Ahmet Yılmaz',
-        email: 'ahmet@technosoft.com',
-        role: 'Süper Admin',
-        lastLogin: '2024-01-10T15:30:00Z',
+  // Fetch tenant data from API
+  const { data: apiTenant, isLoading: loading, error } = useQuery({
+    queryKey: ['tenant', id],
+    queryFn: () => masterTenantApi.getById(id!),
+    enabled: !!id,
+  });
+
+  // Map API data to component format
+  const tenant: TenantDetailData | null = useMemo(() => {
+    if (!apiTenant) return null;
+    
+    return {
+      id: apiTenant.id,
+      name: apiTenant.name,
+      code: apiTenant.code,
+      domain: apiTenant.domain || '',
+      email: apiTenant.contactEmail,
+      phone: apiTenant.contactPhone || '',
+      address: apiTenant.address || '',
+      city: apiTenant.city || '',
+      country: apiTenant.country || 'Türkiye',
+      status: apiTenant.isActive ? 'active' : 'inactive',
+      plan: 'Standart', // TODO: Get from subscription
+      maxUsers: 100, // TODO: Get from package
+      currentUsers: apiTenant.userCount || 0,
+      storage: {
+        used: 0, // TODO: Get from API
+        total: 100, // TODO: Get from package
       },
-      {
-        id: '2',
-        name: 'Ayşe Kaya',
-        email: 'ayse@technosoft.com',
-        role: 'Admin',
-        lastLogin: '2024-01-10T14:20:00Z',
+      createdAt: apiTenant.createdAt,
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // TODO: Get from subscription
+      lastLogin: apiTenant.updatedAt || apiTenant.createdAt,
+      modules: [], // TODO: Get from package
+      subscription: {
+        id: 'SUB001',
+        plan: 'Standart',
+        price: 999,
+        period: 'monthly',
+        startDate: apiTenant.createdAt,
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        autoRenew: true,
       },
-    ],
-  };
+      billing: {
+        totalPaid: 0,
+        outstandingBalance: 0,
+        nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        paymentMethod: 'Kredi Kartı',
+      },
+      usage: {
+        apiCalls: 0,
+        bandwidth: 0,
+        transactions: 0,
+        emails: 0,
+      },
+      admins: [],
+    };
+  }, [apiTenant]);
+
+  // Toggle status mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: () => masterTenantApi.toggleStatus(id!),
+    onSuccess: () => {
+      message.success('Kiracı durumu güncellendi');
+      queryClient.invalidateQueries({ queryKey: ['tenant', id] });
+    },
+    onError: () => {
+      message.error('Durum güncellenirken hata oluştu');
+    },
+  });
 
   useEffect(() => {
-    loadTenantData();
-  }, [id]);
-
-  const loadTenantData = async () => {
-    setLoading(true);
-    try {
-      // Simüle edilmiş API çağrısı
-      setTimeout(() => {
-        setTenant(mockTenant);
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
+    if (error) {
       message.error('Kiracı bilgileri yüklenemedi');
-      setLoading(false);
+      navigate('/master/tenants');
     }
-  };
+  }, [error, navigate]);
 
   const handleStatusChange = (checked: boolean) => {
     confirm({
@@ -254,7 +252,7 @@ const EnhancedTenantDetail: React.FC = () => {
       okText: 'Evet',
       cancelText: 'İptal',
       onOk() {
-        message.success(`Kiracı ${checked ? 'aktifleştirildi' : 'askıya alındı'}`);
+        toggleStatusMutation.mutate();
       },
     });
   };
