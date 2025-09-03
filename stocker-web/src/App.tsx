@@ -49,6 +49,7 @@ const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').t
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
 const EnhancedTenantDetail = lazy(() => import('@/features/master/pages/TenantDetail/EnhancedTenantDetail'));
+const EnhancedSystemSettings = lazy(() => import('@/features/master/pages/Settings/EnhancedSystemSettings'));
 const MasterSubscriptionsPage = lazy(() => import('@/features/master/pages/Subscriptions').then(m => ({ default: m.MasterSubscriptionsPage })));
 const MasterMigrationsPage = lazy(() => import('@/features/master/pages/Migrations').then(m => ({ default: m.default })));
 const MasterUsersPage = lazy(() => import('@/features/master/pages/Users').then(m => ({ default: m.MasterUsersPage })));
@@ -264,7 +265,8 @@ function App() {
                   <Route path="users" element={<MasterUsersPage />} />
                   <Route path="monitoring/*" element={<MasterMonitoringPage />} />
                   <Route path="reports/*" element={<MasterReportsPage />} />
-                  <Route path="settings/*" element={<MasterSettingsPage />} />
+                  <Route path="settings" element={<EnhancedSystemSettings />} />
+                  <Route path="settings/*" element={<EnhancedSystemSettings />} />
                   <Route path="migrations" element={<MasterMigrationsPage />} />
                   <Route path="invoices" element={<MasterInvoicesPage />} />
                   <Route path="payments" element={<MasterPaymentsPage />} />
