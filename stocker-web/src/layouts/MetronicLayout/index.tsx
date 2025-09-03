@@ -110,15 +110,15 @@ const MetronicLayout: React.FC = () => {
           badge: 23,
           children: [
             {
-              key: '/master/tenants/list',
+              key: '/master/tenants',
               label: 'Tüm Tenantlar',
             },
             {
-              key: '/master/tenants/pending',
+              key: '/master/tenants?status=pending',
               label: 'Onay Bekleyenler',
             },
             {
-              key: '/master/tenants/suspended',
+              key: '/master/tenants?status=suspended',
               label: 'Askıya Alınanlar',
             },
           ],
