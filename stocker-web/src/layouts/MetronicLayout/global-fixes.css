@@ -121,6 +121,7 @@
 .ant-layout-content {
   min-height: calc(100vh - 64px);
   overflow-x: hidden;
+  background: #f5f8fa !important; /* Arka planı açık gri yap */
 }
 
 /* Ensure consistent card shadows */

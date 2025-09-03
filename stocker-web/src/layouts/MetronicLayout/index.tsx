@@ -60,6 +60,7 @@ import { NotificationBell } from '@/features/master/components/NotificationBell'
 import './styles.css';
 import './sidebar-fix.css';
 import './global-fixes.css';
+import './content-fix.css';
 
 const { Header, Sider, Content } = Layout;
 
