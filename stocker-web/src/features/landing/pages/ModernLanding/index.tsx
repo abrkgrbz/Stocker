@@ -44,6 +44,8 @@ import {
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+import { FAQSection } from '../../components/FAQSection';
+import { SolutionsSection } from '../../components/SolutionsSection';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -311,8 +313,10 @@ export const ModernLanding: React.FC = () => {
           </div>
           <div className="nav-menu">
             <a href="#features">Özellikler</a>
+            <a href="#solutions">Çözümler</a>
             <a href="#pricing">Fiyatlandırma</a>
             <a href="#testimonials">Referanslar</a>
+            <a href="#faq">SSS</a>
             <Button type="default" onClick={() => navigate('/login')}>Giriş</Button>
             <Button type="primary" onClick={() => navigate('/register')}>
               Ücretsiz Başla
@@ -874,6 +878,9 @@ export const ModernLanding: React.FC = () => {
         </div>
       </section>
 
+      {/* Solutions Section */}
+      <SolutionsSection />
+
       {/* Testimonials Section */}
       <section id="testimonials" className="testimonials-section">
         <div className="container">
@@ -907,6 +914,9 @@ export const ModernLanding: React.FC = () => {
           </Row>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* CTA Section */}
       <section className="cta-section">
