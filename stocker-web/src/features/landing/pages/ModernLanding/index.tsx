@@ -46,6 +46,9 @@ import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
 import { FAQSection } from '../../components/FAQSection';
 import { SolutionsSection } from '../../components/SolutionsSection';
+import { BlogSection } from '../../components/BlogSection';
+import { PartnersSection } from '../../components/PartnersSection';
+import { NewsletterSection } from '../../components/NewsletterSection';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -315,7 +318,8 @@ export const ModernLanding: React.FC = () => {
             <a href="#features">Özellikler</a>
             <a href="#solutions">Çözümler</a>
             <a href="#pricing">Fiyatlandırma</a>
-            <a href="#testimonials">Referanslar</a>
+            <a href="#blog">Blog</a>
+            <a href="#partners">İş Ortakları</a>
             <a href="#faq">SSS</a>
             <Button type="default" onClick={() => navigate('/login')}>Giriş</Button>
             <Button type="primary" onClick={() => navigate('/register')}>
@@ -915,8 +919,17 @@ export const ModernLanding: React.FC = () => {
         </div>
       </section>
 
+      {/* Blog Section */}
+      <BlogSection />
+
+      {/* Partners Section */}
+      <PartnersSection />
+
       {/* FAQ Section */}
       <FAQSection />
+
+      {/* Newsletter Section */}
+      <NewsletterSection />
 
       {/* CTA Section */}
       <section className="cta-section">
