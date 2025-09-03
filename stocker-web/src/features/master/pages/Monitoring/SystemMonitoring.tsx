@@ -44,7 +44,7 @@ import {
   ClockCircleOutlined,
   FireOutlined,
 } from '@ant-design/icons';
-import { Area, Line, Column, Gauge, Liquid, TinyArea, TinyColumn } from '@ant-design/charts';
+import { Area, Line, Column, Gauge, Liquid } from '@ant-design/charts';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { useRealtimeData, useWebSocketData } from '../../hooks/useRealtimeData';
@@ -512,7 +512,7 @@ const SystemMonitoring: React.FC = () => {
             <div style={{ marginBottom: 16 }}>
               <Text type="secondary">Network Traffic</Text>
             </div>
-            <TinyArea {...networkConfig} />
+            <Area {...networkConfig} style={{ height: 60 }} />
             <Divider />
             <Space direction="vertical" style={{ width: '100%' }}>
               <div className="metric-detail">

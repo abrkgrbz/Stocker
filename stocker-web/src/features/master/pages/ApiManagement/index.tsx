@@ -47,7 +47,7 @@ import {
   ThunderboltOutlined,
   CloudServerOutlined,
   BarChartOutlined,
-  WebhookOutlined,
+  ApiOutlined as WebhookOutlined, // WebhookOutlined yok, ApiOutlined kullan
   LockOutlined,
   UnlockOutlined,
   WarningOutlined,
