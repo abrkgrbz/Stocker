@@ -889,10 +889,7 @@ export const MasterTenantsPage: React.FC = () => {
   };
 
   const handleViewDetails = (tenant: Tenant) => {
-    setSelectedTenant(tenant);
-    setTimeout(() => {
-      setShowDetailsDrawer(true);
-    }, 100);
+    navigate(`/master/tenants/${tenant.id}`);
   };
 
   // Bulk Operations

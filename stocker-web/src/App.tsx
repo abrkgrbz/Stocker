@@ -48,6 +48,7 @@ const TenantsPage = lazy(() => import('@/features/tenants/pages/TenantsPage').th
 const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').then(m => ({ default: m.MasterTenantsPage })));
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
+const EnhancedTenantDetail = lazy(() => import('@/features/master/pages/TenantDetail/EnhancedTenantDetail'));
 const MasterSubscriptionsPage = lazy(() => import('@/features/master/pages/Subscriptions').then(m => ({ default: m.MasterSubscriptionsPage })));
 const MasterMigrationsPage = lazy(() => import('@/features/master/pages/Migrations').then(m => ({ default: m.default })));
 const MasterUsersPage = lazy(() => import('@/features/master/pages/Users').then(m => ({ default: m.MasterUsersPage })));
@@ -255,7 +256,8 @@ function App() {
                   }
                 >
                   <Route index element={<MasterDashboard />} />
-                  <Route path="tenants/*" element={<MasterTenantsPage />} />
+                  <Route path="tenants" element={<MasterTenantsPage />} />
+                  <Route path="tenants/:id" element={<EnhancedTenantDetail />} />
                   <Route path="subscriptions/*" element={<MasterSubscriptionsPage />} />
                   <Route path="packages" element={<MasterPackagesPage />} />
                   <Route path="modules" element={<MasterModulesPage />} />
