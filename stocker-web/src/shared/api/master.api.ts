@@ -40,25 +40,25 @@ export const masterTenantApi = {
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
     
-    return apiClient.get<PaginatedResponse<Tenant>>(`/api/master/tenants?${queryParams.toString()}`);
+    return apiClient.get<PaginatedResponse<Tenant>>(`/api/master/Tenants?${queryParams.toString()}`);
   },
     
   getById: (id: string) => 
-    apiClient.get<Tenant>(`/api/master/tenants/${id}`),
+    apiClient.get<Tenant>(`/api/master/Tenants/${id}`),
     
   create: (data: CreateTenantRequest) => 
-    apiClient.post<Tenant>('/api/master/tenants', data),
+    apiClient.post<Tenant>('/api/master/Tenants', data),
     
   update: (id: string, data: Partial<Tenant>) => 
-    apiClient.put<Tenant>(`/api/master/tenants/${id}`, data),
+    apiClient.put<Tenant>(`/api/master/Tenants/${id}`, data),
     
   delete: (id: string) => 
-    apiClient.delete(`/api/master/tenants/${id}`),
+    apiClient.delete(`/api/master/Tenants/${id}`),
     
   // Toggle tenant status (activate/deactivate)
   toggleStatus: (id: string) => {
     console.log('API call: Toggling tenant status', id);
-    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
+    return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
         console.log('Toggle status API response:', response);
         return response;
@@ -72,7 +72,7 @@ export const masterTenantApi = {
   // Legacy methods for backward compatibility
   suspend: (id: string, reason?: string) => {
     console.log('API call: Suspending tenant (using toggle)', id);
-    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
+    return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
         console.log('Toggle status API response:', response);
         return response;
@@ -85,7 +85,7 @@ export const masterTenantApi = {
     
   activate: (id: string) => {
     console.log('API call: Activating tenant (using toggle)', id);
-    return apiClient.post(`/api/master/tenants/${id}/toggle-status`)
+    return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
         console.log('Toggle status API response:', response);
         return response;
@@ -97,10 +97,10 @@ export const masterTenantApi = {
   },
     
   resetPassword: (id: string) => 
-    apiClient.post(`/api/master/tenants/${id}/reset-password`),
+    apiClient.post(`/api/master/Tenants/${id}/reset-password`),
     
   getUsageStats: (id: string) => 
-    apiClient.get(`/api/master/tenants/${id}/statistics`),
+    apiClient.get(`/api/master/Tenants/${id}/statistics`),
     
   getActivityLog: (id: string) => 
     // Activity log endpoint not implemented yet, return empty data
