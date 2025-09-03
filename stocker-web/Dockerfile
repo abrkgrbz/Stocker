@@ -6,7 +6,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY stocker-web/package.json stocker-web/yarn.lock* stocker-web/package-lock.json* ./
+COPY package.json yarn.lock* package-lock.json* ./
 
 # Install dependencies - prefer yarn if lock file exists
 RUN if [ -f yarn.lock ]; then \
@@ -18,14 +18,15 @@ RUN if [ -f yarn.lock ]; then \
     fi
 
 # Copy all source files
-COPY stocker-web/ .
+COPY . .
 
 # Set NODE_ENV and build the application
 ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=https://api.stoocker.app
 RUN if [ -f yarn.lock ]; then \
-      yarn build; \
+      yarn build || yarn build:docker; \
     else \
-      npm run build; \
+      npm run build || npm run build:docker; \
     fi
 
 # Stage 2: Serve with nginx
@@ -35,7 +36,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY stocker-web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80
