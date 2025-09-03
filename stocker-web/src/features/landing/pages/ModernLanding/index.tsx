@@ -49,6 +49,9 @@ import { SolutionsSection } from '../../components/SolutionsSection';
 import { BlogSection } from '../../components/BlogSection';
 import { PartnersSection } from '../../components/PartnersSection';
 import { NewsletterSection } from '../../components/NewsletterSection';
+import { ComparisonTable } from '../../components/ComparisonTable';
+import { DemoBooking } from '../../components/DemoBooking';
+import { VideoSection } from '../../components/VideoSection';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -918,6 +921,15 @@ export const ModernLanding: React.FC = () => {
           </Row>
         </div>
       </section>
+
+      {/* Comparison Table */}
+      <ComparisonTable />
+
+      {/* Demo Booking */}
+      <DemoBooking />
+
+      {/* Video Section */}
+      <VideoSection />
 
       {/* Blog Section */}
       <BlogSection />
