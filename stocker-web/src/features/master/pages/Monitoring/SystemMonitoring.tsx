@@ -210,24 +210,66 @@ const SystemMonitoring: React.FC = () => {
     },
   ];
 
-  // Real-time data hook kullanımı
-  const { data: metrics, loading: metricsLoading, refresh: refreshMetrics } = useRealtimeData(
-    async () => mockMetrics,
-    { interval: refreshInterval, enabled: autoRefresh }
-  );
-
-  // WebSocket bağlantısı (opsiyonel)
-  const { data: wsData, connected } = useWebSocketData<any>(
-    'ws://localhost:8080/monitoring',
-    {
-      onMessage: (data) => {
-        console.log('WebSocket data received:', data);
-      },
-      onError: (error) => {
-        console.error('WebSocket error:', error);
-      },
+  // Metrikleri state'te tut (realtime hook yerine)
+  const [metrics, setMetrics] = useState<SystemMetrics>(mockMetrics);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+  
+  // Metrikleri güncelle
+  const refreshMetrics = useCallback(() => {
+    setMetricsLoading(true);
+    // Simüle edilmiş veri güncelleme
+    setTimeout(() => {
+      setMetrics({
+        cpu: {
+          usage: Math.random() * 100,
+          cores: 8,
+          temperature: 45 + Math.random() * 20,
+          processes: Math.floor(150 + Math.random() * 50),
+        },
+        memory: {
+          used: 12.5,
+          total: 16,
+          percentage: 78.125,
+          swap: 2.1,
+        },
+        disk: {
+          used: 256,
+          total: 512,
+          percentage: 50,
+          iops: Math.floor(1000 + Math.random() * 500),
+        },
+        network: {
+          in: Math.random() * 100,
+          out: Math.random() * 50,
+          connections: Math.floor(200 + Math.random() * 100),
+          errors: Math.floor(Math.random() * 5),
+        },
+      });
+      setMetricsLoading(false);
+    }, 500);
+  }, []);
+  
+  // Auto refresh effect
+  useEffect(() => {
+    if (autoRefresh && refreshInterval > 0) {
+      const interval = setInterval(refreshMetrics, refreshInterval);
+      return () => clearInterval(interval);
     }
-  );
+  }, [autoRefresh, refreshInterval, refreshMetrics]);
+
+  // WebSocket bağlantısını devre dışı bırak (şimdilik)
+  // const { data: wsData, connected } = useWebSocketData<any>(
+  //   'ws://localhost:8080/monitoring',
+  //   {
+  //     onMessage: (data) => {
+  //       console.log('WebSocket data received:', data);
+  //     },
+  //     onError: (error) => {
+  //       console.error('WebSocket error:', error);
+  //     },
+  //   }
+  // );
+  const connected = false; // WebSocket devre dışı
 
   // Service status badge
   const getStatusBadge = (status: string) => {

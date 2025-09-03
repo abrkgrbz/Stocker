@@ -48,11 +48,11 @@ export function useRealtimeData<T>(
     // Initial fetch
     fetchData();
 
-    // Set up interval
-    const intervalId = setInterval(fetchData, interval);
-
-    // Cleanup
-    return () => clearInterval(intervalId);
+    // Set up interval only if interval > 0
+    if (interval > 0) {
+      const intervalId = setInterval(fetchData, interval);
+      return () => clearInterval(intervalId);
+    }
   }, [fetchData, interval, enabled]);
 
   const refresh = useCallback(() => {
