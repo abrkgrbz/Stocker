@@ -4,7 +4,8 @@ import {
   Package, 
   Subscription, 
   CreateTenantRequest,
-  PaginatedResponse 
+  PaginatedResponse,
+  ApiResponse 
 } from '@/shared/types';
 
 // Dashboard API
@@ -43,8 +44,10 @@ export const masterTenantApi = {
     return apiClient.get<PaginatedResponse<Tenant>>(`/api/master/Tenants?${queryParams.toString()}`);
   },
     
-  getById: (id: string) => 
-    apiClient.get<Tenant>(`/api/master/Tenants/${id}`),
+  getById: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<Tenant>>(`/api/master/Tenants/${id}`);
+    return response.data.data!;
+  },
     
   create: (data: CreateTenantRequest) => 
     apiClient.post<Tenant>('/api/master/Tenants', data),
@@ -99,8 +102,20 @@ export const masterTenantApi = {
   resetPassword: (id: string) => 
     apiClient.post(`/api/master/Tenants/${id}/reset-password`),
     
-  getUsageStats: (id: string) => 
-    apiClient.get(`/api/master/Tenants/${id}/statistics`),
+  getStatistics: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<any>>(`/api/master/Tenants/${id}/statistics`);
+    return response.data.data;
+  },
+    
+  getUsers: async (id: string) => {
+    // TODO: Implement when backend endpoint is ready
+    return Promise.resolve([]);
+  },
+    
+  getModules: async (id: string) => {
+    // TODO: Implement when backend endpoint is ready  
+    return Promise.resolve([]);
+  },
     
   getActivityLog: (id: string) => 
     // Activity log endpoint not implemented yet, return empty data

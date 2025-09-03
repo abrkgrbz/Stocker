@@ -43,23 +43,35 @@ export interface LoginResponse {
 }
 
 // Tenant Types
+export interface TenantSubscription {
+  id: string;
+  packageId: string;
+  packageName: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  trialEndDate?: string;
+  price: number;
+}
+
 export interface Tenant {
   id: string;
   name: string;
   code: string;
   domain?: string;
-  contactName: string;
-  contactEmail: string;
+  contactName?: string;
+  contactEmail?: string;
   contactPhone?: string;
   address?: string;
   city?: string;
   country?: string;
   logoUrl?: string;
   isActive: boolean;
-  subscriptionStatus?: string;
-  userCount: number;
   createdAt: string;
   updatedAt?: string;
+  subscription?: TenantSubscription;
+  userCount?: number;
+  subscriptionStatus?: string;
 }
 
 export interface CreateTenantRequest {

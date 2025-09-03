@@ -183,31 +183,39 @@ const EnhancedTenantDetail: React.FC = () => {
       name: apiTenant.name,
       code: apiTenant.code,
       domain: apiTenant.domain || '',
-      email: apiTenant.contactEmail,
+      email: apiTenant.contactEmail || 'info@example.com',
       phone: apiTenant.contactPhone || '',
       address: apiTenant.address || '',
       city: apiTenant.city || '',
       country: apiTenant.country || 'Türkiye',
       status: apiTenant.isActive ? 'active' : 'inactive',
-      plan: 'Standart', // TODO: Get from subscription
-      maxUsers: 100, // TODO: Get from package
+      plan: apiTenant.subscription?.packageName || 'Standart',
+      maxUsers: 100, // TODO: Get from package details
       currentUsers: apiTenant.userCount || 0,
       storage: {
-        used: 0, // TODO: Get from API
-        total: 100, // TODO: Get from package
+        used: statistics?.storageUsed || 0,
+        total: statistics?.storageTotal || 100,
       },
       createdAt: apiTenant.createdAt,
-      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // TODO: Get from subscription
+      expiresAt: apiTenant.subscription?.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       lastLogin: apiTenant.updatedAt || apiTenant.createdAt,
-      modules: [], // TODO: Get from package
-      subscription: {
-        id: 'SUB001',
-        plan: 'Standart',
-        price: 999,
+      modules: [], // TODO: Get from subscription modules
+      subscription: apiTenant.subscription ? {
+        id: apiTenant.subscription.id,
+        plan: apiTenant.subscription.packageName,
+        price: apiTenant.subscription.price,
+        period: 'monthly',
+        startDate: apiTenant.subscription.startDate,
+        endDate: apiTenant.subscription.endDate,
+        autoRenew: true,
+      } : {
+        id: 'N/A',
+        plan: 'No Subscription',
+        price: 0,
         period: 'monthly',
         startDate: apiTenant.createdAt,
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        autoRenew: true,
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        autoRenew: false,
       },
       billing: {
         totalPaid: 0,
@@ -216,14 +224,21 @@ const EnhancedTenantDetail: React.FC = () => {
         paymentMethod: 'Kredi Kartı',
       },
       usage: {
-        apiCalls: 0,
-        bandwidth: 0,
-        transactions: 0,
-        emails: 0,
+        apiCalls: statistics?.apiCallCount || 0,
+        bandwidth: statistics?.bandwidthUsed || 0,
+        transactions: statistics?.transactionCount || 0,
+        emails: statistics?.emailCount || 0,
       },
       admins: [],
     };
-  }, [apiTenant]);
+  }, [apiTenant, statistics]);
+
+  // Fetch statistics
+  const { data: statistics } = useQuery({
+    queryKey: ['tenant-statistics', id],
+    queryFn: () => masterTenantApi.getStatistics(id!),
+    enabled: !!id,
+  });
 
   // Toggle status mutation
   const toggleStatusMutation = useMutation({
