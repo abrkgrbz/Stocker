@@ -30,9 +30,14 @@ export const useSignalRValidation = () => {
       const service = useMockService ? mockSignalRService : signalRService;
       
       try {
-        // Try real service first
+        // Try real service first with timeout
         if (!useMockService) {
-          await signalRService.startValidationConnection();
+          const connectionPromise = signalRService.startValidationConnection();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout')), 10000)
+          );
+          
+          await Promise.race([connectionPromise, timeoutPromise]);
           console.log('✅ Connected to real SignalR validation service');
         } else {
           await mockSignalRService.startValidationConnection();
@@ -41,6 +46,7 @@ export const useSignalRValidation = () => {
         
         if (isMounted) {
           setIsConnected(true);
+          setError(null);
         }
 
         // Set up event listeners

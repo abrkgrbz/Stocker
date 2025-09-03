@@ -5,6 +5,7 @@ class SignalRService {
   private validationConnection: signalR.HubConnection | null = null;
   private notificationConnection: signalR.HubConnection | null = null;
   private baseUrl: string = API_BASE_URL;
+  private isRetrying: boolean = false;
 
   // Validation Hub Methods
   async startValidationConnection(): Promise<void> {
@@ -42,9 +43,20 @@ class SignalRService {
           'X-Bypass-Rate-Limit': 'true'
         }
       })
-      // Disable automatic reconnect for now to debug the issue
-      // .withAutomaticReconnect([2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Debug)
+      // Enable automatic reconnect with progressive delays
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (retryContext) => {
+          // Custom retry logic
+          if (retryContext.elapsedMilliseconds < 60000) {
+            // First minute: retry every 2-5 seconds
+            return Math.min(2000 + retryContext.previousRetryCount * 1000, 5000);
+          } else {
+            // After a minute, stop retrying
+            return null;
+          }
+        }
+      })
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     this.validationConnection.onreconnecting((error) => {
@@ -57,12 +69,22 @@ class SignalRService {
 
     this.validationConnection.onclose((error) => {
       console.error('ValidationHub connection closed:', error);
+      // Set connection to null so it can be recreated
+      this.validationConnection = null;
     });
 
     try {
       await this.validationConnection.start();
+      console.log('ValidationHub connected successfully');
     } catch (err) {
       console.error("Error connecting to validation hub:", err);
+      // Clean up the connection on error
+      if (this.validationConnection) {
+        try {
+          await this.validationConnection.stop();
+        } catch {}
+        this.validationConnection = null;
+      }
       throw err;
     }
   }
