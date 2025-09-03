@@ -1,0 +1,196 @@
+/* Fix for text visibility in System Monitoring page */
+
+/* Ensure all text is visible */
+.system-monitoring * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix for Ant Design Typography components */
+.system-monitoring .ant-typography {
+  color: #262626 !important;
+  z-index: 2;
+  position: relative;
+}
+
+/* Fix for secondary text */
+.system-monitoring .ant-typography-secondary {
+  color: #8c8c8c !important;
+}
+
+/* Fix for Row and Col text */
+.system-monitoring .ant-row {
+  position: relative;
+  z-index: 1;
+}
+
+.system-monitoring .ant-col {
+  position: relative;
+  z-index: 1;
+}
+
+/* Metric card text fix */
+.metric-card .ant-typography,
+.metric-card span,
+.metric-card div {
+  color: #262626 !important;
+  position: relative;
+  z-index: 2;
+}
+
+.metric-card .ant-typography-secondary {
+  color: #8c8c8c !important;
+}
+
+/* Service card text fix */
+.service-card .ant-typography,
+.service-card span,
+.service-card div {
+  color: #262626 !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure CountUp is visible */
+.metric-card h1,
+.metric-card h2,
+.metric-card h3,
+.metric-card h4,
+.metric-card h5 {
+  color: #262626 !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Fix for metric details */
+.metric-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.metric-detail .ant-typography {
+  color: inherit !important;
+}
+
+.metric-detail .ant-typography strong {
+  color: #262626 !important;
+  font-weight: 600;
+}
+
+/* Fix disk usage center text */
+.disk-usage {
+  text-align: center;
+  padding: 24px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.disk-usage .ant-typography {
+  color: #262626 !important;
+}
+
+/* Fix the gradient background pseudo-element */
+.system-monitoring::before {
+  z-index: 0 !important;
+  pointer-events: none;
+}
+
+/* Fix metric card before pseudo-element */
+.metric-card::before {
+  z-index: 0 !important;
+}
+
+/* Ensure cards have proper background */
+.metric-card {
+  background: white !important;
+  position: relative;
+}
+
+.metric-card .ant-card-body {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Fix for any text that might be hidden */
+.system-monitoring .ant-card-body * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Specific fix for the Row that's having issues */
+.ant-row.css-l4k4wr {
+  position: relative;
+  z-index: 1;
+}
+
+.ant-row.css-l4k4wr .ant-typography {
+  color: #262626 !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Remove any text transparency */
+.system-monitoring * {
+  -webkit-text-fill-color: initial !important;
+}
+
+/* Only apply gradient to specific elements */
+.metric-value {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  margin: 16px 0 !important;
+}
+
+/* Fix icons to not override text color */
+.metric-icon {
+  font-size: 32px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Ensure all text in cards is visible */
+.ant-card .ant-typography,
+.ant-card span:not(.metric-value):not(.metric-icon),
+.ant-card div:not(.metric-value):not(.metric-icon) {
+  -webkit-text-fill-color: initial !important;
+  color: #262626 !important;
+}
+
+.ant-card .ant-typography-secondary {
+  color: #8c8c8c !important;
+  -webkit-text-fill-color: #8c8c8c !important;
+}
+
+/* Progress text fix */
+.ant-progress-text {
+  color: #262626 !important;
+  -webkit-text-fill-color: #262626 !important;
+}
+
+/* Divider fix */
+.ant-divider {
+  background: #f0f0f0 !important;
+  border-color: #f0f0f0 !important;
+}
+
+/* Space component fix */
+.ant-space {
+  position: relative;
+  z-index: 1;
+}
+
+.ant-space-item {
+  position: relative;
+  z-index: 1;
+}

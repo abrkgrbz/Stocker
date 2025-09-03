@@ -89,11 +89,16 @@
 .metric-value {
   font-size: 36px;
   font-weight: 700;
+  color: #667eea; /* Fallback color */
+  margin: 16px 0;
+}
+
+/* Only apply gradient to specific metric values that need it */
+.metric-value.gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 16px 0;
 }
 
 .metric-label {
@@ -106,10 +111,7 @@
 
 .metric-icon {
   font-size: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea; /* Fallback color */
 }
 
 /* Service Status Cards */

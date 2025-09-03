@@ -50,6 +50,7 @@ import CountUp from 'react-countup';
 import { useRealtimeData, useWebSocketData } from '../../hooks/useRealtimeData';
 import './monitoring.css';
 import './monitoring-enhanced.css';
+import './monitoring-text-fix.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
