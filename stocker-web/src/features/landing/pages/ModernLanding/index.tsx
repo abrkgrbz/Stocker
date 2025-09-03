@@ -61,6 +61,18 @@ export const ModernLanding: React.FC = () => {
   const { modal, notification } = App.useApp();
   const [activeFeature, setActiveFeature] = useState(0);
   const [selectedBusinessType, setSelectedBusinessType] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  
+  // Scroll listener for navigation and parallax
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const handleBusinessTypeSelect = (type: string, name: string) => {
     setSelectedBusinessType(type);
@@ -72,8 +84,22 @@ export const ModernLanding: React.FC = () => {
       icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />
     });
   };
-  const { ref: statsRef, inView: statsInView } = useInView({ triggerOnce: true });
-  const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true });
+  const { ref: statsRef, inView: statsInView } = useInView({ 
+    triggerOnce: true,
+    threshold: 0.1
+  });
+  const { ref: featuresRef, inView: featuresInView } = useInView({ 
+    triggerOnce: true,
+    threshold: 0.1
+  });
+  const { ref: pricingRef, inView: pricingInView } = useInView({ 
+    triggerOnce: true,
+    threshold: 0.1
+  });
+  const { ref: testimonialsRef, inView: testimonialsInView } = useInView({ 
+    triggerOnce: true,
+    threshold: 0.1
+  });
 
   // Hero typing animation
   const [displayText, setDisplayText] = useState('');
@@ -89,6 +115,14 @@ export const ModernLanding: React.FC = () => {
         clearInterval(timer);
       }
     }, 100);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-rotate features
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveFeature((prev) => (prev + 1) % features.length);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -307,7 +341,7 @@ export const ModernLanding: React.FC = () => {
     <div className="modern-landing">
       {/* Navigation */}
       <motion.nav 
-        className="modern-nav"
+        className={`modern-nav ${scrolled ? 'scrolled' : ''}`}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
@@ -334,7 +368,12 @@ export const ModernLanding: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-background">
+        <div 
+          className="hero-background"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`
+          }}
+        >
           {[...Array(20)].map((_, i) => (
             <motion.div
               key={i}
@@ -352,7 +391,8 @@ export const ModernLanding: React.FC = () => {
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                animationDelay: `${i * 0.3}s`
+                animationDelay: `${i * 0.3}s`,
+                transform: `translateY(${scrollY * (0.1 * (i % 3))}px)`
               }}
             />
           ))}
@@ -697,7 +737,7 @@ export const ModernLanding: React.FC = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="pricing-section">
+      <section id="pricing" className="pricing-section" ref={pricingRef}>
         <div className="container">
           <div className="section-header">
             <Tag color="purple" className="section-tag">Çözüm Önerileri</Tag>
@@ -798,7 +838,7 @@ export const ModernLanding: React.FC = () => {
               <Col xs={24} sm={12} lg={8} key={index}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  animate={pricingInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -10 }}
                   className={`pricing-card ${plan.popular ? 'popular' : ''}`}
@@ -889,7 +929,7 @@ export const ModernLanding: React.FC = () => {
       <SolutionsSection />
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="testimonials-section">
+      <section id="testimonials" className="testimonials-section" ref={testimonialsRef}>
         <div className="container">
           <div className="section-header">
             <Tag color="purple" className="section-tag">Referanslar</Tag>
@@ -902,7 +942,7 @@ export const ModernLanding: React.FC = () => {
               <Col xs={24} md={8} key={index}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  animate={testimonialsInView ? { opacity: 1, scale: 1 } : {}}
                   transition={{ delay: index * 0.1 }}
                   className="testimonial-card"
                 >
