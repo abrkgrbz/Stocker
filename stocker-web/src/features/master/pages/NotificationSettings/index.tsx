@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './notification-settings.css';
+import './notification-settings-enhanced.css';
 
 interface NotificationPreferences {
   email: {

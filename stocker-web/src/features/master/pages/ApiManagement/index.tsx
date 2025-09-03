@@ -81,6 +81,7 @@ import {
   Cell
 } from 'recharts';
 import './api-management.css';
+import './api-management-enhanced.css';
 
 dayjs.extend(relativeTime);
 

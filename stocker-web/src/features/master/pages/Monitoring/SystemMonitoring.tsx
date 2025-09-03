@@ -49,6 +49,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { useRealtimeData, useWebSocketData } from '../../hooks/useRealtimeData';
 import './monitoring.css';
+import './monitoring-enhanced.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
