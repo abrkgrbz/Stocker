@@ -316,21 +316,24 @@ export const ModernLanding: React.FC = () => {
   const testimonials = [
     {
       name: 'Ahmet Yılmaz',
-      company: 'Üretim Firması',
+      position: 'Genel Müdür',
+      company: 'TechCorp',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
       rating: 5,
       comment: 'Stocker ERP ile tüm departmanlarımızı tek platformda topladık. Üretimden satışa kadar her şey kontrol altında.'
     },
     {
       name: 'Ayşe Demir',
-      company: 'Toptan Ticaret',
+      position: 'Operasyon Direktörü',
+      company: 'GlobalTrade',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
       rating: 5,
       comment: 'Stok ve finans modülleri mükemmel entegre. E-fatura sistemi sayesinde muhasebe işlerimiz %80 hızlandı.'
     },
     {
       name: 'Mehmet Kara',
-      company: 'Perakende Zinciri',
+      position: 'Satış Müdürü',
+      company: 'RetailPlus',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
       rating: 5,
       comment: 'CRM modülü ile müşteri memnuniyetimiz arttı. Tüm şubelerimizi tek yerden yönetiyoruz.'
@@ -937,23 +940,64 @@ export const ModernLanding: React.FC = () => {
             <Paragraph>Stocker ERP'yi tercih eden işletmelerden geri bildirimler</Paragraph>
           </div>
 
-          <Row gutter={[32, 32]}>
+          {/* Client Logos */}
+          <div className="client-logos">
+            <motion.div 
+              className="logos-container"
+              initial={{ opacity: 0, y: 20 }}
+              animate={testimonialsInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6 }}
+            >
+              {[
+                { name: 'TechCorp', bg: '#667eea' },
+                { name: 'GlobalTrade', bg: '#764ba2' },
+                { name: 'RetailPlus', bg: '#f093fb' },
+                { name: 'LogiMove', bg: '#4facfe' },
+                { name: 'ProdFactory', bg: '#43e97b' },
+                { name: 'ServicePro', bg: '#fa709a' }
+              ].map((client, index) => (
+                <motion.div
+                  key={index}
+                  className="logo-card"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div 
+                    className="logo-placeholder"
+                    style={{ background: `linear-gradient(135deg, ${client.bg}20, ${client.bg}10)` }}
+                  >
+                    <span style={{ color: client.bg, fontWeight: 700, fontSize: 18 }}>
+                      {client.name}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+
+          <Row gutter={[32, 32]} style={{ marginTop: 60 }}>
             {testimonials.map((testimonial, index) => (
               <Col xs={24} md={8} key={index}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={testimonialsInView ? { opacity: 1, scale: 1 } : {}}
                   transition={{ delay: index * 0.1 }}
-                  className="testimonial-card"
+                  className="testimonial-card-modern"
                 >
-                  <Rate disabled defaultValue={testimonial.rating} />
+                  <div className="testimonial-header">
+                    <Avatar 
+                      src={testimonial.avatar} 
+                      size={64} 
+                      style={{ border: '4px solid white', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    />
+                    <Rate disabled defaultValue={testimonial.rating} style={{ marginTop: 12 }} />
+                  </div>
                   <p className="testimonial-comment">"{testimonial.comment}"</p>
-                  <div className="testimonial-author">
-                    <Avatar src={testimonial.avatar} size={48} />
-                    <div>
-                      <h4>{testimonial.name}</h4>
-                      <span>{testimonial.company}</span>
-                    </div>
+                  <div className="testimonial-footer">
+                    <h4>{testimonial.name}</h4>
+                    <span>{testimonial.position}</span>
+                    <div className="company-badge">{testimonial.company}</div>
                   </div>
                 </motion.div>
               </Col>
