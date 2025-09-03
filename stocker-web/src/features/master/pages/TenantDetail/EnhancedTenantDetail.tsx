@@ -174,6 +174,13 @@ const EnhancedTenantDetail: React.FC = () => {
     enabled: !!id,
   });
 
+  // Fetch statistics
+  const { data: statistics } = useQuery({
+    queryKey: ['tenant-statistics', id],
+    queryFn: () => masterTenantApi.getStatistics(id!),
+    enabled: !!id,
+  });
+
   // Map API data to component format
   const tenant: TenantDetailData | null = useMemo(() => {
     if (!apiTenant) return null;
@@ -232,13 +239,6 @@ const EnhancedTenantDetail: React.FC = () => {
       admins: [],
     };
   }, [apiTenant, statistics]);
-
-  // Fetch statistics
-  const { data: statistics } = useQuery({
-    queryKey: ['tenant-statistics', id],
-    queryFn: () => masterTenantApi.getStatistics(id!),
-    enabled: !!id,
-  });
 
   // Toggle status mutation
   const toggleStatusMutation = useMutation({
