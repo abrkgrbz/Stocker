@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api';
+import { api } from '@/services/api';
 
 export interface Customer {
   id: number;
@@ -118,65 +118,65 @@ class CustomerService {
   private readonly baseUrl = '/api/crm/customers';
 
   async getCustomers(params?: CustomerListParams): Promise<CustomerListResponse> {
-    const response = await apiClient.get(this.baseUrl, { params });
+    const response = await api.get(this.baseUrl, { params });
     return response.data;
   }
 
   async getCustomerById(id: number): Promise<Customer> {
-    const response = await apiClient.get(`${this.baseUrl}/${id}`);
+    const response = await api.get(`${this.baseUrl}/${id}`);
     return response.data;
   }
 
   async createCustomer(data: CreateCustomerDto): Promise<Customer> {
-    const response = await apiClient.post(this.baseUrl, data);
+    const response = await api.post(this.baseUrl, data);
     return response.data;
   }
 
   async updateCustomer(id: number, data: UpdateCustomerDto): Promise<Customer> {
-    const response = await apiClient.put(`${this.baseUrl}/${id}`, data);
+    const response = await api.put(`${this.baseUrl}/${id}`, data);
     return response.data;
   }
 
   async deleteCustomer(id: number): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${id}`);
+    await api.delete(`${this.baseUrl}/${id}`);
   }
 
   async getCustomerContacts(customerId: number): Promise<Contact[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/contacts`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/contacts`);
     return response.data;
   }
 
   async addContact(customerId: number, data: CreateContactDto): Promise<Contact> {
-    const response = await apiClient.post(`${this.baseUrl}/${customerId}/contacts`, data);
+    const response = await api.post(`${this.baseUrl}/${customerId}/contacts`, data);
     return response.data;
   }
 
   async updateContact(customerId: number, contactId: number, data: UpdateContactDto): Promise<Contact> {
-    const response = await apiClient.put(`${this.baseUrl}/${customerId}/contacts/${contactId}`, data);
+    const response = await api.put(`${this.baseUrl}/${customerId}/contacts/${contactId}`, data);
     return response.data;
   }
 
   async removeContact(customerId: number, contactId: number): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${customerId}/contacts/${contactId}`);
+    await api.delete(`${this.baseUrl}/${customerId}/contacts/${contactId}`);
   }
 
   async getCustomerOpportunities(customerId: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/opportunities`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/opportunities`);
     return response.data;
   }
 
   async getCustomerDeals(customerId: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/deals`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/deals`);
     return response.data;
   }
 
   async getCustomerActivities(customerId: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/activities`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/activities`);
     return response.data;
   }
 
   async getCustomerNotes(customerId: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/notes`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/notes`);
     return response.data;
   }
 
@@ -191,12 +191,12 @@ class CustomerService {
       revenue: number;
     }>;
   }> {
-    const response = await apiClient.get(`${this.baseUrl}/${customerId}/revenue`);
+    const response = await api.get(`${this.baseUrl}/${customerId}/revenue`);
     return response.data;
   }
 
   async exportCustomers(params?: CustomerListParams): Promise<Blob> {
-    const response = await apiClient.get(`${this.baseUrl}/export`, {
+    const response = await api.get(`${this.baseUrl}/export`, {
       params,
       responseType: 'blob'
     });
@@ -211,7 +211,7 @@ class CustomerService {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await apiClient.post(`${this.baseUrl}/import`, formData, {
+    const response = await api.post(`${this.baseUrl}/import`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -220,7 +220,7 @@ class CustomerService {
   }
 
   async mergeCustomers(primaryId: number, secondaryId: number): Promise<Customer> {
-    const response = await apiClient.post(`${this.baseUrl}/merge`, {
+    const response = await api.post(`${this.baseUrl}/merge`, {
       primaryId,
       secondaryId
     });
@@ -228,12 +228,12 @@ class CustomerService {
   }
 
   async getCustomerSegments(): Promise<string[]> {
-    const response = await apiClient.get(`${this.baseUrl}/segments`);
+    const response = await api.get(`${this.baseUrl}/segments`);
     return response.data;
   }
 
   async getIndustries(): Promise<string[]> {
-    const response = await apiClient.get(`${this.baseUrl}/industries`);
+    const response = await api.get(`${this.baseUrl}/industries`);
     return response.data;
   }
 }

@@ -168,4 +168,4 @@ const api = {
 };
 
 export default api;
-export { axiosInstance, API_BASE_URL };
+export { api, axiosInstance, API_BASE_URL };

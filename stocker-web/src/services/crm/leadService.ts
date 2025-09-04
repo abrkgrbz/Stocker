@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api';
+import { api } from '@/services/api';
 
 export interface Lead {
   id: number;
@@ -102,27 +102,27 @@ class LeadService {
   private readonly baseUrl = '/api/crm/leads';
 
   async getLeads(params?: LeadListParams): Promise<LeadListResponse> {
-    const response = await apiClient.get(this.baseUrl, { params });
+    const response = await api.get(this.baseUrl, { params });
     return response.data;
   }
 
   async getLeadById(id: number): Promise<Lead> {
-    const response = await apiClient.get(`${this.baseUrl}/${id}`);
+    const response = await api.get(`${this.baseUrl}/${id}`);
     return response.data;
   }
 
   async createLead(data: CreateLeadDto): Promise<Lead> {
-    const response = await apiClient.post(this.baseUrl, data);
+    const response = await api.post(this.baseUrl, data);
     return response.data;
   }
 
   async updateLead(id: number, data: UpdateLeadDto): Promise<Lead> {
-    const response = await apiClient.put(`${this.baseUrl}/${id}`, data);
+    const response = await api.put(`${this.baseUrl}/${id}`, data);
     return response.data;
   }
 
   async deleteLead(id: number): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${id}`);
+    await api.delete(`${this.baseUrl}/${id}`);
   }
 
   async convertLead(id: number, data: ConvertLeadDto): Promise<{
@@ -130,22 +130,22 @@ class LeadService {
     contactId: number;
     opportunityId?: number;
   }> {
-    const response = await apiClient.post(`${this.baseUrl}/${id}/convert`, data);
+    const response = await api.post(`${this.baseUrl}/${id}/convert`, data);
     return response.data;
   }
 
   async qualifyLead(id: number): Promise<Lead> {
-    const response = await apiClient.post(`${this.baseUrl}/${id}/qualify`);
+    const response = await api.post(`${this.baseUrl}/${id}/qualify`);
     return response.data;
   }
 
   async disqualifyLead(id: number, reason: string): Promise<Lead> {
-    const response = await apiClient.post(`${this.baseUrl}/${id}/disqualify`, { reason });
+    const response = await api.post(`${this.baseUrl}/${id}/disqualify`, { reason });
     return response.data;
   }
 
   async assignLead(id: number, ownerId: number): Promise<Lead> {
-    const response = await apiClient.post(`${this.baseUrl}/${id}/assign`, { ownerId });
+    const response = await api.post(`${this.baseUrl}/${id}/assign`, { ownerId });
     return response.data;
   }
 
@@ -157,35 +157,35 @@ class LeadService {
       applied: boolean;
     }>;
   }> {
-    const response = await apiClient.get(`${this.baseUrl}/${id}/score`);
+    const response = await api.get(`${this.baseUrl}/${id}/score`);
     return response.data;
   }
 
   async recalculateScore(id: number): Promise<Lead> {
-    const response = await apiClient.post(`${this.baseUrl}/${id}/recalculate-score`);
+    const response = await api.post(`${this.baseUrl}/${id}/recalculate-score`);
     return response.data;
   }
 
   async getLeadActivities(id: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${id}/activities`);
+    const response = await api.get(`${this.baseUrl}/${id}/activities`);
     return response.data;
   }
 
   async getLeadNotes(id: number): Promise<any[]> {
-    const response = await apiClient.get(`${this.baseUrl}/${id}/notes`);
+    const response = await api.get(`${this.baseUrl}/${id}/notes`);
     return response.data;
   }
 
   async bulkAssignLeads(leadIds: number[], ownerId: number): Promise<void> {
-    await apiClient.post(`${this.baseUrl}/bulk-assign`, { leadIds, ownerId });
+    await api.post(`${this.baseUrl}/bulk-assign`, { leadIds, ownerId });
   }
 
   async bulkUpdateStatus(leadIds: number[], status: string): Promise<void> {
-    await apiClient.post(`${this.baseUrl}/bulk-update-status`, { leadIds, status });
+    await api.post(`${this.baseUrl}/bulk-update-status`, { leadIds, status });
   }
 
   async exportLeads(params?: LeadListParams): Promise<Blob> {
-    const response = await apiClient.get(`${this.baseUrl}/export`, {
+    const response = await api.get(`${this.baseUrl}/export`, {
       params,
       responseType: 'blob'
     });
@@ -200,7 +200,7 @@ class LeadService {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await apiClient.post(`${this.baseUrl}/import`, formData, {
+    const response = await api.post(`${this.baseUrl}/import`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
