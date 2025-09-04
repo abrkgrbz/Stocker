@@ -64,7 +64,7 @@ public class DesignTimeTenantService : ITenantService
 
     public Guid? GetCurrentTenantId() => _tenantId;
     public string? GetCurrentTenantName() => "Design Tenant";
-    public string? GetConnectionString() => "Server=DESKTOP-A1C2AO3;Database=StockerTenantDb_Design;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    public string? GetConnectionString() => "Server=coolify.stoocker.app;Database=StockerTenantDb_Design;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true";
     public Task<bool> SetCurrentTenant(Guid tenantId) => Task.FromResult(true);
     public Task<bool> SetCurrentTenant(string tenantIdentifier) => Task.FromResult(true);
 }

@@ -9,6 +9,10 @@ import {
   SettingOutlined,
   LogoutOutlined,
   FileTextOutlined,
+  TeamOutlined,
+  FundProjectionScreenOutlined,
+  CalendarOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -36,6 +40,33 @@ export const TenantLayout: React.FC = () => {
       path: `/app/${tenantId}/crm`,
       name: 'CRM',
       icon: <ContactsOutlined />,
+      routes: [
+        {
+          path: `/app/${tenantId}/crm/dashboard`,
+          name: 'CRM Dashboard',
+          icon: <DashboardOutlined />,
+        },
+        {
+          path: `/app/${tenantId}/crm/leads`,
+          name: 'Potansiyel Müşteriler',
+          icon: <SolutionOutlined />,
+        },
+        {
+          path: `/app/${tenantId}/crm/customers`,
+          name: 'Müşteriler',
+          icon: <TeamOutlined />,
+        },
+        {
+          path: `/app/${tenantId}/crm/pipeline`,
+          name: 'Satış Hattı',
+          icon: <FundProjectionScreenOutlined />,
+        },
+        {
+          path: `/app/${tenantId}/crm/activities`,
+          name: 'Aktiviteler',
+          icon: <CalendarOutlined />,
+        },
+      ],
     },
     {
       path: `/app/${tenantId}/inventory`,

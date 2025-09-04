@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Stocker.Modules.CRM.Application.Mappings;
 
 namespace Stocker.Modules.CRM.Application;
 
@@ -22,6 +23,9 @@ public static class DependencyInjection
 
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
+
+        // Add AutoMapper
+        services.AddAutoMapper(typeof(CRMProfile));
 
         // Validation behavior is already registered in the main application
         // No need to register it again here

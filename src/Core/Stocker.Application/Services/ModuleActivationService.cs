@@ -39,7 +39,7 @@ public class ModuleActivationService : IModuleActivationService
     {
         // Register available modules and their activation handlers
         // These will be resolved from DI container when needed
-        _moduleHandlers["CRM"] = typeof(Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService);
+        _moduleHandlers["CRM"] = typeof(Stocker.Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService);
         _moduleHandlers["Inventory"] = typeof(object); // Placeholder for future implementation
         _moduleHandlers["Sales"] = typeof(object);
         _moduleHandlers["Purchase"] = typeof(object);
@@ -67,7 +67,7 @@ public class ModuleActivationService : IModuleActivationService
                 using var scope = _serviceProvider.CreateScope();
                 var crmService = scope.ServiceProvider.GetService(handlerType);
                 
-                if (crmService is Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService tenantCrmService)
+                if (crmService is Stocker.Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService tenantCrmService)
                 {
                     var connectionString = GetTenantConnectionString(tenantId);
                     return await tenantCrmService.EnableCRMForTenantAsync(tenantId, connectionString);
@@ -106,7 +106,7 @@ public class ModuleActivationService : IModuleActivationService
                 using var scope = _serviceProvider.CreateScope();
                 var crmService = scope.ServiceProvider.GetService(handlerType);
                 
-                if (crmService is Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService tenantCrmService)
+                if (crmService is Stocker.Modules.CRM.Infrastructure.Services.ITenantCRMDatabaseService tenantCrmService)
                 {
                     return await tenantCrmService.DisableCRMForTenantAsync(tenantId);
                 }

@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\Infrastructure\Stocker.Persistence\Stocker.Persistence.csproj" />
     <ProjectReference Include="..\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj" />
   </ItemGroup>
 
 </Project>
