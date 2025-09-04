@@ -298,7 +298,7 @@ builder.Services.AddSwaggerGen(c =>
         return docName switch
         {
             "master" => path.Contains("/master/"),
-            "tenant" => path.Contains("/tenant/"),
+            "tenant" => path.Contains("/tenant/") || path.Contains("/crm/"),  // Include CRM endpoints
             "public" => path.Contains("/public/") || path.Contains("/auth"),
             "admin" => path.Contains("/admin/"),
             _ => false
