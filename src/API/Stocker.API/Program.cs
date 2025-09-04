@@ -368,10 +368,11 @@ builder.Services.AddAuthorization(options =>
               .RequireClaim("TenantId"));
 });
 
-// Add Tenant-based Rate Limiting
-builder.Services.AddTenantRateLimiting(builder.Configuration);
+// Add Tenant-based Rate Limiting - TEMPORARILY DISABLED
+// builder.Services.AddTenantRateLimiting(builder.Configuration);
 
-// Add Standard Rate Limiting (as fallback)
+// Add Standard Rate Limiting (as fallback) - TEMPORARILY DISABLED
+/*
 builder.Services.AddRateLimiter(options =>
 {
     // Global limiter (skip for SignalR and public endpoints)
@@ -426,6 +427,7 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+*/
 
 var app = builder.Build();
 
@@ -496,8 +498,8 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add Tenant-based Rate Limiting - After authentication
-app.UseTenantRateLimiting();
+// Add Tenant-based Rate Limiting - After authentication - TEMPORARILY DISABLED
+// app.UseTenantRateLimiting();
 
 // Add Standard Rate Limiting (as fallback)
 app.UseRateLimiter();
