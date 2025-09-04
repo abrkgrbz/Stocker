@@ -14,7 +14,7 @@ public class LeadScoringRule : TenantEntity
     public bool IsActive { get; private set; }
     public int Priority { get; private set; }
     
-    protected LeadScoringRule() { }
+    protected LeadScoringRule() : base() { }
     
     public LeadScoringRule(
         Guid tenantId,
@@ -23,7 +23,7 @@ public class LeadScoringRule : TenantEntity
         string field,
         string @operator,
         int score,
-        string? value = null) : base(tenantId)
+        string? value = null) : base(Guid.NewGuid(), tenantId)
     {
         Name = name;
         Category = category;
@@ -246,7 +246,7 @@ public class LeadScoringHistory : TenantEntity
     
     public virtual Lead Lead { get; private set; }
     
-    protected LeadScoringHistory() { }
+    protected LeadScoringHistory() : base() { }
     
     public LeadScoringHistory(
         Guid tenantId,
@@ -254,7 +254,7 @@ public class LeadScoringHistory : TenantEntity
         int previousScore,
         int newScore,
         string? ruleApplied,
-        string? reason) : base(tenantId)
+        string? reason) : base(Guid.NewGuid(), tenantId)
     {
         LeadId = leadId;
         PreviousScore = previousScore;

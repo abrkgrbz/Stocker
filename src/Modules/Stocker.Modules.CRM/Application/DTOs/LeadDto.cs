@@ -30,12 +30,15 @@ public class LeadDto
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
     public Guid? AssignedToUserId { get; set; }
+    public string? AssignedToName { get; set; }
     public DateTime? ConvertedDate { get; set; }
     public Guid? ConvertedToCustomerId { get; set; }
     public bool IsConverted { get; set; }
     public int Score { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<ActivityDto>? Activities { get; set; }
+    public List<NoteDto>? Notes { get; set; }
 }
 
 /// <summary>

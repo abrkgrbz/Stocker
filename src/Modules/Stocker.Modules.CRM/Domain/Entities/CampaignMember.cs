@@ -28,13 +28,13 @@ public class CampaignMember : TenantEntity
     public virtual Lead? Lead { get; private set; }
     public virtual Opportunity? ConvertedOpportunity { get; private set; }
     
-    protected CampaignMember() { }
+    protected CampaignMember() : base() { }
     
     public CampaignMember(
         Guid tenantId,
         int campaignId,
         int? contactId = null,
-        int? leadId = null) : base(tenantId)
+        int? leadId = null) : base(Guid.NewGuid(), tenantId)
     {
         if (contactId == null && leadId == null)
             throw new ArgumentException("Either ContactId or LeadId must be provided");

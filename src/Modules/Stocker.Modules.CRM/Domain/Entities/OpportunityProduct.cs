@@ -19,7 +19,7 @@ public class OpportunityProduct : TenantEntity
     
     public virtual Opportunity Opportunity { get; private set; }
     
-    protected OpportunityProduct() { }
+    protected OpportunityProduct() : base() { }
     
     public OpportunityProduct(
         Guid tenantId,
@@ -28,7 +28,7 @@ public class OpportunityProduct : TenantEntity
         string productName,
         decimal quantity,
         Money unitPrice,
-        int sortOrder = 0) : base(tenantId)
+        int sortOrder = 0) : base(Guid.NewGuid(), tenantId)
     {
         OpportunityId = opportunityId;
         ProductId = productId;

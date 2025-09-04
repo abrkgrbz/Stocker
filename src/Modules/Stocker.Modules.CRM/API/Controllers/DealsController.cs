@@ -69,7 +69,10 @@ public class DealsController : ControllerBase
     public async Task<ActionResult<DealDto>> CreateDeal(CreateDealCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetDeal), new { id = result.Id }, result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return CreatedAtAction(nameof(GetDeal), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPut("{id}")]
@@ -79,7 +82,10 @@ public class DealsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}")]
@@ -97,7 +103,10 @@ public class DealsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/close-won")]
@@ -107,7 +116,10 @@ public class DealsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/close-lost")]
@@ -117,7 +129,10 @@ public class DealsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}/activities")]
@@ -143,7 +158,10 @@ public class DealsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}/products/{productId}")]

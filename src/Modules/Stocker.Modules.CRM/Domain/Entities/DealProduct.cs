@@ -24,7 +24,7 @@ public class DealProduct : TenantEntity
     
     public virtual Deal Deal { get; private set; }
     
-    protected DealProduct() { }
+    protected DealProduct() : base() { }
     
     public DealProduct(
         Guid tenantId,
@@ -34,7 +34,7 @@ public class DealProduct : TenantEntity
         decimal quantity,
         Money unitPrice,
         decimal tax = 0,
-        int sortOrder = 0) : base(tenantId)
+        int sortOrder = 0) : base(Guid.NewGuid(), tenantId)
     {
         DealId = dealId;
         ProductId = productId;

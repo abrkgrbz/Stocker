@@ -37,14 +37,14 @@ public class Note : TenantEntity
     public virtual Deal? Deal { get; private set; }
     public virtual Activity? Activity { get; private set; }
     
-    protected Note() { }
+    protected Note() : base() { }
     
     public Note(
         Guid tenantId,
         string title,
         string content,
         NoteType type,
-        int createdById) : base(tenantId)
+        int createdById) : base(Guid.NewGuid(), tenantId)
     {
         Title = title;
         Content = content;

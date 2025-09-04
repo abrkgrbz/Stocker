@@ -99,4 +99,9 @@ public class LeadRepository : BaseRepository<Lead>, ILeadRepository
             .OrderByDescending(l => l.Score)
             .ToListAsync(cancellationToken);
     }
+
+    public IQueryable<Lead> GetQueryable()
+    {
+        return _dbSet.AsQueryable();
+    }
 }

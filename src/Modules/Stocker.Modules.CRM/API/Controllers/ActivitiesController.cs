@@ -71,7 +71,10 @@ public class ActivitiesController : ControllerBase
     public async Task<ActionResult<ActivityDto>> CreateActivity(CreateActivityCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetActivity), new { id = result.Id }, result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return CreatedAtAction(nameof(GetActivity), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPut("{id}")]
@@ -81,7 +84,10 @@ public class ActivitiesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}")]
@@ -99,7 +105,10 @@ public class ActivitiesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/cancel")]
@@ -109,7 +118,10 @@ public class ActivitiesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/reschedule")]
@@ -119,7 +131,10 @@ public class ActivitiesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpGet("upcoming")]

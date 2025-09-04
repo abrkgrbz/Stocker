@@ -32,8 +32,11 @@ public static class DependencyInjection
         services.Configure<StorageSettings>(configuration.GetSection("StorageSettings"));
         services.Configure<ExternalApiSettings>(configuration.GetSection("ExternalApiKeys"));
 
-        // Add AutoMapper
-        services.AddAutoMapper(assembly);
+        // Add AutoMapper - using specific package to avoid ambiguity
+        services.AddSingleton<AutoMapper.IConfigurationProvider>(sp =>
+            new AutoMapper.MapperConfiguration(cfg => cfg.AddMaps(assembly)));
+        services.AddScoped<AutoMapper.IMapper>(sp =>
+            new AutoMapper.Mapper(sp.GetRequiredService<AutoMapper.IConfigurationProvider>()));
 
         // Add FluentValidation with Turkish language
         services.AddValidatorsFromAssembly(assembly);

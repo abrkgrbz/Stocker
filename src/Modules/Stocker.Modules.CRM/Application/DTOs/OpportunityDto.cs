@@ -35,12 +35,32 @@ public class OpportunityDto
 public class OpportunityProductDto
 {
     public Guid Id { get; set; }
-    public Guid OpportunityId { get; set; }
-    public Guid ProductId { get; set; }
+    public int OpportunityId { get; set; }
+    public int ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string? ProductCode { get; set; }
-    public int Quantity { get; set; }
+    public string? Description { get; set; }
+    public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
-    public decimal DiscountPercentage { get; set; }
-    public decimal TotalPrice => (UnitPrice * Quantity) * (1 - DiscountPercentage / 100);
+    public string Currency { get; set; } = "USD";
+    public decimal DiscountPercent { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal TotalPrice { get; set; }
+    public int SortOrder { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class CreateOpportunityProductDto
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string? ProductCode { get; set; }
+    public string? Description { get; set; }
+    public decimal Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public string Currency { get; set; } = "USD";
+    public decimal DiscountPercent { get; set; } = 0;
+    public decimal DiscountAmount { get; set; } = 0;
+    public int SortOrder { get; set; } = 0;
 }

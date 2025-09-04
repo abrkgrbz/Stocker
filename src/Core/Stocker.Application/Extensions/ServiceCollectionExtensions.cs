@@ -21,8 +21,11 @@ public static class ServiceCollectionExtensions
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
 
-        // Add AutoMapper
-        services.AddAutoMapper(assembly);
+        // Add AutoMapper - using specific package to avoid ambiguity
+        services.AddSingleton<AutoMapper.IConfigurationProvider>(sp =>
+            new AutoMapper.MapperConfiguration(cfg => cfg.AddMaps(assembly)));
+        services.AddScoped<AutoMapper.IMapper>(sp =>
+            new AutoMapper.Mapper(sp.GetRequiredService<AutoMapper.IConfigurationProvider>()));
 
         // Add CQRS Pipeline Behaviors
         // NOTE: These are now registered via MediatR configuration in AddApplication()

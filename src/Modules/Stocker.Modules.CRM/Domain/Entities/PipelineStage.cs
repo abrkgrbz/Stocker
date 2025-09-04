@@ -17,7 +17,7 @@ public class PipelineStage : TenantEntity
     
     public virtual Pipeline Pipeline { get; private set; }
     
-    protected PipelineStage() { }
+    protected PipelineStage() : base() { }
     
     public PipelineStage(
         Guid tenantId,
@@ -26,7 +26,7 @@ public class PipelineStage : TenantEntity
         decimal probability,
         int displayOrder,
         bool isWon = false,
-        bool isLost = false) : base(tenantId)
+        bool isLost = false) : base(Guid.NewGuid(), tenantId)
     {
         PipelineId = pipelineId;
         Name = name;

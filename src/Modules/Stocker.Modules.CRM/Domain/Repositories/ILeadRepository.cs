@@ -58,4 +58,9 @@ public interface ILeadRepository : IRepository<Lead>
     /// Gets high-scoring leads
     /// </summary>
     Task<IReadOnlyList<Lead>> GetHighScoringLeadsAsync(int minimumScore = 70, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a queryable for advanced queries
+    /// </summary>
+    IQueryable<Lead> GetQueryable();
 }

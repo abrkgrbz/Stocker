@@ -153,7 +153,7 @@ public class TenantRateLimitingMiddleware
     {
         var cacheKey = $"rate_limiter_{tenantId}";
         
-        return _cache.GetOrCreate(cacheKey, entry =>
+        return _cache.GetOrCreate<RateLimiter>(cacheKey, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(5);
             
@@ -201,7 +201,7 @@ public class TenantRateLimitingMiddleware
         });
     }
 
-    private TenantRateLimitOptions GetRateLimitOptions(string tenantId, HttpContext context)
+    private TenantRateLimitingOptions GetRateLimitOptions(string tenantId, HttpContext context)
     {
         // Customize rate limits based on tenant, endpoint, or subscription level
         var endpoint = context.Request.Path.Value?.ToLower() ?? "";
@@ -209,7 +209,7 @@ public class TenantRateLimitingMiddleware
         // Special limits for auth endpoints
         if (endpoint.Contains("/auth") || endpoint.Contains("/login"))
         {
-            return new TenantRateLimitOptions
+            return new TenantRateLimitingOptions
             {
                 Algorithm = RateLimitAlgorithm.FixedWindow,
                 PermitLimit = 5,
@@ -226,7 +226,7 @@ public class TenantRateLimitingMiddleware
             
             if (isPremiumTenant)
             {
-                return new TenantRateLimitOptions
+                return new TenantRateLimitingOptions
                 {
                     Algorithm = RateLimitAlgorithm.TokenBucket,
                     PermitLimit = 1000,
@@ -248,17 +248,19 @@ public class TenantRateLimitingMiddleware
         return false;
     }
 
-    private void AddRateLimitHeaders(HttpContext context, RateLeasedResource lease)
+    private void AddRateLimitHeaders(HttpContext context, RateLimitLease lease)
     {
         var headers = context.Response.Headers;
         
         // Add standard rate limit headers
         headers["X-RateLimit-Limit"] = _options.PermitLimit.ToString();
         
-        if (lease.Metadata.TryGetValue("RETRY_AFTER", out var retryAfter))
+        // In .NET 9, RateLimitLease doesn't have Metadata property
+        // We'll use a simplified approach
+        if (!lease.IsAcquired)
         {
             headers["X-RateLimit-Remaining"] = "0";
-            headers["Retry-After"] = retryAfter.ToString();
+            headers["Retry-After"] = _options.WindowSeconds.ToString();
         }
         else
         {
@@ -271,7 +273,7 @@ public class TenantRateLimitingMiddleware
         headers["X-RateLimit-Reset"] = resetTime.ToString();
     }
 
-    private async Task HandleRateLimitExceeded(HttpContext context, RateLeasedResource lease)
+    private async Task HandleRateLimitExceeded(HttpContext context, RateLimitLease lease)
     {
         _logger.LogWarning(
             "Rate limit exceeded for {TenantId} on {Path}", 

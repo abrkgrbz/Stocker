@@ -34,6 +34,8 @@ public class Deal : TenantAggregateRoot
     public int ActivitiesCount { get; private set; }
     public int EmailsCount { get; private set; }
     public string? Labels { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
     
     public virtual Customer? Customer { get; private set; }
     public virtual Contact? Contact { get; private set; }
@@ -43,7 +45,7 @@ public class Deal : TenantAggregateRoot
     public virtual IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
     public virtual IReadOnlyCollection<DealProduct> Products => _products.AsReadOnly();
     
-    protected Deal() { }
+    protected Deal() : base() { }
     
     public Deal(
         Guid tenantId,
@@ -51,7 +53,7 @@ public class Deal : TenantAggregateRoot
         int pipelineId,
         int stageId,
         Money value,
-        int ownerId) : base(tenantId)
+        int ownerId) : base(Guid.NewGuid(), tenantId)
     {
         Name = name;
         PipelineId = pipelineId;
@@ -64,6 +66,7 @@ public class Deal : TenantAggregateRoot
         Currency = value.Currency;
         ActivitiesCount = 0;
         EmailsCount = 0;
+        CreatedAt = DateTime.UtcNow;
     }
     
     public void UpdateDetails(string name, string? description, Money value)
@@ -71,6 +74,7 @@ public class Deal : TenantAggregateRoot
         Name = name;
         Description = description;
         Value = value;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetRecurringValue(Money recurringValue, RecurringPeriod period, int? cycles = null)
@@ -78,12 +82,14 @@ public class Deal : TenantAggregateRoot
         RecurringValue = recurringValue;
         RecurringPeriod = period;
         RecurringCycles = cycles;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AssignToCustomer(int customerId, int? contactId = null)
     {
         CustomerId = customerId;
         ContactId = contactId;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MoveToStage(int stageId, decimal probability)
@@ -91,11 +97,13 @@ public class Deal : TenantAggregateRoot
         StageId = stageId;
         Probability = probability;
         UpdateRottenStatus();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetExpectedCloseDate(DateTime? date)
     {
         ExpectedCloseDate = date;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MarkAsWon(DateTime closedDate)
@@ -103,6 +111,7 @@ public class Deal : TenantAggregateRoot
         Status = DealStatus.Won;
         ActualCloseDate = closedDate;
         Probability = 100;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MarkAsLost(DateTime closedDate, string lostReason)
@@ -111,6 +120,7 @@ public class Deal : TenantAggregateRoot
         ActualCloseDate = closedDate;
         LostReason = lostReason;
         Probability = 0;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void Reopen()
@@ -119,21 +129,25 @@ public class Deal : TenantAggregateRoot
         ActualCloseDate = null;
         LostReason = null;
         UpdateRottenStatus();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void Delete()
     {
         Status = DealStatus.Deleted;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetPriority(DealPriority priority)
     {
         Priority = priority;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetLabels(string labels)
     {
         Labels = labels;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddActivity(Activity activity)
@@ -156,23 +170,27 @@ public class Deal : TenantAggregateRoot
         }
         
         UpdateRottenStatus();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddNote(Note note)
     {
         _notes.Add(note);
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddProduct(DealProduct product)
     {
         _products.Add(product);
         RecalculateValue();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void RemoveProduct(DealProduct product)
     {
         _products.Remove(product);
         RecalculateValue();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     private void RecalculateValue()
@@ -191,7 +209,7 @@ public class Deal : TenantAggregateRoot
         
         var daysSinceLastActivity = LastActivityDate.HasValue
             ? (int)(DateTime.UtcNow - LastActivityDate.Value).TotalDays
-            : (int)(DateTime.UtcNow - CreatedDate).TotalDays;
+            : (int)(DateTime.UtcNow - CreatedAt).TotalDays;
             
         // Deal is considered "rotten" if no activity for more than 30 days
         RottenDays = daysSinceLastActivity > 30 ? daysSinceLastActivity : null;
@@ -215,7 +233,7 @@ public class Deal : TenantAggregateRoot
     
     public int GetDaysInCurrentStage()
     {
-        return (int)(DateTime.UtcNow - UpdatedDate).TotalDays;
+        return (int)(DateTime.UtcNow - (UpdatedAt ?? CreatedAt)).TotalDays;
     }
     
     public int? GetDaysUntilExpectedClose()

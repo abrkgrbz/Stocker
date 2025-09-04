@@ -31,6 +31,8 @@ public class Opportunity : TenantAggregateRoot
     public int? ParentOpportunityId { get; private set; }
     public string? NextStep { get; private set; }
     public OpportunityPriority Priority { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
     
     public virtual Customer? Customer { get; private set; }
     public virtual Contact? Contact { get; private set; }
@@ -43,7 +45,7 @@ public class Opportunity : TenantAggregateRoot
     public virtual IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
     public virtual IReadOnlyCollection<OpportunityProduct> Products => _products.AsReadOnly();
     
-    protected Opportunity() { }
+    protected Opportunity() : base() { }
     
     public Opportunity(
         Guid tenantId,
@@ -52,7 +54,7 @@ public class Opportunity : TenantAggregateRoot
         int stageId,
         Money amount,
         DateTime expectedCloseDate,
-        int ownerId) : base(tenantId)
+        int ownerId) : base(Guid.NewGuid(), tenantId)
     {
         Name = name;
         PipelineId = pipelineId;
@@ -65,6 +67,7 @@ public class Opportunity : TenantAggregateRoot
         Priority = OpportunityPriority.Medium;
         Type = OpportunityType.NewBusiness;
         Source = OpportunitySource.Direct;
+        CreatedAt = DateTime.UtcNow;
     }
     
     public void UpdateDetails(string name, string? description, Money amount, DateTime expectedCloseDate)
@@ -73,6 +76,7 @@ public class Opportunity : TenantAggregateRoot
         Description = description;
         Amount = amount;
         ExpectedCloseDate = expectedCloseDate;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AssignToCustomer(int customerId, int? contactId = null)
@@ -80,6 +84,7 @@ public class Opportunity : TenantAggregateRoot
         CustomerId = customerId;
         ContactId = contactId;
         LeadId = null;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AssignToLead(int leadId)
@@ -87,12 +92,14 @@ public class Opportunity : TenantAggregateRoot
         LeadId = leadId;
         CustomerId = null;
         ContactId = null;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MoveToStage(int stageId, decimal probability)
     {
         StageId = stageId;
         Probability = probability;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MarkAsWon(DateTime closedDate)
@@ -100,6 +107,7 @@ public class Opportunity : TenantAggregateRoot
         Status = OpportunityStatus.Won;
         ActualCloseDate = closedDate;
         Probability = 100;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void MarkAsLost(DateTime closedDate, string lostReason, string? competitorName = null)
@@ -109,6 +117,7 @@ public class Opportunity : TenantAggregateRoot
         LostReason = lostReason;
         CompetitorName = competitorName;
         Probability = 0;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void Reopen()
@@ -117,53 +126,63 @@ public class Opportunity : TenantAggregateRoot
         ActualCloseDate = null;
         LostReason = null;
         CompetitorName = null;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetPriority(OpportunityPriority priority)
     {
         Priority = priority;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetSource(OpportunitySource source)
     {
         Source = source;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetType(OpportunityType type)
     {
         Type = type;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void SetNextStep(string? nextStep)
     {
         NextStep = nextStep;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void LinkToCampaign(int campaignId)
     {
         CampaignId = campaignId;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddActivity(Activity activity)
     {
         _activities.Add(activity);
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddNote(Note note)
     {
         _notes.Add(note);
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void AddProduct(OpportunityProduct product)
     {
         _products.Add(product);
         RecalculateAmount();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void RemoveProduct(OpportunityProduct product)
     {
         _products.Remove(product);
         RecalculateAmount();
+        UpdatedAt = DateTime.UtcNow;
     }
     
     private void RecalculateAmount()
@@ -180,7 +199,7 @@ public class Opportunity : TenantAggregateRoot
     public int GetDaysInCurrentStage()
     {
         // Would need to track stage history for accurate calculation
-        return (int)(DateTime.UtcNow - UpdatedDate).TotalDays;
+        return (int)(DateTime.UtcNow - (UpdatedAt ?? CreatedAt)).TotalDays;
     }
     
     public int GetDaysUntilExpectedClose()

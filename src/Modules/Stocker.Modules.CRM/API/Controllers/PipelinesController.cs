@@ -43,7 +43,10 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<PipelineDto>> CreatePipeline(CreatePipelineCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetPipeline), new { id = result.Id }, result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return CreatedAtAction(nameof(GetPipeline), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPut("{id}")]
@@ -53,7 +56,10 @@ public class PipelinesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}")]
@@ -79,7 +85,10 @@ public class PipelinesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPut("{id}/stages/{stageId}")]
@@ -89,7 +98,10 @@ public class PipelinesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}/stages/{stageId}")]
@@ -112,7 +124,10 @@ public class PipelinesController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}/statistics")]
@@ -128,7 +143,10 @@ public class PipelinesController : ControllerBase
     {
         var command = new ActivatePipelineCommand { Id = id };
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/deactivate")]
@@ -136,6 +154,9 @@ public class PipelinesController : ControllerBase
     {
         var command = new DeactivatePipelineCommand { Id = id };
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 }

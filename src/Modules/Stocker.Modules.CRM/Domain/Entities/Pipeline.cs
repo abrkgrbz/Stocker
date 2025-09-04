@@ -17,13 +17,13 @@ public class Pipeline : TenantAggregateRoot
     
     public virtual IReadOnlyCollection<PipelineStage> Stages => _stages.AsReadOnly();
     
-    protected Pipeline() { }
+    protected Pipeline() : base() { }
     
     public Pipeline(
         Guid tenantId,
         string name,
         PipelineType type,
-        string currency = "TRY") : base(tenantId)
+        string currency = "TRY") : base(Guid.NewGuid(), tenantId)
     {
         Name = name;
         Type = type;
@@ -75,13 +75,13 @@ public class Pipeline : TenantAggregateRoot
         if (_stages.Any(s => s.DisplayOrder == order))
             throw new InvalidOperationException($"Stage with order {order} already exists in this pipeline");
             
-        var stage = new PipelineStage(TenantId, Id, name, probability, order, isWon, isLost);
+        var stage = new PipelineStage(TenantId, Id.GetHashCode(), name, probability, order, isWon, isLost);
         _stages.Add(stage);
         
         return stage;
     }
     
-    public void RemoveStage(int stageId)
+    public void RemoveStage(Guid stageId)
     {
         var stage = _stages.FirstOrDefault(s => s.Id == stageId);
         if (stage == null)
@@ -100,7 +100,7 @@ public class Pipeline : TenantAggregateRoot
         }
     }
     
-    public void ReorderStages(List<int> stageIds)
+    public void ReorderStages(List<Guid> stageIds)
     {
         if (stageIds.Count != _stages.Count)
             throw new ArgumentException("Must provide all stage IDs for reordering");
@@ -125,7 +125,7 @@ public class Pipeline : TenantAggregateRoot
         return _stages.OrderBy(s => s.DisplayOrder).LastOrDefault();
     }
     
-    public PipelineStage? GetNextStage(int currentStageId)
+    public PipelineStage? GetNextStage(Guid currentStageId)
     {
         var currentStage = _stages.FirstOrDefault(s => s.Id == currentStageId);
         if (currentStage == null)
@@ -137,7 +137,7 @@ public class Pipeline : TenantAggregateRoot
             .FirstOrDefault();
     }
     
-    public PipelineStage? GetPreviousStage(int currentStageId)
+    public PipelineStage? GetPreviousStage(Guid currentStageId)
     {
         var currentStage = _stages.FirstOrDefault(s => s.Id == currentStageId);
         if (currentStage == null)

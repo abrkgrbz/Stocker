@@ -28,7 +28,7 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, IEnumerable<L
                 l.FirstName.Contains(request.Search) ||
                 l.LastName.Contains(request.Search) ||
                 l.Email.Contains(request.Search) ||
-                (l.Company != null && l.Company.Contains(request.Search)));
+                (l.CompanyName != null && l.CompanyName.Contains(request.Search)));
         }
 
         if (request.Status.HasValue)

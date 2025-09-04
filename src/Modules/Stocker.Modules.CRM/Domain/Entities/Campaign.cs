@@ -55,7 +55,7 @@ public class Campaign : TenantAggregateRoot
     public virtual IReadOnlyCollection<Lead> GeneratedLeads => _generatedLeads.AsReadOnly();
     public virtual IReadOnlyCollection<Opportunity> GeneratedOpportunities => _generatedOpportunities.AsReadOnly();
     
-    protected Campaign() { }
+    protected Campaign() : base() { }
     
     public Campaign(
         Guid tenantId,
@@ -64,7 +64,7 @@ public class Campaign : TenantAggregateRoot
         DateTime startDate,
         DateTime endDate,
         Money budgetedCost,
-        int ownerId) : base(tenantId)
+        int ownerId) : base(Guid.NewGuid(), tenantId)
     {
         Name = name;
         Type = type;

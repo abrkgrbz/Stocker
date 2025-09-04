@@ -61,7 +61,10 @@ public class CampaignsController : ControllerBase
     public async Task<ActionResult<CampaignDto>> CreateCampaign(CreateCampaignCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetCampaign), new { id = result.Id }, result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return CreatedAtAction(nameof(GetCampaign), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPut("{id}")]
@@ -71,7 +74,10 @@ public class CampaignsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}")]
@@ -87,7 +93,10 @@ public class CampaignsController : ControllerBase
     {
         var command = new StartCampaignCommand { Id = id };
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/pause")]
@@ -95,7 +104,10 @@ public class CampaignsController : ControllerBase
     {
         var command = new PauseCampaignCommand { Id = id };
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpPost("{id}/complete")]
@@ -103,7 +115,10 @@ public class CampaignsController : ControllerBase
     {
         var command = new CompleteCampaignCommand { Id = id };
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}/members")]
@@ -121,7 +136,10 @@ public class CampaignsController : ControllerBase
             return BadRequest("Id mismatch");
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id}/members/{memberId}")]
@@ -147,7 +165,10 @@ public class CampaignsController : ControllerBase
         };
         
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}/roi")]
@@ -170,6 +191,9 @@ public class CampaignsController : ControllerBase
     public async Task<ActionResult<BulkImportResultDto>> BulkImportMembers(BulkImportCampaignMembersCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(result.Value);
     }
 }

@@ -60,13 +60,13 @@ public class Activity : TenantEntity
     public virtual Opportunity? Opportunity { get; private set; }
     public virtual Deal? Deal { get; private set; }
     
-    protected Activity() { }
+    protected Activity() : base() { }
     
     public Activity(
         Guid tenantId,
         string subject,
         ActivityType type,
-        int ownerId) : base(tenantId)
+        int ownerId) : base(Guid.NewGuid(), tenantId)
     {
         Subject = subject;
         Type = type;

@@ -64,7 +64,10 @@ public class LeadsController : ControllerBase
     public async Task<ActionResult<LeadDto>> CreateLead(CreateLeadCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetLead), new { id = result.Id }, result);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return CreatedAtAction(nameof(GetLead), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPut("{id}")]

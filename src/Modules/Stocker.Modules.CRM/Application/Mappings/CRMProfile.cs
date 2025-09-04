@@ -14,34 +14,46 @@ public class CRMProfile : Profile
             .ForMember(dest => dest.Activities, opt => opt.Ignore())
             .ForMember(dest => dest.Notes, opt => opt.Ignore());
 
-        CreateMap<Customer, CustomerDto>()
-            .ForMember(dest => dest.OwnerName, opt => opt.Ignore())
-            .ForMember(dest => dest.Contacts, opt => opt.Ignore())
-            .ForMember(dest => dest.Opportunities, opt => opt.Ignore())
-            .ForMember(dest => dest.Activities, opt => opt.Ignore());
+        CreateMap<Customer, CustomerDto>();
 
         CreateMap<Contact, ContactDto>()
-            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
-            .ForMember(dest => dest.CustomerName, opt => opt.Ignore())
-            .ForMember(dest => dest.Activities, opt => opt.Ignore());
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"));
 
         CreateMap<Opportunity, OpportunityDto>()
+            .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Amount.Currency))
+            .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId.ToString()))
+            .ForMember(dest => dest.CustomerId, opt => opt.Ignore()) // ID conversion needed
+            .ForMember(dest => dest.PipelineId, opt => opt.Ignore()) // ID conversion needed
+            .ForMember(dest => dest.CurrentStageId, opt => opt.Ignore()) // ID conversion needed
             .ForMember(dest => dest.CustomerName, opt => opt.Ignore())
             .ForMember(dest => dest.PipelineName, opt => opt.Ignore())
             .ForMember(dest => dest.CurrentStageName, opt => opt.Ignore())
             .ForMember(dest => dest.OwnerName, opt => opt.Ignore())
             .ForMember(dest => dest.Products, opt => opt.Ignore())
             .ForMember(dest => dest.RecentActivities, opt => opt.Ignore())
-            .ForMember(dest => dest.Notes, opt => opt.Ignore());
+            .ForMember(dest => dest.Notes, opt => opt.Ignore())
+            .ForMember(dest => dest.Source, opt => opt.Ignore())
+            .ForMember(dest => dest.Score, opt => opt.Ignore());
 
         CreateMap<Deal, DealDto>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Value.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Value.Currency))
+            .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId.ToString()))
+            .ForMember(dest => dest.CustomerId, opt => opt.Ignore()) // ID conversion needed
+            .ForMember(dest => dest.PipelineId, opt => opt.Ignore()) // ID conversion needed
+            .ForMember(dest => dest.CurrentStageId, opt => opt.Ignore()) // ID conversion needed
             .ForMember(dest => dest.CustomerName, opt => opt.Ignore())
             .ForMember(dest => dest.PipelineName, opt => opt.Ignore())
             .ForMember(dest => dest.CurrentStageName, opt => opt.Ignore())
             .ForMember(dest => dest.OwnerName, opt => opt.Ignore())
             .ForMember(dest => dest.Products, opt => opt.Ignore())
             .ForMember(dest => dest.Activities, opt => opt.Ignore())
-            .ForMember(dest => dest.Notes, opt => opt.Ignore());
+            .ForMember(dest => dest.Notes, opt => opt.Ignore())
+            .ForMember(dest => dest.WonDetails, opt => opt.Ignore())
+            .ForMember(dest => dest.CompetitorName, opt => opt.Ignore())
+            .ForMember(dest => dest.Source, opt => opt.Ignore());
 
         CreateMap<Activity, ActivityDto>()
             .ForMember(dest => dest.LeadName, opt => opt.Ignore())
@@ -77,11 +89,16 @@ public class CRMProfile : Profile
             .ForMember(dest => dest.CreatedByName, opt => opt.Ignore());
 
         CreateMap<OpportunityProduct, OpportunityProductDto>()
-            .ForMember(dest => dest.ProductName, opt => opt.Ignore())
-            .ForMember(dest => dest.ProductCode, opt => opt.Ignore());
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountAmount.Amount))
+            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.UnitPrice.Currency));
 
         CreateMap<DealProduct, DealProductDto>()
-            .ForMember(dest => dest.ProductName, opt => opt.Ignore())
-            .ForMember(dest => dest.ProductCode, opt => opt.Ignore());
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountAmount.Amount))
+            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForMember(dest => dest.TaxAmount, opt => opt.MapFrom(src => src.TaxAmount.Amount))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.UnitPrice.Currency));
     }
 }
