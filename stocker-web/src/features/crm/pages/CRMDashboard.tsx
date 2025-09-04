@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Progress, List, Tag, Space, Avatar, Typography, Table, Timeline } from 'antd';
+import { Row, Col, Card, Statistic, Progress, List, Tag, Space, Avatar, Typography, Table, Timeline, Badge } from 'antd';
 import { 
   TeamOutlined, 
   RiseOutlined, 
