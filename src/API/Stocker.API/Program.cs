@@ -6,6 +6,7 @@ using Stocker.Identity.Extensions;
 using Stocker.Infrastructure.Extensions;
 using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.Middleware;
+using Stocker.Infrastructure.RateLimiting;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
 using Stocker.SharedKernel.Settings;
@@ -350,7 +351,10 @@ builder.Services.AddAuthorization(options =>
               .RequireClaim("TenantId"));
 });
 
-// Add Rate Limiting
+// Add Tenant-based Rate Limiting
+builder.Services.AddTenantRateLimiting(builder.Configuration);
+
+// Add Standard Rate Limiting (as fallback)
 builder.Services.AddRateLimiter(options =>
 {
     // Global limiter (skip for SignalR and public endpoints)
@@ -461,25 +465,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Add Security Headers (Skip for SignalR hubs)
-app.Use(async (context, next) =>
-{
-    // Skip security headers for SignalR hubs to allow WebSocket connections
-    if (!context.Request.Path.StartsWithSegments("/hubs"))
-    {
-        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-        context.Response.Headers.Append("X-Frame-Options", "DENY");
-        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-        // Update CSP to allow WebSocket connections
-        context.Response.Headers.Append("Content-Security-Policy", 
-            "default-src 'self'; " +
-            "script-src 'self' 'unsafe-inline'; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "connect-src 'self' wss: ws: https: http:;");
-    }
-    await next();
-});
+// Add Security Headers Middleware
+// Skip for SignalR hubs to allow WebSocket connections
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/hubs"),
+    appBuilder => appBuilder.UseSecurityHeaders());
 
 // Add Tenant Resolution Middleware - Authentication'dan önce olmalı
 // SignalR hub'ları için kontrol middleware'da yapılıyor
@@ -488,7 +478,10 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add Rate Limiting - Authentication'dan sonra olmalı
+// Add Tenant-based Rate Limiting - After authentication
+app.UseTenantRateLimiting();
+
+// Add Standard Rate Limiting (as fallback)
 app.UseRateLimiter();
 
 // Add Hangfire Dashboard (after authentication to secure it)

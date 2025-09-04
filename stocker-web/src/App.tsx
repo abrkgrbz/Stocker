@@ -85,6 +85,7 @@ const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'))
 const TestSweetAlert = lazy(() => import('@/features/test/TestSweetAlert'));
 
 // Lazy load module pages
+const CRMRoutes = lazy(() => import('@/features/crm').then(m => ({ default: m.CRMRoutes })));
 const CRMModule = lazy(() => import('@/features/modules/pages/CRMModule').then(m => ({ default: m.CRMModule })));
 const InventoryModule = lazy(() => import('@/features/modules/pages/InventoryModule').then(m => ({ default: m.InventoryModule })));
 const SalesModule = lazy(() => import('@/features/modules/pages/SalesModule').then(m => ({ default: m.SalesModule })));
@@ -320,7 +321,7 @@ function App() {
                   <Route path="invoices/new" element={<CreateInvoice />} />
                   <Route path="invoices/:id" element={<InvoiceDetail />} />
                   <Route path="invoices/:id/edit" element={<InvoiceEdit />} />
-                  <Route path="crm/*" element={<CRMModule />} />
+                  <Route path="crm/*" element={<CRMRoutes />} />
                   <Route path="inventory/*" element={<InventoryModule />} />
                   <Route path="sales/*" element={<SalesModule />} />
                   <Route path="finance/*" element={<FinanceModule />} />

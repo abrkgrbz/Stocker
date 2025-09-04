@@ -35,11 +35,11 @@ public class TenantDbContext : BaseDbContext
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
 
-    // Inventory
-    public DbSet<Product> Products => Set<Product>();
-    public DbSet<Stock> Stocks => Set<Stock>();
-    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
-    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    // Inventory - Moved to Stocker.Modules.Inventory
+    // public DbSet<Product> Products => Set<Product>();
+    // public DbSet<Stock> Stocks => Set<Stock>();
+    // public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    // public DbSet<Warehouse> Warehouses => Set<Warehouse>();
 
     // CRM Module - TODO: Move to separate CRM DbContext to avoid circular reference
     // public DbSet<Customer> Customers => Set<Customer>();
@@ -91,10 +91,11 @@ public class TenantDbContext : BaseDbContext
         modelBuilder.Entity<Branch>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         modelBuilder.Entity<TenantUser>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<StockMovement>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        // Inventory entities moved to Stocker.Modules.Inventory
+        // modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        // modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        // modelBuilder.Entity<StockMovement>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        // modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

@@ -12,9 +12,34 @@ public class CRMDbContext : DbContext
 {
     private readonly ITenantService _tenantService;
 
+    // Core CRM Entities
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Contact> Contacts { get; set; } = null!;
     public DbSet<Lead> Leads { get; set; } = null!;
+    
+    // Opportunity Management
+    public DbSet<Opportunity> Opportunities { get; set; } = null!;
+    public DbSet<OpportunityProduct> OpportunityProducts { get; set; } = null!;
+    
+    // Deal Management
+    public DbSet<Deal> Deals { get; set; } = null!;
+    public DbSet<DealProduct> DealProducts { get; set; } = null!;
+    
+    // Activity Management
+    public DbSet<Activity> Activities { get; set; } = null!;
+    public DbSet<Note> Notes { get; set; } = null!;
+    
+    // Campaign Management
+    public DbSet<Campaign> Campaigns { get; set; } = null!;
+    public DbSet<CampaignMember> CampaignMembers { get; set; } = null!;
+    
+    // Pipeline Management
+    public DbSet<Pipeline> Pipelines { get; set; } = null!;
+    public DbSet<PipelineStage> PipelineStages { get; set; } = null!;
+    
+    // Lead Scoring
+    public DbSet<LeadScoringRule> LeadScoringRules { get; set; } = null!;
+    public DbSet<LeadScoringHistory> LeadScoringHistories { get; set; } = null!;
 
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
@@ -31,13 +56,41 @@ public class CRMDbContext : DbContext
         // Apply configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CRMDbContext).Assembly);
 
+        // Set default schema for CRM module
+        modelBuilder.HasDefaultSchema("crm");
+        
         // Apply global query filters for multi-tenancy
         var tenantId = _tenantService.GetCurrentTenantId();
         if (tenantId.HasValue)
         {
+            // Core entities
             modelBuilder.Entity<Customer>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<Contact>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<Lead>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Opportunity entities
+            modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<OpportunityProduct>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Deal entities
+            modelBuilder.Entity<Deal>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<DealProduct>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Activity entities
+            modelBuilder.Entity<Activity>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Note>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Campaign entities
+            modelBuilder.Entity<Campaign>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CampaignMember>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Pipeline entities
+            modelBuilder.Entity<Pipeline>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PipelineStage>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            
+            // Lead scoring entities
+            modelBuilder.Entity<LeadScoringRule>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<LeadScoringHistory>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 
