@@ -501,8 +501,8 @@ app.UseAuthorization();
 // Add Tenant-based Rate Limiting - After authentication - TEMPORARILY DISABLED
 // app.UseTenantRateLimiting();
 
-// Add Standard Rate Limiting (as fallback)
-app.UseRateLimiter();
+// Add Standard Rate Limiting (as fallback) - TEMPORARILY DISABLED
+// app.UseRateLimiter();
 
 // Add Hangfire Dashboard (after authentication to secure it)
 app.UseHangfireDashboard(app.Configuration);
