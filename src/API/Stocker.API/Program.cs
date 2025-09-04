@@ -279,6 +279,14 @@ builder.Services.AddSwaggerGen(c =>
         c.IncludeXmlComments(xmlPath);
     }
     
+    // Include CRM module XML comments
+    var crmXmlFile = "Stocker.Modules.CRM.xml";
+    var crmXmlPath = Path.Combine(AppContext.BaseDirectory, crmXmlFile);
+    if (File.Exists(crmXmlPath))
+    {
+        c.IncludeXmlComments(crmXmlPath);
+    }
+    
     // Add schema filter to clean up schema display
     c.SchemaFilter<CleanupSchemaFilter>();
     
