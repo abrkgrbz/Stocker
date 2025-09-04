@@ -12,7 +12,7 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
-[ApiExplorerSettings(GroupName = "tenant")]
+[ApiExplorerSettings(GroupName = "crm")]
 public class LeadsController : ControllerBase
 {
     private readonly IMediator _mediator;

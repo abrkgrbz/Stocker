@@ -119,6 +119,14 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Tenant-specific endpoints for business operations"
     });
     
+    // CRM Module APIs
+    c.SwaggerDoc("crm", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Stocker CRM Module",
+        Version = "v1",
+        Description = "Customer Relationship Management module endpoints"
+    });
+    
     // Public APIs
     c.SwaggerDoc("public", new Microsoft.OpenApi.Models.OpenApiInfo
     {
@@ -298,7 +306,8 @@ builder.Services.AddSwaggerGen(c =>
         return docName switch
         {
             "master" => path.Contains("/master/"),
-            "tenant" => path.Contains("/tenant/") || path.Contains("/crm/"),  // Include CRM endpoints
+            "tenant" => path.Contains("/tenant/"),
+            "crm" => path.Contains("/crm/"),  // CRM Module endpoints
             "public" => path.Contains("/public/") || path.Contains("/auth"),
             "admin" => path.Contains("/admin/"),
             _ => false
@@ -427,6 +436,7 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
     c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
+    c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
     c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
     c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
     c.RoutePrefix = string.Empty; // Swagger UI at root
