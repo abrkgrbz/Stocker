@@ -34,7 +34,7 @@ export const TenantLayout: React.FC = () => {
       path: `/app/${tenantId}/invoices`,
       name: 'Faturalar',
       icon: <FileTextOutlined />,
-      badge: { count: 5, dot: true },
+      // badge: { count: 5, dot: true }, // ProLayout badge özelliği devre dışı
     },
     {
       path: `/app/${tenantId}/crm`,
