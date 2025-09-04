@@ -13,6 +13,11 @@ COPY src/Infrastructure/Stocker.Persistence/*.csproj ./src/Infrastructure/Stocke
 COPY src/Infrastructure/Stocker.Identity/*.csproj ./src/Infrastructure/Stocker.Identity/
 COPY src/Infrastructure/Stocker.SignalR/*.csproj ./src/Infrastructure/Stocker.SignalR/
 COPY src/Modules/Stocker.Modules.CRM/*.csproj ./src/Modules/Stocker.Modules.CRM/
+COPY src/Modules/Stocker.Modules.Inventory/*.csproj ./src/Modules/Stocker.Modules.Inventory/
+COPY src/Modules/Stocker.Modules.Sales/*.csproj ./src/Modules/Stocker.Modules.Sales/
+COPY src/Modules/Stocker.Modules.Purchase/*.csproj ./src/Modules/Stocker.Modules.Purchase/
+COPY src/Modules/Stocker.Modules.Finance/*.csproj ./src/Modules/Stocker.Modules.Finance/
+COPY src/Modules/Stocker.Modules.HR/*.csproj ./src/Modules/Stocker.Modules.HR/
 
 # Restore dependencies
 RUN dotnet restore
