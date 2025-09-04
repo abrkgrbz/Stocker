@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Customers.Commands; 
-using Stocker.Modules.CRM.Application.Features.Customers.Queries; 
+using Stocker.Modules.CRM.Application.Features.Customers.Queries;
+ 
 
 namespace Stocker.Modules.CRM.API.Controllers;
 
@@ -11,7 +12,6 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [Route("api/crm/[controller]")]
 [Authorize]
 [ApiExplorerSettings(GroupName = "tenant")]
-[Tags("CRM - Customers")]
 public class CustomersController : ControllerBase
 {
     private readonly IMediator _mediator;

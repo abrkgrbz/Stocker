@@ -12,7 +12,6 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [Route("api/crm/[controller]")]
 [Authorize]
 [ApiExplorerSettings(GroupName = "tenant")]
-[Tags("CRM - Activities")]
 public class ActivitiesController : ControllerBase
 {
     private readonly IMediator _mediator;
