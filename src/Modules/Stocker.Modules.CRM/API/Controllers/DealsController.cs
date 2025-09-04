@@ -11,6 +11,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Deals")]
 public class DealsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,6 +23,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<DealDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<DealDto>>> GetDeals(
         [FromQuery] string? search,
         [FromQuery] DealStatus? status,
@@ -54,6 +59,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(DealDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<DealDto>> GetDeal(Guid id)
     {
         var query = new GetDealByIdQuery { Id = id };
@@ -66,6 +74,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(DealDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<DealDto>> CreateDeal(CreateDealCommand command)
     {
         var result = await _mediator.Send(command);
@@ -76,6 +87,10 @@ public class DealsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(DealDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<DealDto>> UpdateDeal(Guid id, UpdateDealCommand command)
     {
         if (id != command.Id)
@@ -89,6 +104,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteDeal(Guid id)
     {
         var command = new DeleteDealCommand { Id = id };
@@ -97,6 +115,10 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost("{id}/move-stage")]
+    [ProducesResponseType(typeof(DealDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<DealDto>> MoveToStage(Guid id, MoveDealStageCommand command)
     {
         if (id != command.DealId)
@@ -110,6 +132,10 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost("{id}/close-won")]
+    [ProducesResponseType(typeof(DealDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<DealDto>> CloseWon(Guid id, CloseDealWonCommand command)
     {
         if (id != command.Id)
@@ -123,6 +149,10 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost("{id}/close-lost")]
+    [ProducesResponseType(typeof(DealDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<DealDto>> CloseLost(Guid id, CloseDealLostCommand command)
     {
         if (id != command.Id)
@@ -136,6 +166,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("{id}/activities")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetDealActivities(Guid id)
     {
         var query = new GetDealActivitiesQuery { DealId = id };
@@ -144,6 +177,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("{id}/products")]
+    [ProducesResponseType(typeof(IEnumerable<DealProductDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<DealProductDto>>> GetDealProducts(Guid id)
     {
         var query = new GetDealProductsQuery { DealId = id };
@@ -152,6 +188,10 @@ public class DealsController : ControllerBase
     }
 
     [HttpPost("{id}/products")]
+    [ProducesResponseType(typeof(DealProductDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<DealProductDto>> AddProduct(Guid id, AddDealProductCommand command)
     {
         if (id != command.DealId)
@@ -165,6 +205,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpDelete("{id}/products/{productId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveProduct(Guid id, Guid productId)
     {
         var command = new RemoveDealProductCommand 
@@ -178,6 +221,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("statistics")]
+    [ProducesResponseType(typeof(DealStatisticsDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<DealStatisticsDto>> GetDealStatistics(
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate)
@@ -193,6 +239,9 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("conversion-rates")]
+    [ProducesResponseType(typeof(ConversionRatesDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<ConversionRatesDto>> GetConversionRates(
         [FromQuery] Guid? pipelineId,
         [FromQuery] DateTime? fromDate,

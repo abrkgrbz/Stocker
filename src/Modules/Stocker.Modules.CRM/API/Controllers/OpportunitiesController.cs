@@ -11,6 +11,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Opportunities")]
 public class OpportunitiesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,6 +23,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<OpportunityDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<OpportunityDto>>> GetOpportunities(
         [FromQuery] string? search,
         [FromQuery] OpportunityStatus? status,
@@ -54,6 +59,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(OpportunityDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<OpportunityDto>> GetOpportunity(Guid id)
     {
         var query = new GetOpportunityByIdQuery { Id = id };
@@ -66,6 +74,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(OpportunityDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<OpportunityDto>> CreateOpportunity(CreateOpportunityCommand command)
     {
         var result = await _mediator.Send(command);
@@ -76,6 +87,10 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(OpportunityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<OpportunityDto>> UpdateOpportunity(Guid id, UpdateOpportunityCommand command)
     {
         if (id != command.Id)
@@ -89,6 +104,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteOpportunity(Guid id)
     {
         var command = new DeleteOpportunityCommand { Id = id };
@@ -97,6 +115,10 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPost("{id}/move-stage")]
+    [ProducesResponseType(typeof(OpportunityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<OpportunityDto>> MoveToStage(Guid id, MoveOpportunityStageCommand command)
     {
         if (id != command.OpportunityId)
@@ -110,6 +132,10 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPost("{id}/win")]
+    [ProducesResponseType(typeof(OpportunityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<OpportunityDto>> WinOpportunity(Guid id, WinOpportunityCommand command)
     {
         if (id != command.Id)
@@ -123,6 +149,10 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPost("{id}/lose")]
+    [ProducesResponseType(typeof(OpportunityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<OpportunityDto>> LoseOpportunity(Guid id, LoseOpportunityCommand command)
     {
         if (id != command.Id)
@@ -136,6 +166,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet("{id}/activities")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetOpportunityActivities(Guid id)
     {
         var query = new GetOpportunityActivitiesQuery { OpportunityId = id };
@@ -144,6 +177,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet("{id}/products")]
+    [ProducesResponseType(typeof(IEnumerable<OpportunityProductDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<OpportunityProductDto>>> GetOpportunityProducts(Guid id)
     {
         var query = new GetOpportunityProductsQuery { OpportunityId = id };
@@ -152,6 +188,10 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpPost("{id}/products")]
+    [ProducesResponseType(typeof(OpportunityProductDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<OpportunityProductDto>> AddProduct(Guid id, AddOpportunityProductCommand command)
     {
         if (id != command.OpportunityId)
@@ -165,6 +205,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpDelete("{id}/products/{productId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveProduct(Guid id, Guid productId)
     {
         var command = new RemoveOpportunityProductCommand 
@@ -178,6 +221,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet("pipeline-report")]
+    [ProducesResponseType(typeof(PipelineReportDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<PipelineReportDto>> GetPipelineReport(
         [FromQuery] Guid? pipelineId,
         [FromQuery] DateTime? fromDate,
@@ -195,6 +241,9 @@ public class OpportunitiesController : ControllerBase
     }
 
     [HttpGet("forecast")]
+    [ProducesResponseType(typeof(ForecastDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<ForecastDto>> GetSalesForecast(
         [FromQuery] DateTime fromDate,
         [FromQuery] DateTime toDate)

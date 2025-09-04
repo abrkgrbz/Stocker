@@ -10,6 +10,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Pipelines")]
 public class PipelinesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -20,6 +22,8 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<PipelineDto>), 200)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<PipelineDto>>> GetPipelines()
     {
         var query = new GetPipelinesQuery();
@@ -28,6 +32,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(PipelineDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<PipelineDto>> GetPipeline(Guid id)
     {
         var query = new GetPipelineByIdQuery { Id = id };
@@ -40,6 +47,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(PipelineDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<PipelineDto>> CreatePipeline(CreatePipelineCommand command)
     {
         var result = await _mediator.Send(command);
@@ -50,6 +60,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(PipelineDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineDto>> UpdatePipeline(Guid id, UpdatePipelineCommand command)
     {
         if (id != command.Id)
@@ -63,6 +77,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeletePipeline(Guid id)
     {
         var command = new DeletePipelineCommand { Id = id };
@@ -71,6 +88,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpGet("{id}/stages")]
+    [ProducesResponseType(typeof(IEnumerable<PipelineStageDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<PipelineStageDto>>> GetPipelineStages(Guid id)
     {
         var query = new GetPipelineStagesQuery { PipelineId = id };
@@ -79,6 +99,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPost("{id}/stages")]
+    [ProducesResponseType(typeof(PipelineStageDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineStageDto>> AddStage(Guid id, AddPipelineStageCommand command)
     {
         if (id != command.PipelineId)
@@ -92,6 +116,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPut("{id}/stages/{stageId}")]
+    [ProducesResponseType(typeof(PipelineStageDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineStageDto>> UpdateStage(Guid id, Guid stageId, UpdatePipelineStageCommand command)
     {
         if (id != command.PipelineId || stageId != command.StageId)
@@ -105,6 +133,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpDelete("{id}/stages/{stageId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveStage(Guid id, Guid stageId)
     {
         var command = new RemovePipelineStageCommand 
@@ -118,6 +149,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPost("{id}/stages/reorder")]
+    [ProducesResponseType(typeof(IEnumerable<PipelineStageDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<PipelineStageDto>>> ReorderStages(Guid id, ReorderPipelineStagesCommand command)
     {
         if (id != command.PipelineId)
@@ -131,6 +166,9 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpGet("{id}/statistics")]
+    [ProducesResponseType(typeof(PipelineStatisticsDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineStatisticsDto>> GetPipelineStatistics(Guid id)
     {
         var query = new GetPipelineStatisticsQuery { PipelineId = id };
@@ -139,6 +177,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPost("{id}/activate")]
+    [ProducesResponseType(typeof(PipelineDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineDto>> ActivatePipeline(Guid id)
     {
         var command = new ActivatePipelineCommand { Id = id };
@@ -150,6 +192,10 @@ public class PipelinesController : ControllerBase
     }
 
     [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(typeof(PipelineDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<PipelineDto>> DeactivatePipeline(Guid id)
     {
         var command = new DeactivatePipelineCommand { Id = id };

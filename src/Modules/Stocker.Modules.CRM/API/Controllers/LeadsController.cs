@@ -12,6 +12,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Leads")]
 public class LeadsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -22,6 +24,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<LeadDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<LeadDto>>> GetLeads(
         [FromQuery] string? search,
         [FromQuery] LeadStatus? status,
@@ -49,6 +54,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<LeadDto>> GetLead(Guid id)
     {
         var query = new GetLeadByIdQuery { Id = id };
@@ -61,6 +69,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(LeadDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<LeadDto>> CreateLead(CreateLeadCommand command)
     {
         var result = await _mediator.Send(command);
@@ -71,6 +82,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<LeadDto>> UpdateLead(Guid id, UpdateLeadCommand command)
     {
         if (id != command.Id)
@@ -81,6 +96,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteLead(Guid id)
     {
         var command = new DeleteLeadCommand { Id = id };
@@ -89,6 +107,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost("{id}/convert")]
+    [ProducesResponseType(typeof(CustomerDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CustomerDto>> ConvertToCustomer(Guid id, ConvertLeadToCustomerCommand command)
     {
         if (id != command.LeadId)
@@ -99,6 +121,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost("{id}/qualify")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<LeadDto>> QualifyLead(Guid id, QualifyLeadCommand command)
     {
         if (id != command.Id)
@@ -109,6 +135,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost("{id}/disqualify")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<LeadDto>> DisqualifyLead(Guid id, DisqualifyLeadCommand command)
     {
         if (id != command.Id)
@@ -119,6 +149,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost("{id}/assign")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<LeadDto>> AssignLead(Guid id, AssignLeadCommand command)
     {
         if (id != command.Id)
@@ -129,6 +163,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet("{id}/activities")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetLeadActivities(Guid id)
     {
         var query = new GetLeadActivitiesQuery { LeadId = id };
@@ -137,6 +174,10 @@ public class LeadsController : ControllerBase
     }
 
     [HttpPost("{id}/score")]
+    [ProducesResponseType(typeof(LeadDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<LeadDto>> UpdateLeadScore(Guid id, UpdateLeadScoreCommand command)
     {
         if (id != command.Id)
@@ -147,6 +188,9 @@ public class LeadsController : ControllerBase
     }
 
     [HttpGet("statistics")]
+    [ProducesResponseType(typeof(LeadStatisticsDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<LeadStatisticsDto>> GetLeadStatistics(
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate)

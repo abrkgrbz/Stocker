@@ -11,6 +11,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Campaigns")]
 public class CampaignsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,6 +23,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<CampaignDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<CampaignDto>>> GetCampaigns(
         [FromQuery] string? search,
         [FromQuery] CampaignStatus? status,
@@ -46,6 +51,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(CampaignDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<CampaignDto>> GetCampaign(Guid id)
     {
         var query = new GetCampaignByIdQuery { Id = id };
@@ -58,6 +66,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(CampaignDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<CampaignDto>> CreateCampaign(CreateCampaignCommand command)
     {
         var result = await _mediator.Send(command);
@@ -68,6 +79,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(CampaignDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignDto>> UpdateCampaign(Guid id, UpdateCampaignCommand command)
     {
         if (id != command.Id)
@@ -81,6 +96,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteCampaign(Guid id)
     {
         var command = new DeleteCampaignCommand { Id = id };
@@ -89,6 +107,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("{id}/start")]
+    [ProducesResponseType(typeof(CampaignDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignDto>> StartCampaign(Guid id)
     {
         var command = new StartCampaignCommand { Id = id };
@@ -100,6 +122,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("{id}/pause")]
+    [ProducesResponseType(typeof(CampaignDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignDto>> PauseCampaign(Guid id)
     {
         var command = new PauseCampaignCommand { Id = id };
@@ -111,6 +137,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("{id}/complete")]
+    [ProducesResponseType(typeof(CampaignDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignDto>> CompleteCampaign(Guid id)
     {
         var command = new CompleteCampaignCommand { Id = id };
@@ -122,6 +152,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpGet("{id}/members")]
+    [ProducesResponseType(typeof(IEnumerable<CampaignMemberDto>), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IEnumerable<CampaignMemberDto>>> GetCampaignMembers(Guid id)
     {
         var query = new GetCampaignMembersQuery { CampaignId = id };
@@ -130,6 +163,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("{id}/members")]
+    [ProducesResponseType(typeof(CampaignMemberDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignMemberDto>> AddMember(Guid id, AddCampaignMemberCommand command)
     {
         if (id != command.CampaignId)
@@ -143,6 +180,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpDelete("{id}/members/{memberId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveMember(Guid id, Guid memberId)
     {
         var command = new RemoveCampaignMemberCommand 
@@ -156,6 +196,10 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("{id}/members/{memberId}/convert")]
+    [ProducesResponseType(typeof(CampaignMemberDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignMemberDto>> ConvertMember(Guid id, Guid memberId)
     {
         var command = new ConvertCampaignMemberCommand 
@@ -172,6 +216,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpGet("{id}/roi")]
+    [ProducesResponseType(typeof(CampaignRoiDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignRoiDto>> GetCampaignRoi(Guid id)
     {
         var query = new GetCampaignRoiQuery { CampaignId = id };
@@ -180,6 +227,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpGet("{id}/statistics")]
+    [ProducesResponseType(typeof(CampaignStatisticsDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<CampaignStatisticsDto>> GetCampaignStatistics(Guid id)
     {
         var query = new GetCampaignStatisticsQuery { CampaignId = id };
@@ -188,6 +238,9 @@ public class CampaignsController : ControllerBase
     }
 
     [HttpPost("bulk-import")]
+    [ProducesResponseType(typeof(BulkImportResultDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<BulkImportResultDto>> BulkImportMembers(BulkImportCampaignMembersCommand command)
     {
         var result = await _mediator.Send(command);

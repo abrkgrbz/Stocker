@@ -11,6 +11,8 @@ namespace Stocker.Modules.CRM.API.Controllers;
 [ApiController]
 [Route("api/crm/[controller]")]
 [Authorize]
+[ApiExplorerSettings(GroupName = "tenant")]
+[Tags("CRM - Activities")]
 public class ActivitiesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,6 +23,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetActivities(
         [FromQuery] ActivityType? type,
         [FromQuery] ActivityStatus? status,
@@ -56,6 +61,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ActivityDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<ActivityDto>> GetActivity(Guid id)
     {
         var query = new GetActivityByIdQuery { Id = id };
@@ -68,6 +76,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(ActivityDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<ActivityDto>> CreateActivity(CreateActivityCommand command)
     {
         var result = await _mediator.Send(command);
@@ -78,6 +89,10 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ActivityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<ActivityDto>> UpdateActivity(Guid id, UpdateActivityCommand command)
     {
         if (id != command.Id)
@@ -91,6 +106,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteActivity(Guid id)
     {
         var command = new DeleteActivityCommand { Id = id };
@@ -99,6 +117,10 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpPost("{id}/complete")]
+    [ProducesResponseType(typeof(ActivityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<ActivityDto>> CompleteActivity(Guid id, CompleteActivityCommand command)
     {
         if (id != command.Id)
@@ -112,6 +134,10 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpPost("{id}/cancel")]
+    [ProducesResponseType(typeof(ActivityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<ActivityDto>> CancelActivity(Guid id, CancelActivityCommand command)
     {
         if (id != command.Id)
@@ -125,6 +151,10 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpPost("{id}/reschedule")]
+    [ProducesResponseType(typeof(ActivityDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<ActivityDto>> RescheduleActivity(Guid id, RescheduleActivityCommand command)
     {
         if (id != command.Id)
@@ -138,6 +168,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet("upcoming")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetUpcomingActivities(
         [FromQuery] int days = 7,
         [FromQuery] Guid? assignedToId = null)
@@ -153,6 +186,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet("overdue")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetOverdueActivities(
         [FromQuery] Guid? assignedToId = null)
     {
@@ -166,6 +202,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet("calendar")]
+    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetCalendarActivities(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
@@ -183,6 +222,9 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet("statistics")]
+    [ProducesResponseType(typeof(ActivityStatisticsDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
     public async Task<ActionResult<ActivityStatisticsDto>> GetActivityStatistics(
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate,
