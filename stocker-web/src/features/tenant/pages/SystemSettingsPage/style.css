@@ -1,7 +1,6 @@
 /* System Settings Page Styles */
 .system-settings-page {
   padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: calc(100vh - 64px);
 }
 
@@ -304,10 +303,6 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .system-settings-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  }
-  
   .settings-header,
   .settings-category-card .ant-card-body,
   .setting-item-card {
