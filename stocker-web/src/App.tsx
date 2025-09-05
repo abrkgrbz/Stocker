@@ -83,6 +83,8 @@ const TenantSettingsNew = lazy(() => import('@/features/tenant/settings/pages/Se
 const TenantModules = lazy(() => import('@/features/tenant/modules/pages/ModulesPage'));
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const NotFoundPage = lazy(() => import('@/features/error/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const TrainingPage = lazy(() => import('@/features/training/pages/TrainingPage').then(m => ({ default: m.TrainingPage })));
+const BlogPage = lazy(() => import('@/features/blog/pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
 const TestSweetAlert = lazy(() => import('@/features/test/TestSweetAlert'));
 
@@ -228,6 +230,8 @@ function App() {
                 {/* Landing Page - No layout wrapper */}
                 <Route path="/" element={<ModernLanding />} />
                 <Route path="/old-landing" element={<LandingPage />} />
+                <Route path="/training" element={<TrainingPage />} />
+                <Route path="/blog" element={<BlogPage />} />
                 
                 {/* Register Page - No layout wrapper for full experience */}
                 <Route path="/register-old" element={<RegisterWizard />} />

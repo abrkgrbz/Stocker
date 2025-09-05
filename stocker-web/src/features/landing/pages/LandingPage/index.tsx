@@ -295,7 +295,7 @@ export const LandingPage: React.FC = () => {
                 <ul className="footer-links">
                   <li><a href="#">Hakkımızda</a></li>
                   <li><a href="#">Kariyer</a></li>
-                  <li><a href="#">Blog</a></li>
+                  <li><a onClick={() => navigate('/blog')}>Blog</a></li>
                   <li><a href="#">İletişim</a></li>
                   <li><a href="#">Basın Kiti</a></li>
                 </ul>
@@ -306,7 +306,7 @@ export const LandingPage: React.FC = () => {
                 <Typography.Title level={5}>Destek</Typography.Title>
                 <ul className="footer-links">
                   <li><a href="#">Yardım Merkezi</a></li>
-                  <li><a href="#">Video Eğitimler</a></li>
+                  <li><a onClick={() => navigate('/training')}>Eğitim ve Videolar</a></li>
                   <li><a href="#">Kullanım Kılavuzu</a></li>
                   <li><a href="#">SSS</a></li>
                   <li><a href="#">Sistem Durumu</a></li>

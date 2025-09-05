@@ -131,6 +131,22 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
         services.AddScoped<ITenantUnitOfWorkFactory, TenantUnitOfWorkFactory>();
+        
+        // Add TenantDbContext as scoped service for CQRS handlers
+        services.AddScoped<TenantDbContext>(serviceProvider =>
+        {
+            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
+            var factory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
+            var tenantId = tenantService.GetCurrentTenantId();
+            
+            if (!tenantId.HasValue || tenantId.Value == Guid.Empty)
+            {
+                throw new InvalidOperationException("TenantDbContext cannot be created without a valid TenantId");
+            }
+            
+            // Use Task.Run to avoid deadlock
+            return Task.Run(async () => await factory.CreateDbContextAsync(tenantId.Value)).GetAwaiter().GetResult();
+        });
 
         // Add Migration Services
         services.AddScoped<IMigrationService, MigrationService>(); 
