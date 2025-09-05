@@ -1,0 +1,293 @@
+/* Pricing Page Fixes and Improvements */
+
+/* Card Grid Fixes */
+.pricing-cards-section .ant-row {
+  align-items: stretch;
+}
+
+.pricing-cards-section .ant-col {
+  display: flex;
+}
+
+.pricing-cards-section .pricing-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Popular Card Highlight */
+.pricing-card.popular::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+/* Feature List Improvements */
+.plan-features {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feature-item {
+  min-height: 32px;
+  align-items: flex-start !important;
+}
+
+.feature-icon {
+  margin-top: 2px;
+}
+
+/* Button Consistency */
+.plan-button.ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25);
+}
+
+.plan-button.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6c4199 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+}
+
+.plan-button.ant-btn-default {
+  background: white;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.plan-button.ant-btn-default:hover {
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.enterprise-button {
+  background: #1f2937 !important;
+  border: none !important;
+  color: white !important;
+}
+
+.enterprise-button:hover {
+  background: #374151 !important;
+}
+
+/* Comparison Table Improvements */
+.comparison-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.comparison-table table {
+  min-width: 768px;
+}
+
+.comparison-table th {
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.comparison-table th:first-child {
+  position: sticky;
+  left: 0;
+  background: #f8f9fa;
+  z-index: 11;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 10;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table .highlighted {
+  background: linear-gradient(180deg, #f0f5ff 0%, #e6f0ff 100%);
+  position: relative;
+}
+
+.comparison-table .highlighted::before {
+  content: 'ÖNERİLEN';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Add-ons Section Grid Fix */
+.addons-section .ant-row {
+  align-items: stretch;
+}
+
+.addons-section .addon-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.addon-card .addon-price {
+  margin-top: auto;
+}
+
+/* FAQ Cards Alignment */
+.faq-section .ant-row {
+  align-items: stretch;
+}
+
+.faq-card {
+  height: 100%;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 992px) {
+  .pricing-card.popular {
+    transform: scale(1);
+    margin-bottom: 24px;
+  }
+  
+  .pricing-card {
+    min-height: auto;
+  }
+  
+  .comparison-table {
+    margin: 0 -24px;
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .pricing-cards-section {
+    padding: 0 16px;
+  }
+  
+  .pricing-card {
+    margin-bottom: 24px;
+  }
+  
+  .plan-badge {
+    font-size: 12px;
+    padding: 4px 16px;
+  }
+  
+  .comparison-section {
+    overflow: hidden;
+  }
+  
+  .comparison-card {
+    border-radius: 0;
+    margin: 0 -24px;
+  }
+  
+  .addon-card {
+    margin-bottom: 16px;
+  }
+  
+  .faq-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Animation Improvements */
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.pricing-card.popular {
+  animation: float-subtle 3s ease-in-out infinite;
+}
+
+/* Trust Badges Alignment */
+.trust-section .trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s;
+}
+
+.trust-section .trust-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth Scroll for Sections */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Loading States */
+.pricing-card.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-card.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Accessibility Improvements */
+.plan-button:focus-visible,
+.billing-toggle span:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .pricing-header,
+  .pricing-cta,
+  .trust-section {
+    display: none;
+  }
+  
+  .pricing-card {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .comparison-table table {
+    font-size: 12px;
+  }
+}

@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './style.css';
+import './pricing-fixes.css';
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -282,16 +283,21 @@ export const PricingPage: React.FC = () => {
                 14 gün ücretsiz deneme • Kredi kartı gerekmez • İstediğiniz zaman iptal edin
               </Paragraph>
               
-              <div className="billing-toggle">
-                <span className={billingPeriod === 'monthly' ? 'active' : ''}>Aylık</span>
-                <Switch 
-                  checked={billingPeriod === 'yearly'}
-                  onChange={(checked) => setBillingPeriod(checked ? 'yearly' : 'monthly')}
-                  className="billing-switch"
-                />
-                <span className={billingPeriod === 'yearly' ? 'active' : ''}>
+              <div className={`billing-toggle ${billingPeriod}`}>
+                <span 
+                  className={billingPeriod === 'monthly' ? 'active' : ''}
+                  onClick={() => setBillingPeriod('monthly')}
+                >
+                  Aylık
+                </span>
+                <span 
+                  className={billingPeriod === 'yearly' ? 'active' : ''}
+                  onClick={() => setBillingPeriod('yearly')}
+                >
                   Yıllık
-                  <Tag color="green" className="save-tag">2 Ay Ücretsiz</Tag>
+                  {billingPeriod === 'yearly' && (
+                    <Tag color="green" className="save-tag" style={{ marginLeft: 8 }}>%20 İndirim</Tag>
+                  )}
                 </span>
               </div>
             </div>
@@ -462,9 +468,13 @@ export const PricingPage: React.FC = () => {
                       <td>
                         {typeof item.starter === 'boolean' ? (
                           item.starter ? (
-                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                              <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 22 }} />
+                            </div>
                           ) : (
-                            <span className="not-included">-</span>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                              <span style={{ color: '#d1d5db', fontSize: 24 }}>-</span>
+                            </div>
                           )
                         ) : (
                           <Tag color="blue">{item.starter}</Tag>
@@ -473,7 +483,7 @@ export const PricingPage: React.FC = () => {
                       <td className="highlighted">
                         {typeof item.professional === 'boolean' ? (
                           item.professional ? (
-                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 22 }} />
                           ) : (
                             <span className="not-included">-</span>
                           )
@@ -484,7 +494,7 @@ export const PricingPage: React.FC = () => {
                       <td>
                         {typeof item.business === 'boolean' ? (
                           item.business ? (
-                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 22 }} />
                           ) : (
                             <span className="not-included">-</span>
                           )
@@ -495,7 +505,7 @@ export const PricingPage: React.FC = () => {
                       <td>
                         {typeof item.enterprise === 'boolean' ? (
                           item.enterprise ? (
-                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 22 }} />
                           ) : (
                             <span className="not-included">-</span>
                           )
