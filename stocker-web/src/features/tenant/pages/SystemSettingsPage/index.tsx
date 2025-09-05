@@ -77,6 +77,8 @@ interface GroupedSettings {
 }
 
 const SystemSettingsPage: React.FC = () => {
+  console.log('SystemSettingsPage rendered!'); // Component render check
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<SettingItem[]>([]);
@@ -87,10 +89,12 @@ const SystemSettingsPage: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
+    console.log('useEffect triggered - calling loadSettings'); // useEffect check
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
+    console.log('loadSettings function started'); // Function start check
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
