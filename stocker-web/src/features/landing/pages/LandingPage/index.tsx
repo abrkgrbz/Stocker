@@ -23,7 +23,6 @@ import {
 } from '@ant-design/icons';
 import { AnimatedHero } from '../../components/AnimatedHero';
 import { FeaturesSection } from '../../components/FeaturesSection';
-import { PricingSection } from '../../components/PricingSection';
 import { TestimonialsSection } from '../../components/TestimonialsSection';
 import { StatsSection } from '../../components/StatsSection';
 import { FloatingActionButton } from '../../components/FloatingActionButton';
@@ -72,7 +71,7 @@ export const LandingPage: React.FC = () => {
             <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>Özellikler</a>
             <a href="#solutions" onClick={(e) => { e.preventDefault(); document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' }); }}>Çözümler</a>
             <a href="#modules" onClick={(e) => { e.preventDefault(); document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' }); }}>Modüller</a>
-            <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}>Fiyatlandırma</a>
+            <a onClick={() => navigate('/pricing')} style={{ cursor: 'pointer' }}>Fiyatlandırma</a>
             <a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitimler</a>
             <a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a>
             <a href="#faq" onClick={(e) => { e.preventDefault(); document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }); }}>SSS</a>
@@ -160,9 +159,6 @@ export const LandingPage: React.FC = () => {
             </Row>
           </div>
         </section>
-
-        {/* Pricing Section */}
-        <PricingSection navigate={navigate} />
 
         {/* Testimonials Section */}
         <TestimonialsSection />
@@ -286,7 +282,7 @@ export const LandingPage: React.FC = () => {
                   <li><a href="#features">Özellikler</a></li>
                   <li><a href="#solutions">Çözümler</a></li>
                   <li><a href="#modules">Modüller</a></li>
-                  <li><a href="#pricing">Fiyatlandırma</a></li>
+                  <li><a onClick={() => navigate('/pricing')} style={{ cursor: 'pointer' }}>Fiyatlandırma</a></li>
                   <li><a href="#faq">SSS</a></li>
                 </ul>
               </div>

@@ -354,7 +354,7 @@ export const ModernLanding: React.FC = () => {
           <div className="nav-menu">
             <a href="#features">Özellikler</a>
             <a href="#solutions">Çözümler</a>
-            <a href="#pricing">Fiyatlandırma</a>
+            <a onClick={() => navigate('/pricing')} style={{ cursor: 'pointer' }}>Fiyatlandırma</a>
             <a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitimler</a>
             <a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a>
             <a href="#partners">İş Ortakları</a>
