@@ -58,7 +58,7 @@ export const TrainingPage: React.FC = () => {
       duration: '12:45',
       category: 'Genel',
       level: 'Başlangıç',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=225&fit=crop',
       instructor: 'Ahmet Yılmaz',
       views: 1250,
       rating: 4.8
@@ -70,7 +70,7 @@ export const TrainingPage: React.FC = () => {
       duration: '25:30',
       category: 'Modüller',
       level: 'Orta',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=225&fit=crop',
       instructor: 'Mehmet Demir',
       views: 890,
       rating: 4.7
@@ -82,7 +82,7 @@ export const TrainingPage: React.FC = () => {
       duration: '32:15',
       category: 'Modüller',
       level: 'Orta',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop',
       instructor: 'Ayşe Kara',
       views: 1120,
       rating: 4.9
@@ -94,7 +94,7 @@ export const TrainingPage: React.FC = () => {
       duration: '18:20',
       category: 'Entegrasyonlar',
       level: 'İleri',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=225&fit=crop',
       instructor: 'Fatma Şahin',
       views: 650,
       rating: 4.6
@@ -106,7 +106,7 @@ export const TrainingPage: React.FC = () => {
       duration: '28:40',
       category: 'Raporlama',
       level: 'İleri',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=225&fit=crop',
       instructor: 'Ali Veli',
       views: 780,
       rating: 4.8
@@ -118,7 +118,7 @@ export const TrainingPage: React.FC = () => {
       duration: '22:10',
       category: 'Modüller',
       level: 'Orta',
-      thumbnail: '/api/placeholder/400/225',
+      thumbnail: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=225&fit=crop',
       instructor: 'Zeynep Yıldız',
       views: 540,
       rating: 4.7

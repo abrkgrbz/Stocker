@@ -1,10 +1,12 @@
 using AutoMapper;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
+using Stocker.Application.DTOs.Tenant.Settings;
 using Stocker.Application.DTOs.Subscription;
 using Stocker.Application.DTOs.TenantInvoice;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
+using Stocker.Domain.Tenant.Entities;
 
 namespace Stocker.Application.Common.Mappings;
 
@@ -101,5 +103,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.UnitPrice.Currency))
             .ForMember(dest => dest.DiscountAmount, opt => opt.MapFrom(src => src.DiscountAmount != null ? src.DiscountAmount.Amount : (decimal?)null))
             .ForMember(dest => dest.TaxAmount, opt => opt.MapFrom(src => src.TaxAmount != null ? src.TaxAmount.Amount : (decimal?)null));
+
+        // TenantSettings Mappings
+        CreateMap<TenantSettings, SettingDto>();
     }
 }

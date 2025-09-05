@@ -1,6 +1,41 @@
 /* Pricing Page Fixes and Improvements */
 
+/* Hero Section Background Enhancement */
+.pricing-hero .hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.pricing-hero .ant-badge-ribbon {
+  z-index: 3;
+}
+
+.pricing-hero .ant-badge-ribbon .ant-badge-ribbon-text {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+  font-weight: 700;
+}
+
+/* Text Overflow Fixes */
+.hero-title {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.hero-description {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Card Grid Fixes */
+.pricing-cards-section {
+  background: linear-gradient(180deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+  padding: 40px 24px 60px;
+  border-radius: 20px;
+  margin: 0 24px 40px;
+}
+
 .pricing-cards-section .ant-row {
   align-items: stretch;
 }
@@ -13,6 +48,16 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pricing-card .plan-header {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Popular Card Highlight */
@@ -35,6 +80,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 280px;
 }
 
 .feature-item {
@@ -157,8 +203,41 @@
   height: 100%;
 }
 
+/* Gradient Background for Better Visual Hierarchy */
+.comparison-section {
+  background: linear-gradient(180deg, rgba(102, 126, 234, 0.03) 0%, rgba(255, 255, 255, 1) 100%);
+}
+
+.addons-section {
+  background: linear-gradient(180deg, rgba(118, 75, 162, 0.02) 0%, rgba(102, 126, 234, 0.02) 100%);
+  border-radius: 20px;
+  margin: 0 24px 40px;
+}
+
+.faq-section {
+  background: linear-gradient(135deg, #f8f9fc 0%, #e9ecef 100%);
+}
+
 /* Mobile Optimizations */
 @media (max-width: 992px) {
+  .pricing-hero {
+    margin: 0 16px 32px;
+    padding: 40px 16px;
+  }
+  
+  .hero-title {
+    font-size: 36px !important;
+  }
+  
+  .hero-description {
+    font-size: 16px;
+  }
+  
+  .pricing-cards-section {
+    margin: 0 16px 32px;
+    padding: 32px 16px 48px;
+  }
+  
   .pricing-card.popular {
     transform: scale(1);
     margin-bottom: 24px;
@@ -172,16 +251,42 @@
     margin: 0 -24px;
     padding: 0 24px;
   }
+  
+  .addons-section {
+    margin: 0 16px 32px;
+  }
 }
 
 @media (max-width: 768px) {
+  .pricing-hero {
+    margin: 0 8px 24px;
+    padding: 32px 16px;
+  }
+  
+  .hero-title {
+    font-size: 28px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .hero-description {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+  
   .billing-toggle {
     width: 100%;
     justify-content: center;
+    padding: 4px;
+  }
+  
+  .billing-toggle span {
+    padding: 8px 16px;
+    font-size: 14px;
   }
   
   .pricing-cards-section {
-    padding: 0 16px;
+    padding: 24px 8px 40px;
+    margin: 0 8px 24px;
   }
   
   .pricing-card {
@@ -189,17 +294,18 @@
   }
   
   .plan-badge {
-    font-size: 12px;
-    padding: 4px 16px;
+    font-size: 11px;
+    padding: 4px 12px;
   }
   
   .comparison-section {
     overflow: hidden;
+    margin: 0 8px 24px;
   }
   
   .comparison-card {
-    border-radius: 0;
-    margin: 0 -24px;
+    border-radius: 16px;
+    margin: 0;
   }
   
   .addon-card {
@@ -208,6 +314,15 @@
   
   .faq-card {
     margin-bottom: 16px;
+  }
+  
+  .addons-section {
+    margin: 0 8px 24px;
+    padding: 24px 16px;
+  }
+  
+  .faq-section {
+    margin: 0 8px 24px;
   }
 }
 
@@ -222,16 +337,23 @@
 }
 
 /* Trust Badges Alignment */
+.trust-section {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .trust-section .trust-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding: 20px;
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s;
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .trust-section .trust-item:hover {
