@@ -8,7 +8,13 @@ public sealed class PhoneNumber : ValueObject
 {
     private static readonly Regex PhoneRegex = new(@"^\+?[1-9]\d{1,14}$", RegexOptions.Compiled);
 
-    public string Value { get; }
+    public string Value { get; private set; }
+
+    // EF Core constructor
+    private PhoneNumber()
+    {
+        Value = string.Empty;
+    }
 
     private PhoneNumber(string value)
     {

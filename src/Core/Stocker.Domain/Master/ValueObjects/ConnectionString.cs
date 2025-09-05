@@ -5,7 +5,13 @@ namespace Stocker.Domain.Master.ValueObjects;
 
 public sealed class ConnectionString : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; private set; }
+
+    // EF Core constructor
+    private ConnectionString()
+    {
+        Value = string.Empty;
+    }
 
     private ConnectionString(string value)
     {
