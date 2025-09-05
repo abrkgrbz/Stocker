@@ -79,6 +79,8 @@ const InvoiceDetail = lazy(() => import('@/features/invoices/pages/InvoiceDetail
 const InvoiceEdit = lazy(() => import('@/features/invoices/pages/InvoiceEdit').then(m => ({ default: m.InvoiceEdit })));
 const TenantUsers = lazy(() => import('@/features/users/pages/TenantUsers').then(m => ({ default: m.TenantUsers })));
 const TenantSettings = lazy(() => import('@/features/settings/pages/TenantSettings').then(m => ({ default: m.TenantSettings })));
+const TenantSettingsNew = lazy(() => import('@/features/tenant/settings/pages/SettingsPage'));
+const TenantModules = lazy(() => import('@/features/tenant/modules/pages/ModulesPage'));
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const NotFoundPage = lazy(() => import('@/features/error/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
@@ -328,7 +330,9 @@ function App() {
                   <Route path="hr/*" element={<HRModule />} />
                   <Route path="production/*" element={<ProductionModule />} />
                   <Route path="users" element={<TenantUsers />} />
-                  <Route path="settings" element={<TenantSettings />} />
+                  <Route path="settings-old" element={<TenantSettings />} />
+                  <Route path="settings" element={<TenantSettingsNew />} />
+                  <Route path="modules" element={<TenantModules />} />
                 </Route>
 
                 {/* 404 Page */}

@@ -13,6 +13,7 @@ import {
   FundProjectionScreenOutlined,
   CalendarOutlined,
   SolutionOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar } from 'antd';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -77,6 +78,11 @@ export const TenantLayout: React.FC = () => {
       path: `/app/${tenantId}/users`,
       name: 'Kullanıcılar',
       icon: <UserOutlined />,
+    },
+    {
+      path: `/app/${tenantId}/modules`,
+      name: 'Modüller',
+      icon: <AppstoreOutlined />,
     },
     {
       path: `/app/${tenantId}/settings`,
