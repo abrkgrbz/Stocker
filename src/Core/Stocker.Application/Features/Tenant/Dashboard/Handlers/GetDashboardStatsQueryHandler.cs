@@ -1,140 +1,44 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Tenant.Dashboard;
 using Stocker.Application.Features.Tenant.Dashboard.Queries;
-using Stocker.Persistence.Contexts;
 
 namespace Stocker.Application.Features.Tenant.Dashboard.Handlers;
 
 public class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQuery, DashboardStatsDto>
 {
-    private readonly TenantDbContext _context;
-
-    public GetDashboardStatsQueryHandler(TenantDbContext context)
+    public Task<DashboardStatsDto> Handle(GetDashboardStatsQuery request, CancellationToken cancellationToken)
     {
-        _context = context;
-    }
-
-    public async Task<DashboardStatsDto> Handle(GetDashboardStatsQuery request, CancellationToken cancellationToken)
-    {
-        var tenantId = request.TenantId;
-        var today = DateTime.UtcNow.Date;
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
-        var startOfLastMonth = startOfMonth.AddMonths(-1);
-        var sixMonthsAgo = today.AddMonths(-6);
-
-        var totalCustomers = await _context.Customers
-            .Where(c => c.TenantId == tenantId && !c.IsDeleted)
-            .CountAsync(cancellationToken);
-
-        var totalProducts = await _context.Products
-            .Where(p => p.TenantId == tenantId && !p.IsDeleted)
-            .CountAsync(cancellationToken);
-
-        var totalOrders = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted)
-            .CountAsync(cancellationToken);
-
-        var totalRevenue = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.Status == "Completed")
-            .SumAsync(o => o.TotalAmount, cancellationToken);
-
-        var lastMonthCustomers = await _context.Customers
-            .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.CreatedDate < startOfMonth && c.CreatedDate >= startOfLastMonth)
-            .CountAsync(cancellationToken);
-
-        var thisMonthCustomers = await _context.Customers
-            .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.CreatedDate >= startOfMonth)
-            .CountAsync(cancellationToken);
-
-        var customerGrowth = lastMonthCustomers > 0
-            ? Math.Round(((double)(thisMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100, 1)
-            : 0;
-
-        var lastMonthOrders = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.CreatedDate < startOfMonth && o.CreatedDate >= startOfLastMonth)
-            .CountAsync(cancellationToken);
-
-        var thisMonthOrders = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.CreatedDate >= startOfMonth)
-            .CountAsync(cancellationToken);
-
-        var orderGrowth = lastMonthOrders > 0
-            ? Math.Round(((double)(thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100, 1)
-            : 0;
-
-        var lastMonthRevenue = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.Status == "Completed"
-                && o.CreatedDate < startOfMonth && o.CreatedDate >= startOfLastMonth)
-            .SumAsync(o => o.TotalAmount, cancellationToken);
-
-        var thisMonthRevenue = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.Status == "Completed" && o.CreatedDate >= startOfMonth)
-            .SumAsync(o => o.TotalAmount, cancellationToken);
-
-        var revenueGrowth = lastMonthRevenue > 0
-            ? Math.Round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100, 1)
-            : 0;
-
-        var monthlyRevenue = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted && o.Status == "Completed" && o.CreatedDate >= sixMonthsAgo)
-            .GroupBy(o => new { o.CreatedDate.Year, o.CreatedDate.Month })
-            .Select(g => new
-            {
-                Year = g.Key.Year,
-                Month = g.Key.Month,
-                Revenue = g.Sum(o => o.TotalAmount)
-            })
-            .OrderBy(x => x.Year).ThenBy(x => x.Month)
-            .ToListAsync(cancellationToken);
-
-        var monthNames = new[] { "", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık" };
-        var monthlyRevenueData = monthlyRevenue.Select(m => new MonthlyRevenueDto
+        // Mock data for now - will be replaced when modules are ready
+        var result = new DashboardStatsDto
         {
-            Month = monthNames[m.Month],
-            Revenue = m.Revenue
-        }).ToList();
-
-        var topProducts = await _context.OrderItems
-            .Where(oi => oi.Order.TenantId == tenantId && !oi.Order.IsDeleted && oi.Order.Status == "Completed")
-            .GroupBy(oi => new { oi.ProductId, oi.Product.Name })
-            .Select(g => new TopProductDto
+            TotalRevenue = 125750.50m,
+            TotalOrders = 342,
+            TotalCustomers = 89,
+            TotalProducts = 156,
+            RevenueGrowth = 15.5,
+            OrderGrowth = 8.2,
+            CustomerGrowth = 12.3,
+            ProductGrowth = 5.1,
+            MonthlyRevenue = new List<MonthlyRevenueDto>
             {
-                Name = g.Key.Name,
-                Sales = g.Sum(oi => oi.Quantity),
-                Revenue = g.Sum(oi => oi.Quantity * oi.UnitPrice)
-            })
-            .OrderByDescending(x => x.Revenue)
-            .Take(3)
-            .ToListAsync(cancellationToken);
-
-        var recentOrders = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted)
-            .OrderByDescending(o => o.CreatedDate)
-            .Take(3)
-            .Select(o => new RecentOrderDto
+                new() { Month = "Ocak", Revenue = 95000 },
+                new() { Month = "Şubat", Revenue = 105000 },
+                new() { Month = "Mart", Revenue = 125750.50m }
+            },
+            TopProducts = new List<TopProductDto>
             {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                Customer = o.Customer.Name,
-                Amount = o.TotalAmount,
-                Status = o.Status
-            })
-            .ToListAsync(cancellationToken);
-
-        return new DashboardStatsDto
-        {
-            TotalRevenue = totalRevenue,
-            TotalOrders = totalOrders,
-            TotalCustomers = totalCustomers,
-            TotalProducts = totalProducts,
-            RevenueGrowth = revenueGrowth,
-            OrderGrowth = orderGrowth,
-            CustomerGrowth = customerGrowth,
-            ProductGrowth = 0.0,
-            MonthlyRevenue = monthlyRevenueData,
-            TopProducts = topProducts,
-            RecentOrders = recentOrders
+                new() { Name = "Laptop", Sales = 45, Revenue = 67500 },
+                new() { Name = "Mouse", Sales = 120, Revenue = 3600 },
+                new() { Name = "Klavye", Sales = 80, Revenue = 8000 }
+            },
+            RecentOrders = new List<RecentOrderDto>
+            {
+                new() { Id = Guid.NewGuid(), OrderNumber = "ORD-2024-001", Customer = "ABC Şirketi", Amount = 2500, Status = "Completed" },
+                new() { Id = Guid.NewGuid(), OrderNumber = "ORD-2024-002", Customer = "XYZ Ltd.", Amount = 1800, Status = "Processing" },
+                new() { Id = Guid.NewGuid(), OrderNumber = "ORD-2024-003", Customer = "Test AŞ", Amount = 3200, Status = "Pending" }
+            }
         };
+
+        return Task.FromResult(result);
     }
 }

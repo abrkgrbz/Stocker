@@ -1,82 +1,68 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Tenant.Dashboard;
 using Stocker.Application.Features.Tenant.Dashboard.Queries;
-using Stocker.Persistence.Contexts;
 
 namespace Stocker.Application.Features.Tenant.Dashboard.Handlers;
 
 public class GetRecentActivitiesQueryHandler : IRequestHandler<GetRecentActivitiesQuery, List<ActivityDto>>
 {
-    private readonly TenantDbContext _context;
-
-    public GetRecentActivitiesQueryHandler(TenantDbContext context)
+    public Task<List<ActivityDto>> Handle(GetRecentActivitiesQuery request, CancellationToken cancellationToken)
     {
-        _context = context;
-    }
-
-    public async Task<List<ActivityDto>> Handle(GetRecentActivitiesQuery request, CancellationToken cancellationToken)
-    {
-        var tenantId = request.TenantId;
-        var activities = new List<ActivityDto>();
-
-        var recentOrders = await _context.Orders
-            .Where(o => o.TenantId == tenantId && !o.IsDeleted)
-            .OrderByDescending(o => o.CreatedDate)
-            .Take(5)
-            .Select(o => new ActivityDto
+        // Mock data for now - will be replaced when modules are ready
+        var activities = new List<ActivityDto>
+        {
+            new()
             {
-                Id = o.Id,
+                Id = Guid.NewGuid(),
                 Type = "order",
                 Title = "Yeni Sipariş",
-                Description = $"{o.OrderNumber} numaralı sipariş oluşturuldu",
-                Timestamp = o.CreatedDate,
-                User = o.CreatedBy ?? "Sistem",
+                Description = "ORD-2024-001 numaralı sipariş oluşturuldu",
+                Timestamp = DateTime.UtcNow.AddHours(-1),
+                User = "Ahmet Yılmaz",
                 Icon = "ShoppingCart"
-            })
-            .ToListAsync(cancellationToken);
-
-        activities.AddRange(recentOrders);
-
-        var recentCustomers = await _context.Customers
-            .Where(c => c.TenantId == tenantId && !c.IsDeleted)
-            .OrderByDescending(c => c.CreatedDate)
-            .Take(5)
-            .Select(c => new ActivityDto
+            },
+            new()
             {
-                Id = c.Id,
+                Id = Guid.NewGuid(),
                 Type = "customer",
                 Title = "Yeni Müşteri",
-                Description = $"{c.Name} firması eklendi",
-                Timestamp = c.CreatedDate,
-                User = c.CreatedBy ?? "Sistem",
+                Description = "ABC Şirketi eklendi",
+                Timestamp = DateTime.UtcNow.AddHours(-2),
+                User = "Mehmet Demir",
                 Icon = "UserPlus"
-            })
-            .ToListAsync(cancellationToken);
-
-        activities.AddRange(recentCustomers);
-
-        var recentPayments = await _context.Payments
-            .Where(p => p.TenantId == tenantId && !p.IsDeleted)
-            .OrderByDescending(p => p.CreatedDate)
-            .Take(5)
-            .Select(p => new ActivityDto
+            },
+            new()
             {
-                Id = p.Id,
+                Id = Guid.NewGuid(),
                 Type = "payment",
                 Title = "Ödeme Alındı",
-                Description = $"{p.Invoice.InvoiceNumber} faturası için {p.Amount:N2} TL ödeme",
-                Timestamp = p.CreatedDate,
-                User = p.CreatedBy ?? "Sistem",
+                Description = "INV-2024-015 faturası için 5,000 TL ödeme",
+                Timestamp = DateTime.UtcNow.AddHours(-3),
+                User = "Sistem",
                 Icon = "CreditCard"
-            })
-            .ToListAsync(cancellationToken);
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Type = "stock",
+                Title = "Stok Güncellendi",
+                Description = "Laptop stok miktarı güncellendi",
+                Timestamp = DateTime.UtcNow.AddHours(-4),
+                User = "Ayşe Kaya",
+                Icon = "Package"
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Type = "task",
+                Title = "Görev Tamamlandı",
+                Description = "Aylık rapor hazırlama görevi tamamlandı",
+                Timestamp = DateTime.UtcNow.AddHours(-5),
+                User = "Fatma Öz",
+                Icon = "CheckCircle"
+            }
+        };
 
-        activities.AddRange(recentPayments);
-
-        return activities
-            .OrderByDescending(a => a.Timestamp)
-            .Take(10)
-            .ToList();
+        return Task.FromResult(activities);
     }
 }

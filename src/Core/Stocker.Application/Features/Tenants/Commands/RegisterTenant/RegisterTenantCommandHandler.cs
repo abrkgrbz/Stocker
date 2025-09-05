@@ -94,7 +94,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             {
                 return Result<TenantDto>.Failure(Error.Validation("Tenant.InvalidContactPhone", "Invalid contactPhone string format"));
             }
-            var tenant = Tenant.Create(
+            var tenant = Domain.Master.Entities.Tenant.Create(
                 name: request.CompanyName,
                 code: request.CompanyCode,
                 databaseName: $"Stocker_Tenant_{request.CompanyCode}",

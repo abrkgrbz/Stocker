@@ -53,7 +53,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 return Result<RegisterResponse>.Failure(Error.Validation("Register.InvalidData", "Geçersiz veri"));
             }
             
-            var tenant = Tenant.Create(
+            var tenant = Domain.Master.Entities.Tenant.Create(
                 name: request.CompanyName,
                 code: subdomain,
                 databaseName: $"StockerTenant_{subdomain}",
@@ -63,7 +63,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 description: $"Identity: {request.IdentityType}-{request.IdentityNumber}, Sector: {request.Sector}, Employees: {request.EmployeeCount}",
                 logoUrl: null);
 
-            await _masterUnitOfWork.Repository<Tenant>().AddAsync(tenant, cancellationToken);
+            await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant, cancellationToken);
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
       

@@ -89,7 +89,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
         }
 
         // Check if subdomain already exists in Tenant.Code
-        var existingTenant = await _masterUnitOfWork.Repository<Tenant>()
+        var existingTenant = await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>()
             .AsQueryable()
             .FirstOrDefaultAsync(t => t.Code.ToLower() == subdomain, cancellationToken);
 

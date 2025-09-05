@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore; 
 using Stocker.Domain.Tenant.Entities;
+using Stocker.Domain.Master.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 
@@ -30,10 +31,17 @@ public class TenantDbContext : BaseDbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
     
+    // Settings & Configuration
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+    public DbSet<TenantModules> TenantModules => Set<TenantModules>();
+    
+    // Reference to Tenant from Master DB (read-only)
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    
     // Financial
-    public DbSet<Invoice> Invoices => Set<Invoice>();
-    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
-    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();
+    public DbSet<Domain.Tenant.Entities.InvoiceItem> InvoiceItems => Set<Domain.Tenant.Entities.InvoiceItem>();
+    public DbSet<Domain.Tenant.Entities.Payment> Payments => Set<Domain.Tenant.Entities.Payment>();
 
     // Inventory - Moved to Stocker.Modules.Inventory
     // public DbSet<Product> Products => Set<Product>();
@@ -91,6 +99,8 @@ public class TenantDbContext : BaseDbContext
         modelBuilder.Entity<Branch>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         modelBuilder.Entity<TenantUser>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        modelBuilder.Entity<TenantSettings>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        modelBuilder.Entity<TenantModules>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         // Inventory entities moved to Stocker.Modules.Inventory
         // modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         // modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
