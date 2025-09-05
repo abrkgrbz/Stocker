@@ -93,12 +93,18 @@ const SystemSettingsPage: React.FC = () => {
   const loadSettings = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      console.log('Loading settings with token:', token ? 'Token exists' : 'No token');
+      
       const response = await fetch('/api/tenant/settings', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
+      
+      console.log('Settings API response status:', response.status);
+      console.log('Settings API response headers:', response.headers);
 
       if (response.ok) {
         const data = await response.json();
@@ -126,11 +132,17 @@ const SystemSettingsPage: React.FC = () => {
         });
         form.setFieldsValue(formValues);
       } else {
-        message.error('Ayarlar yüklenemedi');
+        const errorText = await response.text();
+        console.error('Settings API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        message.error(`Ayarlar yüklenemedi (${response.status}): ${response.statusText}`);
       }
     } catch (error) {
       console.error('Settings load error:', error);
-      message.error('Ayarlar yüklenirken bir hata oluştu');
+      message.error('Ayarlar yüklenirken bir hata oluştu: ' + error.message);
     }
     setLoading(false);
   };
