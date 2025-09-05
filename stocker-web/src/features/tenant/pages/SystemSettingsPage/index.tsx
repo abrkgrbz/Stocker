@@ -104,9 +104,18 @@ const SystemSettingsPage: React.FC = () => {
       });
       
       console.log('Settings API response status:', response.status);
-      console.log('Settings API response headers:', response.headers);
+      console.log('Settings API response URL:', response.url);
+      console.log('Settings API response content-type:', response.headers.get('content-type'));
 
       if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Expected JSON but got:', contentType, 'Body:', text.substring(0, 200));
+          message.error('API JSON formatında veri döndürmedi');
+          return;
+        }
+        
         const data = await response.json();
         const categories: SettingCategoryDto[] = data.data || [];
         
@@ -136,7 +145,8 @@ const SystemSettingsPage: React.FC = () => {
         console.error('Settings API error:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorText
+          url: response.url,
+          body: errorText.substring(0, 500) // First 500 chars to see what HTML is returned
         });
         message.error(`Ayarlar yüklenemedi (${response.status}): ${response.statusText}`);
       }
