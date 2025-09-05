@@ -21,11 +21,34 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
+  text-align: center !important;
 }
 
 .hero-description {
   word-wrap: break-word;
   overflow-wrap: break-word;
+  text-align: center !important;
+}
+
+/* Enterprise Plan Custom Price Fix */
+.pricing-card.enterprise .custom-price {
+  color: white !important;
+  background: none !important;
+  -webkit-text-fill-color: white !important;
+}
+
+.pricing-card.enterprise .plan-price {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enterprise Plan Additional Info */
+.pricing-card.enterprise .custom-price::after {
+  content: 'İhtiyaçlarınıza özel paket';
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
 }
 
 /* Card Grid Fixes */
@@ -134,6 +157,41 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.comparison-table .ant-typography {
+  margin: 0;
+}
+
+/* Fix Checkmark Alignment */
+.comparison-table td {
+  vertical-align: middle !important;
+}
+
+.comparison-table td .anticon {
+  display: block;
+  margin: 0 auto;
+  font-size: 18px;
+}
+
+.comparison-table td > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.comparison-table .not-included {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d9d9d9 !important;
+  font-size: 20px !important;
+  font-weight: bold;
+}
+
+.comparison-table .ant-tag {
+  margin: 0;
+}
+
 .comparison-table table {
   min-width: 768px;
 }
@@ -203,9 +261,32 @@
   height: 100%;
 }
 
+/* CTA Section Visibility Fix */
+.pricing-cta {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.cta-card .ant-typography {
+  color: white !important;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-card > * {
+  position: relative;
+  z-index: 2;
+}
+
 /* Gradient Background for Better Visual Hierarchy */
 .comparison-section {
   background: linear-gradient(180deg, rgba(102, 126, 234, 0.03) 0%, rgba(255, 255, 255, 1) 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .addons-section {
