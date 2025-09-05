@@ -47,41 +47,22 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import tenantSettingsService from '@/services/tenant/settingsService';
+import { SettingCategoryDto, SettingDto } from '@/types/tenant/settings';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface SettingItem {
-  id: string;
-  settingKey: string;
-  settingValue: string;
-  description?: string;
-  category: string;
-  dataType: string;
-  isSystemSetting: boolean;
-  isEncrypted: boolean;
-  isPublic: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-interface SettingCategoryDto {
-  category: string;
-  settings: SettingItem[];
-}
-
 interface GroupedSettings {
-  [category: string]: SettingItem[];
+  [category: string]: SettingDto[];
 }
 
 const SystemSettingsPage: React.FC = () => {
-  console.log('SystemSettingsPage rendered!'); // Component render check
-  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<SettingItem[]>([]);
+  const [settings, setSettings] = useState<SettingDto[]>([]);
   const [groupedSettings, setGroupedSettings] = useState<GroupedSettings>({});
   const [activeTab, setActiveTab] = useState('Genel');
   const [editingSettings, setEditingSettings] = useState<{ [key: string]: any }>({});
@@ -89,81 +70,38 @@ const SystemSettingsPage: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    console.log('useEffect triggered - calling loadSettings'); // useEffect check
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
-    console.log('loadSettings function started'); // Function start check
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      console.log('Loading settings with token:', token ? 'Token exists' : 'No token');
+      const categories = await tenantSettingsService.getSettings();
       
-      // Use full API URL for production
-      const apiUrl = import.meta.env.VITE_API_URL 
-        ? `${import.meta.env.VITE_API_URL}/api/tenant/settings`
-        : '/api/tenant/settings';
-        
-      console.log('Fetching from URL:', apiUrl);
+      // Flatten settings from categories
+      const allSettings: SettingDto[] = categories.flatMap(cat => 
+        cat.settings.map(setting => ({ ...setting, category: cat.category }))
+      );
       
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      setSettings(allSettings);
+      
+      // Group settings by category
+      const grouped = categories.reduce((acc: GroupedSettings, category) => {
+        acc[category.category] = category.settings;
+        return acc;
+      }, {} as GroupedSettings);
+      
+      setGroupedSettings(grouped);
+      
+      // Set initial form values
+      const formValues: { [key: string]: any } = {};
+      allSettings.forEach((setting: SettingDto) => {
+        formValues[setting.settingKey] = convertValueByDataType(setting.settingValue, setting.dataType);
       });
-      
-      console.log('Settings API response status:', response.status);
-      console.log('Settings API response URL:', response.url);
-      console.log('Settings API response content-type:', response.headers.get('content-type'));
-
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Expected JSON but got:', contentType, 'Body:', text.substring(0, 200));
-          message.error('API JSON formatında veri döndürmedi');
-          return;
-        }
-        
-        const data = await response.json();
-        const categories: SettingCategoryDto[] = data.data || [];
-        
-        // Flatten settings from categories
-        const allSettings: SettingItem[] = categories.flatMap(cat => 
-          cat.settings.map(setting => ({ ...setting, category: cat.category }))
-        );
-        
-        setSettings(allSettings);
-        
-        // Group settings by category
-        const grouped = categories.reduce((acc: GroupedSettings, category) => {
-          acc[category.category] = category.settings;
-          return acc;
-        }, {} as GroupedSettings);
-        
-        setGroupedSettings(grouped);
-        
-        // Set initial form values
-        const formValues: { [key: string]: any } = {};
-        allSettings.forEach((setting: SettingItem) => {
-          formValues[setting.settingKey] = convertValueByDataType(setting.settingValue, setting.dataType);
-        });
-        form.setFieldsValue(formValues);
-      } else {
-        const errorText = await response.text();
-        console.error('Settings API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url,
-          body: errorText.substring(0, 500) // First 500 chars to see what HTML is returned
-        });
-        message.error(`Ayarlar yüklenemedi (${response.status}): ${response.statusText}`);
-      }
-    } catch (error) {
+      form.setFieldsValue(formValues);
+    } catch (error: any) {
       console.error('Settings load error:', error);
-      message.error('Ayarlar yüklenirken bir hata oluştu: ' + error.message);
+      message.error('Ayarlar yüklenirken bir hata oluştu');
     }
     setLoading(false);
   };
@@ -207,24 +145,12 @@ const SystemSettingsPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const apiBaseUrl = import.meta.env.VITE_API_URL 
-        ? `${import.meta.env.VITE_API_URL}/api/tenant/settings`
-        : '/api/tenant/settings';
-        
       const updatePromises = Object.entries(editingSettings).map(([settingKey, settingValue]) => {
-        return fetch(`${apiBaseUrl}/${settingKey}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ settingValue }),
-        });
+        return tenantSettingsService.updateSettingValue(settingKey, settingValue);
       });
 
-      const responses = await Promise.all(updatePromises);
-      const allSuccessful = responses.every(response => response.ok);
+      await Promise.all(updatePromises);
+      const allSuccessful = true;
 
       if (allSuccessful) {
         message.success(`${Object.keys(editingSettings).length} ayar başarıyla güncellendi`);
@@ -267,7 +193,7 @@ const SystemSettingsPage: React.FC = () => {
     message.success('Panoya kopyalandı');
   };
 
-  const renderFormField = (setting: SettingItem) => {
+  const renderFormField = (setting: SettingDto) => {
     const { settingKey, settingValue, description, dataType, isEncrypted, isSystemSetting } = setting;
     const currentValue = form.getFieldValue(settingKey);
     
