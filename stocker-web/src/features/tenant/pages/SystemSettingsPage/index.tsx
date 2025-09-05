@@ -96,7 +96,14 @@ const SystemSettingsPage: React.FC = () => {
       const token = localStorage.getItem('token');
       console.log('Loading settings with token:', token ? 'Token exists' : 'No token');
       
-      const response = await fetch('/api/tenant/settings', {
+      // Use full API URL for production
+      const apiUrl = import.meta.env.VITE_API_URL 
+        ? `${import.meta.env.VITE_API_URL}/api/tenant/settings`
+        : '/api/tenant/settings';
+        
+      console.log('Fetching from URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -196,11 +203,16 @@ const SystemSettingsPage: React.FC = () => {
 
     setSaving(true);
     try {
+      const token = localStorage.getItem('token');
+      const apiBaseUrl = import.meta.env.VITE_API_URL 
+        ? `${import.meta.env.VITE_API_URL}/api/tenant/settings`
+        : '/api/tenant/settings';
+        
       const updatePromises = Object.entries(editingSettings).map(([settingKey, settingValue]) => {
-        return fetch(`/api/tenant/settings/${settingKey}`, {
+        return fetch(`${apiBaseUrl}/${settingKey}`, {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ settingValue }),
