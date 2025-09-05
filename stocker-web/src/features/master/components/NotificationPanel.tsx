@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
-import './notification-panel.css';
+import './notification-panel-modern.css';
 
 interface NotificationPanelProps {
   isOpen: boolean;

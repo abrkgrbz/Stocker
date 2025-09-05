@@ -1,0 +1,250 @@
+/* Modern Notification Bell Styles */
+.notification-bell {
+  position: relative;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.notification-bell:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #3b82f6;
+  transform: translateY(-2px) rotate(-5deg);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
+  border-color: #bfdbfe;
+}
+
+.notification-bell:active {
+  transform: scale(0.95) rotate(-5deg);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.notification-bell svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.5;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-bell:hover svg {
+  animation: bellShake 0.5s ease-in-out;
+}
+
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+/* Badge */
+.bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 12px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  border: 2px solid white;
+  animation: badgeBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes badgeBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.bell-badge::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulseRing 1.5s ease-out infinite;
+  z-index: -1;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Notification Bell with new notifications */
+.notification-bell.has-new {
+  animation: bellAlert 2s ease-in-out infinite;
+}
+
+@keyframes bellAlert {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  5% {
+    transform: rotate(12deg);
+  }
+  10% {
+    transform: rotate(-12deg);
+  }
+  15% {
+    transform: rotate(12deg);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  25%, 95% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Interactive States */
+.notification-bell.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.notification-bell.active svg {
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Loading State */
+.notification-bell.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tooltip */
+.notification-bell::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  background: #1f2937;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.notification-bell:hover::before {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .notification-bell {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    color: #9ca3af;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .notification-bell:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    color: #60a5fa;
+    border-color: #374151;
+    box-shadow: 0 6px 20px rgba(96, 165, 250, 0.2);
+  }
+  
+  .notification-bell.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification-bell {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+  
+  .notification-bell svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .bell-badge {
+    top: -2px;
+    right: -2px;
+    font-size: 10px;
+    min-width: 18px;
+    height: 18px;
+  }
+}
+
+/* Accessibility */
+.notification-bell:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-bell,
+  .notification-bell svg,
+  .bell-badge,
+  .bell-badge::after {
+    animation: none;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+}

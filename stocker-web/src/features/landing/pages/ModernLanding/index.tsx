@@ -737,192 +737,24 @@ export const ModernLanding: React.FC = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="pricing-section" ref={pricingRef}>
+      {/* Pricing CTA Section */}
+      <section className="pricing-cta-section">
         <div className="container">
-          <div className="section-header">
-            <Tag color="purple" className="section-tag">Çözüm Önerileri</Tag>
-            <Title level={2}>İşletmenize Özel ERP Çözümü</Title>
-            <Paragraph>Sektörünüze ve büyüklüğünüze göre özelleştirilmiş paketler</Paragraph>
-          </div>
-
-          {/* İşletme Tipi Seçimi */}
-          <div style={{ 
-            maxWidth: '800px', 
-            margin: '0 auto 60px',
-            textAlign: 'center'
-          }}>
-            <Title level={4} style={{ marginBottom: '20px' }}>İşletme tipinizi seçin:</Title>
-            <Row gutter={[16, 16]} justify="center">
-              <Col>
-                <Card 
-                  hoverable
-                  onClick={() => handleBusinessTypeSelect('retail', 'Perakende')}
-                  style={{ 
-                    width: 180,
-                    textAlign: 'center',
-                    borderColor: selectedBusinessType === 'retail' ? '#667eea' : '#e8e8e8',
-                    borderWidth: selectedBusinessType === 'retail' ? '2px' : '1px',
-                    background: selectedBusinessType === 'retail' 
-                      ? 'linear-gradient(135deg, #667eea25 0%, #764ba225 100%)'
-                      : 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)'
-                  }}
-                >
-                  <ShopOutlined style={{ fontSize: '32px', color: '#667eea', marginBottom: '10px' }} />
-                  <h4>Perakende</h4>
-                  <p style={{ fontSize: '12px', color: '#666' }}>1-10 Mağaza</p>
-                </Card>
-              </Col>
-              <Col>
-                <Card 
-                  hoverable
-                  onClick={() => handleBusinessTypeSelect('production', 'Üretim')}
-                  style={{ 
-                    width: 180,
-                    textAlign: 'center',
-                    borderColor: selectedBusinessType === 'production' ? '#764ba2' : '#e8e8e8',
-                    borderWidth: selectedBusinessType === 'production' ? '2px' : '1px',
-                    background: selectedBusinessType === 'production'
-                      ? 'linear-gradient(135deg, #764ba225 0%, #f093fb25 100%)'
-                      : 'linear-gradient(135deg, #764ba215 0%, #f093fb15 100%)'
-                  }}
-                >
-                  <GlobalOutlined style={{ fontSize: '32px', color: '#764ba2', marginBottom: '10px' }} />
-                  <h4>Üretim</h4>
-                  <p style={{ fontSize: '12px', color: '#666' }}>KOBİ & Büyük</p>
-                </Card>
-              </Col>
-              <Col>
-                <Card 
-                  hoverable
-                  onClick={() => handleBusinessTypeSelect('distribution', 'Dağıtım')}
-                  style={{ 
-                    width: 180,
-                    textAlign: 'center',
-                    borderColor: selectedBusinessType === 'distribution' ? '#f093fb' : '#e8e8e8',
-                    borderWidth: selectedBusinessType === 'distribution' ? '2px' : '1px',
-                    background: selectedBusinessType === 'distribution'
-                      ? 'linear-gradient(135deg, #f093fb25 0%, #f5576c25 100%)'
-                      : 'linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%)'
-                  }}
-                >
-                  <TruckOutlined style={{ fontSize: '32px', color: '#f093fb', marginBottom: '10px' }} />
-                  <h4>Dağıtım</h4>
-                  <p style={{ fontSize: '12px', color: '#666' }}>Toptan & Lojistik</p>
-                </Card>
-              </Col>
-              <Col>
-                <Card 
-                  hoverable
-                  onClick={() => handleBusinessTypeSelect('service', 'Hizmet')}
-                  style={{ 
-                    width: 180,
-                    textAlign: 'center',
-                    borderColor: selectedBusinessType === 'service' ? '#f5576c' : '#e8e8e8',
-                    borderWidth: selectedBusinessType === 'service' ? '2px' : '1px',
-                    background: selectedBusinessType === 'service'
-                      ? 'linear-gradient(135deg, #f5576c25 0%, #ffa50025 100%)'
-                      : 'linear-gradient(135deg, #f5576c15 0%, #ffa50015 100%)'
-                  }}
-                >
-                  <CustomerServiceOutlined style={{ fontSize: '32px', color: '#f5576c', marginBottom: '10px' }} />
-                  <h4>Hizmet</h4>
-                  <p style={{ fontSize: '12px', color: '#666' }}>Servis & Danışmanlık</p>
-                </Card>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Özelleştirilmiş Paketler */}
-          <Row gutter={[32, 32]} justify="center">
-            {currentPlans.map((plan, index) => (
-              <Col xs={24} sm={12} lg={8} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={pricingInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className={`pricing-card ${plan.popular ? 'popular' : ''}`}
-                >
-                  {plan.popular && (
-                    <div className="popular-badge">
-                      <CrownOutlined /> Önerilen
-                    </div>
-                  )}
-
-                  <div style={{ 
-                    textAlign: 'center',
-                    marginBottom: '20px'
-                  }}>
-                    <div style={{ 
-                      fontSize: '40px', 
-                      color: plan.popular ? '#764ba2' : '#667eea',
-                      marginBottom: '10px'
-                    }}>
-                      {plan.icon}
-                    </div>
-                  </div>
-                  
-                  <div className="pricing-header">
-                    <h3>{plan.name}</h3>
-                    <div className="pricing-amount">
-                      <span className="currency">₺</span>
-                      <span className="price">{plan.price}</span>
-                      <span className="period">/{plan.period}</span>
-                    </div>
-                  </div>
-
-                  <ul className="pricing-features">
-                    {plan.features.map((feature, i) => (
-                      <li key={i}>
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                        {feature.includes('Sınırsız') || feature.includes('Tüm') 
-                          ? <strong>{feature}</strong> 
-                          : feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button 
-                    type={plan.popular ? 'primary' : 'default'}
-                    size="large"
-                    block
-                    className="pricing-button"
-                    onClick={() => navigate('/register')}
-                  >
-                    {index === 2 ? 'Teklif Al' : plan.popular ? 'Ücretsiz Dene' : 'Hemen Başla'}
-                  </Button>
-                </motion.div>
-              </Col>
-            ))}
-          </Row>
-
-          {/* Karşılaştırma Tablosu Butonu */}
-          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <Card className="pricing-cta-card">
+            <Title level={2}>İşletmenize Uygun Planı Keşfedin</Title>
+            <Paragraph>
+              Sektörünüze ve büyüklüğünüze göre özelleştirilmiş fiyatlandırma seçeneklerimizi inceleyin
+            </Paragraph>
             <Button 
-              icon={<BarChartOutlined />}
+              type="primary" 
               size="large"
-              style={{ marginRight: '10px' }}
-              onClick={() => {
-                notification.info({
-                  message: 'Karşılaştırma Tablosu',
-                  description: 'Detaylı paket karşılaştırma tablosu yakında eklenecek! Şu an için paket özelliklerini yukarıda görebilirsiniz.',
-                  placement: 'topRight',
-                  duration: 4,
-                  icon: <BarChartOutlined style={{ color: '#667eea' }} />
-                });
-              }}
+              icon={<CrownOutlined />}
+              onClick={() => navigate('/pricing')}
+              className="view-pricing-button"
             >
-              Detaylı Karşılaştırma
+              Fiyatları Görüntüle
             </Button>
-            <Button 
-              icon={<CustomerServiceOutlined />}
-              size="large"
-              onClick={() => navigate('/register')}
-            >
-              Danışmanlık Al
-            </Button>
-          </div>
+          </Card>
         </div>
       </section>
 

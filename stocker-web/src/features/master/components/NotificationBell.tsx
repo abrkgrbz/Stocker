@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
 import { NotificationPanel } from './NotificationPanel';
-import './notification-bell.css';
+import './notification-bell-modern.css';
 
 export const NotificationBell: React.FC = () => {
   const { unreadCount } = useNotifications();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
+  const handleClick = () => {
+    setIsPanelOpen(!isPanelOpen);
+    // Add click animation
+    const button = document.querySelector('.notification-bell');
+    button?.classList.add('active');
+    setTimeout(() => button?.classList.remove('active'), 200);
+  };
+
   return (
     <>
       <button 
-        className="notification-bell"
-        onClick={() => setIsPanelOpen(!isPanelOpen)}
-        aria-label="Bildirimler"
+        className={`notification-bell ${unreadCount > 0 ? 'has-new' : ''}`}
+        onClick={handleClick}
+        aria-label={`Bildirimler ${unreadCount > 0 ? `(${unreadCount} yeni)` : ''}`}
+        data-tooltip={unreadCount > 0 ? `${unreadCount} yeni bildirim` : 'Bildirimler'}
       >
         <svg 
           width="24" 
