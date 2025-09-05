@@ -46,11 +46,9 @@ import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
 import { FAQSection } from '../../components/FAQSection';
 import { SolutionsSection } from '../../components/SolutionsSection';
-import { BlogSection } from '../../components/BlogSection';
 import { PartnersSection } from '../../components/PartnersSection';
 import { ComparisonTable } from '../../components/ComparisonTable';
 import { DemoBooking } from '../../components/DemoBooking';
-import { VideoSection } from '../../components/VideoSection';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -357,7 +355,8 @@ export const ModernLanding: React.FC = () => {
             <a href="#features">Özellikler</a>
             <a href="#solutions">Çözümler</a>
             <a href="#pricing">Fiyatlandırma</a>
-            <a href="#blog">Blog</a>
+            <a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitimler</a>
+            <a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a>
             <a href="#partners">İş Ortakları</a>
             <a href="#faq">SSS</a>
             <Button type="default" onClick={() => navigate('/login')}>Giriş</Button>
@@ -1010,12 +1009,6 @@ export const ModernLanding: React.FC = () => {
 
       {/* Demo Booking */}
       <DemoBooking />
-
-      {/* Video Section */}
-      <VideoSection />
-
-      {/* Blog Section */}
-      <BlogSection />
 
       {/* Partners Section */}
       <PartnersSection />

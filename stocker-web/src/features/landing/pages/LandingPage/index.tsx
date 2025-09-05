@@ -73,6 +73,8 @@ export const LandingPage: React.FC = () => {
             <a href="#solutions" onClick={(e) => { e.preventDefault(); document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' }); }}>Çözümler</a>
             <a href="#modules" onClick={(e) => { e.preventDefault(); document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' }); }}>Modüller</a>
             <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}>Fiyatlandırma</a>
+            <a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitimler</a>
+            <a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a>
             <a href="#faq" onClick={(e) => { e.preventDefault(); document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }); }}>SSS</a>
           </nav>
           <div className="header-actions">
@@ -295,7 +297,7 @@ export const LandingPage: React.FC = () => {
                 <ul className="footer-links">
                   <li><a href="#">Hakkımızda</a></li>
                   <li><a href="#">Kariyer</a></li>
-                  <li><a onClick={() => navigate('/blog')}>Blog</a></li>
+                  <li><a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a></li>
                   <li><a href="#">İletişim</a></li>
                   <li><a href="#">Basın Kiti</a></li>
                 </ul>
@@ -306,7 +308,7 @@ export const LandingPage: React.FC = () => {
                 <Typography.Title level={5}>Destek</Typography.Title>
                 <ul className="footer-links">
                   <li><a href="#">Yardım Merkezi</a></li>
-                  <li><a onClick={() => navigate('/training')}>Eğitim ve Videolar</a></li>
+                  <li><a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitim ve Videolar</a></li>
                   <li><a href="#">Kullanım Kılavuzu</a></li>
                   <li><a href="#">SSS</a></li>
                   <li><a href="#">Sistem Durumu</a></li>

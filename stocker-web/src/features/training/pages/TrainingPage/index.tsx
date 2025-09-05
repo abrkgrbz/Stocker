@@ -53,7 +53,7 @@ export const TrainingPage: React.FC = () => {
   const videos: Video[] = [
     {
       id: 1,
-      title: 'Stocker'a Başlarken',
+      title: "Stocker'a Başlarken",
       description: 'Platform hakkında genel bilgiler ve ilk adımlar',
       duration: '12:45',
       category: 'Genel',
