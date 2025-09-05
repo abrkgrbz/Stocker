@@ -244,7 +244,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
         return $"Server=localhost;Database=Stocker_Tenant_{companyCode};Trusted_Connection=true;TrustServerCertificate=true;";
     }
 
-    private async Task SendVerificationEmail(Tenant tenant, MasterUser user, EmailVerificationToken verificationToken)
+    private async Task SendVerificationEmail(Domain.Master.Entities.Tenant tenant, MasterUser user, EmailVerificationToken verificationToken)
     {
         var baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" 
             ? "https://stoocker.app" 

@@ -1,6 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stocker.API.Controllers.Base;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Persistence.Contexts;
+using System.Net;
+using System.Net.Mail;
+using System.Text.Json;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -10,298 +16,883 @@ namespace Stocker.API.Controllers.Tenant;
 public class SettingsController : ApiController
 {
     private readonly ILogger<SettingsController> _logger;
+    private readonly TenantDbContext _context;
+    private readonly ICurrentTenantService _currentTenantService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public SettingsController(ILogger<SettingsController> logger)
+    public SettingsController(
+        ILogger<SettingsController> logger,
+        TenantDbContext context,
+        ICurrentTenantService currentTenantService,
+        ICurrentUserService currentUserService)
     {
         _logger = logger;
+        _context = context;
+        _currentTenantService = currentTenantService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetSettings()
     {
-        var settings = new
+        try
         {
-            company = new
-            {
-                name = "ABC Teknoloji Ltd.",
-                taxNumber = "1234567890",
-                taxOffice = "Kadıköy",
-                address = "Kadıköy, İstanbul",
-                phone = "+90 216 123 4567",
-                email = "info@abcteknoloji.com",
-                website = "https://abcteknoloji.com",
-                logo = "/api/tenant/settings/logo"
-            },
-            general = new
-            {
-                language = "tr",
-                timezone = "Europe/Istanbul",
-                dateFormat = "DD/MM/YYYY",
-                timeFormat = "HH:mm",
-                currency = "TRY",
-                currencyPosition = "suffix",
-                thousandSeparator = ".",
-                decimalSeparator = ",",
-                decimalPlaces = 2
-            },
-            invoice = new
-            {
-                prefix = "INV",
-                nextNumber = 1001,
-                footerText = "Ödeme koşulları: 30 gün",
-                showLogo = true,
-                showTaxNumber = true,
-                autoSend = false
-            },
-            email = new
-            {
-                smtpHost = "smtp.gmail.com",
-                smtpPort = 587,
-                smtpUser = "noreply@abcteknoloji.com",
-                smtpSecure = true,
-                fromName = "ABC Teknoloji",
-                fromEmail = "noreply@abcteknoloji.com"
-            },
-            notifications = new
-            {
-                emailNotifications = true,
-                smsNotifications = false,
-                pushNotifications = true,
-                notifyOnNewOrder = true,
-                notifyOnPayment = true,
-                notifyOnLowStock = true,
-                dailyReport = false,
-                weeklyReport = true
-            },
-            security = new
-            {
-                twoFactorRequired = false,
-                passwordMinLength = 8,
-                passwordRequireUppercase = true,
-                passwordRequireLowercase = true,
-                passwordRequireNumbers = true,
-                passwordRequireSpecialChars = true,
-                sessionTimeout = 30, // minutes
-                maxLoginAttempts = 5,
-                lockoutDuration = 15 // minutes
-            }
-        };
+            var tenantId = _currentTenantService.TenantId;
+            
+            // Get tenant with settings
+            var tenant = await _context.Tenants
+                .Include(t => t.TenantSettings)
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
 
-        return Ok(new ApiResponse<object>
+            if (tenant == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Kiracı bilgisi bulunamadı"
+                });
+            }
+
+            // Parse settings from JSON columns
+            var generalSettings = tenant.TenantSettings?.GeneralSettings != null 
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.TenantSettings.GeneralSettings)
+                : GetDefaultGeneralSettings();
+
+            var invoiceSettings = tenant.TenantSettings?.InvoiceSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.TenantSettings.InvoiceSettings)
+                : GetDefaultInvoiceSettings();
+
+            var emailSettings = tenant.TenantSettings?.EmailSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.TenantSettings.EmailSettings)
+                : GetDefaultEmailSettings();
+
+            var notificationSettings = tenant.TenantSettings?.NotificationSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.TenantSettings.NotificationSettings)
+                : GetDefaultNotificationSettings();
+
+            var securitySettings = tenant.TenantSettings?.SecuritySettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.TenantSettings.SecuritySettings)
+                : GetDefaultSecuritySettings();
+
+            var settings = new
+            {
+                company = new
+                {
+                    name = tenant.Name,
+                    taxNumber = tenant.TaxNumber,
+                    taxOffice = tenant.TaxOffice,
+                    address = tenant.Address,
+                    phone = tenant.Phone,
+                    email = tenant.Email,
+                    website = tenant.Website,
+                    logo = tenant.Logo ?? "/api/tenant/settings/logo"
+                },
+                general = generalSettings,
+                invoice = invoiceSettings,
+                email = emailSettings,
+                notifications = notificationSettings,
+                security = securitySettings
+            };
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = settings,
+                Message = "Ayarlar başarıyla yüklendi"
+            });
+        }
+        catch (Exception ex)
         {
-            Success = true,
-            Data = settings,
-            Message = "Ayarlar başarıyla yüklendi"
-        });
+            _logger.LogError(ex, "Error getting settings");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Ayarlar alınırken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("company")]
     public async Task<IActionResult> UpdateCompanySettings([FromBody] CompanySettingsRequest request)
     {
-        _logger.LogInformation("Updating company settings for tenant");
-
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Şirket ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var tenant = await _context.Tenants
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
+
+            if (tenant == null)
+            {
+                return NotFound(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Kiracı bilgisi bulunamadı"
+                });
+            }
+
+            // Update company information
+            if (!string.IsNullOrEmpty(request.Name))
+                tenant.Name = request.Name;
+            if (!string.IsNullOrEmpty(request.TaxNumber))
+                tenant.TaxNumber = request.TaxNumber;
+            if (!string.IsNullOrEmpty(request.TaxOffice))
+                tenant.TaxOffice = request.TaxOffice;
+            if (!string.IsNullOrEmpty(request.Address))
+                tenant.Address = request.Address;
+            if (!string.IsNullOrEmpty(request.Phone))
+                tenant.Phone = request.Phone;
+            if (!string.IsNullOrEmpty(request.Email))
+                tenant.Email = request.Email;
+            if (!string.IsNullOrEmpty(request.Website))
+                tenant.Website = request.Website;
+
+            tenant.ModifiedDate = DateTime.UtcNow;
+            tenant.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Company settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Şirket ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating company settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Şirket ayarları güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("general")]
     public async Task<IActionResult> UpdateGeneralSettings([FromBody] GeneralSettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Genel ayarlar başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings == null)
+            {
+                settings = new Domain.Tenant.Entities.TenantSettings
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = currentUserId
+                };
+                _context.TenantSettings.Add(settings);
+            }
+
+            // Update general settings as JSON
+            var generalSettings = settings.GeneralSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(settings.GeneralSettings)
+                : new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(request.Language))
+                generalSettings!["language"] = request.Language;
+            if (!string.IsNullOrEmpty(request.Timezone))
+                generalSettings!["timezone"] = request.Timezone;
+            if (!string.IsNullOrEmpty(request.DateFormat))
+                generalSettings!["dateFormat"] = request.DateFormat;
+            if (!string.IsNullOrEmpty(request.TimeFormat))
+                generalSettings!["timeFormat"] = request.TimeFormat;
+            if (!string.IsNullOrEmpty(request.Currency))
+                generalSettings!["currency"] = request.Currency;
+            if (!string.IsNullOrEmpty(request.CurrencyPosition))
+                generalSettings!["currencyPosition"] = request.CurrencyPosition;
+            if (!string.IsNullOrEmpty(request.ThousandSeparator))
+                generalSettings!["thousandSeparator"] = request.ThousandSeparator;
+            if (!string.IsNullOrEmpty(request.DecimalSeparator))
+                generalSettings!["decimalSeparator"] = request.DecimalSeparator;
+            if (request.DecimalPlaces.HasValue)
+                generalSettings!["decimalPlaces"] = request.DecimalPlaces.Value;
+
+            settings.GeneralSettings = JsonSerializer.Serialize(generalSettings);
+            settings.ModifiedDate = DateTime.UtcNow;
+            settings.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("General settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Genel ayarlar başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating general settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Genel ayarlar güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("invoice")]
     public async Task<IActionResult> UpdateInvoiceSettings([FromBody] InvoiceSettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Fatura ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings == null)
+            {
+                settings = new Domain.Tenant.Entities.TenantSettings
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = currentUserId
+                };
+                _context.TenantSettings.Add(settings);
+            }
+
+            // Update invoice settings as JSON
+            var invoiceSettings = settings.InvoiceSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(settings.InvoiceSettings)
+                : new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(request.Prefix))
+                invoiceSettings!["prefix"] = request.Prefix;
+            if (request.NextNumber.HasValue)
+                invoiceSettings!["nextNumber"] = request.NextNumber.Value;
+            if (!string.IsNullOrEmpty(request.FooterText))
+                invoiceSettings!["footerText"] = request.FooterText;
+            if (request.ShowLogo.HasValue)
+                invoiceSettings!["showLogo"] = request.ShowLogo.Value;
+            if (request.ShowTaxNumber.HasValue)
+                invoiceSettings!["showTaxNumber"] = request.ShowTaxNumber.Value;
+            if (request.AutoSend.HasValue)
+                invoiceSettings!["autoSend"] = request.AutoSend.Value;
+
+            settings.InvoiceSettings = JsonSerializer.Serialize(invoiceSettings);
+            settings.ModifiedDate = DateTime.UtcNow;
+            settings.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Invoice settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Fatura ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating invoice settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Fatura ayarları güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("email")]
     public async Task<IActionResult> UpdateEmailSettings([FromBody] EmailSettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "E-posta ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings == null)
+            {
+                settings = new Domain.Tenant.Entities.TenantSettings
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = currentUserId
+                };
+                _context.TenantSettings.Add(settings);
+            }
+
+            // Update email settings as JSON (encrypt password in production)
+            var emailSettings = settings.EmailSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(settings.EmailSettings)
+                : new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(request.SmtpHost))
+                emailSettings!["smtpHost"] = request.SmtpHost;
+            if (request.SmtpPort.HasValue)
+                emailSettings!["smtpPort"] = request.SmtpPort.Value;
+            if (!string.IsNullOrEmpty(request.SmtpUser))
+                emailSettings!["smtpUser"] = request.SmtpUser;
+            if (!string.IsNullOrEmpty(request.SmtpPassword))
+                emailSettings!["smtpPassword"] = request.SmtpPassword; // TODO: Encrypt in production
+            if (request.SmtpSecure.HasValue)
+                emailSettings!["smtpSecure"] = request.SmtpSecure.Value;
+            if (!string.IsNullOrEmpty(request.FromName))
+                emailSettings!["fromName"] = request.FromName;
+            if (!string.IsNullOrEmpty(request.FromEmail))
+                emailSettings!["fromEmail"] = request.FromEmail;
+
+            settings.EmailSettings = JsonSerializer.Serialize(emailSettings);
+            settings.ModifiedDate = DateTime.UtcNow;
+            settings.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Email settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "E-posta ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating email settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "E-posta ayarları güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPost("email/test")]
     public async Task<IActionResult> TestEmailSettings([FromBody] TestEmailRequest request)
     {
-        _logger.LogInformation("Testing email settings with recipient: {Email}", request.TestEmail);
-
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Test e-postası başarıyla gönderildi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings?.EmailSettings == null)
+            {
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "E-posta ayarları yapılandırılmamış"
+                });
+            }
+
+            var emailSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(settings.EmailSettings);
+
+            // Send test email
+            try
+            {
+                using var client = new SmtpClient(emailSettings!["smtpHost"].ToString())
+                {
+                    Port = Convert.ToInt32(emailSettings["smtpPort"]),
+                    Credentials = new NetworkCredential(
+                        emailSettings["smtpUser"].ToString(),
+                        emailSettings["smtpPassword"].ToString()),
+                    EnableSsl = Convert.ToBoolean(emailSettings["smtpSecure"])
+                };
+
+                var message = new MailMessage
+                {
+                    From = new MailAddress(emailSettings["fromEmail"].ToString()!, emailSettings["fromName"].ToString()),
+                    Subject = "Test E-postası",
+                    Body = "Bu bir test e-postasıdır. E-posta ayarlarınız doğru yapılandırılmış.",
+                    IsBodyHtml = true
+                };
+
+                message.To.Add(new MailAddress(request.TestEmail));
+
+                await client.SendMailAsync(message);
+
+                _logger.LogInformation("Test email sent successfully to: {Email}", request.TestEmail);
+
+                return Ok(new ApiResponse<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Test e-postası başarıyla gönderildi"
+                });
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogError(emailEx, "Failed to send test email");
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = $"E-posta gönderilemedi: {emailEx.Message}"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error testing email settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "E-posta test edilirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("notifications")]
     public async Task<IActionResult> UpdateNotificationSettings([FromBody] NotificationSettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Bildirim ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings == null)
+            {
+                settings = new Domain.Tenant.Entities.TenantSettings
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = currentUserId
+                };
+                _context.TenantSettings.Add(settings);
+            }
+
+            // Update notification settings as JSON
+            var notificationSettings = settings.NotificationSettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(settings.NotificationSettings)
+                : new Dictionary<string, object>();
+
+            if (request.EmailNotifications.HasValue)
+                notificationSettings!["emailNotifications"] = request.EmailNotifications.Value;
+            if (request.SmsNotifications.HasValue)
+                notificationSettings!["smsNotifications"] = request.SmsNotifications.Value;
+            if (request.PushNotifications.HasValue)
+                notificationSettings!["pushNotifications"] = request.PushNotifications.Value;
+            if (request.NotifyOnNewOrder.HasValue)
+                notificationSettings!["notifyOnNewOrder"] = request.NotifyOnNewOrder.Value;
+            if (request.NotifyOnPayment.HasValue)
+                notificationSettings!["notifyOnPayment"] = request.NotifyOnPayment.Value;
+            if (request.NotifyOnLowStock.HasValue)
+                notificationSettings!["notifyOnLowStock"] = request.NotifyOnLowStock.Value;
+            if (request.DailyReport.HasValue)
+                notificationSettings!["dailyReport"] = request.DailyReport.Value;
+            if (request.WeeklyReport.HasValue)
+                notificationSettings!["weeklyReport"] = request.WeeklyReport.Value;
+
+            settings.NotificationSettings = JsonSerializer.Serialize(notificationSettings);
+            settings.ModifiedDate = DateTime.UtcNow;
+            settings.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Notification settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Bildirim ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating notification settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Bildirim ayarları güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("security")]
     public async Task<IActionResult> UpdateSecuritySettings([FromBody] SecuritySettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = "Güvenlik ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var settings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+            if (settings == null)
+            {
+                settings = new Domain.Tenant.Entities.TenantSettings
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = currentUserId
+                };
+                _context.TenantSettings.Add(settings);
+            }
+
+            // Update security settings as JSON
+            var securitySettings = settings.SecuritySettings != null
+                ? JsonSerializer.Deserialize<Dictionary<string, object>>(settings.SecuritySettings)
+                : new Dictionary<string, object>();
+
+            if (request.TwoFactorRequired.HasValue)
+                securitySettings!["twoFactorRequired"] = request.TwoFactorRequired.Value;
+            if (request.PasswordMinLength.HasValue)
+                securitySettings!["passwordMinLength"] = request.PasswordMinLength.Value;
+            if (request.PasswordRequireUppercase.HasValue)
+                securitySettings!["passwordRequireUppercase"] = request.PasswordRequireUppercase.Value;
+            if (request.PasswordRequireLowercase.HasValue)
+                securitySettings!["passwordRequireLowercase"] = request.PasswordRequireLowercase.Value;
+            if (request.PasswordRequireNumbers.HasValue)
+                securitySettings!["passwordRequireNumbers"] = request.PasswordRequireNumbers.Value;
+            if (request.PasswordRequireSpecialChars.HasValue)
+                securitySettings!["passwordRequireSpecialChars"] = request.PasswordRequireSpecialChars.Value;
+            if (request.SessionTimeout.HasValue)
+                securitySettings!["sessionTimeout"] = request.SessionTimeout.Value;
+            if (request.MaxLoginAttempts.HasValue)
+                securitySettings!["maxLoginAttempts"] = request.MaxLoginAttempts.Value;
+            if (request.LockoutDuration.HasValue)
+                securitySettings!["lockoutDuration"] = request.LockoutDuration.Value;
+
+            settings.SecuritySettings = JsonSerializer.Serialize(securitySettings);
+            settings.ModifiedDate = DateTime.UtcNow;
+            settings.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Security settings updated for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Güvenlik ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating security settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Güvenlik ayarları güncellenirken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPost("logo")]
     public async Task<IActionResult> UploadLogo(IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        try
         {
-            return BadRequest(new ApiResponse<object>
+            if (file == null || file.Length == 0)
             {
-                Success = false,
-                Message = "Dosya seçilmedi"
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Dosya seçilmedi"
+                });
+            }
+
+            // Validate file type
+            var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Sadece resim dosyaları yüklenebilir (JPG, PNG, GIF)"
+                });
+            }
+
+            // Validate file size (max 2MB)
+            if (file.Length > 2 * 1024 * 1024)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Dosya boyutu 2MB'dan büyük olamaz"
+                });
+            }
+
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+            var fileName = $"logo_{tenantId}_{DateTime.UtcNow.Ticks}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine("wwwroot", "uploads", "logos", fileName);
+
+            // Ensure directory exists
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var logoUrl = $"/uploads/logos/{fileName}";
+
+            // Update tenant logo
+            var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+            if (tenant != null)
+            {
+                tenant.Logo = logoUrl;
+                tenant.ModifiedDate = DateTime.UtcNow;
+                tenant.ModifiedBy = currentUserId;
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Logo uploaded for tenant: {TenantId}", tenantId);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new { logoUrl },
+                Message = "Logo başarıyla yüklendi"
             });
         }
-
-        // Validate file type
-        var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif" };
-        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+        catch (Exception ex)
         {
-            return BadRequest(new ApiResponse<object>
+            _logger.LogError(ex, "Error uploading logo");
+            return StatusCode(500, new ApiResponse<object>
             {
                 Success = false,
-                Message = "Sadece resim dosyaları yüklenebilir (JPG, PNG, GIF)"
+                Message = "Logo yüklenirken bir hata oluştu"
             });
         }
-
-        // Validate file size (max 2MB)
-        if (file.Length > 2 * 1024 * 1024)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Dosya boyutu 2MB'dan büyük olamaz"
-            });
-        }
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Data = new { logoUrl = "/api/tenant/settings/logo" },
-            Message = "Logo başarıyla yüklendi"
-        });
     }
 
     [HttpGet("logo")]
     public async Task<IActionResult> GetLogo()
     {
-        // Return default logo or tenant's logo
-        var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "default-logo.png");
-        
-        if (!System.IO.File.Exists(logoPath))
+        try
         {
-            return NotFound();
-        }
+            var tenantId = _currentTenantService.TenantId;
+            var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+            
+            if (!string.IsNullOrEmpty(tenant?.Logo))
+            {
+                var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", tenant.Logo.TrimStart('/'));
+                if (System.IO.File.Exists(logoPath))
+                {
+                    var image = System.IO.File.OpenRead(logoPath);
+                    var contentType = GetContentType(Path.GetExtension(logoPath));
+                    return File(image, contentType);
+                }
+            }
 
-        var image = System.IO.File.OpenRead(logoPath);
-        return File(image, "image/png");
+            // Return default logo
+            var defaultLogoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "default-logo.png");
+            
+            if (!System.IO.File.Exists(defaultLogoPath))
+            {
+                return NotFound();
+            }
+
+            var defaultImage = System.IO.File.OpenRead(defaultLogoPath);
+            return File(defaultImage, "image/png");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting logo");
+            return StatusCode(500);
+        }
     }
 
     [HttpGet("modules")]
     public async Task<IActionResult> GetModuleSettings()
     {
-        var modules = new[]
+        try
         {
-            new
-            {
-                code = "CRM",
-                name = "Müşteri İlişkileri Yönetimi",
-                isActive = true,
-                settings = (object)new
+            var tenantId = _currentTenantService.TenantId;
+            
+            var modules = await _context.TenantModules
+                .Include(tm => tm.Module)
+                .Where(tm => tm.TenantId == tenantId)
+                .Select(tm => new
                 {
-                    leadAutoAssignment = true,
-                    dealAutoClose = false,
-                    pipelineStages = 5,
-                    emailIntegration = true
-                }
-            },
-            new
-            {
-                code = "INVENTORY",
-                name = "Stok Yönetimi",
-                isActive = true,
-                settings = (object)new
-                {
-                    lowStockAlert = true,
-                    alertThreshold = 10,
-                    autoReorder = false,
-                    barcodeEnabled = true
-                }
-            },
-            new
-            {
-                code = "FINANCE",
-                name = "Finans Yönetimi",
-                isActive = true,
-                settings = (object)new
-                {
-                    autoInvoicing = true,
-                    paymentReminders = true,
-                    reminderDays = 3,
-                    lateFeeEnabled = false
-                }
-            },
-            new
-            {
-                code = "HR",
-                name = "İnsan Kaynakları",
-                isActive = false,
-                settings = (object)new { }
-            }
-        };
+                    code = tm.Module.Code,
+                    name = tm.Module.Name,
+                    isActive = tm.IsActive,
+                    settings = tm.Settings != null 
+                        ? JsonSerializer.Deserialize<object>(tm.Settings) 
+                        : new { }
+                })
+                .ToListAsync();
 
-        return Ok(new ApiResponse<object>
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = modules,
+                Message = "Modül ayarları başarıyla yüklendi"
+            });
+        }
+        catch (Exception ex)
         {
-            Success = true,
-            Data = modules,
-            Message = "Modül ayarları başarıyla yüklendi"
-        });
+            _logger.LogError(ex, "Error getting module settings");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Modül ayarları alınırken bir hata oluştu"
+            });
+        }
     }
 
     [HttpPut("modules/{moduleCode}")]
     public async Task<IActionResult> UpdateModuleSettings(string moduleCode, [FromBody] ModuleSettingsRequest request)
     {
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Success = true,
-            Data = true,
-            Message = $"{moduleCode} modül ayarları başarıyla güncellendi"
-        });
+            var tenantId = _currentTenantService.TenantId;
+            var currentUserId = _currentUserService.UserId;
+
+            var tenantModule = await _context.TenantModules
+                .Include(tm => tm.Module)
+                .FirstOrDefaultAsync(tm => tm.TenantId == tenantId && tm.Module.Code == moduleCode);
+
+            if (tenantModule == null)
+            {
+                return NotFound(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Modül bulunamadı"
+                });
+            }
+
+            tenantModule.IsActive = request.IsActive;
+            if (request.Settings != null)
+            {
+                tenantModule.Settings = JsonSerializer.Serialize(request.Settings);
+            }
+
+            tenantModule.ModifiedDate = DateTime.UtcNow;
+            tenantModule.ModifiedBy = currentUserId;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Module settings updated for module: {ModuleCode}, tenant: {TenantId}", 
+                moduleCode, tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = $"{moduleCode} modül ayarları başarıyla güncellendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating module settings");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Modül ayarları güncellenirken bir hata oluştu"
+            });
+        }
+    }
+
+    private Dictionary<string, object> GetDefaultGeneralSettings()
+    {
+        return new Dictionary<string, object>
+        {
+            ["language"] = "tr",
+            ["timezone"] = "Europe/Istanbul",
+            ["dateFormat"] = "DD/MM/YYYY",
+            ["timeFormat"] = "HH:mm",
+            ["currency"] = "TRY",
+            ["currencyPosition"] = "suffix",
+            ["thousandSeparator"] = ".",
+            ["decimalSeparator"] = ",",
+            ["decimalPlaces"] = 2
+        };
+    }
+
+    private Dictionary<string, object> GetDefaultInvoiceSettings()
+    {
+        return new Dictionary<string, object>
+        {
+            ["prefix"] = "INV",
+            ["nextNumber"] = 1001,
+            ["footerText"] = "Ödeme koşulları: 30 gün",
+            ["showLogo"] = true,
+            ["showTaxNumber"] = true,
+            ["autoSend"] = false
+        };
+    }
+
+    private Dictionary<string, object> GetDefaultEmailSettings()
+    {
+        return new Dictionary<string, object>
+        {
+            ["smtpHost"] = "smtp.gmail.com",
+            ["smtpPort"] = 587,
+            ["smtpUser"] = "",
+            ["smtpPassword"] = "",
+            ["smtpSecure"] = true,
+            ["fromName"] = "",
+            ["fromEmail"] = ""
+        };
+    }
+
+    private Dictionary<string, object> GetDefaultNotificationSettings()
+    {
+        return new Dictionary<string, object>
+        {
+            ["emailNotifications"] = true,
+            ["smsNotifications"] = false,
+            ["pushNotifications"] = true,
+            ["notifyOnNewOrder"] = true,
+            ["notifyOnPayment"] = true,
+            ["notifyOnLowStock"] = true,
+            ["dailyReport"] = false,
+            ["weeklyReport"] = true
+        };
+    }
+
+    private Dictionary<string, object> GetDefaultSecuritySettings()
+    {
+        return new Dictionary<string, object>
+        {
+            ["twoFactorRequired"] = false,
+            ["passwordMinLength"] = 8,
+            ["passwordRequireUppercase"] = true,
+            ["passwordRequireLowercase"] = true,
+            ["passwordRequireNumbers"] = true,
+            ["passwordRequireSpecialChars"] = true,
+            ["sessionTimeout"] = 30,
+            ["maxLoginAttempts"] = 5,
+            ["lockoutDuration"] = 15
+        };
+    }
+
+    private string GetContentType(string extension)
+    {
+        return extension.ToLower() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            _ => "application/octet-stream"
+        };
     }
 }
 
