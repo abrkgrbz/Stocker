@@ -1,1 +1,2 @@
-export { default } from './index.tsx';
+export { default } from './SystemSettingsPage';
+export * from './SystemSettingsPage';
