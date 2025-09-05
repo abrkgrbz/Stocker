@@ -5,11 +5,17 @@ namespace Stocker.Domain.Master.ValueObjects;
 
 public sealed class RefreshToken : ValueObject
 {
-    public string Token { get; }
-    public DateTime ExpiresAt { get; }
-    public DateTime CreatedAt { get; }
-    public string? DeviceInfo { get; }
-    public string? IpAddress { get; }
+    public string Token { get; private set; }
+    public DateTime ExpiresAt { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public string? DeviceInfo { get; private set; }
+    public string? IpAddress { get; private set; }
+
+    // EF Core constructor
+    private RefreshToken()
+    {
+        Token = string.Empty;
+    }
 
     private RefreshToken(string token, DateTime expiresAt, DateTime createdAt, string? deviceInfo, string? ipAddress)
     {

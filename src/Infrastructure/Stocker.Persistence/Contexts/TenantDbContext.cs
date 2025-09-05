@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore; 
 using Stocker.Domain.Tenant.Entities;
-using Stocker.Domain.Master.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 
@@ -34,9 +33,6 @@ public class TenantDbContext : BaseDbContext
     // Settings & Configuration
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     public DbSet<TenantModules> TenantModules => Set<TenantModules>();
-    
-    // Reference to Tenant from Master DB (read-only)
-    public DbSet<Tenant> Tenants => Set<Tenant>();
     
     // Financial
     public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();

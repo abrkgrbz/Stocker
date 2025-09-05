@@ -4,11 +4,17 @@ namespace Stocker.Domain.Master.ValueObjects;
 
 public sealed class PackageLimit : ValueObject
 {
-    public int MaxUsers { get; }
-    public int MaxStorage { get; } // in GB
-    public int MaxProjects { get; }
-    public int MaxApiCalls { get; } // per month
-    public Dictionary<string, int> ModuleLimits { get; }
+    public int MaxUsers { get; private set; }
+    public int MaxStorage { get; private set; } // in GB
+    public int MaxProjects { get; private set; }
+    public int MaxApiCalls { get; private set; } // per month
+    public Dictionary<string, int> ModuleLimits { get; private set; }
+
+    // EF Core constructor
+    private PackageLimit()
+    {
+        ModuleLimits = new Dictionary<string, int>();
+    }
 
     private PackageLimit(
         int maxUsers,

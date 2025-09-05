@@ -10,8 +10,15 @@ public sealed class HashedPassword : ValueObject
     private const int KeySize = 256 / 8; // 256 bit
     private const int Iterations = 600000; // OWASP 2023 recommendation for PBKDF2-HMAC-SHA256
 
-    public string Hash { get; }
-    public string Salt { get; }
+    public string Hash { get; private set; }
+    public string Salt { get; private set; }
+
+    // EF Core constructor
+    private HashedPassword()
+    {
+        Hash = string.Empty;
+        Salt = string.Empty;
+    }
 
     private HashedPassword(string hash, string salt)
     {

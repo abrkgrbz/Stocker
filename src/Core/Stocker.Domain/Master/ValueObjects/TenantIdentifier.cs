@@ -7,7 +7,13 @@ public sealed class TenantIdentifier : ValueObject
 {
     private static readonly Regex IdentifierRegex = new(@"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", RegexOptions.Compiled);
 
-    public string Value { get; }
+    public string Value { get; private set; }
+
+    // EF Core constructor
+    private TenantIdentifier()
+    {
+        Value = string.Empty;
+    }
 
     private TenantIdentifier(string value)
     {
