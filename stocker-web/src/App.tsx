@@ -85,6 +85,7 @@ const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const NotFoundPage = lazy(() => import('@/features/error/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const TrainingPage = lazy(() => import('@/features/training/pages/TrainingPage').then(m => ({ default: m.TrainingPage })));
 const BlogPage = lazy(() => import('@/features/blog/pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const PricingPage = lazy(() => import('@/features/pricing/pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
 const TestSweetAlert = lazy(() => import('@/features/test/TestSweetAlert'));
 
@@ -232,6 +233,7 @@ function App() {
                 <Route path="/old-landing" element={<LandingPage />} />
                 <Route path="/training" element={<TrainingPage />} />
                 <Route path="/blog" element={<BlogPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
                 
                 {/* Register Page - No layout wrapper for full experience */}
                 <Route path="/register-old" element={<RegisterWizard />} />

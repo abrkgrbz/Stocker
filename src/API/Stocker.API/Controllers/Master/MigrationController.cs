@@ -128,6 +128,10 @@ public class MigrationController : ApiController
 
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
             optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            
+            // Suppress pending model changes warning for tenant migrations
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
             
@@ -275,6 +279,10 @@ public class MigrationController : ApiController
 
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
             optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            
+            // Suppress pending model changes warning for tenant migrations
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
             
