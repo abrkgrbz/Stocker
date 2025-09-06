@@ -5,7 +5,7 @@ import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined
 import { useAuthStore } from '@/app/store/auth.store';
 import { LoginRequest } from '@/shared/types';
 import companyService from '@/services/companyService';
-import { showApiResponse, showLoginSuccess } from '@/shared/utils/sweetAlert';
+import { showApiResponse, showWelcomeAlert } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
 import './style.css';
 
@@ -100,9 +100,12 @@ export const LoginPage: React.FC = () => {
       
       console.log('[LoginPage] Navigation called');
       
-      // Show success message AFTER navigation (non-blocking toast)
+      // Show beautiful welcome alert AFTER navigation
       setTimeout(() => {
-        showLoginSuccess(userName);
+        const roleDisplayName = userRole === 'SystemAdmin' ? 'Sistem Yöneticisi' : 
+                               userRole === 'TenantAdmin' ? 'Kiracı Yöneticisi' :
+                               userRole === 'Admin' ? 'Yönetici' : 'Kullanıcı';
+        showWelcomeAlert(userName, roleDisplayName);
       }, 100);
       
     } catch (error: any) {

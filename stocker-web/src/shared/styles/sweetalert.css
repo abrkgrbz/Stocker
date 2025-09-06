@@ -138,11 +138,17 @@
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 12px;
+  background-color: #ffffff !important;
 }
 
 .swal2-toast .swal2-title {
   font-size: 0.9rem;
   margin: 0;
+  color: #1f2937 !important;
+}
+
+.swal2-toast .swal2-html-container {
+  color: #4b5563 !important;
 }
 
 .swal2-toast .swal2-icon {
@@ -250,6 +256,195 @@
     border-color: #374151;
     color: #d1d5db;
   }
+  
+  /* Toast in dark mode */
+  .swal2-toast {
+    background-color: #1f2937 !important;
+  }
+  
+  .swal2-toast .swal2-title {
+    color: #f9fafb !important;
+  }
+  
+  .swal2-toast .swal2-html-container {
+    color: #d1d5db !important;
+  }
+}
+
+/* Modern Alert Styles */
+.modern-alert-popup {
+  border-radius: 20px !important;
+  padding: 32px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  box-shadow: 0 25px 50px -12px rgba(102, 126, 234, 0.25) !important;
+}
+
+.modern-alert-title {
+  color: #ffffff !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+}
+
+.modern-alert-text {
+  color: #f3f4f6 !important;
+  font-size: 16px !important;
+  margin-top: 12px !important;
+}
+
+.modern-alert-button {
+  background: #ffffff !important;
+  color: #667eea !important;
+  padding: 12px 32px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.modern-alert-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.modern-alert-progress .swal2-timer-progress-bar {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Welcome Alert Specific Styles */
+.welcome-alert-popup {
+  background: #ffffff !important;
+  border-radius: 24px !important;
+  padding: 40px !important;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(102, 126, 234, 0.1) !important;
+  border: 2px solid transparent !important;
+  background-image: linear-gradient(white, white), 
+                    linear-gradient(135deg, #667eea, #764ba2) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+}
+
+.welcome-alert-container {
+  text-align: center;
+}
+
+.welcome-alert-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  animation: welcome-icon-spin 2s ease-in-out;
+}
+
+.welcome-alert-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 6px rgba(102, 126, 234, 0.2));
+}
+
+.welcome-alert-title {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin: 0 0 8px 0 !important;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-alert-username {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin: 0 !important;
+}
+
+.welcome-alert-message {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.welcome-alert-progress .swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #667eea, #764ba2) !important;
+  height: 4px !important;
+}
+
+/* Animations for Welcome Alert */
+@keyframes welcome-icon-spin {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.welcome-alert-show {
+  animation: welcome-show 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.welcome-alert-hide {
+  animation: welcome-hide 0.3s ease-out;
+}
+
+@keyframes welcome-show {
+  0% {
+    transform: scale(0.8) translateY(-50px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes welcome-hide {
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8) translateY(50px);
+    opacity: 0;
+  }
+}
+
+/* Dark mode support for modern alerts */
+@media (prefers-color-scheme: dark) {
+  .welcome-alert-popup {
+    background: #1f2937 !important;
+    background-image: linear-gradient(#1f2937, #1f2937), 
+                      linear-gradient(135deg, #667eea, #764ba2) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+  }
+  
+  .welcome-alert-title {
+    background: linear-gradient(135deg, #818cf8, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .welcome-alert-username {
+    color: #f3f4f6 !important;
+  }
+  
+  .welcome-alert-message {
+    border-top-color: #374151;
+    color: #9ca3af;
+  }
 }
 
 /* Responsive design */
@@ -257,5 +452,22 @@
   .swal2-popup {
     width: calc(100% - 2rem);
     margin: 1rem;
+  }
+  
+  .welcome-alert-popup {
+    padding: 24px !important;
+  }
+  
+  .welcome-alert-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .welcome-alert-title {
+    font-size: 24px !important;
+  }
+  
+  .welcome-alert-username {
+    font-size: 18px !important;
   }
 }

@@ -266,13 +266,85 @@ export const showRegistrationSuccess = async (email: string) => {
   });
 };
 
-// Helper function for login success
+// Helper function for login success with modern centered alert
 export const showLoginSuccess = (userName: string) => {
-  // Use toast for non-blocking notification
-  return Toast.fire({
+  return Swal.fire({
     icon: 'success',
     title: `Hoş geldiniz ${userName}!`,
-    text: 'Başarıyla giriş yaptınız.'
+    text: 'Başarıyla giriş yaptınız.',
+    confirmButtonText: 'Devam Et',
+    confirmButtonColor: '#667eea',
+    showConfirmButton: true,
+    timer: 3000,
+    timerProgressBar: true,
+    position: 'center',
+    backdrop: true,
+    customClass: {
+      popup: 'modern-alert-popup',
+      title: 'modern-alert-title',
+      htmlContainer: 'modern-alert-text',
+      confirmButton: 'modern-alert-button',
+      timerProgressBar: 'modern-alert-progress'
+    },
+    showClass: {
+      popup: 'animate__animated animate__fadeInDown animate__faster'
+    },
+    hideClass: {
+      popup: 'animate__animated animate__fadeOutUp animate__faster'
+    }
+  });
+};
+
+// Alternative: Beautiful welcome alert with animation
+export const showWelcomeAlert = (userName: string, role?: string) => {
+  const roleText = role ? `<p style="font-size: 14px; color: #9ca3af; margin-top: 8px;">Rol: ${role}</p>` : '';
+  
+  return Swal.fire({
+    html: `
+      <div class="welcome-alert-container">
+        <div class="welcome-alert-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+                  fill="url(#gradient1)" stroke="url(#gradient2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+              <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h2 class="welcome-alert-title">Hoş Geldiniz!</h2>
+        <p class="welcome-alert-username">${userName}</p>
+        ${roleText}
+        <div class="welcome-alert-message">
+          Başarıyla giriş yaptınız. Sistem yükleniyor...
+        </div>
+      </div>
+    `,
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    position: 'center',
+    backdrop: `
+      rgba(102, 126, 234, 0.1)
+      left top
+      no-repeat
+    `,
+    customClass: {
+      popup: 'welcome-alert-popup',
+      timerProgressBar: 'welcome-alert-progress'
+    },
+    showClass: {
+      popup: 'welcome-alert-show'
+    },
+    hideClass: {
+      popup: 'welcome-alert-hide'
+    }
   });
 };
 
