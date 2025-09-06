@@ -42,8 +42,24 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IValidationService, ValidationService>();
         
         // Add Cache Service
-        services.AddMemoryCache();
-        services.AddSingleton<ITenantSettingsCacheService, TenantSettingsCacheService>();
+        // Check if Redis is configured
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrEmpty(redisConnection))
+        {
+            // Use Redis cache
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "Stocker:";
+            });
+            services.AddSingleton<ITenantSettingsCacheService, RedisCacheService>();
+        }
+        else
+        {
+            // Fall back to in-memory cache
+            services.AddMemoryCache();
+            services.AddSingleton<ITenantSettingsCacheService, TenantSettingsCacheService>();
+        }
         
         // Add Audit Service
         services.AddScoped<IAuditService, AuditService>();
