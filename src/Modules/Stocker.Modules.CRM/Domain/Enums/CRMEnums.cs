@@ -204,12 +204,13 @@ public enum EmailStatus
     Queued = 2,
     Sent = 3,
     Delivered = 4,
-    Opened = 5,
-    Clicked = 6,
-    Replied = 7,
-    Bounced = 8,
-    Failed = 9,
-    Spam = 10
+    Read = 5,
+    Opened = 6,
+    Clicked = 7,
+    Replied = 8,
+    Bounced = 9,
+    Failed = 10,
+    Spam = 11
 }
 
 public enum TaskType

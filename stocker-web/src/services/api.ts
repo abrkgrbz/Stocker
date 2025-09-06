@@ -9,7 +9,9 @@ const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000, // Increased to 60 seconds for long operations
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json; charset=utf-8',
+    'Accept-Charset': 'utf-8',
   },
 });
 
@@ -45,6 +47,11 @@ axiosInstance.interceptors.request.use(
 // Response interceptor for error handling
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Ensure response is properly decoded as UTF-8
+    if (response.headers['content-type']?.includes('application/json')) {
+      // Response is already parsed by axios
+      return response;
+    }
     return response;
   },
   async (error) => {

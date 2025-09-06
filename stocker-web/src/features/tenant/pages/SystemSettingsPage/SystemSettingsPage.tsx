@@ -79,7 +79,7 @@ const SystemSettingsPage: React.FC = () => {
       form.setFieldsValue(formValues);
     } catch (error) {
       console.error('Settings load error:', error);
-      message.error('Ayarlar yuklenirken bir hata olustu');
+      message.error('Ayarlar yüklenirken bir hata oluştu');
     }
     setLoading(false);
   };
@@ -104,7 +104,7 @@ const SystemSettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     if (Object.keys(editedValues).length === 0) {
-      message.info('Degisiklik yapilmadi');
+      message.info('Değişiklik yapılmadı');
       return;
     }
 
@@ -115,12 +115,12 @@ const SystemSettingsPage: React.FC = () => {
       );
       
       await Promise.all(promises);
-      message.success('Ayarlar basariyla kaydedildi');
+      message.success('Ayarlar başarıyla kaydedildi');
       setEditedValues({});
       await loadSettings();
     } catch (error) {
       console.error('Save error:', error);
-      message.error('Ayarlar kaydedilirken hata olustu');
+      message.error('Ayarlar kaydedilirken hata oluştu');
     }
     setSaving(false);
   };
@@ -128,16 +128,16 @@ const SystemSettingsPage: React.FC = () => {
   const handleReset = () => {
     setEditedValues({});
     loadSettings();
-    message.info('Degisiklikler geri alindi');
+    message.info('Değişiklikler geri alındı');
   };
 
   const getIcon = (category: string) => {
     const icons: { [key: string]: React.ReactNode } = {
       'Genel': <GlobalOutlined />,
-      'Guvenlik': <SecurityScanOutlined />,
+      'Güvenlik': <SecurityScanOutlined />,
       'E-posta': <MailOutlined />,
       'Fatura': <FileTextOutlined />,
-      'Yerellesirme': <GlobalOutlined />,
+      'Yerelleştirme': <GlobalOutlined />,
     };
     return icons[category] || <SettingOutlined />;
   };
@@ -193,7 +193,7 @@ const SystemSettingsPage: React.FC = () => {
     return (
       <div className="settings-loading">
         <Spin size="large" />
-        <Title level={4}>Ayarlar Yukleniyor...</Title>
+        <Title level={4}>Ayarlar Yükleniyor...</Title>
       </div>
     );
   }
@@ -201,7 +201,7 @@ const SystemSettingsPage: React.FC = () => {
   if (settings.length === 0) {
     return (
       <Card className="settings-empty">
-        <Empty description="Ayar bulunamadi" />
+        <Empty description="Ayar bulunamadı" />
       </Card>
     );
   }
@@ -226,7 +226,7 @@ const SystemSettingsPage: React.FC = () => {
                     <Tag color="orange" size="small">Sistem</Tag>
                   )}
                   {editedValues[setting.settingKey] !== undefined && (
-                    <Tag color="blue" size="small">Degisti</Tag>
+                    <Tag color="blue" size="small">Değişti</Tag>
                   )}
                 </div>
                 {setting.description && (
@@ -254,10 +254,10 @@ const SystemSettingsPage: React.FC = () => {
         <div className="settings-header">
           <div>
             <Title level={3}>
-              <SettingOutlined /> Sistem Ayarlari
+              <SettingOutlined /> Sistem Ayarları
             </Title>
             <Text type="secondary">
-              Tenant ayarlarinizi buradan yonetebilirsiniz
+              Tenant ayarlarınızı buradan yönetebilirsiniz
             </Text>
           </div>
           <Space>
@@ -266,7 +266,7 @@ const SystemSettingsPage: React.FC = () => {
               onClick={handleReset}
               disabled={Object.keys(editedValues).length === 0}
             >
-              Sifirla
+              Sıfırla
             </Button>
             <Button
               type="primary"
