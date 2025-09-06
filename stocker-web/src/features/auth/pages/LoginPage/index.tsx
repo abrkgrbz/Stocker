@@ -95,18 +95,20 @@ export const LoginPage: React.FC = () => {
       console.log('[LoginPage] Final navigation target:', targetPath);
       console.log('[LoginPage] About to navigate...');
       
-      // Navigate immediately
-      navigate(targetPath, { replace: true });
+      // Show welcome alert first (non-blocking)
+      const roleDisplayName = userRole === 'SystemAdmin' ? 'Sistem Yöneticisi' : 
+                             userRole === 'TenantAdmin' ? 'Kiracı Yöneticisi' :
+                             userRole === 'Admin' ? 'Yönetici' : 'Kullanıcı';
+      showWelcomeAlert(userName, roleDisplayName);
       
-      console.log('[LoginPage] Navigation called');
+      // Use window.location for hard navigation to ensure page reload
+      // This will trigger a full page reload and re-initialization
+      console.log('[LoginPage] Hard navigating to:', targetPath);
       
-      // Show beautiful welcome alert AFTER navigation
       setTimeout(() => {
-        const roleDisplayName = userRole === 'SystemAdmin' ? 'Sistem Yöneticisi' : 
-                               userRole === 'TenantAdmin' ? 'Kiracı Yöneticisi' :
-                               userRole === 'Admin' ? 'Yönetici' : 'Kullanıcı';
-        showWelcomeAlert(userName, roleDisplayName);
-      }, 100);
+        // Use window.location.href for guaranteed navigation
+        window.location.href = targetPath;
+      }, 1000);
       
     } catch (error: any) {
       // Close loading

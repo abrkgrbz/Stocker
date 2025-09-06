@@ -327,14 +327,16 @@ export const showWelcomeAlert = (userName: string, role?: string) => {
       </div>
     `,
     showConfirmButton: false,
-    timer: 2500,
+    timer: 2000,
     timerProgressBar: true,
     position: 'center',
-    backdrop: `
-      rgba(102, 126, 234, 0.1)
-      left top
-      no-repeat
-    `,
+    allowOutsideClick: true,
+    allowEscapeKey: true,
+    allowEnterKey: true,
+    backdrop: false,  // Disable backdrop to prevent blocking
+    focusConfirm: false,
+    focusCancel: false,
+    focusDeny: false,
     customClass: {
       popup: 'welcome-alert-popup',
       timerProgressBar: 'welcome-alert-progress'
