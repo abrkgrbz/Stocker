@@ -6,10 +6,12 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   define: {
-    'process.env': {}
+    'process.env': {},
+    __DEV__: JSON.stringify(true)
   },
   esbuild: {
     charset: 'utf8',
+    legalComments: 'none',
   },
   resolve: {
     alias: {

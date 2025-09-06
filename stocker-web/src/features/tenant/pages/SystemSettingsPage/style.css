@@ -11,17 +11,14 @@
   align-items: flex-start;
   margin-bottom: 24px;
   padding: 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
 }
 
 .header-content h2 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #262626;
 }
 
 /* Loading State */
@@ -51,7 +48,7 @@
 
 .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab-active {
   border-color: #1890ff;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+  background: #1890ff;
 }
 
 .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab-active .ant-tabs-tab-btn {
@@ -66,26 +63,27 @@
 
 /* Category Card Styles */
 .settings-category-card {
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .settings-category-card .ant-card-head {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  color: #262626;
 }
 
 .settings-category-card .ant-card-head-title {
-  color: white;
+  color: #262626;
   font-weight: 600;
 }
 
 .settings-category-card .ant-card-body {
   padding: 24px;
-  background: white;
+  background: #ffffff;
 }
 
 /* Setting Item Card Styles */
@@ -105,7 +103,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1890ff;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -183,10 +181,10 @@
 
 /* Footer Styles */
 .settings-footer {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: none;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  background: #ffffff;
 }
 
 .settings-footer .ant-card-body {
