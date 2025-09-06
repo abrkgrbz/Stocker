@@ -41,6 +41,13 @@ public static class ServiceCollectionExtensions
         // Add Validation Service
         services.AddScoped<IValidationService, ValidationService>();
         
+        // Add Cache Service
+        services.AddMemoryCache();
+        services.AddSingleton<ITenantSettingsCacheService, TenantSettingsCacheService>();
+        
+        // Add Audit Service
+        services.AddScoped<IAuditService, AuditService>();
+        
         // Add Email Service
         // Use DevelopmentEmailService in Development, EmailService in Production
         var isDevelopment = environment?.IsDevelopment() ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
