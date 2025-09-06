@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore; 
-using Stocker.Domain.Entities.Tenant;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;

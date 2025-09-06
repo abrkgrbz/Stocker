@@ -1,10 +1,9 @@
-using Stocker.Domain.Common;
+using Stocker.SharedKernel.MultiTenancy;
 
-namespace Stocker.Domain.Entities.Tenant;
+namespace Stocker.Domain.Tenant.Entities;
 
-public sealed class AuditLog : BaseEntity
+public sealed class AuditLog : TenantAggregateRoot
 {
-    public Guid TenantId { get; private set; }
     public string EntityName { get; private set; }
     public string EntityId { get; private set; }
     public string Action { get; private set; }
@@ -27,9 +26,8 @@ public sealed class AuditLog : BaseEntity
         string entityId,
         string action,
         string userId,
-        string userName)
+        string userName) : base(Guid.NewGuid(), tenantId)
     {
-        TenantId = tenantId;
         EntityName = entityName;
         EntityId = entityId;
         Action = action;

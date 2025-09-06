@@ -62,7 +62,7 @@ public static class ServiceCollectionExtensions
         }
         
         // Add Audit Service
-        services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<Services.IAuditService, Services.AuditService>();
         
         // Add Email Service
         // Use DevelopmentEmailService in Development, EmailService in Production

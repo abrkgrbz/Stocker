@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Stocker.Domain.Entities.Tenant;
+using Stocker.Domain.Tenant.Entities;
 using Stocker.Persistence.Contexts;
 using Stocker.SharedKernel.Interfaces;
 using System.Text.Json;
@@ -66,7 +66,7 @@ public class AuditService : IAuditService
                 return;
             }
 
-            var userId = _currentUserService.UserId ?? "system";
+            var userId = _currentUserService.UserId?.ToString() ?? Guid.Empty.ToString();
             var userName = _currentUserService.UserName ?? "System";
             var userEmail = _currentUserService.Email;
             
@@ -208,7 +208,7 @@ public class AuditService : IAuditService
                 {
                     if (!oldDict.ContainsKey(key))
                     {
-                        changes[key] = new { Old = null, New = newDict[key].ToString() };
+                        changes[key] = new { Old = (object?)null, New = newDict[key].ToString() };
                     }
                     else if (oldDict[key].ToString() != newDict[key].ToString())
                     {
@@ -225,7 +225,7 @@ public class AuditService : IAuditService
                 {
                     if (!newDict.ContainsKey(key))
                     {
-                        changes[key] = new { Old = oldDict[key].ToString(), New = null };
+                        changes[key] = new { Old = oldDict[key].ToString(), New = (object?)null };
                     }
                 }
             }
