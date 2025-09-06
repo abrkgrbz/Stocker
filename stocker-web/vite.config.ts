@@ -8,6 +8,9 @@ export default defineConfig({
   define: {
     'process.env': {}
   },
+  esbuild: {
+    charset: 'utf8',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
