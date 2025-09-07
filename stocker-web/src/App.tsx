@@ -27,7 +27,6 @@ import { initWebVitals } from '@/services/web-vitals';
 import '@/i18n/config';
 
 // Layouts
-import MetronicLayout from '@/layouts/MetronicLayout';
 import MasterLayout from '@/features/master/layouts/MasterLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
