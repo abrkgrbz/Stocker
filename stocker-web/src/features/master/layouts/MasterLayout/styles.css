@@ -1,0 +1,207 @@
+/* Master Layout Styles */
+.master-layout {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.master-layout-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Content Area */
+.master-content {
+  flex: 1;
+  padding: 24px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 64px);
+}
+
+.master-content-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page Container */
+.master-page-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.master-page-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.master-page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.master-page-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .master-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .master-content {
+    padding: 16px;
+  }
+  
+  .master-page-container {
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .master-page-title {
+    font-size: 20px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .master-layout {
+    background: #111827;
+  }
+  
+  .master-content {
+    background: #111827;
+  }
+  
+  .master-page-container {
+    background: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .master-page-header {
+    border-bottom-color: #374151;
+  }
+  
+  .master-page-title {
+    color: #f9fafb;
+  }
+  
+  .master-page-description {
+    color: #9ca3af;
+  }
+}
+
+/* Loading States */
+.master-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.master-loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error States */
+.master-error {
+  text-align: center;
+  padding: 48px;
+}
+
+.master-error-icon {
+  font-size: 48px;
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.master-error-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.master-error-message {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Utility Classes */
+.master-flex {
+  display: flex;
+}
+
+.master-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.master-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.master-gap-xs {
+  gap: 8px;
+}
+
+.master-gap-sm {
+  gap: 12px;
+}
+
+.master-gap-md {
+  gap: 16px;
+}
+
+.master-gap-lg {
+  gap: 24px;
+}
+
+.master-mb-xs {
+  margin-bottom: 8px;
+}
+
+.master-mb-sm {
+  margin-bottom: 12px;
+}
+
+.master-mb-md {
+  margin-bottom: 16px;
+}
+
+.master-mb-lg {
+  margin-bottom: 24px;
+}

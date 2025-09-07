@@ -275,7 +275,7 @@ export const showLoginSuccess = (userName: string) => {
     confirmButtonText: 'Devam Et',
     confirmButtonColor: '#667eea',
     showConfirmButton: true,
-    timer: 3000,
+    timer: 5000,
     timerProgressBar: true,
     position: 'center',
     backdrop: true,
@@ -327,7 +327,7 @@ export const showWelcomeAlert = (userName: string, role?: string) => {
       </div>
     `,
     showConfirmButton: false,
-    timer: 2000,
+    timer: 4000,
     timerProgressBar: true,
     position: 'center',
     allowOutsideClick: true,

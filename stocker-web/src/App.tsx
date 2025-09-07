@@ -28,6 +28,7 @@ import '@/i18n/config';
 
 // Layouts
 import MetronicLayout from '@/layouts/MetronicLayout';
+import MasterLayout from '@/features/master/layouts/MasterLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
@@ -265,7 +266,7 @@ function App() {
                   path="/master"
                   element={
                     <PrivateRoute roles={['SystemAdmin']}>
-                      <MetronicLayout />
+                      <MasterLayout />
                     </PrivateRoute>
                   }
                 >
