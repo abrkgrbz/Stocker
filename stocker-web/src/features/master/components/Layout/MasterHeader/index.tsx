@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '../../NotificationBell';
+import { useTheme } from '../../../contexts/ThemeContext';
 import './styles.css';
 
 const { Header } = Layout;
@@ -32,15 +33,20 @@ interface MasterHeaderProps {
 export const MasterHeader: React.FC<MasterHeaderProps> = ({
   collapsed,
   onCollapse,
-  darkMode,
-  onDarkModeChange,
+  darkMode: propDarkMode,
+  onDarkModeChange: propOnDarkModeChange,
   fullscreen,
   onFullscreenToggle,
   onMobileMenuClick,
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [searchValue, setSearchValue] = React.useState('');
+
+  // Use theme context values if available, otherwise use props
+  const isDarkMode = darkMode !== undefined ? darkMode : propDarkMode;
+  const handleDarkModeToggle = toggleDarkMode || propOnDarkModeChange;
 
   const userMenuItems = [
     {
@@ -119,11 +125,11 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
         <Space size="middle">
           <LanguageSwitcher mode="dropdown" showName={false} />
 
-          <Tooltip title={darkMode ? 'Aydınlık Mod' : 'Karanlık Mod'}>
+          <Tooltip title={isDarkMode ? 'Aydınlık Mod' : 'Karanlık Mod'}>
             <Button
               type="text"
-              icon={darkMode ? <SunOutlined /> : <MoonOutlined />}
-              onClick={() => onDarkModeChange(!darkMode)}
+              icon={isDarkMode ? <SunOutlined /> : <MoonOutlined />}
+              onClick={() => handleDarkModeToggle(!isDarkMode)}
               className="header-action-btn"
             />
           </Tooltip>
