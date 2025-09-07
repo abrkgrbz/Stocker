@@ -7,6 +7,8 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
+type NotificationFilter = 'all' | 'unread' | 'system' | 'user' | 'alert';
+
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose }) => {
   const {
     notifications,
@@ -17,28 +19,53 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     clearAll
   } = useNotifications();
 
-  const [filter, setFilter] = useState<'all' | 'unread' | 'system' | 'tenant' | 'payment' | 'security' | 'performance'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<NotificationFilter>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
 
+  // Reset selections when panel closes
   useEffect(() => {
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    if (!isOpen) {
+      setSelectedNotifications([]);
+      setSearchTerm('');
     }
-  }, []);
+  }, [isOpen]);
 
-  const filteredNotifications = notifications.filter(notif => {
-    // Search filter
-    if (searchQuery && !notif.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !notif.message.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+  // Filter notifications
+  const filteredNotifications = notifications.filter(notification => {
+    // Apply filter
+    if (filter === 'unread' && notification.read) return false;
+    if (filter === 'system' && notification.type !== 'system') return false;
+    if (filter === 'user' && notification.type !== 'user') return false;
+    if (filter === 'alert' && notification.type !== 'alert') return false;
+    
+    // Apply search
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return notification.title.toLowerCase().includes(search) ||
+             notification.message.toLowerCase().includes(search);
     }
-
-    // Category filter
-    if (filter === 'all') return true;
-    if (filter === 'unread') return !notif.read;
-    return notif.category === filter;
+    
+    return true;
   });
+
+  const handleNotificationClick = (id: string) => {
+    markAsRead(id);
+  };
+
+  const handleSelectNotification = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedNotifications(prev => 
+      prev.includes(id) 
+        ? prev.filter(nId => nId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    selectedNotifications.forEach(id => deleteNotification(id));
+    setSelectedNotifications([]);
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
