@@ -1,301 +1,69 @@
-/* Modern Notification Bell Styles */
-.notification-bell-container {
+/* Notification Bell Button Styles */
+.notification-bell-button {
   position: relative;
-}
-
-.notification-bell-modern {
-  position: relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
   width: 48px;
   height: 48px;
-  border-radius: 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  overflow: visible;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
-.notification-bell-modern:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
+.notification-bell-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
-.notification-bell-modern:active {
+.notification-bell-button:active {
   transform: scale(0.95);
 }
 
-.notification-bell-modern.active {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-.notification-bell-modern.animating .bell-icon {
-  animation: bellRing 0.5s ease-in-out;
-}
-
-/* Icon Wrapper */
-.bell-icon-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* Bell Icon */
 .bell-icon {
   color: white;
   width: 24px;
   height: 24px;
-  z-index: 2;
-  position: relative;
 }
 
-/* Ring Animation Container */
-.bell-ring-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.bell-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  border-radius: 50%;
-  opacity: 0;
-}
-
-.bell-ring-1 {
-  animation: ringPulse 2s infinite;
-}
-
-.bell-ring-2 {
-  animation: ringPulse 2s infinite 1s;
-}
-
-/* Modern Badge */
-.bell-badge-modern {
+/* Notification Badge */
+.notification-badge {
   position: absolute;
   top: -8px;
   right: -8px;
   background: #ff4757;
   color: white;
-  border-radius: 12px;
-  padding: 2px 6px;
   font-size: 11px;
   font-weight: 700;
+  padding: 2px 6px;
   min-width: 20px;
   height: 20px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
   border: 2px solid white;
-  z-index: 3;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
 }
 
-.badge-number {
-  position: relative;
-  z-index: 2;
+/* Animation for new notifications */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70% { transform: rotate(10deg); }
+  20%, 40%, 60% { transform: rotate(-10deg); }
 }
 
-.badge-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  background: #ff4757;
-  border-radius: 50%;
-  animation: badgePulse 2s infinite;
-}
-
-@keyframes badgeBounce {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.bell-badge::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulseRing 1.5s ease-out infinite;
-  z-index: -1;
-}
-
-@keyframes pulseRing {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
-  }
-}
-
-/* Notification Bell with new notifications */
-.notification-bell.has-new {
-  animation: bellAlert 2s ease-in-out infinite;
-}
-
-@keyframes bellAlert {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  5% {
-    transform: rotate(12deg);
-  }
-  10% {
-    transform: rotate(-12deg);
-  }
-  15% {
-    transform: rotate(12deg);
-  }
-  20% {
-    transform: rotate(-12deg);
-  }
-  25%, 95% {
-    transform: rotate(0deg);
-  }
-}
-
-/* Interactive States */
-.notification-bell.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border-color: #3b82f6;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-}
-
-.notification-bell.active svg {
-  color: white;
-  transform: scale(1.1);
-}
-
-/* Loading State */
-.notification-bell.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid #3b82f6;
-  border-radius: 50%;
-  border-top-color: transparent;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Tooltip */
-.notification-bell::before {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: -36px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-  background: #1f2937;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.notification-bell:hover::before {
-  transform: translateX(-50%) scale(1);
-  opacity: 1;
+.notification-bell-button.has-new {
+  animation: bellRing 0.5s ease-in-out;
 }
 
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
-  .notification-bell {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-    color: #9ca3af;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .notification-bell:hover {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-    color: #60a5fa;
-    border-color: #374151;
-    box-shadow: 0 6px 20px rgba(96, 165, 250, 0.2);
-  }
-  
-  .notification-bell.active {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .notification-bell {
-    width: 40px;
-    height: 40px;
-    padding: 8px;
-  }
-  
-  .notification-bell svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .bell-badge {
-    top: -2px;
-    right: -2px;
-    font-size: 10px;
-    min-width: 18px;
-    height: 18px;
-  }
-}
-
-/* Accessibility */
-.notification-bell:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .notification-bell,
-  .notification-bell svg,
-  .bell-badge,
-  .bell-badge::after {
-    animation: none;
-    transition: opacity 0.3s, visibility 0.3s;
+  .notification-bell-button {
+    background: linear-gradient(135deg, #4c63d2 0%, #bc3bc4 100%);
   }
 }
