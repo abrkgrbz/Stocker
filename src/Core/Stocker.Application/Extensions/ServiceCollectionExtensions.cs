@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Stocker.Application.Common.Behaviors;
+using Stocker.Application.Interfaces.Repositories;
+using Stocker.Application.Services;
 using System; 
 
 namespace Stocker.Application.Extensions;
@@ -34,6 +36,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
+
+        // Add Application Services
+        services.AddScoped<IDashboardRepository, DashboardService>();
+        services.AddScoped<IUserRepository, UserService>();
+        services.AddScoped<ISettingsRepository, SettingsService>();
 
         return services;
     }

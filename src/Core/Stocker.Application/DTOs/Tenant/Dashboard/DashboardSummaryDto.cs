@@ -6,6 +6,14 @@ public class DashboardSummaryDto
     public SubscriptionInfoDto Subscription { get; set; } = new();
     public List<ModuleInfoDto> Modules { get; set; } = new();
     public QuickStatsDto QuickStats { get; set; } = new();
+    
+    // Additional fields for database integration
+    public int TotalUsers { get; set; }
+    public int ActiveUsers { get; set; }
+    public int TotalInvoices { get; set; }
+    public int PendingInvoices { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public decimal OutstandingAmount { get; set; }
 }
 
 public class CompanyInfoDto

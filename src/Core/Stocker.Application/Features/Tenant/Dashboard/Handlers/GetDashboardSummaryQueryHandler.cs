@@ -1,32 +1,42 @@
 using MediatR;
 using Stocker.Application.DTOs.Tenant.Dashboard;
 using Stocker.Application.Features.Tenant.Dashboard.Queries;
+using Stocker.Application.Interfaces.Repositories;
 
 namespace Stocker.Application.Features.Tenant.Dashboard.Handlers;
 
 public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSummaryQuery, DashboardSummaryDto>
 {
-    public Task<DashboardSummaryDto> Handle(GetDashboardSummaryQuery request, CancellationToken cancellationToken)
+    private readonly IDashboardRepository _dashboardRepository;
+
+    public GetDashboardSummaryQueryHandler(IDashboardRepository dashboardRepository)
     {
-        // Mock data for now - will be replaced when modules are ready
+        _dashboardRepository = dashboardRepository;
+    }
+
+    public async Task<DashboardSummaryDto> Handle(GetDashboardSummaryQuery request, CancellationToken cancellationToken)
+    {
+        var dbSummary = await _dashboardRepository.GetDashboardSummaryAsync(request.TenantId, cancellationToken);
+        
+        // Build the full summary DTO with additional mock data for now
         var result = new DashboardSummaryDto
         {
             Company = new CompanyInfoDto
             {
-                Name = "Demo Company",
+                Name = "Demo Company", // This would come from tenant/company service
                 Logo = "/api/tenant/company/logo",
                 Industry = "Technology",
-                EmployeeCount = 50,
+                EmployeeCount = dbSummary.TotalUsers,
                 FoundedYear = 2020
             },
             Subscription = new SubscriptionInfoDto
             {
-                Plan = "Professional",
+                Plan = "Professional", // This would come from subscription service
                 Status = "Active",
                 ExpiryDate = DateTime.UtcNow.AddDays(30),
                 UsedStorage = 2.5,
                 TotalStorage = 10,
-                UsedUsers = 15,
+                UsedUsers = dbSummary.ActiveUsers,
                 TotalUsers = 50
             },
             Modules = new List<ModuleInfoDto>
@@ -38,13 +48,13 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             },
             QuickStats = new QuickStatsDto
             {
-                TodayRevenue = 15750.50m,
-                TodayOrders = 24,
-                PendingTasks = 8,
-                UnreadMessages = 3
+                TodayRevenue = dbSummary.TotalRevenue / 30, // Mock daily calculation
+                TodayOrders = dbSummary.TotalInvoices / 30, // Mock daily calculation
+                PendingTasks = dbSummary.PendingInvoices,
+                UnreadMessages = 3 // This would come from notification service
             }
         };
 
-        return Task.FromResult(result);
+        return result;
     }
 }
