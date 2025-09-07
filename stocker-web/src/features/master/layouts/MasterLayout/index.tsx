@@ -5,12 +5,14 @@ import { MasterHeader } from '../../components/Layout/MasterHeader';
 import { MasterSidebar } from '../../components/Layout/MasterSidebar';
 import { MasterFooter } from '../../components/Layout/MasterFooter';
 import { NotificationProvider } from '../../contexts/NotificationContext';
+import { MasterThemeProvider } from '../../contexts/ThemeContext';
 import { useMasterLayout } from '../../hooks/useMasterLayout';
 import './styles.css';
+import '../../styles/dark-mode.css';
 
 const { Content } = Layout;
 
-export const MasterLayout: React.FC = () => {
+const MasterLayoutInner: React.FC = () => {
   const {
     collapsed,
     setCollapsed,
@@ -23,8 +25,7 @@ export const MasterLayout: React.FC = () => {
   } = useMasterLayout();
 
   return (
-    <NotificationProvider>
-      <Layout className="master-layout">
+    <Layout className="master-layout">
         <MasterSidebar 
           collapsed={collapsed}
           onCollapse={setCollapsed}
@@ -52,7 +53,16 @@ export const MasterLayout: React.FC = () => {
           <MasterFooter />
         </Layout>
       </Layout>
-    </NotificationProvider>
+  );
+};
+
+export const MasterLayout: React.FC = () => {
+  return (
+    <MasterThemeProvider>
+      <NotificationProvider>
+        <MasterLayoutInner />
+      </NotificationProvider>
+    </MasterThemeProvider>
   );
 };
 
