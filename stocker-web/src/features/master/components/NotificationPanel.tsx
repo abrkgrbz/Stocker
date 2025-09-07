@@ -127,8 +127,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
           <input
             type="text"
             placeholder="Bildirimlerde ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
           <div className="action-buttons">
