@@ -3,8 +3,6 @@ import { Layout, Button, Input, Space, Tooltip, Avatar, Dropdown } from 'antd';
 import {
   MenuOutlined,
   SearchOutlined,
-  SunOutlined,
-  MoonOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
   UserOutlined,
@@ -15,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '../../NotificationBell';
-import { useTheme } from '../../../contexts/ThemeContext';
+import { ThemeSwitcher } from '@/core/theme';
 import './styles.css';
 
 const { Header } = Layout;
@@ -33,20 +31,15 @@ interface MasterHeaderProps {
 export const MasterHeader: React.FC<MasterHeaderProps> = ({
   collapsed,
   onCollapse,
-  darkMode: propDarkMode,
-  onDarkModeChange: propOnDarkModeChange,
+  darkMode,
+  onDarkModeChange,
   fullscreen,
   onFullscreenToggle,
   onMobileMenuClick,
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { darkMode, toggleDarkMode } = useTheme();
   const [searchValue, setSearchValue] = React.useState('');
-
-  // Use theme context values if available, otherwise use props
-  const isDarkMode = darkMode !== undefined ? darkMode : propDarkMode;
-  const handleDarkModeToggle = toggleDarkMode || propOnDarkModeChange;
 
   const userMenuItems = [
     {
@@ -125,14 +118,7 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
         <Space size="middle">
           <LanguageSwitcher mode="dropdown" showName={false} />
 
-          <Tooltip title={isDarkMode ? 'Aydınlık Mod' : 'Karanlık Mod'}>
-            <Button
-              type="text"
-              icon={isDarkMode ? <SunOutlined /> : <MoonOutlined />}
-              onClick={() => handleDarkModeToggle(!isDarkMode)}
-              className="header-action-btn"
-            />
-          </Tooltip>
+          <ThemeSwitcher variant="dropdown" />
 
           <Tooltip title={fullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran'}>
             <Button

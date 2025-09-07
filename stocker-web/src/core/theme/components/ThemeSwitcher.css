@@ -1,0 +1,109 @@
+/* Theme Switcher Styles */
+.theme-switcher-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-base);
+}
+
+.theme-switcher-button:hover {
+  background: var(--bg-tertiary);
+}
+
+.theme-switcher-button .anticon {
+  font-size: 18px;
+  transition: transform var(--transition-base);
+}
+
+.theme-switcher-button:hover .anticon {
+  transform: rotate(15deg);
+}
+
+/* Switch variant */
+.theme-switcher-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-switcher-switch .anticon {
+  font-size: 16px;
+  color: var(--text-tertiary);
+  transition: all var(--transition-base);
+}
+
+.theme-switcher-switch .anticon.active {
+  color: var(--color-primary);
+}
+
+.theme-switcher-switch .ant-switch {
+  background: var(--bg-tertiary);
+}
+
+.theme-switcher-switch .ant-switch-checked {
+  background: var(--color-primary);
+}
+
+.theme-switcher-switch .theme-label {
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Dropdown variant */
+.theme-switcher-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-switcher-arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  transition: transform var(--transition-base);
+}
+
+.ant-dropdown-open .theme-switcher-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.ant-dropdown-menu-item-selected {
+  background: var(--bg-tertiary);
+}
+
+.ant-dropdown-menu-item-selected .anticon-check {
+  color: var(--color-primary);
+}
+
+/* Animation for theme change */
+@keyframes themeSwitch {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+.theme-switching .theme-switcher-button .anticon {
+  animation: themeSwitch 0.5s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-switcher-button span:not(.anticon) {
+    display: none;
+  }
+  
+  .theme-switcher-dropdown span:not(.anticon) {
+    display: none;
+  }
+  
+  .theme-switcher-arrow {
+    display: none;
+  }
+}

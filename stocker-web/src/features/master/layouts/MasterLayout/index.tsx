@@ -5,10 +5,10 @@ import { MasterHeader } from '../../components/Layout/MasterHeader';
 import { MasterSidebar } from '../../components/Layout/MasterSidebar';
 import { MasterFooter } from '../../components/Layout/MasterFooter';
 import { NotificationProvider } from '../../contexts/NotificationContext';
-import { MasterThemeProvider } from '../../contexts/ThemeContext';
+import { ThemeProvider } from '@/core/theme';
 import { useMasterLayout } from '../../hooks/useMasterLayout';
+import '@/core/theme/styles/variables.css';
 import './styles.css';
-import '../../styles/dark-mode.css';
 
 const { Content } = Layout;
 
@@ -58,11 +58,11 @@ const MasterLayoutInner: React.FC = () => {
 
 export const MasterLayout: React.FC = () => {
   return (
-    <MasterThemeProvider>
+    <ThemeProvider defaultTheme="system" storageKey="master-theme">
       <NotificationProvider>
         <MasterLayoutInner />
       </NotificationProvider>
-    </MasterThemeProvider>
+    </ThemeProvider>
   );
 };
 
