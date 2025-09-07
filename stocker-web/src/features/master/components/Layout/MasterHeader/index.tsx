@@ -31,8 +31,8 @@ interface MasterHeaderProps {
 export const MasterHeader: React.FC<MasterHeaderProps> = ({
   collapsed,
   onCollapse,
-  darkMode,
-  onDarkModeChange,
+  darkMode: propDarkMode,
+  onDarkModeChange: propOnDarkModeChange,
   fullscreen,
   onFullscreenToggle,
   onMobileMenuClick,

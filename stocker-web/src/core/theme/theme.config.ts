@@ -22,8 +22,8 @@ const colors = {
   light: {
     bg: {
       primary: '#ffffff',
-      secondary: '#f5f7fa',
-      tertiary: '#e5e7eb',
+      secondary: '#f8f9fa',
+      tertiary: '#f3f4f6',
       elevated: '#ffffff',
     },
     text: {
@@ -33,9 +33,9 @@ const colors = {
       inverse: '#ffffff',
     },
     border: {
-      primary: '#e5e7eb',
-      secondary: '#d1d5db',
-      tertiary: '#9ca3af',
+      primary: '#f0f0f0',
+      secondary: '#e5e7eb',
+      tertiary: '#d1d5db',
     },
   },
   
@@ -81,20 +81,20 @@ export const lightTheme: CustomThemeConfig = {
     },
     components: {
       Layout: {
-        bodyBg: colors.light.bg.secondary,
-        headerBg: colors.light.bg.primary,
-        siderBg: '#1a1f2e', // Sidebar always dark
-        footerBg: colors.light.bg.primary,
+        bodyBg: '#fafbfc',
+        headerBg: '#ffffff',
+        siderBg: '#34495e', // Lighter sidebar for light mode
+        footerBg: '#ffffff',
       },
       Card: {
         colorBgContainer: colors.light.bg.primary,
         colorBorderSecondary: colors.light.border.primary,
       },
       Table: {
-        colorBgContainer: colors.light.bg.primary,
-        headerBg: colors.light.bg.secondary,
-        rowHoverBg: colors.light.bg.secondary,
-        colorBorderSecondary: colors.light.border.primary,
+        colorBgContainer: '#ffffff',
+        headerBg: '#fafbfc',
+        rowHoverBg: '#f8f9fa',
+        colorBorderSecondary: '#f0f0f0',
       },
       Modal: {
         contentBg: colors.light.bg.primary,
@@ -138,10 +138,10 @@ export const lightTheme: CustomThemeConfig = {
     '--color-error': colors.error,
     '--color-info': colors.info,
     
-    '--bg-primary': colors.light.bg.primary,
-    '--bg-secondary': colors.light.bg.secondary,
-    '--bg-tertiary': colors.light.bg.tertiary,
-    '--bg-elevated': colors.light.bg.elevated,
+    '--bg-primary': '#ffffff',
+    '--bg-secondary': '#f8f9fa',
+    '--bg-tertiary': '#f3f4f6',
+    '--bg-elevated': '#ffffff',
     
     '--text-primary': colors.light.text.primary,
     '--text-secondary': colors.light.text.secondary,
