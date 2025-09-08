@@ -11,7 +11,7 @@ import MetronicLayout from './layouts/MetronicLayout';
 
 // Pages
 import LoginPage from './features/auth/LoginPage';
-import MetronicDashboard from './features/dashboard/MetronicDashboard';
+import DashboardPage from './features/dashboard/DashboardPage';
 import TenantsPage from './features/tenants/TenantsPage';
 import UsersPage from './features/users/UsersPage';
 import PackagesPage from './features/packages/PackagesPage';
@@ -64,7 +64,7 @@ function App() {
             }
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<MetronicDashboard />} />
+            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="tenants" element={<TenantsPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="packages" element={<PackagesPage />} />
