@@ -58,6 +58,10 @@ import {
   HistoryOutlined,
   LockOutlined,
   UnlockOutlined,
+  HeartOutlined,
+  CloudUploadOutlined,
+  LineChartOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
@@ -444,22 +448,127 @@ const TenantDetails: React.FC = () => {
               <Col span={8}>
                 <Card title="Hızlı İşlemler">
                   <Space direction="vertical" style={{ width: '100%' }}>
-                    <Button icon={<KeyOutlined />} block>
+                    <Button icon={<KeyOutlined />} block onClick={() => navigate(`/tenants/${id}/api-keys`)}>
                       API Anahtarları
                     </Button>
-                    <Button icon={<DatabaseOutlined />} block>
-                      Veritabanı Yönetimi
+                    <Button icon={<DatabaseOutlined />} block onClick={() => navigate(`/tenants/${id}/backup-restore`)}>
+                      Yedekleme & Geri Yükleme
                     </Button>
-                    <Button icon={<FileTextOutlined />} block>
+                    <Button icon={<FileTextOutlined />} block onClick={() => navigate(`/tenants/${id}/billing`)}>
                       Faturalar
                     </Button>
-                    <Button icon={<HistoryOutlined />} block>
+                    <Button icon={<HistoryOutlined />} block onClick={() => navigate(`/tenants/${id}/activity-logs`)}>
                       Aktivite Logları
                     </Button>
-                    <Button icon={<SafetyOutlined />} block>
+                    <Button icon={<SafetyOutlined />} block onClick={() => navigate(`/tenants/${id}/security`)}>
                       Güvenlik Ayarları
                     </Button>
                   </Space>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Tüm Yönetim Sayfaları Kartları */}
+            <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+              <Col span={24}>
+                <Title level={4}>Tenant Yönetimi</Title>
+              </Col>
+              
+              {/* İlk Satır */}
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/settings`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <SettingOutlined style={{ fontSize: 32, color: '#1890ff' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Ayarlar</Title>
+                  <Text type="secondary">Genel, e-posta, güvenlik ayarları</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/users`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <UserOutlined style={{ fontSize: 32, color: '#52c41a' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Kullanıcılar</Title>
+                  <Text type="secondary">Kullanıcı yönetimi ve roller</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/analytics`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <LineChartOutlined style={{ fontSize: 32, color: '#722ed1' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Analitik</Title>
+                  <Text type="secondary">Trafik ve kullanım raporları</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/integrations`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <ApiOutlined style={{ fontSize: 32, color: '#fa8c16' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Entegrasyonlar</Title>
+                  <Text type="secondary">3. parti servis bağlantıları</Text>
+                </Card>
+              </Col>
+              
+              {/* İkinci Satır */}
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/webhooks`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <LinkOutlined style={{ fontSize: 32, color: '#13c2c2' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Webhook'lar</Title>
+                  <Text type="secondary">Event yönetimi ve loglar</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/health`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <HeartOutlined style={{ fontSize: 32, color: '#ff4d4f' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Sistem Sağlığı</Title>
+                  <Text type="secondary">Performans ve metrikler</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/domains`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <GlobalOutlined style={{ fontSize: 32, color: '#2f54eb' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Domain'ler</Title>
+                  <Text type="secondary">Domain yönetimi</Text>
+                </Card>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card 
+                  hoverable 
+                  onClick={() => navigate(`/tenants/${id}/migrations`)}
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                >
+                  <CloudUploadOutlined style={{ fontSize: 32, color: '#eb2f96' }} />
+                  <Title level={5} style={{ marginTop: 8 }}>Migrasyonlar</Title>
+                  <Text type="secondary">Veritabanı migrasyonları</Text>
                 </Card>
               </Col>
             </Row>
