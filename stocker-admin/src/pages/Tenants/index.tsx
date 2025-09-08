@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -118,6 +119,7 @@ interface Tenant {
 }
 
 const TenantsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -1025,6 +1027,14 @@ const TenantsPage: React.FC = () => {
         }}
         pagination={{
           pageSize: 10,
+        }}
+        onRow={(record) => {
+          return {
+            onClick: () => {
+              navigate(`/tenants/${record.id}`);
+            },
+            style: { cursor: 'pointer' },
+          };
         }}
         dateFormatter="string"
         headerTitle="Tenant Listesi"
