@@ -41,14 +41,12 @@ ENV VITE_API_BASE_URL=https://api.stoocker.app
 # Debug: Check if all files are present
 RUN echo "=== Checking source files ===" && \
     ls -la && \
-    echo "=== Checking for TypeScript config ===" && \
-    ls -la tsconfig*.json || echo "No tsconfig files found"
+    echo "=== Checking for vite.config ===" && \
+    ls -la vite.config.* || echo "No vite config found"
 
-# Try to build with error handling
-RUN echo "=== Running build ===" && \
-    npm run build || \
-    (echo "=== Build failed, trying without TypeScript check ===" && \
-     npx vite build)
+# Build directly with Vite (skip TypeScript check)
+RUN echo "=== Running vite build directly ===" && \
+    npx vite build --mode production
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
