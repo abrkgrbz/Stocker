@@ -13,6 +13,12 @@ RUN rm -rf node_modules package-lock.json && \
 # Copy all source files
 COPY stocker-admin/ .
 
+# Debug: Check what files were copied
+RUN echo "=== Checking copied files ===" && \
+    ls -la src/features/packages/ && \
+    echo "=== App.tsx content ===" && \
+    head -30 src/App.tsx
+
 # Build the application
 ENV NODE_ENV=production
 ENV VITE_API_BASE_URL=https://api.stoocker.app
