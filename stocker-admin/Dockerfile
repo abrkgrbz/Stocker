@@ -6,10 +6,16 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY stocker-admin/package.json stocker-admin/package-lock.json* ./
+COPY stocker-admin/package.json stocker-admin/yarn.lock* stocker-admin/package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install dependencies - prefer yarn if lock file exists
+RUN if [ -f yarn.lock ]; then \
+      yarn install --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then \
+      npm ci --legacy-peer-deps; \
+    else \
+      npm install --legacy-peer-deps; \
+    fi
 
 # Copy all source files
 COPY stocker-admin/ .
@@ -17,7 +23,11 @@ COPY stocker-admin/ .
 # Set NODE_ENV and build the application
 ENV NODE_ENV=production
 ENV VITE_API_BASE_URL=https://api.stoocker.app
-RUN npm run build
+RUN if [ -f yarn.lock ]; then \
+      yarn build || yarn build:docker; \
+    else \
+      npm run build || npm run build:docker; \
+    fi
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
