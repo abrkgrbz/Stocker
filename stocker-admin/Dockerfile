@@ -6,11 +6,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY stocker-admin/package.json ./
-COPY stocker-admin/package-lock.json ./
+COPY stocker-admin/package.json stocker-admin/package-lock.json* ./
 
 # Install dependencies
-RUN npm ci --legacy-peer-deps
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Copy all source files
 COPY stocker-admin/ .
