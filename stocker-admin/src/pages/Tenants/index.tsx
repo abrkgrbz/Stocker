@@ -378,12 +378,13 @@ const TenantsPage: React.FC = () => {
       width: 120,
       fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Space className="tenant-actions" onClick={(e) => e.stopPropagation()}>
           <Tooltip title="Detaylar">
             <Button
               type="text"
               icon={<InfoCircleOutlined />}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setSelectedTenant(record);
                 setIsDrawerVisible(true);
               }}
@@ -393,7 +394,10 @@ const TenantsPage: React.FC = () => {
             <Button
               type="text"
               icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(record);
+              }}
             />
           </Tooltip>
           <Dropdown
@@ -438,7 +442,11 @@ const TenantsPage: React.FC = () => {
               onClick: ({ key }) => handleMenuClick(key, record),
             }}
           >
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button 
+              type="text" 
+              icon={<MoreOutlined />} 
+              onClick={(e) => e.stopPropagation()}
+            />
           </Dropdown>
         </Space>
       ),
@@ -1030,8 +1038,17 @@ const TenantsPage: React.FC = () => {
         }}
         onRow={(record) => {
           return {
-            onClick: () => {
-              navigate(`/tenants/${record.id}`);
+            onClick: (e) => {
+              // Prevent navigation when clicking on action buttons or dropdowns
+              const target = e.target as HTMLElement;
+              const isActionButton = target.closest('.ant-dropdown-trigger') || 
+                                   target.closest('.ant-btn') || 
+                                   target.closest('.ant-space') ||
+                                   target.closest('[class*="actions"]');
+              
+              if (!isActionButton) {
+                navigate(`/tenants/${record.id}`);
+              }
             },
             style: { cursor: 'pointer' },
           };
