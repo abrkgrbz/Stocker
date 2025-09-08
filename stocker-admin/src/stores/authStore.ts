@@ -69,17 +69,17 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          const { accessToken, refreshToken, user } = data;
+          const { accessToken, refreshToken, user, expiresAt } = data;
           
-          // Calculate expiration (7 days from now)
-          const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+          // Convert expiresAt to timestamp
+          const expiresAtTimestamp = new Date(expiresAt).getTime();
           
           
           set({
             user,
             accessToken,
             refreshToken,
-            expiresAt,
+            expiresAt: expiresAtTimestamp,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -192,19 +192,20 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await axiosInstance.post(`/api/master/auth/refresh`, {
+          const response = await axiosInstance.post(`/api/master/auth/refresh-token`, {
             refreshToken,
           });
 
           const { success, data } = response.data;
           
           if (success && data.accessToken) {
-            const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+            const expiresAtTimestamp = new Date(data.expiresAt).getTime();
             
             set({
               accessToken: data.accessToken,
               refreshToken: data.refreshToken || refreshToken,
-              expiresAt,
+              expiresAt: expiresAtTimestamp,
+              user: data.user || get().user,
               isAuthenticated: true,
             });
           } else {
