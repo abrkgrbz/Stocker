@@ -3,26 +3,17 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY stocker-admin/package*.json ./
+# Copy only package.json first (not package-lock.json)
+COPY stocker-admin/package.json ./
 
-# Debug: Check if files were copied
-RUN echo "=== Checking copied files ===" && \
-    ls -la && \
-    if [ -f package.json ]; then \
-        echo "package.json found"; \
-    else \
-        echo "ERROR: package.json not found!"; \
-        exit 1; \
-    fi
-
-# Install dependencies (force platform and skip optional deps)
-RUN npm install --legacy-peer-deps --force --no-optional
+# Clean install to regenerate lock file for Linux
+RUN rm -rf node_modules package-lock.json && \
+    npm install --legacy-peer-deps
 
 # Copy all source files
 COPY stocker-admin/ .
 
-# Build the application (skip TypeScript checking)
+# Build the application
 ENV NODE_ENV=production
 ENV VITE_API_BASE_URL=https://api.stoocker.app
 RUN npx vite build
