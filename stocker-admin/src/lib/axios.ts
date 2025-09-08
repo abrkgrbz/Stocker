@@ -8,7 +8,9 @@ const axiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: false, // Set to true if you need to send cookies
 });
 
 // Request interceptor to add auth token
