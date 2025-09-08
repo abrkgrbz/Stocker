@@ -10,15 +10,15 @@ import { tr } from 'date-fns/locale';
 import { useAuthStore } from './stores/authStore';
 
 // Layouts
-import AdminLayout from './layouts/AdminLayout';
+import AdminLayout from './layouts/AdminLayout.tsx';
 
 // Pages
-import LoginPage from './features/auth/LoginPage';
-import DashboardPage from './features/dashboard/DashboardPage';
-import TenantsPage from './features/tenants/TenantsPage';
-import UsersPage from './features/users/UsersPage';
-import PackagesPage from './features/packages/PackagesPage';
-import SettingsPage from './features/settings/SettingsPage';
+import LoginPage from './features/auth/LoginPage.tsx';
+import DashboardPage from './features/dashboard/DashboardPage.tsx';
+import TenantsPage from './features/tenants/TenantsPage.tsx';
+import UsersPage from './features/users/UsersPage.tsx';
+import PackagesPage from './features/packages/PackagesPage.tsx';
+import SettingsPage from './features/settings/SettingsPage.tsx';
 
 // Styles
 import './App.css';
