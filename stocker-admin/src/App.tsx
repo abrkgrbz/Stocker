@@ -7,7 +7,7 @@ import { Toaster } from './metronic/ui/sonner';
 import { useAuthStore } from './stores/authStore';
 
 // Layouts
-import CustomLayout from './layouts/CustomLayout';
+import MasterLayout from './layouts/MasterLayout';
 
 // Pages
 import LoginPage from './features/auth/LoginPage';
@@ -59,7 +59,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <CustomLayout />
+                <MasterLayout />
               </ProtectedRoute>
             }
           >

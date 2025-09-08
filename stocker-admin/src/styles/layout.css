@@ -14,10 +14,12 @@
   left: 0;
   bottom: 0;
   width: var(--sidebar-width);
-  background-color: var(--dark);
+  background: linear-gradient(180deg, #1e1e2e 0%, #151521 100%);
   z-index: var(--z-fixed);
   transition: var(--transition-base);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.collapsed {
