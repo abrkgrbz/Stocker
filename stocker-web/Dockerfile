@@ -16,8 +16,8 @@ RUN echo "=== Checking copied files ===" && \
         exit 1; \
     fi
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies (force platform and skip optional deps)
+RUN npm install --legacy-peer-deps --force --no-optional
 
 # Copy all source files
 COPY stocker-web/ .
