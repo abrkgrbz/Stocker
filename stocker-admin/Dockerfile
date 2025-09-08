@@ -14,10 +14,12 @@ RUN rm -rf node_modules package-lock.json && \
 COPY stocker-admin/ .
 
 # Debug: Check what files were copied
-RUN echo "=== Checking copied files ===" && \
-    ls -la src/features/packages/ && \
-    echo "=== App.tsx content ===" && \
-    head -30 src/App.tsx
+RUN echo "=== Checking current directory ===" && \
+    ls -la && \
+    echo "=== Checking if src exists ===" && \
+    ls -la src/ || echo "src directory not found" && \
+    echo "=== Checking features ===" && \
+    ls -la src/features/ || echo "features not found"
 
 # Build the application
 ENV NODE_ENV=production
