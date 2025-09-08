@@ -6,11 +6,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Debug: Show what files exist in the build context
-RUN echo "=== Build context check ===" && \
-    ls -la /
+RUN echo "=== Build context check ===" && ls -la /
 
-# Try to copy package files with debug output
-COPY stocker-admin/package*.json ./ || (echo "Failed to copy package files" && ls -la && exit 1)
+# Copy package files
+COPY stocker-admin/package*.json ./
 
 # Debug: Check what was copied
 RUN echo "=== After copy ===" && \
@@ -21,14 +20,16 @@ RUN echo "=== After copy ===" && \
         head -20 package.json; \
     else \
         echo "ERROR: package.json not found!" && \
+        echo "Current directory contents:" && \
+        ls -la && \
         exit 1; \
     fi
 
 # Install dependencies with more verbose output
 RUN echo "=== Installing dependencies ===" && \
-    npm install --legacy-peer-deps --verbose 2>&1 || \
-    (echo "=== NPM Install failed, trying with --force ===" && \
-     npm install --legacy-peer-deps --force --verbose 2>&1)
+    npm install --legacy-peer-deps --verbose || \
+    echo "=== NPM Install failed, trying with --force ===" && \
+    npm install --legacy-peer-deps --force --verbose
 
 # Copy all source files
 COPY stocker-admin/ .
