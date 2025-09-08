@@ -4,11 +4,21 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY stocker-admin/package.json stocker-admin/package-lock.json ./
+# Copy package files with optional pattern
+COPY stocker-admin/package*.json ./
 
-# Install dependencies
-RUN npm install
+# Debug: Check if files are copied correctly
+RUN ls -la && \
+    echo "Checking for package.json..." && \
+    if [ -f package.json ]; then \
+        echo "package.json found!"; \
+    else \
+        echo "ERROR: package.json not found!"; \
+        exit 1; \
+    fi
+
+# Install dependencies with verbose output
+RUN npm install --verbose || (echo "npm install failed" && exit 1)
 
 # Copy all source files
 COPY stocker-admin/ .
