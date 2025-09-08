@@ -1,20 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './features/auth/LoginPage';
+import MasterLayout from './layouts/MasterLayout';
+import Dashboard from './pages/Dashboard';
+import TenantsPage from './pages/Tenants';
+import UsersPage from './pages/Users';
+import PackagesPage from './pages/Packages';
 import { useAuthStore } from './stores/authStore';
-
-// Temporary Dashboard Component
-const Dashboard: React.FC = () => {
-  const { user, logout } = useAuthStore();
-  
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1>Dashboard</h1>
-      <p>Hoş geldiniz, {user?.name || 'Admin'}</p>
-      <button onClick={logout}>Çıkış Yap</button>
-    </div>
-  );
-};
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,14 +25,19 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/dashboard"
+          path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <MasterLayout />
             </ProtectedRoute>
           }
-        />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="tenants/*" element={<TenantsPage />} />
+          <Route path="users/*" element={<UsersPage />} />
+          <Route path="packages" element={<PackagesPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
