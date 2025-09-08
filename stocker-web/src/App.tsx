@@ -66,8 +66,8 @@ const MasterApiManagementPage = lazy(() => import('@/features/master/pages/ApiMa
 const MasterAuditLogsPage = lazy(() => import('@/features/master/pages/AuditLogs').then(m => ({ default: m.default })));
 const MasterBillingPage = lazy(() => import('@/features/master/pages/Billing').then(m => ({ default: m.default })));
 const MasterSystemMonitoringPage = lazy(() => import('@/features/master/pages/Monitoring/SystemMonitoring').then(m => ({ default: m.default })));
-const MasterBackupPage = lazy(() => import('@/features/master/pages/Backup').then(m => ({ default: m.default })));
-const MasterEmailTemplatesPage = lazy(() => import('@/features/master/pages/EmailTemplates').then(m => ({ default: m.default })));
+const MasterBackupPage = lazy(() => import('@/features/master/pages/Backup').then(m => ({ default: m.ProfessionalBackup })));
+const MasterEmailTemplatesPage = lazy(() => import('@/features/master/pages/EmailTemplates').then(m => ({ default: m.ProfessionalEmailTemplates })));
 const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.default })));
 const I18nDemo = lazy(() => import('@/pages/I18nDemo').then(m => ({ default: m.default })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));

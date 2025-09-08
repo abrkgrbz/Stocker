@@ -1005,4 +1005,6 @@ const BackupManagement: React.FC = () => {
   );
 };
 
+// Export both the old and new versions
 export default BackupManagement;
+export { default as ProfessionalBackup } from './ProfessionalBackup';

@@ -869,4 +869,6 @@ const EmailTemplateManagement: React.FC = () => {
   );
 };
 
+// Export both the old and new versions
 export default EmailTemplateManagement;
+export { default as ProfessionalEmailTemplates } from './ProfessionalEmailTemplates';
