@@ -7,18 +7,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { tr } from 'date-fns/locale';
 
 // Stores
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from './stores/authStore';
 
 // Layouts
-import AdminLayout from '@/layouts/AdminLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 // Pages
-import LoginPage from '@/features/auth/LoginPage';
-import DashboardPage from '@/features/dashboard/DashboardPage';
-import TenantsPage from '@/features/tenants/TenantsPage';
-import UsersPage from '@/features/users/UsersPage';
-import PackagesPage from '@/features/packages/PackagesPage';
-import SettingsPage from '@/features/settings/SettingsPage';
+import LoginPage from './features/auth/LoginPage';
+import DashboardPage from './features/dashboard/DashboardPage';
+import TenantsPage from './features/tenants/TenantsPage';
+import UsersPage from './features/users/UsersPage';
+import PackagesPage from './features/packages/PackagesPage';
+import SettingsPage from './features/settings/SettingsPage';
 
 // Styles
 import './App.css';

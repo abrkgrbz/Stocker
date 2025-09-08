@@ -56,7 +56,7 @@ import {
   MonitorHeart as MonitorHeartIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 const drawerWidth = 280;
 const collapsedDrawerWidth = 72;
