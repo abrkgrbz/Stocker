@@ -42,20 +42,12 @@ import {
   FilterOutlined,
   ReloadOutlined,
   InfoCircleOutlined,
-  RiseOutlined,
-  FallOutlined,
   ClockCircleOutlined,
   GlobalOutlined,
   MobileOutlined,
   DesktopOutlined,
-  AndroidOutlined,
-  AppleOutlined,
-  WindowsOutlined,
   ChromeOutlined,
-  FirefoxOutlined,
-  SafariOutlined,
   ExportOutlined,
-  PrinterOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -274,16 +266,16 @@ const TenantAnalytics: React.FC = () => {
 
   const browserData = [
     { name: 'Chrome', value: 52.3, icon: <ChromeOutlined /> },
-    { name: 'Safari', value: 28.7, icon: <SafariOutlined /> },
-    { name: 'Firefox', value: 12.8, icon: <FirefoxOutlined /> },
+    { name: 'Safari', value: 28.7, icon: <GlobalOutlined /> },
+    { name: 'Firefox', value: 12.8, icon: <GlobalOutlined /> },
     { name: 'Diğer', value: 6.2, icon: <GlobalOutlined /> },
   ];
 
   const osData = [
-    { name: 'Windows', value: 48.5, icon: <WindowsOutlined /> },
-    { name: 'iOS', value: 25.3, icon: <AppleOutlined /> },
-    { name: 'Android', value: 18.7, icon: <AndroidOutlined /> },
-    { name: 'macOS', value: 7.5, icon: <AppleOutlined /> },
+    { name: 'Windows', value: 48.5, icon: <DesktopOutlined /> },
+    { name: 'iOS', value: 25.3, icon: <MobileOutlined /> },
+    { name: 'Android', value: 18.7, icon: <MobileOutlined /> },
+    { name: 'macOS', value: 7.5, icon: <DesktopOutlined /> },
   ];
 
   const handleDateRangeChange = (range: string) => {
@@ -324,7 +316,7 @@ const TenantAnalytics: React.FC = () => {
               prefix={<EyeOutlined style={{ color: '#52c41a' }} />}
               suffix={
                 <Tooltip title="Geçen aya göre %8.2 artış">
-                  <RiseOutlined style={{ color: '#52c41a' }} />
+                  <TrendingUpOutlined style={{ color: '#52c41a' }} />
                 </Tooltip>
               }
             />
