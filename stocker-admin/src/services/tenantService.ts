@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../lib/axios';
 import type {
   Tenant,
   TenantListResponse,
@@ -14,14 +14,6 @@ import type {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class TenantService {
-  private getHeaders() {
-    const token = localStorage.getItem('auth-token');
-    return {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-  }
-
   async getTenants(
     page: number = 1,
     pageSize: number = 25,
@@ -47,9 +39,7 @@ class TenantService {
         params.append('endDate', filters.dateRange.end);
       }
 
-      const response = await axios.get(`${API_URL}/api/admin/tenants?${params}`, {
-        headers: this.getHeaders(),
-      });
+      const response = await axiosInstance.get(`/api/master/tenants?${params}`);
 
       return response.data;
     } catch (error) {
@@ -60,9 +50,7 @@ class TenantService {
 
   async getTenant(id: string): Promise<Tenant> {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/tenants/${id}`, {
-        headers: this.getHeaders(),
-      });
+      const response = await axiosInstance.get(`/api/master/tenants/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching tenant:', error);
@@ -72,9 +60,7 @@ class TenantService {
 
   async createTenant(tenantData: CreateTenantRequest): Promise<Tenant> {
     try {
-      const response = await axios.post(`${API_URL}/api/admin/tenants`, tenantData, {
-        headers: this.getHeaders(),
-      });
+      const response = await axiosInstance.post(`/api/master/tenants`, tenantData);
       return response.data;
     } catch (error) {
       console.error('Error creating tenant:', error);
@@ -84,9 +70,7 @@ class TenantService {
 
   async updateTenant(id: string, updates: UpdateTenantRequest): Promise<Tenant> {
     try {
-      const response = await axios.put(`${API_URL}/api/admin/tenants/${id}`, updates, {
-        headers: this.getHeaders(),
-      });
+      const response = await axiosInstance.put(`/api/master/tenants/${id}`, updates);
       return response.data;
     } catch (error) {
       console.error('Error updating tenant:', error);
@@ -96,9 +80,7 @@ class TenantService {
 
   async deleteTenant(id: string): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/api/admin/tenants/${id}`, {
-        headers: this.getHeaders(),
-      });
+      await axiosInstance.delete(`/api/master/tenants/${id}`);
     } catch (error) {
       console.error('Error deleting tenant:', error);
       throw error;
@@ -107,9 +89,7 @@ class TenantService {
 
   async bulkAction(action: BulkTenantAction): Promise<void> {
     try {
-      await axios.post(`${API_URL}/api/admin/tenants/bulk`, action, {
-        headers: this.getHeaders(),
-      });
+      await axiosInstance.post(`/api/master/tenants/bulk`, action);
     } catch (error) {
       console.error('Error performing bulk action:', error);
       throw error;
@@ -118,9 +98,7 @@ class TenantService {
 
   async getTenantStats(): Promise<TenantStats> {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/tenants/stats`, {
-        headers: this.getHeaders(),
-      });
+      const response = await axiosInstance.get(`/api/master/tenants/stats`);
       return response.data;
     } catch (error) {
       console.error('Error fetching tenant stats:', error);
@@ -133,11 +111,8 @@ class TenantService {
     totalCount: number;
   }> {
     try {
-      const response = await axios.get(
-        `${API_URL}/api/admin/tenants/${tenantId}/activities?page=${page}&pageSize=${pageSize}`,
-        {
-          headers: this.getHeaders(),
-        }
+      const response = await axiosInstance.get(
+        `/api/master/tenants/${tenantId}/activities?page=${page}&pageSize=${pageSize}`
       );
       return response.data;
     } catch (error) {
@@ -151,12 +126,9 @@ class TenantService {
     permissions: string[];
   }): Promise<TenantApiKey> {
     try {
-      const response = await axios.post(
-        `${API_URL}/api/admin/tenants/${tenantId}/api-keys`,
-        keyData,
-        {
-          headers: this.getHeaders(),
-        }
+      const response = await axiosInstance.post(
+        `/api/master/tenants/${tenantId}/api-keys`,
+        keyData
       );
       return response.data;
     } catch (error) {
@@ -167,9 +139,7 @@ class TenantService {
 
   async deleteApiKey(tenantId: string, keyId: string): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/api/admin/tenants/${tenantId}/api-keys/${keyId}`, {
-        headers: this.getHeaders(),
-      });
+      await axiosInstance.delete(`/api/master/tenants/${tenantId}/api-keys/${keyId}`);
     } catch (error) {
       console.error('Error deleting API key:', error);
       throw error;
@@ -178,12 +148,9 @@ class TenantService {
 
   async toggleApiKeyStatus(tenantId: string, keyId: string): Promise<TenantApiKey> {
     try {
-      const response = await axios.patch(
-        `${API_URL}/api/admin/tenants/${tenantId}/api-keys/${keyId}/toggle`,
-        {},
-        {
-          headers: this.getHeaders(),
-        }
+      const response = await axiosInstance.patch(
+        `/api/master/tenants/${tenantId}/api-keys/${keyId}/toggle`,
+        {}
       );
       return response.data;
     } catch (error) {
@@ -206,8 +173,7 @@ class TenantService {
         params.append('plan', filters.plan.join(','));
       }
 
-      const response = await axios.get(`${API_URL}/api/admin/tenants/export?${params}`, {
-        headers: this.getHeaders(),
+      const response = await axiosInstance.get(`/api/master/tenants/export?${params}`, {
         responseType: 'blob',
       });
 

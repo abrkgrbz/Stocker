@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
+import Swal from 'sweetalert2';
+import axiosInstance from '../lib/axios';
 
 interface AdminUser {
   id: string;
@@ -14,7 +15,9 @@ interface AdminUser {
 
 interface AuthState {
   user: AdminUser | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: number | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -24,15 +27,17 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  refreshAccessToken: () => Promise<void>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
+      expiresAt: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -41,74 +46,172 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await axios.post(`${API_URL}/api/admin/auth/login`, {
+          const response = await axiosInstance.post(`/api/master/auth/login`, {
             email,
             password,
           });
 
-          const { user, token } = response.data;
+          const { success, data, message } = response.data;
           
-          // Set auth header for future requests
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          if (!success) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Giriş Başarısız',
+              text: message || 'Giriş yapılamadı',
+              confirmButtonColor: '#d33',
+              confirmButtonText: 'Tamam'
+            });
+            set({
+              isLoading: false,
+              error: message || 'Login failed',
+              isAuthenticated: false,
+            });
+            return;
+          }
+
+          const { accessToken, refreshToken, user } = data;
+          
+          // Calculate expiration (7 days from now)
+          const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+          
           
           set({
             user,
-            token,
+            accessToken,
+            refreshToken,
+            expiresAt,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
+
+          await Swal.fire({
+            icon: 'success',
+            title: 'Hoş Geldiniz!',
+            text: `Merhaba ${user.name}, başarıyla giriş yaptınız.`,
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
         } catch (error: any) {
+          const errorMessage = error.response?.data?.message || 'Bağlantı hatası oluştu';
+          
+          await Swal.fire({
+            icon: 'error',
+            title: 'Giriş Başarısız',
+            text: errorMessage,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Tamam'
+          });
+          
           set({
             isLoading: false,
-            error: error.response?.data?.message || 'Login failed',
+            error: errorMessage,
             isAuthenticated: false,
           });
-          throw error;
         }
       },
 
       logout: () => {
-        // Clear auth header
-        delete axios.defaults.headers.common['Authorization'];
         
         // Clear state
         set({
           user: null,
-          token: null,
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
           isAuthenticated: false,
           error: null,
         });
         
         // Clear local storage
         localStorage.removeItem('stocker-admin-auth');
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Çıkış Yapıldı',
+          text: 'Başarıyla çıkış yaptınız.',
+          timer: 1500,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       },
 
       checkAuth: async () => {
-        const token = get().token;
+        const { accessToken, expiresAt, refreshToken } = get();
         
-        if (!token) {
+        if (!accessToken) {
           set({ isAuthenticated: false });
+          return;
+        }
+
+        // Check if token is expired
+        if (expiresAt && Date.now() > expiresAt) {
+          // Try to refresh the token
+          if (refreshToken) {
+            await get().refreshAccessToken();
+            return;
+          }
+          // No refresh token, logout
+          get().logout();
           return;
         }
 
         set({ isLoading: true });
         
         try {
-          // Set auth header
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          const response = await axiosInstance.get(`/api/master/auth/me`);
           
-          const response = await axios.get(`${API_URL}/api/admin/auth/me`);
-          
-          set({
-            user: response.data,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          if (response.data.success) {
+            set({
+              user: response.data.data,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            get().logout();
+            set({ isLoading: false });
+          }
         } catch (error) {
           // Token is invalid
+          if (refreshToken) {
+            await get().refreshAccessToken();
+          } else {
+            get().logout();
+            set({ isLoading: false });
+          }
+        }
+      },
+
+      refreshAccessToken: async () => {
+        const { refreshToken } = get();
+        
+        if (!refreshToken) {
           get().logout();
-          set({ isLoading: false });
+          return;
+        }
+
+        try {
+          const response = await axiosInstance.post(`/api/master/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { success, data } = response.data;
+          
+          if (success && data.accessToken) {
+            const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
+            
+            set({
+              accessToken: data.accessToken,
+              refreshToken: data.refreshToken || refreshToken,
+              expiresAt,
+              isAuthenticated: true,
+            });
+          } else {
+            get().logout();
+          }
+        } catch (error) {
+          get().logout();
         }
       },
 
@@ -118,7 +221,9 @@ export const useAuthStore = create<AuthState>()(
       name: 'stocker-admin-auth',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        expiresAt: state.expiresAt,
         isAuthenticated: state.isAuthenticated,
       }),
     }

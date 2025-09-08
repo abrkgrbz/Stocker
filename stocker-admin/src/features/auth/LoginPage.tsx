@@ -34,11 +34,14 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Mock login - gerçek API entegrasyonu için değiştir
-    setTimeout(() => {
-      localStorage.setItem('admin_token', 'mock_token_123');
+    try {
+      await login(email, password);
       navigate('/dashboard');
-    }, 1000);
+    } catch (error) {
+      // Error is handled by sweetalert2 in the auth store
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

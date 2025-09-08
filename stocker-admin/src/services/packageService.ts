@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../lib/axios';
 import type {
   Package,
   PackageListResponse,
@@ -15,7 +15,7 @@ import type {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 class PackageService {
-  private baseUrl = `${API_BASE_URL}/admin/packages`;
+  private baseUrl = `${API_BASE_URL}/master/packages`;
 
   // Get all packages with pagination and filters
   async getPackages(
@@ -24,7 +24,7 @@ class PackageService {
     filters: PackageFilters = {}
   ): Promise<PackageListResponse> {
     try {
-      const response = await axios.get(`${this.baseUrl}`, {
+      const response = await axiosInstance.get(`${this.baseUrl}`, {
         params: {
           page,
           pageSize,
@@ -41,7 +41,7 @@ class PackageService {
   // Get a single package by ID
   async getPackage(id: string): Promise<Package> {
     try {
-      const response = await axios.get(`${this.baseUrl}/${id}`);
+      const response = await axiosInstance.get(`${this.baseUrl}/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Failed to fetch package ${id}:`, error);
@@ -52,7 +52,7 @@ class PackageService {
   // Create a new package
   async createPackage(packageData: CreatePackageRequest): Promise<Package> {
     try {
-      const response = await axios.post(`${this.baseUrl}`, packageData);
+      const response = await axiosInstance.post(`${this.baseUrl}`, packageData);
       return response.data;
     } catch (error) {
       console.error('Failed to create package:', error);
@@ -63,7 +63,7 @@ class PackageService {
   // Update an existing package
   async updatePackage(id: string, updates: UpdatePackageRequest): Promise<Package> {
     try {
-      const response = await axios.put(`${this.baseUrl}/${id}`, updates);
+      const response = await axiosInstance.put(`${this.baseUrl}/${id}`, updates);
       return response.data;
     } catch (error) {
       console.error(`Failed to update package ${id}:`, error);
@@ -74,7 +74,7 @@ class PackageService {
   // Delete a package
   async deletePackage(id: string): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/${id}`);
+      await axiosInstance.delete(`${this.baseUrl}/${id}`);
     } catch (error) {
       console.error(`Failed to delete package ${id}:`, error);
       throw error;
@@ -84,7 +84,7 @@ class PackageService {
   // Bulk actions on multiple packages
   async bulkAction(action: BulkPackageAction): Promise<void> {
     try {
-      await axios.post(`${this.baseUrl}/bulk`, action);
+      await axiosInstance.post(`${this.baseUrl}/bulk`, action);
     } catch (error) {
       console.error('Failed to perform bulk action:', error);
       throw error;
@@ -94,7 +94,7 @@ class PackageService {
   // Get package statistics
   async getPackageStats(): Promise<PackageStats> {
     try {
-      const response = await axios.get(`${this.baseUrl}/stats`);
+      const response = await axiosInstance.get(`${this.baseUrl}/stats`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch package stats:', error);
@@ -105,7 +105,7 @@ class PackageService {
   // Get package comparison data
   async getPackageComparison(packageIds: string[]): Promise<PackageComparison> {
     try {
-      const response = await axios.post(`${this.baseUrl}/compare`, {
+      const response = await axiosInstance.post(`${this.baseUrl}/compare`, {
         packageIds,
       });
       return response.data;
@@ -118,7 +118,7 @@ class PackageService {
   // Get migration paths between packages
   async getMigrationPaths(fromPackageId: string, toPackageId: string): Promise<PackageMigration> {
     try {
-      const response = await axios.get(`${this.baseUrl}/migration`, {
+      const response = await axiosInstance.get(`${this.baseUrl}/migration`, {
         params: { fromPackageId, toPackageId },
       });
       return response.data;
@@ -134,7 +134,7 @@ class PackageService {
     period: 'day' | 'week' | 'month' | 'quarter' | 'year' = 'month'
   ): Promise<PackageAnalytics> {
     try {
-      const response = await axios.get(`${this.baseUrl}/${packageId}/analytics`, {
+      const response = await axiosInstance.get(`${this.baseUrl}/${packageId}/analytics`, {
         params: { period },
       });
       return response.data;
@@ -147,7 +147,7 @@ class PackageService {
   // Clone an existing package
   async clonePackage(id: string, newName: string): Promise<Package> {
     try {
-      const response = await axios.post(`${this.baseUrl}/${id}/clone`, {
+      const response = await axiosInstance.post(`${this.baseUrl}/${id}/clone`, {
         name: newName,
       });
       return response.data;
@@ -160,7 +160,7 @@ class PackageService {
   // Export packages data
   async exportPackages(filters: PackageFilters = {}): Promise<Blob> {
     try {
-      const response = await axios.get(`${this.baseUrl}/export`, {
+      const response = await axiosInstance.get(`${this.baseUrl}/export`, {
         params: filters,
         responseType: 'blob',
       });
@@ -179,7 +179,7 @@ class PackageService {
     estimatedRevenue: number;
   }> {
     try {
-      const response = await axios.post(`${this.baseUrl}/preview-pricing`, packageConfig);
+      const response = await axiosInstance.post(`${this.baseUrl}/preview-pricing`, packageConfig);
       return response.data;
     } catch (error) {
       console.error('Failed to preview pricing:', error);
@@ -190,7 +190,7 @@ class PackageService {
   // Validate package slug availability
   async validateSlug(slug: string, excludeId?: string): Promise<boolean> {
     try {
-      const response = await axios.get(`${this.baseUrl}/validate-slug`, {
+      const response = await axiosInstance.get(`${this.baseUrl}/validate-slug`, {
         params: { slug, excludeId },
       });
       return response.data.available;

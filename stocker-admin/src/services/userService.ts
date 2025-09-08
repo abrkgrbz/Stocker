@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../lib/axios';
 import type {
   User,
   UserFilters,
@@ -18,23 +18,7 @@ import type {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 class UserService {
-  private api = axios.create({
-    baseURL: `${API_BASE_URL}/admin`,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  constructor() {
-    // Add auth interceptor
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('admin_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-  }
+  private api = axiosInstance;
 
   async getUsers(
     page: number = 1,
@@ -58,31 +42,31 @@ class UserService {
       }
     });
 
-    const response = await this.api.get(`/users?${params}`);
+    const response = await this.api.get(`/api/master/users?${params}`);
     return response.data;
   }
 
   async getUser(id: string): Promise<User> {
-    const response = await this.api.get(`/users/${id}`);
+    const response = await this.api.get(`/api/master/users/${id}`);
     return response.data;
   }
 
   async createUser(userData: CreateUserRequest): Promise<User> {
-    const response = await this.api.post('/users', userData);
+    const response = await this.api.post('/api/master/users', userData);
     return response.data;
   }
 
   async updateUser(id: string, userData: UpdateUserRequest): Promise<User> {
-    const response = await this.api.put(`/users/${id}`, userData);
+    const response = await this.api.put(`/api/master/users/${id}`, userData);
     return response.data;
   }
 
   async deleteUser(id: string): Promise<void> {
-    await this.api.delete(`/users/${id}`);
+    await this.api.delete(`/api/master/users/${id}`);
   }
 
   async getUserStats(): Promise<UserStats> {
-    const response = await this.api.get('/users/stats');
+    const response = await this.api.get('/api/master/users/stats');
     return response.data;
   }
 
@@ -90,59 +74,59 @@ class UserService {
     data: UserActivity[];
     totalCount: number;
   }> {
-    const response = await this.api.get(`/users/${userId}/activities`, {
+    const response = await this.api.get(`/api/master/users/${userId}/activities`, {
       params: { page, pageSize }
     });
     return response.data;
   }
 
   async getUserSessions(userId: string): Promise<UserSession[]> {
-    const response = await this.api.get(`/users/${userId}/sessions`);
+    const response = await this.api.get(`/api/master/users/${userId}/sessions`);
     return response.data;
   }
 
   async revokeUserSession(userId: string, sessionId: string): Promise<void> {
-    await this.api.delete(`/users/${userId}/sessions/${sessionId}`);
+    await this.api.delete(`/api/master/users/${userId}/sessions/${sessionId}`);
   }
 
   async revokeAllUserSessions(userId: string): Promise<void> {
-    await this.api.delete(`/users/${userId}/sessions`);
+    await this.api.delete(`/api/master/users/${userId}/sessions`);
   }
 
   async getUserLoginHistory(userId: string, page: number = 1, pageSize: number = 50): Promise<{
     data: UserLoginHistory[];
     totalCount: number;
   }> {
-    const response = await this.api.get(`/users/${userId}/login-history`, {
+    const response = await this.api.get(`/api/master/users/${userId}/login-history`, {
       params: { page, pageSize }
     });
     return response.data;
   }
 
   async resetUserPassword(data: PasswordResetRequest): Promise<{ temporaryPassword?: string }> {
-    const response = await this.api.post(`/users/${data.userId}/reset-password`, data);
+    const response = await this.api.post(`/api/master/users/${data.userId}/reset-password`, data);
     return response.data;
   }
 
   async setupTwoFactor(data: TwoFactorSetupRequest): Promise<{ qrCode?: string; backupCodes?: string[] }> {
-    const response = await this.api.post(`/users/${data.userId}/two-factor`, data);
+    const response = await this.api.post(`/api/master/users/${data.userId}/two-factor`, data);
     return response.data;
   }
 
   async verifyUserEmail(userId: string): Promise<void> {
-    await this.api.post(`/users/${userId}/verify-email`);
+    await this.api.post(`/api/master/users/${userId}/verify-email`);
   }
 
   async resendVerificationEmail(userId: string): Promise<void> {
-    await this.api.post(`/users/${userId}/resend-verification`);
+    await this.api.post(`/api/master/users/${userId}/resend-verification`);
   }
 
   async lockUser(userId: string, reason?: string): Promise<void> {
-    await this.api.post(`/users/${userId}/lock`, { reason });
+    await this.api.post(`/api/master/users/${userId}/lock`, { reason });
   }
 
   async unlockUser(userId: string): Promise<void> {
-    await this.api.post(`/users/${userId}/unlock`);
+    await this.api.post(`/api/master/users/${userId}/unlock`);
   }
 
   async bulkAction(action: BulkUserAction): Promise<{
@@ -150,29 +134,29 @@ class UserService {
     failed: number;
     errors: Array<{ userId: string; error: string }>;
   }> {
-    const response = await this.api.post('/users/bulk-action', action);
+    const response = await this.api.post('/api/master/users/bulk-action', action);
     return response.data;
   }
 
   async exportUsers(options: UserExportOptions & { userIds?: string[] }): Promise<Blob> {
-    const response = await this.api.post('/users/export', options, {
+    const response = await this.api.post('/api/master/users/export', options, {
       responseType: 'blob'
     });
     return response.data;
   }
 
   async impersonateUser(userId: string): Promise<{ token: string; redirectUrl: string }> {
-    const response = await this.api.post(`/users/${userId}/impersonate`);
+    const response = await this.api.post(`/api/master/users/${userId}/impersonate`);
     return response.data;
   }
 
   async getUserPermissions(userId: string): Promise<string[]> {
-    const response = await this.api.get(`/users/${userId}/permissions`);
+    const response = await this.api.get(`/api/master/users/${userId}/permissions`);
     return response.data;
   }
 
   async updateUserPermissions(userId: string, permissions: string[]): Promise<void> {
-    await this.api.put(`/users/${userId}/permissions`, { permissions });
+    await this.api.put(`/api/master/users/${userId}/permissions`, { permissions });
   }
 
   // Mock data for development
