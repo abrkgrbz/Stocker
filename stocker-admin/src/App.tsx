@@ -4,6 +4,9 @@ import LoginPage from './features/auth/LoginPage';
 import MasterLayout from './layouts/MasterLayout';
 import Dashboard from './pages/Dashboard';
 import TenantsPage from './pages/Tenants';
+import TenantCreate from './pages/Tenants/Create';
+import TenantDomains from './pages/Tenants/Domains';
+import TenantMigrations from './pages/Tenants/Migrations';
 import UsersPage from './pages/Users';
 import PackagesPage from './pages/Packages';
 import { useAuthStore } from './stores/authStore';
@@ -34,7 +37,11 @@ function App() {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="tenants/*" element={<TenantsPage />} />
+          <Route path="tenants" element={<TenantsPage />} />
+          <Route path="tenants/create" element={<TenantCreate />} />
+          <Route path="tenants/list" element={<TenantsPage />} />
+          <Route path="tenants/domains" element={<TenantDomains />} />
+          <Route path="tenants/migrations" element={<TenantMigrations />} />
           <Route path="users/*" element={<UsersPage />} />
           <Route path="packages" element={<PackagesPage />} />
         </Route>
