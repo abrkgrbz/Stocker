@@ -31,8 +31,8 @@ import {
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
-  TrendingUpOutlined,
-  TrendingDownOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
   EyeOutlined,
   UserOutlined,
   ShoppingCartOutlined,
@@ -316,7 +316,7 @@ const TenantAnalytics: React.FC = () => {
               prefix={<EyeOutlined style={{ color: '#52c41a' }} />}
               suffix={
                 <Tooltip title="Geçen aya göre %8.2 artış">
-                  <TrendingUpOutlined style={{ color: '#52c41a' }} />
+                  <ArrowUpOutlined style={{ color: '#52c41a' }} />
                 </Tooltip>
               }
             />
@@ -340,7 +340,7 @@ const TenantAnalytics: React.FC = () => {
               value={overviewStats.conversionRate}
               precision={1}
               suffix="%"
-              prefix={<TrendingUpOutlined style={{ color: '#722ed1' }} />}
+              prefix={<ArrowUpOutlined style={{ color: '#722ed1' }} />}
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>

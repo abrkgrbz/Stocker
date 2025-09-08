@@ -37,8 +37,8 @@ import {
   ExclamationCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
-  TrendingUpOutlined,
-  TrendingDownOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
   DatabaseOutlined,
   ApiOutlined,
   CloudOutlined,
@@ -712,8 +712,8 @@ const TenantHealth: React.FC = () => {
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     Son kontrol: {dayjs(metric.lastCheck).fromNow()}
                   </Text>
-                  {metric.trend === 'up' && <TrendingUpOutlined style={{ color: '#ff4d4f' }} />}
-                  {metric.trend === 'down' && <TrendingDownOutlined style={{ color: '#52c41a' }} />}
+                  {metric.trend === 'up' && <ArrowUpOutlined style={{ color: '#ff4d4f' }} />}
+                  {metric.trend === 'down' && <ArrowDownOutlined style={{ color: '#52c41a' }} />}
                 </Space>
               </Col>
               <Col>
