@@ -53,7 +53,6 @@ import {
   BarChartOutlined,
   DashboardOutlined,
   MonitorOutlined,
-  ServerOutlined,
   GlobalOutlined,
   LockOutlined,
   EyeOutlined,
@@ -1039,7 +1038,7 @@ const TenantHealth: React.FC = () => {
           <MetricsTab />
         </TabPane>
         
-        <TabPane tab={<span><ServerOutlined /> Servisler</span>} key="services">
+        <TabPane tab={<span><DatabaseOutlined /> Servisler</span>} key="services">
           <ServicesTab />
         </TabPane>
         
