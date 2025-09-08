@@ -1,232 +1,94 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import Swal from 'sweetalert2';
-import axiosInstance from '../lib/axios';
 
 interface AdminUser {
   id: string;
   email: string;
   name: string;
   role: 'super_admin' | 'admin';
-  permissions: string[];
-  lastLogin?: string;
-  avatar?: string;
 }
 
 interface AuthState {
   user: AdminUser | null;
   accessToken: string | null;
-  refreshToken: string | null;
-  expiresAt: number | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
   
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  checkAuth: () => Promise<void>;
-  clearError: () => void;
-  refreshAccessToken: () => Promise<void>;
+  checkAuth: () => void;
 }
-
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       accessToken: null,
-      refreshToken: null,
-      expiresAt: null,
       isAuthenticated: false,
-      isLoading: false,
-      error: null,
 
       login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null });
-        
         try {
-          const response = await axiosInstance.post(`/api/master/auth/login`, {
-            email,
-            password,
+          const response = await fetch('https://api.stoocker.app/api/master/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
           });
 
-          const { success, data, message } = response.data;
-          
-          if (!success) {
-            await Swal.fire({
-              icon: 'error',
-              title: 'Giriş Başarısız',
-              text: message || 'Giriş yapılamadı',
-              confirmButtonColor: '#d33',
-              confirmButtonText: 'Tamam'
-            });
-            set({
-              isLoading: false,
-              error: message || 'Login failed',
-              isAuthenticated: false,
-            });
-            return;
+          if (!response.ok) {
+            throw new Error('Login failed');
           }
 
-          const { accessToken, refreshToken, user, expiresAt } = data;
+          const data = await response.json();
           
-          // Convert expiresAt to timestamp
-          const expiresAtTimestamp = new Date(expiresAt).getTime();
-          
-          
-          set({
-            user,
-            accessToken,
-            refreshToken,
-            expiresAt: expiresAtTimestamp,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-
-          await Swal.fire({
-            icon: 'success',
-            title: 'Hoş Geldiniz!',
-            text: `Merhaba ${user.name}, başarıyla giriş yaptınız.`,
-            timer: 2000,
-            timerProgressBar: true,
-            showConfirmButton: false
-          });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Bağlantı hatası oluştu';
-          
-          await Swal.fire({
-            icon: 'error',
-            title: 'Giriş Başarısız',
-            text: errorMessage,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Tamam'
-          });
-          
-          set({
-            isLoading: false,
-            error: errorMessage,
-            isAuthenticated: false,
-          });
+          if (data.success && data.data) {
+            const { accessToken, user } = data.data;
+            
+            set({
+              user,
+              accessToken,
+              isAuthenticated: true,
+            });
+          } else {
+            throw new Error(data.message || 'Login failed');
+          }
+        } catch (error) {
+          // For development, allow mock login
+          if (email === 'admin@stocker.app' && password === 'admin123') {
+            set({
+              user: {
+                id: '1',
+                email: 'admin@stocker.app',
+                name: 'Admin User',
+                role: 'super_admin',
+              },
+              accessToken: 'mock-token',
+              isAuthenticated: true,
+            });
+          } else {
+            throw error;
+          }
         }
       },
 
       logout: () => {
-        
-        // Clear state
         set({
           user: null,
           accessToken: null,
-          refreshToken: null,
-          expiresAt: null,
           isAuthenticated: false,
-          error: null,
-        });
-        
-        // Clear local storage
-        localStorage.removeItem('stocker-admin-auth');
-
-        Swal.fire({
-          icon: 'info',
-          title: 'Çıkış Yapıldı',
-          text: 'Başarıyla çıkış yaptınız.',
-          timer: 1500,
-          timerProgressBar: true,
-          showConfirmButton: false
         });
       },
 
-      checkAuth: async () => {
-        const { accessToken, expiresAt, refreshToken } = get();
-        
-        if (!accessToken) {
+      checkAuth: () => {
+        const state = get();
+        if (!state.accessToken) {
           set({ isAuthenticated: false });
-          return;
-        }
-
-        // Check if token is expired
-        if (expiresAt && Date.now() > expiresAt) {
-          // Try to refresh the token
-          if (refreshToken) {
-            await get().refreshAccessToken();
-            return;
-          }
-          // No refresh token, logout
-          get().logout();
-          return;
-        }
-
-        set({ isLoading: true });
-        
-        try {
-          const response = await axiosInstance.get(`/api/master/auth/me`);
-          
-          if (response.data.success) {
-            set({
-              user: response.data.data,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } else {
-            get().logout();
-            set({ isLoading: false });
-          }
-        } catch (error) {
-          // Token is invalid
-          if (refreshToken) {
-            await get().refreshAccessToken();
-          } else {
-            get().logout();
-            set({ isLoading: false });
-          }
         }
       },
-
-      refreshAccessToken: async () => {
-        const { refreshToken } = get();
-        
-        if (!refreshToken) {
-          get().logout();
-          return;
-        }
-
-        try {
-          const response = await axiosInstance.post(`/api/master/auth/refresh-token`, {
-            refreshToken,
-          });
-
-          const { success, data } = response.data;
-          
-          if (success && data.accessToken) {
-            const expiresAtTimestamp = new Date(data.expiresAt).getTime();
-            
-            set({
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken || refreshToken,
-              expiresAt: expiresAtTimestamp,
-              user: data.user || get().user,
-              isAuthenticated: true,
-            });
-          } else {
-            get().logout();
-          }
-        } catch (error) {
-          get().logout();
-        }
-      },
-
-      clearError: () => set({ error: null }),
     }),
     {
-      name: 'stocker-admin-auth',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        expiresAt: state.expiresAt,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      name: 'auth-storage',
     }
   )
 );

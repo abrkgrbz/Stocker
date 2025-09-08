@@ -1,33 +1,20 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from './metronic/ui/sonner';
-
-// Stores
+import LoginPage from './features/auth/LoginPage';
 import { useAuthStore } from './stores/authStore';
 
-// Layouts
-import MasterLayout from './layouts/MasterLayout';
-
-// Pages
-import LoginPage from './features/auth/LoginPage';
-import CustomDashboard from './features/dashboard/CustomDashboard';
-import CustomTenants from './features/tenants/CustomTenants';
-import UsersPage from './features/users/UsersPage';
-import PackagesPage from './features/packages/PackagesPage';
-import SettingsPage from './features/settings/SettingsPage';
-
-// Create query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+// Temporary Dashboard Component
+const Dashboard: React.FC = () => {
+  const { user, logout } = useAuthStore();
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Dashboard</h1>
+      <p>Hoş geldiniz, {user?.name || 'Admin'}</p>
+      <button onClick={logout}>Çıkış Yap</button>
+    </div>
+  );
+};
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,42 +28,22 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 function App() {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
-  
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Protected Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <MasterLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<CustomDashboard />} />
-            <Route path="tenants" element={<CustomTenants />} />
-            <Route path="users" element={<UsersPage />} />
-            <Route path="packages" element={<PackagesPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-          
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-        <Toaster />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
