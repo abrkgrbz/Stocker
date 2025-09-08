@@ -14,6 +14,11 @@ import TenantBackupRestore from './pages/Tenants/BackupRestore';
 import TenantUsers from './pages/Tenants/Users';
 import TenantDomains from './pages/Tenants/Domains';
 import TenantMigrations from './pages/Tenants/Migrations';
+import TenantSecurity from './pages/Tenants/Security';
+import TenantAnalytics from './pages/Tenants/Analytics';
+import TenantIntegrations from './pages/Tenants/Integrations';
+import TenantWebhooks from './pages/Tenants/Webhooks';
+import TenantHealth from './pages/Tenants/Health';
 import UsersPage from './pages/Users';
 import PackagesPage from './pages/Packages';
 import { useAuthStore } from './stores/authStore';
@@ -55,6 +60,11 @@ function App() {
           <Route path="tenants/:id/users" element={<TenantUsers />} />
           <Route path="tenants/:id/domains" element={<TenantDomains />} />
           <Route path="tenants/:id/migrations" element={<TenantMigrations />} />
+          <Route path="tenants/:id/security" element={<TenantSecurity />} />
+          <Route path="tenants/:id/analytics" element={<TenantAnalytics />} />
+          <Route path="tenants/:id/integrations" element={<TenantIntegrations />} />
+          <Route path="tenants/:id/webhooks" element={<TenantWebhooks />} />
+          <Route path="tenants/:id/health" element={<TenantHealth />} />
           <Route path="users/*" element={<UsersPage />} />
           <Route path="packages" element={<PackagesPage />} />
         </Route>
