@@ -6,6 +6,16 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY stocker-web/package*.json ./
 
+# Debug: Check if files were copied
+RUN echo "=== Checking copied files ===" && \
+    ls -la && \
+    if [ -f package.json ]; then \
+        echo "package.json found"; \
+    else \
+        echo "ERROR: package.json not found!"; \
+        exit 1; \
+    fi
+
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
