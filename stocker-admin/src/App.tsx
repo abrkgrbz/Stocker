@@ -7,12 +7,12 @@ import { Toaster } from './metronic/ui/sonner';
 import { useAuthStore } from './stores/authStore';
 
 // Layouts
-import MetronicLayout from './layouts/MetronicLayout';
+import CustomLayout from './layouts/CustomLayout';
 
 // Pages
 import LoginPage from './features/auth/LoginPage';
-import DashboardPage from './features/dashboard/DashboardPage';
-import TenantsPage from './features/tenants/TenantsPage';
+import CustomDashboard from './features/dashboard/CustomDashboard';
+import CustomTenants from './features/tenants/CustomTenants';
 import UsersPage from './features/users/UsersPage';
 import PackagesPage from './features/packages/PackagesPage';
 import SettingsPage from './features/settings/SettingsPage';
@@ -59,13 +59,13 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <MetronicLayout />
+                <CustomLayout />
               </ProtectedRoute>
             }
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="tenants" element={<TenantsPage />} />
+            <Route path="dashboard" element={<CustomDashboard />} />
+            <Route path="tenants" element={<CustomTenants />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="packages" element={<PackagesPage />} />
             <Route path="settings" element={<SettingsPage />} />

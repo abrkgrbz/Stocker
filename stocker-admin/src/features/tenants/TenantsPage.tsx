@@ -53,7 +53,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import tenantService from '../../services/tenantService';
-import { toast } from '../../metronic/ui/sonner';
+import { Toaster, toast } from '../../metronic/ui/sonner';
 
 const TenantsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
