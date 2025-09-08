@@ -1,49 +1,49 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Multi-stage build for React Admin app
+# Stage 1: Build the application
+FROM node:22-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY stocker-admin/package.json stocker-admin/yarn.lock* stocker-admin/package-lock.json* ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies - prefer yarn if lock file exists
+RUN if [ -f yarn.lock ]; then \
+      yarn install --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then \
+      npm ci --legacy-peer-deps; \
+    else \
+      npm install --legacy-peer-deps; \
+    fi
 
-# Copy source code
-COPY . .
+# Copy all source files
+COPY stocker-admin/ .
 
-# Build the application
-RUN npm run build
+# Set NODE_ENV and build the application
+ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=https://api.stoocker.app
+RUN if [ -f yarn.lock ]; then \
+      yarn build || yarn build:docker; \
+    else \
+      npm run build || npm run build:docker; \
+    fi
 
-# Production stage
+# Stage 2: Serve with nginx
 FROM nginx:alpine
-
-# Install curl for healthcheck
-RUN apk add --no-cache curl
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create a non-root user
-RUN adduser -D -H -s /sbin/nologin nginx-user && \
-    chown -R nginx-user:nginx-user /usr/share/nginx/html && \
-    chown -R nginx-user:nginx-user /var/cache/nginx && \
-    chown -R nginx-user:nginx-user /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown nginx-user:nginx-user /var/run/nginx.pid
-
-# Switch to non-root user
-USER nginx-user
+COPY stocker-admin/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80 || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
