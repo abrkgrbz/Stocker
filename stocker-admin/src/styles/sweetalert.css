@@ -1,0 +1,66 @@
+/* SweetAlert2 Custom Styles */
+.colored-toast.swal2-icon-success {
+  background-color: #1a1f36 !important;
+}
+
+.colored-toast.swal2-icon-error {
+  background-color: #1a1f36 !important;
+}
+
+.swal-title {
+  font-weight: 600 !important;
+  font-size: 1.2rem !important;
+}
+
+.swal-progress-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.swal-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  padding: 10px 24px !important;
+}
+
+.swal-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.swal2-timer-progress-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Custom animations */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.swal2-show {
+  animation: slideInFromTop 0.3s ease-out !important;
+}
+
+/* Toast specific styles */
+.swal2-toast {
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
+
+.swal2-toast .swal2-title {
+  margin: 0 !important;
+}
+
+.swal2-toast .swal2-content {
+  margin: 8px 0 0 0 !important;
+  padding: 0 !important;
+}

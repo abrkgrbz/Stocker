@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import Swal from 'sweetalert2';
 
 interface AdminUser {
   id: string;
@@ -77,6 +78,29 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           accessToken: null,
           isAuthenticated: false,
+        });
+        
+        // Çıkış bildirimi
+        Swal.fire({
+          icon: 'info',
+          title: 'Çıkış Yapıldı',
+          text: 'Güvenli bir şekilde çıkış yaptınız.',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top',
+          background: '#1a1f36',
+          color: '#fff',
+          customClass: {
+            popup: 'colored-toast',
+            title: 'swal-title',
+            timerProgressBar: 'swal-progress-bar'
+          },
+          didOpen: (toast) => {
+            toast.style.border = '2px solid #667eea';
+            toast.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
+          }
         });
       },
 

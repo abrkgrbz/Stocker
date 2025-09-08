@@ -22,7 +22,7 @@ import {
   Divider,
 } from 'antd';
 import { PageContainer } from '@ant-design/pro-components';
-import { Column, Line, Area, Pie, DualAxes, Gauge, Liquid, RingProgress } from '@ant-design/charts';
+import { Column, Line, Area, Pie, DualAxes, Gauge, Liquid } from '@ant-design/charts';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,
@@ -395,20 +395,19 @@ const Dashboard: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space direction="vertical" style={{ width: '100%' }} align="center">
               <Text type="secondary">Büyüme Oranı</Text>
-              <RingProgress
+              <Progress
+                type="circle"
                 percent={stats.growthRate}
-                color={['#667eea', '#e8e8e8']}
-                statistic={{
-                  title: false,
-                  content: (
-                    <Space direction="vertical" align="center">
-                      <Text strong style={{ fontSize: 24 }}>{stats.growthRate}%</Text>
-                      <Text type="secondary">Aylık</Text>
-                    </Space>
-                  ),
-                }}
+                strokeColor="#667eea"
+                format={() => (
+                  <Space direction="vertical" align="center">
+                    <Text strong style={{ fontSize: 24 }}>{stats.growthRate}%</Text>
+                    <Text type="secondary">Aylık</Text>
+                  </Space>
+                )}
+                width={120}
               />
             </Space>
           </Card>
