@@ -1,8 +1,11 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
-using Stocker.Application.Interfaces.Repositories;
-using Stocker.Domain.Tenant.Entities;
+using Stocker.Application.DTOs.Tenant.Users;
+using Stocker.Application.Features.Tenant.Users.Commands;
+using Stocker.Application.Features.Tenant.Users.Queries;
+using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -11,44 +14,74 @@ namespace Stocker.API.Controllers.Tenant;
 [Authorize]
 public class UsersController : ApiController
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UsersController(IUserRepository userRepository)
+    public UsersController(IMediator mediator, ICurrentUserService currentUserService)
     {
-        _userRepository = userRepository;
+        _mediator = mediator;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<UsersListDto>), 200)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 10, 
         [FromQuery] string? searchTerm = null)
     {
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid(); // This should come from ICurrentTenantService
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var query = new GetUsersQuery
+        {
+            TenantId = tenantId,
+            Page = page,
+            PageSize = pageSize,
+            Search = searchTerm
+        };
+
+        var result = await _mediator.Send(query);
         
-        var users = await _userRepository.GetTenantUsersAsync(tenantId, page, pageSize, searchTerm);
-        
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<UsersListDto>
         {
             Success = true,
-            Data = users,
+            Data = result,
             Message = "Kullanıcılar başarıyla listelendi"
         });
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<UserDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> GetUser(Guid id)
     {
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var query = new GetUserByIdQuery
+        {
+            TenantId = tenantId,
+            UserId = id
+        };
+
+        var result = await _mediator.Send(query);
         
-        var user = await _userRepository.GetTenantUserByIdAsync(tenantId, id);
-        
-        if (user == null)
+        if (result == null)
         {
             return NotFound(new ApiResponse<object>
             {
@@ -57,16 +90,16 @@ public class UsersController : ApiController
             });
         }
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<UserDetailDto>
         {
             Success = true,
-            Data = user,
+            Data = result,
             Message = "Kullanıcı detayları başarıyla getirildi"
         });
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<object>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
     {
@@ -80,38 +113,43 @@ public class UsersController : ApiController
             });
         }
 
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var user = new TenantUser
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
         {
-            Id = Guid.NewGuid(),
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var command = new CreateUserCommand
+        {
             TenantId = tenantId,
-            UserName = dto.Username,
+            Username = dto.Username,
             Email = dto.Email,
+            Password = dto.Password,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            PhoneNumber = dto.PhoneNumber,
-            Title = dto.Title,
-            DepartmentId = dto.DepartmentId,
-            BranchId = dto.BranchId,
-            PasswordHash = dto.Password, // Will be hashed in service
-            CreatedDate = DateTime.UtcNow,
-            IsActive = true
+            Phone = dto.PhoneNumber,
+            Role = dto.Role ?? "User",
+            Department = dto.Department,
+            Branch = dto.Branch,
+            CreatedBy = User.Identity?.Name
         };
 
-        var createdUser = await _userRepository.CreateTenantUserAsync(user);
+        var result = await _mediator.Send(command);
         
-        return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, new ApiResponse<object>
+        return CreatedAtAction(nameof(GetUser), new { id = result.Id }, new ApiResponse<UserDto>
         {
             Success = true,
-            Data = new { id = createdUser.Id },
+            Data = result,
             Message = "Kullanıcı başarıyla oluşturuldu"
         });
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
     {
@@ -125,94 +163,121 @@ public class UsersController : ApiController
             });
         }
 
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var user = new TenantUser
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
         {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var command = new UpdateUserCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber,
-            Title = dto.Title,
-            Bio = dto.Bio,
-            Avatar = dto.Avatar,
-            DepartmentId = dto.DepartmentId,
-            BranchId = dto.BranchId
+            Phone = dto.PhoneNumber,
+            ModifiedBy = User.Identity?.Name
         };
 
-        var updatedUser = await _userRepository.UpdateTenantUserAsync(tenantId, id, user);
+        var result = await _mediator.Send(command);
         
-        if (updatedUser == null)
+        if (!result)
         {
-            return NotFound(new ApiResponse<object>
+            return NotFound(new ApiResponse<bool>
             {
                 Success = false,
                 Message = "Kullanıcı bulunamadı"
             });
         }
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<bool>
         {
             Success = true,
+            Data = true,
             Message = "Kullanıcı başarıyla güncellendi"
         });
     }
 
     [HttpDelete("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var result = await _userRepository.DeleteTenantUserAsync(tenantId, id);
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var command = new DeleteUserCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
+            DeletedBy = User.Identity?.Name
+        };
+
+        var result = await _mediator.Send(command);
         
         if (!result)
         {
-            return NotFound(new ApiResponse<object>
+            return NotFound(new ApiResponse<bool>
             {
                 Success = false,
                 Message = "Kullanıcı bulunamadı"
             });
         }
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<bool>
         {
             Success = true,
+            Data = true,
             Message = "Kullanıcı başarıyla silindi"
         });
     }
 
     [HttpPost("{id}/toggle-status")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<ToggleUserStatusResult>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> ToggleUserStatus(Guid id)
     {
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var result = await _userRepository.ToggleUserStatusAsync(tenantId, id);
-        
-        if (!result)
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
         {
-            return NotFound(new ApiResponse<object>
+            return BadRequest(new ApiResponse<object>
             {
                 Success = false,
-                Message = "Kullanıcı bulunamadı"
+                Message = "Tenant bulunamadı"
             });
         }
+
+        var command = new ToggleUserStatusCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
+            ModifiedBy = User.Identity?.Name
+        };
+
+        var result = await _mediator.Send(command);
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<ToggleUserStatusResult>
         {
             Success = true,
+            Data = result,
             Message = "Kullanıcı durumu başarıyla güncellendi"
         });
     }
 
     [HttpPost("{id}/reset-password")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> ResetPassword(Guid id, [FromBody] ResetPasswordDto dto)
     {
@@ -226,46 +291,74 @@ public class UsersController : ApiController
             });
         }
 
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var result = await _userRepository.ResetUserPasswordAsync(tenantId, id, dto.NewPassword);
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var command = new ResetPasswordCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
+            NewPassword = dto.NewPassword,
+            ModifiedBy = User.Identity?.Name
+        };
+
+        var result = await _mediator.Send(command);
         
         if (!result)
         {
-            return NotFound(new ApiResponse<object>
+            return NotFound(new ApiResponse<bool>
             {
                 Success = false,
                 Message = "Kullanıcı bulunamadı"
             });
         }
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<bool>
         {
             Success = true,
+            Data = true,
             Message = "Şifre başarıyla sıfırlandı"
         });
     }
 
     [HttpGet("roles")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<List<RoleDto>>), 200)]
     public async Task<IActionResult> GetRoles()
     {
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var query = new GetRolesQuery
+        {
+            TenantId = tenantId
+        };
+
+        var result = await _mediator.Send(query);
         
-        var roles = await _userRepository.GetRolesAsync(tenantId);
-        
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<List<RoleDto>>
         {
             Success = true,
-            Data = roles,
+            Data = result,
             Message = "Roller başarıyla listelendi"
         });
     }
 
     [HttpPost("{id}/assign-role")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] AssignRoleDto dto)
     {
@@ -279,23 +372,39 @@ public class UsersController : ApiController
             });
         }
 
-        // TODO: Get tenantId from current user context
-        var tenantId = Guid.NewGuid();
-        
-        var result = await _userRepository.AssignRoleAsync(tenantId, id, dto.RoleId);
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Tenant bulunamadı"
+            });
+        }
+
+        var command = new AssignRoleCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
+            RoleId = dto.RoleId,
+            ModifiedBy = User.Identity?.Name
+        };
+
+        var result = await _mediator.Send(command);
         
         if (!result)
         {
-            return NotFound(new ApiResponse<object>
+            return NotFound(new ApiResponse<bool>
             {
                 Success = false,
                 Message = "Kullanıcı veya rol bulunamadı"
             });
         }
         
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<bool>
         {
             Success = true,
+            Data = true,
             Message = "Rol başarıyla atandı"
         });
     }
@@ -311,8 +420,9 @@ public class CreateUserDto
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? Title { get; set; }
-    public Guid? DepartmentId { get; set; }
-    public Guid? BranchId { get; set; }
+    public string? Role { get; set; }
+    public string? Department { get; set; }
+    public string? Branch { get; set; }
 }
 
 public class UpdateUserDto
