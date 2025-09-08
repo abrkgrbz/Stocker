@@ -5,6 +5,13 @@ import MasterLayout from './layouts/MasterLayout';
 import Dashboard from './pages/Dashboard';
 import TenantsPage from './pages/Tenants';
 import TenantCreate from './pages/Tenants/Create';
+import TenantDetails from './pages/Tenants/Details';
+import TenantSettings from './pages/Tenants/Settings';
+import TenantBilling from './pages/Tenants/Billing';
+import TenantActivityLogs from './pages/Tenants/ActivityLogs';
+import TenantApiKeys from './pages/Tenants/ApiKeys';
+import TenantBackupRestore from './pages/Tenants/BackupRestore';
+import TenantUsers from './pages/Tenants/Users';
 import TenantDomains from './pages/Tenants/Domains';
 import TenantMigrations from './pages/Tenants/Migrations';
 import UsersPage from './pages/Users';
@@ -39,9 +46,15 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="tenants" element={<TenantsPage />} />
           <Route path="tenants/create" element={<TenantCreate />} />
-          <Route path="tenants/list" element={<TenantsPage />} />
-          <Route path="tenants/domains" element={<TenantDomains />} />
-          <Route path="tenants/migrations" element={<TenantMigrations />} />
+          <Route path="tenants/:id" element={<TenantDetails />} />
+          <Route path="tenants/:id/settings" element={<TenantSettings />} />
+          <Route path="tenants/:id/billing" element={<TenantBilling />} />
+          <Route path="tenants/:id/activity-logs" element={<TenantActivityLogs />} />
+          <Route path="tenants/:id/api-keys" element={<TenantApiKeys />} />
+          <Route path="tenants/:id/backup-restore" element={<TenantBackupRestore />} />
+          <Route path="tenants/:id/users" element={<TenantUsers />} />
+          <Route path="tenants/:id/domains" element={<TenantDomains />} />
+          <Route path="tenants/:id/migrations" element={<TenantMigrations />} />
           <Route path="users/*" element={<UsersPage />} />
           <Route path="packages" element={<PackagesPage />} />
         </Route>
