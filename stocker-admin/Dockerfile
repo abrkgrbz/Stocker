@@ -28,8 +28,8 @@ RUN echo "=== After copy ===" && \
 # Install dependencies with more verbose output
 RUN echo "=== Installing dependencies ===" && \
     npm install --legacy-peer-deps --verbose || \
-    echo "=== NPM Install failed, trying with --force ===" && \
-    npm install --legacy-peer-deps --force --verbose
+    (echo "=== NPM Install failed, trying with --force ===" && \
+     npm install --legacy-peer-deps --force --verbose)
 
 # Copy all source files
 COPY stocker-admin/ .
