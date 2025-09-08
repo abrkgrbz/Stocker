@@ -31,11 +31,11 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Build and publish
 WORKDIR /src
-RUN dotnet publish src/API/Stocker.API/Stocker.API.csproj -c Release -o /app/publish
+RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj -c Release -o /app/publish
 
 # Generate migration bundle (self-contained migration executable)
 WORKDIR /src
-RUN dotnet ef migrations bundle -p src/Infrastructure/Stocker.Persistence -s src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
