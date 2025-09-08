@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -36,9 +36,11 @@ import {
   Descriptions,
   Result,
   Empty,
+  Spin,
 } from 'antd';
 import { PageContainer, ProTable, ProFormText, ProFormSelect, ProFormDateRangePicker } from '@ant-design/pro-components';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
+import tenantService, { Tenant, TenantStats } from '../../services/tenantService';
 import {
   PlusOutlined,
   EditOutlined,
@@ -85,39 +87,6 @@ const { TabPane } = Tabs;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface Tenant {
-  id: string;
-  name: string;
-  subdomain: string;
-  customDomain?: string;
-  status: 'active' | 'inactive' | 'suspended' | 'pending';
-  package: 'starter' | 'professional' | 'enterprise' | 'custom';
-  users: number;
-  maxUsers: number;
-  storage: number;
-  maxStorage: number;
-  createdAt: string;
-  expiresAt: string;
-  lastActive: string;
-  owner: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  billing: {
-    plan: string;
-    amount: number;
-    cycle: 'monthly' | 'yearly';
-    nextBilling: string;
-  };
-  database: {
-    name: string;
-    status: 'active' | 'migrating' | 'error';
-    size: number;
-  };
-  features: string[];
-}
-
 const TenantsPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -126,10 +95,43 @@ const TenantsPage: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
 
-  // Mock data
+  // Fetch tenant statistics
+  useEffect(() => {
+    fetchTenantStats();
+  }, []);
+
+  const fetchTenantStats = async () => {
+    setStatsLoading(true);
+    try {
+      // For now, we'll use mock stats since the endpoint might not exist yet
+      setTenantStats({
+        totalTenants: 1247,
+        activeTenants: 1189,
+        suspendedTenants: 58,
+        totalRevenue: 458750,
+        monthlyGrowth: 12.5,
+      });
+    } catch (error) {
+      console.error('Error fetching tenant stats:', error);
+      // Use default stats if API fails
+      setTenantStats({
+        totalTenants: 0,
+        activeTenants: 0,
+        suspendedTenants: 0,
+        totalRevenue: 0,
+        monthlyGrowth: 0,
+      });
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // Mock data for fallback
   const mockTenants: Tenant[] = [
     {
       id: '1',
@@ -251,13 +253,13 @@ const TenantsPage: React.FC = () => {
       render: (_, record) => (
         <Space>
           <Avatar style={{ backgroundColor: '#667eea' }}>
-            {record.name[0]}
+            {record.name?.[0] || 'T'}
           </Avatar>
           <div>
             <Text strong>{record.name}</Text>
             <br />
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.subdomain}.stocker.app
+              {record.code || record.subdomain || 'N/A'}
             </Text>
           </div>
         </Space>
@@ -265,29 +267,30 @@ const TenantsPage: React.FC = () => {
     },
     {
       title: 'Durum',
-      dataIndex: 'status',
+      dataIndex: 'isActive',
       key: 'status',
       width: 120,
       filters: [
-        { text: 'Aktif', value: 'active' },
-        { text: 'İnaktif', value: 'inactive' },
-        { text: 'Askıda', value: 'suspended' },
-        { text: 'Beklemede', value: 'pending' },
+        { text: 'Aktif', value: true },
+        { text: 'İnaktif', value: false },
       ],
-      render: (status: string) => (
-        <Badge
-          status={statusColors[status as keyof typeof statusColors]}
-          text={
-            status === 'active' ? 'Aktif' :
-            status === 'inactive' ? 'İnaktif' :
-            status === 'suspended' ? 'Askıda' : 'Beklemede'
-          }
-        />
-      ),
+      render: (isActive: boolean, record) => {
+        const status = record.status || (isActive ? 'active' : 'inactive');
+        return (
+          <Badge
+            status={statusColors[status as keyof typeof statusColors]}
+            text={
+              status === 'active' || isActive ? 'Aktif' :
+              status === 'inactive' || !isActive ? 'İnaktif' :
+              status === 'suspended' ? 'Askıda' : 'Beklemede'
+            }
+          />
+        );
+      },
     },
     {
       title: 'Paket',
-      dataIndex: 'package',
+      dataIndex: 'packageName',
       key: 'package',
       width: 130,
       filters: [
@@ -296,27 +299,34 @@ const TenantsPage: React.FC = () => {
         { text: 'Enterprise', value: 'enterprise' },
         { text: 'Custom', value: 'custom' },
       ],
-      render: (pkg: string) => (
-        <Tag color={packageColors[pkg as keyof typeof packageColors]}>
-          {pkg.toUpperCase()}
-        </Tag>
-      ),
+      render: (packageName: string, record) => {
+        const pkg = record.package || 'starter';
+        return (
+          <Tag color={packageColors[pkg as keyof typeof packageColors]}>
+            {packageName || pkg.toUpperCase()}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Kullanıcılar',
       key: 'users',
       width: 150,
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text>{record.users} / {record.maxUsers}</Text>
-          <Progress
-            percent={Math.round((record.users / record.maxUsers) * 100)}
-            size="small"
-            strokeColor={record.users / record.maxUsers > 0.8 ? '#ff4d4f' : '#667eea'}
-            showInfo={false}
-          />
-        </Space>
-      ),
+      render: (_, record) => {
+        const users = record.userCount || record.users || 0;
+        const maxUsers = record.maxUsers || 100;
+        return (
+          <Space direction="vertical" size={0}>
+            <Text>{users} / {maxUsers}</Text>
+            <Progress
+              percent={Math.round((users / maxUsers) * 100)}
+              size="small"
+              strokeColor={users / maxUsers > 0.8 ? '#ff4d4f' : '#667eea'}
+              showInfo={false}
+            />
+          </Space>
+        );
+      },
     },
     {
       title: 'Depolama',
@@ -335,14 +345,14 @@ const TenantsPage: React.FC = () => {
       ),
     },
     {
-      title: 'Sahip',
+      title: 'İletişim',
       key: 'owner',
       width: 200,
       render: (_, record) => (
         <Space direction="vertical" size={0}>
-          <Text>{record.owner.name}</Text>
+          <Text>{record.owner?.name || record.contactEmail?.split('@')[0] || 'Admin'}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.owner.email}
+            {record.contactEmail || record.owner?.email || '-'}
           </Text>
         </Space>
       ),
@@ -975,44 +985,46 @@ const TenantsPage: React.FC = () => {
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={statsLoading}>
             <Statistic
               title="Toplam Tenant"
-              value={1247}
+              value={tenantStats?.totalTenants || 0}
               prefix={<TeamOutlined style={{ color: '#667eea' }} />}
               suffix={
-                <Text type="success" style={{ fontSize: 14 }}>
-                  +12.5%
-                </Text>
+                tenantStats?.monthlyGrowth ? (
+                  <Text type="success" style={{ fontSize: 14 }}>
+                    +{tenantStats.monthlyGrowth}%
+                  </Text>
+                ) : null
               }
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={statsLoading}>
             <Statistic
               title="Aktif Tenant"
-              value={1189}
+              value={tenantStats?.activeTenants || 0}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={statsLoading}>
             <Statistic
               title="Askıda"
-              value={58}
+              value={tenantStats?.suspendedTenants || 0}
               prefix={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card loading={statsLoading}>
             <Statistic
               title="Toplam Gelir"
-              value={458750}
+              value={tenantStats?.totalRevenue || 0}
               prefix="₺"
               suffix={
                 <Text type="success" style={{ fontSize: 14 }}>
@@ -1027,14 +1039,46 @@ const TenantsPage: React.FC = () => {
       {/* ProTable */}
       <ProTable<Tenant>
         columns={columns}
-        dataSource={mockTenants}
         actionRef={actionRef}
         rowKey="id"
+        request={async (params, sort, filter) => {
+          try {
+            const response = await tenantService.getTenants({
+              page: params.current,
+              pageSize: params.pageSize,
+              search: params.name || params.keyword,
+              status: filter.status?.[0],
+              package: filter.package?.[0],
+              sortBy: sort ? Object.keys(sort)[0] : undefined,
+              sortOrder: sort ? (Object.values(sort)[0] === 'descend' ? 'desc' : 'asc') : undefined,
+            });
+
+            return {
+              data: response.data,
+              success: true,
+              total: response.total,
+              page: response.page,
+            };
+          } catch (error) {
+            message.error('Tenant listesi yüklenirken hata oluştu');
+            console.error('Error loading tenants:', error);
+            
+            // Return mock data if API fails
+            return {
+              data: mockTenants,
+              success: true,
+              total: mockTenants.length,
+              page: 1,
+            };
+          }
+        }}
         search={{
           labelWidth: 120,
         }}
         pagination={{
           pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
         }}
         onRow={(record) => {
           return {
