@@ -45,8 +45,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   ReloadOutlined,
-  ConnectOutlined,
-  DisconnectOutlined,
   CloudOutlined,
   DatabaseOutlined,
   MailOutlined,
@@ -67,6 +65,7 @@ import {
   DownloadOutlined,
   EyeOutlined,
   CopyOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
@@ -394,7 +393,7 @@ const TenantIntegrations: React.FC = () => {
           <Tooltip title={record.status === 'connected' ? 'Bağlantıyı Kes' : 'Bağlan'}>
             <Button
               type="text"
-              icon={record.status === 'connected' ? <DisconnectOutlined /> : <ConnectOutlined />}
+              icon={record.status === 'connected' ? <CloseOutlined /> : <LinkOutlined />}
               onClick={() => handleToggleConnection(record)}
             />
           </Tooltip>
@@ -812,7 +811,7 @@ const TenantIntegrations: React.FC = () => {
         <TabPane 
           tab={
             <Space>
-              <ConnectOutlined />
+              <LinkOutlined />
               Aktif Entegrasyonlar
               <Badge 
                 count={mockIntegrations.filter(i => i.status !== 'disconnected').length} 

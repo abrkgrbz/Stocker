@@ -33,7 +33,6 @@ import {
   SafetyOutlined,
   LockOutlined,
   UnlockOutlined,
-  ShieldOutlined,
   WarningOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -50,10 +49,9 @@ import {
   MailOutlined,
   BellOutlined,
   HistoryOutlined,
-  FirewallOutlined,
-  ScanOutlined,
   ThunderboltOutlined,
   DeleteOutlined,
+  SearchOutlined,
   PlusOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
@@ -229,7 +227,7 @@ const TenantSecurity: React.FC = () => {
               <Col>
                 <Button 
                   type="primary" 
-                  icon={<ScanOutlined />} 
+                  icon={<SearchOutlined />} 
                   loading={loading}
                   onClick={handleSecurityScan}
                 >
@@ -277,7 +275,7 @@ const TenantSecurity: React.FC = () => {
             <Statistic
               title="Aktif Kurallar"
               value={securityStats.activeRules}
-              prefix={<ShieldOutlined style={{ color: '#722ed1' }} />}
+              prefix={<SafetyOutlined style={{ color: '#722ed1' }} />}
             />
           </Card>
         </Col>
@@ -705,7 +703,7 @@ const TenantSecurity: React.FC = () => {
           <SecurityDashboard />
         </TabPane>
         
-        <TabPane tab={<span><ShieldOutlined /> Kurallar</span>} key="rules">
+        <TabPane tab={<span><SafetyOutlined /> Kurallar</span>} key="rules">
           <SecurityRules />
         </TabPane>
         
