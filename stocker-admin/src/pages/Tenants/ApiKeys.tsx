@@ -111,7 +111,7 @@ const TenantApiKeys: React.FC = () => {
     {
       id: '1',
       name: 'Production API',
-      key: 'mock_key_production_abc123def456...',
+      key: 'mock_prod_key_abc123def456789...',
       prefix: 'mock_prod',
       status: 'active',
       permissions: ['read', 'write', 'delete'],
@@ -128,7 +128,7 @@ const TenantApiKeys: React.FC = () => {
     {
       id: '2',
       name: 'Test API',
-      key: 'mock_key_test_789xyz012uvw...',
+      key: 'mock_test_key_xyz789uvw012345...',
       prefix: 'mock_test',
       status: 'active',
       permissions: ['read', 'write'],
@@ -144,7 +144,7 @@ const TenantApiKeys: React.FC = () => {
     {
       id: '3',
       name: 'Mobile App API',
-      key: 'mock_key_production_abc123def456...',
+      key: 'mock_prod_key_abc123def456789...',
       prefix: 'mock_prod',
       status: 'inactive',
       permissions: ['read'],
