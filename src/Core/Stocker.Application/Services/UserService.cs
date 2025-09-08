@@ -29,22 +29,22 @@ public class UserService : IUserRepository
             query = query.Where(u => 
                 u.FirstName.Contains(searchTerm) ||
                 u.LastName.Contains(searchTerm) ||
-                u.Email.Contains(searchTerm) ||
-                u.UserName.Contains(searchTerm));
+                u.Email.Value.Contains(searchTerm) ||
+                u.Username.Contains(searchTerm));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
         var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
         var users = await query
-            .OrderByDescending(u => u.CreatedDate)
+            .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(u => new UserDto
             {
                 Id = u.Id,
-                Username = u.UserName,
-                Email = u.Email,
+                Username = u.Username,
+                Email = u.Email.Value,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Role = _tenantContext.UserRoles
@@ -57,9 +57,9 @@ public class UserService : IUserRepository
                 Branch = u.BranchId.HasValue
                     ? _tenantContext.Branches.Where(b => b.Id == u.BranchId.Value).Select(b => b.Name).FirstOrDefault()
                     : null,
-                IsActive = u.IsActive,
-                LastLoginDate = u.LastLoginDate,
-                CreatedDate = u.CreatedDate
+                IsActive = u.Status == Domain.Tenant.Enums.TenantUserStatus.Active,
+                LastLoginDate = u.LastLoginAt,
+                CreatedDate = u.CreatedAt
             })
             .ToListAsync(cancellationToken);
 
@@ -80,25 +80,25 @@ public class UserService : IUserRepository
             .Select(u => new UserDetailDto
             {
                 Id = u.Id,
-                Username = u.UserName,
-                Email = u.Email,
+                Username = u.Username,
+                Email = u.Email.Value,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
-                PhoneNumber = u.PhoneNumber,
+                PhoneNumber = u.Phone != null ? u.Phone.Value : null,
                 Title = u.Title,
-                Bio = u.Bio,
-                Avatar = u.Avatar,
-                IsActive = u.IsActive,
-                EmailConfirmed = u.EmailConfirmed,
-                PhoneNumberConfirmed = u.PhoneNumberConfirmed,
-                TwoFactorEnabled = u.TwoFactorEnabled,
-                LockoutEnabled = u.LockoutEnabled,
-                LockoutEnd = u.LockoutEnd,
-                AccessFailedCount = u.AccessFailedCount,
-                LastLoginDate = u.LastLoginDate,
-                LastPasswordChangeDate = u.LastPasswordChangeDate,
-                CreatedDate = u.CreatedDate,
-                ModifiedDate = u.ModifiedDate,
+                Bio = null,
+                Avatar = u.ProfilePictureUrl,
+                IsActive = u.Status == Domain.Tenant.Enums.TenantUserStatus.Active,
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = false,
+                TwoFactorEnabled = false,
+                LockoutEnabled = false,
+                LockoutEnd = null,
+                AccessFailedCount = 0,
+                LastLoginDate = u.LastLoginAt,
+                LastPasswordChangeDate = null,
+                CreatedDate = u.CreatedAt,
+                ModifiedDate = u.UpdatedAt,
                 Department = u.DepartmentId.HasValue 
                     ? new DepartmentDto
                     {
@@ -146,15 +146,8 @@ public class UserService : IUserRepository
 
     public async Task<TenantUser> CreateTenantUserAsync(TenantUser user, CancellationToken cancellationToken = default)
     {
-        // Hash password
-        if (!string.IsNullOrEmpty(user.PasswordHash))
-        {
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-        }
-
-        user.CreatedDate = DateTime.UtcNow;
-        user.IsActive = true;
-
+        // TenantUser is created through factory methods, not directly
+        // This method signature needs to be changed
         _tenantContext.TenantUsers.Add(user);
         await _tenantContext.SaveChangesAsync(cancellationToken);
 
@@ -169,16 +162,19 @@ public class UserService : IUserRepository
         if (existingUser == null)
             return null;
 
-        existingUser.FirstName = user.FirstName;
-        existingUser.LastName = user.LastName;
-        existingUser.Email = user.Email;
-        existingUser.PhoneNumber = user.PhoneNumber;
-        existingUser.Title = user.Title;
-        existingUser.Bio = user.Bio;
-        existingUser.Avatar = user.Avatar;
-        existingUser.DepartmentId = user.DepartmentId;
-        existingUser.BranchId = user.BranchId;
-        existingUser.ModifiedDate = DateTime.UtcNow;
+        // TenantUser entity has read-only properties, need to use Update methods
+        existingUser.UpdateProfile(
+            user.FirstName,
+            user.LastName,
+            user.Phone,
+            user.Mobile,
+            user.Title);
+        
+        existingUser.UpdateEmployeeInfo(
+            user.EmployeeCode,
+            user.DepartmentId,
+            user.BranchId,
+            user.ManagerId);
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
 
@@ -193,10 +189,8 @@ public class UserService : IUserRepository
         if (user == null)
             return false;
 
-        // Soft delete
-        user.IsDeleted = true;
-        user.DeletedDate = DateTime.UtcNow;
-        user.IsActive = false;
+        // Soft delete - just deactivate the user
+        user.Deactivate();
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;
@@ -210,8 +204,10 @@ public class UserService : IUserRepository
         if (user == null)
             return false;
 
-        user.IsActive = !user.IsActive;
-        user.ModifiedDate = DateTime.UtcNow;
+        if (user.Status == Domain.Tenant.Enums.TenantUserStatus.Active)
+            user.Deactivate();
+        else
+            user.Activate();
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;
@@ -225,8 +221,9 @@ public class UserService : IUserRepository
         if (user == null)
             return false;
 
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        user.ModifiedDate = DateTime.UtcNow;
+        // Password is managed at MasterUser level, not TenantUser
+        // This functionality needs to be moved to MasterUser management
+        return false;
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;

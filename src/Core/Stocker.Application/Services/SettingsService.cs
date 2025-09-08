@@ -29,18 +29,18 @@ public class SettingsService : ISettingsRepository
             query = query.Where(s => s.Category == category);
         }
 
-        return await query.OrderBy(s => s.Category).ThenBy(s => s.Key).ToListAsync(cancellationToken);
+        return await query.OrderBy(s => s.Category).ThenBy(s => s.SettingKey).ToListAsync(cancellationToken);
     }
 
     public async Task<TenantSettings?> GetTenantSettingByKeyAsync(Guid tenantId, string key, CancellationToken cancellationToken = default)
     {
         return await _tenantContext.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Key == key, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.SettingKey == key, cancellationToken);
     }
 
     public async Task<TenantSettings> CreateTenantSettingAsync(TenantSettings setting, CancellationToken cancellationToken = default)
     {
-        setting.CreatedDate = DateTime.UtcNow;
+        // TenantSettings is created through factory method
         _tenantContext.TenantSettings.Add(setting);
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return setting;
@@ -49,13 +49,12 @@ public class SettingsService : ISettingsRepository
     public async Task<TenantSettings?> UpdateTenantSettingAsync(Guid tenantId, string key, string value, CancellationToken cancellationToken = default)
     {
         var setting = await _tenantContext.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Key == key, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.SettingKey == key, cancellationToken);
 
         if (setting == null)
             return null;
 
-        setting.Value = value;
-        setting.ModifiedDate = DateTime.UtcNow;
+        setting.UpdateValue(value);
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return setting;
@@ -64,7 +63,7 @@ public class SettingsService : ISettingsRepository
     public async Task<bool> DeleteTenantSettingAsync(Guid tenantId, string key, CancellationToken cancellationToken = default)
     {
         var setting = await _tenantContext.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Key == key, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.SettingKey == key, cancellationToken);
 
         if (setting == null)
             return false;
@@ -83,21 +82,20 @@ public class SettingsService : ISettingsRepository
             .Select(g => new SettingCategoryDto
             {
                 Category = g.Key,
-                DisplayName = GetCategoryDisplayName(g.Key),
                 Description = GetCategoryDescription(g.Key),
-                Icon = GetCategoryIcon(g.Key),
                 Settings = g.Select(s => new SettingDto
                 {
-                    Key = s.Key,
-                    Value = s.Value,
-                    DisplayName = s.DisplayName ?? s.Key,
+                    Id = s.Id,
+                    SettingKey = s.SettingKey,
+                    SettingValue = s.SettingValue,
                     Description = s.Description,
+                    Category = s.Category,
                     DataType = s.DataType ?? "string",
-                    IsRequired = s.IsRequired,
-                    IsReadOnly = s.IsReadOnly,
-                    DefaultValue = s.DefaultValue,
-                    ValidationRules = s.ValidationRules,
-                    Options = ParseOptions(s.Options)
+                    IsSystemSetting = s.IsSystemSetting,
+                    IsEncrypted = s.IsEncrypted,
+                    IsPublic = s.IsPublic,
+                    CreatedAt = s.CreatedAt,
+                    UpdatedAt = s.UpdatedAt
                 }).ToList()
             })
             .ToList();
@@ -110,26 +108,22 @@ public class SettingsService : ISettingsRepository
         foreach (var kvp in settings)
         {
             var setting = await _tenantContext.TenantSettings
-                .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Key == kvp.Key, cancellationToken);
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.SettingKey == kvp.Key, cancellationToken);
 
             if (setting != null)
             {
-                setting.Value = kvp.Value;
-                setting.ModifiedDate = DateTime.UtcNow;
+                setting.UpdateValue(kvp.Value);
             }
             else
             {
                 // Create new setting if it doesn't exist
-                setting = new TenantSettings
-                {
-                    Id = Guid.NewGuid(),
-                    TenantId = tenantId,
-                    Key = kvp.Key,
-                    Value = kvp.Value,
-                    Category = DetermineCategory(kvp.Key),
-                    DataType = DetermineDataType(kvp.Value),
-                    CreatedDate = DateTime.UtcNow
-                };
+                setting = TenantSettings.Create(
+                    tenantId,
+                    kvp.Key,
+                    kvp.Value,
+                    DetermineCategory(kvp.Key),
+                    DetermineDataType(kvp.Value)
+                );
                 _tenantContext.TenantSettings.Add(setting);
             }
         }
@@ -161,8 +155,10 @@ public class SettingsService : ISettingsRepository
         if (module == null)
             return false;
 
-        module.IsActive = !module.IsActive;
-        module.ModifiedDate = DateTime.UtcNow;
+        if (module.IsEnabled)
+            module.Disable();
+        else
+            module.Enable();
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;
@@ -176,8 +172,7 @@ public class SettingsService : ISettingsRepository
         if (module == null)
             return false;
 
-        module.Settings = settings;
-        module.ModifiedDate = DateTime.UtcNow;
+        module.UpdateConfiguration(settings);
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;
@@ -202,8 +197,8 @@ public class SettingsService : ISettingsRepository
                     value = s.Value,
                     description = s.Description,
                     dataType = s.DataType,
-                    isRequired = s.IsRequired,
-                    lastModified = s.ModifiedDate
+                    isRequired = false,
+                    lastModified = DateTime.MinValue
                 })
             });
 
@@ -218,21 +213,19 @@ public class SettingsService : ISettingsRepository
         if (setting == null)
         {
             // Create new setting
-            setting = new Domain.Entities.Settings.SystemSettings
-            {
-                Id = Guid.NewGuid(),
-                Key = key,
-                Value = value,
-                Category = DetermineCategory(key),
-                DataType = DetermineDataType(value),
-                CreatedDate = DateTime.UtcNow
-            };
+            setting = new Domain.Entities.Settings.SystemSettings(
+                DetermineCategory(key),
+                key,
+                value,
+                null,
+                false,
+                false
+            );
             _masterContext.SystemSettings.Add(setting);
         }
         else
         {
-            setting.Value = value;
-            setting.ModifiedDate = DateTime.UtcNow;
+            setting.UpdateValue(value);
         }
 
         await _masterContext.SaveChangesAsync(cancellationToken);

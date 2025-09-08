@@ -23,14 +23,17 @@ public class GetSettingByKeyQueryHandler : IRequestHandler<GetSettingByKeyQuery,
 
         return new SettingDto
         {
-            Key = setting.Key,
-            Value = setting.Value,
-            DisplayName = setting.DisplayName ?? setting.Key,
+            Id = setting.Id,
+            SettingKey = setting.SettingKey,
+            SettingValue = setting.SettingValue,
             Description = setting.Description,
-            DataType = setting.DataType ?? "string",
-            IsRequired = setting.IsRequired,
-            IsReadOnly = setting.IsReadOnly,
-            DefaultValue = setting.DefaultValue
+            Category = setting.Category,
+            DataType = setting.DataType,
+            IsSystemSetting = setting.IsSystemSetting,
+            IsEncrypted = setting.IsEncrypted,
+            IsPublic = setting.IsPublic,
+            CreatedAt = setting.CreatedAt,
+            UpdatedAt = setting.UpdatedAt
         };
     }
 }

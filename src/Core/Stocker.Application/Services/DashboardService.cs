@@ -31,10 +31,10 @@ public class DashboardService : IDashboardRepository
         var lastMonth = DateTime.UtcNow.AddMonths(-1);
 
         // Calculate revenue
-        stats.TotalRevenue = invoices.Sum(i => i.TotalAmount);
+        stats.TotalRevenue = invoices.Sum(i => i.TotalAmount.Amount);
         var lastMonthRevenue = invoices
-            .Where(i => i.CreatedDate.Month == lastMonth.Month && i.CreatedDate.Year == lastMonth.Year)
-            .Sum(i => i.TotalAmount);
+            .Where(i => i.InvoiceDate.Month == lastMonth.Month && i.InvoiceDate.Year == lastMonth.Year)
+            .Sum(i => i.TotalAmount.Amount);
         
         stats.RevenueGrowth = lastMonthRevenue > 0 
             ? ((double)(stats.TotalRevenue - lastMonthRevenue) / (double)lastMonthRevenue) * 100 
@@ -42,7 +42,7 @@ public class DashboardService : IDashboardRepository
 
         // Get order count
         stats.TotalOrders = invoices.Count;
-        var lastMonthOrders = invoices.Count(i => i.CreatedDate.Month == lastMonth.Month && i.CreatedDate.Year == lastMonth.Year);
+        var lastMonthOrders = invoices.Count(i => i.InvoiceDate.Month == lastMonth.Month && i.InvoiceDate.Year == lastMonth.Year);
         stats.OrderGrowth = lastMonthOrders > 0 
             ? ((double)(stats.TotalOrders - lastMonthOrders) / lastMonthOrders) * 100 
             : 0;
@@ -57,11 +57,11 @@ public class DashboardService : IDashboardRepository
 
         // Monthly revenue
         var monthlyRevenue = invoices
-            .GroupBy(i => new { i.CreatedDate.Year, i.CreatedDate.Month })
+            .GroupBy(i => new { i.InvoiceDate.Year, i.InvoiceDate.Month })
             .Select(g => new MonthlyRevenueDto
             {
                 Month = GetMonthName(g.Key.Month),
-                Revenue = g.Sum(i => i.TotalAmount)
+                Revenue = g.Sum(i => i.TotalAmount.Amount)
             })
             .OrderBy(m => m.Month)
             .Take(12)
@@ -74,15 +74,15 @@ public class DashboardService : IDashboardRepository
 
         // Recent orders
         stats.RecentOrders = invoices
-            .OrderByDescending(i => i.CreatedDate)
+            .OrderByDescending(i => i.InvoiceDate)
             .Take(5)
             .Select(i => new RecentOrderDto
             {
                 Id = i.Id,
                 OrderNumber = i.InvoiceNumber,
-                Customer = i.CustomerName ?? "N/A",
-                Amount = i.TotalAmount,
-                Status = i.Status?.ToString() ?? "Pending"
+                Customer = "Customer #" + i.CustomerId.ToString().Substring(0, 8),
+                Amount = i.TotalAmount.Amount,
+                Status = i.Status.ToString()
             })
             .ToList();
 
@@ -93,17 +93,17 @@ public class DashboardService : IDashboardRepository
     {
         var activities = await _tenantContext.AuditLogs
             .Where(a => a.TenantId == tenantId)
-            .OrderByDescending(a => a.CreatedDate)
+            .OrderByDescending(a => a.Timestamp)
             .Take(count)
             .Select(a => new ActivityDto
             {
                 Id = a.Id,
                 Type = a.Action ?? "unknown",
-                Description = a.Details ?? "No description",
+                Description = a.AdditionalData ?? "No description",
                 User = a.UserName ?? "System",
-                Timestamp = a.CreatedDate,
+                Timestamp = a.Timestamp,
                 Icon = GetActivityIcon(a.Action),
-                Color = GetActivityColor(a.Action)
+                // Color = GetActivityColor(a.Action) // Removed as ActivityDto doesn't have Color
             })
             .ToListAsync(cancellationToken);
 
@@ -115,16 +115,16 @@ public class DashboardService : IDashboardRepository
         // For now, generate notifications from audit logs
         var notifications = await _tenantContext.AuditLogs
             .Where(a => a.TenantId == tenantId)
-            .OrderByDescending(a => a.CreatedDate)
+            .OrderByDescending(a => a.Timestamp)
             .Take(20)
             .Select(a => new NotificationDto
             {
                 Id = a.Id,
                 Title = GetNotificationTitle(a.Action),
-                Message = a.Details ?? "System notification",
+                Message = a.AdditionalData ?? "System notification",
                 Type = GetNotificationType(a.Action),
                 IsRead = false,
-                CreatedAt = a.CreatedDate
+                Timestamp = a.Timestamp
             })
             .ToListAsync(cancellationToken);
 
@@ -154,15 +154,15 @@ public class DashboardService : IDashboardRepository
                 chart.Labels.Add(date.ToString("dd/MM"));
                 
                 var dayRevenue = invoices
-                    .Where(inv => inv.CreatedDate.Date == date.Date)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate.Date == date.Date)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Data.Add(dayRevenue);
 
                 // Previous week same day
                 var compareDate = date.AddDays(-7);
                 var compareDayRevenue = invoices
-                    .Where(inv => inv.CreatedDate.Date == compareDate.Date)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate.Date == compareDate.Date)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Comparison.Add(compareDayRevenue);
             }
         }
@@ -176,16 +176,16 @@ public class DashboardService : IDashboardRepository
                 chart.Labels.Add($"Hafta {4 - i}");
                 
                 var weekRevenue = invoices
-                    .Where(inv => inv.CreatedDate >= weekStart && inv.CreatedDate <= weekEnd)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate >= weekStart && inv.InvoiceDate <= weekEnd)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Data.Add(weekRevenue);
 
                 // Previous month same week
                 var compareWeekStart = weekStart.AddDays(-28);
                 var compareWeekEnd = compareWeekStart.AddDays(6);
                 var compareWeekRevenue = invoices
-                    .Where(inv => inv.CreatedDate >= compareWeekStart && inv.CreatedDate <= compareWeekEnd)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate >= compareWeekStart && inv.InvoiceDate <= compareWeekEnd)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Comparison.Add(compareWeekRevenue);
             }
         }
@@ -198,15 +198,15 @@ public class DashboardService : IDashboardRepository
                 chart.Labels.Add(GetMonthName(date.Month));
                 
                 var monthRevenue = invoices
-                    .Where(inv => inv.CreatedDate.Month == date.Month && inv.CreatedDate.Year == date.Year)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate.Month == date.Month && inv.InvoiceDate.Year == date.Year)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Data.Add(monthRevenue);
 
                 // Previous year same month
                 var compareDate = date.AddYears(-1);
                 var compareMonthRevenue = invoices
-                    .Where(inv => inv.CreatedDate.Month == compareDate.Month && inv.CreatedDate.Year == compareDate.Year)
-                    .Sum(inv => inv.TotalAmount);
+                    .Where(inv => inv.InvoiceDate.Month == compareDate.Month && inv.InvoiceDate.Year == compareDate.Year)
+                    .Sum(inv => inv.TotalAmount.Amount);
                 chart.Comparison.Add(compareMonthRevenue);
             }
         }
@@ -230,11 +230,11 @@ public class DashboardService : IDashboardRepository
         var summary = new DashboardSummaryDto
         {
             TotalUsers = await _tenantContext.TenantUsers.Where(u => u.TenantId == tenantId).CountAsync(cancellationToken),
-            ActiveUsers = await _tenantContext.TenantUsers.Where(u => u.TenantId == tenantId && u.IsActive).CountAsync(cancellationToken),
+            ActiveUsers = await _tenantContext.TenantUsers.Where(u => u.TenantId == tenantId && u.Status == Domain.Tenant.Enums.TenantUserStatus.Active).CountAsync(cancellationToken),
             TotalInvoices = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId).CountAsync(cancellationToken),
-            PendingInvoices = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status == Domain.Tenant.Enums.InvoiceStatus.Beklemede).CountAsync(cancellationToken),
-            TotalRevenue = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId).SumAsync(i => i.TotalAmount, cancellationToken),
-            OutstandingAmount = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status != Domain.Tenant.Enums.InvoiceStatus.Odendi).SumAsync(i => i.TotalAmount, cancellationToken)
+            PendingInvoices = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status == Domain.Tenant.Enums.InvoiceStatus.Draft).CountAsync(cancellationToken),
+            TotalRevenue = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId).SumAsync(i => i.TotalAmount.Amount, cancellationToken),
+            OutstandingAmount = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status != Domain.Tenant.Enums.InvoiceStatus.Paid).SumAsync(i => i.TotalAmount.Amount, cancellationToken)
         };
 
         return summary;
@@ -352,13 +352,13 @@ public class DashboardService : IDashboardRepository
     public async Task<List<object>> GetRecentTenantsAsync(int count = 10, CancellationToken cancellationToken = default)
     {
         var tenants = await _masterContext.Tenants
-            .OrderByDescending(t => t.CreatedDate)
+            .OrderByDescending(t => t.CreatedAt)
             .Take(count)
             .Select(t => new
             {
                 id = t.Id,
                 name = t.Name,
-                subdomain = t.Subdomain,
+                subdomain = t.Code,
                 plan = "Premium",
                 createdAt = t.CreatedAt,
                 status = t.IsActive ? "Active" : "Inactive",

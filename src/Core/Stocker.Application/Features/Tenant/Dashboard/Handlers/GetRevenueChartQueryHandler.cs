@@ -18,27 +18,7 @@ public class GetRevenueChartQueryHandler : IRequestHandler<GetRevenueChartQuery,
     {
         var chartData = await _dashboardRepository.GetRevenueChartDataAsync(request.TenantId, request.Period, cancellationToken);
         
-        // Convert to the expected DTO format
-        var result = new RevenueChartDto
-        {
-            Labels = chartData.Labels.ToArray(),
-            Datasets = new List<ChartDatasetDto>
-            {
-                new() {
-                    Label = "Gelir",
-                    Data = chartData.Data.ToArray(),
-                    BorderColor = "#10b981",
-                    BackgroundColor = "rgba(16, 185, 129, 0.2)"
-                },
-                new() {
-                    Label = "Önceki Dönem",
-                    Data = chartData.Comparison.ToArray(),
-                    BorderColor = "#6b7280",
-                    BackgroundColor = "rgba(107, 114, 128, 0.2)"
-                }
-            }
-        };
-
-        return result;
+        // Data is already in the correct format
+        return chartData;
     }
 }
