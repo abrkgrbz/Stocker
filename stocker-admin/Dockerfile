@@ -5,16 +5,35 @@ FROM node:22-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY stocker-admin/package.json stocker-admin/package-lock.json* ./
+# Debug: Show what files exist in the build context
+RUN echo "=== Build context check ===" && \
+    ls -la /
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Try to copy package files with debug output
+COPY stocker-admin/package*.json ./ || (echo "Failed to copy package files" && ls -la && exit 1)
+
+# Debug: Check what was copied
+RUN echo "=== After copy ===" && \
+    ls -la && \
+    echo "=== Checking for package.json ===" && \
+    if [ -f package.json ]; then \
+        echo "package.json found! Contents:" && \
+        head -20 package.json; \
+    else \
+        echo "ERROR: package.json not found!" && \
+        exit 1; \
+    fi
+
+# Install dependencies with more verbose output
+RUN echo "=== Installing dependencies ===" && \
+    npm install --legacy-peer-deps --verbose 2>&1 || \
+    (echo "=== NPM Install failed, trying with --force ===" && \
+     npm install --legacy-peer-deps --force --verbose 2>&1)
 
 # Copy all source files
 COPY stocker-admin/ .
 
-# Set NODE_ENV and build the application
+# Build the application
 ENV NODE_ENV=production
 ENV VITE_API_BASE_URL=https://api.stoocker.app
 RUN npm run build
@@ -28,7 +47,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY stocker-admin/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80 (same as web)
+# Expose port 80
 EXPOSE 80
 
 # Health check
