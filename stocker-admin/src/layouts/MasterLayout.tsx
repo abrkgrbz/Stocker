@@ -87,7 +87,7 @@ const MasterLayout: React.FC = () => {
       icon: <TeamOutlined />,
       routes: [
         {
-          path: '/tenants/list',
+          path: '/tenants',
           name: locale === 'tr' ? 'Tenant Listesi' : 'Tenant List',
           icon: <TeamOutlined />,
         },
@@ -109,7 +109,7 @@ const MasterLayout: React.FC = () => {
       icon: <UserOutlined />,
       routes: [
         {
-          path: '/users/list',
+          path: '/users',
           name: locale === 'tr' ? 'Kullanıcı Listesi' : 'User List',
           icon: <UserOutlined />,
         },
