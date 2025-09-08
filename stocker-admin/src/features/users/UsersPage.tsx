@@ -56,13 +56,8 @@ import {
 } from '@mui/material';
 import {
   DataGrid,
-  GridColDef,
-  GridRowSelectionModel,
   GridActionsCellItem,
   GridToolbar,
-  GridRowParams,
-  GridPaginationModel,
-  GridValueGetterParams,
 } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
@@ -117,7 +112,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import {
+import type {
   User,
   UserStatus,
   UserRole,
@@ -158,7 +153,7 @@ const UsersPage: React.FC = () => {
   
   // State management
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<GridRowSelectionModel>([]);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -345,7 +340,7 @@ const UsersPage: React.FC = () => {
   };
 
   // DataGrid columns
-  const columns: GridColDef[] = [
+  const columns = [
     {
       field: 'user',
       headerName: 'Kullanıcı',
@@ -461,7 +456,7 @@ const UsersPage: React.FC = () => {
       type: 'actions',
       headerName: 'İşlemler',
       width: 120,
-      getActions: (params: GridRowParams) => [
+      getActions: (params: any) => [
         <GridActionsCellItem
           icon={<ViewIcon />}
           label="Detayları Görüntüle"
@@ -678,7 +673,7 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  const handlePaginationModelChange = (model: GridPaginationModel) => {
+  const handlePaginationModelChange = (model: any) => {
     setCurrentPage(model.page);
     setPageSize(model.pageSize);
   };

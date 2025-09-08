@@ -1,292 +1,393 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Container,
-  Paper,
   TextField,
   Button,
   Typography,
-  Alert,
   InputAdornment,
   IconButton,
-  CircularProgress,
-  FormControlLabel,
-  Checkbox,
-  Divider,
+  Paper,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
-  Email as EmailIcon,
+  Person as PersonIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  AdminPanelSettings as AdminIcon,
-  Security as SecurityIcon,
+  ArrowForward as ArrowIcon,
 } from '@mui/icons-material';
+import { useAuthStore } from '../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
 
 const LoginPage: React.FC = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login } = useAuthStore();
   
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    
-    if (!formData.email) {
-      errors.email = 'E-posta adresi gereklidir';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Geçerli bir e-posta adresi girin';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Şifre gereklidir';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Şifre en az 6 karakter olmalıdır';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (!validateForm()) {
-      return;
-    }
-    
-    try {
-      await login(formData.email, formData.password);
+    // Mock login - gerçek API entegrasyonu için değiştir
+    setTimeout(() => {
+      localStorage.setItem('admin_token', 'mock_token_123');
       navigate('/dashboard');
-    } catch (error) {
-      // Error is handled by the store
-    }
-  };
-
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [field]: e.target.value });
-    // Clear validation error when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors({ ...validationErrors, [field]: '' });
-    }
-    // Clear auth error
-    if (error) {
-      clearError();
-    }
+    }, 1000);
   };
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        height: '100vh',
+        width: '100vw',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        position: 'relative',
+        position: 'fixed',
+        top: 0,
+        left: 0,
         overflow: 'hidden',
       }}
     >
-      {/* Animated Background */}
+      {/* Sol Taraf - Form */}
       <Box
         sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.1,
-          background: `
-            radial-gradient(circle at 20% 80%, #fff 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, #fff 0%, transparent 50%)
-          `,
-          animation: 'float 20s ease-in-out infinite',
-          '@keyframes float': {
-            '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
-            '33%': { transform: 'translateY(-20px) rotate(1deg)' },
-            '66%': { transform: 'translateY(20px) rotate(-1deg)' },
-          },
+          width: { xs: '100%', md: '45%' },
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 4,
+          bgcolor: '#0a0e27',
+          position: 'relative',
+          zIndex: 2,
+          overflowY: 'auto',
         }}
-      />
-
-      <Container maxWidth="sm">
-        <Paper
-          elevation={24}
-          sx={{
-            p: 5,
-            borderRadius: 4,
-            background: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box
-              sx={{
-                display: 'inline-flex',
-                p: 2,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                mb: 2,
-              }}
-            >
-              <AdminIcon sx={{ fontSize: 48, color: 'white' }} />
-            </Box>
+      >
+        <Box sx={{ width: '100%', maxWidth: 440 }}>
+          {/* Logo */}
+          <Box sx={{ mb: 5 }}>
             <Typography
-              variant="h4"
-              fontWeight="bold"
+              variant="h3"
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                fontWeight: 900,
+                color: '#fff',
+                letterSpacing: '-1px',
                 mb: 1,
               }}
             >
-              Stocker Admin
+              STOCKER
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sistem yönetici paneline hoş geldiniz
+            <Typography
+              sx={{
+                color: alpha('#fff', 0.7),
+                fontSize: '1rem',
+              }}
+            >
+              Admin Panel'e Hoş Geldiniz
             </Typography>
           </Box>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }} onClose={clearError}>
-              {error}
-            </Alert>
-          )}
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                sx={{
+                  color: alpha('#fff', 0.7),
+                  fontSize: '0.875rem',
+                  mb: 1,
+                  fontWeight: 500,
+                }}
+              >
+                E-posta
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="admin@stocker.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon sx={{ color: alpha('#fff', 0.5) }} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    bgcolor: alpha('#fff', 0.05),
+                    borderRadius: 2,
+                    color: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha('#fff', 0.1),
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha('#fff', 0.2),
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#667eea',
+                    },
+                  },
+                }}
+              />
+            </Box>
 
-          {/* Login Form */}
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="E-posta Adresi"
-              type="email"
-              value={formData.email}
-              onChange={handleChange('email')}
-              error={!!validationErrors.email}
-              helperText={validationErrors.email}
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Şifre"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleChange('password')}
-              error={!!validationErrors.password}
-              helperText={validationErrors.password}
-              sx={{ mb: 2 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockIcon color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.rememberMe}
-                  onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-                  color="primary"
-                />
-              }
-              label="Beni hatırla"
-              sx={{ mb: 3 }}
-            />
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                sx={{
+                  color: alpha('#fff', 0.7),
+                  fontSize: '0.875rem',
+                  mb: 1,
+                  fontWeight: 500,
+                }}
+              >
+                Şifre
+              </Typography>
+              <TextField
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: alpha('#fff', 0.5) }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        sx={{ color: alpha('#fff', 0.5) }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    bgcolor: alpha('#fff', 0.05),
+                    borderRadius: 2,
+                    color: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha('#fff', 0.1),
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha('#fff', 0.2),
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#667eea',
+                    },
+                  },
+                }}
+              />
+            </Box>
 
             <Button
-              fullWidth
               type="submit"
+              fullWidth
               variant="contained"
-              size="large"
               disabled={isLoading}
+              endIcon={!isLoading && <ArrowIcon />}
               sx={{
-                py: 1.5,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                py: 2,
                 borderRadius: 2,
-                textTransform: 'none',
-                fontSize: '1.1rem',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                fontSize: '1rem',
                 fontWeight: 600,
-                boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+                textTransform: 'none',
+                boxShadow: '0 10px 30px rgba(102, 126, 234, 0.4)',
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                  boxShadow: '0 12px 32px rgba(102, 126, 234, 0.6)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 15px 40px rgba(102, 126, 234, 0.6)',
                 },
               }}
             >
-              {isLoading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'Giriş Yap'
-              )}
+              {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            </Button>
+          </form>
+
+          {/* Alt Linkler */}
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Button
+              sx={{
+                color: alpha('#fff', 0.7),
+                textTransform: 'none',
+                '&:hover': {
+                  color: '#fff',
+                  bgcolor: 'transparent',
+                },
+              }}
+            >
+              Şifremi Unuttum
             </Button>
           </Box>
+        </Box>
+      </Box>
 
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="caption" color="text.secondary">
-              GÜVENLİ GİRİŞ
-            </Typography>
-          </Divider>
+      {/* Sağ Taraf - Görsel */}
+      <Box
+        sx={{
+          width: { xs: '0', md: '55%' },
+          height: '100vh',
+          position: 'relative',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: { xs: 'none', md: 'flex' },
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Animated Background Pattern */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.1,
+            backgroundImage: `
+              radial-gradient(circle at 20% 50%, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 70%),
+              radial-gradient(circle at 80% 80%, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 70%),
+              radial-gradient(circle at 40% 20%, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 70%)
+            `,
+            animation: 'float 20s ease-in-out infinite',
+            '@keyframes float': {
+              '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+              '50%': { transform: 'translateY(-20px) rotate(10deg)' },
+            },
+          }}
+        />
 
-          {/* Security Note */}
+        {/* İçerik */}
+        <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', px: 4 }}>
           <Box
             sx={{
+              width: 120,
+              height: 120,
+              margin: '0 auto 3rem',
+              borderRadius: '30px',
+              background: 'rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(10px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 1,
-              p: 2,
-              borderRadius: 2,
-              bgcolor: 'grey.50',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              transform: 'rotate(-10deg)',
+              animation: 'pulse 3s ease-in-out infinite',
+              '@keyframes pulse': {
+                '0%, 100%': { transform: 'rotate(-10deg) scale(1)' },
+                '50%': { transform: 'rotate(-10deg) scale(1.05)' },
+              },
             }}
           >
-            <SecurityIcon sx={{ color: 'success.main', fontSize: 20 }} />
-            <Typography variant="caption" color="text.secondary">
-              256-bit SSL şifreleme ile korunmaktadır
+            <Typography
+              sx={{
+                fontSize: '3rem',
+                fontWeight: 900,
+                color: '#fff',
+                transform: 'rotate(10deg)',
+              }}
+            >
+              S
             </Typography>
           </Box>
-        </Paper>
 
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', mt: 3 }}>
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            © 2024 Stocker. Tüm hakları saklıdır.
+          <Typography
+            variant="h3"
+            sx={{
+              color: '#fff',
+              fontWeight: 700,
+              mb: 2,
+              textShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            }}
+          >
+            Yönetim Paneli
           </Typography>
+          
+          <Typography
+            sx={{
+              color: alpha('#fff', 0.9),
+              fontSize: '1.125rem',
+              maxWidth: 400,
+              mx: 'auto',
+              lineHeight: 1.6,
+            }}
+          >
+            Tüm işletme süreçlerinizi tek bir yerden yönetin. Güçlü araçlar ve detaylı analizlerle işinizi büyütün.
+          </Typography>
+
+          {/* Stats */}
+          <Box sx={{ display: 'flex', gap: 4, justifyContent: 'center', mt: 5 }}>
+            <Box>
+              <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: '#fff' }}>
+                500+
+              </Typography>
+              <Typography sx={{ color: alpha('#fff', 0.8), fontSize: '0.875rem' }}>
+                Aktif Şirket
+              </Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: '#fff' }}>
+                10K+
+              </Typography>
+              <Typography sx={{ color: alpha('#fff', 0.8), fontSize: '0.875rem' }}>
+                Kullanıcı
+              </Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: '#fff' }}>
+                99.9%
+              </Typography>
+              <Typography sx={{ color: alpha('#fff', 0.8), fontSize: '0.875rem' }}>
+                Uptime
+              </Typography>
+            </Box>
+          </Box>
         </Box>
-      </Container>
+
+        {/* Floating Elements */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '10%',
+            left: '10%',
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.2)',
+            animation: 'float 6s ease-in-out infinite',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '20%',
+            right: '15%',
+            width: 40,
+            height: 40,
+            borderRadius: '10px',
+            background: 'rgba(255,255,255,0.2)',
+            animation: 'float 8s ease-in-out infinite reverse',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '60%',
+            right: '10%',
+            width: 80,
+            height: 80,
+            borderRadius: '20px',
+            background: 'rgba(255,255,255,0.1)',
+            animation: 'float 10s ease-in-out infinite',
+          }}
+        />
+      </Box>
     </Box>
   );
 };

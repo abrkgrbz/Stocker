@@ -45,12 +45,8 @@ import {
 } from '@mui/material';
 import {
   DataGrid,
-  GridColDef,
-  GridRowSelectionModel,
   GridActionsCellItem,
   GridToolbar,
-  GridRowParams,
-  GridPaginationModel,
 } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
@@ -85,7 +81,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import {
+import type {
   Tenant,
   TenantStatus,
   TenantPlan,
@@ -124,7 +120,7 @@ const TenantsPage: React.FC = () => {
   
   // State management
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [selectedTenants, setSelectedTenants] = useState<GridRowSelectionModel>([]);
+  const [selectedTenants, setSelectedTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -238,7 +234,7 @@ const TenantsPage: React.FC = () => {
   };
 
   // DataGrid columns
-  const columns: GridColDef[] = [
+  const columns = [
     {
       field: 'name',
       headerName: 'Kiracı Adı',
@@ -393,7 +389,7 @@ const TenantsPage: React.FC = () => {
       type: 'actions',
       headerName: 'İşlemler',
       width: 120,
-      getActions: (params: GridRowParams) => [
+      getActions: (params: any) => [
         <GridActionsCellItem
           icon={<ViewIcon />}
           label="Detayları Görüntüle"
@@ -531,7 +527,7 @@ const TenantsPage: React.FC = () => {
     }
   };
 
-  const handlePaginationModelChange = (model: GridPaginationModel) => {
+  const handlePaginationModelChange = (model: any) => {
     setCurrentPage(model.page);
     setPageSize(model.pageSize);
   };
