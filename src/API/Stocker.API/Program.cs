@@ -175,6 +175,18 @@ builder.Services.AddSwaggerGen(c =>
     {
         var typeName = type.Name;
         
+        // Handle namespace conflicts for duplicate class names
+        if (typeName == "TopTenantDto" || typeName == "TenantsStatisticsDto")
+        {
+            // Include namespace to avoid conflicts
+            var namespaceParts = type.Namespace?.Split('.') ?? Array.Empty<string>();
+            if (namespaceParts.Length > 0)
+            {
+                var lastPart = namespaceParts[^1]; // Get last part (Tenant, Master, Dashboard)
+                typeName = $"{lastPart}_{typeName}";
+            }
+        }
+        
         // Handle generic types with full type information
         if (type.IsGenericType)
         {
