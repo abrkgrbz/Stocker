@@ -1,0 +1,120 @@
+.setup-wizard-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.setup-wizard-loading {
+  text-align: center;
+  padding: 100px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.wizard-header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.wizard-content-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.wizard-steps {
+  padding: 24px 0;
+}
+
+.wizard-steps .ant-steps-item-icon {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 18px;
+}
+
+.wizard-steps .ant-steps-item-process .ant-steps-item-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.wizard-steps .ant-steps-item-finish .ant-steps-item-icon {
+  background: #52c41a;
+  border-color: #52c41a;
+}
+
+.wizard-step-content {
+  padding: 24px 0;
+  min-height: 400px;
+}
+
+.step-detail-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  font-size: 24px;
+}
+
+.step-component-container {
+  min-height: 300px;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 24px;
+}
+
+.wizard-actions .ant-btn {
+  min-width: 120px;
+}
+
+/* Progress Bar Customization */
+.ant-progress-text {
+  color: #1890ff !important;
+}
+
+.ant-progress-success-bg,
+.ant-progress-bg {
+  height: 8px !important;
+  border-radius: 4px !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .setup-wizard-container {
+    padding: 16px;
+  }
+  
+  .wizard-steps {
+    display: none;
+  }
+  
+  .wizard-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .wizard-actions .ant-btn {
+    width: 100%;
+  }
+}

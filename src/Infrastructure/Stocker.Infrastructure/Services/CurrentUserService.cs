@@ -4,7 +4,7 @@ using System.Security.Claims;
 
 namespace Stocker.Infrastructure.Services;
 
-public class CurrentUserService : ICurrentUserService
+public class CurrentUserService : SharedKernel.Interfaces.ICurrentUserService, Application.Common.Interfaces.ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -13,6 +13,7 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    // For SharedKernel.Interfaces.ICurrentUserService
     public Guid? UserId
     {
         get
@@ -24,6 +25,11 @@ public class CurrentUserService : ICurrentUserService
             return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
         }
     }
+    
+    // For Application.Common.Interfaces.ICurrentUserService  
+    string? Application.Common.Interfaces.ICurrentUserService.UserId => UserId?.ToString();
+    
+    string? Application.Common.Interfaces.ICurrentUserService.TenantId => TenantId?.ToString();
 
     public string? UserName => 
         _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
@@ -66,4 +72,14 @@ public class CurrentUserService : ICurrentUserService
             return permissions ?? Enumerable.Empty<string>();
         }
     }
+    
+    // For Application.Common.Interfaces.ICurrentUserService
+    public bool IsMasterAdmin => IsSuperAdmin;
+    
+    public string[]? Roles => _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role)
+        .Select(c => c.Value)
+        .ToArray();
+    
+    public Dictionary<string, string>? Claims => _httpContextAccessor.HttpContext?.User?.Claims
+        .ToDictionary(c => c.Type, c => c.Value);
 }

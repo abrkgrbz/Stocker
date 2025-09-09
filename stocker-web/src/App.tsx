@@ -36,12 +36,14 @@ import { PublicLayout } from '@/layouts/PublicLayout';
 const ModernLanding = lazy(() => import('@/features/landing/pages/ModernLanding').then(m => ({ default: m.ModernLanding })));
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const TenantLogin = lazy(() => import('@/features/auth/pages/TenantLogin').then(m => ({ default: m.TenantLogin })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVerification'));
 const RegisterPage = lazy(() => import('@/features/register/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const RegisterWizard = lazy(() => import('@/features/register/pages/RegisterWizard'));
 const SignalRTestPage = lazy(() => import('@/features/register/pages/SignalRTest').then(m => ({ default: m.SignalRTestPage })));
 const PaymentPage = lazy(() => import('@/features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
+const FeatureTestPage = lazy(() => import('@/features/test/pages/FeatureTestPage'));
 const MasterDashboard = lazy(() => import('@/features/master/pages/Dashboard').then(m => ({ default: m.MasterDashboard })));
 const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
@@ -242,6 +244,7 @@ function App() {
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/signalr-test" element={<SignalRTestPage />} />
                 <Route path="/test-sweetalert" element={<TestSweetAlert />} />
+                <Route path="/test-features" element={<FeatureTestPage />} />
                 
                 {/* Company Setup - Protected route but no layout */}
                 <Route 
@@ -255,7 +258,7 @@ function App() {
                 
                 {/* Public Routes */}
                 <Route element={<PublicLayout />}>
-                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/login" element={<TenantLogin />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/verify-email" element={<EmailVerificationPage />} />
                 </Route>

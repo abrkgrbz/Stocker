@@ -21,7 +21,8 @@ public static class ServiceCollectionExtensions
         services.Configure<PasswordPolicy>(configuration.GetSection("PasswordPolicy"));
         
         // Add Current User Service
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<Application.Common.Interfaces.ICurrentUserService, CurrentUserService>();
+        services.AddScoped<SharedKernel.Interfaces.ICurrentUserService, CurrentUserService>();
         
         // Add Date Time Service
         services.AddScoped<IDateTimeService, DateTimeService>();
@@ -75,6 +76,9 @@ public static class ServiceCollectionExtensions
         {
             services.AddScoped<IEmailService, EmailService>();
         }
+        
+        // Add Captcha Service
+        services.AddHttpClient<ICaptchaService, ReCaptchaService>();
         
         // Add Memory Cache for tenant caching
         services.AddMemoryCache();

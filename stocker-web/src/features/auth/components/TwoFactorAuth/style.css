@@ -1,0 +1,116 @@
+/* Two Factor Authentication Styles */
+.twofa-modal .ant-modal-body {
+  padding: 24px;
+}
+
+.twofa-setup-content {
+  padding: 20px 0;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  margin: 24px 0;
+  min-height: 260px;
+}
+
+.secret-key-container {
+  margin-top: 24px;
+}
+
+.secret-key-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.secret-key {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  word-break: break-all;
+}
+
+.verification-input {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+.success-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 24px 0;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.backup-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e0;
+}
+
+.backup-code {
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.backup-code:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.phone-input-container {
+  margin: 24px 0;
+}
+
+.twofa-verify-modal .ant-modal-body {
+  padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .backup-codes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .qr-code-container {
+    padding: 24px;
+  }
+}

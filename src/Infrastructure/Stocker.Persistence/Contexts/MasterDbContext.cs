@@ -14,6 +14,34 @@ public class MasterDbContext : BaseDbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
+    public DbSet<TenantApiKey> TenantApiKeys => Set<TenantApiKey>();
+    public DbSet<TenantWebhook> TenantWebhooks => Set<TenantWebhook>();
+    public DbSet<TenantIntegration> TenantIntegrations => Set<TenantIntegration>();
+    public DbSet<TenantActivityLog> TenantActivityLogs => Set<TenantActivityLog>();
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+    public DbSet<TenantSecuritySettings> TenantSecuritySettings => Set<TenantSecuritySettings>();
+    public DbSet<TenantHealthCheck> TenantHealthChecks => Set<TenantHealthCheck>();
+    public DbSet<TenantBackup> TenantBackups => Set<TenantBackup>();
+    
+    // Tenant Registration & Onboarding
+    public DbSet<TenantRegistration> TenantRegistrations => Set<TenantRegistration>();
+    public DbSet<TenantContract> TenantContracts => Set<TenantContract>();
+    public DbSet<TenantBilling> TenantBillings => Set<TenantBilling>();
+    public DbSet<TenantOnboarding> TenantOnboardings => Set<TenantOnboarding>();
+    public DbSet<TenantLimits> TenantLimits => Set<TenantLimits>();
+    public DbSet<OnboardingStep> OnboardingSteps => Set<OnboardingStep>();
+    public DbSet<OnboardingTask> OnboardingTasks => Set<OnboardingTask>();
+    
+    // Tenant Management & Compliance
+    public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
+    public DbSet<TenantCustomization> TenantCustomizations => Set<TenantCustomization>();
+    public DbSet<TenantCompliance> TenantCompliances => Set<TenantCompliance>();
+    public DbSet<TenantDocument> TenantDocuments => Set<TenantDocument>();
+    
+    // Tenant Setup & Wizard
+    public DbSet<TenantSetupWizard> TenantSetupWizards => Set<TenantSetupWizard>();
+    public DbSet<TenantInitialData> TenantInitialData => Set<TenantInitialData>();
+    public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>();
 
     // Package & Subscription Management
     public DbSet<Package> Packages => Set<Package>();

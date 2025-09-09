@@ -1,0 +1,277 @@
+.tenant-dashboard-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 8px;
+}
+
+.metrics-row {
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.metric-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.metric-card .ant-statistic-title {
+  color: #8c8c8c;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.metric-card .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.growth-positive {
+  color: #52c41a;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.growth-negative {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.dashboard-card {
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.dashboard-card .ant-card-body {
+  padding: 24px;
+}
+
+.module-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.module-tags .ant-tag {
+  padding: 4px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+
+.quick-action-card {
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 20px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #f0f0f0;
+}
+
+.quick-action-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.quick-action-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.ant-timeline-item-content {
+  margin-left: 18px;
+  margin-top: -4px;
+}
+
+.ant-alert {
+  border-radius: 6px;
+}
+
+.ant-progress-text {
+  font-size: 12px !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tenant-dashboard-container {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    padding: 16px;
+  }
+
+  .metric-card .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  .dashboard-card .ant-card-body {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .tenant-dashboard-container {
+    padding: 12px;
+  }
+
+  .metrics-row {
+    margin-bottom: 16px;
+  }
+
+  .metric-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* Status Indicators */
+.status-healthy {
+  color: #52c41a;
+}
+
+.status-warning {
+  color: #faad14;
+}
+
+.status-critical {
+  color: #ff4d4f;
+}
+
+/* Chart Container */
+.chart-container {
+  height: 300px;
+  margin-top: 16px;
+}
+
+/* Activity Feed */
+.activity-feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-feed::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activity-feed::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.activity-feed::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.activity-feed::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Setup Progress Section */
+.setup-progress-section {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.setup-progress-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.setup-progress-item:last-child {
+  border-bottom: none;
+}
+
+/* Billing Status */
+.billing-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.billing-status .ant-tag {
+  margin: 0;
+}
+
+/* Module Grid */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.module-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.module-item:hover {
+  background: #e6f7ff;
+  transform: translateY(-2px);
+}
+
+.module-item-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #1890ff;
+}
+
+.module-item-name {
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Alert Actions */
+.alert-action-button {
+  margin-left: auto;
+}

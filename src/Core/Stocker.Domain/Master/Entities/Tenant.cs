@@ -30,6 +30,24 @@ public sealed class Tenant : AggregateRoot
     public IReadOnlyList<TenantDomain> Domains => _domains.AsReadOnly();
     public IReadOnlyList<TenantFeature> Features => _features.AsReadOnly();
     public IReadOnlyList<Subscription> Subscriptions => _subscriptions.AsReadOnly();
+    
+    // New Navigation Properties for Registration Process
+    public TenantRegistration? Registration { get; private set; }
+    public TenantContract? ActiveContract { get; private set; }
+    public TenantBilling? BillingInfo { get; private set; }
+    public TenantOnboarding? Onboarding { get; private set; }
+    public TenantLimits? Limits { get; private set; }
+    
+    // Existing Navigation Properties
+    public TenantSettings? Settings { get; private set; }
+    public TenantSecuritySettings? SecuritySettings { get; private set; }
+    public ICollection<TenantContract> Contracts { get; private set; } = new List<TenantContract>();
+    public ICollection<TenantApiKey> ApiKeys { get; private set; } = new List<TenantApiKey>();
+    public ICollection<TenantWebhook> Webhooks { get; private set; } = new List<TenantWebhook>();
+    public ICollection<TenantIntegration> Integrations { get; private set; } = new List<TenantIntegration>();
+    public ICollection<TenantActivityLog> ActivityLogs { get; private set; } = new List<TenantActivityLog>();
+    public ICollection<TenantHealthCheck> HealthChecks { get; private set; } = new List<TenantHealthCheck>();
+    public ICollection<TenantBackup> Backups { get; private set; } = new List<TenantBackup>();
 
     private Tenant() { } // EF Constructor
 
@@ -208,5 +226,67 @@ public sealed class Tenant : AggregateRoot
     {
         var feature = _features.FirstOrDefault(f => f.FeatureCode == featureCode);
         return feature?.IsActive() ?? false;
+    }
+    
+    // New Methods for Registration Process
+    public void SetRegistration(TenantRegistration registration)
+    {
+        Registration = registration ?? throw new ArgumentNullException(nameof(registration));
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void SetContract(TenantContract contract)
+    {
+        ActiveContract = contract ?? throw new ArgumentNullException(nameof(contract));
+        Contracts.Add(contract);
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void SetBillingInfo(TenantBilling billingInfo)
+    {
+        BillingInfo = billingInfo ?? throw new ArgumentNullException(nameof(billingInfo));
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void StartOnboarding(TenantOnboarding onboarding)
+    {
+        Onboarding = onboarding ?? throw new ArgumentNullException(nameof(onboarding));
+        UpdatedAt = DateTime.UtcNow;
+        
+        RaiseDomainEvent(new TenantOnboardingStartedDomainEvent(Id));
+    }
+    
+    public void SetLimits(TenantLimits limits)
+    {
+        Limits = limits ?? throw new ArgumentNullException(nameof(limits));
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void CompleteOnboarding()
+    {
+        if (Onboarding == null)
+            throw new InvalidOperationException("No onboarding process found.");
+            
+        Onboarding.Complete();
+        UpdatedAt = DateTime.UtcNow;
+        
+        RaiseDomainEvent(new TenantOnboardingCompletedDomainEvent(Id));
+    }
+    
+    public bool IsOnboardingComplete()
+    {
+        return Onboarding?.Status == OnboardingStatus.Completed;
+    }
+    
+    public bool HasActiveContract()
+    {
+        return ActiveContract != null && 
+               ActiveContract.Status == ContractStatus.Active &&
+               ActiveContract.EndDate > DateTime.UtcNow;
+    }
+    
+    public bool IsWithinLimits(UsageType usageType)
+    {
+        return Limits?.IsLimitExceeded(usageType) == false;
     }
 }

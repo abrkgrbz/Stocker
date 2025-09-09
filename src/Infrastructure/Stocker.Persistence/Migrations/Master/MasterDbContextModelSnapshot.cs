@@ -18,7 +18,7 @@ namespace Stocker.Persistence.Migrations.Master
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("master")
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -232,6 +232,93 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasDatabaseName("IX_MasterUsers_Username");
 
                     b.ToTable("MasterUsers", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.OnboardingStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("OnboardingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StepName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OnboardingId");
+
+                    b.HasIndex("OnboardingId", "StepNumber")
+                        .IsUnique();
+
+                    b.ToTable("OnboardingSteps", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.OnboardingTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("OnboardingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("IsCompleted");
+
+                    b.HasIndex("OnboardingId");
+
+                    b.ToTable("OnboardingTasks", "Master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Package", b =>
@@ -604,6 +691,1792 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("Tenants", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("ActivityDescription")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("ActivityDescription");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ActivityType");
+
+                    b.Property<string>("AdditionalData")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("AdditionalData");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("EntityId");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("EntityType");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("IpAddress");
+
+                    b.Property<string>("NewValues")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("NewValues");
+
+                    b.Property<string>("OldValues")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("OldValues");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Info")
+                        .HasColumnName("Severity");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("UserAgent");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("UserId");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("UserName");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_TenantActivityLogs_CreatedAt");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantActivityLogs_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "ActivityType")
+                        .HasDatabaseName("IX_TenantActivityLogs_TenantId_ActivityType");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("IX_TenantActivityLogs_TenantId_CreatedAt");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .HasDatabaseName("IX_TenantActivityLogs_TenantId_UserId");
+
+                    b.HasIndex("TenantId", "EntityType", "EntityId")
+                        .HasDatabaseName("IX_TenantActivityLogs_TenantId_EntityType_EntityId");
+
+                    b.ToTable("TenantActivityLogs", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantApiKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("AllowedIpAddresses")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("AllowedIpAddresses");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Key");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastUsedAt");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<int?>("RateLimit")
+                        .HasColumnType("int")
+                        .HasColumnName("RateLimit");
+
+                    b.Property<string>("Scopes")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Scopes");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantApiKeys_Key");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantApiKeys_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("IX_TenantApiKeys_TenantId_IsActive");
+
+                    b.ToTable("TenantApiKeys", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBackup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("BackupName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("BackupName");
+
+                    b.Property<string>("BackupType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("BackupType");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CompletedAt");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("DownloadUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("DownloadUrl");
+
+                    b.Property<string>("EncryptionKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("EncryptionKey");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("ErrorMessage");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("FilePath");
+
+                    b.Property<bool>("IncludesConfiguration")
+                        .HasColumnType("bit")
+                        .HasColumnName("IncludesConfiguration");
+
+                    b.Property<bool>("IncludesDatabase")
+                        .HasColumnType("bit")
+                        .HasColumnName("IncludesDatabase");
+
+                    b.Property<bool>("IncludesFiles")
+                        .HasColumnType("bit")
+                        .HasColumnName("IncludesFiles");
+
+                    b.Property<bool>("IsCompressed")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsCompressed");
+
+                    b.Property<bool>("IsEncrypted")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsEncrypted");
+
+                    b.Property<bool>("IsRestorable")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsRestorable");
+
+                    b.Property<DateTime?>("LastRestoredAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastRestoredAt");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Metadata");
+
+                    b.Property<int>("RestoreCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("RestoreCount");
+
+                    b.Property<string>("RestoreNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("RestoreNotes");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("RetryCount");
+
+                    b.Property<long>("SizeInBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("SizeInBytes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("Status");
+
+                    b.Property<string>("StorageLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("StorageLocation");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Tags");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_TenantBackups_CreatedAt");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantBackups_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "BackupType")
+                        .HasDatabaseName("IX_TenantBackups_TenantId_BackupType");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("IX_TenantBackups_TenantId_CreatedAt");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("IX_TenantBackups_TenantId_Status");
+
+                    b.ToTable("TenantBackups", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBilling", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountHolder")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AddressLine2")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("AutoPaymentEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BankBranch")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("BillingCycle")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("BillingDay")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CardAddedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CardExpiryMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CardExpiryYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CardHolderName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CardNumberMasked")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CardToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("CardType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("ConsolidatedBilling")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CostCenter")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<int?>("GracePeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IBAN")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("LastPaymentAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("LastPaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("LatePaymentInterestRate")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("NextBillingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PayPalAccountId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PayPalEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<decimal?>("PaymentLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("PaymentTermsDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PreferredPaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PurchaseOrderNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("SendInvoiceByEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendInvoiceByPost")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SwiftCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PreferredPaymentMethod");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("TenantBillings", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantCompliance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AccountLockoutMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AllowDataDeletion")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowDataExport")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowDataPortability")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AttributeBasedAccessControl")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AuditFrequency")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("AuditLogEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("AuditLogRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AutoBackupEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AutoDeleteExpiredData")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("BackupEncryption")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BackupFrequency")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("BackupLocation")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("BackupRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CertificatesUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ComplianceReportsUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("ComplianceScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CriticalVulnerabilities")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DataCategories")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("DataEncryptionAtRest")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DataEncryptionInTransit")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("DataProcessingAgreements")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DataProtectionOfficer")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DataProtectionOfficerEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("DataProtectionOfficerPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("DataRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DataRetentionPolicy")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("DetailedAuditLog")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DocumentsLastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EncryptionAlgorithm")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("EncryptionKeyLength")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalAuditor")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("GDPRCompliant")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("GDPRConsentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GDPRConsentVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("HIPAAAssessmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HIPAACompliant")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("HighVulnerabilities")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ISO27001CertificateNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("ISO27001Certified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ISO27001ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IncidentNotificationHours")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IncidentResponsePlan")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IncidentResponseProcedure")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("IncidentResponseTeam")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("KVKKCompliant")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("KVKKConsentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("KVKKConsentVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("KeyRotationIntervalDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastAssessmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastAuditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastAuditReport")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("LastBackupDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastBackupTestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastDataPurgeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastIncidentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastKeyRotationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastPenTestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastScanDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastVendorAuditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LowVulnerabilities")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxLoginAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MediumVulnerabilities")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NextAssessmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NextAuditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NextDataPurgeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NextScanDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NonComplianceAreas")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("PCIDSSCompliant")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PCIDSSLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("PCIDSSValidUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PasswordExpiryDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PasswordHistoryCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PasswordMinLength")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("PasswordRequireLowercase")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PasswordRequireNumbers")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PasswordRequireSpecialChars")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PasswordRequireUppercase")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PenetrationTesting")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PolicyDocumentsUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("PrivacyPolicyAcceptedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PrivacyPolicyUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PrivacyPolicyVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("RecoveryPointObjectiveHours")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecoveryTimeObjectiveHours")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RemediationDeadline")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RemediationPlan")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("RequireConsentForAnalytics")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequireConsentForMarketing")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequireConsentForThirdParty")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequireMFA")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RoleBasedAccessControl")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SOC2AuditDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SOC2Compliant")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SOC2ReportUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ScanFrequency")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SensitiveDataTypes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("SessionTimeoutMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SubProcessors")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ThirdPartyVendors")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("TotalIncidents")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnresolvedIncidents")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("VendorRiskAssessment")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("VulnerabilityScanning")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComplianceScore");
+
+                    b.HasIndex("GDPRCompliant");
+
+                    b.HasIndex("ISO27001Certified");
+
+                    b.HasIndex("KVKKCompliant");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("TenantCompliances", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantContract", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApprovalNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("AutoRenewal")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ContractNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ContractType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("ContractValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DocumentHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("DocumentUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("EarlyTerminationFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NoticePeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentTerms")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("RenewalPeriodMonths")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("RenewalPriceIncrease")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ResolutionTimeHours")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ResponseTimeHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SignedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("SignedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SignerEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("SignerTitle")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SpecialConditions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SupportLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TerminatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("TerminationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TerminationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Terms")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("UptimeGuarantee")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractNumber")
+                        .IsUnique();
+
+                    b.HasIndex("EndDate");
+
+                    b.HasIndex("StartDate");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId1")
+                        .IsUnique()
+                        .HasFilter("[TenantId1] IS NOT NULL");
+
+                    b.HasIndex("Status", "EndDate");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("TenantContracts", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantCustomization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccentColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<bool>("AllowCustomCode")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AndroidAppUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("BackgroundColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("BodyHtml")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("CollapsedSidebarByDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CopyrightText")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CurrencyPosition")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("CustomCSS")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomJavaScript")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomMenuItems")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("DarkModeEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("DashboardLayout")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DateFormat")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("DefaultLanguage")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<string>("DefaultWidgets")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("EmailFooterHtml")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("EmailHeaderHtml")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("EmailSignature")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("EnableAnimations")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnableAutoSave")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnableSounds")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FaviconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FirstDayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FontFamily")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FontSize")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FooterText")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("HeadHtml")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("HighContrastMode")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IOSAppUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("InvoiceEmailTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("InvoiceTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LoginBackgroundColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("LoginBackgroundUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LoginFooterText")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("LoginLogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LoginSubtitle")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LoginTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LogoDarkUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MobileLogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("MobileOptimized")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobileTheme")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NavigationPosition")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("NavigationStyle")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("NotificationEmailTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("NumberFormat")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PasswordResetEmailTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("PrimaryColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("PurchaseOrderTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("QuotationTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("ReportFooterTemplate")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ReportHeaderTemplate")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SecondaryColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<bool>("ShowBreadcrumbs")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowGettingStarted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowHelp")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowKeyboardShortcuts")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowLoginForgotPassword")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowLoginRememberMe")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowLoginSocialButtons")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowLogoOnReports")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowMobileApp")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowNotificationBell")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowRecentActivity")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowSearchBar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowStatistics")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowTooltips")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowTour")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowUserMenu")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowWatermarkOnReports")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowWelcomeMessage")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SidebarPosition")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SupportedLanguages")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Tagline")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TextColor")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TimeFormat")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Use24HourTime")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UseCustomEmailTemplates")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WatermarkText")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("WelcomeEmailTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("WelcomeMessageTemplate")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.HasIndex("Version");
+
+                    b.ToTable("TenantCustomizations", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccessLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AllowedRoles")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("AllowedUsers")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ApprovalNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("CanBeDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ComplianceStandard")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CustomMetadata")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DocumentName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DocumentNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("DownloadCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FileHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsComplianceDocument")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsConfidential")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLatestVersion")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLegalDocument")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSigned")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Keywords")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("LastDownloadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastDownloadedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LastNotificationSent")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastViewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastViewedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LegalJurisdiction")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MimeType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ModificationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NotificationRecipients")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("ParentDocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PreviousVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RelatedDocumentIds")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("RenewalNoticeDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RenewalNotificationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReplacesDocumentId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresNDA")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresRenewal")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresSignature")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RetentionPolicy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("RetentionUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SendExpiryNotification")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendRenewalNotification")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SignatureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SignedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("SignedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VersionNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("DocumentNumber")
+                        .IsUnique();
+
+                    b.HasIndex("DocumentType");
+
+                    b.HasIndex("ExpiryDate");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsLatestVersion");
+
+                    b.HasIndex("ParentDocumentId");
+
+                    b.HasIndex("PreviousVersionId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Category", "Status");
+
+                    b.HasIndex("TenantId", "DocumentType", "IsActive");
+
+                    b.HasIndex("TenantId", "IsLatestVersion", "IsActive");
+
+                    b.ToTable("TenantDocuments", "Master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDomain", b =>
                 {
                     b.Property<Guid>("Id")
@@ -679,6 +2552,2443 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasDatabaseName("IX_TenantFeatures_TenantId_FeatureCode");
 
                     b.ToTable("TenantFeatures", "master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantHealthCheck", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<int>("ActiveConnections")
+                        .HasColumnType("int")
+                        .HasColumnName("ActiveConnections");
+
+                    b.Property<int>("ActiveUsers")
+                        .HasColumnType("int")
+                        .HasColumnName("ActiveUsers");
+
+                    b.Property<int>("ApiErrorRate")
+                        .HasColumnType("int")
+                        .HasColumnName("ApiErrorRate");
+
+                    b.Property<int>("ApiRequestsPerMinute")
+                        .HasColumnType("int")
+                        .HasColumnName("ApiRequestsPerMinute");
+
+                    b.Property<long>("ApiResponseTimeMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("ApiResponseTimeMs");
+
+                    b.Property<DateTime>("CheckedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CheckedAt");
+
+                    b.Property<int>("ConcurrentSessions")
+                        .HasColumnType("int")
+                        .HasColumnName("ConcurrentSessions");
+
+                    b.Property<double>("CpuUsagePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("float(5)")
+                        .HasColumnName("CpuUsagePercent");
+
+                    b.Property<long>("DatabaseResponseTimeMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("DatabaseResponseTimeMs");
+
+                    b.Property<long>("DatabaseSizeMb")
+                        .HasColumnType("bigint")
+                        .HasColumnName("DatabaseSizeMb");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("int")
+                        .HasColumnName("ErrorCount");
+
+                    b.Property<string>("Errors")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Errors");
+
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("int")
+                        .HasColumnName("FailedLoginAttempts");
+
+                    b.Property<bool>("HasSecurityUpdates")
+                        .HasColumnType("bit")
+                        .HasColumnName("HasSecurityUpdates");
+
+                    b.Property<int>("HealthScore")
+                        .HasColumnType("int")
+                        .HasColumnName("HealthScore");
+
+                    b.Property<bool>("IsApiHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsApiHealthy");
+
+                    b.Property<bool>("IsBackgroundJobsHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsBackgroundJobsHealthy");
+
+                    b.Property<bool>("IsBackupHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsBackupHealthy");
+
+                    b.Property<bool>("IsCacheHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsCacheHealthy");
+
+                    b.Property<bool>("IsDatabaseHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsDatabaseHealthy");
+
+                    b.Property<bool>("IsEmailServiceHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsEmailServiceHealthy");
+
+                    b.Property<bool>("IsNotificationServiceHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsNotificationServiceHealthy");
+
+                    b.Property<bool>("IsStorageHealthy")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsStorageHealthy");
+
+                    b.Property<DateTime?>("LastBackupDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastBackupDate");
+
+                    b.Property<long>("LastBackupSizeMb")
+                        .HasColumnType("bigint")
+                        .HasColumnName("LastBackupSizeMb");
+
+                    b.Property<DateTime?>("LastSecurityScan")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastSecurityScan");
+
+                    b.Property<double>("MemoryUsagePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("float(5)")
+                        .HasColumnName("MemoryUsagePercent");
+
+                    b.Property<string>("OverallStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("OverallStatus");
+
+                    b.Property<int>("SecurityIncidents")
+                        .HasColumnType("int")
+                        .HasColumnName("SecurityIncidents");
+
+                    b.Property<long>("StorageAvailableMb")
+                        .HasColumnType("bigint")
+                        .HasColumnName("StorageAvailableMb");
+
+                    b.Property<int>("StorageUsagePercent")
+                        .HasColumnType("int")
+                        .HasColumnName("StorageUsagePercent");
+
+                    b.Property<long>("StorageUsedMb")
+                        .HasColumnType("bigint")
+                        .HasColumnName("StorageUsedMb");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("WarningCount")
+                        .HasColumnType("int")
+                        .HasColumnName("WarningCount");
+
+                    b.Property<string>("Warnings")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Warnings");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CheckedAt")
+                        .HasDatabaseName("IX_TenantHealthChecks_CheckedAt");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantHealthChecks_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "CheckedAt")
+                        .HasDatabaseName("IX_TenantHealthChecks_TenantId_CheckedAt");
+
+                    b.ToTable("TenantHealthChecks", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantInitialData", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddressLine1")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AddressLine2")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AdminFirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AdminLastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AdminPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("AdminUserCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AdminUserEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AdminUserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("AnnualRevenue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ApprovalWorkflows")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("BranchesCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BusinessType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("ChartOfAccountsCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ChartOfAccountsTemplate")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CompanyCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ContactFax")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("CreateSampleData")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("CustomerTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DataSetType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DefaultBranches")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DefaultCurrency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DefaultDateFormat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DefaultDepartments")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DefaultLanguage")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("DefaultProductCategories")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("DefaultTheme")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DefaultTimeFormat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DefaultTimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("DepartmentsCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("EmployeeCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FiscalYearStart")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ImportExistingData")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ImportedDataSources")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int?>("ImportedRecordsCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IndustryType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IntegrationsConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsValidated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MersisNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ModuleConfigurations")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("NotificationRules")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PreferredIntegrations")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProcessingAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProcessingErrors")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("ProductCategoriesCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SelectedModules")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<decimal>("SetupProgressPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("SetupStepsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("TemplatesCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalSetupSteps")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TradeRegistryNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("UseDefaultChartOfAccounts")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ValidationErrors")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("VendorTemplate")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("WorkflowsConfigured")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminUserEmail");
+
+                    b.HasIndex("CompanyName");
+
+                    b.HasIndex("ContactEmail");
+
+                    b.HasIndex("DataSetType");
+
+                    b.HasIndex("IsProcessed");
+
+                    b.HasIndex("IsValidated");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("TenantInitialData", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantIntegration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("ApiKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("ApiKey");
+
+                    b.Property<string>("Configuration")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Configuration");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<bool>("IsConnected")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsConnected");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("LastError");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastSyncAt");
+
+                    b.Property<string>("LastSyncStatus")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("LastSyncStatus");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("RefreshToken");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TokenExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("TokenExpiresAt");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("WebhookUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("WebhookUrl");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantIntegrations_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "Type")
+                        .HasDatabaseName("IX_TenantIntegrations_TenantId_Type");
+
+                    b.HasIndex("TenantId", "IsActive", "IsConnected")
+                        .HasDatabaseName("IX_TenantIntegrations_TenantId_IsActive_IsConnected");
+
+                    b.ToTable("TenantIntegrations", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantLimits", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApiLimitAction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("AuditLogRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BackupRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CurrentAdminUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentApiKeys")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentBackupsThisMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentConcurrentUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentCustomDomains")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentCustomFields")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentCustomModules")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentCustomReports")
+                        .HasColumnType("int");
+
+                    b.Property<long>("CurrentDailyApiCalls")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CurrentDailyTransactions")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("CurrentDatabaseConnections")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CurrentDatabaseSizeGB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("CurrentEmailTemplates")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentExportsToday")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentIntegrations")
+                        .HasColumnType("int");
+
+                    b.Property<long>("CurrentMonthlyApiCalls")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CurrentMonthlyEmails")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CurrentMonthlySMS")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CurrentMonthlyTransactions")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("CurrentStorageGB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("CurrentUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentWebhooks")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentWorkflows")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DataRetentionDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastLimitExceededNotificationSent")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastResetDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastWarningNotificationSent")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxAdminUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxApiCallsPerMinute")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxApiKeys")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxBackupsPerMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCPUCores")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxConcurrentUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCustomDomains")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCustomFields")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCustomModules")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCustomReports")
+                        .HasColumnType("int");
+
+                    b.Property<long>("MaxDailyApiCalls")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MaxDailyTransactions")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MaxDatabaseConnections")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MaxDatabaseSizeGB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("MaxEmailTemplates")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MaxExportSizeGB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("MaxExportsPerDay")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MaxFileUploadSizeMB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("MaxIntegrations")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxMemoryGB")
+                        .HasColumnType("int");
+
+                    b.Property<long>("MaxMonthlyApiCalls")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MaxMonthlyEmails")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MaxMonthlySMS")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MaxMonthlyTransactions")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("MaxStorageGB")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("MaxTransactionsPerMinute")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxUsers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxWebhooks")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxWorkflows")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NextResetDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SendLimitExceededNotifications")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendWarningNotifications")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("StorageLimitAction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionLimitAction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserLimitAction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("WarningThresholdPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("LastResetDate");
+
+                    b.HasIndex("NextResetDate");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("TenantLimits", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BCCRecipients")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("CCRecipients")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CronExpression")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("DayOfMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DelayMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmailTemplateId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("FailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPaused")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxPerDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxPerMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxPerWeek")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("NextScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PausedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PausedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Recipients")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SMSTemplateId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Schedule")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("SendToAllAdmins")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendToOwner")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SentThisMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SentThisWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SentToday")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ThresholdUnit")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("ThresholdValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<TimeSpan?>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.Property<int>("TotalSentCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TriggerConditions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("UseDefaultTemplate")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Channel");
+
+                    b.HasIndex("IsEnabled");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("TenantId", "Type", "IsEnabled");
+
+                    b.ToTable("TenantNotifications", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantOnboarding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedToEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AssignedToName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AssignedToUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Blockers")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ContactPersonEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ContactPersonName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ContactPersonPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CurrentStepNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomizationRequirements")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("CustomizationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DataMigrationCompleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DataMigrationStarted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DataMigrationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DocumentationUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("EstimatedCompletionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FeedbackComments")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("FeedbackReceivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IntegrationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IntegrationSystems")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Issues")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("KickoffMeetingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("KickoffMeetingNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("NextTrainingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("OnboardingType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PreferredContactMethod")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PreferredContactTime")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("ProgressPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<long?>("RecordsMigrated")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("RequiresCustomization")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresDataMigration")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresIntegration")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("SatisfactionScore")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalDaysExpected")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("TotalRecordsToMigrate")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TotalTrainingSessions")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrainingMaterialsUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("TrainingSessionsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("WelcomePackageSent")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("WelcomePackageSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WelcomePackageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OnboardingType");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "Priority");
+
+                    b.ToTable("TenantOnboardings", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AddressLine2")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("ApprovalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CompanyWebsite")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ContactPersonName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContactPersonSurname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("EmailVerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Industry")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("MarketingEmailsAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("MarketingSmsAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneVerificationCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PhoneVerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("PrivacyPolicyAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PrivacyPolicyAcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PromoCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ReferralCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RegistrationCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("RejectionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("SelectedPackageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("TermsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("TermsAcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TermsVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegistrationCode")
+                        .IsUnique();
+
+                    b.HasIndex("RegistrationDate");
+
+                    b.HasIndex("SelectedPackageId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasFilter("[TenantId] IS NOT NULL");
+
+                    b.HasIndex("Status", "RegistrationDate");
+
+                    b.ToTable("TenantRegistrations", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSecuritySettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("AllowedTwoFactorProviders")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("AllowedTwoFactorProviders");
+
+                    b.Property<int>("ApiKeyRotationDays")
+                        .HasColumnType("int")
+                        .HasColumnName("ApiKeyRotationDays");
+
+                    b.Property<int>("ApiRateLimitPerMinute")
+                        .HasColumnType("int")
+                        .HasColumnName("ApiRateLimitPerMinute");
+
+                    b.Property<int>("AuditLogRetentionDays")
+                        .HasColumnType("int")
+                        .HasColumnName("AuditLogRetentionDays");
+
+                    b.Property<string>("BlacklistedIps")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("BlacklistedIps");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CspPolicy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("CspPolicy");
+
+                    b.Property<bool>("EnableAccountLockout")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableAccountLockout");
+
+                    b.Property<bool>("EnableApiKeyRotation")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableApiKeyRotation");
+
+                    b.Property<bool>("EnableApiRateLimiting")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableApiRateLimiting");
+
+                    b.Property<bool>("EnableAuditLog")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableAuditLog");
+
+                    b.Property<bool>("EnableConcurrentSessions")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableConcurrentSessions");
+
+                    b.Property<bool>("EnableCsp")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableCsp");
+
+                    b.Property<bool>("EnableDataEncryption")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableDataEncryption");
+
+                    b.Property<bool>("EnableHsts")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableHsts");
+
+                    b.Property<bool>("EnableIpBlacklist")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableIpBlacklist");
+
+                    b.Property<bool>("EnableIpWhitelist")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableIpWhitelist");
+
+                    b.Property<bool>("EnableSensitiveDataMasking")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableSensitiveDataMasking");
+
+                    b.Property<bool>("EnableXContentTypeOptions")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableXContentTypeOptions");
+
+                    b.Property<bool>("EnableXFrameOptions")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableXFrameOptions");
+
+                    b.Property<bool>("EnforceTwoFactor")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnforceTwoFactor");
+
+                    b.Property<int>("LockoutDurationMinutes")
+                        .HasColumnType("int")
+                        .HasColumnName("LockoutDurationMinutes");
+
+                    b.Property<int>("MaxConcurrentSessions")
+                        .HasColumnType("int")
+                        .HasColumnName("MaxConcurrentSessions");
+
+                    b.Property<int>("MaxFailedLoginAttempts")
+                        .HasColumnType("int")
+                        .HasColumnName("MaxFailedLoginAttempts");
+
+                    b.Property<int>("MinPasswordLength")
+                        .HasColumnType("int")
+                        .HasColumnName("MinPasswordLength");
+
+                    b.Property<int>("PasswordExpirationDays")
+                        .HasColumnType("int")
+                        .HasColumnName("PasswordExpirationDays");
+
+                    b.Property<int>("PasswordHistoryCount")
+                        .HasColumnType("int")
+                        .HasColumnName("PasswordHistoryCount");
+
+                    b.Property<bool>("RequireApiAuthentication")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequireApiAuthentication");
+
+                    b.Property<bool>("RequireLowercase")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequireLowercase");
+
+                    b.Property<bool>("RequireNumbers")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequireNumbers");
+
+                    b.Property<bool>("RequireSpecialCharacters")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequireSpecialCharacters");
+
+                    b.Property<bool>("RequireUppercase")
+                        .HasColumnType("bit")
+                        .HasColumnName("RequireUppercase");
+
+                    b.Property<int>("SessionTimeoutMinutes")
+                        .HasColumnType("int")
+                        .HasColumnName("SessionTimeoutMinutes");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("UpdatedAt");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("UpdatedBy");
+
+                    b.Property<string>("WhitelistedIps")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("WhitelistedIps");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantSecuritySettings_TenantId");
+
+                    b.HasIndex("TenantId1")
+                        .IsUnique()
+                        .HasFilter("[TenantId1] IS NOT NULL");
+
+                    b.ToTable("TenantSecuritySettings", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Address");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("CompanyName");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("Country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("CustomCss")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("CustomCss");
+
+                    b.Property<int>("DataRetentionDays")
+                        .HasColumnType("int")
+                        .HasColumnName("DataRetentionDays");
+
+                    b.Property<string>("DateFormat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("DateFormat");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("Email");
+
+                    b.Property<string>("EmailFromAddress")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("EmailFromAddress");
+
+                    b.Property<string>("EmailFromName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("EmailFromName");
+
+                    b.Property<bool>("EnableApiAccess")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableApiAccess");
+
+                    b.Property<bool>("EnableAutoBackup")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableAutoBackup");
+
+                    b.Property<bool>("EnableEmailNotifications")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableEmailNotifications");
+
+                    b.Property<bool>("EnableSmsNotifications")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableSmsNotifications");
+
+                    b.Property<bool>("EnableTwoFactor")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableTwoFactor");
+
+                    b.Property<bool>("EnableWebhooks")
+                        .HasColumnType("bit")
+                        .HasColumnName("EnableWebhooks");
+
+                    b.Property<string>("FaviconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("FaviconUrl");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("Language");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("LogoUrl");
+
+                    b.Property<int>("MaxApiCallsPerMonth")
+                        .HasColumnType("int")
+                        .HasColumnName("MaxApiCallsPerMonth");
+
+                    b.Property<int>("MaxStorage")
+                        .HasColumnType("int")
+                        .HasColumnName("MaxStorage");
+
+                    b.Property<int>("MaxUsers")
+                        .HasColumnType("int")
+                        .HasColumnName("MaxUsers");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("Phone");
+
+                    b.Property<string>("PrimaryColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("PrimaryColor");
+
+                    b.Property<string>("SecondaryColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("SecondaryColor");
+
+                    b.Property<int>("SessionTimeoutMinutes")
+                        .HasColumnType("int")
+                        .HasColumnName("SessionTimeoutMinutes");
+
+                    b.Property<bool>("SmtpEnableSsl")
+                        .HasColumnType("bit")
+                        .HasColumnName("SmtpEnableSsl");
+
+                    b.Property<string>("SmtpHost")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("SmtpHost");
+
+                    b.Property<string>("SmtpPassword")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("SmtpPassword");
+
+                    b.Property<int?>("SmtpPort")
+                        .HasColumnType("int")
+                        .HasColumnName("SmtpPort");
+
+                    b.Property<string>("SmtpUsername")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("SmtpUsername");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("TaxNumber");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TimeFormat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("TimeFormat");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("TimeZone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("UpdatedAt");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("UpdatedBy");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("Website");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantSettings_TenantId");
+
+                    b.HasIndex("TenantId1")
+                        .IsUnique()
+                        .HasFilter("[TenantId1] IS NOT NULL");
+
+                    b.ToTable("TenantSettings", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSetupChecklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AccountCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AdminUserCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("AdminUserCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AdminUserCreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("ApprovalWorkflowsConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ApprovalWorkflowsConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("AutomationRuleCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AutomationRulesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("AutomationRulesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("BackupConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("BackupConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BlockingIssues")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("BranchCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("BranchesCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("BranchesCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ChartOfAccountsSetup")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ChartOfAccountsSetupAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("CompanyInfoCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CompanyInfoCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompanyInfoCompletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CompletedItems")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ComplianceConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ComplianceConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("CurrencyConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CurrencyConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CustomersImported")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CustomersImportedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DashboardConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DashboardConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DataMigrationCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DataMigrationCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DepartmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DepartmentsCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DepartmentsCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DocumentationReviewed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DocumentationReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EmailIntegrationConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("EmailIntegrationConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EmailTemplatesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("EmailTemplatesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("FiscalYearConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("FiscalYearConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("GoLiveApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("GoLiveApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GoLiveApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IntegratedServices")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("LogoUploaded")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LogoUploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LogoUploadedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("ModulesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModulesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ModulesSelected")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModulesSelectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("NotificationRuleCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("NotificationRulesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("NotificationRulesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("OverallProgress")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("PasswordPolicySet")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PasswordPolicySetAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("PaymentGatewayConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PaymentGatewayConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PendingTasks")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("PricingRulesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PricingRulesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PrimaryCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<bool>("ProductCategoriesCreated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ProductCategoriesCreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductCategoryCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ProductsImported")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ProductsImportedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ReportTemplatesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReportTemplatesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequiredCompletedItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredItems")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RequiredProgress")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("RoleCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RolesConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RolesConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SecuritySettingsConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SecuritySettingsConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SelectedModulesList")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("SmsIntegrationConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SmsIntegrationConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("SupportContactsAdded")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SupportContactsAddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SystemTestingCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SystemTestingCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("TaxSettingsConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("TaxSettingsConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ThemeCustomized")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ThemeCustomizedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ThirdPartyIntegrationsConfigured")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ThirdPartyIntegrationsConfiguredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrainedUserCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("TrainingCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("TrainingCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("TwoFactorEnabledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("UserAcceptanceCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UserAcceptanceCompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("UsersInvited")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UsersInvitedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VendorCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("VendorsImported")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("VendorsImportedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkflowCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoLiveApproved");
+
+                    b.HasIndex("OverallProgress");
+
+                    b.HasIndex("RequiredProgress");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("TenantSetupChecklists", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSetupWizard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssistanceNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("AutoSaveEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<long?>("AverageStepTime")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("CanSkipCurrentStep")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CompletedSteps")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CompletedStepsData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("CurrentStep")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CurrentStepCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CurrentStepDescription")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("CurrentStepName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DefaultConfiguration")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("ErrorMessages")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("EstimatedCompletionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasErrors")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasWarnings")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("HelpRequestCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCurrentStepRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastActivityAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastAutoSaveAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastHelpRequestAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("NeedsAssistance")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PendingStepsData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<decimal>("ProgressPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("SavedConfiguration")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("SkippedStepsData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StartedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalSteps")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("TotalTimeSpent")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WarningMessages")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("WizardType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("WizardType");
+
+                    b.HasIndex("TenantId", "WizardType", "Status");
+
+                    b.ToTable("TenantSetupWizards", "Master");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantWebhook", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("Events")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Events");
+
+                    b.Property<int>("FailureCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("FailureCount");
+
+                    b.Property<string>("Headers")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Headers");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
+                    b.Property<string>("LastStatus")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("LastStatus");
+
+                    b.Property<DateTime?>("LastTriggeredAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastTriggeredAt");
+
+                    b.Property<int>("MaxRetries")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3)
+                        .HasColumnName("MaxRetries");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<string>("Secret")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Secret");
+
+                    b.Property<int>("SuccessCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("SuccessCount");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TimeoutSeconds")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(30)
+                        .HasColumnName("TimeoutSeconds");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("Url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantWebhooks_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("IX_TenantWebhooks_TenantId_IsActive");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantWebhooks_TenantId_Name");
+
+                    b.ToTable("TenantWebhooks", "Master");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
@@ -1154,6 +5464,24 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("RefreshTokens");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.OnboardingStep", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.TenantOnboarding", null)
+                        .WithMany("Steps")
+                        .HasForeignKey("OnboardingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.OnboardingTask", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.TenantOnboarding", null)
+                        .WithMany("Tasks")
+                        .HasForeignKey("OnboardingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Package", b =>
                 {
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "BasePrice", b1 =>
@@ -1410,6 +5738,188 @@ namespace Stocker.Persistence.Migrations.Master
                     b.Navigation("ContactPhone");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantActivityLog", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("ActivityLogs")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantApiKey", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("ApiKeys")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBackup", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("Backups")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantBilling", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne("BillingInfo")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantBilling", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "CCEmail", b1 =>
+                        {
+                            b1.Property<Guid>("TenantBillingId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("CCEmail");
+
+                            b1.HasKey("TenantBillingId");
+
+                            b1.ToTable("TenantBillings", "Master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantBillingId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.PhoneNumber", "ContactPhone", b1 =>
+                        {
+                            b1.Property<Guid>("TenantBillingId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("ContactPhone");
+
+                            b1.HasKey("TenantBillingId");
+
+                            b1.ToTable("TenantBillings", "Master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantBillingId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "InvoiceEmail", b1 =>
+                        {
+                            b1.Property<Guid>("TenantBillingId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("InvoiceEmail");
+
+                            b1.HasKey("TenantBillingId");
+
+                            b1.ToTable("TenantBillings", "Master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantBillingId");
+                        });
+
+                    b.Navigation("CCEmail");
+
+                    b.Navigation("ContactPhone");
+
+                    b.Navigation("InvoiceEmail")
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantCompliance", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne()
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantCompliance", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantContract", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany("Contracts")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithOne("ActiveContract")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantContract", "TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantCustomization", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne()
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantCustomization", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDocument", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.TenantDocument", "ParentDocument")
+                        .WithMany()
+                        .HasForeignKey("ParentDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Stocker.Domain.Master.Entities.TenantDocument", "PreviousVersion")
+                        .WithMany()
+                        .HasForeignKey("PreviousVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentDocument");
+
+                    b.Navigation("PreviousVersion");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantDomain", b =>
                 {
                     b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
@@ -1426,6 +5936,208 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantHealthCheck", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("HealthChecks")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantInitialData", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantIntegration", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("Integrations")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantLimits", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne("Limits")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantLimits", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantNotification", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantOnboarding", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne("Onboarding")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantOnboarding", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantRegistration", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Package", "SelectedPackage")
+                        .WithMany()
+                        .HasForeignKey("SelectedPackageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne("Registration")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantRegistration", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "ContactEmail", b1 =>
+                        {
+                            b1.Property<Guid>("TenantRegistrationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("ContactEmail");
+
+                            b1.HasKey("TenantRegistrationId");
+
+                            b1.ToTable("TenantRegistrations", "Master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantRegistrationId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.PhoneNumber", "ContactPhone", b1 =>
+                        {
+                            b1.Property<Guid>("TenantRegistrationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("ContactPhone");
+
+                            b1.HasKey("TenantRegistrationId");
+
+                            b1.ToTable("TenantRegistrations", "Master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantRegistrationId");
+                        });
+
+                    b.Navigation("ContactEmail")
+                        .IsRequired();
+
+                    b.Navigation("ContactPhone")
+                        .IsRequired();
+
+                    b.Navigation("SelectedPackage");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSecuritySettings", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne()
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantSecuritySettings", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithOne("SecuritySettings")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantSecuritySettings", "TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSettings", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne()
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantSettings", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithOne("Settings")
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantSettings", "TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSetupChecklist", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithOne()
+                        .HasForeignKey("Stocker.Domain.Master.Entities.TenantSetupChecklist", "TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantSetupWizard", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantWebhook", b =>
+                {
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Domain.Master.Entities.Tenant", null)
+                        .WithMany("Webhooks")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.UserLoginHistory", b =>
@@ -1482,11 +6194,46 @@ namespace Stocker.Persistence.Migrations.Master
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Tenant", b =>
                 {
+                    b.Navigation("ActiveContract");
+
+                    b.Navigation("ActivityLogs");
+
+                    b.Navigation("ApiKeys");
+
+                    b.Navigation("Backups");
+
+                    b.Navigation("BillingInfo");
+
+                    b.Navigation("Contracts");
+
                     b.Navigation("Domains");
 
                     b.Navigation("Features");
 
+                    b.Navigation("HealthChecks");
+
+                    b.Navigation("Integrations");
+
+                    b.Navigation("Limits");
+
+                    b.Navigation("Onboarding");
+
+                    b.Navigation("Registration");
+
+                    b.Navigation("SecuritySettings");
+
+                    b.Navigation("Settings");
+
                     b.Navigation("Subscriptions");
+
+                    b.Navigation("Webhooks");
+                });
+
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.TenantOnboarding", b =>
+                {
+                    b.Navigation("Steps");
+
+                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

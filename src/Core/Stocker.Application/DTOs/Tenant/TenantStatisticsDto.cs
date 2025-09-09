@@ -37,6 +37,14 @@ public class TenantStatisticsDto
         ? Math.Round((decimal)StorageUsedBytes / StorageLimitBytes * 100, 2) 
         : 0;
     
+    // Dashboard Metrics
+    public UserMetrics Users { get; set; } = new();
+    public StorageMetrics Storage { get; set; } = new();
+    public BillingMetrics Billing { get; set; } = new();
+    public ActivityMetrics Activity { get; set; } = new();
+    public ModuleMetrics Modules { get; set; } = new();
+    public HealthMetrics Health { get; set; } = new();
+    
     private static string FormatBytes(long bytes)
     {
         string[] sizes = { "B", "KB", "MB", "GB", "TB" };
@@ -51,4 +59,50 @@ public class TenantStatisticsDto
         
         return $"{size:0.##} {sizes[order]}";
     }
+}
+
+public class UserMetrics
+{
+    public int Total { get; set; }
+    public int Active { get; set; }
+    public int Inactive { get; set; }
+    public decimal Growth { get; set; }
+}
+
+public class StorageMetrics
+{
+    public long Used { get; set; }
+    public long Total { get; set; }
+    public decimal Percentage { get; set; }
+}
+
+public class BillingMetrics
+{
+    public string CurrentPlan { get; set; } = string.Empty;
+    public decimal MonthlyRevenue { get; set; }
+    public string NextBillingDate { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+}
+
+public class ActivityMetrics
+{
+    public int DailyActiveUsers { get; set; }
+    public int WeeklyActiveUsers { get; set; }
+    public int MonthlyActiveUsers { get; set; }
+    public string LastActivity { get; set; } = string.Empty;
+}
+
+public class ModuleMetrics
+{
+    public int Total { get; set; }
+    public int Active { get; set; }
+    public List<string> Names { get; set; } = new();
+}
+
+public class HealthMetrics
+{
+    public string Status { get; set; } = "healthy";
+    public decimal Uptime { get; set; }
+    public string? LastIncident { get; set; }
+    public int ApiLatency { get; set; }
 }

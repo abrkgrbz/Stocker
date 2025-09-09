@@ -63,7 +63,49 @@ public class GetTenantStatisticsQueryHandler : IRequestHandler<GetTenantStatisti
             
             // Storage Information (mock data)
             StorageUsedBytes = 536870912, // 512 MB
-            StorageLimitBytes = 5368709120 // 5 GB
+            StorageLimitBytes = 5368709120, // 5 GB
+            
+            // Dashboard Metrics
+            Users = new UserMetrics
+            {
+                Total = 15,
+                Active = 12,
+                Inactive = 3,
+                Growth = 15.5m
+            },
+            Storage = new StorageMetrics
+            {
+                Used = 2147483648, // 2 GB
+                Total = 5368709120, // 5 GB
+                Percentage = 40
+            },
+            Billing = new BillingMetrics
+            {
+                CurrentPlan = "Professional",
+                MonthlyRevenue = 2499.99m,
+                NextBillingDate = DateTime.UtcNow.AddDays(15).ToString("dd.MM.yyyy"),
+                PaymentStatus = "paid"
+            },
+            Activity = new ActivityMetrics
+            {
+                DailyActiveUsers = 8,
+                WeeklyActiveUsers = 12,
+                MonthlyActiveUsers = 15,
+                LastActivity = DateTime.UtcNow.AddMinutes(-5).ToString("HH:mm")
+            },
+            Modules = new ModuleMetrics
+            {
+                Total = 8,
+                Active = 6,
+                Names = new List<string> { "CRM", "Stok", "Muhasebe", "E-Fatura", "Raporlama", "İnsan Kaynakları" }
+            },
+            Health = new HealthMetrics
+            {
+                Status = "healthy",
+                Uptime = 99.97m,
+                LastIncident = null,
+                ApiLatency = 42
+            }
         };
 
         _logger.LogInformation("Retrieved statistics for tenant {TenantId}", request.TenantId);

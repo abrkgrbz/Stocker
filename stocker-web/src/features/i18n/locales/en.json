@@ -1,0 +1,216 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "submit": "Submit",
+    "continue": "Continue",
+    "retry": "Retry",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember Me",
+      "forgotPassword": "Forgot Password",
+      "loginButton": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up",
+      "or": "or",
+      "loginWith": "Sign in with {{provider}}",
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "accountLocked": "Your account is locked",
+        "tooManyAttempts": "Too many failed attempts"
+      }
+    },
+    "register": {
+      "title": "Sign Up",
+      "subtitle": "Create a new account",
+      "steps": {
+        "company": "Company Information",
+        "contact": "Contact Information",
+        "security": "Security",
+        "package": "Package Selection"
+      },
+      "companyName": "Company Name",
+      "companyCode": "Company Code",
+      "taxNumber": "Tax Number",
+      "industry": "Industry",
+      "employeeCount": "Employee Count",
+      "contactName": "Contact Name",
+      "contactEmail": "Email",
+      "contactPhone": "Phone",
+      "contactTitle": "Title",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "termsAccept": "I accept the terms of service",
+      "privacyAccept": "I accept the privacy policy",
+      "marketingAccept": "I want to receive marketing emails",
+      "referralCode": "Referral Code (Optional)",
+      "selectPackage": "Select Package",
+      "createAccount": "Create Account",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign In",
+      "validation": {
+        "required": "This field is required",
+        "invalidEmail": "Enter a valid email address",
+        "invalidPhone": "Enter a valid phone number",
+        "passwordMismatch": "Passwords do not match",
+        "passwordWeak": "Password is too weak",
+        "companyCodeTaken": "This company code is already taken",
+        "emailTaken": "This email is already registered",
+        "invalidReferralCode": "Invalid referral code"
+      }
+    },
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "subtitle": "Enter security code",
+      "enterCode": "Enter 6-digit code",
+      "verifyButton": "Verify",
+      "resendCode": "Resend Code",
+      "useBackupCode": "Use backup code",
+      "methods": {
+        "authenticator": "Authenticator App",
+        "sms": "SMS",
+        "email": "Email"
+      }
+    },
+    "emailVerification": {
+      "title": "Email Verification",
+      "subtitle": "Verify your email address",
+      "checkEmail": "Check your email",
+      "enterCode": "Enter verification code",
+      "verifyButton": "Verify",
+      "resendEmail": "Resend Email",
+      "didntReceive": "Didn't receive email?",
+      "checkSpam": "Check spam folder",
+      "success": "Your email has been verified!"
+    },
+    "passwordReset": {
+      "title": "Password Reset",
+      "subtitle": "Set your new password",
+      "email": "Your email address",
+      "sendResetLink": "Send Reset Link",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "resetButton": "Reset Password",
+      "backToLogin": "Back to login",
+      "success": "Your password has been reset successfully"
+    }
+  },
+  "packages": {
+    "title": "Package Selection",
+    "subtitle": "Choose the right package for you",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "discount": "{{percent}}% Discount",
+    "popular": "Popular",
+    "recommended": "Recommended",
+    "features": "Features",
+    "users": "{{count}} Users",
+    "storage": "{{size}} GB Storage",
+    "support": "{{type}} Support",
+    "selectButton": "Select Package",
+    "currentPlan": "Your Current Plan",
+    "upgradePlan": "Upgrade Plan",
+    "downgradePlan": "Downgrade Plan",
+    "customPlan": "Custom Plan",
+    "contactSales": "Contact Sales Team",
+    "trialDays": "{{days}} days free trial",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "billed": "Billed {{period}}"
+  },
+  "features": {
+    "captcha": {
+      "verify": "Verify you're not a robot",
+      "expired": "CAPTCHA expired",
+      "error": "CAPTCHA verification failed"
+    },
+    "referral": {
+      "title": "Referral Program",
+      "subtitle": "Invite friends, earn rewards",
+      "yourCode": "Your Referral Code",
+      "shareLink": "Invite Link",
+      "inviteFriends": "Invite Friends",
+      "earnRewards": "Earn Rewards",
+      "statistics": "Statistics",
+      "totalReferrals": "Total Referrals",
+      "successfulReferrals": "Successful Referrals",
+      "pendingReferrals": "Pending Referrals",
+      "totalEarnings": "Total Earnings",
+      "nextReward": "Next Reward",
+      "copyCode": "Copy Code",
+      "share": "Share",
+      "applied": "Referral code applied"
+    },
+    "autoSave": {
+      "saving": "Saving...",
+      "saved": "Saved",
+      "restored": "Form data restored",
+      "clear": "Clear saved data",
+      "restorePrompt": "Would you like to continue where you left off?"
+    },
+    "progress": {
+      "formProgress": "Form Progress",
+      "completed": "Completed",
+      "remaining": "Remaining",
+      "step": "Step {{current}} / {{total}}",
+      "fieldsCompleted": "{{count}} fields completed",
+      "fieldsRemaining": "{{count}} fields remaining"
+    },
+    "liveChat": {
+      "title": "Live Support",
+      "online": "Online",
+      "offline": "Offline",
+      "connecting": "Connecting...",
+      "typeMessage": "Type your message...",
+      "send": "Send",
+      "endChat": "End Chat",
+      "rateExperience": "Rate your experience",
+      "newMessage": "New message"
+    }
+  },
+  "errors": {
+    "general": "An error occurred",
+    "network": "Network error",
+    "serverError": "Server error",
+    "notFound": "Page not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access denied",
+    "validation": "Validation error",
+    "timeout": "Request timeout",
+    "tooManyRequests": "Too many requests",
+    "maintenance": "Maintenance mode"
+  },
+  "messages": {
+    "welcome": "Welcome",
+    "goodbye": "Goodbye",
+    "thankYou": "Thank you",
+    "pleaseWait": "Please wait",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "retry": "Please try again",
+    "contactSupport": "Contact support"
+  }
+}

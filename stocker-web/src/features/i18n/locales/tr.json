@@ -1,0 +1,216 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "actions": "İşlemler",
+    "yes": "Evet",
+    "no": "Hayır",
+    "ok": "Tamam",
+    "back": "Geri",
+    "next": "İleri",
+    "finish": "Bitir",
+    "submit": "Gönder",
+    "continue": "Devam",
+    "retry": "Tekrar Dene",
+    "error": "Hata",
+    "success": "Başarılı",
+    "warning": "Uyarı",
+    "info": "Bilgi"
+  },
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "subtitle": "Hesabınıza giriş yapın",
+      "email": "E-posta",
+      "password": "Şifre",
+      "rememberMe": "Beni Hatırla",
+      "forgotPassword": "Şifremi Unuttum",
+      "loginButton": "Giriş Yap",
+      "noAccount": "Hesabınız yok mu?",
+      "signUp": "Kayıt Ol",
+      "or": "veya",
+      "loginWith": "{{provider}} ile giriş yap",
+      "errors": {
+        "invalidCredentials": "Geçersiz e-posta veya şifre",
+        "accountLocked": "Hesabınız kilitlendi",
+        "tooManyAttempts": "Çok fazla başarısız deneme"
+      }
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "subtitle": "Yeni hesap oluşturun",
+      "steps": {
+        "company": "Şirket Bilgileri",
+        "contact": "İletişim Bilgileri",
+        "security": "Güvenlik",
+        "package": "Paket Seçimi"
+      },
+      "companyName": "Şirket Adı",
+      "companyCode": "Şirket Kodu",
+      "taxNumber": "Vergi Numarası",
+      "industry": "Sektör",
+      "employeeCount": "Çalışan Sayısı",
+      "contactName": "Yetkili Adı Soyadı",
+      "contactEmail": "E-posta",
+      "contactPhone": "Telefon",
+      "contactTitle": "Ünvan",
+      "password": "Şifre",
+      "confirmPassword": "Şifre Tekrar",
+      "termsAccept": "Kullanım şartlarını kabul ediyorum",
+      "privacyAccept": "Gizlilik politikasını kabul ediyorum",
+      "marketingAccept": "Pazarlama e-postaları almak istiyorum",
+      "referralCode": "Referans Kodu (Opsiyonel)",
+      "selectPackage": "Paket Seçin",
+      "createAccount": "Hesap Oluştur",
+      "alreadyHaveAccount": "Zaten hesabınız var mı?",
+      "signIn": "Giriş Yap",
+      "validation": {
+        "required": "Bu alan zorunludur",
+        "invalidEmail": "Geçerli bir e-posta adresi girin",
+        "invalidPhone": "Geçerli bir telefon numarası girin",
+        "passwordMismatch": "Şifreler eşleşmiyor",
+        "passwordWeak": "Şifre çok zayıf",
+        "companyCodeTaken": "Bu şirket kodu kullanımda",
+        "emailTaken": "Bu e-posta adresi kayıtlı",
+        "invalidReferralCode": "Geçersiz referans kodu"
+      }
+    },
+    "twoFactor": {
+      "title": "İki Faktörlü Doğrulama",
+      "subtitle": "Güvenlik kodunu girin",
+      "enterCode": "6 haneli kodu girin",
+      "verifyButton": "Doğrula",
+      "resendCode": "Kodu Tekrar Gönder",
+      "useBackupCode": "Yedek kod kullan",
+      "methods": {
+        "authenticator": "Authenticator Uygulaması",
+        "sms": "SMS",
+        "email": "E-posta"
+      }
+    },
+    "emailVerification": {
+      "title": "E-posta Doğrulama",
+      "subtitle": "E-posta adresinizi doğrulayın",
+      "checkEmail": "E-postanızı kontrol edin",
+      "enterCode": "Doğrulama kodunu girin",
+      "verifyButton": "Doğrula",
+      "resendEmail": "E-postayı Tekrar Gönder",
+      "didntReceive": "E-posta gelmedi mi?",
+      "checkSpam": "Spam klasörünü kontrol edin",
+      "success": "E-posta adresiniz doğrulandı!"
+    },
+    "passwordReset": {
+      "title": "Şifre Sıfırlama",
+      "subtitle": "Yeni şifrenizi belirleyin",
+      "email": "E-posta adresiniz",
+      "sendResetLink": "Sıfırlama Linki Gönder",
+      "newPassword": "Yeni Şifre",
+      "confirmNewPassword": "Yeni Şifre Tekrar",
+      "resetButton": "Şifreyi Sıfırla",
+      "backToLogin": "Giriş sayfasına dön",
+      "success": "Şifreniz başarıyla sıfırlandı"
+    }
+  },
+  "packages": {
+    "title": "Paket Seçimi",
+    "subtitle": "Size uygun paketi seçin",
+    "monthly": "Aylık",
+    "yearly": "Yıllık",
+    "discount": "{{percent}}% İndirim",
+    "popular": "Popüler",
+    "recommended": "Önerilen",
+    "features": "Özellikler",
+    "users": "{{count}} Kullanıcı",
+    "storage": "{{size}} GB Depolama",
+    "support": "{{type}} Destek",
+    "selectButton": "Paketi Seç",
+    "currentPlan": "Mevcut Planınız",
+    "upgradePlan": "Planı Yükselt",
+    "downgradePlan": "Planı Düşür",
+    "customPlan": "Özel Plan",
+    "contactSales": "Satış Ekibiyle İletişime Geçin",
+    "trialDays": "{{days}} gün ücretsiz deneme",
+    "perMonth": "/ay",
+    "perYear": "/yıl",
+    "billed": "{{period}} faturalandırma"
+  },
+  "features": {
+    "captcha": {
+      "verify": "Robot olmadığınızı doğrulayın",
+      "expired": "CAPTCHA süresi doldu",
+      "error": "CAPTCHA doğrulaması başarısız"
+    },
+    "referral": {
+      "title": "Referans Programı",
+      "subtitle": "Arkadaşlarınızı davet edin, kazanın",
+      "yourCode": "Referans Kodunuz",
+      "shareLink": "Davet Linki",
+      "inviteFriends": "Arkadaşlarını Davet Et",
+      "earnRewards": "Ödüller Kazan",
+      "statistics": "İstatistikler",
+      "totalReferrals": "Toplam Davet",
+      "successfulReferrals": "Başarılı Davet",
+      "pendingReferrals": "Bekleyen Davet",
+      "totalEarnings": "Toplam Kazanç",
+      "nextReward": "Sonraki Ödül",
+      "copyCode": "Kodu Kopyala",
+      "share": "Paylaş",
+      "applied": "Referans kodu uygulandı"
+    },
+    "autoSave": {
+      "saving": "Kaydediliyor...",
+      "saved": "Kaydedildi",
+      "restored": "Form verileri geri yüklendi",
+      "clear": "Kaydedilen verileri temizle",
+      "restorePrompt": "Kaldığınız yerden devam etmek ister misiniz?"
+    },
+    "progress": {
+      "formProgress": "Form İlerlemesi",
+      "completed": "Tamamlandı",
+      "remaining": "Kalan",
+      "step": "Adım {{current}} / {{total}}",
+      "fieldsCompleted": "{{count}} alan tamamlandı",
+      "fieldsRemaining": "{{count}} alan kaldı"
+    },
+    "liveChat": {
+      "title": "Canlı Destek",
+      "online": "Çevrimiçi",
+      "offline": "Çevrimdışı",
+      "connecting": "Bağlanıyor...",
+      "typeMessage": "Mesajınızı yazın...",
+      "send": "Gönder",
+      "endChat": "Sohbeti Bitir",
+      "rateExperience": "Deneyiminizi değerlendirin",
+      "newMessage": "Yeni mesaj"
+    }
+  },
+  "errors": {
+    "general": "Bir hata oluştu",
+    "network": "Ağ hatası",
+    "serverError": "Sunucu hatası",
+    "notFound": "Sayfa bulunamadı",
+    "unauthorized": "Yetkisiz erişim",
+    "forbidden": "Erişim engellendi",
+    "validation": "Doğrulama hatası",
+    "timeout": "İstek zaman aşımına uğradı",
+    "tooManyRequests": "Çok fazla istek",
+    "maintenance": "Bakım modu"
+  },
+  "messages": {
+    "welcome": "Hoş geldiniz",
+    "goodbye": "Güle güle",
+    "thankYou": "Teşekkür ederiz",
+    "pleaseWait": "Lütfen bekleyin",
+    "processing": "İşleniyor",
+    "completed": "Tamamlandı",
+    "failed": "Başarısız",
+    "retry": "Tekrar deneyin",
+    "contactSupport": "Destek ile iletişime geçin"
+  }
+}

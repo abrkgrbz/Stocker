@@ -1,0 +1,118 @@
+/* Form Progress Styles */
+.form-progress-container {
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.form-progress-compact {
+  margin: 16px 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-details {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-stat {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.progress-complete {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(82, 196, 26, 0.2);
+}
+
+/* Mini Progress */
+.mini-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.mini-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Circular Progress */
+.circular-progress {
+  position: relative;
+  display: inline-block;
+}
+
+.circular-progress svg {
+  transform: rotate(-90deg);
+}
+
+.circular-progress-bg {
+  fill: none;
+  stroke: #f0f0f0;
+}
+
+.circular-progress-fill {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.circular-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.circular-progress-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.circular-progress-label {
+  font-size: 14px;
+  color: #718096;
+  margin-top: -4px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .progress-details {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .circular-progress-value {
+    font-size: 24px;
+  }
+}

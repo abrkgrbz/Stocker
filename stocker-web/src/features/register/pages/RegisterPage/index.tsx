@@ -48,8 +48,10 @@ import { ModuleSelection } from './ModuleSelection';
 import { RegisterWizard } from './RegisterWizard';
 import { NeonWizard } from './NeonWizard';
 import { ModernWizard } from './ModernWizard';
+import { PremiumPackageCard } from './PremiumPackageCard';
 import './style.css';
 import './module-selection.css';
+import './premium-package-selection.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
@@ -432,97 +434,42 @@ export const RegisterPage: React.FC = () => {
   );
 
   const renderPackageSelection = () => (
-    <div className="packages-section">
-      <div className="billing-toggle">
-        <Space size="large">
-          <Text strong>Faturalandırma Dönemi:</Text>
-          <Button.Group>
-            <Button 
-              type={billingPeriod === 'Monthly' ? 'primary' : 'default'}
-              onClick={() => setBillingPeriod('Monthly')}
-            >
-              Aylık
-            </Button>
-            <Button 
-              type={billingPeriod === 'Yearly' ? 'primary' : 'default'}
-              onClick={() => setBillingPeriod('Yearly')}
-            >
-              Yıllık <Tag color="green">20% İndirim</Tag>
-            </Button>
-          </Button.Group>
-        </Space>
+    <div className="package-selection-wrapper">
+      <div className="floating-shapes">
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+      </div>
+      
+      <div className="billing-toggle-container">
+        <div className="billing-toggle">
+          <button 
+            className={`billing-toggle-btn ${billingPeriod === 'Monthly' ? 'active' : ''}`}
+            onClick={() => setBillingPeriod('Monthly')}
+          >
+            Aylık
+          </button>
+          <button 
+            className={`billing-toggle-btn ${billingPeriod === 'Yearly' ? 'active' : ''}`}
+            onClick={() => setBillingPeriod('Yearly')}
+          >
+            Yıllık 
+            <span className="discount-badge">💸 %20 İndirim</span>
+          </button>
+        </div>
       </div>
 
-      <Row gutter={[24, 24]} style={{ marginTop: 32 }}>
+      <div className="packages-grid">
         {packages.map((pkg) => (
-          <Col xs={24} md={8} key={pkg.id}>
-            <Badge.Ribbon 
-              text="Popüler" 
-              color="red"
-              style={{ display: pkg.isPopular ? 'block' : 'none' }}
-            >
-              <Card 
-                hoverable
-                className={`package-card ${selectedPackage?.id === pkg.id ? 'selected' : ''} ${pkg.isPopular ? 'popular' : ''}`}
-                onClick={() => handlePackageSelect(pkg)}
-              >
-                <div className="package-header">
-                  <Title level={3}>{pkg.name}</Title>
-                  <Text type="secondary">{pkg.description}</Text>
-                </div>
-
-                <div className="package-pricing">
-                  <div className="price">
-                    <span className="currency">{pkg.currency}</span>
-                    <span className="amount">
-                      {billingPeriod === 'Monthly' 
-                        ? pkg.price 
-                        : Math.floor(pkg.price * 12 * 0.8 / 12)}
-                    </span>
-                    <span className="period">/ay</span>
-                  </div>
-                  {billingPeriod === 'Yearly' && (
-                    <Text type="secondary" delete>
-                      {pkg.currency}{pkg.price}/ay
-                    </Text>
-                  )}
-                  {pkg.discount && (
-                    <Tag color="red">%{pkg.discount} İndirim</Tag>
-                  )}
-                </div>
-
-                <Divider />
-
-                <List
-                  size="small"
-                  dataSource={pkg.features}
-                  renderItem={(feature) => (
-                    <List.Item style={{ border: 'none', padding: '8px 0' }}>
-                      <Space>
-                        <CheckOutlined style={{ color: '#52c41a' }} />
-                        <Text>{feature}</Text>
-                      </Space>
-                    </List.Item>
-                  )}
-                />
-
-                <Button 
-                  type={pkg.isPopular ? 'primary' : 'default'}
-                  size="large"
-                  block
-                  style={{ marginTop: 24 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePackageSelect(pkg);
-                  }}
-                >
-                  {pkg.isPopular ? 'En Çok Tercih Edilen' : 'Paketi Seç'}
-                </Button>
-              </Card>
-            </Badge.Ribbon>
-          </Col>
+          <PremiumPackageCard
+            key={pkg.id}
+            package={pkg}
+            isSelected={selectedPackage?.id === pkg.id}
+            onSelect={handlePackageSelect}
+            billingPeriod={billingPeriod}
+          />
         ))}
-      </Row>
+      </div>
 
       <div className="package-comparison">
         <Card style={{ marginTop: 48 }}>

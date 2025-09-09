@@ -105,6 +105,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.TaxAmount, opt => opt.MapFrom(src => src.TaxAmount != null ? src.TaxAmount.Amount : (decimal?)null));
 
         // TenantSettings Mappings
-        CreateMap<TenantSettings, SettingDto>();
+        CreateMap<Domain.Tenant.Entities.TenantSettings, SettingDto>();
     }
 }

@@ -148,6 +148,8 @@ public static class ServiceCollectionExtensions
             return Task.Run(async () => await factory.CreateDbContextAsync(tenantId.Value)).GetAwaiter().GetResult();
         });
 
+        // Add Repositories
+        
         // Add Migration Services
         services.AddScoped<IMigrationService, MigrationService>(); 
         // Disabled automatic migration - handled manually in Program.cs

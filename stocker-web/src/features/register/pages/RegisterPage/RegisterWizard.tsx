@@ -16,7 +16,8 @@ import {
   Alert,
   Tooltip,
   Progress,
-  Spin
+  Spin,
+  Checkbox
 } from 'antd';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -44,6 +45,8 @@ import {
 } from '@ant-design/icons';
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
+import { useRealTimeValidation } from '../../hooks/useRealTimeValidation';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './register-wizard.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -61,6 +64,22 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = React.useRef<ReCAPTCHA>(null);
+  
+  // Real-time validation hook
+  const {
+    isConnected,
+    validationResults,
+    loading: validationLoading,
+    validateEmail,
+    checkPasswordStrength,
+    checkDomain,
+    validatePhone,
+    checkCompanyName,
+    validateIdentity,
+    clearValidation
+  } = useRealTimeValidation();
 
   const steps = [
     {
@@ -92,6 +111,13 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
   const next = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Check captcha on last step
+      if (currentStep === steps.length - 1 && !captchaToken) {
+        message.error('Lütfen güvenlik doğrulamasını tamamlayın');
+        return;
+      }
+      
       const newFormData = { ...formData, ...values };
       setFormData(newFormData);
       
@@ -116,27 +142,60 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
       const lastName = lastNameParts.join(' ') || firstName;
       
       const registrationData = {
+        // Company Information
         companyName: allValues.companyName,
         companyCode: allValues.companyCode,
-        identityType: allValues.identityType,
-        identityNumber: allValues.identityNumber,
-        sector: allValues.sector,
-        employeeCount: allValues.employeeCount,
-        contactName: allValues.contactName,
+        taxNumber: allValues.identityType === 'vergi' ? allValues.identityNumber : null,
+        taxOffice: allValues.taxOffice,
+        tradeRegistryNumber: allValues.tradeRegistryNumber || null,
+        mersisNumber: allValues.mersisNumber || null,
+        
+        // Contact Information
         contactEmail: allValues.email,
         contactPhone: allValues.phone,
-        contactTitle: allValues.title,
-        email: allValues.email,
-        username: allValues.email?.split('@')[0] || allValues.companyCode,
-        firstName: firstName,
-        lastName: lastName,
-        password: allValues.password,
-        domain: allValues.companyCode,
-        packageId: selectedPackage?.id,
-        billingPeriod: 'Monthly'
+        contactFax: allValues.fax || null,
+        website: allValues.website || null,
+        
+        // Address
+        addressLine1: allValues.address || null,
+        addressLine2: allValues.addressLine2 || null,
+        city: allValues.city || null,
+        state: allValues.state || null,
+        country: allValues.country || 'Türkiye',
+        postalCode: allValues.postalCode || null,
+        
+        // Business Information
+        industryType: allValues.sector,
+        businessType: allValues.identityType === 'vergi' ? 'Kurumsal' : 'Şahıs',
+        employeeCountRange: allValues.employeeCount,
+        annualRevenue: allValues.annualRevenue || null,
+        currency: 'TRY',
+        
+        // Admin User Information
+        adminEmail: allValues.email,
+        adminUsername: allValues.email?.split('@')[0] || allValues.companyCode,
+        adminFirstName: firstName,
+        adminLastName: lastName,
+        adminPhone: allValues.phone,
+        adminTitle: allValues.title || null,
+        adminPassword: allValues.password,
+        
+        // Package & Subscription
+        packageId: selectedPackage?.id || null,
+        billingCycle: 'Monthly',
+        
+        // Preferences
+        preferredLanguage: 'tr-TR',
+        preferredTimeZone: 'Turkey Standard Time',
+        acceptTerms: true,
+        acceptPrivacyPolicy: true,
+        allowMarketing: allValues.allowMarketing || false,
+        
+        // Captcha
+        captchaToken: captchaToken
       };
 
-      const response = await apiClient.post('/api/public/register', registrationData);
+      const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success) {
         // Başarılı kayıt alert'i - sweetAlert utility'sini kullan
@@ -207,11 +266,27 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     { required: true, message: 'Şirket kodu zorunludur' },
                     { pattern: /^[a-z0-9-]+$/, message: 'Küçük harf, rakam ve tire kullanın' }
                   ]}
+                  validateStatus={
+                    validationResults.domain?.isAvailable === false ? 'error' : 
+                    validationResults.domain?.isAvailable === true ? 'success' : ''
+                  }
+                  help={
+                    validationLoading.domain ? 'Kontrol ediliyor...' :
+                    validationResults.domain?.message
+                  }
+                  hasFeedback={!!validationResults.domain}
                 >
                   <Input 
                     size="large"
                     placeholder="abc-teknoloji" 
                     addonAfter=".stocker.app"
+                    onChange={(e) => {
+                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      form.setFieldValue('companyCode', value);
+                      if (value.length >= 3) {
+                        checkDomain(value);
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -251,12 +326,28 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     { required: true, message: 'Bu alan zorunludur' },
                     { pattern: /^\d{10,11}$/, message: '10-11 haneli olmalı' }
                   ]}
+                  validateStatus={
+                    validationResults.identity?.isValid === false ? 'error' : 
+                    validationResults.identity?.isValid === true ? 'success' : ''
+                  }
+                  help={
+                    validationLoading.identity ? 'Doğrulanıyor...' :
+                    validationResults.identity?.message
+                  }
+                  hasFeedback={!!validationResults.identity}
                 >
                   <Input 
                     size="large"
                     prefix={<IdcardOutlined className="field-icon" />}
                     placeholder="12345678901" 
                     maxLength={11}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      form.setFieldValue('identityNumber', value);
+                      if (value.length === 10 || value.length === 11) {
+                        validateIdentity(value);
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -376,6 +467,134 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                 </Form.Item>
               </Col>
             </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="taxOffice"
+                  label="Vergi Dairesi"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    prefix={<BankOutlined className="field-icon" />}
+                    placeholder="Merkez Vergi Dairesi" 
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="tradeRegistryNumber"
+                  label="Ticaret Sicil No"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    placeholder="123456" 
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="mersisNumber"
+                  label="MERSİS No"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    placeholder="0123456789012345" 
+                    maxLength={16}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="annualRevenue"
+                  label="Yıllık Ciro (Opsiyonel)"
+                  className="wizard-form-item"
+                >
+                  <Select size="large" placeholder="Yıllık ciro aralığı">
+                    <Select.Option value="0-1M">0 - 1 Milyon TL</Select.Option>
+                    <Select.Option value="1M-5M">1 - 5 Milyon TL</Select.Option>
+                    <Select.Option value="5M-10M">5 - 10 Milyon TL</Select.Option>
+                    <Select.Option value="10M-50M">10 - 50 Milyon TL</Select.Option>
+                    <Select.Option value="50M+">50+ Milyon TL</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Divider orientation="left">Adres Bilgileri</Divider>
+            
+            <Row gutter={[24, 0]}>
+              <Col xs={24}>
+                <Form.Item
+                  name="address"
+                  label="Adres"
+                  className="wizard-form-item"
+                >
+                  <Input.TextArea 
+                    size="large"
+                    rows={2}
+                    placeholder="Cadde, sokak, bina no" 
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="city"
+                  label="İl"
+                  className="wizard-form-item"
+                >
+                  <Select 
+                    size="large" 
+                    showSearch
+                    placeholder="İl seçin"
+                  >
+                    <Select.Option value="İstanbul">İstanbul</Select.Option>
+                    <Select.Option value="Ankara">Ankara</Select.Option>
+                    <Select.Option value="İzmir">İzmir</Select.Option>
+                    <Select.Option value="Bursa">Bursa</Select.Option>
+                    <Select.Option value="Antalya">Antalya</Select.Option>
+                    <Select.Option value="Adana">Adana</Select.Option>
+                    <Select.Option value="Kocaeli">Kocaeli</Select.Option>
+                    <Select.Option value="Konya">Konya</Select.Option>
+                    <Select.Option value="Gaziantep">Gaziantep</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="state"
+                  label="İlçe"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    placeholder="İlçe adı" 
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="postalCode"
+                  label="Posta Kodu"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    placeholder="34100" 
+                    maxLength={5}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
           </div>
         );
 
@@ -479,11 +698,26 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     { required: true, message: 'E-posta zorunludur' },
                     { type: 'email', message: 'Geçerli bir e-posta girin' }
                   ]}
+                  validateStatus={
+                    validationResults.email?.isValid === false ? 'error' : 
+                    validationResults.email?.isValid === true ? 'success' : ''
+                  }
+                  help={
+                    validationLoading.email ? 'Kontrol ediliyor...' :
+                    validationResults.email?.message
+                  }
+                  hasFeedback={!!validationResults.email}
                 >
                   <Input 
                     size="large"
                     prefix={<MailOutlined className="field-icon" />}
                     placeholder="ahmet@sirket.com" 
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.includes('@') && value.includes('.')) {
+                        validateEmail(value);
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -496,12 +730,61 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     { required: true, message: 'Telefon zorunludur' },
                     { pattern: /^[0-9]{10,11}$/, message: 'Geçerli telefon girin' }
                   ]}
+                  validateStatus={
+                    validationResults.phone?.isValid === false ? 'error' : 
+                    validationResults.phone?.isValid === true ? 'success' : ''
+                  }
+                  help={
+                    validationLoading.phone ? 'Doğrulanıyor...' :
+                    validationResults.phone?.details?.formattedNumber || validationResults.phone?.message
+                  }
+                  hasFeedback={!!validationResults.phone}
                 >
                   <Input 
                     size="large"
                     prefix={<PhoneOutlined className="field-icon" />}
                     placeholder="5551234567" 
                     maxLength={11}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      form.setFieldValue('phone', value);
+                      if (value.length >= 10) {
+                        validatePhone(value);
+                      }
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="fax"
+                  label="Faks (Opsiyonel)"
+                  className="wizard-form-item"
+                >
+                  <Input 
+                    size="large"
+                    prefix={<PhoneOutlined className="field-icon" />}
+                    placeholder="2121234567" 
+                    maxLength={11}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="website"
+                  label="Web Sitesi (Opsiyonel)"
+                  className="wizard-form-item"
+                  rules={[
+                    { type: 'url', message: 'Geçerli bir URL girin' }
+                  ]}
+                >
+                  <Input 
+                    size="large"
+                    prefix={<GlobalOutlined className="field-icon" />}
+                    placeholder="https://www.sirket.com" 
                   />
                 </Form.Item>
               </Col>
@@ -545,7 +828,13 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     size="large"
                     prefix={<LockOutlined className="field-icon" />}
                     placeholder="Güvenli şifreniz"
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPassword(value);
+                      if (value.length > 0) {
+                        checkPasswordStrength(value);
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -581,6 +870,21 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                 <div className="password-requirements-title">
                   <SafetyOutlined /> Şifre Gereksinimleri
                 </div>
+                
+                {/* Real-time password strength */}
+                {validationResults.password && (
+                  <div className="password-strength-meter">
+                    <Progress 
+                      percent={validationResults.password.score * 20} 
+                      strokeColor={validationResults.password.color}
+                      showInfo={false}
+                    />
+                    <span style={{ color: validationResults.password.color }}>
+                      Güç: {validationResults.password.level}
+                    </span>
+                  </div>
+                )}
+                
                 {passwordRequirements.map(req => (
                   <div 
                     key={req.key} 
@@ -594,8 +898,123 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     <span>{req.label}</span>
                   </div>
                 ))}
+                
+                {/* Password suggestions */}
+                {validationResults.password?.suggestions?.length > 0 && (
+                  <Alert
+                    message="Öneriler"
+                    description={
+                      <ul style={{ margin: 0, paddingLeft: 20 }}>
+                        {validationResults.password.suggestions.map((suggestion: string, index: number) => (
+                          <li key={index}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    }
+                    type="info"
+                    showIcon
+                    style={{ marginTop: 10 }}
+                  />
+                )}
               </div>
             )}
+
+            <Divider orientation="left">Sözleşmeler ve İzinler</Divider>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24}>
+                <Form.Item
+                  name="acceptTerms"
+                  valuePropName="checked"
+                  className="wizard-form-item"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value ? Promise.resolve() : Promise.reject(new Error('Kullanım koşullarını kabul etmelisiniz')),
+                    },
+                  ]}
+                >
+                  <Checkbox>
+                    <span>
+                      <a href="/terms" target="_blank" rel="noopener noreferrer">Kullanım Koşulları</a>'nı okudum ve kabul ediyorum
+                    </span>
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24}>
+                <Form.Item
+                  name="acceptPrivacy"
+                  valuePropName="checked"
+                  className="wizard-form-item"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value ? Promise.resolve() : Promise.reject(new Error('Gizlilik politikasını kabul etmelisiniz')),
+                    },
+                  ]}
+                >
+                  <Checkbox>
+                    <span>
+                      <a href="/privacy" target="_blank" rel="noopener noreferrer">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum
+                    </span>
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24}>
+                <Form.Item
+                  name="allowMarketing"
+                  valuePropName="checked"
+                  className="wizard-form-item"
+                  initialValue={false}
+                >
+                  <Checkbox>
+                    <span>Stocker'dan pazarlama e-postaları almak istiyorum (Opsiyonel)</span>
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Divider orientation="left">Güvenlik Doğrulaması</Divider>
+
+            <Row gutter={[24, 0]}>
+              <Col xs={24}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"} // Test key
+                    onChange={(token) => {
+                      setCaptchaToken(token);
+                      if (token) {
+                        message.success('Güvenlik doğrulaması başarılı');
+                      }
+                    }}
+                    onExpired={() => {
+                      setCaptchaToken(null);
+                      message.warning('Güvenlik doğrulaması süresi doldu, lütfen tekrar deneyin');
+                    }}
+                    onErrored={() => {
+                      setCaptchaToken(null);
+                      message.error('Güvenlik doğrulaması başarısız');
+                    }}
+                    theme="light"
+                    size="normal"
+                  />
+                </div>
+                {!captchaToken && (
+                  <Alert
+                    message="Robot olmadığınızı doğrulayın"
+                    description="Kayıt işlemini tamamlamak için yukarıdaki güvenlik doğrulamasını tamamlamanız gerekmektedir."
+                    type="warning"
+                    showIcon
+                  />
+                )}
+              </Col>
+            </Row>
 
             {selectedPackage && (
               <div className="wizard-summary">

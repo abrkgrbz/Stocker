@@ -1,0 +1,294 @@
+import React, { useState } from 'react';
+import {
+  Modal,
+  Input,
+  Button,
+  Space,
+  Typography,
+  Alert,
+  Divider,
+  List,
+  Avatar,
+  Card,
+  Row,
+  Col,
+  Tag,
+  Tooltip,
+  Steps
+} from 'antd';
+import {
+  LoginOutlined,
+  ShopOutlined,
+  SearchOutlined,
+  GlobalOutlined,
+  CheckCircleOutlined,
+  ArrowRightOutlined,
+  TeamOutlined,
+  SafetyOutlined,
+  RocketOutlined,
+  CrownOutlined,
+  StarFilled,
+  ClockCircleOutlined,
+  QuestionCircleOutlined
+} from '@ant-design/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { redirectToTenantDomain } from '../../../../utils/tenant';
+import './style.css';
+
+const { Title, Text, Paragraph } = Typography;
+
+interface TenantLoginModalProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+// Mock popular tenants for demonstration
+const popularTenants = [
+  { 
+    slug: 'demo', 
+    name: 'Demo Company', 
+    users: 150,
+    industry: 'Teknoloji',
+    tag: 'Deneme',
+    tagColor: 'green',
+    description: 'Ücretsiz deneme hesabı'
+  },
+  { 
+    slug: 'acme', 
+    name: 'ACME Corporation', 
+    users: 320,
+    industry: 'E-ticaret',
+    tag: 'Premium',
+    tagColor: 'gold',
+    description: 'Kurumsal çözüm'
+  },
+  { 
+    slug: 'techstart', 
+    name: 'TechStart Inc.', 
+    users: 89,
+    industry: 'Startup',
+    tag: 'Büyüyen',
+    tagColor: 'blue',
+    description: 'Hızlı büyüyen işletme'
+  },
+];
+
+export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
+  visible,
+  onClose
+}) => {
+  const [tenantSlug, setTenantSlug] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTenantLogin = async () => {
+    if (!tenantSlug.trim()) {
+      setError('Lütfen firma kısa adını girin');
+      return;
+    }
+
+    // Validate tenant slug format
+    const slugRegex = /^[a-z0-9-]+$/;
+    if (!slugRegex.test(tenantSlug)) {
+      setError('Firma kısa adı sadece küçük harf, rakam ve tire içerebilir');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // TODO: Validate tenant exists via API
+      // const response = await fetch(`/api/tenants/validate/${tenantSlug}`);
+      // if (!response.ok) {
+      //   throw new Error('Tenant not found');
+      // }
+
+      // Redirect to tenant subdomain
+      setTimeout(() => {
+        redirectToTenantDomain(tenantSlug);
+      }, 500);
+    } catch (err) {
+      setError('Firma bulunamadı. Lütfen firma kısa adını kontrol edin.');
+      setLoading(false);
+    }
+  };
+
+  const handleQuickAccess = (slug: string) => {
+    setTenantSlug(slug);
+    redirectToTenantDomain(slug);
+  };
+
+  return (
+    <Modal
+      title={null}
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width={720}
+      centered
+      className="tenant-login-modal"
+      closeIcon={<span style={{ fontSize: 20, color: '#8b95a7' }}>×</span>}
+    >
+      <div className="modal-content">
+        {/* Header Section */}
+        <div className="modal-header">
+          <Space direction="vertical" align="center" style={{ width: '100%' }}>
+            <div className="header-icon">
+              <GlobalOutlined />
+            </div>
+            <Title level={3} style={{ margin: 0 }}>
+              Firma Girişi
+            </Title>
+            <Text type="secondary" style={{ fontSize: 14 }}>
+              İşletmenizin özel alanına güvenli giriş yapın
+            </Text>
+          </Space>
+        </div>
+
+        {/* Main Content */}
+        <div style={{ padding: '0 24px 24px' }}>
+          {/* Search Section */}
+          <div style={{ marginTop: 24 }}>
+            <div style={{ marginBottom: 12 }}>
+              <Text strong style={{ fontSize: 14 }}>
+                Firma Adresiniz
+              </Text>
+              <Tooltip title="Firmanıza özel giriş adresi. Örn: demo.stocker.app">
+                <QuestionCircleOutlined 
+                  style={{ 
+                    color: '#8b95a7', 
+                    cursor: 'help', 
+                    fontSize: 14,
+                    marginLeft: 8
+                  }} 
+                />
+              </Tooltip>
+            </div>
+
+            <div className="input-container" style={{ 
+              display: 'flex', 
+              alignItems: 'center'
+            }}>
+              <Input
+                size="large"
+                placeholder="demo"
+                value={tenantSlug}
+                onChange={(e) => {
+                  setTenantSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                  setError(null);
+                }}
+                onPressEnter={() => handleTenantLogin()}
+                style={{ 
+                  border: 'none',
+                  background: 'white',
+                  borderRadius: '6px 0 0 6px',
+                  fontSize: 16,
+                  fontWeight: 500
+                }}
+                prefix={
+                  <ShopOutlined style={{ color: '#667eea', fontSize: 18 }} />
+                }
+              />
+              <div className="domain-suffix">
+                .stocker.app
+              </div>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRightOutlined />}
+                loading={loading}
+                onClick={handleTenantLogin}
+                style={{
+                  borderRadius: '0 6px 6px 0',
+                  minWidth: 120,
+                  height: 42
+                }}
+              >
+                Devam
+              </Button>
+            </div>
+            
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError(null)}
+                style={{ marginTop: 12 }}
+              />
+            )}
+          </div>
+
+          {/* Quick Access Section */}
+          <div style={{ marginTop: 24 }}>
+            <Divider style={{ margin: '16px 0' }}>
+              <Text type="secondary" style={{ fontSize: 13 }}>Hızlı Erişim</Text>
+            </Divider>
+
+            <Row gutter={12}>
+              {popularTenants.map((tenant) => (
+                <Col key={tenant.slug} xs={24} sm={8}>
+                  <Card
+                    className="tenant-card"
+                    hoverable
+                    onClick={() => handleQuickAccess(tenant.slug)}
+                    bordered={false}
+                    bodyStyle={{ padding: 16 }}
+                  >
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Avatar size={40}>
+                          {tenant.name.charAt(0)}
+                        </Avatar>
+                        <Tag color={tenant.tagColor} style={{ margin: 0 }}>
+                          {tenant.tag}
+                        </Tag>
+                      </div>
+                      
+                      <div>
+                        <Text strong>
+                          {tenant.name}
+                        </Text>
+                        <br />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {tenant.slug}.stocker.app
+                        </Text>
+                      </div>
+                      
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        <TeamOutlined /> {tenant.users} kullanıcı
+                      </Text>
+                    </Space>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </div>
+
+          {/* Footer */}
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <Space split={<Divider type="vertical" />}>
+              <span className="footer-icon success">
+                <SafetyOutlined />
+                <Text type="secondary">SSL Güvenli</Text>
+              </span>
+              <span className="footer-icon info">
+                <ClockCircleOutlined />
+                <Text type="secondary">7/24 Erişim</Text>
+              </span>
+            </Space>
+            
+            <div style={{ marginTop: 16 }}>
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                Firma kısa adınızı bilmiyorsanız{' '}
+                <a href="mailto:destek@stocker.app">destek ekibiyle</a> iletişime geçin
+              </Text>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};

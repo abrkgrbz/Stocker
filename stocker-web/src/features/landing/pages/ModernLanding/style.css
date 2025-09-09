@@ -10,6 +10,13 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Section Navigation - Hide on mobile */
+@media (max-width: 768px) {
+  .section-navigation {
+    display: none !important;
+  }
+}
+
 /* Subtle Animations */
 @keyframes fadeInUp {
   from {
@@ -123,6 +130,16 @@ html {
 }
 
 .nav-menu a:hover::after {
+  width: 100%;
+}
+
+/* Active navigation link styles */
+.nav-menu a.active {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.nav-menu a.active::after {
   width: 100%;
 }
 
