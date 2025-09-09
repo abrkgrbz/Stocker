@@ -26,18 +26,24 @@ export const getTenantSlugFromDomain = (): string | null => {
   // Production subdomain extraction
   const parts = hostname.split('.');
   
-  // Must have at least subdomain.domain.tld
-  if (parts.length >= 3) {
-    // First part is the tenant slug
+  // Check if we have a subdomain
+  // For stoocker.app (2 parts) - no subdomain
+  // For demo.stoocker.app (3 parts) - has subdomain
+  // For www.stoocker.app (3 parts) - reserved subdomain
+  if (parts.length === 3 || (parts.length === 4 && parts[0] === 'www')) {
+    // First part is potentially the tenant slug
     const slug = parts[0];
     
     // Exclude www and other reserved subdomains
-    const reservedSubdomains = ['www', 'api', 'admin', 'app', 'mail'];
+    const reservedSubdomains = ['www', 'api', 'admin', 'app', 'mail', 'master'];
     if (reservedSubdomains.includes(slug)) {
       return null;
     }
     
     return slug;
+  } else if (parts.length === 2) {
+    // Main domain without subdomain (stoocker.app)
+    return null;
   }
   
   return null;
@@ -72,7 +78,20 @@ export const redirectToTenantDomain = (tenantSlug: string): void => {
     window.location.href = '/login';
   } else {
     // Production redirect to subdomain
-    const baseDomain = currentHost.replace(/^[^.]+\./, '');
+    // If we're already on a subdomain, get the base domain
+    // If we're on the main domain (stoocker.app), use it as is
+    let baseDomain = currentHost;
+    
+    // Check if we're on a subdomain (has more than 2 parts)
+    const parts = currentHost.split('.');
+    if (parts.length > 2) {
+      // Remove the subdomain part (e.g., www.stoocker.app -> stoocker.app)
+      baseDomain = parts.slice(-2).join('.');
+    } else if (parts.length === 2) {
+      // Already on base domain (stoocker.app)
+      baseDomain = currentHost;
+    }
+    
     window.location.href = `${protocol}//${tenantSlug}.${baseDomain}${port}/login`;
   }
 };
@@ -91,10 +110,13 @@ export const getMainDomainUrl = (): string => {
   
   // Remove subdomain if exists
   const parts = currentHost.split('.');
-  if (parts.length >= 3) {
-    const mainDomain = parts.slice(1).join('.');
+  if (parts.length > 2) {
+    // Has subdomain (e.g., demo.stoocker.app or www.stoocker.app)
+    // Keep only the last two parts (stoocker.app)
+    const mainDomain = parts.slice(-2).join('.');
     return `${protocol}//${mainDomain}${port}`;
   }
   
+  // Already on main domain
   return `${protocol}//${currentHost}${port}`;
 };
