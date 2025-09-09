@@ -52,10 +52,12 @@ services:
       - "traefik.http.routers.web-main.priority=10"
       
       # Wildcard subdomain routing for ALL tenants
-      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
+      - "traefik.http.routers.web-wildcard.rule=Host(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
       - "traefik.http.routers.web-wildcard.entrypoints=https"
       - "traefik.http.routers.web-wildcard.tls=true"
       - "traefik.http.routers.web-wildcard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.web-wildcard.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.web-wildcard.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.web-wildcard.service=web-service"
       - "traefik.http.routers.web-wildcard.priority=5"
       
