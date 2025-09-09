@@ -1,7 +1,7 @@
 version: '3.8'
 
-# Stocker Web Application
-# Frontend React application - Built from source by Coolify
+# Stocker Web Application with Dynamic Subdomain Support
+# This configuration handles all tenant subdomains automatically
 
 services:
   web:
@@ -11,56 +11,70 @@ services:
     container_name: stocker-web
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
     environment:
+      - NODE_ENV=production
       - VITE_API_URL=https://api.stoocker.app
       - VITE_APP_URL=https://stoocker.app
       - VITE_MOCK_ENABLED=false
-      - VITE_SEQ_URL=https://seq.stoocker.app
-      - VITE_MINIO_URL=https://s3.stoocker.app
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - coolify
+      - VITE_SEQ_URL=http://95.217.219.4:5341
+      - VITE_MASTER_URL=https://master.stoocker.app
+    
     labels:
-      # Standard labels
-      - "com.stocker.service=web"
-      - "com.stocker.tier=application"
-      
-      # Traefik configuration
+      # Traefik configuration for automatic subdomain routing
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       
-      # Main domain routing (stoocker.app and www)
+      # Main domain routing
       - "traefik.http.routers.web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
       - "traefik.http.routers.web-main.entrypoints=websecure"
       - "traefik.http.routers.web-main.tls=true"
+      - "traefik.http.routers.web-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.web-main.service=web-service"
       - "traefik.http.routers.web-main.priority=10"
       
-      # Wildcard subdomain routing for ALL tenants
+      # Wildcard subdomain routing - catches all tenant subdomains
       - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
       - "traefik.http.routers.web-wildcard.entrypoints=websecure"
       - "traefik.http.routers.web-wildcard.tls=true"
+      - "traefik.http.routers.web-wildcard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.web-wildcard.service=web-service"
       - "traefik.http.routers.web-wildcard.priority=5"
       
-      # Service configuration
+      # Service definition
       - "traefik.http.services.web-service.loadbalancer.server.port=80"
+      - "traefik.http.services.web-service.loadbalancer.server.scheme=http"
       - "traefik.http.services.web-service.loadbalancer.passhostheader=true"
       
-      # WWW to non-WWW redirect
+      # Middleware for www redirect
       - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www.(.*)"
       - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$$1"
       - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
       - "traefik.http.routers.web-main.middlewares=www-redirect"
       
-      # Tenant detection middleware
-      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Tenant-Slug={subdomain}"
+      # Headers middleware for tenant detection
+      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Forwarded-Host={subdomain}.stoocker.app"
       - "traefik.http.routers.web-wildcard.middlewares=tenant-headers"
+      
+      # Coolify specific labels
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=stocker-web"
+      
+      # Health check
+      - "traefik.http.services.web-service.loadbalancer.healthcheck.path=/"
+      - "traefik.http.services.web-service.loadbalancer.healthcheck.interval=30s"
+      - "traefik.http.services.web-service.loadbalancer.healthcheck.timeout=10s"
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+    networks:
+      - coolify
 
 networks:
   coolify:
