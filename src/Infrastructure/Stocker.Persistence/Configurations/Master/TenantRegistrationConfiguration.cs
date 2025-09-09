@@ -97,6 +97,15 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
         builder.Property(x => x.RejectedBy)
             .HasMaxLength(100);
             
+        // Configure AdminEmail as owned type
+        builder.OwnsOne(x => x.AdminEmail, email =>
+        {
+            email.Property(e => e.Value)
+                .HasColumnName("AdminEmail")
+                .IsRequired()
+                .HasMaxLength(256);
+        });
+            
         // Package Selection
         builder.Property(x => x.ReferralCode)
             .HasMaxLength(50);
