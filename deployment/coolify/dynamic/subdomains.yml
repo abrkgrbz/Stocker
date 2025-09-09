@@ -1,0 +1,157 @@
+# Dynamic configuration for tenant subdomains
+# This handles routing for *.stoocker.app to the web application
+
+http:
+  routers:
+    # Catch-all router for tenant subdomains
+    tenant-router:
+      rule: "HostRegexp(`{tenant:[a-z0-9-]+}.stoocker.app`)"
+      service: stocker-web
+      tls:
+        certResolver: letsencrypt-wildcard
+      middlewares:
+        - tenant-headers
+        - security-headers
+      priority: 10
+    
+    # Main domain router
+    main-router:
+      rule: "Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      service: stocker-web
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: stoocker.app
+          - sans:
+            - www.stoocker.app
+      middlewares:
+        - www-redirect
+        - security-headers
+      priority: 20
+    
+    # API router
+    api-router:
+      rule: "Host(`api.stoocker.app`)"
+      service: stocker-api
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - api-headers
+        - cors
+      priority: 30
+    
+    # Master admin router
+    master-router:
+      rule: "Host(`master.stoocker.app`)"
+      service: stocker-master
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - security-headers
+        - auth-master
+      priority: 30
+      
+  middlewares:
+    # Redirect www to non-www
+    www-redirect:
+      redirectRegex:
+        regex: "^https://www\\.(.+)"
+        replacement: "https://${1}"
+        permanent: true
+    
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customResponseHeaders:
+          X-Robots-Tag: "all"
+    
+    # Tenant headers - extract tenant from subdomain
+    tenant-headers:
+      headers:
+        customRequestHeaders:
+          X-Tenant-Slug: "{tenant}"
+    
+    # API headers
+    api-headers:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+          X-Real-IP: "{remote_addr}"
+    
+    # CORS for API
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+          - PATCH
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "https://stoocker.app"
+          - "https://*.stoocker.app"
+          - "http://localhost:3000"
+          - "http://localhost:3001"
+          - "http://localhost:3002"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+        accessControlAllowCredentials: true
+    
+    # Basic auth for master panel
+    auth-master:
+      basicAuth:
+        users:
+          # admin:$2y$10$... (generate with htpasswd)
+          - "${MASTER_AUTH_USERS}"
+    
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1m
+        
+  services:
+    # Web application service
+    stocker-web:
+      loadBalancer:
+        servers:
+          - url: "http://stocker-web:3000"
+        passHostHeader: true
+        healthCheck:
+          path: /
+          interval: 30s
+          timeout: 10s
+    
+    # API service
+    stocker-api:
+      loadBalancer:
+        servers:
+          - url: "http://stocker-api:5000"
+        passHostHeader: true
+        healthCheck:
+          path: /health
+          interval: 30s
+          timeout: 10s
+    
+    # Master admin service
+    stocker-master:
+      loadBalancer:
+        servers:
+          - url: "http://stocker-admin:3002"
+        passHostHeader: true
+        healthCheck:
+          path: /
+          interval: 30s
+          timeout: 10s
