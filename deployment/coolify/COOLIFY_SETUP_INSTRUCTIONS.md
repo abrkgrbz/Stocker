@@ -1,0 +1,236 @@
+# Coolify Setup Instructions
+
+## Fix for "path not found" Error
+
+The error `unable to prepare context: path "/stocker-web" not found` occurs because Coolify can't find the build context.
+
+## Solution Options:
+
+### Option 1: Use GitHub Source (Recommended)
+
+1. **In Coolify UI:**
+   - Create New Application
+   - Choose "Public Repository"
+   - Enter GitHub URL: `https://github.com/yourusername/stocker`
+   - Branch: `main` or `master`
+
+2. **Build Configuration:**
+   - Build Pack: `Dockerfile`
+   - Dockerfile Location: `stocker-web/Dockerfile`
+   - Base Directory: `/` (root)
+   - Install Command: (leave empty)
+   - Build Command: (leave empty)
+
+3. **Environment Variables:**
+   ```env
+   NODE_ENV=production
+   VITE_API_URL=https://api.stoocker.app
+   VITE_APP_URL=https://stoocker.app
+   VITE_MOCK_ENABLED=false
+   ```
+
+4. **Domains:**
+   ```
+   stoocker.app
+   www.stoocker.app
+   demo.stoocker.app
+   techstart.stoocker.app
+   ```
+
+### Option 2: Use Docker Compose
+
+1. **In Coolify UI:**
+   - Create New Application
+   - Choose "Docker Compose"
+   - Paste this configuration:
+
+```yaml
+version: '3.8'
+services:
+  web:
+    image: node:18-alpine
+    working_dir: /app
+    command: |
+      sh -c "
+      git clone https://github.com/yourusername/stocker.git . &&
+      cd stocker-web &&
+      npm install &&
+      npm run build &&
+      npx serve -s dist -l 80
+      "
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=https://api.stoocker.app
+```
+
+### Option 3: Pre-built Docker Image
+
+1. **First, build and push image locally:**
+```bash
+# Build image
+cd stocker-web
+docker build -t yourdockerhub/stocker-web:latest .
+
+# Push to registry
+docker push yourdockerhub/stocker-web:latest
+```
+
+2. **In Coolify:**
+   - Create New Application
+   - Choose "Docker Image"
+   - Image: `yourdockerhub/stocker-web:latest`
+   - Port: 80
+
+### Option 4: Use Buildpacks
+
+1. **In Coolify UI:**
+   - Create New Application
+   - Choose "Public Repository"
+   - Build Pack: `Nixpacks` (auto-detect)
+   - Let Coolify auto-configure
+
+## Quick Fix for Current Deployment
+
+1. **SSH to your Coolify server:**
+```bash
+ssh root@your-server-ip
+```
+
+2. **Clone repository manually:**
+```bash
+cd /tmp
+git clone https://github.com/yourusername/stocker.git
+cd stocker
+```
+
+3. **Build manually:**
+```bash
+cd stocker-web
+docker build -t stocker-web:local .
+```
+
+4. **Run with docker:**
+```bash
+docker run -d \
+  --name stocker-web \
+  --network coolify \
+  -p 3000:80 \
+  -e VITE_API_URL=https://api.stoocker.app \
+  stocker-web:local
+```
+
+## Permanent Solution
+
+### Create a Deploy Script:
+
+```bash
+#!/bin/bash
+# deploy-web.sh
+
+# Variables
+REPO_URL="https://github.com/yourusername/stocker.git"
+APP_NAME="stocker-web"
+NETWORK="coolify"
+
+# Clone and build
+cd /tmp
+rm -rf stocker-temp
+git clone $REPO_URL stocker-temp
+cd stocker-temp/stocker-web
+
+# Build Docker image
+docker build -t $APP_NAME:latest .
+
+# Stop old container
+docker stop $APP_NAME 2>/dev/null
+docker rm $APP_NAME 2>/dev/null
+
+# Run new container
+docker run -d \
+  --name $APP_NAME \
+  --network $NETWORK \
+  --restart unless-stopped \
+  -p 80:80 \
+  -e NODE_ENV=production \
+  -e VITE_API_URL=https://api.stoocker.app \
+  -e VITE_APP_URL=https://stoocker.app \
+  --label "coolify.managed=true" \
+  $APP_NAME:latest
+
+echo "Deployment completed!"
+```
+
+## Coolify UI Configuration
+
+### If using Coolify v4:
+
+1. **Application Settings:**
+   - Name: `stocker-web`
+   - Git Repository: `https://github.com/yourusername/stocker`
+   - Branch: `main`
+   - Build Path: `/stocker-web`
+   - Dockerfile: `Dockerfile`
+
+2. **Advanced Settings:**
+   - Docker Context: `/`
+   - Working Directory: `/stocker-web`
+
+3. **Build Arguments:**
+   ```
+   NODE_ENV=production
+   ```
+
+4. **Domains (Add all at once):**
+   ```
+   stoocker.app,www.stoocker.app,demo.stoocker.app,techstart.stoocker.app,master.stoocker.app
+   ```
+
+5. **Generate SSL:** ✅ Enabled
+
+## Troubleshooting
+
+### If still getting path errors:
+
+1. **Check Coolify logs:**
+```bash
+docker logs coolify
+```
+
+2. **Check build logs in Coolify UI:**
+   - Go to Deployments
+   - Click on failed deployment
+   - View logs
+
+3. **Verify paths:**
+```bash
+# SSH to server
+ls -la /data/coolify/applications/your-app-id/
+```
+
+4. **Manual override:**
+   - In Coolify UI, go to "Advanced"
+   - Enable "Custom Docker Command"
+   - Add: `--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=1`
+
+## SSL Certificate Issues
+
+After deployment, if SSL not working:
+
+1. **Force SSL regeneration:**
+   - Coolify UI → Application → SSL
+   - Click "Force Renew"
+
+2. **Check DNS:**
+```bash
+dig techstart.stoocker.app
+# Should point to your Coolify server IP
+```
+
+3. **Add domain manually:**
+   - Coolify UI → Application → Domains
+   - Add: `techstart.stoocker.app`
+   - Save and wait 2 minutes
+
+The SSL will be auto-generated by Let's Encrypt!

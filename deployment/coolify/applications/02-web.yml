@@ -6,7 +6,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: .
+      context: ../../../
       dockerfile: ./stocker-web/Dockerfile
     container_name: stocker-web
     restart: unless-stopped
