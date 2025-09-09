@@ -5,9 +5,18 @@ version: '3.8'
 
 services:
   web:
+    # Option 1: Use pre-built image (fastest)
+    # image: ghcr.io/yourusername/stocker-web:latest
+    
+    # Option 2: Build from GitHub
+    # build:
+    #   context: https://github.com/abrkgrbz/Stocker.git#main
+    #   dockerfile: stocker-web/Dockerfile
+    
+    # Option 3: For Coolify - use root context
     build:
-      context: ../../../
-      dockerfile: ./stocker-web/Dockerfile
+      context: .
+      dockerfile: stocker-web/Dockerfile
     container_name: stocker-web
     restart: unless-stopped
     ports:
