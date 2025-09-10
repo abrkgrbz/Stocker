@@ -29,7 +29,8 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email: string, password: string) => {
         try {
-          const response = await fetch('https://api.stoocker.app/api/master/auth/login', {
+          const apiUrl = import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
+          const response = await fetch(`${apiUrl}/api/master/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -38,7 +39,8 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (!response.ok) {
-            throw new Error('Login failed');
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || 'Login failed');
           }
 
           const data = await response.json();
@@ -46,27 +48,40 @@ export const useAuthStore = create<AuthState>()(
           if (data.success && data.data) {
             const { accessToken, user } = data.data;
             
+            // Map the API user format to our admin user format
+            const adminUser: AdminUser = {
+              id: user.id || user.Id,
+              email: user.email || user.Email,
+              name: user.fullName || user.username || user.Username || 'Admin User',
+              role: (user.roles && user.roles.includes('SystemAdmin')) ? 'super_admin' : 'admin',
+            };
+            
             set({
-              user,
+              user: adminUser,
               accessToken,
               isAuthenticated: true,
             });
+            
+            // Also store in localStorage for backward compatibility
+            localStorage.setItem('token', accessToken);
           } else {
             throw new Error(data.message || 'Login failed');
           }
-        } catch (error) {
+        } catch (error: any) {
           // For development, allow mock login
-          if (email === 'admin@stocker.app' && password === 'admin123') {
+          if (email === 'admin@stoocker.app' && password === 'admin123') {
+            const mockToken = 'mock-token-' + Date.now();
             set({
               user: {
                 id: '1',
-                email: 'admin@stocker.app',
+                email: 'admin@stoocker.app',
                 name: 'Admin User',
                 role: 'super_admin',
               },
-              accessToken: 'mock-token',
+              accessToken: mockToken,
               isAuthenticated: true,
             });
+            localStorage.setItem('token', mockToken);
           } else {
             throw error;
           }
@@ -79,6 +94,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           isAuthenticated: false,
         });
+        
+        // Clear token from localStorage
+        localStorage.removeItem('token');
         
         // Çıkış bildirimi
         Swal.fire({
