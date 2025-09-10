@@ -31,11 +31,12 @@ public class HangfireInitializationService : IHostedService
         {
             _logger.LogInformation("Initializing Hangfire database schema...");
 
-            var connectionString = _configuration.GetConnectionString("MasterConnection");
+            var connectionString = _configuration.GetConnectionString("HangfireConnection") 
+                ?? _configuration.GetConnectionString("MasterConnection");
             
             if (string.IsNullOrEmpty(connectionString))
             {
-                _logger.LogError("MasterConnection connection string is not configured");
+                _logger.LogError("HangfireConnection connection string is not configured");
                 return;
             }
 
