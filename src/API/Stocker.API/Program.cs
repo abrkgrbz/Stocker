@@ -49,6 +49,7 @@ builder.Services.AddCors(options =>
                     "https://stoocker.app",
                     "https://www.stoocker.app",
                     "https://master.stoocker.app",
+                    "https://admin.stoocker.app",
                     "https://api.stoocker.app"
                   )
                   .AllowAnyMethod()
@@ -69,6 +70,7 @@ builder.Services.AddCors(options =>
                     "https://stoocker.app",
                     "https://www.stoocker.app",
                     "https://master.stoocker.app",
+                    "https://admin.stoocker.app",
                     "https://api.stoocker.app"
                   )
                   .AllowAnyMethod()
