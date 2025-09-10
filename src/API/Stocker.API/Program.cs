@@ -545,6 +545,18 @@ using (var scope = app.Services.CreateScope())
 {
     try
     {
+        // Log connection strings for debugging
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var masterConnection = configuration.GetConnectionString("MasterConnection");
+        var tenantConnection = configuration.GetConnectionString("TenantConnection");
+        var hangfireConnection = configuration.GetConnectionString("HangfireConnection");
+        
+        app.Logger.LogInformation("=== DATABASE CONNECTION DEBUG ===");
+        app.Logger.LogInformation($"MasterConnection: {masterConnection?.Replace("Password=", "Password=***")}");
+        app.Logger.LogInformation($"TenantConnection: {tenantConnection?.Replace("Password=", "Password=***")}");
+        app.Logger.LogInformation($"HangfireConnection: {hangfireConnection?.Replace("Password=", "Password=***")}");
+        app.Logger.LogInformation("=================================");
+        
         var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Persistence.Migrations.IMigrationService>();
         await migrationService.MigrateMasterDatabaseAsync();
         await migrationService.SeedMasterDataAsync();
