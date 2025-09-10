@@ -41,6 +41,7 @@ import {
 import { PageContainer, ProTable, ProFormText, ProFormSelect, ProFormDateRangePicker } from '@ant-design/pro-components';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import tenantService, { Tenant, TenantStats } from '../../services/tenantService';
+import signalRService from '../../services/signalRService';
 import {
   PlusOutlined,
   EditOutlined,
@@ -104,9 +105,20 @@ const TenantsPage: React.FC = () => {
   const [form] = Form.useForm();
   const codeValidationTimeout = useRef<NodeJS.Timeout>();
 
-  // Fetch tenant statistics
+  // Fetch tenant statistics and initialize SignalR
   useEffect(() => {
     fetchTenantStats();
+    // Initialize SignalR connection
+    signalRService.initializeValidationHub().catch(error => {
+      console.error('Failed to connect to SignalR:', error);
+    });
+    
+    // Cleanup on unmount
+    return () => {
+      if (codeValidationTimeout.current) {
+        clearTimeout(codeValidationTimeout.current);
+      }
+    };
   }, []);
 
   const fetchTenantStats = async () => {
@@ -527,9 +539,13 @@ const TenantsPage: React.FC = () => {
     }
   };
 
-  // Validate tenant code in real-time
+  // Validate tenant code in real-time using SignalR
   const validateTenantCode = async (value: string) => {
-    if (!value) return;
+    if (!value) {
+      setCodeValidationStatus(undefined);
+      setCodeValidationHelp('');
+      return;
+    }
     
     // Clear previous timeout
     if (codeValidationTimeout.current) {
@@ -544,7 +560,8 @@ const TenantsPage: React.FC = () => {
     // Debounce the validation
     codeValidationTimeout.current = setTimeout(async () => {
       try {
-        const result = await tenantService.validateTenantCode(value);
+        // Use SignalR for real-time validation
+        const result = await signalRService.validateTenantCode(value);
         
         if (result.isAvailable) {
           setCodeValidationStatus('success');
@@ -552,14 +569,35 @@ const TenantsPage: React.FC = () => {
         } else {
           setCodeValidationStatus('error');
           setCodeValidationHelp(result.message || 'Bu kod zaten kullanımda!');
+          
+          // Show suggested codes if available
+          if (result.suggestedCodes && result.suggestedCodes.length > 0) {
+            setCodeValidationHelp(
+              `${result.message}. Öneriler: ${result.suggestedCodes.slice(0, 3).join(', ')}`
+            );
+          }
         }
       } catch (error) {
-        setCodeValidationStatus('warning');
-        setCodeValidationHelp('Kod kontrolü yapılamadı');
+        console.error('SignalR validation error:', error);
+        // Fallback to REST API if SignalR fails
+        try {
+          const result = await tenantService.validateTenantCode(value);
+          
+          if (result.isAvailable) {
+            setCodeValidationStatus('success');
+            setCodeValidationHelp('Bu kod kullanılabilir!');
+          } else {
+            setCodeValidationStatus('error');
+            setCodeValidationHelp(result.message || 'Bu kod zaten kullanımda!');
+          }
+        } catch (apiError) {
+          setCodeValidationStatus('warning');
+          setCodeValidationHelp('Kod kontrolü yapılamadı');
+        }
       } finally {
         setValidatingCode(false);
       }
-    }, 500); // 500ms debounce
+    }, 300); // 300ms debounce for SignalR
   };
 
   const handleModalOk = async () => {

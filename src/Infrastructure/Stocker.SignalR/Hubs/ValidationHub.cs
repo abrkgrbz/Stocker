@@ -203,6 +203,34 @@ public class ValidationHub : Hub
     }
 
     /// <summary>
+    /// Validate tenant code availability for multi-tenant subdomain
+    /// </summary>
+    public async Task ValidateTenantCode(string code)
+    {
+        try
+        {
+            _logger.LogInformation("Validating tenant code: {Code}", code);
+            
+            var codeResult = await _validationService.ValidateTenantCodeAsync(code);
+            
+            var result = new TenantCodeValidationResult
+            {
+                IsAvailable = codeResult.IsAvailable,
+                Message = codeResult.Message,
+                Code = code,
+                SuggestedCodes = codeResult.SuggestedCodes?.ToArray() ?? Array.Empty<string>()
+            };
+
+            await Clients.Caller.SendAsync("TenantCodeValidated", result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating tenant code");
+            await Clients.Caller.SendAsync("ValidationError", "Kod kontrolü sırasında bir hata oluştu");
+        }
+    }
+
+    /// <summary>
     /// Validate Turkish ID Number (TC Kimlik No) or Tax Number (Vergi No)
     /// </summary>
     public async Task ValidateIdentity(string identityNumber)
@@ -290,6 +318,14 @@ public class IdentityValidationResult
     public string Message { get; set; } = string.Empty;
     public string NumberType { get; set; } = string.Empty;
     public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class TenantCodeValidationResult
+{
+    public bool IsAvailable { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string[] SuggestedCodes { get; set; } = Array.Empty<string>();
 }
 
 #endregion
