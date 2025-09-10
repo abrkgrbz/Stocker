@@ -9,17 +9,22 @@ services:
     container_name: mssql
     restart: unless-stopped
     ports:
-      - "1433:1433"
+      - "1433:1433"  # Sadece gerekiyorsa açık bırakın, güvenlik için kapatabilirsiniz
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SA_PASSWORD:-YourStrongPassword123!}
-      - MSSQL_PID=${MSSQL_PID:-Express}
+      - MSSQL_PID=${MSSQL_PID:-Developer}  # Express yerine Developer daha iyi performans
       - MSSQL_AGENT_ENABLED=true
       - MSSQL_ENABLE_HADR=0
       - MSSQL_TCP_PORT=1433
+      - MSSQL_COLLATION=Turkish_CI_AS  # Türkçe karakter desteği için
+      - MSSQL_MEMORY_LIMIT_MB=2048  # RAM limiti (MB cinsinden)
+      - MSSQL_BACKUP_DIR=/var/opt/mssql/backup
+      - TZ=Europe/Istanbul  # Timezone ayarı
     volumes:
       - mssql_data:/var/opt/mssql
       - mssql_backup:/var/opt/mssql/backup
+      - mssql_log:/var/opt/mssql/log  # Log klasörü eklendi
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '${SA_PASSWORD:-YourStrongPassword123!}' -Q 'SELECT 1' -b -o /dev/null"]
       interval: 15s
@@ -31,11 +36,33 @@ services:
     labels:
       - "com.stocker.service=database"
       - "com.stocker.tier=infrastructure"
+      - "coolify.managed=true"
+      
+      # Traefik labels (isteğe bağlı - SQL Management Studio web erişimi için)
+      # - "traefik.enable=true"
+      # - "traefik.docker.network=coolify"
+      # - "traefik.http.routers.mssql-secure.rule=Host(`db.stoocker.app`)"
+      # - "traefik.http.routers.mssql-secure.entrypoints=https"
+      # - "traefik.http.routers.mssql-secure.tls=true"
+      # - "traefik.http.routers.mssql-secure.tls.certresolver=letsencrypt"
+      # - "traefik.http.services.mssql.loadbalancer.server.port=1433"
+    
+    # Kaynak limitleri (isteğe bağlı)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
 
 volumes:
   mssql_data:
     driver: local
   mssql_backup:
+    driver: local
+  mssql_log:
     driver: local
 
 networks:

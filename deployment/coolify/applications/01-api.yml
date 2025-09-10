@@ -11,8 +11,8 @@ services:
       dockerfile: ./src/API/Stocker.API/Dockerfile
     container_name: stocker-api
     restart: unless-stopped
-    ports:
-      - "5000:5000"
+    # ports:  # Traefik üzerinden erişim sağlanacak, port açmaya gerek yok
+    #   - "5000:5000"
     environment:
       # ASP.NET Core
       - ASPNETCORE_ENVIRONMENT=Production
@@ -45,7 +45,7 @@ services:
       - EmailSettings__EnableSsl=true
       - EmailSettings__UseStartTls=false
       
-      # MinIO
+      # MinIO - Internal network üzerinden erişim
       - Storage__Provider=MinIO
       - Storage__MinIO__Endpoint=minio:9000
       - Storage__MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
@@ -53,26 +53,39 @@ services:
       - Storage__MinIO__BucketName=stocker-files
       - Storage__MinIO__UseSSL=false
       
+    networks:
+      - coolify
     labels:
       # Traefik configuration for api.stoocker.app
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       
-      # API routing
-      - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls=true"
-      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api.service=api"
+      # API routing - HTTPS
+      - "traefik.http.routers.api-secure.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api-secure.entrypoints=https"
+      - "traefik.http.routers.api-secure.tls=true"
+      - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api-secure.service=api"
       - "traefik.http.services.api.loadbalancer.server.port=5000"
       
+      # API routing - HTTP (redirect to HTTPS)
+      - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api.entrypoints=http"
+      - "traefik.http.routers.api.middlewares=redirect-to-https"
+      
+      # Middlewares
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      
       # CORS headers
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=*"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://*.stoocker.app"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://admin.stoocker.app,https://app.stoocker.app"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
-      - "traefik.http.routers.api.middlewares=api-cors"
+      
+      # Apply CORS to HTTPS router
+      - "traefik.http.routers.api-secure.middlewares=api-cors"
       
       # Coolify labels
       - "coolify.managed=true"
@@ -85,8 +98,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - coolify
 
 networks:
   coolify:
