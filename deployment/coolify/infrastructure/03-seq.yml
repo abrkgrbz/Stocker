@@ -1,67 +1,38 @@
 version: '3.8'
 
-# Seq Logging - Public Access Version
-# This configuration exposes Seq on seq.stoocker.app
-
 services:
   seq:
     image: datalust/seq:latest
     container_name: seq
     restart: unless-stopped
-    # ports:  # Traefik üzerinden erişim sağlanacak
-    #   - "5341:80"
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=${SEQ_ADMIN_PASSWORD_HASH:-}
-      - SEQ_CACHE_SYSTEMRAMTARGET=0.2
-      - SEQ_STORAGE_SECRETKEY=${SEQ_SECRET_KEY:-}
-      - SEQ_API_CANONICALURI=https://seq.stoocker.app
-      - SEQ_INGESTION_PORTS=5341
+      - SEQ_FIRSTRUN_ADMINUSERNAME=admin
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Admin123!
     volumes:
       - seq_data:/data
     networks:
       - coolify
     labels:
-      # Traefik configuration
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       
-      # Seq Web UI - HTTPS
-      - "traefik.http.routers.seq-secure.rule=Host(`seq.stoocker.app`) || Host(`logs.stoocker.app`)"
+      # HTTPS Router
+      - "traefik.http.routers.seq-secure.rule=Host(`seq.stoocker.app`)"
       - "traefik.http.routers.seq-secure.entrypoints=https"
       - "traefik.http.routers.seq-secure.tls=true"
       - "traefik.http.routers.seq-secure.tls.certresolver=letsencrypt"
       - "traefik.http.routers.seq-secure.service=seq"
       - "traefik.http.services.seq.loadbalancer.server.port=80"
       
-      # Seq Web UI - HTTP (redirect to HTTPS)
-      - "traefik.http.routers.seq.rule=Host(`seq.stoocker.app`) || Host(`logs.stoocker.app`)"
+      # HTTP Router (redirect to HTTPS)
+      - "traefik.http.routers.seq.rule=Host(`seq.stoocker.app`)"
       - "traefik.http.routers.seq.entrypoints=http"
-      - "traefik.http.routers.seq.middlewares=redirect-to-https"
+      - "traefik.http.routers.seq.middlewares=seq-redirect"
       
-      # Seq Ingestion API (port 5341) - for applications to send logs
-      - "traefik.tcp.routers.seq-ingestion.rule=HostSNI(`seq.stoocker.app`)"
-      - "traefik.tcp.routers.seq-ingestion.entrypoints=seq-ingestion"
-      - "traefik.tcp.routers.seq-ingestion.tls=true"
-      - "traefik.tcp.routers.seq-ingestion.tls.certresolver=letsencrypt"
-      - "traefik.tcp.services.seq-ingestion.loadbalancer.server.port=5341"
-      
-      # Middlewares
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      
-      # Basic auth middleware for security
-      - "traefik.http.middlewares.seq-auth.basicauth.users=${SEQ_AUTH_USERS:-admin:$$2y$$10$$your-hashed-password}"
-      - "traefik.http.routers.seq-secure.middlewares=seq-auth"
-      
-      # Rate limiting (optional)
-      - "traefik.http.middlewares.seq-ratelimit.ratelimit.average=100"
-      - "traefik.http.middlewares.seq-ratelimit.ratelimit.burst=50"
-      
-      # Coolify labels
-      - "coolify.managed=true"
-      - "coolify.type=service"
-      - "coolify.name=seq"
+      # Middleware definition
+      - "traefik.http.middlewares.seq-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.seq-redirect.redirectscheme.permanent=true"
       
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
@@ -69,20 +40,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
 
 volumes:
   seq_data:
-    driver: local  # external: true yerine driver: local
+    driver: local
 
 networks:
   coolify:
