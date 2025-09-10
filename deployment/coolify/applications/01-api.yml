@@ -1,8 +1,7 @@
 version: '3.8'
 
-# Stocker API - Standalone version for Coolify
-# No depends_on since services are deployed separately
-# Built from source by Coolify
+# Stocker API - Production Configuration for Coolify
+# All environment variables are properly structured based on API configuration
 
 services:
   api:
@@ -11,31 +10,39 @@ services:
       dockerfile: ./src/API/Stocker.API/Dockerfile
     container_name: stocker-api
     restart: unless-stopped
-    # ports:  # Traefik üzerinden erişim sağlanacak, port açmaya gerek yok
-    #   - "5000:5000"
     environment:
-      # ASP.NET Core
+      # ==================================
+      # ASPNETCORE CONFIGURATION
+      # ==================================
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       
-      # Database Connections
-      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      # ==================================
+      # DATABASE CONNECTIONS
+      # ==================================
+      - ConnectionStrings__MasterConnection=Server=mssql;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
       
-      # Redis
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-RedisPassword123!}
-      
-      # Seq Logging
+      # ==================================
+      # LOGGING (SEQ)
+      # ==================================
       - Logging__Seq__ServerUrl=http://seq:5341
-      - Logging__Seq__ApiKey=${SEQ_API_KEY:-}
+      - Logging__Seq__ApiKey=2KD2afyLd0tMpP7IYHoC
+      - Logging__Seq__MinimumLevel=Information
       
-      # JWT
-      - JwtSettings__Secret=${JWT_SECRET:-df7d992cdade60241c0c2443c421101028c4e2eeb5eb9e5f17da82fca026c73a}
-      - JwtSettings__Issuer=https://api.stoocker.app
-      - JwtSettings__Audience=https://stoocker.app
+      # ==================================
+      # JWT AUTHENTICATION
+      # ==================================
+      - JwtSettings__Secret=ThisIsAVerySecureSecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm2024!
+      - JwtSettings__Issuer=Stocker
+      - JwtSettings__Audience=Stocker
+      - JwtSettings__AccessTokenExpirationMinutes=60
+      - JwtSettings__RefreshTokenExpirationDays=7
       
-      # Email (Namecheap Private Email)
+      # ==================================
+      # EMAIL SETTINGS
+      # ==================================
       - EmailSettings__SmtpHost=mail.privateemail.com
       - EmailSettings__SmtpPort=465
       - EmailSettings__SmtpUsername=info@stoocker.app
@@ -44,14 +51,83 @@ services:
       - EmailSettings__FromName=Stoocker
       - EmailSettings__EnableSsl=true
       - EmailSettings__UseStartTls=false
+      - EmailSettings__EnableEmail=true
+      - EmailSettings__BaseUrl=https://stoocker.app
+      - EmailSettings__TemplatesPath=EmailTemplates
       
-      # MinIO - Internal network üzerinden erişim
+      # ==================================
+      # STORAGE (MINIO)
+      # ==================================
       - Storage__Provider=MinIO
       - Storage__MinIO__Endpoint=minio:9000
       - Storage__MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
       - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD:-MinioPassword123!}
       - Storage__MinIO__BucketName=stocker-files
       - Storage__MinIO__UseSSL=false
+      - Storage__MinIO__PublicEndpoint=https://s3.stoocker.app
+      
+      # ==================================
+      # REDIS CACHE
+      # ==================================
+      - Redis__ConnectionString=redis:6379
+      - Redis__Password=${REDIS_PASSWORD:-RedisPassword123!}
+      - Redis__DefaultDatabase=0
+      - Redis__ConnectTimeout=5000
+      - Redis__SyncTimeout=5000
+      
+      # ==================================
+      # HANGFIRE BACKGROUND JOBS
+      # ==================================
+      - Hangfire__DashboardPath=/hangfire
+      - Hangfire__ServerName=Stocker-Server
+      - Hangfire__WorkerCount=4
+      - Hangfire__Queues=critical,default,low
+      - Hangfire__RetryAttempts=3
+      - Hangfire__ConnectionString=Server=mssql;Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True
+      
+      # ==================================
+      # PASSWORD POLICY
+      # ==================================
+      - PasswordPolicy__MinimumLength=8
+      - PasswordPolicy__MaximumLength=128
+      - PasswordPolicy__RequireUppercase=true
+      - PasswordPolicy__RequireLowercase=true
+      - PasswordPolicy__RequireDigit=true
+      - PasswordPolicy__RequireNonAlphanumeric=true
+      - PasswordPolicy__RequiredUniqueChars=4
+      - PasswordPolicy__PreventCommonPasswords=true
+      - PasswordPolicy__PreventUserInfoInPassword=true
+      - PasswordPolicy__PasswordHistoryCount=5
+      - PasswordPolicy__PasswordExpirationDays=90
+      - PasswordPolicy__MaxFailedAccessAttempts=5
+      - PasswordPolicy__LockoutDurationMinutes=15
+      - PasswordPolicy__MinimumStrengthScore=3
+      
+      # ==================================
+      # SECURITY HEADERS
+      # ==================================
+      - SecurityHeaders__AddXContentTypeOptions=true
+      - SecurityHeaders__AddXFrameOptions=true
+      - SecurityHeaders__XFrameOptionsValue=DENY
+      - SecurityHeaders__AddXXssProtection=true
+      - SecurityHeaders__AddReferrerPolicy=true
+      - SecurityHeaders__ReferrerPolicyValue=strict-origin-when-cross-origin
+      - SecurityHeaders__AddContentSecurityPolicy=true
+      - SecurityHeaders__AddStrictTransportSecurity=true
+      - SecurityHeaders__HstsMaxAge=31536000
+      - SecurityHeaders__HstsIncludeSubDomains=true
+      - SecurityHeaders__HstsPreload=false
+      
+      # ==================================
+      # RATE LIMITING
+      # ==================================
+      - TenantRateLimiting__Algorithm=SlidingWindow
+      - TenantRateLimiting__PermitLimit=100
+      - TenantRateLimiting__WindowSeconds=60
+      - TenantRateLimiting__QueueLimit=5
+      - TenantRateLimiting__SegmentsPerWindow=4
+      - TenantRateLimiting__TokensPerPeriod=10
+      - TenantRateLimiting__ReplenishmentPeriodSeconds=1
       
     networks:
       - coolify
@@ -61,7 +137,7 @@ services:
       - "traefik.docker.network=coolify"
       
       # API routing - HTTPS
-      - "traefik.http.routers.api-secure.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api-secure.rule=Host(\`api.stoocker.app\`)"
       - "traefik.http.routers.api-secure.entrypoints=https"
       - "traefik.http.routers.api-secure.tls=true"
       - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
@@ -69,7 +145,7 @@ services:
       - "traefik.http.services.api.loadbalancer.server.port=5000"
       
       # API routing - HTTP (redirect to HTTPS)
-      - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api.rule=Host(\`api.stoocker.app\`)"
       - "traefik.http.routers.api.entrypoints=http"
       - "traefik.http.routers.api.middlewares=redirect-to-https"
       
@@ -77,10 +153,10 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       
-      # CORS headers
+      # CORS headers for wildcard subdomains
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://admin.stoocker.app,https://app.stoocker.app"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://*.stoocker.app"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
       
