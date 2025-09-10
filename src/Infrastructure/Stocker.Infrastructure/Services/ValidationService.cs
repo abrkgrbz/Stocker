@@ -912,9 +912,9 @@ public class ValidationService : IValidationService
             // Check if code exists in database using MediatR
             try
             {
-                var checkResult = await _mediator.Send(new CheckSubdomainAvailabilityQuery { Subdomain = code });
+                var checkResult = await _mediator.Send(new CheckSubdomainAvailabilityQuery(code));
                 
-                if (checkResult.IsSuccess && checkResult.Value)
+                if (checkResult.IsSuccess && checkResult.Value.Available)
                 {
                     result.IsAvailable = true;
                     result.Message = "Bu kod kullanılabilir";
@@ -922,7 +922,7 @@ public class ValidationService : IValidationService
                 else
                 {
                     result.IsAvailable = false;
-                    result.Message = "Bu kod zaten kullanımda";
+                    result.Message = checkResult.Value?.Reason ?? "Bu kod zaten kullanımda";
                     
                     // Generate suggestions
                     result.SuggestedCodes.Add($"{code}-1");
