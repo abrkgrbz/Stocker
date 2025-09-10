@@ -16,6 +16,7 @@ services:
       # ==================================
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_SWAGGER_ENABLED=false
       
       # ==================================
       # DATABASE CONNECTIONS
