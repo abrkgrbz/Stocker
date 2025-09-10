@@ -10,14 +10,15 @@ public static class HangfireConfiguration
 {
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Get connection string with fallback options
-        var connectionString = configuration.GetConnectionString("MasterConnection");
+        // Get connection string with fallback options - Use HangfireConnection first
+        var connectionString = configuration.GetConnectionString("HangfireConnection") 
+            ?? configuration.GetConnectionString("MasterConnection");
         
         // If connection string is not found, try to build it from environment variables
         if (string.IsNullOrEmpty(connectionString))
         {
             var dbHost = configuration["DB_HOST"] ?? "database";
-            var dbName = configuration["MASTER_DB_NAME"] ?? "StockerMasterDb";
+            var dbName = configuration["HANGFIRE_DB_NAME"] ?? "StockerHangfireDb";
             var dbUser = configuration["DB_USER"] ?? "sa";
             var dbPassword = configuration["DB_PASSWORD"];
             
@@ -29,7 +30,7 @@ public static class HangfireConfiguration
             else
             {
                 // Fallback to a default connection string for local development
-                connectionString = "Server=localhost;Database=StockerMasterDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true";
+                connectionString = "Server=localhost;Database=StockerHangfireDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true";
                 Console.WriteLine($"[Hangfire] Using default connection string");
             }
         }
