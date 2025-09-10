@@ -41,15 +41,6 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:3000", 
-                    "http://localhost:3001", 
-                    "http://localhost:3002", 
-                    "http://localhost:3003",
-                    "http://localhost:3004",
-                    "http://localhost:3005",
-                    "http://localhost:3006",
-                    "http://localhost:3007", 
-                    "http://localhost:5107",
                     "https://stoocker.app",
                     "https://www.stoocker.app",
                     "https://master.stoocker.app",
@@ -67,14 +58,6 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:3000", 
-                    "http://localhost:3001", 
-                    "http://localhost:3002", 
-                    "http://localhost:3003",
-                    "http://localhost:3004",
-                    "http://localhost:3005",
-                    "http://localhost:3006",
-                    "http://localhost:3007",
                     "https://stoocker.app",
                     "https://www.stoocker.app",
                     "https://master.stoocker.app",
