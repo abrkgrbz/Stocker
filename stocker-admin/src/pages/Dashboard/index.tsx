@@ -417,7 +417,7 @@ const Dashboard: React.FC = () => {
             <Space direction="vertical" style={{ width: '100%' }}>
               <Text type="secondary">Churn Rate</Text>
               <Gauge
-                percent={stats.churnRate / 10}
+                percent={stats?.churnRate ? stats.churnRate / 10 : 0}
                 range={{
                   color: ['#52c41a', '#faad14', '#ff4d4f'],
                   width: 12,
@@ -426,7 +426,7 @@ const Dashboard: React.FC = () => {
                 statistic={{
                   title: false,
                   content: {
-                    formatter: () => `${stats.churnRate}%`,
+                    formatter: () => `${stats?.churnRate || 0}%`,
                     style: { fontSize: 24 },
                   },
                 }}
@@ -439,15 +439,15 @@ const Dashboard: React.FC = () => {
             <Space direction="vertical" style={{ width: '100%' }}>
               <Text type="secondary">API Response</Text>
               <Liquid
-                percent={stats.avgResponseTime / 1000}
+                percent={stats?.avgResponseTime ? stats.avgResponseTime / 1000 : 0}
                 statistic={{
                   title: false,
                   content: {
-                    formatter: () => `${stats.avgResponseTime}ms`,
+                    formatter: () => `${stats?.avgResponseTime || 0}ms`,
                     style: { fontSize: 24 },
                   },
                 }}
-                color={() => stats.avgResponseTime < 300 ? '#52c41a' : '#faad14'}
+                color={() => stats?.avgResponseTime && stats.avgResponseTime < 300 ? '#52c41a' : '#faad14'}
               />
             </Space>
           </Card>
