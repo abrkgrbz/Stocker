@@ -258,7 +258,7 @@ public class TenantRegistrationController : ControllerBase
     /// Verify email for registration
     /// </summary>
     [HttpPost("verify-email")]
-    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyTenantEmailCommand command)
     {
         try
         {

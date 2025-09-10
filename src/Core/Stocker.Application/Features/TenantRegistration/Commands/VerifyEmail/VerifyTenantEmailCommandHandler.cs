@@ -9,16 +9,16 @@ using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Commands.VerifyEmail;
 
-public sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Result<bool>>
+public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTenantEmailCommand, Result<bool>>
 {
     private readonly MasterDbContext _context;
-    private readonly ILogger<VerifyEmailCommandHandler> _logger;
+    private readonly ILogger<VerifyTenantEmailCommandHandler> _logger;
     private readonly IMediator _mediator;
     private readonly IBackgroundJobService _backgroundJobService;
 
-    public VerifyEmailCommandHandler(
+    public VerifyTenantEmailCommandHandler(
         MasterDbContext context,
-        ILogger<VerifyEmailCommandHandler> logger,
+        ILogger<VerifyTenantEmailCommandHandler> logger,
         IMediator mediator,
         IBackgroundJobService backgroundJobService)
     {
@@ -28,7 +28,7 @@ public sealed class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailComma
         _backgroundJobService = backgroundJobService;
     }
 
-    public async Task<Result<bool>> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(VerifyTenantEmailCommand request, CancellationToken cancellationToken)
     {
         try
         {
