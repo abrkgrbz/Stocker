@@ -10,8 +10,9 @@ services:
       dockerfile: ./stocker-admin/Dockerfile
     container_name: stocker-admin
     restart: unless-stopped
-    ports:
-      - "3010:80"
+    # ports kısmını kaldırabilirsiniz, Traefik üzerinden erişim sağlanacak
+    # ports:
+    #   - "3010:80"
     environment:
       - VITE_API_URL=https://api.stoocker.app
       - VITE_APP_URL=https://admin.stoocker.app
@@ -29,12 +30,26 @@ services:
       - "com.stocker.service=admin"
       - "com.stocker.tier=application"
       - "traefik.enable=true"
-      # Admin subdomain
+      
+      # HTTPS Router
+      - "traefik.http.routers.admin-secure.rule=Host(`admin.stoocker.app`)"
+      - "traefik.http.routers.admin-secure.entrypoints=https"
+      - "traefik.http.routers.admin-secure.tls=true"
+      - "traefik.http.routers.admin-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.admin-secure.service=admin"
+      
+      # HTTP Router (redirect to HTTPS)
       - "traefik.http.routers.admin.rule=Host(`admin.stoocker.app`)"
+      - "traefik.http.routers.admin.entrypoints=http"
+      - "traefik.http.routers.admin.middlewares=redirect-to-https"
+      
+      # Service
       - "traefik.http.services.admin.loadbalancer.server.port=80"
-      # SSL/TLS
-      - "traefik.http.routers.admin.tls=true"
-      - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
+      
+      # Middlewares
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      
       # Security headers
       - "traefik.http.middlewares.admin-headers.headers.frameDeny=true"
       - "traefik.http.middlewares.admin-headers.headers.sslRedirect=true"
@@ -43,7 +58,9 @@ services:
       - "traefik.http.middlewares.admin-headers.headers.stsIncludeSubdomains=true"
       - "traefik.http.middlewares.admin-headers.headers.stsPreload=true"
       - "traefik.http.middlewares.admin-headers.headers.stsSeconds=31536000"
-      - "traefik.http.routers.admin.middlewares=admin-headers"
+      
+      # Apply security headers to HTTPS router
+      - "traefik.http.routers.admin-secure.middlewares=admin-headers"
 
 networks:
   coolify:

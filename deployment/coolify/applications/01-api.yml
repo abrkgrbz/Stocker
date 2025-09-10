@@ -19,9 +19,9 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       
       # Database Connections
-      - ConnectionStrings__DefaultConnection=Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__MasterConnection=Server=mssql;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=mssql;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
       
       # Redis
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-RedisPassword123!}
