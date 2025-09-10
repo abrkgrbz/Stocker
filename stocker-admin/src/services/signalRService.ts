@@ -99,7 +99,7 @@ class SignalRService {
       };
 
       this.validationConnection.on('TenantCodeValidated', handler);
-      this.validationConnection.once('ValidationError', errorHandler);
+      this.validationConnection.on('ValidationError', errorHandler);
 
       // Send validation request
       this.validationConnection.invoke('ValidateTenantCode', code)
