@@ -154,6 +154,42 @@ class SignalRService {
     });
   }
 
+  // Check company name
+  async checkCompanyName(companyName: string): Promise<{ isValid: boolean; message: string; similarNames?: string[] }> {
+    if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
+      await this.initializeValidationHub();
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!this.validationConnection) {
+        reject(new Error('Validation hub not connected'));
+        return;
+      }
+
+      const handler = (result: any) => {
+        this.validationConnection?.off('CompanyNameChecked', handler);
+        resolve({
+          isValid: result.isValid,
+          message: result.message,
+          similarNames: result.details?.similarNames?.split(', ') || [],
+        });
+      };
+
+      this.validationConnection.on('CompanyNameChecked', handler);
+      
+      this.validationConnection.invoke('CheckCompanyName', companyName)
+        .catch((error) => {
+          this.validationConnection?.off('CompanyNameChecked', handler);
+          reject(error);
+        });
+
+      setTimeout(() => {
+        this.validationConnection?.off('CompanyNameChecked', handler);
+        reject(new Error('Validation timeout'));
+      }, 5000);
+    });
+  }
+
   // Check password strength
   async checkPasswordStrength(password: string): Promise<{ score: number; level: string; color: string; suggestions: string[] }> {
     if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {

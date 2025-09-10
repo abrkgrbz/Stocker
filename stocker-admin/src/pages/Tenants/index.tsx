@@ -101,9 +101,17 @@ const TenantsPage: React.FC = () => {
   const [validatingCode, setValidatingCode] = useState(false);
   const [codeValidationStatus, setCodeValidationStatus] = useState<'success' | 'error' | 'warning' | undefined>();
   const [codeValidationHelp, setCodeValidationHelp] = useState<string>('');
+  const [validatingEmail, setValidatingEmail] = useState(false);
+  const [emailValidationStatus, setEmailValidationStatus] = useState<'success' | 'error' | 'warning' | undefined>();
+  const [emailValidationHelp, setEmailValidationHelp] = useState<string>('');
+  const [validatingCompany, setValidatingCompany] = useState(false);
+  const [companyValidationStatus, setCompanyValidationStatus] = useState<'success' | 'error' | 'warning' | undefined>();
+  const [companyValidationHelp, setCompanyValidationHelp] = useState<string>('');
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const codeValidationTimeout = useRef<NodeJS.Timeout>();
+  const emailValidationTimeout = useRef<NodeJS.Timeout>();
+  const companyValidationTimeout = useRef<NodeJS.Timeout>();
 
   // Fetch tenant statistics and initialize SignalR
   useEffect(() => {
@@ -539,6 +547,98 @@ const TenantsPage: React.FC = () => {
     }
   };
 
+  // Validate email in real-time using SignalR
+  const validateEmail = async (value: string) => {
+    if (!value) {
+      setEmailValidationStatus(undefined);
+      setEmailValidationHelp('');
+      return;
+    }
+    
+    // Clear previous timeout
+    if (emailValidationTimeout.current) {
+      clearTimeout(emailValidationTimeout.current);
+    }
+    
+    // Set loading state
+    setValidatingEmail(true);
+    setEmailValidationStatus(undefined);
+    setEmailValidationHelp('Kontrol ediliyor...');
+    
+    // Debounce the validation
+    emailValidationTimeout.current = setTimeout(async () => {
+      try {
+        const result = await signalRService.validateEmail(value);
+        
+        if (result.isValid) {
+          setEmailValidationStatus('success');
+          setEmailValidationHelp('Email adresi geçerli');
+          
+          if (result.suggestedEmail && result.suggestedEmail !== value) {
+            setEmailValidationHelp(`Email geçerli. Öneri: ${result.suggestedEmail}`);
+          }
+        } else {
+          setEmailValidationStatus('error');
+          setEmailValidationHelp(result.message || 'Geçersiz email adresi');
+        }
+      } catch (error) {
+        console.error('Email validation error:', error);
+        // Basic client-side validation as fallback
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(value)) {
+          setEmailValidationStatus('success');
+          setEmailValidationHelp('Email formatı geçerli');
+        } else {
+          setEmailValidationStatus('error');
+          setEmailValidationHelp('Geçersiz email formatı');
+        }
+      } finally {
+        setValidatingEmail(false);
+      }
+    }, 500);
+  };
+
+  // Validate company name in real-time using SignalR
+  const validateCompanyName = async (value: string) => {
+    if (!value) {
+      setCompanyValidationStatus(undefined);
+      setCompanyValidationHelp('');
+      return;
+    }
+    
+    // Clear previous timeout
+    if (companyValidationTimeout.current) {
+      clearTimeout(companyValidationTimeout.current);
+    }
+    
+    // Set loading state
+    setValidatingCompany(true);
+    setCompanyValidationStatus(undefined);
+    setCompanyValidationHelp('Kontrol ediliyor...');
+    
+    // Debounce the validation
+    companyValidationTimeout.current = setTimeout(async () => {
+      try {
+        const result = await signalRService.checkCompanyName(value);
+        
+        if (result.isValid) {
+          setCompanyValidationStatus('success');
+          setCompanyValidationHelp('Şirket adı kullanılabilir');
+        } else {
+          setCompanyValidationStatus('warning');
+          setCompanyValidationHelp(result.message || 'Bu şirket adı kullanımda olabilir');
+        }
+      } catch (error) {
+        console.error('Company name validation error:', error);
+        // Skip validation on error
+        setCompanyValidationStatus(undefined);
+        setCompanyValidationHelp('');
+      } finally {
+        setValidatingCompany(false);
+      }
+    }, 500);
+  };
+
   // Validate tenant code in real-time using SignalR
   const validateTenantCode = async (value: string) => {
     if (!value) {
@@ -645,9 +745,28 @@ const TenantsPage: React.FC = () => {
           <Form.Item
             name="name"
             label="Tenant Adı"
-            rules={[{ required: true, message: 'Tenant adı zorunludur' }]}
+            validateStatus={validatingCompany ? 'validating' : companyValidationStatus}
+            help={validatingCompany || companyValidationStatus ? companyValidationHelp : ''}
+            hasFeedback
+            rules={[
+              { required: true, message: 'Tenant adı zorunludur' },
+              { min: 2, message: 'En az 2 karakter olmalıdır' },
+              { max: 100, message: 'En fazla 100 karakter olabilir' }
+            ]}
           >
-            <Input placeholder="ABC Corporation" />
+            <Input 
+              placeholder="ABC Corporation"
+              onChange={(e) => validateCompanyName(e.target.value)}
+              suffix={
+                validatingCompany ? (
+                  <Spin size="small" />
+                ) : companyValidationStatus === 'success' ? (
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                ) : companyValidationStatus === 'warning' ? (
+                  <ExclamationCircleOutlined style={{ color: '#faad14' }} />
+                ) : null
+              }
+            />
           </Form.Item>
         </Col>
         <Col span={12}>
@@ -754,12 +873,27 @@ const TenantsPage: React.FC = () => {
           <Form.Item
             name={['owner', 'email']}
             label="E-posta"
+            validateStatus={validatingEmail ? 'validating' : emailValidationStatus}
+            help={validatingEmail || emailValidationStatus ? emailValidationHelp : ''}
+            hasFeedback
             rules={[
               { required: true, message: 'E-posta zorunludur' },
               { type: 'email', message: 'Geçerli bir e-posta giriniz' },
             ]}
           >
-            <Input placeholder="john@example.com" />
+            <Input 
+              placeholder="john@example.com"
+              onChange={(e) => validateEmail(e.target.value)}
+              suffix={
+                validatingEmail ? (
+                  <Spin size="small" />
+                ) : emailValidationStatus === 'success' ? (
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                ) : emailValidationStatus === 'error' ? (
+                  <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                ) : null
+              }
+            />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -1257,11 +1391,25 @@ const TenantsPage: React.FC = () => {
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
+          // Clear all validation states
           setCodeValidationStatus(undefined);
           setCodeValidationHelp('');
           setValidatingCode(false);
+          setEmailValidationStatus(undefined);
+          setEmailValidationHelp('');
+          setValidatingEmail(false);
+          setCompanyValidationStatus(undefined);
+          setCompanyValidationHelp('');
+          setValidatingCompany(false);
+          // Clear timeouts
           if (codeValidationTimeout.current) {
             clearTimeout(codeValidationTimeout.current);
+          }
+          if (emailValidationTimeout.current) {
+            clearTimeout(emailValidationTimeout.current);
+          }
+          if (companyValidationTimeout.current) {
+            clearTimeout(companyValidationTimeout.current);
           }
         }}
         width={900}
