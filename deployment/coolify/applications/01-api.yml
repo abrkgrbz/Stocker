@@ -137,7 +137,7 @@ services:
       - "traefik.docker.network=coolify"
       
       # API routing - HTTPS
-      - "traefik.http.routers.api-secure.rule=Host(\`api.stoocker.app\`)"
+      - "traefik.http.routers.api-secure.rule=Host(`api.stoocker.app`)"
       - "traefik.http.routers.api-secure.entrypoints=https"
       - "traefik.http.routers.api-secure.tls=true"
       - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
@@ -145,7 +145,7 @@ services:
       - "traefik.http.services.api.loadbalancer.server.port=5000"
       
       # API routing - HTTP (redirect to HTTPS)
-      - "traefik.http.routers.api.rule=Host(\`api.stoocker.app\`)"
+      - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
       - "traefik.http.routers.api.entrypoints=http"
       - "traefik.http.routers.api.middlewares=redirect-to-https"
       
