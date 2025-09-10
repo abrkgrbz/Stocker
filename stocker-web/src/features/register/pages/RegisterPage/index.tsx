@@ -126,12 +126,14 @@ export const RegisterPage: React.FC = () => {
     phoneValidation,
     companyNameCheck,
     identityValidation,
+    tenantCodeValidation,
     validateEmail,
     checkPasswordStrength,
     checkDomain,
     validatePhone,
     checkCompanyName,
     validateIdentity,
+    validateTenantCode,
     error: validationError
   } = useSignalRValidation();
 
@@ -539,12 +541,14 @@ export const RegisterPage: React.FC = () => {
           phoneValidation,
           companyNameCheck,
           identityValidation,
+          tenantCodeValidation,
           validateEmail,
           checkPasswordStrength,
           checkDomain,
           validatePhone,
           checkCompanyName,
           validateIdentity,
+          validateTenantCode,
           error: validationError
         }}
       />

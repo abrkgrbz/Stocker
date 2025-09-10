@@ -3,6 +3,7 @@ import signalRService, {
   ValidationResult, 
   PasswordStrength, 
   DomainCheckResult,
+  TenantCodeValidationResult,
   NotificationMessage 
 } from '../../services/signalr.service';
 import mockSignalRService from '../../services/mockSignalr.service';
@@ -15,6 +16,7 @@ export const useSignalRValidation = () => {
   const [phoneValidation, setPhoneValidation] = useState<ValidationResult | null>(null);
   const [companyNameCheck, setCompanyNameCheck] = useState<ValidationResult | null>(null);
   const [identityValidation, setIdentityValidation] = useState<ValidationResult | null>(null);
+  const [tenantCodeValidation, setTenantCodeValidation] = useState<TenantCodeValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [useMockService, setUseMockService] = useState(false);
 
@@ -73,6 +75,10 @@ export const useSignalRValidation = () => {
         service.onIdentityValidated((result) => {
           console.log('Identity validation result received:', result);
           setIdentityValidation(result);
+        });
+
+        service.onTenantCodeValidated((result) => {
+          setTenantCodeValidation(result);
         });
 
         service.onValidationError((error) => {
@@ -178,6 +184,24 @@ export const useSignalRValidation = () => {
     }
   }, [service]);
 
+  const validateTenantCode = useCallback(async (code: string) => {
+    setError(null);
+    setTenantCodeValidation(null);
+    try {
+      await service.validateTenantCode(code);
+    } catch (err) {
+      console.error('Failed to validate tenant code:', err);
+      setError('Failed to validate tenant code');
+      // Set a fallback validation result
+      setTenantCodeValidation({
+        isAvailable: false,
+        message: 'Doğrulama servisi geçici olarak kullanılamıyor',
+        code: code,
+        suggestedCodes: []
+      });
+    }
+  }, [service]);
+
   return {
     isConnected,
     emailValidation,
@@ -186,6 +210,7 @@ export const useSignalRValidation = () => {
     phoneValidation,
     companyNameCheck,
     identityValidation,
+    tenantCodeValidation,
     error,
     validateEmail,
     checkPasswordStrength,
@@ -193,6 +218,7 @@ export const useSignalRValidation = () => {
     validatePhone,
     checkCompanyName,
     validateIdentity,
+    validateTenantCode,
   };
 };
 

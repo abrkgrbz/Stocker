@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { message, Spin } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { message, Spin, Modal } from 'antd';
 import Select from 'react-select';
 import { apiClient } from '@/shared/api/client';
+import { Captcha } from '@/features/auth/components/Captcha';
+import { EmailVerificationModal } from '@/features/auth/components/EmailVerification';
 // SignalR validation will be passed as props from parent component
 import {
   ShopOutlined,
@@ -44,12 +46,14 @@ interface ModernWizardProps {
     phoneValidation: any;
     companyNameCheck: any;
     identityValidation: any;
+    tenantCodeValidation: any;
     validateEmail: (email: string) => Promise<void>;
     checkPasswordStrength: (password: string) => Promise<void>;
     checkDomain: (domain: string) => Promise<void>;
     validatePhone: (phone: string, countryCode?: string) => Promise<void>;
     checkCompanyName: (name: string) => Promise<void>;
     validateIdentity: (identityNumber: string) => Promise<void>;
+    validateTenantCode: (code: string) => Promise<void>;
     error: string | null;
   };
 }
@@ -68,6 +72,11 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const captchaRef = useRef<any>(null);
+  
   const [formData, setFormData] = useState({
     // Step 1 - Company Info
     companyName: '',
@@ -112,12 +121,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     phoneValidation = null,
     companyNameCheck = null,
     identityValidation = null,
+    tenantCodeValidation = null,
     validateEmail = async () => {},
     checkPasswordStrength: checkSignalRPasswordStrength = async () => {},
     checkDomain = async () => {},
     validatePhone = async () => {},
     checkCompanyName = async () => {},
     validateIdentity = async () => {},
+    validateTenantCode = async () => {},
     error: validationError = null
   } = signalRValidation || {};
 
@@ -551,8 +562,31 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     }
   }, [companyNameCheck]);
 
+  // Tenant Code Validation Effect
   useEffect(() => {
-    if (domainCheck) {
+    if (tenantCodeValidation) {
+      setValidating(prev => ({ ...prev, companyCode: false }));
+      
+      if (!tenantCodeValidation.isAvailable) {
+        let errorMessage = tenantCodeValidation.message || 'Bu kod kullanılamaz';
+        
+        // Add suggestions if available
+        if (tenantCodeValidation.suggestedCodes && tenantCodeValidation.suggestedCodes.length > 0) {
+          errorMessage += ` (Öneriler: ${tenantCodeValidation.suggestedCodes.slice(0, 3).join(', ')})`;
+        }
+        
+        setValidationErrors(prev => ({ ...prev, companyCode: errorMessage }));
+        setValidationSuccess(prev => ({ ...prev, companyCode: false }));
+      } else {
+        setValidationErrors(prev => ({ ...prev, companyCode: '' }));
+        setValidationSuccess(prev => ({ ...prev, companyCode: true }));
+      }
+    }
+  }, [tenantCodeValidation]);
+
+  // Domain Check Effect (for backward compatibility)
+  useEffect(() => {
+    if (domainCheck && !tenantCodeValidation) {
       setValidating(prev => ({ ...prev, companyCode: false }));
       if (!domainCheck.isAvailable) {
         setValidationErrors(prev => ({ ...prev, companyCode: 'Bu kod zaten kullanımda' }));
@@ -562,7 +596,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         setValidationSuccess(prev => ({ ...prev, companyCode: true }));
       }
     }
-  }, [domainCheck]);
+  }, [domainCheck, tenantCodeValidation]);
 
   useEffect(() => {
     if (signalRPasswordStrength) {
@@ -851,6 +885,19 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           hasError = true;
         }
         
+        // Captcha kontrolü
+        if (!captchaToken) {
+          errors.captcha = 'Lütfen robot olmadığınızı doğrulayın';
+          hasError = true;
+        }
+        
+        // E-posta doğrulama kontrolü  
+        if (!emailVerified && formData.contactEmail) {
+          setShowEmailVerification(true);
+          message.warning('Lütfen e-posta adresinizi doğrulayın');
+          return false;
+        }
+        
         if (hasError) {
           setValidationErrors(prev => ({ ...prev, ...errors }));
           message.error('Lütfen tüm zorunlu alanları doldurun');
@@ -1059,6 +1106,17 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                     placeholder="Örn: abc-tech"
                     value={formData.companyCode}
                     onChange={(e) => handleInputChange('companyCode', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    onBlur={() => {
+                      if (formData.companyCode && formData.companyCode.length >= 3 && !validating.companyCode) {
+                        setValidating(prev => ({ ...prev, companyCode: true }));
+                        // Use tenant code validation if available, fallback to domain check
+                        if (validateTenantCode) {
+                          validateTenantCode(formData.companyCode);
+                        } else if (checkDomain) {
+                          checkDomain(formData.companyCode);
+                        }
+                      }
+                    }}
                   />
                   {validating.companyCode && <Spin size="small" className="input-spinner" />}
                   {validationErrors.companyCode && <span className="error-message">{validationErrors.companyCode}</span>}
@@ -1437,6 +1495,88 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
               </div>
             </div>
 
+            {/* E-posta Doğrulama */}
+            {formData.contactEmail && !emailVerified && (
+              <div className="form-row single">
+                <div className="form-group">
+                  <div style={{ 
+                    padding: '12px 16px', 
+                    background: '#fff7e6', 
+                    border: '1px solid #ffd591', 
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <InfoCircleOutlined style={{ color: '#faad14', marginRight: 8 }} />
+                      <span>E-posta adresiniz doğrulanmamış</span>
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setShowEmailVerification(true)}
+                    >
+                      Doğrula
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* E-posta Doğrulama Durumu */}
+            {emailVerified && (
+              <div className="form-row single">
+                <div className="form-group">
+                  <div style={{ 
+                    padding: '12px 16px', 
+                    background: '#f6ffed', 
+                    border: '1px solid #b7eb8f', 
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                    <span>E-posta adresiniz doğrulandı</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Captcha */}
+            <div className="form-row single">
+              <div className="form-group">
+                <label className="form-label">
+                  Güvenlik Doğrulaması <span className="form-label-required">*</span>
+                </label>
+                <Captcha
+                  siteKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                  onVerify={(token) => {
+                    setCaptchaToken(token);
+                    setValidationErrors(prev => ({ ...prev, captcha: '' }));
+                  }}
+                  onExpire={() => {
+                    setCaptchaToken(null);
+                    setValidationErrors(prev => ({ ...prev, captcha: 'Captcha süresi doldu, lütfen tekrar deneyin' }));
+                  }}
+                  onError={() => {
+                    setCaptchaToken(null);
+                    setValidationErrors(prev => ({ ...prev, captcha: 'Captcha yüklenemedi' }));
+                  }}
+                  theme="light"
+                  size="normal"
+                />
+                {validationErrors.captcha && <span className="error-message">{validationErrors.captcha}</span>}
+              </div>
+            </div>
+
             <div className="info-box">
               <span className="info-box-icon"><SafetyOutlined /></span>
               <div className="info-box-content">
@@ -1714,6 +1854,18 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           </div>
         </div>
       </div>
+      
+      {/* E-posta Doğrulama Modal */}
+      <EmailVerificationModal
+        visible={showEmailVerification}
+        email={formData.contactEmail}
+        onClose={() => setShowEmailVerification(false)}
+        onVerified={() => {
+          setEmailVerified(true);
+          setShowEmailVerification(false);
+          message.success('E-posta adresiniz başarıyla doğrulandı!');
+        }}
+      />
     </div>
   );
 };

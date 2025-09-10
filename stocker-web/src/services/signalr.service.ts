@@ -192,6 +192,18 @@ class SignalRService {
     this.validationConnection?.on("CompanyNameChecked", callback);
   }
 
+  // Tenant Code Validation
+  async validateTenantCode(code: string): Promise<void> {
+    if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
+      await this.startValidationConnection();
+    }
+    return this.validationConnection!.invoke("ValidateTenantCode", code);
+  }
+
+  onTenantCodeValidated(callback: (result: TenantCodeValidationResult) => void): void {
+    this.validationConnection?.on("TenantCodeValidated", callback);
+  }
+
   // Identity Validation (TC Kimlik No / Vergi No)
   async validateIdentity(identityNumber: string): Promise<void> {
     console.log('=== SignalR validateIdentity START ===');
@@ -295,6 +307,13 @@ export interface DomainCheckResult {
   isAvailable: boolean;
   message: string;
   suggestions?: string[];
+}
+
+export interface TenantCodeValidationResult {
+  isAvailable: boolean;
+  message: string;
+  code: string;
+  suggestedCodes?: string[];
 }
 
 export interface NotificationMessage {
