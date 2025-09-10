@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { PricingCalculator } from '../../components/PricingCalculator';
 import './style.css';
 import './pricing-fixes.css';
 
@@ -519,6 +520,15 @@ export const PricingPage: React.FC = () => {
               </table>
             </div>
           </Card>
+        </section>
+
+        {/* Pricing Calculator Section */}
+        <section className="calculator-section" style={{ marginBottom: 80 }}>
+          <div className="section-header">
+            <Title level={2}>Özel Fiyatlandırma</Title>
+            <Paragraph>İhtiyaçlarınıza göre kendi planınızı oluşturun</Paragraph>
+          </div>
+          <PricingCalculator />
         </section>
 
         {/* Add-ons Section */}
