@@ -11,13 +11,6 @@ public static class SerilogConfiguration
     {
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         var seqUrl = configuration["Logging:Seq:ServerUrl"] ?? "http://localhost:5341";
-        
-        // Production'da direkt IP kullan
-        if (environment == "Production")
-        {
-            seqUrl = "http://95.217.219.4:5341";
-        }
-        
         var seqApiKey = configuration["Logging:Seq:ApiKey"];
         var minimumLevel = configuration["Logging:Seq:MinimumLevel"] ?? "Information";
         

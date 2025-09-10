@@ -29,7 +29,7 @@ services:
       # LOGGING (SEQ)
       # ==================================
       - Logging__Seq__ServerUrl=https://seq.stoocker.app
-      - Logging__Seq__ApiKey=2KD2afyLd0tMpP7IYHoC
+      - Logging__Seq__ApiKey=1kCTahfs94uqcHLWZ5vl
       - Logging__Seq__MinimumLevel=Information
       
       # ==================================
