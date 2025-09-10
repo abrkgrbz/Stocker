@@ -841,4 +841,112 @@ public class ValidationService : IValidationService
     }
 
     #endregion
+
+    public async Task<TenantCodeValidationResult> ValidateTenantCodeAsync(string code)
+    {
+        var result = new TenantCodeValidationResult
+        {
+            Details = new Dictionary<string, string>(),
+            SuggestedCodes = new List<string>()
+        };
+
+        try
+        {
+            _logger.LogInformation("Validating tenant code: {Code}", code);
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                result.IsAvailable = false;
+                result.Message = "Kod boş olamaz";
+                return result;
+            }
+
+            code = code.Trim().ToLower();
+
+            // Check code format (only lowercase letters, numbers and hyphens)
+            if (!Regex.IsMatch(code, @"^[a-z0-9-]+$"))
+            {
+                result.IsAvailable = false;
+                result.Message = "Kod sadece küçük harf, rakam ve tire içerebilir";
+                result.Details["format"] = "Geçerli format: abc-123";
+                return result;
+            }
+
+            // Check minimum and maximum length
+            if (code.Length < 3)
+            {
+                result.IsAvailable = false;
+                result.Message = "Kod en az 3 karakter olmalıdır";
+                return result;
+            }
+
+            if (code.Length > 50)
+            {
+                result.IsAvailable = false;
+                result.Message = "Kod en fazla 50 karakter olabilir";
+                return result;
+            }
+
+            // Check for reserved codes
+            var reservedCodes = new[] { 
+                "api", "admin", "master", "www", "app", "mail", "ftp", 
+                "blog", "shop", "store", "test", "demo", "staging", 
+                "dev", "development", "prod", "production", "system",
+                "root", "public", "private", "static", "assets"
+            };
+
+            if (reservedCodes.Contains(code))
+            {
+                result.IsAvailable = false;
+                result.IsReserved = true;
+                result.Message = "Bu kod sistem tarafından rezerve edilmiştir";
+                
+                // Suggest alternatives
+                result.SuggestedCodes.Add($"{code}-company");
+                result.SuggestedCodes.Add($"{code}-tenant");
+                result.SuggestedCodes.Add($"my-{code}");
+                
+                return result;
+            }
+
+            // Check if code exists in database using MediatR
+            try
+            {
+                var checkResult = await _mediator.Send(new CheckSubdomainAvailabilityQuery { Subdomain = code });
+                
+                if (checkResult.IsSuccess && checkResult.Value)
+                {
+                    result.IsAvailable = true;
+                    result.Message = "Bu kod kullanılabilir";
+                }
+                else
+                {
+                    result.IsAvailable = false;
+                    result.Message = "Bu kod zaten kullanımda";
+                    
+                    // Generate suggestions
+                    result.SuggestedCodes.Add($"{code}-1");
+                    result.SuggestedCodes.Add($"{code}-{DateTime.Now.Year}");
+                    result.SuggestedCodes.Add($"{code}-new");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking subdomain availability");
+                // If database check fails, assume available for now
+                result.IsAvailable = true;
+                result.Message = "Kod kullanılabilir görünüyor";
+                result.Details["warning"] = "Veritabanı kontrolü yapılamadı";
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating tenant code");
+            result.IsAvailable = false;
+            result.Message = "Kod kontrolü sırasında bir hata oluştu";
+            return result;
+        }
+    }
 }

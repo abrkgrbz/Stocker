@@ -8,6 +8,7 @@ public interface IValidationService
     Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(string domain);
     Task<CompanyNameValidationResult> ValidateCompanyNameAsync(string companyName);
     Task<IdentityValidationResult> ValidateIdentityNumberAsync(string identityNumber);
+    Task<TenantCodeValidationResult> ValidateTenantCodeAsync(string code);
 }
 
 public class EmailValidationResult
@@ -75,5 +76,14 @@ public class IdentityValidationResult
     public string NumberType { get; set; } = string.Empty; // TCKimlik, VergiNo
     public string? FormattedNumber { get; set; }
     public bool IsTestNumber { get; set; }
+    public Dictionary<string, string> Details { get; set; } = new();
+}
+
+public class TenantCodeValidationResult
+{
+    public bool IsAvailable { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public List<string> SuggestedCodes { get; set; } = new();
+    public bool IsReserved { get; set; }
     public Dictionary<string, string> Details { get; set; } = new();
 }
