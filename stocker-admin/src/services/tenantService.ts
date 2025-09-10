@@ -212,7 +212,7 @@ export const tenantService = {
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-      const response = await apiClient.get<ApiResponse<Tenant[]>>(`/master/tenant?${queryParams.toString()}`);
+      const response = await apiClient.get<ApiResponse<Tenant[]>>(`/master/tenants?${queryParams.toString()}`);
       
       if (response.data.success) {
         // Map API response to extended tenant format
