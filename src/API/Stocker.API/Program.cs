@@ -545,40 +545,6 @@ using (var scope = app.Services.CreateScope())
 {
     try
     {
-        // Log connection strings for debugging
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        var masterConnection = configuration.GetConnectionString("MasterConnection");
-        var tenantConnection = configuration.GetConnectionString("TenantConnection");
-        var hangfireConnection = configuration.GetConnectionString("HangfireConnection");
-        
-        app.Logger.LogInformation("=== DATABASE CONNECTION DEBUG ===");
-        app.Logger.LogInformation($"MasterConnection: {masterConnection?.Replace("Password=", "Password=***")}");
-        app.Logger.LogInformation($"TenantConnection: {tenantConnection?.Replace("Password=", "Password=***")}");
-        app.Logger.LogInformation($"HangfireConnection: {hangfireConnection?.Replace("Password=", "Password=***")}");
-        
-        // Test connection
-        try
-        {
-            using var testConnection = new Microsoft.Data.SqlClient.SqlConnection(masterConnection);
-            app.Logger.LogInformation("Testing SQL connection...");
-            await testConnection.OpenAsync();
-            app.Logger.LogInformation("SQL connection successful!");
-            testConnection.Close();
-        }
-        catch (Exception connEx)
-        {
-            app.Logger.LogError(connEx, "Failed to connect to SQL Server. Full error details:");
-            app.Logger.LogError($"Connection String: {masterConnection?.Replace("Password=", "Password=***")}");
-            app.Logger.LogError($"Error Type: {connEx.GetType().Name}");
-            app.Logger.LogError($"Error Message: {connEx.Message}");
-            if (connEx.InnerException != null)
-            {
-                app.Logger.LogError($"Inner Exception: {connEx.InnerException.Message}");
-            }
-        }
-        
-        app.Logger.LogInformation("=================================");
-        
         var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Persistence.Migrations.IMigrationService>();
         await migrationService.MigrateMasterDatabaseAsync();
         await migrationService.SeedMasterDataAsync();
