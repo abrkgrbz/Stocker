@@ -45,12 +45,8 @@ public class MigrationService : IMigrationService
         {
             _logger.LogInformation("Starting master database migration...");
             
-            // First ensure database exists
-            _logger.LogInformation("Ensuring database exists...");
-            await context.Database.EnsureCreatedAsync();
-            
-            // Then apply migrations
-            _logger.LogInformation("Applying migrations...");
+            // MigrateAsync will create database if it doesn't exist
+            _logger.LogInformation("Applying migrations and creating database if needed...");
             await context.Database.MigrateAsync();
             
             _logger.LogInformation("Master database migration completed successfully.");
