@@ -54,6 +54,10 @@ public static class ServiceCollectionExtensions
             
             options.UseSqlServer(connectionString);
             
+            // Suppress pending model changes warning in production
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            
             // Add interceptors
             var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
             options.AddInterceptors(auditInterceptor);
