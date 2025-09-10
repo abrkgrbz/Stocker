@@ -69,7 +69,8 @@
       "Bash(nslookup:*)",
       "Bash(mv:*)",
       "Bash(git checkout:*)",
-      "Bash(xcopy:*)"
+      "Bash(xcopy:*)",
+      "Bash(scp:*)"
     ],
     "deny": []
   }

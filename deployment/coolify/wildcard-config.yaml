@@ -1,0 +1,30 @@
+http:
+  routers:
+    web-main:
+      rule: "Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      entryPoints:
+        - https
+      service: web-service
+      tls:
+        certResolver: letsencrypt
+      priority: 10
+      
+    web-wildcard:
+      rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
+      entryPoints:
+        - https
+      service: web-service
+      tls:
+        certResolver: cloudflare
+        domains:
+          - main: "stoocker.app"
+            sans:
+              - "*.stoocker.app"
+      priority: 5
+      
+  services:
+    web-service:
+      loadBalancer:
+        servers:
+          - url: "http://web-t0kogcgc0s8ks48csc8occcc-193601081001:80"
+        passHostHeader: true

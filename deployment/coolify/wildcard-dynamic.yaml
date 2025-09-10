@@ -1,0 +1,21 @@
+http:
+  routers:
+    tenant-wildcard:
+      rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
+      entryPoints:
+        - https
+      service: tenant-web
+      tls:
+        certResolver: cloudflare
+        domains:
+          - main: "stoocker.app"
+            sans:
+              - "*.stoocker.app"
+      priority: 1
+      
+  services:
+    tenant-web:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:3000"
+        passHostHeader: true
