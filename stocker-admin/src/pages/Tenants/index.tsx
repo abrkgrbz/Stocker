@@ -97,8 +97,12 @@ const TenantsPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [validatingCode, setValidatingCode] = useState(false);
+  const [codeValidationStatus, setCodeValidationStatus] = useState<'success' | 'error' | 'warning' | undefined>();
+  const [codeValidationHelp, setCodeValidationHelp] = useState<string>('');
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
+  const codeValidationTimeout = useRef<NodeJS.Timeout>();
 
   // Fetch tenant statistics
   useEffect(() => {
@@ -523,10 +527,52 @@ const TenantsPage: React.FC = () => {
     }
   };
 
+  // Validate tenant code in real-time
+  const validateTenantCode = async (value: string) => {
+    if (!value) return;
+    
+    // Clear previous timeout
+    if (codeValidationTimeout.current) {
+      clearTimeout(codeValidationTimeout.current);
+    }
+    
+    // Set loading state
+    setValidatingCode(true);
+    setCodeValidationStatus(undefined);
+    setCodeValidationHelp('Kontrol ediliyor...');
+    
+    // Debounce the validation
+    codeValidationTimeout.current = setTimeout(async () => {
+      try {
+        const result = await tenantService.validateTenantCode(value);
+        
+        if (result.isAvailable) {
+          setCodeValidationStatus('success');
+          setCodeValidationHelp('Bu kod kullanılabilir!');
+        } else {
+          setCodeValidationStatus('error');
+          setCodeValidationHelp(result.message || 'Bu kod zaten kullanımda!');
+        }
+      } catch (error) {
+        setCodeValidationStatus('warning');
+        setCodeValidationHelp('Kod kontrolü yapılamadı');
+      } finally {
+        setValidatingCode(false);
+      }
+    }, 500); // 500ms debounce
+  };
+
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
+      
+      // Check if code is valid before submitting
+      if (codeValidationStatus === 'error') {
+        message.error('Lütfen geçerli bir kod girin');
+        setLoading(false);
+        return;
+      }
       
       // API çağrısı simülasyonu
       setTimeout(() => {
@@ -538,6 +584,8 @@ const TenantsPage: React.FC = () => {
         setIsModalVisible(false);
         form.resetFields();
         setLoading(false);
+        setCodeValidationStatus(undefined);
+        setCodeValidationHelp('');
         actionRef.current?.reload();
       }, 1500);
     } catch (error) {
@@ -566,14 +614,45 @@ const TenantsPage: React.FC = () => {
         </Col>
         <Col span={12}>
           <Form.Item
-            name="subdomain"
-            label="Subdomain"
+            name="code"
+            label="Şirket Kodu"
+            validateStatus={validatingCode ? 'validating' : codeValidationStatus}
+            help={validatingCode || codeValidationStatus ? codeValidationHelp : ''}
+            hasFeedback
             rules={[
-              { required: true, message: 'Subdomain zorunludur' },
-              { pattern: /^[a-z0-9-]+$/, message: 'Sadece küçük harf, rakam ve tire kullanılabilir' },
+              { required: true, message: 'Şirket kodu zorunludur' },
+              { 
+                pattern: /^[a-z0-9-]+$/, 
+                message: 'Sadece küçük harf, rakam ve tire kullanılabilir' 
+              },
+              {
+                min: 3,
+                message: 'En az 3 karakter olmalıdır'
+              },
+              {
+                max: 50,
+                message: 'En fazla 50 karakter olabilir'
+              }
             ]}
           >
-            <Input addonAfter=".stocker.app" placeholder="abc-corp" />
+            <Input 
+              addonAfter=".stoocker.app" 
+              placeholder="abc-corp"
+              onChange={(e) => {
+                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                form.setFieldsValue({ code: value });
+                validateTenantCode(value);
+              }}
+              suffix={
+                validatingCode ? (
+                  <Spin size="small" />
+                ) : codeValidationStatus === 'success' ? (
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                ) : codeValidationStatus === 'error' ? (
+                  <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                ) : null
+              }
+            />
           </Form.Item>
         </Col>
       </Row>
@@ -1140,6 +1219,12 @@ const TenantsPage: React.FC = () => {
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
+          setCodeValidationStatus(undefined);
+          setCodeValidationHelp('');
+          setValidatingCode(false);
+          if (codeValidationTimeout.current) {
+            clearTimeout(codeValidationTimeout.current);
+          }
         }}
         width={900}
         confirmLoading={loading}

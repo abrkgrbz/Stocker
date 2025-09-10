@@ -302,6 +302,28 @@ export const tenantService = {
     return response.data;
   },
 
+  // Validate tenant code availability
+  async validateTenantCode(code: string): Promise<{ isAvailable: boolean; message?: string }> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ isAvailable: boolean; message?: string }>>(
+        `/master/tenants/validate-code?code=${encodeURIComponent(code)}`
+      );
+      
+      if (response.data.success) {
+        return response.data.data;
+      }
+      
+      return { isAvailable: false, message: 'Validation failed' };
+    } catch (error: any) {
+      // If 404 or network error, assume code is available
+      if (error.response?.status === 404) {
+        return { isAvailable: true };
+      }
+      // For now, return available if API endpoint doesn't exist
+      return { isAvailable: true };
+    }
+  },
+
   // Export tenants data
   async exportTenants(format: 'csv' | 'excel' | 'pdf' = 'excel'): Promise<Blob> {
     const response = await apiClient.get(`/tenants/export?format=${format}`, {

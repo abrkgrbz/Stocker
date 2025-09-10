@@ -246,6 +246,73 @@ public class TenantsController : MasterControllerBase
     }
 
     /// <summary>
+    /// Validate tenant code availability
+    /// </summary>
+    [HttpGet("validate-code")]
+    [ProducesResponseType(typeof(ApiResponse<TenantCodeValidationDto>), 200)]
+    public async Task<IActionResult> ValidateCode([FromQuery] string code)
+    {
+        _logger.LogInformation("Validating tenant code: {Code}", code);
+        
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return Ok(new ApiResponse<TenantCodeValidationDto>
+            {
+                Success = true,
+                Data = new TenantCodeValidationDto
+                {
+                    IsAvailable = false,
+                    Message = "Code is required"
+                }
+            });
+        }
+        
+        // Check if code is valid format
+        if (!System.Text.RegularExpressions.Regex.IsMatch(code, @"^[a-z0-9-]+$"))
+        {
+            return Ok(new ApiResponse<TenantCodeValidationDto>
+            {
+                Success = true,
+                Data = new TenantCodeValidationDto
+                {
+                    IsAvailable = false,
+                    Message = "Code can only contain lowercase letters, numbers, and hyphens"
+                }
+            });
+        }
+        
+        // Check if code is reserved
+        var reservedCodes = new[] { "api", "admin", "master", "www", "app", "mail", "ftp", "blog", "shop", "store" };
+        if (reservedCodes.Contains(code.ToLower()))
+        {
+            return Ok(new ApiResponse<TenantCodeValidationDto>
+            {
+                Success = true,
+                Data = new TenantCodeValidationDto
+                {
+                    IsAvailable = false,
+                    Message = "This code is reserved and cannot be used"
+                }
+            });
+        }
+        
+        // Check if code exists in database
+        var existingTenants = await _mediator.Send(new GetTenantsListQuery { Search = code });
+        var isCodeTaken = existingTenants.IsSuccess && 
+                         existingTenants.Value.Any(t => t.Code?.ToLower() == code.ToLower());
+        
+        return Ok(new ApiResponse<TenantCodeValidationDto>
+        {
+            Success = true,
+            Data = new TenantCodeValidationDto
+            {
+                IsAvailable = !isCodeTaken,
+                Message = isCodeTaken ? "This code is already taken" : "Code is available"
+            }
+        });
+    }
+
+    /// <summary>
     /// Login to tenant (generate access token)
     /// </summary>
     [HttpPost("{id}/login")]
