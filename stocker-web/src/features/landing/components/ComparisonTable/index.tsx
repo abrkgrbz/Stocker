@@ -693,7 +693,7 @@ export const ComparisonTable: React.FC = () => {
                   fontSize: '16px',
                   borderRadius: '12px'
                 }}
-                onClick={() => window.location.href = '/pricing-calculator'}
+                onClick={() => window.location.href = '/pricing'}
               >
                 Fiyat Hesaplayıcı
               </Button>
