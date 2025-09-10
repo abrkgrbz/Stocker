@@ -21,9 +21,9 @@ services:
       # ==================================
       # DATABASE CONNECTIONS
       # ==================================
-      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app,1433;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app,1433;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
       
       # ==================================
       # LOGGING (SEQ)
@@ -84,8 +84,8 @@ services:
       - Hangfire__WorkerCount=4
       - Hangfire__Queues=critical,default,low
       - Hangfire__RetryAttempts=3
-      - Hangfire__ConnectionString=Server=coolify.stoocker.app,1433;Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True
-      - ConnectionStrings__HangfireConnection=Server=coolify.stoocker.app,1433;Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True
+      - Hangfire__ConnectionString=Server=coolify.stoocker.app;Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True
+      - ConnectionStrings__HangfireConnection=Server=coolify.stoocker.app;Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True
       
       # ==================================
       # PASSWORD POLICY
