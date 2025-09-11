@@ -119,14 +119,14 @@
 }
 
 .package-item {
-  border: 2px solid transparent;
+  border: 2px solid #e5e7eb;
   border-radius: 20px;
-  padding: 24px;
+  padding: 28px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   background: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
@@ -143,9 +143,9 @@
 }
 
 .package-item:hover {
-  border-color: rgba(102, 126, 234, 0.2);
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .package-item:hover::before {
@@ -153,11 +153,9 @@
 }
 
 .package-item.selected {
-  border: 2px solid transparent;
-  background: linear-gradient(white, white) padding-box,
-              linear-gradient(135deg, #667eea 0%, #764ba2 100%) border-box;
-  transform: scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(102, 126, 234, 0.25);
+  border: 2px solid #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  box-shadow: 0 10px 30px -5px rgba(102, 126, 234, 0.2);
 }
 
 .package-item.selected::before {
@@ -191,10 +189,9 @@
 }
 
 .package-item.popular {
-  border: 2px solid rgba(102, 126, 234, 0.15);
-  box-shadow: 0 10px 40px -10px rgba(102, 126, 234, 0.3);
-  transform: scale(1.02);
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+  border: 2px solid #667eea;
+  box-shadow: 0 4px 20px -2px rgba(102, 126, 234, 0.25);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
 }
 
 .package-item.popular::before {
@@ -232,17 +229,17 @@
 }
 
 .package-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 24px;
+  align-items: start;
 }
 
 .package-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1;
-  min-width: 0;
+  grid-column: 1 / 3;
 }
 
 .package-icon {
@@ -288,12 +285,21 @@
   margin: 0;
 }
 
+.package-price-section {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  text-align: right;
+  padding: 8px 0;
+  border-left: 2px solid #f3f4f6;
+  padding-left: 24px;
+  min-width: 140px;
+}
+
 .package-price {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  min-width: 120px;
-  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 .price-amount {
@@ -321,11 +327,13 @@
 .package-features {
   list-style: none;
   padding: 0;
-  margin: 16px 0 0 0;
-  display: flex;
-  gap: 12px;
-  flex: 1;
-  flex-wrap: wrap;
+  margin: 20px 0 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  grid-column: 1 / -1;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
 }
 
 .package-features li {
@@ -334,11 +342,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  white-space: nowrap;
-  background: rgba(102, 126, 234, 0.05);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(102, 126, 234, 0.1);
+  background: rgba(102, 126, 234, 0.03);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(102, 126, 234, 0.08);
   transition: all 0.2s ease;
 }
 
@@ -408,21 +415,35 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .package-content {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .package-header {
+    grid-column: 1;
     width: 100%;
   }
 
-  .package-features {
-    margin-top: 12px;
-    width: 100%;
+  .package-price-section {
+    grid-column: 1;
+    grid-row: 2;
+    border-left: none;
+    border-top: 1px solid #f3f4f6;
+    padding-left: 0;
+    padding-top: 16px;
+    text-align: left;
   }
 
   .package-price {
+    justify-content: flex-start;
+  }
+
+  .package-features {
+    grid-column: 1;
+    grid-template-columns: 1fr;
     margin-top: 12px;
+    padding-top: 16px;
   }
 
   .package-select {

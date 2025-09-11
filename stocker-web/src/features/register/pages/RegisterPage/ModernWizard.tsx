@@ -1645,9 +1645,10 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                     <div className="package-content">
                       <div className="package-header">
                         <div className="package-icon">
-                          {pkg.type === 'Starter' && <RocketOutlined />}
-                          {pkg.type === 'Professional' && <CrownOutlined />}
-                          {pkg.type === 'Enterprise' && <GlobalOutlined />}
+                          {pkg.type === 'Starter' || pkg.name === 'Başlangıç' ? <RocketOutlined /> : null}
+                          {pkg.type === 'Professional' || pkg.name === 'Profesyonel' ? <CrownOutlined /> : null}
+                          {pkg.type === 'Enterprise' || pkg.name === 'Enterprise' ? <GlobalOutlined /> : null}
+                          {!pkg.type && pkg.name !== 'Başlangıç' && pkg.name !== 'Profesyonel' && pkg.name !== 'Enterprise' ? <ShoppingCartOutlined /> : null}
                         </div>
                         <div className="package-info">
                           <h3 className="package-name">{pkg.name}</h3>
@@ -1655,31 +1656,37 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                         </div>
                       </div>
                       
-                      <div className="package-price">
-                        <span className="price-amount">
-                          {pkg.currency}{formData.billingPeriod === 'Yearly' 
-                            ? Math.floor(pkg.price * 12 * 0.8 / 12) 
-                            : pkg.price}
-                        </span>
-                        <span className="price-period">/ay</span>
+                      <div className="package-price-section">
+                        <div className="package-price">
+                          <span className="price-amount">
+                            {pkg.currency}{formData.billingPeriod === 'Yearly' 
+                              ? Math.floor(pkg.price * 12 * 0.8 / 12) 
+                              : pkg.price}
+                          </span>
+                          <span className="price-period">/ay</span>
+                        </div>
                         {formData.billingPeriod === 'Yearly' && (
-                          <span className="price-original">{pkg.currency}{pkg.price}</span>
+                          <div style={{ marginTop: '4px' }}>
+                            <span className="price-original">{pkg.currency}{pkg.price}</span>
+                            <span style={{ color: '#10b981', fontSize: '12px', marginLeft: '8px' }}>
+                              %20 tasarruf
+                            </span>
+                          </div>
                         )}
+                        <div className="package-select" style={{ marginTop: '16px' }}>
+                          <div className={`package-radio ${formData.packageId === pkg.id ? 'checked' : ''}`}>
+                            {formData.packageId === pkg.id && <CheckOutlined />}
+                          </div>
+                        </div>
                       </div>
                       
                       <ul className="package-features">
-                        {pkg.features?.slice(0, 4).map((feature, idx) => (
+                        {pkg.features?.map((feature, idx) => (
                           <li key={idx}>
-                            <CheckOutlined /> {feature}
+                            <CheckOutlined style={{ color: '#10b981' }} /> {feature}
                           </li>
                         ))}
                       </ul>
-                      
-                      <div className="package-select">
-                        <div className={`package-radio ${formData.packageId === pkg.id ? 'checked' : ''}`}>
-                          {formData.packageId === pkg.id && <CheckOutlined />}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ))}
