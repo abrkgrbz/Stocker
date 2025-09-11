@@ -164,6 +164,108 @@ class CompanyService {
     
     return response.data;
   }
+
+  async createCompanyWithFullSetup(wizardData: any): Promise<Company> {
+    // Extract data from wizard steps
+    const companyStep = wizardData.company || {};
+    const organizationStep = wizardData.organization || {};
+    const modulesStep = wizardData.modules || {};
+    const financialStep = wizardData.financial || {};
+    const securityStep = wizardData.security || {};
+    const integrationStep = wizardData.integration || {};
+    const importStep = wizardData.import || {};
+    
+    // Create company with basic info
+    const companyData: CompanyData = {
+      name: companyStep.companyName || 'Company',
+      code: `company_${Date.now()}`,
+      legalName: companyStep.legalName || companyStep.companyName,
+      identityType: 'TaxNumber',
+      identityNumber: companyStep.taxNumber,
+      taxNumber: companyStep.taxNumber,
+      taxOffice: companyStep.taxOffice,
+      tradeRegisterNumber: companyStep.tradeRegisterNumber,
+      email: companyStep.email,
+      phone: companyStep.phone,
+      website: companyStep.website,
+      sector: companyStep.sector,
+      foundedYear: companyStep.foundedYear,
+      currency: financialStep.currency || 'TRY',
+      timezone: 'Europe/Istanbul',
+      country: 'Türkiye',
+      city: companyStep.city || '',
+      district: companyStep.district || '',
+      postalCode: companyStep.postalCode,
+      addressLine: companyStep.addressLine || ''
+    };
+    
+    // Create the company
+    const company = await this.createCompany(companyData);
+    
+    // Upload logo if provided
+    if (companyStep.logo && companyStep.logo[0]) {
+      await this.uploadLogo(companyStep.logo[0].originFileObj);
+    }
+    
+    // Setup organization structure (departments, branches, roles)
+    if (organizationStep.departments || organizationStep.branches) {
+      await api.post('/api/tenant/organization/setup', {
+        departments: organizationStep.departments || [],
+        branches: organizationStep.branches || [],
+        userRoles: organizationStep.userRoles || [],
+        employeeCount: organizationStep.employeeCount,
+        expectedUsers: organizationStep.expectedUsers
+      });
+    }
+    
+    // Configure modules
+    if (modulesStep.selectedModules) {
+      await api.post('/api/tenant/modules/configure', {
+        modules: modulesStep.selectedModules,
+        useDefaults: modulesStep.moduleSettings !== false,
+        customSettings: modulesStep.customModuleSettings
+      });
+    }
+    
+    // Configure financial settings
+    await api.post('/api/tenant/financial/configure', {
+      currency: financialStep.currency,
+      multiCurrency: financialStep.multiCurrency,
+      defaultKDV: financialStep.defaultKDV,
+      withholdingTax: financialStep.withholdingTax,
+      specialTax: financialStep.specialTax,
+      fiscalYearStart: financialStep.fiscalYearStart,
+      fiscalYearEnd: financialStep.fiscalYearEnd,
+      chartOfAccounts: financialStep.chartOfAccounts,
+      accountingMethod: financialStep.accountingMethod
+    });
+    
+    // Configure security settings
+    await api.post('/api/tenant/security/configure', {
+      minPasswordLength: securityStep.minPasswordLength,
+      passwordExpiry: securityStep.passwordExpiry,
+      passwordRequirements: securityStep.passwordRequirements || [],
+      twoFactorAuth: securityStep.twoFactorAuth,
+      twoFactorMethods: securityStep.twoFactorMethods || [],
+      backupEnabled: securityStep.backupEnabled,
+      backupFrequency: securityStep.backupFrequency,
+      backupRetention: securityStep.backupRetention,
+      compliance: securityStep.compliance || []
+    });
+    
+    // Configure integrations if any
+    if (integrationStep.emailIntegration || integrationStep.smsIntegration || integrationStep.paymentGateways) {
+      await api.post('/api/tenant/integrations/configure', {
+        emailIntegration: integrationStep.emailIntegration,
+        smsIntegration: integrationStep.smsIntegration,
+        paymentGateways: integrationStep.paymentGateways || [],
+        einvoiceProvider: integrationStep.einvoiceProvider,
+        otherIntegrations: integrationStep.otherIntegrations || []
+      });
+    }
+    
+    return company;
+  }
 }
 
 export default new CompanyService();

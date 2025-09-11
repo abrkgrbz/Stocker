@@ -90,6 +90,7 @@ const TrainingPage = lazy(() => import('@/features/training/pages/TrainingPage')
 const BlogPage = lazy(() => import('@/features/blog/pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const PricingPage = lazy(() => import('@/features/pricing/pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
+const CompanyWizard = lazy(() => import('@/features/company/pages/CompanyWizard'));
 const TestSweetAlert = lazy(() => import('@/features/test/TestSweetAlert'));
 
 // Lazy load module pages
@@ -254,6 +255,16 @@ function App() {
                   element={
                     <PrivateRoute>
                       <CompanySetup />
+                    </PrivateRoute>
+                  } 
+                />
+                
+                {/* Company Wizard - New comprehensive setup */}
+                <Route 
+                  path="/company-wizard" 
+                  element={
+                    <PrivateRoute>
+                      <CompanyWizard />
                     </PrivateRoute>
                   } 
                 />
