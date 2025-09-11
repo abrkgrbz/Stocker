@@ -44,6 +44,7 @@ const RegisterWizard = lazy(() => import('@/features/register/pages/RegisterWiza
 const SignalRTestPage = lazy(() => import('@/features/register/pages/SignalRTest').then(m => ({ default: m.SignalRTestPage })));
 const PaymentPage = lazy(() => import('@/features/payment/pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const FeatureTestPage = lazy(() => import('@/features/test/pages/FeatureTestPage'));
+const RegisterWizardTest = lazy(() => import('@/features/test/pages/RegisterWizardTest').then(m => ({ default: m.RegisterWizardTest })));
 const MasterDashboard = lazy(() => import('@/features/master/pages/Dashboard').then(m => ({ default: m.MasterDashboard })));
 const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
@@ -245,6 +246,7 @@ function App() {
                 <Route path="/signalr-test" element={<SignalRTestPage />} />
                 <Route path="/test-sweetalert" element={<TestSweetAlert />} />
                 <Route path="/test-features" element={<FeatureTestPage />} />
+                <Route path="/test-wizard" element={<RegisterWizardTest />} />
                 
                 {/* Company Setup - Protected route but no layout */}
                 <Route 

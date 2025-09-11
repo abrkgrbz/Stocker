@@ -486,19 +486,34 @@ const FeatureTestPage: React.FC = () => {
       {/* Quick Test Panel */}
       <Card style={{ marginTop: 24 }}>
         <Title level={4}>Hızlı Test Paneli</Title>
-        <Alert
-          message="Test Bilgileri"
-          description={
-            <ul>
-              <li>CAPTCHA Test Key: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI</li>
-              <li>E-posta Doğrulama Kodu: 123456</li>
-              <li>Referans Kodları: WELCOME20, FRIEND50</li>
-              <li>Rate Limit: 5 deneme / dakika</li>
-            </ul>
-          }
-          type="info"
-          showIcon
-        />
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Alert
+            message="Test Bilgileri"
+            description={
+              <ul>
+                <li>CAPTCHA Test Key: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI</li>
+                <li>E-posta Doğrulama Kodu: 123456</li>
+                <li>Referans Kodları: WELCOME20, FRIEND50</li>
+                <li>Rate Limit: 5 deneme / dakika</li>
+              </ul>
+            }
+            type="info"
+            showIcon
+          />
+          <Divider />
+          <Title level={5}>Diğer Test Sayfaları</Title>
+          <Space wrap>
+            <Button type="primary" onClick={() => window.location.href = '/test-wizard'}>
+              Register Wizard Test
+            </Button>
+            <Button onClick={() => window.location.href = '/signalr-test'}>
+              SignalR Test
+            </Button>
+            <Button onClick={() => window.location.href = '/test-sweetalert'}>
+              SweetAlert Test
+            </Button>
+          </Space>
+        </Space>
       </Card>
     </div>
   );
