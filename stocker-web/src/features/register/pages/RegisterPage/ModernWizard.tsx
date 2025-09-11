@@ -890,19 +890,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           hasError = true;
         }
         
-        // Captcha kontrolü
-        if (!captchaToken) {
-          errors.captcha = 'Lütfen robot olmadığınızı doğrulayın';
-          hasError = true;
-        }
-        
-        // E-posta doğrulama kontrolü  
-        if (!emailVerified && formData.contactEmail) {
-          setShowEmailVerification(true);
-          message.warning('Lütfen e-posta adresinizi doğrulayın');
-          return false;
-        }
-        
         if (hasError) {
           setValidationErrors(prev => ({ ...prev, ...errors }));
           message.error('Lütfen tüm zorunlu alanları doldurun');
@@ -1512,88 +1499,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   </span>
                 </label>
                 {validationErrors.terms && <span className="error-message" style={{marginTop: '8px', display: 'block'}}>{validationErrors.terms}</span>}
-              </div>
-            </div>
-
-            {/* E-posta Doğrulama */}
-            {formData.contactEmail && !emailVerified && (
-              <div className="form-row single">
-                <div className="form-group">
-                  <div style={{ 
-                    padding: '12px 16px', 
-                    background: '#fff7e6', 
-                    border: '1px solid #ffd591', 
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <InfoCircleOutlined style={{ color: '#faad14', marginRight: 8 }} />
-                      <span>E-posta adresiniz doğrulanmamış</span>
-                    </div>
-                    <button
-                      type="button"
-                      style={{
-                        background: '#667eea',
-                        color: 'white',
-                        border: 'none',
-                        padding: '4px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => setShowEmailVerification(true)}
-                    >
-                      Doğrula
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* E-posta Doğrulama Durumu */}
-            {emailVerified && (
-              <div className="form-row single">
-                <div className="form-group">
-                  <div style={{ 
-                    padding: '12px 16px', 
-                    background: '#f6ffed', 
-                    border: '1px solid #b7eb8f', 
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
-                    <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                    <span>E-posta adresiniz doğrulandı</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Captcha */}
-            <div className="form-row single">
-              <div className="form-group">
-                <label className="form-label">
-                  Güvenlik Doğrulaması <span className="form-label-required">*</span>
-                </label>
-                <Captcha
-                  siteKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                  onVerify={(token) => {
-                    setCaptchaToken(token);
-                    setValidationErrors(prev => ({ ...prev, captcha: '' }));
-                  }}
-                  onExpire={() => {
-                    setCaptchaToken(null);
-                    setValidationErrors(prev => ({ ...prev, captcha: 'Captcha süresi doldu, lütfen tekrar deneyin' }));
-                  }}
-                  onError={() => {
-                    setCaptchaToken(null);
-                    setValidationErrors(prev => ({ ...prev, captcha: 'Captcha yüklenemedi' }));
-                  }}
-                  theme="light"
-                  size="normal"
-                />
-                {validationErrors.captcha && <span className="error-message">{validationErrors.captcha}</span>}
               </div>
             </div>
 
