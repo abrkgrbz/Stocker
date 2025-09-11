@@ -201,8 +201,6 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
         // Başarılı kayıt alert'i - sweetAlert utility'sini kullan
         await showRegistrationSuccess(allValues.email);
         
-        }
-        
         onComplete(response.data.data);
       } else {
         // Hata alert'i - sweetAlert utility'sini kullan
@@ -215,7 +213,6 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
       // Detaylı hata alert'i - sweetAlert utility'sini kullan
       await showApiResponse.error(error, 'Kayıt işlemi sırasında bir hata oluştu');
       console.error('Registration error:', error);
-      });
     } finally {
       setLoading(false);
     }

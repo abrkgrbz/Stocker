@@ -65,6 +65,7 @@ interface ChecklistData {
 
 class WizardService {
   private baseUrl = '/api/public/tenant-registration';
+  private checklistUrl = '/api/public/tenant-registration/checklist';
 
   // Get current tenant ID from auth store
   private getTenantId(): string {
