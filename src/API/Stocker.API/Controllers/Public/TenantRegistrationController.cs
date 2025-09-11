@@ -32,35 +32,23 @@ public class TenantRegistrationController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateTenantRegistrationCommand command)
     {
-        try
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value,
-                    message = "Kayıt başarıyla oluşturuldu. E-posta adresinize onay maili gönderildi."
-                });
-            }
-            
-            return BadRequest(new
-            {
-                success = false,
-                message = result.Error?.Description ?? "An error occurred"
+                success = true,
+                data = result.Value,
+                message = "Kayıt başarıyla oluşturuldu. E-posta adresinize onay maili gönderildi."
             });
         }
-        catch (Exception ex)
+        
+        return BadRequest(new
         {
-            _logger.LogError(ex, "Error in tenant registration");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Kayıt sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin."
-            });
-        }
+            success = false,
+            message = result.Error?.Description ?? "An error occurred"
+        });
     }
 
     /// <summary>
@@ -69,35 +57,23 @@ public class TenantRegistrationController : ControllerBase
     [HttpGet("status/{registrationCode}")]
     public async Task<IActionResult> GetRegistrationStatus(string registrationCode)
     {
-        try
+        var query = new GetTenantRegistrationQuery { RegistrationCode = registrationCode };
+        var result = await _mediator.Send(query);
+        
+        if (result.IsSuccess)
         {
-            var query = new GetTenantRegistrationQuery { RegistrationCode = registrationCode };
-            var result = await _mediator.Send(query);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value
-                });
-            }
-            
-            return NotFound(new
-            {
-                success = false,
-                message = "Kayıt bulunamadı."
+                success = true,
+                data = result.Value
             });
         }
-        catch (Exception ex)
+        
+        return NotFound(new
         {
-            _logger.LogError(ex, "Error getting registration status");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = "Kayıt bulunamadı."
+        });
     }
 
     /// <summary>
@@ -107,35 +83,23 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetSetupWizard(Guid tenantId)
     {
-        try
+        var query = new GetSetupWizardQuery { TenantId = tenantId };
+        var result = await _mediator.Send(query);
+        
+        if (result.IsSuccess)
         {
-            var query = new GetSetupWizardQuery { TenantId = tenantId };
-            var result = await _mediator.Send(query);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value
-                });
-            }
-            
-            return NotFound(new
-            {
-                success = false,
-                message = "Setup wizard bulunamadı."
+                success = true,
+                data = result.Value
             });
         }
-        catch (Exception ex)
+        
+        return NotFound(new
         {
-            _logger.LogError(ex, "Error getting setup wizard");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = "Setup wizard bulunamadı."
+        });
     }
 
     /// <summary>
@@ -145,36 +109,24 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateWizardStep(Guid wizardId, [FromBody] UpdateWizardStepCommand command)
     {
-        try
+        command.WizardId = wizardId;
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            command.WizardId = wizardId;
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value,
-                    message = "Adım güncellendi."
-                });
-            }
-            
-            return BadRequest(new
-            {
-                success = false,
-                message = result.Error?.Description ?? "An error occurred"
+                success = true,
+                data = result.Value,
+                message = "Adım güncellendi."
             });
         }
-        catch (Exception ex)
+        
+        return BadRequest(new
         {
-            _logger.LogError(ex, "Error updating wizard step");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = result.Error?.Description ?? "An error occurred"
+        });
     }
 
     /// <summary>
@@ -184,35 +136,23 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetSetupChecklist(Guid tenantId)
     {
-        try
+        var query = new GetSetupChecklistQuery { TenantId = tenantId };
+        var result = await _mediator.Send(query);
+        
+        if (result.IsSuccess)
         {
-            var query = new GetSetupChecklistQuery { TenantId = tenantId };
-            var result = await _mediator.Send(query);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value
-                });
-            }
-            
-            return NotFound(new
-            {
-                success = false,
-                message = "Checklist bulunamadı."
+                success = true,
+                data = result.Value
             });
         }
-        catch (Exception ex)
+        
+        return NotFound(new
         {
-            _logger.LogError(ex, "Error getting setup checklist");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = "Checklist bulunamadı."
+        });
     }
 
     /// <summary>
@@ -222,36 +162,24 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateChecklistItem(Guid checklistId, [FromBody] UpdateChecklistItemCommand command)
     {
-        try
+        command.ChecklistId = checklistId;
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            command.ChecklistId = checklistId;
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = result.Value,
-                    message = "Checklist öğesi güncellendi."
-                });
-            }
-            
-            return BadRequest(new
-            {
-                success = false,
-                message = result.Error?.Description ?? "An error occurred"
+                success = true,
+                data = result.Value,
+                message = "Checklist öğesi güncellendi."
             });
         }
-        catch (Exception ex)
+        
+        return BadRequest(new
         {
-            _logger.LogError(ex, "Error updating checklist item");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = result.Error?.Description ?? "An error occurred"
+        });
     }
 
     /// <summary>
@@ -260,33 +188,21 @@ public class TenantRegistrationController : ControllerBase
     [HttpPost("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyTenantEmailCommand command)
     {
-        try
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
+            return Ok(new
             {
-                return Ok(new
-                {
-                    success = true,
-                    message = "E-posta adresi doğrulandı."
-                });
-            }
-            
-            return BadRequest(new
-            {
-                success = false,
-                message = result.Error?.Description ?? "An error occurred"
+                success = true,
+                message = "E-posta adresi doğrulandı."
             });
         }
-        catch (Exception ex)
+        
+        return BadRequest(new
         {
-            _logger.LogError(ex, "Error verifying email");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Bir hata oluştu."
-            });
-        }
+            success = false,
+            message = result.Error?.Description ?? "An error occurred"
+        });
     }
 }

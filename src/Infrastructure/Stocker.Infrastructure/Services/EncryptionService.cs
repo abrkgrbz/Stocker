@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -39,9 +41,13 @@ public class EncryptionService : IEncryptionService
         {
             return _dataProtector.Protect(plainText);
         }
+        catch (CryptographicException ex)
+        {
+            throw new InfrastructureException("Encryption.Failed", "Failed to encrypt data", ex);
+        }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to encrypt data", ex);
+            throw new InfrastructureException("Encryption.UnexpectedError", "Unexpected error during encryption", ex);
         }
     }
 
@@ -57,9 +63,13 @@ public class EncryptionService : IEncryptionService
         {
             return _dataProtector.Unprotect(cipherText);
         }
+        catch (CryptographicException ex)
+        {
+            throw new InfrastructureException("Decryption.Failed", "Failed to decrypt data - data may be corrupted or key mismatch", ex);
+        }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to decrypt data", ex);
+            throw new InfrastructureException("Decryption.UnexpectedError", "Unexpected error during decryption", ex);
         }
     }
 
@@ -87,8 +97,9 @@ public class EncryptionService : IEncryptionService
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
-        catch
+        catch (ArgumentException)
         {
+            // Invalid hash format or arguments - return false for security
             return false;
         }
     }

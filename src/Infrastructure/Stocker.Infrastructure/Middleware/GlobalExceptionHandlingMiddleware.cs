@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 using Stocker.Application.Common.Models;
 using Stocker.SharedKernel.Results;
 using System.Net;
@@ -67,12 +68,12 @@ public class GlobalExceptionHandlingMiddleware
     {
         return exception switch
         {
-            ValidationException validationEx => ProblemDetailsResponse.ValidationError(
+            Stocker.Application.Common.Exceptions.ValidationException validationEx => ProblemDetailsResponse.ValidationError(
                 validationEx.Errors,
                 path,
                 traceId),
 
-            NotFoundException notFoundEx => ProblemDetailsResponse.Create(
+            Stocker.Application.Common.Exceptions.NotFoundException notFoundEx => ProblemDetailsResponse.Create(
                 Error.NotFound(notFoundEx.Code, notFoundEx.Message),
                 path,
                 traceId),
@@ -94,6 +95,21 @@ public class GlobalExceptionHandlingMiddleware
 
             InfrastructureException infraEx => ProblemDetailsResponse.Create(
                 new Error(infraEx.Code, infraEx.Message, ErrorType.Infrastructure),
+                path,
+                traceId),
+
+            Stocker.SharedKernel.Exceptions.DatabaseException dbEx => ProblemDetailsResponse.Create(
+                new Error(dbEx.Code, dbEx.Message, ErrorType.Infrastructure),
+                path,
+                traceId),
+
+            Stocker.SharedKernel.Exceptions.ConfigurationException configEx => ProblemDetailsResponse.Create(
+                new Error(configEx.Code, configEx.Message, ErrorType.Business),
+                path,
+                traceId),
+
+            Stocker.SharedKernel.Exceptions.ExternalServiceException externalEx => ProblemDetailsResponse.Create(
+                new Error(externalEx.Code, $"[{externalEx.ServiceName}] {externalEx.Message}", ErrorType.Infrastructure),
                 path,
                 traceId),
 

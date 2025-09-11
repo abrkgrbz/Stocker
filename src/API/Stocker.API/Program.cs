@@ -549,9 +549,27 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogWarning("Warning: This is a test warning for Seq");
         app.Logger.LogError("Error: This is a test error for Seq (not a real error)");
     }
+    catch (Stocker.SharedKernel.Exceptions.DatabaseException ex)
+    {
+        app.Logger.LogError(ex, "Database error occurred while migrating: {Code}", ex.Code);
+        // Don't throw in production, just log the error
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
+    catch (Stocker.Application.Common.Exceptions.InfrastructureException ex)
+    {
+        app.Logger.LogError(ex, "Infrastructure error occurred while migrating: {Code}", ex.Code);
+        // Don't throw in production, just log the error
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "An error occurred while migrating the database");
+        app.Logger.LogError(ex, "An unexpected error occurred while migrating the database");
         // Don't throw in production, just log the error
         if (app.Environment.IsDevelopment())
         {
