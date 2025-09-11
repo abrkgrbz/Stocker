@@ -11,7 +11,7 @@ services:
     command: >
       redis-server 
       --appendonly yes 
-      --requirepass ${REDIS_PASSWORD:-RedisPassword123!}
+      --requirepass ${REDIS_PASSWORD}
       --maxmemory ${REDIS_MAX_MEMORY:-256mb}
       --maxmemory-policy ${REDIS_EVICTION_POLICY:-allkeys-lru}
       --tcp-backlog 511
@@ -34,7 +34,7 @@ services:
       # redis.conf dosyası varsa uncomment yapın
       # - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-RedisPassword123!}", "ping"]
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5

@@ -11,20 +11,23 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
     {
         var httpContext = context.GetHttpContext();
 
-        // Development ortamında her zaman izin ver
-        if (httpContext.Request.Host.Host == "localhost" || 
-            httpContext.Request.Host.Host == "127.0.0.1")
+        // Check environment
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+        var isDevelopment = environment == "Development";
+
+        // In Development, still require authentication for localhost
+        if (isDevelopment && 
+            (httpContext.Request.Host.Host == "localhost" || 
+             httpContext.Request.Host.Host == "127.0.0.1"))
         {
-            return true;
+            // Require authentication even in development
+            return httpContext.User.Identity?.IsAuthenticated == true;
         }
 
-        // TEMPORARY: Allow anonymous access for testing
-        // TODO: Remove this after testing and uncomment the code below
-        return true;
-
-        // Production'da sadece SistemYoneticisi ve FirmaYoneticisi rollerine izin ver
-        // return httpContext.User.Identity?.IsAuthenticated == true &&
-        //        (httpContext.User.IsInRole("SistemYoneticisi") || 
-        //         httpContext.User.IsInRole("FirmaYoneticisi"));
+        // Production and all other cases: require authentication and proper roles
+        return httpContext.User.Identity?.IsAuthenticated == true &&
+               (httpContext.User.IsInRole("SistemYoneticisi") || 
+                httpContext.User.IsInRole("FirmaYoneticisi") ||
+                httpContext.User.IsInRole("Admin"));
     }
 }

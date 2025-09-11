@@ -19,19 +19,19 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       
       # Database Connections
-      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
       
       # Redis
-      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-RedisPassword123!}
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD}
       
       # Seq Logging
       - Logging__Seq__ServerUrl=http://seq:5341
-      - Logging__Seq__ApiKey=${SEQ_API_KEY:-}
+      - Logging__Seq__ApiKey=${SEQ_API_KEY}
       
       # JWT
-      - JwtSettings__Secret=${JWT_SECRET:-df7d992cdade60241c0c2443c421101028c4e2eeb5eb9e5f17da82fca026c73a}
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=https://api.stoocker.app
       - JwtSettings__Audience=https://stoocker.app
       
@@ -39,7 +39,7 @@ services:
       - EmailSettings__SmtpHost=mail.privateemail.com
       - EmailSettings__SmtpPort=465
       - EmailSettings__SmtpUsername=info@stoocker.app
-      - EmailSettings__SmtpPassword=${SMTP_PASSWORD:-A.bg010203}
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
       - EmailSettings__EnableSsl=true

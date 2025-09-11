@@ -64,14 +64,23 @@ interface ChecklistData {
 }
 
 class WizardService {
-  private baseUrl = '/api/wizard';
-  private checklistUrl = '/api/setup-checklist';
+  private baseUrl = '/api/public/tenant-registration';
+
+  // Get current tenant ID from auth store
+  private getTenantId(): string {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.tenantId || user.tenant?.id || '';
+  }
 
   // Wizard Methods
   async getActiveWizard(): Promise<WizardData | null> {
     try {
-      const response: AxiosResponse<WizardData> = await api.get(`${this.baseUrl}/active`);
-      return response.data;
+      const tenantId = this.getTenantId();
+      const response: AxiosResponse<any> = await api.get(`${this.baseUrl}/wizard/${tenantId}`);
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      return null;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -81,12 +90,28 @@ class WizardService {
   }
 
   async createWizard(data: CreateWizardRequest): Promise<WizardData> {
-    const response: AxiosResponse<WizardData> = await api.post(`${this.baseUrl}/create`, data);
-    return response.data;
+    // Backend'de wizard otomatik oluşturulur, tenant registration ile birlikte
+    // Bu yüzden getActiveWizard kullanıyoruz
+    const wizard = await this.getActiveWizard();
+    if (wizard) {
+      return wizard;
+    }
+    // Eğer yoksa boş bir wizard döndür (frontend için)
+    return {
+      id: 'temp-' + Date.now(),
+      tenantId: this.getTenantId(),
+      wizardType: data.wizardType,
+      status: 'NotStarted',
+      totalSteps: data.totalSteps,
+      completedSteps: 0,
+      currentStep: 1,
+      progressPercentage: 0,
+      startedAt: new Date().toISOString()
+    };
   }
 
   async updateStep(wizardId: string, data: UpdateStepRequest): Promise<void> {
-    await api.put(`${this.baseUrl}/${wizardId}/step`, data);
+    await api.put(`${this.baseUrl}/wizard/${wizardId}/step`, data);
   }
 
   async saveProgress(wizardId: string, data: SaveProgressRequest): Promise<void> {

@@ -21,21 +21,21 @@ services:
       # ==================================
       # DATABASE CONNECTIONS
       # ==================================
-      - ConnectionStrings__MasterConnection=Server=coolify.stoocker.app;Database=StockerMasterDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__DefaultConnection=Server=coolify.stoocker.app;Database=StockerTenantDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
       
       # ==================================
       # LOGGING (SEQ)
       # ==================================
       - Logging__Seq__ServerUrl=https://seq.stoocker.app
-      - Logging__Seq__ApiKey=1kCTahfs94uqcHLWZ5vl
+      - Logging__Seq__ApiKey=${SEQ_API_KEY}
       - Logging__Seq__MinimumLevel=Information
       
       # ==================================
       # JWT AUTHENTICATION
       # ==================================
-      - JwtSettings__Secret=ThisIsAVerySecureSecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm2024!
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=Stocker
       - JwtSettings__Audience=Stocker
       - JwtSettings__AccessTokenExpirationMinutes=60
@@ -46,8 +46,8 @@ services:
       # ==================================
       - EmailSettings__SmtpHost=mail.privateemail.com
       - EmailSettings__SmtpPort=465
-      - EmailSettings__SmtpUsername=info@stoocker.app
-      - EmailSettings__SmtpPassword=${SMTP_PASSWORD:-A.bg010203}
+      - EmailSettings__SmtpUsername=${SMTP_USERNAME}
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
       - EmailSettings__EnableSsl=true
@@ -61,8 +61,8 @@ services:
       # ==================================
       - Storage__Provider=MinIO
       - Storage__MinIO__Endpoint=minio:9000
-      - Storage__MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
-      - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD:-MinioPassword123!}
+      - Storage__MinIO__AccessKey=${MINIO_ROOT_USER}
+      - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD}
       - Storage__MinIO__BucketName=stocker-files
       - Storage__MinIO__UseSSL=false
       - Storage__MinIO__PublicEndpoint=https://s3.stoocker.app
@@ -71,7 +71,7 @@ services:
       # REDIS CACHE
       # ==================================
       - Redis__ConnectionString=redis:6379
-      - Redis__Password=${REDIS_PASSWORD:-RedisPassword123!}
+      - Redis__Password=${REDIS_PASSWORD}
       - Redis__DefaultDatabase=0
       - Redis__ConnectTimeout=5000
       - Redis__SyncTimeout=5000
@@ -84,8 +84,8 @@ services:
       - Hangfire__WorkerCount=4
       - Hangfire__Queues=critical,default,low
       - Hangfire__RetryAttempts=3
-      - Hangfire__ConnectionString=Server=coolify.stoocker.app;Database=StockerHangfireDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True
-      - ConnectionStrings__HangfireConnection=Server=coolify.stoocker.app;Database=StockerHangfireDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True
+      - Hangfire__ConnectionString=Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+      - ConnectionStrings__HangfireConnection=Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
       
       # ==================================
       # PASSWORD POLICY

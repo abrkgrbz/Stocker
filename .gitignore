@@ -3,6 +3,32 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# ===================================
+# SECURITY - NEVER COMMIT THESE FILES
+# ===================================
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+*.pfx
+*.key
+*.pem
+*.crt
+secrets.json
+appsettings.Production.json
+appsettings.Staging.json
+local.settings.json
+keyvault.config
+
+# Docker secrets
+docker-compose.override.yml
+.docker/secrets/
+
+# Backup files that might contain passwords
+*.bak
+*_backup.*
+
 # User-specific files
 *.rsuser
 *.suo
