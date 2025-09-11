@@ -194,6 +194,12 @@ public abstract class BaseRepository<TEntity, TId> : IRepository<TEntity, TId>
         _dbSet.Remove(entity);
     }
 
+    public Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        Remove(entity);
+        return Task.CompletedTask;
+    }
+
     public void RemoveRange(IEnumerable<TEntity> entities)
     {
         _dbSet.RemoveRange(entities);

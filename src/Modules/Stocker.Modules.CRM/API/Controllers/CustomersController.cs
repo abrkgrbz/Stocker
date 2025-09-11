@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Customers.Commands; 
 using Stocker.Modules.CRM.Application.Features.Customers.Queries;
+using Stocker.SharedKernel.Results;
  
 
 namespace Stocker.Modules.CRM.API.Controllers;
@@ -75,8 +76,23 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<CustomerDto>> UpdateCustomer(Guid id, UpdateCustomerDto dto)
     {
-        // TODO: Implement UpdateCustomerCommand
-        return Ok();
+        var command = new UpdateCustomerCommand
+        {
+            CustomerId = id,
+            CustomerData = dto
+        };
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            
+            return BadRequest(result.Error);
+        }
+        
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -88,7 +104,22 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteCustomer(Guid id)
     {
-        // TODO: Implement DeleteCustomerCommand
+        var command = new DeleteCustomerCommand
+        {
+            CustomerId = id,
+            ForceDelete = false // Soft delete by default
+        };
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            
+            return BadRequest(result.Error);
+        }
+        
         return NoContent();
     }
 }
