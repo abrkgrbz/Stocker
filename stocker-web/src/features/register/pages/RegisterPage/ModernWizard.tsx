@@ -140,8 +140,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     { label: 'Şirket', icon: <ShopOutlined /> },
     { label: 'İletişim', icon: <UserOutlined /> },
     { label: 'Güvenlik', icon: <LockOutlined /> },
-    { label: 'Paket', icon: <ShoppingCartOutlined /> },
-    { label: 'Doğrulama', icon: <SafetyOutlined /> }
+    { label: 'Paket', icon: <ShoppingCartOutlined /> }
   ];
 
   // Şirket tipleri ve sektörler için öneriler
@@ -905,21 +904,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         }
         return true;
         
-      case 4:
-        // Captcha verification
-        if (!captchaToken && !formData.captchaVerified) {
-          setValidationErrors(prev => ({ ...prev, captcha: 'Lütfen robot olmadığınızı doğrulayın' }));
-          message.error('Lütfen güvenlik doğrulamasını tamamlayın');
-          return false;
-        }
-        // Email verification
-        if (!emailVerified) {
-          setValidationErrors(prev => ({ ...prev, emailVerification: 'Lütfen e-posta adresinizi doğrulayın' }));
-          message.error('Lütfen e-posta doğrulamasını tamamlayın');
-          return false;
-        }
-        return true;
-        
       default:
         return true;
     }
@@ -942,6 +926,55 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   };
 
   const handleSubmit = async () => {
+    // Önce captcha ve e-posta doğrulaması yap
+    if (!captchaToken) {
+      message.warning('Lütfen önce güvenlik doğrulamasını tamamlayın');
+      // Captcha modal'ını aç
+      Modal.confirm({
+        title: 'Güvenlik Doğrulaması',
+        icon: <SafetyOutlined />,
+        content: (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ marginBottom: 16 }}>Kayıt işlemini tamamlamak için lütfen güvenlik doğrulamasını yapın.</p>
+            <Captcha
+              siteKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                message.success('Güvenlik doğrulaması başarılı!');
+                Modal.destroyAll();
+                // Captcha tamamlandı, şimdi e-posta doğrulaması
+                if (!emailVerified) {
+                  setShowEmailVerification(true);
+                } else {
+                  // Her ikisi de tamamsa kayıt işlemini başlat
+                  performRegistration();
+                }
+              }}
+              onError={() => {
+                message.error('Güvenlik doğrulaması başarısız!');
+              }}
+            />
+          </div>
+        ),
+        okText: 'İptal',
+        cancelButtonProps: { style: { display: 'none' } },
+        onOk: () => {}
+      });
+      return;
+    }
+    
+    // E-posta doğrulaması kontrolü
+    if (!emailVerified) {
+      setShowEmailVerification(true);
+      message.warning('Lütfen e-posta adresinizi doğrulayın');
+      return;
+    }
+    
+    // Her şey tamam, kayıt işlemini başlat
+    performRegistration();
+  };
+  
+  const performRegistration = async () => {
     setLoading(true);
     try {
       const [firstName, ...lastNameParts] = formData.contactName.split(' ');
@@ -1625,104 +1658,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
             )}
           </div>
         );
-        
-      case 4:
-        return (
-          <div className="form-fields">
-            <div className="form-header">
-              <h2 className="form-title">Güvenlik Doğrulaması</h2>
-              <p className="form-subtitle">Son adım! Hesabınızı güvence altına alın</p>
-            </div>
-
-            <div className="info-box">
-              <span className="info-box-icon"><InfoCircleOutlined /></span>
-              <div className="info-box-content">
-                <div className="info-box-title">Önemli</div>
-                <div className="info-box-text">
-                  Güvenliğiniz için e-posta adresinizi doğrulamanız ve robot olmadığınızı onaylamanız gerekiyor.
-                </div>
-              </div>
-            </div>
-
-            <div className="verification-section">
-              {/* E-posta Doğrulama */}
-              <div className="verification-card">
-                <div className="verification-header">
-                  <MailOutlined className="verification-icon" />
-                  <h3>E-posta Doğrulama</h3>
-                  {emailVerified && <CheckCircleOutlined className="verified-icon" />}
-                </div>
-                <div className="verification-content">
-                  <p className="verification-email">{formData.contactEmail}</p>
-                  {!emailVerified ? (
-                    <>
-                      <p className="verification-text">
-                        E-posta adresinize gönderilen doğrulama kodunu girin veya bağlantıya tıklayın.
-                      </p>
-                      <button 
-                        type="button" 
-                        className="btn-verify"
-                        onClick={() => {
-                          setShowEmailVerification(true);
-                          // Send verification email
-                          message.info('Doğrulama kodu gönderiliyor...');
-                        }}
-                      >
-                        <MailOutlined /> Doğrulama Kodu Gönder
-                      </button>
-                    </>
-                  ) : (
-                    <p className="verification-success">
-                      <CheckCircleOutlined /> E-posta adresiniz başarıyla doğrulandı!
-                    </p>
-                  )}
-                </div>
-                {validationErrors.emailVerification && (
-                  <span className="error-message">{validationErrors.emailVerification}</span>
-                )}
-              </div>
-
-              {/* Captcha Doğrulama */}
-              <div className="verification-card">
-                <div className="verification-header">
-                  <SafetyOutlined className="verification-icon" />
-                  <h3>Güvenlik Kontrolü</h3>
-                  {captchaToken && <CheckCircleOutlined className="verified-icon" />}
-                </div>
-                <div className="verification-content">
-                  <p className="verification-text">
-                    Lütfen robot olmadığınızı doğrulayın.
-                  </p>
-                  <div className="captcha-wrapper">
-                    <Captcha
-                      ref={captchaRef}
-                      siteKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                      onVerify={(token) => {
-                        setCaptchaToken(token);
-                        setFormData(prev => ({ ...prev, captchaVerified: true }));
-                        setValidationErrors(prev => ({ ...prev, captcha: '' }));
-                        message.success('Güvenlik doğrulaması başarılı!');
-                      }}
-                      onError={() => {
-                        setCaptchaToken(null);
-                        setFormData(prev => ({ ...prev, captchaVerified: false }));
-                        message.error('Güvenlik doğrulaması başarısız!');
-                      }}
-                    />
-                  </div>
-                  {captchaToken && (
-                    <p className="verification-success">
-                      <CheckCircleOutlined /> Güvenlik kontrolü başarıyla tamamlandı!
-                    </p>
-                  )}
-                </div>
-                {validationErrors.captcha && (
-                  <span className="error-message">{validationErrors.captcha}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        );
 
       default:
         return null;
@@ -1739,7 +1674,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       case 1: return 'İletişim Bilgilerini Tamamlayın';
       case 2: return 'Güvenlik Ayarlarını Yapın';
       case 3: return 'Paket Seçimi Yapın';
-      case 4: return 'Hesabınızı Doğrulayın';
       default: return 'İşletmenizi Güçlendirin';
     }
   };
@@ -1750,7 +1684,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       case 1: return 'Hesap yöneticisi bilgilerinizi ekleyin. Size özel destek ve güncellemeler için iletişim bilgileriniz önemlidir.';
       case 2: return 'Güçlü bir şifre belirleyerek hesabınızı koruma altına alın. Verilerinizin güvenliği bizim için önceliklidir.';
       case 3: return 'İhtiyaçlarınıza en uygun paketi seçin. Her pakette farklı özellikler ve limitler bulunur.';
-      case 4: return 'Son adım! E-posta adresinizi doğrulayın ve güvenlik kontrolünü tamamlayın.';
       default: return 'Modern CRM ve stok yönetimi çözümleriyle işletmenizin verimliliğini artırın.';
     }
   };
@@ -1896,6 +1829,10 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           setEmailVerified(true);
           setShowEmailVerification(false);
           message.success('E-posta adresiniz başarıyla doğrulandı!');
+          // Eğer captcha da tamamlandıysa kayıt işlemini başlat
+          if (captchaToken) {
+            performRegistration();
+          }
         }}
       />
     </div>
