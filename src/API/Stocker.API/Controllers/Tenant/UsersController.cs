@@ -6,6 +6,7 @@ using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Features.Tenant.Users.Queries;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -32,13 +33,7 @@ public class UsersController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetUsersQuery
         {
@@ -65,13 +60,7 @@ public class UsersController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetUserByIdQuery
         {
@@ -82,13 +71,7 @@ public class UsersController : ApiController
         var result = await _mediator.Send(query);
         
         if (result == null)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Kullanıcı bulunamadı"
-            });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(new ApiResponse<UserDetailDto>
         {
@@ -105,23 +88,13 @@ public class UsersController : ApiController
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Geçersiz veri",
-                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-            });
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException("Model", string.Join(", ", errors));
         }
 
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new CreateUserCommand
         {
@@ -155,23 +128,13 @@ public class UsersController : ApiController
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Geçersiz veri",
-                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-            });
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException("Model", string.Join(", ", errors));
         }
 
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new UpdateUserCommand
         {
@@ -187,13 +150,7 @@ public class UsersController : ApiController
         var result = await _mediator.Send(command);
         
         if (!result)
-        {
-            return NotFound(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = "Kullanıcı bulunamadı"
-            });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(new ApiResponse<bool>
         {
@@ -210,13 +167,7 @@ public class UsersController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new DeleteUserCommand
         {
@@ -228,13 +179,7 @@ public class UsersController : ApiController
         var result = await _mediator.Send(command);
         
         if (!result)
-        {
-            return NotFound(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = "Kullanıcı bulunamadı"
-            });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(new ApiResponse<bool>
         {
@@ -251,13 +196,7 @@ public class UsersController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new ToggleUserStatusCommand
         {
@@ -283,23 +222,13 @@ public class UsersController : ApiController
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Geçersiz veri",
-                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-            });
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException("Model", string.Join(", ", errors));
         }
 
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new ResetPasswordCommand
         {
@@ -312,13 +241,7 @@ public class UsersController : ApiController
         var result = await _mediator.Send(command);
         
         if (!result)
-        {
-            return NotFound(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = "Kullanıcı bulunamadı"
-            });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(new ApiResponse<bool>
         {
@@ -334,13 +257,7 @@ public class UsersController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetRolesQuery
         {
@@ -364,23 +281,13 @@ public class UsersController : ApiController
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Geçersiz veri",
-                Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()
-            });
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException("Model", string.Join(", ", errors));
         }
 
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var command = new AssignRoleCommand
         {

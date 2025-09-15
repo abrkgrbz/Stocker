@@ -8,6 +8,8 @@ using Stocker.Application.Features.Subscriptions.Commands.RenewSubscription;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptions;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionById;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -41,7 +43,7 @@ public class SubscriptionsController : MasterControllerBase
             var result = await _mediator.Send(query);
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error getting subscriptions");
             return StatusCode(500, "An error occurred while getting subscriptions");
@@ -58,7 +60,7 @@ public class SubscriptionsController : MasterControllerBase
 
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error getting subscription {SubscriptionId}", id);
             return StatusCode(500,  "An error occurred while getting the subscription" );
@@ -73,7 +75,7 @@ public class SubscriptionsController : MasterControllerBase
             var result = await _mediator.Send(command);
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error creating subscription");
             return StatusCode(500, "An error occurred while creating the subscription");
@@ -89,7 +91,7 @@ public class SubscriptionsController : MasterControllerBase
             var result = await _mediator.Send(commandWithId);
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error updating subscription {SubscriptionId}", id);
             return StatusCode(500, "An error occurred while updating the subscription");
@@ -110,7 +112,7 @@ public class SubscriptionsController : MasterControllerBase
             var result = await _mediator.Send(command);
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error cancelling subscription {SubscriptionId}", id);
             return StatusCode(500, "An error occurred while cancelling the subscription");
@@ -131,7 +133,7 @@ public class SubscriptionsController : MasterControllerBase
             var result = await _mediator.Send(command);
             return HandleResult(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error renewing subscription {SubscriptionId}", id);
             return StatusCode(500, "An error occurred while renewing the subscription");
@@ -146,7 +148,7 @@ public class SubscriptionsController : MasterControllerBase
             // TODO: Implement SuspendSubscriptionCommand
             throw new NotImplementedException();
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error suspending subscription {SubscriptionId}", id);
             return StatusCode(500, "An error occurred while suspending the subscription");
@@ -161,7 +163,7 @@ public class SubscriptionsController : MasterControllerBase
             // TODO: Implement ReactivateSubscriptionCommand
             throw new NotImplementedException();
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
             _logger.LogError(ex, "Error reactivating subscription {SubscriptionId}", id);
             return StatusCode(500, "An error occurred while reactivating the subscription");

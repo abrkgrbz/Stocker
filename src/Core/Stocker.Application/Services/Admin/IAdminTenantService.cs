@@ -1,5 +1,6 @@
 using Stocker.Application.Common.Models;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Application.Services.Admin;
 

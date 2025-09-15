@@ -37,10 +37,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
 
-        // Add Application Services
-        services.AddScoped<IDashboardRepository, DashboardService>();
-        services.AddScoped<IUserRepository, UserService>();
-        services.AddScoped<ISettingsRepository, SettingsService>();
+        // Application Services are now registered in Persistence layer
+        // Repository implementations have been moved to Persistence layer to follow Clean Architecture
 
         return services;
     }

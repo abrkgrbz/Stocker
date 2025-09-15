@@ -4,16 +4,16 @@ using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using StepCategory = Stocker.Domain.Master.Enums.StepCategory;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 
 public sealed class GetSetupWizardQueryHandler : IRequestHandler<GetSetupWizardQuery, Result<TenantSetupWizardDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public GetSetupWizardQueryHandler(MasterDbContext context)
+    public GetSetupWizardQueryHandler(IMasterDbContext context)
     {
         _context = context;
     }

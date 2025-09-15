@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Admin;
 
@@ -35,49 +37,41 @@ public class LogsController : ControllerBase
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null)
     {
-        try
+        var query = "SELECT TOP (@PageSize) * FROM Logs WHERE 1=1";
+        var parameters = new List<object>();
+
+        if (!string.IsNullOrEmpty(level))
         {
-            var query = "SELECT TOP (@PageSize) * FROM Logs WHERE 1=1";
-            var parameters = new List<object>();
-
-            if (!string.IsNullOrEmpty(level))
-            {
-                query += " AND Level = @Level";
-                parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@Level", level));
-            }
-
-            if (from.HasValue)
-            {
-                query += " AND TimeStamp >= @From";
-                parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@From", from.Value));
-            }
-
-            if (to.HasValue)
-            {
-                query += " AND TimeStamp <= @To";
-                parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@To", to.Value));
-            }
-
-            query += " ORDER BY TimeStamp DESC";
-            parameters.Insert(0, new Microsoft.Data.SqlClient.SqlParameter("@PageSize", pageSize));
-
-            var logs = await _context.Database
-                .SqlQueryRaw<LogEntry>(query, parameters.ToArray())
-                .ToListAsync();
-
-            return Ok(new
-            {
-                logs,
-                total = logs.Count,
-                page,
-                pageSize
-            });
+            query += " AND Level = @Level";
+            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@Level", level));
         }
-        catch (Exception ex)
+
+        if (from.HasValue)
         {
-            _logger.LogError(ex, "Error fetching logs");
-            return StatusCode(500, "Log sorgulama sırasında hata oluştu");
+            query += " AND TimeStamp >= @From";
+            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@From", from.Value));
         }
+
+        if (to.HasValue)
+        {
+            query += " AND TimeStamp <= @To";
+            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@To", to.Value));
+        }
+
+        query += " ORDER BY TimeStamp DESC";
+        parameters.Insert(0, new Microsoft.Data.SqlClient.SqlParameter("@PageSize", pageSize));
+
+        var logs = await _context.Database
+            .SqlQueryRaw<LogEntry>(query, parameters.ToArray())
+            .ToListAsync();
+
+        return Ok(new
+        {
+            logs,
+            total = logs.Count,
+            page,
+            pageSize
+        });
     }
 
     /// <summary>
@@ -86,33 +80,25 @@ public class LogsController : ControllerBase
     [HttpGet("files")]
     public IActionResult GetLogFiles()
     {
-        try
+        if (!Directory.Exists(_logPath))
         {
-            if (!Directory.Exists(_logPath))
+            return Ok(new { files = Array.Empty<object>() });
+        }
+
+        var files = Directory.GetFiles(_logPath)
+            .Select(f => new FileInfo(f))
+            .OrderByDescending(f => f.LastWriteTime)
+            .Select(f => new
             {
-                return Ok(new { files = Array.Empty<object>() });
-            }
+                name = f.Name,
+                size = f.Length,
+                sizeFormatted = FormatFileSize(f.Length),
+                lastModified = f.LastWriteTime,
+                type = f.Extension
+            })
+            .ToList();
 
-            var files = Directory.GetFiles(_logPath)
-                .Select(f => new FileInfo(f))
-                .OrderByDescending(f => f.LastWriteTime)
-                .Select(f => new
-                {
-                    name = f.Name,
-                    size = f.Length,
-                    sizeFormatted = FormatFileSize(f.Length),
-                    lastModified = f.LastWriteTime,
-                    type = f.Extension
-                })
-                .ToList();
-
-            return Ok(new { files });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing log files");
-            return StatusCode(500, "Log dosyaları listelenirken hata oluştu");
-        }
+        return Ok(new { files });
     }
 
     /// <summary>
@@ -121,30 +107,18 @@ public class LogsController : ControllerBase
     [HttpGet("files/{fileName}")]
     public IActionResult DownloadLogFile(string fileName)
     {
-        try
-        {
-            var filePath = Path.Combine(_logPath, fileName);
-            
-            if (!System.IO.File.Exists(filePath))
-            {
-                return NotFound("Log dosyası bulunamadı");
-            }
+        var filePath = Path.Combine(_logPath, fileName);
+        
+        if (!System.IO.File.Exists(filePath))
+            throw new Stocker.Application.Common.Exceptions.NotFoundException("LogFile", fileName);
 
-            // Security check - prevent directory traversal
-            var fullPath = Path.GetFullPath(filePath);
-            if (!fullPath.StartsWith(_logPath))
-            {
-                return Forbid();
-            }
+        // Security check - prevent directory traversal
+        var fullPath = Path.GetFullPath(filePath);
+        if (!fullPath.StartsWith(_logPath))
+            throw new ForbiddenException("Access denied to this file");
 
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, "application/octet-stream", fileName);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error downloading log file: {FileName}", fileName);
-            return StatusCode(500, "Log dosyası indirilirken hata oluştu");
-        }
+        var fileBytes = System.IO.File.ReadAllBytes(filePath);
+        return File(fileBytes, "application/octet-stream", fileName);
     }
 
     /// <summary>
@@ -153,49 +127,37 @@ public class LogsController : ControllerBase
     [HttpGet("files/{fileName}/content")]
     public async Task<IActionResult> ViewLogFile(string fileName, [FromQuery] int? lines = 1000)
     {
-        try
+        var filePath = Path.Combine(_logPath, fileName);
+        
+        if (!System.IO.File.Exists(filePath))
+            throw new Stocker.Application.Common.Exceptions.NotFoundException("LogFile", fileName);
+
+        // Security check
+        var fullPath = Path.GetFullPath(filePath);
+        if (!fullPath.StartsWith(_logPath))
+            throw new ForbiddenException("Access denied to this file");
+
+        string content;
+        if (lines.HasValue && lines.Value > 0)
         {
-            var filePath = Path.Combine(_logPath, fileName);
-            
-            if (!System.IO.File.Exists(filePath))
-            {
-                return NotFound("Log dosyası bulunamadı");
-            }
-
-            // Security check
-            var fullPath = Path.GetFullPath(filePath);
-            if (!fullPath.StartsWith(_logPath))
-            {
-                return Forbid();
-            }
-
-            string content;
-            if (lines.HasValue && lines.Value > 0)
-            {
-                // Read last N lines
-                var allLines = await System.IO.File.ReadAllLinesAsync(filePath);
-                var lastLines = allLines.TakeLast(lines.Value).ToArray();
-                content = string.Join("\n", lastLines);
-            }
-            else
-            {
-                // Read entire file (be careful with large files)
-                content = await System.IO.File.ReadAllTextAsync(filePath);
-            }
-
-            return Ok(new
-            {
-                fileName,
-                content,
-                lines = content.Split('\n').Length,
-                size = new FileInfo(filePath).Length
-            });
+            // Read last N lines
+            var allLines = await System.IO.File.ReadAllLinesAsync(filePath);
+            var lastLines = allLines.TakeLast(lines.Value).ToArray();
+            content = string.Join("\n", lastLines);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error reading log file: {FileName}", fileName);
-            return StatusCode(500, "Log dosyası okunurken hata oluştu");
+            // Read entire file (be careful with large files)
+            content = await System.IO.File.ReadAllTextAsync(filePath);
         }
+
+        return Ok(new
+        {
+            fileName,
+            content,
+            lines = content.Split('\n').Length,
+            size = new FileInfo(filePath).Length
+        });
     }
 
     /// <summary>
@@ -247,45 +209,37 @@ public class LogsController : ControllerBase
     [Authorize(Policy = "RequireMasterAccess")]
     public async Task<IActionResult> ClearOldLogs([FromQuery] int daysToKeep = 30)
     {
-        try
+        // Clear database logs
+        var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
+        var deleteQuery = "DELETE FROM Logs WHERE TimeStamp < @CutoffDate";
+        var deletedRows = await _context.Database.ExecuteSqlRawAsync(
+            deleteQuery, 
+            new Microsoft.Data.SqlClient.SqlParameter("@CutoffDate", cutoffDate));
+
+        // Clear old log files
+        var deletedFiles = 0;
+        if (Directory.Exists(_logPath))
         {
-            // Clear database logs
-            var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
-            var deleteQuery = "DELETE FROM Logs WHERE TimeStamp < @CutoffDate";
-            var deletedRows = await _context.Database.ExecuteSqlRawAsync(
-                deleteQuery, 
-                new Microsoft.Data.SqlClient.SqlParameter("@CutoffDate", cutoffDate));
+            var files = Directory.GetFiles(_logPath)
+                .Select(f => new FileInfo(f))
+                .Where(f => f.LastWriteTime < cutoffDate);
 
-            // Clear old log files
-            var deletedFiles = 0;
-            if (Directory.Exists(_logPath))
+            foreach (var file in files)
             {
-                var files = Directory.GetFiles(_logPath)
-                    .Select(f => new FileInfo(f))
-                    .Where(f => f.LastWriteTime < cutoffDate);
-
-                foreach (var file in files)
-                {
-                    file.Delete();
-                    deletedFiles++;
-                }
+                file.Delete();
+                deletedFiles++;
             }
-
-            _logger.LogInformation("Cleared {DeletedRows} log entries and {DeletedFiles} log files older than {Days} days",
-                deletedRows, deletedFiles, daysToKeep);
-
-            return Ok(new
-            {
-                message = $"{deletedRows} log kaydı ve {deletedFiles} log dosyası silindi",
-                deletedRows,
-                deletedFiles
-            });
         }
-        catch (Exception ex)
+
+        _logger.LogInformation("Cleared {DeletedRows} log entries and {DeletedFiles} log files older than {Days} days",
+            deletedRows, deletedFiles, daysToKeep);
+
+        return Ok(new
         {
-            _logger.LogError(ex, "Error clearing old logs");
-            return StatusCode(500, "Log temizleme sırasında hata oluştu");
-        }
+            message = $"{deletedRows} log kaydı ve {deletedFiles} log dosyası silindi",
+            deletedRows,
+            deletedFiles
+        });
     }
 
     private string FormatFileSize(long bytes)

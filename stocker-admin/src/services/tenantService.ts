@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { tokenStorage } from '../utils/tokenStorage';
+import { envValidator } from '../utils/envValidator';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://localhost:7014') + '/api';
+// Get validated API URL
+const API_BASE_URL = envValidator.getApiUrl() + '/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -13,17 +16,25 @@ const apiClient = axios.create({
 // Add auth token to requests
 apiClient.interceptors.request.use(
   (config) => {
-    // Get the auth storage from zustand persist
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      try {
-        const authData = JSON.parse(authStorage);
-        const token = authData?.state?.accessToken;
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+    // First try to get token from secure storage
+    const token = tokenStorage.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Fallback to zustand persist for backward compatibility
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        try {
+          const authData = JSON.parse(authStorage);
+          const zugandToken = authData?.state?.accessToken;
+          if (zugandToken) {
+            config.headers.Authorization = `Bearer ${zugandToken}`;
+            // Migrate to secure storage
+            tokenStorage.setToken(zugandToken, 3600);
+          }
+        } catch (e) {
+          console.error('Error parsing auth storage:', e);
         }
-      } catch (e) {
-        console.error('Error parsing auth storage:', e);
       }
     }
     return config;
@@ -38,7 +49,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access - clear zustand auth storage
+      // Handle unauthorized access - clear all auth storage
+      tokenStorage.clearToken();
       localStorage.removeItem('auth-storage');
       window.location.href = '/login';
     }

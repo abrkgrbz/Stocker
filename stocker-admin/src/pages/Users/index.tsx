@@ -36,6 +36,7 @@ import {
   Steps,
   notification,
   Segmented,
+  Progress,
 } from 'antd';
 import { PageContainer, ProTable, ProCard } from '@ant-design/pro-components';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
@@ -352,7 +353,7 @@ const UsersPage: React.FC = () => {
       width: 120,
       render: (status: string) => (
         <Badge
-          status={statusColors[status as keyof typeof statusColors]}
+          status={statusColors[status as keyof typeof statusColors] as any}
           text={
             status === 'active' ? 'Aktif' :
             status === 'inactive' ? 'İnaktif' :
@@ -859,7 +860,7 @@ const UsersPage: React.FC = () => {
               <br />
               <Space>
                 <Badge
-                  status={statusColors[selectedUser.status as keyof typeof statusColors]}
+                  status={statusColors[selectedUser.status as keyof typeof statusColors] as any}
                   text={selectedUser.status}
                 />
                 <Tag>{selectedUser.role}</Tag>

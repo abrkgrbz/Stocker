@@ -2,21 +2,31 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
 
-public class TenantDbContext : BaseDbContext 
+public class TenantDbContext : BaseDbContext, ITenantDbContext 
 {
-    private readonly ITenantService _tenantService;
+    private readonly ITenantService? _tenantService;
+    private readonly Guid? _tenantId;
     
+    // Constructor for DI with ITenantService
     public TenantDbContext(DbContextOptions<TenantDbContext> options, ITenantService tenantService) 
         : base(options)
     {
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
     }
+    
+    // Constructor for factory pattern with explicit tenantId
+    public TenantDbContext(DbContextOptions<TenantDbContext> options, Guid tenantId) 
+        : base(options)
+    {
+        _tenantId = tenantId;
+    }
 
     // Tenant Id property for Unit of Work
-    public Guid TenantId => _tenantService.GetCurrentTenantId() ?? throw new InvalidOperationException("TenantId is not set");
+    public Guid TenantId => _tenantId ?? _tenantService?.GetCurrentTenantId() ?? throw new InvalidOperationException("TenantId is not set");
 
     // Company & Organization
     public DbSet<Company> Companies => Set<Company>();
@@ -33,12 +43,20 @@ public class TenantDbContext : BaseDbContext
     // Settings & Configuration
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     public DbSet<TenantModules> TenantModules => Set<TenantModules>();
+    // public DbSet<TenantModule> TenantModule => Set<TenantModule>(); // TODO: Add entity or remove
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    // public DbSet<UserSession> UserSessions => Set<UserSession>(); // TODO: Add entity or remove
+    // public DbSet<TenantSetupWizard> TenantSetupWizards => Set<TenantSetupWizard>(); // Moved to Master
+    // public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>(); // Moved to Master
     
     // Financial
     public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();
     public DbSet<Domain.Tenant.Entities.InvoiceItem> InvoiceItems => Set<Domain.Tenant.Entities.InvoiceItem>();
     public DbSet<Domain.Tenant.Entities.Payment> Payments => Set<Domain.Tenant.Entities.Payment>();
+    
+    // Customer & Product Management
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Product> Products => Set<Product>();
 
     // Inventory - Moved to Stocker.Modules.Inventory
     // public DbSet<Product> Products => Set<Product>();
@@ -60,7 +78,7 @@ public class TenantDbContext : BaseDbContext
         base.OnModelCreating(modelBuilder);
 
         // Set schema based on tenant
-        var tenantId = _tenantService.GetCurrentTenantId();
+        var tenantId = _tenantId ?? _tenantService?.GetCurrentTenantId();
         if (tenantId.HasValue)
         {
             // Each tenant can have its own schema if needed
@@ -91,13 +109,22 @@ public class TenantDbContext : BaseDbContext
         }
 
         // Apply global query filter for multi-tenancy
-        modelBuilder.Entity<Company>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Department>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Branch>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<TenantUser>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<TenantSettings>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
-        modelBuilder.Entity<TenantModules>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
+        var currentTenantId = _tenantId ?? _tenantService?.GetCurrentTenantId();
+        if (currentTenantId.HasValue)
+        {
+            modelBuilder.Entity<Company>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Department>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Branch>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<TenantUser>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<TenantSettings>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<TenantModules>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Customer>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Domain.Tenant.Entities.Invoice>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Domain.Tenant.Entities.InvoiceItem>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            modelBuilder.Entity<Domain.Tenant.Entities.Payment>().HasQueryFilter(e => e.TenantId == currentTenantId);
+        }
         // Inventory entities moved to Stocker.Modules.Inventory
         // modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
         // modelBuilder.Entity<Stock>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
@@ -112,7 +139,7 @@ public class TenantDbContext : BaseDbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
+        var tenantId = _tenantId ?? _tenantService?.GetCurrentTenantId();
         if (!tenantId.HasValue)
         {
             throw new InvalidOperationException("TenantId is required for all operations in tenant context.");

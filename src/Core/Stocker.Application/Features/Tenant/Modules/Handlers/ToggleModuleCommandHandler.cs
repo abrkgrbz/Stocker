@@ -1,15 +1,15 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Features.Tenant.Modules.Commands;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Tenant.Modules.Handlers;
 
 public class ToggleModuleCommandHandler : IRequestHandler<ToggleModuleCommand, bool>
 {
-    private readonly TenantDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public ToggleModuleCommandHandler(TenantDbContext context)
+    public ToggleModuleCommandHandler(ITenantDbContext context)
     {
         _context = context;
     }

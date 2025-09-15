@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;  
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
 
-public class MasterDbContext : BaseDbContext 
+public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbContext 
 {
     public MasterDbContext(DbContextOptions<MasterDbContext> options) : base(options)
     {

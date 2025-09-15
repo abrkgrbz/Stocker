@@ -2,17 +2,17 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Subscriptions.Commands.CancelSubscription;
 
 public class CancelSubscriptionCommandHandler : IRequestHandler<CancelSubscriptionCommand, Result<bool>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<CancelSubscriptionCommandHandler> _logger;
 
     public CancelSubscriptionCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<CancelSubscriptionCommandHandler> logger)
     {
         _context = context;

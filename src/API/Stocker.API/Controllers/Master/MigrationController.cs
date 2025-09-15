@@ -5,6 +5,8 @@ using Stocker.API.Controllers.Base;
 using Stocker.Persistence.Contexts;
 using Stocker.SharedKernel.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -78,15 +80,27 @@ public class MigrationController : ApiController
                         HasPendingMigrations = pendingMigrations.Any()
                     });
                 }
-                catch (Exception ex)
+                catch (DatabaseException ex)
                 {
-                    Logger.LogError(ex, "Error checking migrations for tenant {TenantId}", tenant.Id);
+                    Logger.LogError(ex, "Database error checking migrations for tenant {TenantId}", tenant.Id);
                     results.Add(new
                     {
                         TenantId = tenant.Id,
                         TenantName = tenant.Name,
                         TenantCode = tenant.Code,
-                        Error = ex.Message,
+                        Error = $"Database error: {ex.Message}",
+                        HasPendingMigrations = false
+                    });
+                }
+                catch (ConfigurationException ex)
+                {
+                    Logger.LogError(ex, "Configuration error checking migrations for tenant {TenantId}", tenant.Id);
+                    results.Add(new
+                    {
+                        TenantId = tenant.Id,
+                        TenantName = tenant.Name,
+                        TenantCode = tenant.Code,
+                        Error = $"Configuration error: {ex.Message}",
                         HasPendingMigrations = false
                     });
                 }
@@ -101,10 +115,15 @@ public class MigrationController : ApiController
                     r.GetType().GetProperty("HasPendingMigrations")?.GetValue(r) as bool? == true)
             });
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
-            Logger.LogError(ex, "Error getting pending migrations");
-            return StatusCode(500, new { message = "Migration durumu kontrol edilirken hata oluştu", error = ex.Message });
+            Logger.LogError(ex, "Database error getting pending migrations");
+            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
+        }
+        catch (InfrastructureException ex)
+        {
+            Logger.LogError(ex, "Infrastructure error getting pending migrations");
+            return StatusCode(503, new { message = "Altyapı hatası", error = ex.Message });
         }
     }
 
@@ -160,14 +179,23 @@ public class MigrationController : ApiController
                 appliedMigrations = pendingList
             });
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
-            Logger.LogError(ex, "Error applying migration to tenant {TenantId}", tenantId);
-            return StatusCode(500, new 
+            Logger.LogError(ex, "Database error applying migration to tenant {TenantId}", tenantId);
+            return StatusCode(503, new 
             { 
-                message = "Migration uygulanırken hata oluştu", 
+                message = "Veritabanı migration hatası", 
                 error = ex.Message,
                 details = ex.InnerException?.Message
+            });
+        }
+        catch (BusinessException ex)
+        {
+            Logger.LogError(ex, "Business error applying migration to tenant {TenantId}", tenantId);
+            return BadRequest(new 
+            { 
+                message = "Migration işlemi başarısız", 
+                error = ex.Message
             });
         }
     }
@@ -228,17 +256,17 @@ public class MigrationController : ApiController
                         });
                     }
                 }
-                catch (Exception ex)
+                catch (DatabaseException ex)
                 {
                     failureCount++;
-                    Logger.LogError(ex, "Error applying migrations to tenant {TenantId}", tenant.Id);
+                    Logger.LogError(ex, "Database error applying migrations to tenant {TenantId}", tenant.Id);
                     
                     results.Add(new
                     {
                         TenantId = tenant.Id,
                         TenantName = tenant.Name,
                         Success = false,
-                        Message = ex.Message,
+                        Message = $"Database error: {ex.Message}",
                         Error = ex.InnerException?.Message
                     });
                 }
@@ -254,10 +282,15 @@ public class MigrationController : ApiController
                 results
             });
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
-            Logger.LogError(ex, "Error applying migrations to all tenants");
-            return StatusCode(500, new { message = "Migration işlemi sırasında hata oluştu", error = ex.Message });
+            Logger.LogError(ex, "Database error applying migrations to all tenants");
+            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
+        }
+        catch (InfrastructureException ex)
+        {
+            Logger.LogError(ex, "Infrastructure error applying migrations to all tenants");
+            return StatusCode(503, new { message = "Altyapı hatası", error = ex.Message });
         }
     }
 
@@ -298,10 +331,15 @@ public class MigrationController : ApiController
                 totalMigrations = appliedMigrations.Count()
             });
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
-            Logger.LogError(ex, "Error getting migration history for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { message = "Migration geçmişi alınırken hata oluştu", error = ex.Message });
+            Logger.LogError(ex, "Database error getting migration history for tenant {TenantId}", tenantId);
+            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
+        }
+        catch (Application.Common.Exceptions.NotFoundException ex)
+        {
+            Logger.LogError(ex, "Tenant not found {TenantId}", tenantId);
+            return NotFound(new { message = "Tenant bulunamadı", error = ex.Message });
         }
     }
 }

@@ -167,6 +167,29 @@ public sealed class Invoice : AggregateRoot, ITenantEntity
         Terms = terms;
     }
     
+    public void UpdateInvoiceNumber(string invoiceNumber)
+    {
+        if (Status != InvoiceStatus.Draft)
+            throw new InvalidOperationException("Cannot update invoice number on a non-draft invoice.");
+            
+        if (string.IsNullOrWhiteSpace(invoiceNumber))
+            throw new ArgumentException("Invoice number cannot be empty.", nameof(invoiceNumber));
+            
+        InvoiceNumber = invoiceNumber;
+    }
+    
+    public void UpdateDates(DateTime invoiceDate, DateTime dueDate)
+    {
+        if (Status != InvoiceStatus.Draft)
+            throw new InvalidOperationException("Cannot update dates on a non-draft invoice.");
+            
+        if (dueDate < invoiceDate)
+            throw new ArgumentException("Due date cannot be before invoice date.", nameof(dueDate));
+            
+        InvoiceDate = invoiceDate;
+        DueDate = dueDate;
+    }
+    
     public void SetTenantId(Guid tenantId)
     {
         TenantId = tenantId;

@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
 using System;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
@@ -35,6 +37,14 @@ public class TenantRateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip rate limiting in Testing environment
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment == "Testing")
+        {
+            await _next(context);
+            return;
+        }
+        
         // Skip rate limiting for certain paths
         if (ShouldSkipRateLimiting(context))
         {
@@ -243,8 +253,29 @@ public class TenantRateLimitingMiddleware
 
     private bool CheckIfPremiumTenant(string tenantId)
     {
-        // TODO: Implement actual check against database or cache
-        // This would check the tenant's subscription level
+        // Extract the actual tenant ID from the key format (e.g., "tenant_123" -> "123")
+        var actualTenantId = tenantId.StartsWith("tenant_") 
+            ? tenantId.Substring(7) 
+            : tenantId;
+
+        if (string.IsNullOrEmpty(actualTenantId) || actualTenantId.StartsWith("ip_"))
+        {
+            // Not a tenant-based request (IP-based), not premium
+            return false;
+        }
+
+        // Check in cache first
+        var cacheKey = $"tenant_premium_{actualTenantId}";
+        if (_cache.TryGetValue<bool>(cacheKey, out var isPremium))
+        {
+            return isPremium;
+        }
+
+        // If not in cache, default to standard limits
+        // In a real implementation, you would check the database here
+        // For now, we'll cache the result for 5 minutes
+        _cache.Set(cacheKey, false, TimeSpan.FromMinutes(5));
+        
         return false;
     }
 

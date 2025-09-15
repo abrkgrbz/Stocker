@@ -234,35 +234,35 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         }
     }
 
-    public async Task<Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default)
+    public Task<Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default)
     {
         try
         {
             // This functionality needs to be implemented in the Identity service
             _logger.LogWarning("Password reset not yet implemented");
             
-            return Result.Failure(Error.Failure("Auth.ResetNotImplemented", "Password reset functionality is not yet implemented"));
+            return Task.FromResult(Result.Failure(Error.Failure("Auth.ResetNotImplemented", "Password reset functionality is not yet implemented")));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error resetting password for email {Email}", email);
-            return Result.Failure(Error.Failure("Auth.ResetError", "An error occurred while resetting the password"));
+            return Task.FromResult(Result.Failure(Error.Failure("Auth.ResetError", "An error occurred while resetting the password")));
         }
     }
 
-    public async Task<Result<bool>> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
+    public Task<Result<bool>> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         try
         {
             // This functionality needs to be implemented in the Identity service
             // For now, returning a simple validation
             var isValid = !string.IsNullOrWhiteSpace(token) && token.Length > 20;
-            return Result.Success(isValid);
+            return Task.FromResult(Result.Success(isValid));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating token");
-            return Result.Failure<bool>(Error.Failure("Auth.ValidationError", "An error occurred while validating the token"));
+            return Task.FromResult(Result.Failure<bool>(Error.Failure("Auth.ValidationError", "An error occurred while validating the token")));
         }
     }
 }

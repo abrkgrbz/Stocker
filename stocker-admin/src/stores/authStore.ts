@@ -1,23 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import Swal from 'sweetalert2';
+import { tokenStorage } from '../utils/tokenStorage';
+import { auditLogger } from '../utils/auditLogger';
+import { apiClient } from '../services/api/apiClient';
+import { AppError, ERROR_CODES } from '../services/errorService';
+import { STORAGE_KEYS } from '../constants';
 
 interface AdminUser {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin';
+  role: 'super_admin' | 'admin' | 'user';
+  tenantId?: string;
+  tenantName?: string;
 }
 
 interface AuthState {
   user: AdminUser | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => void;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,81 +35,130 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
+      isLoading: false,
+
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
 
       login: async (email: string, password: string) => {
+        set({ isLoading: true });
+        
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
-          const response = await fetch(`${apiUrl}/api/master/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.message || 'Login failed');
-          }
-
-          const data = await response.json();
+          // Use real API client
+          const response = await apiClient.login({ email, password });
           
-          if (data.success && data.data) {
-            const { accessToken, user } = data.data;
-            
-            // Map the API user format to our admin user format
-            const adminUser: AdminUser = {
-              id: user.id || user.Id,
-              email: user.email || user.Email,
-              name: user.fullName || user.username || user.Username || 'Admin User',
-              role: (user.roles && user.roles.includes('SystemAdmin')) ? 'super_admin' : 'admin',
-            };
-            
-            set({
-              user: adminUser,
-              accessToken,
-              isAuthenticated: true,
-            });
-            
-            // Also store in localStorage for backward compatibility
-            localStorage.setItem('token', accessToken);
-          } else {
-            throw new Error(data.message || 'Login failed');
-          }
+          // Map the API user format to our admin user format
+          const adminUser: AdminUser = {
+            id: response.user.id,
+            email: response.user.email,
+            name: response.user.fullName || response.user.username || 'Admin User',
+            role: response.user.roles.includes('SystemAdmin') ? 'super_admin' : 
+                  response.user.roles.includes('Admin') ? 'admin' : 'user',
+            tenantId: response.user.tenantId,
+            tenantName: response.user.tenantName,
+          };
+          
+          // Store tokens securely
+          tokenStorage.setToken(response.accessToken);
+          tokenStorage.setRefreshToken(response.refreshToken);
+          
+          // Update state
+          set({
+            user: adminUser,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          
+          // Log successful login
+          auditLogger.logLogin(adminUser.email, true);
+          
+          // Show success message
+          await Swal.fire({
+            icon: 'success',
+            title: 'Giriş Başarılı',
+            text: `Hoş geldiniz, ${adminUser.name}!`,
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top',
+            background: '#1a1f36',
+            color: '#fff',
+            customClass: {
+              popup: 'colored-toast',
+              title: 'swal-title',
+              timerProgressBar: 'swal-progress-bar'
+            },
+            didOpen: (toast) => {
+              toast.style.border = '2px solid #10b981';
+              toast.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
+            }
+          });
         } catch (error: any) {
-          // For development, allow mock login
-          if (email === 'admin@stoocker.app' && password === 'admin123') {
-            const mockToken = 'mock-token-' + Date.now();
-            set({
-              user: {
-                id: '1',
-                email: 'admin@stoocker.app',
-                name: 'Admin User',
-                role: 'super_admin',
-              },
-              accessToken: mockToken,
-              isAuthenticated: true,
-            });
-            localStorage.setItem('token', mockToken);
-          } else {
-            throw error;
-          }
+          set({ isLoading: false });
+          
+          // Log failed login attempt
+          auditLogger.logLogin(email, false, error.message);
+          
+          // Show error message
+          const errorMessage = error.message || 'Giriş başarısız oldu';
+          
+          await Swal.fire({
+            icon: 'error',
+            title: 'Giriş Hatası',
+            text: errorMessage,
+            confirmButtonText: 'Tamam',
+            background: '#1a1f36',
+            color: '#fff',
+            confirmButtonColor: '#ef4444',
+            customClass: {
+              popup: 'colored-toast',
+              title: 'swal-title',
+            },
+            didOpen: (popup) => {
+              popup.style.border = '2px solid #ef4444';
+              popup.style.boxShadow = '0 10px 40px rgba(239, 68, 68, 0.3)';
+            }
+          });
+          
+          throw error;
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        const user = get().user;
+        
+        try {
+          // Call logout API
+          await apiClient.logout();
+        } catch (error) {
+          // Log error but continue with local logout
+          console.error('Logout API call failed:', error);
+        }
+        
+        // Clear local state
         set({
           user: null,
           accessToken: null,
+          refreshToken: null,
           isAuthenticated: false,
         });
         
-        // Clear token from localStorage
-        localStorage.removeItem('token');
+        // Clear tokens from secure storage
+        tokenStorage.clearToken();
         
-        // Çıkış bildirimi
-        Swal.fire({
+        // Log logout
+        if (user) {
+          auditLogger.logLogout(user.email);
+        }
+        
+        // Show logout notification
+        await Swal.fire({
           icon: 'info',
           title: 'Çıkış Yapıldı',
           text: 'Güvenli bir şekilde çıkış yaptınız.',
@@ -124,13 +183,28 @@ export const useAuthStore = create<AuthState>()(
 
       checkAuth: () => {
         const state = get();
-        if (!state.accessToken) {
+        // Check both state and secure storage
+        const storedToken = tokenStorage.getToken();
+        const storedRefreshToken = tokenStorage.getRefreshToken();
+        
+        if (!state.accessToken && !storedToken) {
           set({ isAuthenticated: false });
+        } else if (storedToken && !state.accessToken) {
+          // Restore tokens from secure storage if available
+          set({ 
+            accessToken: storedToken,
+            refreshToken: storedRefreshToken,
+            isAuthenticated: true 
+          });
         }
       },
     }),
     {
-      name: 'auth-storage',
+      name: STORAGE_KEYS.AUTH,
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );

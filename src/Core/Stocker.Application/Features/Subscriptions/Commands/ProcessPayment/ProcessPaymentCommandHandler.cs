@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Extensions;
-using Stocker.Persistence.Migrations;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
 
@@ -113,7 +113,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
         }
     }
 
-    private async Task SendActivationEmail(Domain.Master.Entities.Tenant tenant)
+    private Task SendActivationEmail(Domain.Master.Entities.Tenant tenant)
     {
         // For now, just log the activation
         _logger.LogInformation("Tenant {TenantCode} has been activated after successful payment", tenant.Code);
@@ -122,5 +122,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
         // 1. Get the tenant owner from MasterUsers
         // 2. Send them an activation email
         // 3. Include login credentials and getting started guide
+        
+        return Task.CompletedTask;
     }
 }

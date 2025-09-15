@@ -2,8 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Settings.Queries.GetAllSettings;
 using Stocker.Application.Features.Settings.Commands.UpdateGeneralSettings;
+using Stocker.Application.Features.Settings.Commands.UpdateEmailSettings;
 using Stocker.Application.DTOs.Settings;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -98,18 +101,18 @@ public class SettingsController : MasterControllerBase
     /// </summary>
     [HttpPut("email")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    public async Task<IActionResult> UpdateEmail([FromBody] EmailSettingsDto settings)
+    public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailSettingsCommand command)
     {
-        _logger.LogInformation("Updating email settings");
+        _logger.LogInformation("Updating email settings (with encryption for passwords)");
         
-        // TODO: Implement UpdateEmailSettingsCommand
-        return Ok(new ApiResponse<bool>
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            Success = true,
-            Data = true,
-            Message = "Email settings updated successfully",
-            Timestamp = DateTime.UtcNow
-        });
+            _logger.LogInformation("Email settings updated successfully with encrypted passwords");
+        }
+        
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -209,14 +212,36 @@ public class SettingsController : MasterControllerBase
                 Timestamp = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (ExternalServiceException ex)
         {
-            _logger.LogError(ex, "Failed to send test email");
-            return Ok(new ApiResponse<bool>
+            _logger.LogError(ex, "Email service error while sending test email");
+            return BadRequest(new ApiResponse<bool>
             {
                 Success = false,
                 Data = false,
-                Message = $"Failed to send test email: {ex.Message}",
+                Message = $"Email service error: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (ConfigurationException ex)
+        {
+            _logger.LogError(ex, "Email configuration error");
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = $"Email configuration error: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Business error while sending test email");
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = ex.Message,
                 Timestamp = DateTime.UtcNow
             });
         }
@@ -243,14 +268,25 @@ public class SettingsController : MasterControllerBase
                 Timestamp = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (InfrastructureException ex)
         {
-            _logger.LogError(ex, "Failed to start backup");
-            return Ok(new ApiResponse<bool>
+            _logger.LogError(ex, "Infrastructure error while starting backup");
+            return StatusCode(503, new ApiResponse<bool>
             {
                 Success = false,
                 Data = false,
-                Message = $"Failed to start backup: {ex.Message}",
+                Message = $"Backup service unavailable: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Business error while starting backup");
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = ex.Message,
                 Timestamp = DateTime.UtcNow
             });
         }
@@ -277,14 +313,25 @@ public class SettingsController : MasterControllerBase
                 Timestamp = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (InfrastructureException ex)
         {
-            _logger.LogError(ex, "Failed to clear cache");
-            return Ok(new ApiResponse<bool>
+            _logger.LogError(ex, "Infrastructure error while clearing cache");
+            return StatusCode(503, new ApiResponse<bool>
             {
                 Success = false,
                 Data = false,
-                Message = $"Failed to clear cache: {ex.Message}",
+                Message = $"Cache service error: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Business error while clearing cache");
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = ex.Message,
                 Timestamp = DateTime.UtcNow
             });
         }

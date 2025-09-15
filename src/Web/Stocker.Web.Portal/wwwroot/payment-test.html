@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Test - Iyzico Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .payment-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+        }
+        .test-card-selector {
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .test-card-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .test-card-selector.selected {
+            border-color: #764ba2;
+            background-color: #f8f9fa;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .loading-spinner {
+            display: none;
+        }
+        .loading-spinner.active {
+            display: inline-block;
+        }
+        .result-section {
+            display: none;
+        }
+        .result-section.active {
+            display: block;
+        }
+        .json-viewer {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .credit-card-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            position: relative;
+            min-height: 200px;
+        }
+        .card-number-display {
+            font-size: 24px;
+            letter-spacing: 2px;
+            margin: 20px 0;
+        }
+        .card-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <!-- Header -->
+        <div class="text-center text-white mb-4">
+            <h1><i class="fas fa-credit-card"></i> Payment Test Interface</h1>
+            <p>Iyzico Sandbox Integration Testing</p>
+        </div>
+
+        <!-- Test Status -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Test Environment Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="statusInfo" class="text-center">
+                    <button class="btn btn-primary" onclick="checkTestStatus()">
+                        <i class="fas fa-sync"></i> Check Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-id-card"></i> Test Cards</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="testCardsContainer">
+                    <!-- Test cards will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Payment Form</h5>
+            </div>
+            <div class="card-body">
+                <!-- Credit Card Display -->
+                <div class="credit-card-display mb-4">
+                    <div class="text-end">
+                        <i class="fab fa-cc-mastercard fa-2x"></i>
+                    </div>
+                    <div class="card-number-display" id="cardNumberDisplay">
+                        **** **** **** ****
+                    </div>
+                    <div class="card-info-row">
+                        <div>
+                            <small>Card Holder</small>
+                            <div id="cardHolderDisplay">JOHN DOE</div>
+                        </div>
+                        <div>
+                            <small>Expires</small>
+                            <div id="expiryDisplay">12/30</div>
+                        </div>
+                        <div>
+                            <small>CVV</small>
+                            <div id="cvvDisplay">***</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="paymentForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Payment Information</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Amount (TRY)</label>
+                                <input type="number" class="form-control" id="amount" value="100.00" step="0.01" min="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" id="description" value="Test Payment">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Card Information</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="cardNumber" maxlength="16" placeholder="5528790000000008">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Month</label>
+                                        <input type="text" class="form-control" id="expiryMonth" value="12" maxlength="2">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Year</label>
+                                        <input type="text" class="form-control" id="expiryYear" value="2030" maxlength="4">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">CVV</label>
+                                        <input type="text" class="form-control" id="cvv" value="123" maxlength="3">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Card Holder Name</label>
+                                <input type="text" class="form-control" id="cardHolderName" value="John Doe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Buyer Information</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" id="buyerName" value="John">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Surname</label>
+                                <input type="text" class="form-control" id="buyerSurname" value="Doe">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="buyerEmail" value="test@test.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>&nbsp;</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="buyerPhone" value="+905350000000">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Identity Number</label>
+                                <input type="text" class="form-control" id="buyerIdentityNumber" value="74300864791">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="buyerCity" value="Istanbul">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" id="buyerAddress" rows="2">Test Address No:1 Sisli Istanbul</textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-lock"></i> Process Payment
+                            <span class="loading-spinner spinner-border spinner-border-sm ms-2" role="status"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card result-section" id="resultSection">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-receipt"></i> Payment Result</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultContent">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Refund Section -->
+        <div class="card result-section" id="refundSection">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-undo"></i> Refund Payment</h5>
+            </div>
+            <div class="card-body">
+                <form id="refundForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment ID</label>
+                                <input type="text" class="form-control" id="refundPaymentId" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Refund Amount</label>
+                                <input type="number" class="form-control" id="refundAmount" step="0.01" min="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-undo"></i> Process Refund
+                    </button>
+                </form>
+                <div id="refundResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5104/api/public/payment-test';
+        let currentPaymentId = null;
+
+        // Check test status on load
+        $(document).ready(function() {
+            checkTestStatus();
+            loadTestCards();
+            setupEventHandlers();
+        });
+
+        function checkTestStatus() {
+            $.get(`${API_BASE_URL}/status`)
+                .done(function(response) {
+                    $('#statusInfo').html(`
+                        <div class="alert ${response.testModeEnabled ? 'alert-success' : 'alert-warning'}">
+                            <h6>Environment: ${response.environment}</h6>
+                            <p>Test Mode: <span class="status-badge ${response.testModeEnabled ? 'status-success' : 'status-error'}">${response.testModeEnabled ? 'ENABLED' : 'DISABLED'}</span></p>
+                            <p>Iyzico URL: ${response.iyzicoBaseUrl}</p>
+                            <small>${response.message}</small>
+                        </div>
+                    `);
+                })
+                .fail(function(xhr) {
+                    $('#statusInfo').html(`
+                        <div class="alert alert-danger">
+                            <h6>Connection Error</h6>
+                            <p>Could not connect to API at ${API_BASE_URL}</p>
+                            <p>Make sure the API is running on the correct port.</p>
+                        </div>
+                    `);
+                });
+        }
+
+        function loadTestCards() {
+            $.get(`${API_BASE_URL}/test-cards`)
+                .done(function(response) {
+                    let cardsHtml = '';
+                    response.testCards.forEach(card => {
+                        cardsHtml += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card test-card-selector" onclick="selectTestCard('${card.number}', '${card.type}')">
+                                    <div class="card-body">
+                                        <h6>${card.description}</h6>
+                                        <p class="mb-0"><strong>${formatCardNumber(card.number)}</strong></p>
+                                        <small class="text-muted">Type: ${card.type}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#testCardsContainer').html(cardsHtml);
+                });
+        }
+
+        function selectTestCard(cardNumber, type) {
+            $('#cardNumber').val(cardNumber);
+            updateCardDisplay();
+            $('.test-card-selector').removeClass('selected');
+            $(event.currentTarget).addClass('selected');
+        }
+
+        function formatCardNumber(number) {
+            return number.replace(/(.{4})/g, '$1 ').trim();
+        }
+
+        function setupEventHandlers() {
+            // Update card display on input
+            $('#cardNumber, #cardHolderName, #expiryMonth, #expiryYear, #cvv').on('input', updateCardDisplay);
+
+            // Payment form submission
+            $('#paymentForm').on('submit', function(e) {
+                e.preventDefault();
+                processPayment();
+            });
+
+            // Refund form submission
+            $('#refundForm').on('submit', function(e) {
+                e.preventDefault();
+                processRefund();
+            });
+        }
+
+        function updateCardDisplay() {
+            const cardNumber = $('#cardNumber').val();
+            const cardHolder = $('#cardHolderName').val();
+            const month = $('#expiryMonth').val();
+            const year = $('#expiryYear').val();
+            const cvv = $('#cvv').val();
+
+            if (cardNumber) {
+                const formatted = formatCardNumber(cardNumber);
+                $('#cardNumberDisplay').text(formatted || '**** **** **** ****');
+            }
+            
+            $('#cardHolderDisplay').text(cardHolder.toUpperCase() || 'JOHN DOE');
+            $('#expiryDisplay').text(`${month}/${year.substr(-2)}` || '12/30');
+            $('#cvvDisplay').text('*'.repeat(cvv.length) || '***');
+        }
+
+        function processPayment() {
+            $('.loading-spinner').addClass('active');
+            
+            const paymentData = {
+                amount: parseFloat($('#amount').val()),
+                description: $('#description').val(),
+                cardHolderName: $('#cardHolderName').val(),
+                cardNumber: $('#cardNumber').val(),
+                expiryMonth: $('#expiryMonth').val(),
+                expiryYear: $('#expiryYear').val(),
+                cvv: $('#cvv').val(),
+                buyerName: $('#buyerName').val(),
+                buyerSurname: $('#buyerSurname').val(),
+                buyerEmail: $('#buyerEmail').val(),
+                buyerPhone: $('#buyerPhone').val(),
+                buyerIdentityNumber: $('#buyerIdentityNumber').val(),
+                buyerAddress: $('#buyerAddress').val(),
+                buyerCity: $('#buyerCity').val()
+            };
+
+            $.ajax({
+                url: `${API_BASE_URL}/process`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(paymentData)
+            })
+            .done(function(response) {
+                displayPaymentResult(response, 'success');
+                if (response.data && response.data.paymentId) {
+                    currentPaymentId = response.data.paymentId;
+                    $('#refundPaymentId').val(currentPaymentId);
+                    $('#refundAmount').val(paymentData.amount);
+                    $('#refundSection').addClass('active');
+                }
+            })
+            .fail(function(xhr) {
+                const error = xhr.responseJSON || { error: 'Unknown error occurred' };
+                displayPaymentResult(error, 'error');
+            })
+            .always(function() {
+                $('.loading-spinner').removeClass('active');
+            });
+        }
+
+        function processRefund() {
+            const refundData = {
+                paymentId: $('#refundPaymentId').val(),
+                amount: parseFloat($('#refundAmount').val())
+            };
+
+            $.ajax({
+                url: `${API_BASE_URL}/refund`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(refundData)
+            })
+            .done(function(response) {
+                $('#refundResult').html(`
+                    <div class="alert alert-success">
+                        <h6>Refund Successful!</h6>
+                        <pre class="json-viewer">${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `);
+            })
+            .fail(function(xhr) {
+                const error = xhr.responseJSON || { error: 'Refund failed' };
+                $('#refundResult').html(`
+                    <div class="alert alert-danger">
+                        <h6>Refund Failed</h6>
+                        <p>${error.error}</p>
+                    </div>
+                `);
+            });
+        }
+
+        function displayPaymentResult(response, type) {
+            $('#resultSection').addClass('active');
+            
+            let html = '';
+            if (type === 'success') {
+                html = `
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle"></i> Payment Successful!</h5>
+                        <hr>
+                        <p><strong>Payment ID:</strong> ${response.data.paymentId}</p>
+                        <p><strong>Transaction ID:</strong> ${response.data.transactionId}</p>
+                        <p><strong>Amount:</strong> ${response.data.amount} ${response.data.currency}</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-success">${response.data.status}</span></p>
+                        <p><strong>Order ID:</strong> ${response.orderId}</p>
+                    </div>
+                    <h6>Full Response:</h6>
+                    <pre class="json-viewer">${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } else {
+                html = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-times-circle"></i> Payment Failed</h5>
+                        <hr>
+                        <p><strong>Error:</strong> ${response.error}</p>
+                        <p><strong>Code:</strong> ${response.code || 'N/A'}</p>
+                    </div>
+                    <h6>Full Response:</h6>
+                    <pre class="json-viewer">${JSON.stringify(response, null, 2)}</pre>
+                `;
+            }
+            
+            $('#resultContent').html(html);
+        }
+    </script>
+</body>
+</html>

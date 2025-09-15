@@ -1,19 +1,19 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Settings;
 using Stocker.Application.Features.Tenant.Settings.Commands;
 using Stocker.Domain.Tenant.Entities;
-using Stocker.Persistence.Contexts;
 
 namespace Stocker.Application.Features.Tenant.Settings.Handlers;
 
 public class CreateSettingCommandHandler : IRequestHandler<CreateSettingCommand, SettingDto>
 {
-    private readonly TenantDbContext _context;
+    private readonly ITenantDbContext _context;
     private readonly IMapper _mapper;
 
-    public CreateSettingCommandHandler(TenantDbContext context, IMapper mapper)
+    public CreateSettingCommandHandler(ITenantDbContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;

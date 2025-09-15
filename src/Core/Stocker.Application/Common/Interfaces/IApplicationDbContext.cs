@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Entities.Settings;
 
 namespace Stocker.Application.Common.Interfaces;
 
@@ -12,6 +13,9 @@ public interface IApplicationDbContext
     DbSet<Subscription> Subscriptions { get; }
     DbSet<Domain.Master.Entities.Invoice> Invoices { get; }
     DbSet<Domain.Master.Entities.Payment> Payments { get; }
+    
+    // Settings
+    DbSet<SystemSettings> SystemSettings { get; }
     
     // Tenant Related Entities
     DbSet<TenantApiKey> TenantApiKeys { get; }

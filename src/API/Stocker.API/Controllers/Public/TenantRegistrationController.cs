@@ -9,6 +9,7 @@ using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupChecklist;
 using Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardStep;
 using Stocker.Application.Features.TenantSetupChecklist.Commands.UpdateChecklistItem;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -34,20 +35,14 @@ public class TenantRegistrationController : ControllerBase
     {
         var result = await _mediator.Send(command);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value,
-                message = "Kayıt başarıyla oluşturuldu. E-posta adresinize onay maili gönderildi."
-            });
-        }
-        
-        return BadRequest(new
-        {
-            success = false,
-            message = result.Error?.Description ?? "An error occurred"
+            success = true,
+            data = result.Value,
+            message = "Kayıt başarıyla oluşturuldu. E-posta adresinize onay maili gönderildi."
         });
     }
 
@@ -60,19 +55,13 @@ public class TenantRegistrationController : ControllerBase
         var query = new GetTenantRegistrationQuery { RegistrationCode = registrationCode };
         var result = await _mediator.Send(query);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new NotFoundException("Registration", registrationCode);
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value
-            });
-        }
-        
-        return NotFound(new
-        {
-            success = false,
-            message = "Kayıt bulunamadı."
+            success = true,
+            data = result.Value
         });
     }
 
@@ -86,19 +75,13 @@ public class TenantRegistrationController : ControllerBase
         var query = new GetSetupWizardQuery { TenantId = tenantId };
         var result = await _mediator.Send(query);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new NotFoundException("SetupWizard", tenantId);
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value
-            });
-        }
-        
-        return NotFound(new
-        {
-            success = false,
-            message = "Setup wizard bulunamadı."
+            success = true,
+            data = result.Value
         });
     }
 
@@ -112,20 +95,14 @@ public class TenantRegistrationController : ControllerBase
         command.WizardId = wizardId;
         var result = await _mediator.Send(command);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value,
-                message = "Adım güncellendi."
-            });
-        }
-        
-        return BadRequest(new
-        {
-            success = false,
-            message = result.Error?.Description ?? "An error occurred"
+            success = true,
+            data = result.Value,
+            message = "Adım güncellendi."
         });
     }
 
@@ -139,19 +116,13 @@ public class TenantRegistrationController : ControllerBase
         var query = new GetSetupChecklistQuery { TenantId = tenantId };
         var result = await _mediator.Send(query);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new NotFoundException("Checklist", tenantId);
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value
-            });
-        }
-        
-        return NotFound(new
-        {
-            success = false,
-            message = "Checklist bulunamadı."
+            success = true,
+            data = result.Value
         });
     }
 
@@ -165,20 +136,14 @@ public class TenantRegistrationController : ControllerBase
         command.ChecklistId = checklistId;
         var result = await _mediator.Send(command);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                data = result.Value,
-                message = "Checklist öğesi güncellendi."
-            });
-        }
-        
-        return BadRequest(new
-        {
-            success = false,
-            message = result.Error?.Description ?? "An error occurred"
+            success = true,
+            data = result.Value,
+            message = "Checklist öğesi güncellendi."
         });
     }
 
@@ -190,19 +155,13 @@ public class TenantRegistrationController : ControllerBase
     {
         var result = await _mediator.Send(command);
         
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
+            throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+
+        return Ok(new
         {
-            return Ok(new
-            {
-                success = true,
-                message = "E-posta adresi doğrulandı."
-            });
-        }
-        
-        return BadRequest(new
-        {
-            success = false,
-            message = result.Error?.Description ?? "An error occurred"
+            success = true,
+            message = "E-posta adresi doğrulandı."
         });
     }
 }

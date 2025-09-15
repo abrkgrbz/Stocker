@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; 
 using StackExchange.Redis;
 using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers;
 
@@ -53,7 +55,7 @@ public class HealthController : ControllerBase
             await masterContext.Database.ExecuteSqlRawAsync("SELECT 1");
             healthChecks["Database"] = new { Status = "Healthy", ResponseTime = "< 1s" };
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
             _logger.LogError(ex, "Database health check failed");
             healthChecks["Database"] = new { Status = "Unhealthy", Error = ex.Message };
@@ -76,7 +78,7 @@ public class HealthController : ControllerBase
                 healthChecks["Redis"] = new { Status = "Not Configured" };
             }
         }
-        catch (Exception ex)
+        catch (ExternalServiceException ex)
         {
             _logger.LogError(ex, "Redis health check failed");
             healthChecks["Redis"] = new { Status = "Unhealthy", Error = ex.Message };
@@ -101,9 +103,9 @@ public class HealthController : ControllerBase
                 healthChecks["Email"] = new { Status = "Disabled" };
             }
         }
-        catch (Exception ex)
+        catch (ConfigurationException ex)
         {
-            _logger.LogError(ex, "Email health check failed");
+            _logger.LogError(ex, "Email configuration check failed");
             healthChecks["Email"] = new { Status = "Error", Error = ex.Message };
         }
 

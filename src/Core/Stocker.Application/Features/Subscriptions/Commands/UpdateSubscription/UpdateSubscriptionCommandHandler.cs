@@ -2,18 +2,18 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 
 namespace Stocker.Application.Features.Subscriptions.Commands.UpdateSubscription;
 
 public class UpdateSubscriptionCommandHandler : IRequestHandler<UpdateSubscriptionCommand, Result<bool>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<UpdateSubscriptionCommandHandler> _logger;
 
     public UpdateSubscriptionCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<UpdateSubscriptionCommandHandler> logger)
     {
         _context = context;

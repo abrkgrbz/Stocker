@@ -1,4 +1,5 @@
 using Stocker.Application.Common.Models;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Application.Common.Interfaces;
 

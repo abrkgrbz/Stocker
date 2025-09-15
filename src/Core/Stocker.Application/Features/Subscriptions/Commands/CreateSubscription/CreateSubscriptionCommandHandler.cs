@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Application.DTOs.Subscription;
@@ -12,12 +12,12 @@ namespace Stocker.Application.Features.Subscriptions.Commands.CreateSubscription
 
 public class CreateSubscriptionCommandHandler : IRequestHandler<CreateSubscriptionCommand, Result<SubscriptionDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateSubscriptionCommandHandler> _logger;
 
     public CreateSubscriptionCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         IMapper mapper,
         ILogger<CreateSubscriptionCommandHandler> logger)
     {

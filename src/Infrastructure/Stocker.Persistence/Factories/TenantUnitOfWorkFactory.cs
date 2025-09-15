@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Persistence.Contexts;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Repositories;
 
@@ -29,7 +31,7 @@ public class TenantUnitOfWorkFactory : ITenantUnitOfWorkFactory
         {
             var context = await _contextFactory.CreateDbContextAsync(tenantId);
             
-            var unitOfWork = new TenantUnitOfWork(context);
+            var unitOfWork = new TenantUnitOfWork((TenantDbContext)context);
             
             return unitOfWork;
         }
@@ -46,8 +48,14 @@ public class TenantUnitOfWorkFactory : ITenantUnitOfWorkFactory
         try
         {
             _logger.LogInformation("TenantUnitOfWorkFactory.CreateAsync started for tenant identifier {TenantIdentifier}", tenantIdentifier);
-            var context = await _contextFactory.CreateDbContextAsync(tenantIdentifier);
-            var unitOfWork = new TenantUnitOfWork(context);
+            // Convert string identifier to Guid
+            if (!Guid.TryParse(tenantIdentifier, out var tenantId))
+            {
+                throw new ArgumentException($"Invalid tenant identifier: {tenantIdentifier}");
+            }
+            
+            var context = await _contextFactory.CreateDbContextAsync(tenantId);
+            var unitOfWork = new TenantUnitOfWork((TenantDbContext)context);
             _logger.LogInformation("TenantUnitOfWork created successfully for tenant identifier {TenantIdentifier}", tenantIdentifier);
             return unitOfWork;
         }

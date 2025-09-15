@@ -2,20 +2,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Stocker.Infrastructure.Middleware;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Infrastructure.Services;
 
 public class TenantResolverService : ITenantResolverService
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly IMemoryCache _cache;
     private readonly ILogger<TenantResolverService> _logger;
     private const string CACHE_KEY_PREFIX = "tenant_";
     private const int CACHE_DURATION_MINUTES = 5;
 
     public TenantResolverService(
-        MasterDbContext context,
+        IMasterDbContext context,
         IMemoryCache cache,
         ILogger<TenantResolverService> logger)
     {

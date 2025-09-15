@@ -15,6 +15,8 @@ using Stocker.Persistence.Services;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Repositories;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Interfaces.Repositories;
 
 namespace Stocker.Persistence.Extensions;
 
@@ -122,7 +124,7 @@ public static class ServiceCollectionExtensions
                 // Task.Run ile deadlock'ı önle
                 var defaultContext = Task.Run(async () => await contextFactory.CreateDbContextAsync(Guid.Empty)).GetAwaiter().GetResult();
                 logger?.LogWarning("Default TenantUnitOfWork created with empty tenant ID - this may cause issues!");
-                return new TenantUnitOfWork(defaultContext);
+                return new TenantUnitOfWork((TenantDbContext)defaultContext);
             }
             catch (Exception ex)
             {
@@ -139,20 +141,36 @@ public static class ServiceCollectionExtensions
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>
         {
-            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
+            var tenantService = serviceProvider.GetService<ITenantService>();
             var factory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
-            var tenantId = tenantService.GetCurrentTenantId();
+            var tenantId = tenantService?.GetCurrentTenantId();
             
+            // If no tenant ID is available (e.g., during login), return a default context
+            // This context won't be used for actual operations but prevents DI errors
             if (!tenantId.HasValue || tenantId.Value == Guid.Empty)
             {
-                throw new InvalidOperationException("TenantDbContext cannot be created without a valid TenantId");
+                var logger = serviceProvider.GetService<ILogger<TenantDbContext>>();
+                logger?.LogDebug("Creating TenantDbContext with empty tenant ID for non-tenant operations");
+                
+                // Create a context with empty tenant ID - it won't be used for actual DB operations
+                var defaultContext = Task.Run(async () => await factory.CreateDbContextAsync(Guid.Empty)).GetAwaiter().GetResult();
+                return (TenantDbContext)defaultContext;
             }
             
             // Use Task.Run to avoid deadlock
-            return Task.Run(async () => await factory.CreateDbContextAsync(tenantId.Value)).GetAwaiter().GetResult();
+            var context = Task.Run(async () => await factory.CreateDbContextAsync(tenantId.Value)).GetAwaiter().GetResult();
+            return (TenantDbContext)context;
         });
 
         // Add Repositories
+        services.AddScoped<ISettingsRepository, SettingsRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+        
+        // Register DbContext interfaces for Application layer
+        services.AddScoped<ITenantDbContext>(provider => provider.GetRequiredService<TenantDbContext>());
+        services.AddScoped<IMasterDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
         
         // Add Migration Services
         services.AddScoped<IMigrationService, MigrationService>(); 

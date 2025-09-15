@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.DTOs.Master;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Diagnostics;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -29,42 +31,29 @@ public class MonitoringController : MasterControllerBase
     [ProducesResponseType(typeof(ApiResponse<SystemHealthDto>), 200)]
     public async Task<IActionResult> GetSystemHealth()
     {
-        try
-        {
-            var process = Process.GetCurrentProcess();
-            var startTime = DateTime.Now.AddMilliseconds(-Environment.TickCount);
-            var uptime = DateTime.Now - startTime;
+        var process = Process.GetCurrentProcess();
+        var startTime = DateTime.Now.AddMilliseconds(-Environment.TickCount);
+        var uptime = DateTime.Now - startTime;
 
-            var health = new SystemHealthDto
-            {
-                Status = "Healthy",
-                Uptime = uptime,
-                CpuUsage = GetCpuUsage(),
-                MemoryUsage = GetMemoryUsage(process),
-                DiskUsage = GetDiskUsage(),
-                ActiveConnections = GetActiveConnections(),
-                Environment = _environment.EnvironmentName,
-                Version = GetApplicationVersion(),
-                LastChecked = DateTime.UtcNow
-            };
-
-            return Ok(new ApiResponse<SystemHealthDto>
-            {
-                Success = true,
-                Data = health,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
+        var health = new SystemHealthDto
         {
-            _logger.LogError(ex, "Error getting system health");
-            return StatusCode(500, new ApiResponse<SystemHealthDto>
-            {
-                Success = false,
-                Message = "Error retrieving system health",
-                Timestamp = DateTime.UtcNow
-            });
-        }
+            Status = "Healthy",
+            Uptime = uptime,
+            CpuUsage = GetCpuUsage(),
+            MemoryUsage = GetMemoryUsage(process),
+            DiskUsage = GetDiskUsage(),
+            ActiveConnections = GetActiveConnections(),
+            Environment = _environment.EnvironmentName,
+            Version = GetApplicationVersion(),
+            LastChecked = DateTime.UtcNow
+        };
+
+        return Ok(new ApiResponse<SystemHealthDto>
+        {
+            Success = true,
+            Data = health,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     /// <summary>
@@ -94,13 +83,13 @@ public class MonitoringController : MasterControllerBase
                 Timestamp = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (InfrastructureException ex)
         {
-            _logger.LogError(ex, "Error getting system metrics");
-            return StatusCode(500, new ApiResponse<SystemMetricsDto>
+            _logger.LogError(ex, "Infrastructure error getting system metrics");
+            return StatusCode(503, new ApiResponse<SystemMetricsDto>
             {
                 Success = false,
-                Message = "Error retrieving system metrics",
+                Message = $"Infrastructure error: {ex.Message}",
                 Timestamp = DateTime.UtcNow
             });
         }

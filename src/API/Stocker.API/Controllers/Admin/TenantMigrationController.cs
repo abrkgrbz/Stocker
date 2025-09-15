@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stocker.Persistence.Migrations;
+using Stocker.Application.Common.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Admin;
 
@@ -34,10 +36,15 @@ public class TenantMigrationController : ControllerBase
             
             return Ok(new { success = true, message = $"Tenant {tenantId} database migrated successfully" });
         }
-        catch (Exception ex)
+        catch (Application.Common.Exceptions.NotFoundException ex)
         {
-            _logger.LogError(ex, "Failed to migrate tenant {TenantId}", tenantId);
-            return StatusCode(500, new { success = false, message = ex.Message });
+            _logger.LogError(ex, "Tenant not found: {TenantId}", tenantId);
+            return NotFound(new { success = false, message = ex.Message });
+        }
+        catch (DatabaseException ex)
+        {
+            _logger.LogError(ex, "Database error migrating tenant {TenantId}", tenantId);
+            return StatusCode(503, new { success = false, message = ex.Message });
         }
     }
 
@@ -52,10 +59,10 @@ public class TenantMigrationController : ControllerBase
             
             return Ok(new { success = true, message = "All tenant databases migrated successfully" });
         }
-        catch (Exception ex)
+        catch (DatabaseException ex)
         {
-            _logger.LogError(ex, "Failed to migrate all tenants");
-            return StatusCode(500, new { success = false, message = ex.Message });
+            _logger.LogError(ex, "Database error migrating all tenants");
+            return StatusCode(503, new { success = false, message = ex.Message });
         }
     }
 }

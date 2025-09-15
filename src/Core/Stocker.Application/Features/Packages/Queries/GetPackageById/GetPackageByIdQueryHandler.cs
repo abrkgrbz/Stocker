@@ -3,17 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
 using Stocker.Application.DTOs.Package;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Packages.Queries.GetPackageById;
 
 public class GetPackageByIdQueryHandler : IRequestHandler<GetPackageByIdQuery, Result<PackageDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<GetPackageByIdQueryHandler> _logger;
 
     public GetPackageByIdQueryHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<GetPackageByIdQueryHandler> logger)
     {
         _context = context;

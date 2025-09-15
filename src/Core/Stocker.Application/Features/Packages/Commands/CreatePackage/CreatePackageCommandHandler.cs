@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
 using Stocker.Application.DTOs.Package;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Entities;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
@@ -13,11 +13,11 @@ namespace Stocker.Application.Features.Packages.Commands.CreatePackage;
 
 public class CreatePackageCommandHandler : IRequestHandler<CreatePackageCommand, Result<PackageDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<CreatePackageCommandHandler> _logger;
 
     public CreatePackageCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<CreatePackageCommandHandler> logger)
     {
         _context = context;

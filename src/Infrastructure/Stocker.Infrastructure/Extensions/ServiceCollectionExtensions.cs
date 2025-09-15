@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,6 +27,13 @@ public static class ServiceCollectionExtensions
         
         // Add Date Time Service
         services.AddScoped<IDateTimeService, DateTimeService>();
+        services.AddScoped<IDateTime, DateTimeService>();
+        
+        // Add Encryption Service with Data Protection
+        services.AddDataProtection()
+            .SetApplicationName("Stocker.ERP")
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "keys")));
+        services.AddSingleton<IEncryptionService, EncryptionService>();
         
         // Add JWT Service
         services.AddScoped<IJwtService, JwtService>();
@@ -42,25 +50,8 @@ public static class ServiceCollectionExtensions
         // Add Validation Service
         services.AddScoped<IValidationService, ValidationService>();
         
-        // Add Cache Service
-        // Check if Redis is configured
-        var redisConnection = configuration.GetConnectionString("Redis");
-        if (!string.IsNullOrEmpty(redisConnection))
-        {
-            // Use Redis cache
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = redisConnection;
-                options.InstanceName = "Stocker:";
-            });
-            services.AddSingleton<ITenantSettingsCacheService, RedisCacheService>();
-        }
-        else
-        {
-            // Fall back to in-memory cache
-            services.AddMemoryCache();
-            services.AddSingleton<ITenantSettingsCacheService, TenantSettingsCacheService>();
-        }
+        // Add Cache Services (Redis or In-Memory)
+        services.AddCacheServices(configuration);
         
         // Add Audit Service
         services.AddScoped<Services.IAuditService, Services.AuditService>();
@@ -80,21 +71,34 @@ public static class ServiceCollectionExtensions
         // Add Captcha Service
         services.AddHttpClient<ICaptchaService, ReCaptchaService>();
         
+        // Add Payment Service
+        services.AddHttpClient("Iyzico");
+        services.AddScoped<IPaymentService, PaymentService>();
+        
         // Add Memory Cache for tenant caching
         services.AddMemoryCache();
 
-        // Add Hangfire services
-        services.AddHangfireServices(configuration);
-        
-        // Add Hangfire initialization service
-        services.AddHostedService<HangfireInitializationService>();
-        
-        // Register Hangfire jobs
-        services.AddScoped<IEmailBackgroundJob, EmailBackgroundJob>();
-        services.AddScoped<ITenantProvisioningJob, TenantProvisioningJob>();
-        
-        // Register Background Job Service
-        services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+        // Add Hangfire services (skip in Testing environment)
+        var isTestingEnvironment = environment?.EnvironmentName?.Equals("Testing", StringComparison.OrdinalIgnoreCase) ?? false;
+        if (!isTestingEnvironment)
+        {
+            services.AddHangfireServices(configuration);
+            
+            // Add Hangfire initialization service
+            services.AddHostedService<HangfireInitializationService>();
+            
+            // Register Hangfire jobs
+            services.AddScoped<IEmailBackgroundJob, EmailBackgroundJob>();
+            services.AddScoped<ITenantProvisioningJob, TenantProvisioningJob>();
+            
+            // Register Background Job Service
+            services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+        }
+        else
+        {
+            // Register a mock background job service for testing
+            services.AddScoped<IBackgroundJobService, MockBackgroundJobService>();
+        }
 
         // Add other infrastructure services here as needed
 

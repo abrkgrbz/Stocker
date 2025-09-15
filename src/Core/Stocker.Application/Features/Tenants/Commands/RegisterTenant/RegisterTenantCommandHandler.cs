@@ -11,6 +11,7 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Master.Enums;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 
@@ -90,7 +91,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             {
                 return Result<TenantDto>.Failure(Error.Validation("RegisterTenant.InvalidContactEmail", "Invalid contactEmail string format"));
             }
-            if (contactPhone.IsFailure)
+            if (contactPhone != null && contactPhone.IsFailure)
             {
                 return Result<TenantDto>.Failure(Error.Validation("Tenant.InvalidContactPhone", "Invalid contactPhone string format"));
             }
@@ -100,7 +101,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
                 databaseName: $"Stocker_Tenant_{request.CompanyCode}",
                 connectionString: connectionString.Value,
                 contactEmail: contactEmail.Value,
-                contactPhone: contactPhone.Value,
+                contactPhone: contactPhone?.Value,
                 description: $"Registered via self-service on {DateTime.UtcNow:yyyy-MM-dd}",
                 logoUrl: null
             );
@@ -189,7 +190,7 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
                 await SendVerificationEmail(tenant, masterUser, verificationToken);
                 _logger.LogInformation("Verification email sent successfully to: {Email}", masterUser.Email.Value);
             }
-            catch (Exception emailEx)
+            catch (System.Exception emailEx)
             {
                 // Email gönderimi başarısız olsa bile kayıt işlemi başarılı
                 // Kullanıcı daha sonra email doğrulama linkini tekrar isteyebilir
@@ -202,15 +203,29 @@ public class RegisterTenantCommandHandler : IRequestHandler<RegisterTenantComman
             var result = _mapper.Map<TenantDto>(tenant);
             return Result<TenantDto>.Success(result);
         }
-        catch (Exception ex)
+        catch (BusinessException ex)
         {
-            _logger.LogError(ex, "Error registering tenant");
+            _logger.LogError(ex, "Business error registering tenant");
             
             // Transaction'ı geri al
             if (_unitOfWork.HasActiveTransaction)
             {
                 await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                _logger.LogInformation("Transaction rolled back due to registration error");
+                _logger.LogInformation("Transaction rolled back due to business error");
+            }
+            
+            return Result<TenantDto>.Failure(
+                Error.Failure(ex.Code, ex.Message));
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error registering tenant");
+            
+            // Transaction'ı geri al
+            if (_unitOfWork.HasActiveTransaction)
+            {
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                _logger.LogInformation("Transaction rolled back due to unexpected error");
             }
             
             // Daha detaylı hata mesajı

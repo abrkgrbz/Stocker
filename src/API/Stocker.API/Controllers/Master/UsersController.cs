@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Interfaces.Repositories;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -32,9 +33,7 @@ public class UsersController : ControllerBase
         var user = await _userRepository.GetMasterUserByIdAsync(id);
         
         if (user == null)
-        {
-            return NotFound(new { message = "User not found" });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(user);
     }
@@ -45,9 +44,7 @@ public class UsersController : ControllerBase
         var result = await _userRepository.ToggleMasterUserStatusAsync(id);
         
         if (!result)
-        {
-            return NotFound(new { message = "User not found" });
-        }
+            throw new NotFoundException("User", id);
         
         return Ok(new { success = true, message = "User status updated successfully" });
     }
@@ -58,9 +55,7 @@ public class UsersController : ControllerBase
         var result = await _userRepository.AssignTenantToUserAsync(userId, tenantId);
         
         if (!result)
-        {
-            return NotFound(new { message = "User or tenant not found" });
-        }
+            throw new NotFoundException("User or tenant", $"{userId}/{tenantId}");
         
         return Ok(new { success = true, message = "Tenant assigned to user successfully" });
     }

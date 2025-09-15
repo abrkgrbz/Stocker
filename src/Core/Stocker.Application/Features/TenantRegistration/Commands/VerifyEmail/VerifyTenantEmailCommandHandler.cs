@@ -4,20 +4,19 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
-using Stocker.Persistence.Contexts;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Commands.VerifyEmail;
 
 public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTenantEmailCommand, Result<bool>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<VerifyTenantEmailCommandHandler> _logger;
     private readonly IMediator _mediator;
     private readonly IBackgroundJobService _backgroundJobService;
 
     public VerifyTenantEmailCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<VerifyTenantEmailCommandHandler> logger,
         IMediator mediator,
         IBackgroundJobService backgroundJobService)

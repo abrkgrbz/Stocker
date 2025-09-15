@@ -1,12 +1,15 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Settings;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -14,20 +17,29 @@ public class EmailService : IEmailService
 {
     private readonly EmailSettings _emailSettings;
     private readonly ILogger<EmailService> _logger;
+    private readonly IEncryptionService _encryptionService;
+    private readonly IMasterDbContext _masterContext;
     private readonly string _templatesPath;
 
     public EmailService(
         IOptions<EmailSettings> emailSettings,
-        ILogger<EmailService> logger)
+        ILogger<EmailService> logger,
+        IEncryptionService encryptionService,
+        IMasterDbContext masterContext)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
+        _encryptionService = encryptionService;
+        _masterContext = masterContext;
         _templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _emailSettings.TemplatesPath);
     }
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
-        if (!_emailSettings.EnableEmail)
+        // Get email settings from database
+        var emailSettings = await GetEmailSettingsFromDatabaseAsync(cancellationToken);
+        
+        if (!emailSettings.EnableEmail)
         {
             _logger.LogWarning("Email service is disabled. Email not sent to {To}", message.To);
             return;
@@ -36,7 +48,7 @@ public class EmailService : IEmailService
         try
         {
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(_emailSettings.FromName, _emailSettings.FromEmail));
+            email.From.Add(new MailboxAddress(emailSettings.FromName, emailSettings.FromEmail));
             email.To.Add(MailboxAddress.Parse(message.To));
             email.Subject = message.Subject;
 
@@ -79,26 +91,30 @@ public class EmailService : IEmailService
             // Set timeout to 30 seconds
             smtp.Timeout = 30000;
             
-            // Log connection attempt
-            _logger.LogInformation("Attempting to connect to SMTP server {Host}:{Port}", _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+            // Log connection attempt (without exposing password)
+            _logger.LogInformation("Attempting to connect to SMTP server {Host}:{Port}", emailSettings.SmtpHost, emailSettings.SmtpPort);
             
             await smtp.ConnectAsync(
-                _emailSettings.SmtpHost, 
-                _emailSettings.SmtpPort, 
-                _emailSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : 
-                _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None, 
+                emailSettings.SmtpHost, 
+                emailSettings.SmtpPort, 
+                emailSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : 
+                emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None, 
                 cancellationToken);
             
-            await smtp.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword, cancellationToken);
+            await smtp.AuthenticateAsync(emailSettings.SmtpUsername, emailSettings.SmtpPassword, cancellationToken);
             await smtp.SendAsync(email, cancellationToken);
             await smtp.DisconnectAsync(true, cancellationToken);
 
             _logger.LogInformation("Email sent successfully to {To}", message.To);
         }
-        catch (Exception ex)
+        catch (ExternalServiceException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Failed to send email to {To}", message.To);
-            throw;
+            throw new ExternalServiceException("EmailService", "Failed to send email", ex);
         }
     }
 
@@ -221,7 +237,7 @@ public class EmailService : IEmailService
             
             return true;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Email service is not available");
             return false;
@@ -256,7 +272,7 @@ public class EmailService : IEmailService
                 template.Subject = GetDefaultSubject(templateName);
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Failed to load email template: {TemplateName}", templateName);
             template.HtmlBody = GetDefaultTemplate(templateName);
@@ -264,6 +280,80 @@ public class EmailService : IEmailService
         }
         
         return template;
+    }
+
+    private async Task<EmailSettings> GetEmailSettingsFromDatabaseAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get settings from database
+            var settings = await _masterContext.SystemSettings
+                .Where(s => s.Category == "Email" || s.Key.StartsWith("Email.") || s.Key.StartsWith("Smtp."))
+                .ToListAsync(cancellationToken);
+
+            var emailSettings = new EmailSettings();
+
+            // SMTP Settings
+            var smtpHost = settings.FirstOrDefault(s => s.Key == "Smtp.Host")?.Value;
+            if (!string.IsNullOrEmpty(smtpHost))
+                emailSettings.SmtpHost = smtpHost;
+
+            var smtpPort = settings.FirstOrDefault(s => s.Key == "Smtp.Port")?.Value;
+            if (!string.IsNullOrEmpty(smtpPort) && int.TryParse(smtpPort, out var port))
+                emailSettings.SmtpPort = port;
+
+            var smtpUsername = settings.FirstOrDefault(s => s.Key == "Smtp.Username")?.Value;
+            if (!string.IsNullOrEmpty(smtpUsername))
+                emailSettings.SmtpUsername = smtpUsername;
+
+            // SMTP Password - DECRYPT if encrypted
+            var smtpPasswordSetting = settings.FirstOrDefault(s => s.Key == "Smtp.Password");
+            if (smtpPasswordSetting != null && !string.IsNullOrEmpty(smtpPasswordSetting.Value))
+            {
+                try
+                {
+                    // Try to decrypt the password
+                    emailSettings.SmtpPassword = _encryptionService.Decrypt(smtpPasswordSetting.Value);
+                    _logger.LogDebug("SMTP password decrypted successfully");
+                }
+                catch (System.Exception ex)
+                {
+                    // If decryption fails, it might be stored as plain text (legacy)
+                    _logger.LogWarning(ex, "Failed to decrypt SMTP password, using as plain text. Consider re-saving settings.");
+                    emailSettings.SmtpPassword = smtpPasswordSetting.Value;
+                }
+            }
+
+            var enableSsl = settings.FirstOrDefault(s => s.Key == "Smtp.EnableSsl")?.Value;
+            if (!string.IsNullOrEmpty(enableSsl) && bool.TryParse(enableSsl, out var ssl))
+                emailSettings.EnableSsl = ssl;
+
+            // Email Settings
+            var fromEmail = settings.FirstOrDefault(s => s.Key == "Email.FromAddress")?.Value;
+            if (!string.IsNullOrEmpty(fromEmail))
+                emailSettings.FromEmail = fromEmail;
+
+            var fromName = settings.FirstOrDefault(s => s.Key == "Email.FromName")?.Value;
+            if (!string.IsNullOrEmpty(fromName))
+                emailSettings.FromName = fromName;
+
+            var enableEmail = settings.FirstOrDefault(s => s.Key == "Email.Enable")?.Value;
+            if (!string.IsNullOrEmpty(enableEmail) && bool.TryParse(enableEmail, out var enabled))
+                emailSettings.EnableEmail = enabled;
+
+            return emailSettings;
+        }
+        catch (DatabaseException ex)
+        {
+            _logger.LogError(ex, "Database error loading email settings, using default configuration");
+            // Return default settings from configuration as fallback
+            return _emailSettings;
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load email settings, using default configuration");
+            return _emailSettings;
+        }
     }
 
     private string GetDefaultTemplate(string templateName)

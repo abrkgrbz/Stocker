@@ -2,7 +2,6 @@ using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
-using Stocker.Persistence.Migrations;
 using Stocker.SharedKernel.Repositories;
 using Stocker.Domain.Master.Entities;
 

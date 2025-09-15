@@ -10,7 +10,7 @@ using Stocker.Application.Extensions;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.ValueObjects;
-using Stocker.Persistence.Migrations; 
+using Stocker.Application.Common.Interfaces; 
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
 

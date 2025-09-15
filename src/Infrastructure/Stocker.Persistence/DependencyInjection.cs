@@ -1,0 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Persistence.Contexts;
+using Stocker.Persistence.Factories;
+using Stocker.Persistence.Repositories;
+using Stocker.Persistence.UnitOfWork;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Repositories;
+
+namespace Stocker.Persistence;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Add MasterDbContext
+        services.AddDbContext<MasterDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly(typeof(MasterDbContext).Assembly.FullName)));
+
+        // Register MasterDbContext as IMasterDbContext
+        services.AddScoped<IMasterDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
+
+        // Add TenantDbContext as transient (created per request via factory)
+        services.AddTransient<TenantDbContext>();
+        
+        // Register TenantDbContextFactory
+        services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
+
+        // Register repositories
+        services.AddScoped<IMasterUnitOfWork, MasterUnitOfWork>();
+        services.AddScoped<ITenantUnitOfWork, TenantUnitOfWork>();
+        
+        // Note: Generic repositories should be registered per context
+        // They will be registered in specific context configurations
+
+        // Register migration service
+        services.AddScoped<IMigrationService, Migrations.MigrationService>();
+        
+        // Note: MigrationService is not registered as HostedService
+        // Migrations should be handled explicitly or through a separate hosted service
+
+        return services;
+    }
+}

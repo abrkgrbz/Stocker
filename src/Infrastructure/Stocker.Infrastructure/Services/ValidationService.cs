@@ -7,6 +7,8 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using Stocker.Application.Features.Tenants.Queries.CheckSubdomainAvailability;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -150,7 +152,7 @@ public class ValidationService : IValidationService
             await Task.CompletedTask;
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error validating email: {Email}", email);
             result.IsValid = false;
@@ -271,7 +273,7 @@ public class ValidationService : IValidationService
             await Task.CompletedTask;
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error validating phone number: {PhoneNumber}", phoneNumber);
             result.IsValid = false;
@@ -375,7 +377,7 @@ public class ValidationService : IValidationService
             await Task.CompletedTask;
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error checking password strength");
             result.Score = 0;
@@ -482,7 +484,7 @@ public class ValidationService : IValidationService
 
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error checking domain availability: {Domain}", domain);
             result.IsAvailable = false;
@@ -577,7 +579,7 @@ public class ValidationService : IValidationService
             await Task.CompletedTask;
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error validating identity number");
             result.IsValid = false;
@@ -662,7 +664,7 @@ public class ValidationService : IValidationService
             await Task.CompletedTask;
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error validating company name: {CompanyName}", companyName);
             result.IsValid = false;
@@ -930,7 +932,7 @@ public class ValidationService : IValidationService
                     result.SuggestedCodes.Add($"{code}-new");
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 _logger.LogError(ex, "Error checking subdomain availability");
                 // If database check fails, assume available for now
@@ -941,7 +943,7 @@ public class ValidationService : IValidationService
 
             return result;
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error validating tenant code");
             result.IsAvailable = false;

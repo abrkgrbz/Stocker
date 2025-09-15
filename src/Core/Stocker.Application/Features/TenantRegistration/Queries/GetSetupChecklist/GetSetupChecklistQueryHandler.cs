@@ -2,16 +2,16 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Queries.GetSetupChecklist;
 
 public sealed class GetSetupChecklistQueryHandler : IRequestHandler<GetSetupChecklistQuery, Result<TenantSetupChecklistDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public GetSetupChecklistQueryHandler(MasterDbContext context)
+    public GetSetupChecklistQueryHandler(IMasterDbContext context)
     {
         _context = context;
     }

@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Master.Entities;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Identity.Models;
-using Stocker.Persistence.Contexts;
 using System.Security.Claims;
 
 namespace Stocker.Identity.Services;
@@ -14,11 +14,11 @@ namespace Stocker.Identity.Services;
 public class TokenGenerationService : ITokenGenerationService
 {
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly MasterDbContext _masterContext;
+    private readonly IMasterDbContext _masterContext;
 
     public TokenGenerationService(
         IJwtTokenService jwtTokenService,
-        MasterDbContext masterContext)
+        IMasterDbContext masterContext)
     {
         _jwtTokenService = jwtTokenService;
         _masterContext = masterContext;

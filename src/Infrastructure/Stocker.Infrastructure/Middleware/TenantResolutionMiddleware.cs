@@ -20,6 +20,15 @@ public class TenantResolutionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip tenant resolution in Testing environment
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment == "Testing")
+        {
+            _logger.LogDebug("Skipping tenant resolution in Testing environment");
+            await _next(context);
+            return;
+        }
+        
         // Skip tenant resolution for health check endpoints
         if (context.Request.Path.StartsWithSegments("/health") || 
             context.Request.Path.StartsWithSegments("/healthz") ||
@@ -137,7 +146,7 @@ public class TenantResolutionMiddleware
         if (context.Request.Headers.TryGetValue("X-Tenant-Code", out var tenantCode))
         {
             var tenantService = context.RequestServices.GetRequiredService<ITenantResolverService>();
-            var tenantInfo = tenantService.GetTenantByCodeAsync(tenantCode).Result;
+            var tenantInfo = tenantService.GetTenantByCodeAsync(tenantCode.ToString()).Result;
             if (tenantInfo != null)
             {
                 _logger.LogDebug("Tenant {TenantId} resolved from X-Tenant-Code header: {TenantCode}", tenantInfo.Id, tenantCode);

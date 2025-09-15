@@ -5,6 +5,7 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Customers.Commands; 
 using Stocker.Modules.CRM.Application.Features.Customers.Queries;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.Pagination;
  
 
 namespace Stocker.Modules.CRM.API.Controllers;
@@ -32,6 +33,45 @@ public class CustomersController : ControllerBase
     public async Task<ActionResult<List<CustomerDto>>> GetCustomers()
     {
         var result = await _mediator.Send(new GetCustomersQuery());
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get paginated customers for the current tenant
+    /// </summary>
+    [HttpGet("paged")]
+    [ProducesResponseType(typeof(PagedResult<CustomerDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<PagedResult<CustomerDto>>> GetCustomersPaged(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] string? industry = null,
+        [FromQuery] string? city = null,
+        [FromQuery] string? country = null)
+    {
+        var query = new GetCustomersPagedQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            SearchTerm = searchTerm,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            IncludeInactive = includeInactive,
+            Industry = industry,
+            City = city,
+            Country = country
+        };
+
+        var result = await _mediator.Send(query);
+        
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+            
         return Ok(result.Value);
     }
 

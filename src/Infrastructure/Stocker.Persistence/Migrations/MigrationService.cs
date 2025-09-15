@@ -10,21 +10,9 @@ using Stocker.Persistence.Services;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 using Stocker.SharedKernel.Exceptions;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Migrations;
-
-public interface IMigrationService
-{
-    // - MigrateMasterDatabaseAsync(): Master veritaban�na migration uygular
-    //  - MigrateTenantDatabaseAsync(Guid tenantId): Belirli bir tenant'�n veritaban�na migration uygular
-    //  - MigrateAllTenantDatabasesAsync(): T�m aktif tenant'lar�n veritabanlar�na migration uygular
-
-    Task MigrateMasterDatabaseAsync();
-    Task MigrateTenantDatabaseAsync(Guid tenantId);
-    Task MigrateAllTenantDatabasesAsync();
-    Task SeedMasterDataAsync();
-    Task SeedTenantDataAsync(Guid tenantId);
-}
 
 public class MigrationService : IMigrationService
 {
@@ -57,7 +45,11 @@ public class MigrationService : IMigrationService
             _logger.LogError(ex, "Database update error while migrating the master database.");
             throw new DatabaseException("Migration.MasterFailed", "Failed to migrate master database", ex);
         }
-        catch (Exception ex)
+        catch (DatabaseException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred while migrating the master database.");
             throw new ApplicationException("Unexpected error during master database migration", ex);
@@ -81,12 +73,15 @@ public class MigrationService : IMigrationService
                 throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
             }
             
-            // Skip connection test since we're creating the database
-            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId, skipConnectionTest: true);
+            // Create the database context
+            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
+            
+            // Cast to TenantDbContext to access Database property
+            var tenantDbContext = (TenantDbContext)context;
             
             // MigrateAsync will create the database if it doesn't exist and apply all migrations
             _logger.LogInformation("Creating database and applying migrations for tenant {TenantId}...", tenantId);
-            await context.Database.MigrateAsync();
+            await tenantDbContext.Database.MigrateAsync();
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);
         }
@@ -100,7 +95,11 @@ public class MigrationService : IMigrationService
             _logger.LogError(ex, "Invalid operation while migrating tenant {TenantId}.", tenantId);
             throw new InvalidOperationException(ex.Message, ex);
         }
-        catch (Exception ex)
+        catch (DatabaseException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred while migrating the tenant database for tenant {TenantId}.", tenantId);
             throw new ApplicationException($"Unexpected error during tenant database migration for tenant {tenantId}", ex);
@@ -130,7 +129,7 @@ public class MigrationService : IMigrationService
                 _logger.LogError(ex, "Database error migrating tenant {TenantId}. Continuing with next tenant...", tenantId);
                 // Continue with other tenants even if one fails
             }
-            catch (Exception ex)
+        catch (System.Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error migrating tenant {TenantId}. Continuing with next tenant...", tenantId);
                 // Continue with other tenants even if one fails
@@ -157,7 +156,11 @@ public class MigrationService : IMigrationService
             _logger.LogError(ex, "Database error while seeding master data.");
             throw new DatabaseException("Seed.MasterFailed", "Failed to seed master data", ex);
         }
-        catch (Exception ex)
+        catch (DatabaseException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred while seeding master data.");
             throw new ApplicationException("Unexpected error during master data seeding", ex);
@@ -208,7 +211,11 @@ public class MigrationService : IMigrationService
             _logger.LogError(ex, "Database error while seeding tenant data for tenant {TenantId}.", tenantId);
             throw new DatabaseException("Seed.TenantFailed", $"Failed to seed tenant data for tenant {tenantId}", ex);
         }
-        catch (Exception ex)
+        catch (DatabaseException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred while seeding tenant data for tenant {TenantId}.", tenantId);
             throw new ApplicationException($"Unexpected error during tenant data seeding for tenant {tenantId}", ex);
@@ -250,7 +257,7 @@ public class DatabaseMigrationHostedService : IHostedService
             _logger.LogError(ex, "Database error during startup migration.");
             // Don't throw - let the application start even if migration fails
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Failed to migrate databases on startup.");
             // Don't throw - let the application start even if migration fails

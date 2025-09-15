@@ -6,6 +6,7 @@ using Stocker.Application.DTOs.Tenant.Settings;
 using Stocker.Application.Features.Tenant.Settings.Commands;
 using Stocker.Application.Features.Tenant.Settings.Queries;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -32,13 +33,7 @@ public class SettingsController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetSettingsQuery
         {
@@ -65,13 +60,7 @@ public class SettingsController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetSettingByKeyQuery
         {
@@ -82,13 +71,7 @@ public class SettingsController : ApiController
         var result = await _mediator.Send(query);
 
         if (result == null)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = $"'{key}' ayarı bulunamadı"
-            });
-        }
+            throw new NotFoundException("Setting", key);
 
         return Ok(new ApiResponse<SettingDto>
         {
@@ -106,47 +89,30 @@ public class SettingsController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
-        try
+        var command = new CreateSettingCommand
         {
-            var command = new CreateSettingCommand
-            {
-                TenantId = tenantId,
-                SettingKey = request.SettingKey,
-                SettingValue = request.SettingValue,
-                Description = request.Description,
-                Category = request.Category,
-                DataType = request.DataType,
-                IsSystemSetting = request.IsSystemSetting,
-                IsEncrypted = request.IsEncrypted,
-                IsPublic = request.IsPublic,
-                CreatedBy = User.Identity?.Name
-            };
+            TenantId = tenantId,
+            SettingKey = request.SettingKey,
+            SettingValue = request.SettingValue,
+            Description = request.Description,
+            Category = request.Category,
+            DataType = request.DataType,
+            IsSystemSetting = request.IsSystemSetting,
+            IsEncrypted = request.IsEncrypted,
+            IsPublic = request.IsPublic,
+            CreatedBy = User.Identity?.Name
+        };
 
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            return Ok(new ApiResponse<SettingDto>
-            {
-                Success = true,
-                Data = result,
-                Message = "Ayar başarıyla oluşturuldu"
-            });
-        }
-        catch (InvalidOperationException ex)
+        return Ok(new ApiResponse<SettingDto>
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = ex.Message
-            });
-        }
+            Success = true,
+            Data = result,
+            Message = "Ayar başarıyla oluşturuldu"
+        });
     }
 
     [HttpPut("{key}")]
@@ -177,13 +143,7 @@ public class SettingsController : ApiController
         var result = await _mediator.Send(command);
 
         if (!result)
-        {
-            return NotFound(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = $"'{key}' ayarı bulunamadı"
-            });
-        }
+            throw new NotFoundException("Setting", key);
 
         return Ok(new ApiResponse<bool>
         {

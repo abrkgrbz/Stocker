@@ -321,7 +321,7 @@ const TenantIntegrations: React.FC = () => {
       render: (status: keyof typeof statusColors, record) => (
         <Space direction="vertical" size={0}>
           <Badge
-            status={statusColors[status]}
+            status={statusColors[status] as any}
             text={statusTexts[status]}
           />
           {record.lastSync && status !== 'disconnected' && (

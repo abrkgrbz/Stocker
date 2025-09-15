@@ -144,9 +144,7 @@ public class AuthController : ControllerBase
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         
         if (string.IsNullOrEmpty(userId))
-        {
-            return BadRequest(new { success = false, message = "User not found" });
-        }
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
         
         var command = new LogoutCommand { UserId = userId };
         await _mediator.Send(command);

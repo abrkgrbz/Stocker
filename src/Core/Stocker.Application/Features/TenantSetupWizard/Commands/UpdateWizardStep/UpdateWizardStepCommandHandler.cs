@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 using System.Text.Json;
 
@@ -10,10 +10,10 @@ namespace Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardSt
 
 public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizardStepCommand, Result<TenantSetupWizardDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<UpdateWizardStepCommandHandler> _logger;
 
-    public UpdateWizardStepCommandHandler(MasterDbContext context, ILogger<UpdateWizardStepCommandHandler> logger)
+    public UpdateWizardStepCommandHandler(IMasterDbContext context, ILogger<UpdateWizardStepCommandHandler> logger)
     {
         _context = context;
         _logger = logger;

@@ -13,6 +13,13 @@ public class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
     {
     }
 
+    public async Task<IReadOnlyList<Customer>> GetAllWithContactsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(c => c.Contacts)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Customer?> GetWithContactsAsync(Guid customerId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
@@ -30,6 +37,7 @@ public class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
     public async Task<IReadOnlyList<Customer>> GetActiveCustomersAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .Include(c => c.Contacts)
             .Where(c => c.IsActive)
             .ToListAsync(cancellationToken);
     }

@@ -3,17 +3,17 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantSetupWizard.Create;
 
 public sealed class CreateTenantSetupWizardCommandHandler : IRequestHandler<CreateTenantSetupWizardCommand, Result<TenantSetupWizardDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantSetupWizardCommandHandler> _logger;
 
-    public CreateTenantSetupWizardCommandHandler(MasterDbContext context, ILogger<CreateTenantSetupWizardCommandHandler> logger)
+    public CreateTenantSetupWizardCommandHandler(IMasterDbContext context, ILogger<CreateTenantSetupWizardCommandHandler> logger)
     {
         _context = context;
         _logger = logger;

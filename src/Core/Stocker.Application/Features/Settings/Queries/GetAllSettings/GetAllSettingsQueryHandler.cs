@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Settings;
 using Stocker.Domain.Entities.Settings;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 using System.Text.Json;
 
@@ -10,9 +10,9 @@ namespace Stocker.Application.Features.Settings.Queries.GetAllSettings;
 
 public class GetAllSettingsQueryHandler : IRequestHandler<GetAllSettingsQuery, Result<SettingsDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public GetAllSettingsQueryHandler(MasterDbContext context)
+    public GetAllSettingsQueryHandler(IMasterDbContext context)
     {
         _context = context;
     }

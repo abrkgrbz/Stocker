@@ -82,7 +82,7 @@ public class InvoicesController : MasterControllerBase
         {
             _logger.LogInformation("Invoice created successfully with ID: {InvoiceId}", result.Value.Id);
             return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, 
-                new ApiResponse<InvoiceDto>
+                new ApiResponse<Stocker.Application.DTOs.Invoice.InvoiceDto>
                 {
                     Success = true,
                     Data = result.Value,

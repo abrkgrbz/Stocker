@@ -6,6 +6,7 @@ using Stocker.Application.DTOs.Tenant.Modules;
 using Stocker.Application.Features.Tenant.Modules.Commands;
 using Stocker.Application.Features.Tenant.Modules.Queries;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -30,13 +31,7 @@ public class ModulesController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetModulesQuery
         {
@@ -71,43 +66,26 @@ public class ModulesController : ApiController
             });
         }
 
-        try
+        var command = new ToggleModuleCommand
         {
-            var command = new ToggleModuleCommand
-            {
-                TenantId = tenantId,
-                ModuleCode = moduleCode,
-                Enable = request.Enable,
-                ModifiedBy = User.Identity?.Name
-            };
+            TenantId = tenantId,
+            ModuleCode = moduleCode,
+            Enable = request.Enable,
+            ModifiedBy = User.Identity?.Name
+        };
 
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            if (!result)
-            {
-                return NotFound(new ApiResponse<bool>
-                {
-                    Success = false,
-                    Message = $"'{moduleCode}' modülü bulunamadı"
-                });
-            }
+        if (!result)
+            throw new NotFoundException("Module", moduleCode);
 
-            var action = request.Enable ? "etkinleştirildi" : "devre dışı bırakıldı";
-            return Ok(new ApiResponse<bool>
-            {
-                Success = true,
-                Data = true,
-                Message = $"Modül başarıyla {action}"
-            });
-        }
-        catch (InvalidOperationException ex)
+        var action = request.Enable ? "etkinleştirildi" : "devre dışı bırakıldı";
+        return Ok(new ApiResponse<bool>
         {
-            return BadRequest(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = ex.Message
-            });
-        }
+            Success = true,
+            Data = true,
+            Message = $"Modül başarıyla {action}"
+        });
     }
 
     [HttpGet("summary")]
@@ -117,13 +95,7 @@ public class ModulesController : ApiController
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
         if (tenantId == Guid.Empty)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Tenant bulunamadı"
-            });
-        }
+            throw new UnauthorizedException("Tenant bulunamadı");
 
         var query = new GetModulesQuery
         {

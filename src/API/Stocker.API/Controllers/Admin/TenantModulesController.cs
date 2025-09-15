@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Infrastructure.Services;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Admin;
 
@@ -42,30 +44,22 @@ public class TenantModulesController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> EnableCRMForTenant(Guid tenantId)
     {
-        try
-        {
-            _logger.LogInformation("Enabling CRM module for tenant {TenantId}", tenantId);
+        _logger.LogInformation("Enabling CRM module for tenant {TenantId}", tenantId);
 
-            // Get tenant-specific connection string
-            var connectionString = _tenantCRMService.GetTenantConnectionString(tenantId);
-            
-            // Enable CRM and create tables in tenant's database
-            var result = await _tenantCRMService.EnableCRMForTenantAsync(tenantId, connectionString);
-            
-            if (result)
-            {
-                _logger.LogInformation("CRM module enabled successfully for tenant {TenantId}", tenantId);
-                return Ok(new { Message = $"CRM module enabled for tenant {tenantId}" });
-            }
-
-            _logger.LogWarning("Failed to enable CRM module for tenant {TenantId}", tenantId);
-            return BadRequest(new { Error = "Failed to enable CRM module" });
-        }
-        catch (Exception ex)
+        // Get tenant-specific connection string
+        var connectionString = _tenantCRMService.GetTenantConnectionString(tenantId);
+        
+        // Enable CRM and create tables in tenant's database
+        var result = await _tenantCRMService.EnableCRMForTenantAsync(tenantId, connectionString);
+        
+        if (result)
         {
-            _logger.LogError(ex, "Error enabling CRM module for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { Error = "An error occurred while enabling CRM module" });
+            _logger.LogInformation("CRM module enabled successfully for tenant {TenantId}", tenantId);
+            return Ok(new { Message = $"CRM module enabled for tenant {tenantId}" });
         }
+
+        _logger.LogWarning("Failed to enable CRM module for tenant {TenantId}", tenantId);
+        return BadRequest(new { Error = "Failed to enable CRM module" });
     }
 
     /// <summary>
@@ -74,25 +68,17 @@ public class TenantModulesController : ControllerBase
     [HttpPost("{tenantId}/crm/disable")]
     public async Task<IActionResult> DisableCRMForTenant(Guid tenantId)
     {
-        try
-        {
-            _logger.LogInformation("Disabling CRM module for tenant {TenantId}", tenantId);
+        _logger.LogInformation("Disabling CRM module for tenant {TenantId}", tenantId);
 
-            var result = await _tenantCRMService.DisableCRMForTenantAsync(tenantId);
-            
-            if (result)
-            {
-                _logger.LogInformation("CRM module disabled successfully for tenant {TenantId}", tenantId);
-                return Ok(new { Message = $"CRM module disabled for tenant {tenantId}" });
-            }
-
-            return BadRequest(new { Error = "Failed to disable CRM module" });
-        }
-        catch (Exception ex)
+        var result = await _tenantCRMService.DisableCRMForTenantAsync(tenantId);
+        
+        if (result)
         {
-            _logger.LogError(ex, "Error disabling CRM module for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { Error = "An error occurred while disabling CRM module" });
+            _logger.LogInformation("CRM module disabled successfully for tenant {TenantId}", tenantId);
+            return Ok(new { Message = $"CRM module disabled for tenant {tenantId}" });
         }
+
+        return BadRequest(new { Error = "Failed to disable CRM module" });
     }
 
     /// <summary>
@@ -101,22 +87,14 @@ public class TenantModulesController : ControllerBase
     [HttpGet("{tenantId}/crm/status")]
     public async Task<IActionResult> GetCRMStatus(Guid tenantId)
     {
-        try
-        {
-            // Check if CRM tables exist in tenant's database
-            var isEnabled = await _tenantCRMService.EnsureCRMTablesExistAsync(tenantId);
-            
-            return Ok(new 
-            { 
-                TenantId = tenantId,
-                CRMEnabled = isEnabled,
-                DatabaseName = $"Stocker_Tenant_{tenantId:N}"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking CRM status for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { Error = "An error occurred while checking CRM status" });
-        }
+        // Check if CRM tables exist in tenant's database
+        var isEnabled = await _tenantCRMService.EnsureCRMTablesExistAsync(tenantId);
+        
+        return Ok(new 
+        { 
+            TenantId = tenantId,
+            CRMEnabled = isEnabled,
+            DatabaseName = $"Stocker_Tenant_{tenantId:N}"
+        });
     }
 }

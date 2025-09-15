@@ -16,6 +16,6 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
 
     public async Task<List<NotificationDto>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
     {
-        return await _dashboardRepository.GetNotificationsAsync(request.TenantId, request.UserId, cancellationToken);
+        return await _dashboardRepository.GetNotificationsAsync(request.TenantId, request.UserId ?? string.Empty, cancellationToken);
     }
 }

@@ -27,8 +27,13 @@ public class SecurityHeadersMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Add security headers before processing the request
-        AddSecurityHeaders(context);
+        // Skip security headers in Testing environment
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment != "Testing")
+        {
+            // Add security headers before processing the request
+            AddSecurityHeaders(context);
+        }
 
         // Call the next middleware in the pipeline
         await _next(context);

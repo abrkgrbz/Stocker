@@ -1,15 +1,15 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Features.Tenant.Settings.Commands;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Tenant.Settings.Handlers;
 
 public class UpdateSettingCommandHandler : IRequestHandler<UpdateSettingCommand, bool>
 {
-    private readonly TenantDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public UpdateSettingCommandHandler(TenantDbContext context)
+    public UpdateSettingCommandHandler(ITenantDbContext context)
     {
         _context = context;
     }

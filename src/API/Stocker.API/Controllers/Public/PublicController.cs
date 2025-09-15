@@ -8,6 +8,8 @@ using Stocker.Application.Features.Packages.Queries.GetPublicPackages;
 using Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 using Stocker.Application.Features.Subscriptions.Commands.ProcessPayment;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -60,35 +62,23 @@ public class PublicController : ControllerBase
     {
         _logger.LogInformation("Registering new tenant: {CompanyName}", command.CompanyName);
         
-        try
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
-            {
-                return Ok(new 
-                { 
-                    success = true, 
-                    data = result.Value,
-                    message = "Kayıt başarılı! Email adresinize aktivasyon linki gönderildi."
-                });
-            }
-            
-            return BadRequest(new 
+            return Ok(new 
             { 
-                success = false, 
-                message = result.Error.Description 
+                success = true, 
+                data = result.Value,
+                message = "Kayıt başarılı! Email adresinize aktivasyon linki gönderildi."
             });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error registering tenant");
-            return StatusCode(500, new 
-            { 
-                success = false, 
-                message = "Kayıt işlemi sırasında bir hata oluştu" 
-            });
-        }
+        
+        return BadRequest(new 
+        { 
+            success = false, 
+            message = result.Error.Description 
+        });
     }
 
     /// <summary>
@@ -100,39 +90,27 @@ public class PublicController : ControllerBase
     {
         _logger.LogInformation("Processing payment for tenant: {TenantId}", command.TenantId);
         
-        try
+        // Simulate payment processing
+        await Task.Delay(2000); // Simulate payment gateway delay
+        
+        var result = await _mediator.Send(command);
+        
+        if (result.IsSuccess)
         {
-            // Simulate payment processing
-            await Task.Delay(2000); // Simulate payment gateway delay
-            
-            var result = await _mediator.Send(command);
-            
-            if (result.IsSuccess)
-            {
-                return Ok(new 
-                { 
-                    success = true,
-                    message = "Ödeme başarıyla işlendi",
-                    transactionId = Guid.NewGuid().ToString(),
-                    data = result.Value
-                });
-            }
-            
-            return BadRequest(new 
+            return Ok(new 
             { 
-                success = false, 
-                message = result.Error.Description 
+                success = true,
+                message = "Ödeme başarıyla işlendi",
+                transactionId = Guid.NewGuid().ToString(),
+                data = result.Value
             });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing payment");
-            return StatusCode(500, new 
-            { 
-                success = false, 
-                message = "Ödeme işlemi sırasında bir hata oluştu" 
-            });
-        }
+        
+        return BadRequest(new 
+        { 
+            success = false, 
+            message = result.Error.Description 
+        });
     }
 
     /// <summary>
@@ -184,55 +162,37 @@ public class PublicController : ControllerBase
     {
         _logger.LogInformation("Testing email service to: {Email}", request.Email);
         
-        try
+        var emailMessage = new EmailMessage
         {
-            var emailMessage = new EmailMessage
-            {
-                To = request.Email,
-                Subject = "Stocker Email Test",
-                Body = $@"
-                    <h2>Email Test Başarılı!</h2>
-                    <p>Bu bir test emailidir.</p>
-                    <p>Eğer bu emaili aldıysanız, email servisi çalışıyor demektir.</p>
-                    <br>
-                    <p><strong>Test Bilgileri:</strong></p>
-                    <ul>
-                        <li>Gönderim Zamanı: {DateTime.Now:dd.MM.yyyy HH:mm:ss}</li>
-                        <li>Server: {Environment.MachineName}</li>
-                        <li>Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}</li>
-                    </ul>
-                    <br>
-                    <p>Saygılarımızla,<br>Stocker Ekibi</p>
-                ",
-                IsHtml = true
-            };
-            
-            await _emailService.SendAsync(emailMessage);
-            
-            _logger.LogInformation("Test email sent successfully to: {Email}", request.Email);
-            
-            return Ok(new 
-            { 
-                success = true,
-                message = $"Test emaili başarıyla {request.Email} adresine gönderildi. Lütfen inbox ve spam klasörünüzü kontrol edin.",
-                timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send test email to: {Email}", request.Email);
-            
-            return StatusCode(500, new 
-            { 
-                success = false,
-                message = "Email gönderilemedi. Hata detayları log'larda mevcut.",
-                error = ex.Message,
-                innerError = ex.InnerException?.Message,
-                stackTrace = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" 
-                    ? ex.StackTrace 
-                    : null
-            });
-        }
+            To = request.Email,
+            Subject = "Stocker Email Test",
+            Body = $@"
+                <h2>Email Test Başarılı!</h2>
+                <p>Bu bir test emailidir.</p>
+                <p>Eğer bu emaili aldıysanız, email servisi çalışıyor demektir.</p>
+                <br>
+                <p><strong>Test Bilgileri:</strong></p>
+                <ul>
+                    <li>Gönderim Zamanı: {DateTime.Now:dd.MM.yyyy HH:mm:ss}</li>
+                    <li>Server: {Environment.MachineName}</li>
+                    <li>Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}</li>
+                </ul>
+                <br>
+                <p>Saygılarımızla,<br>Stocker Ekibi</p>
+            ",
+            IsHtml = true
+        };
+        
+        await _emailService.SendAsync(emailMessage);
+        
+        _logger.LogInformation("Test email sent successfully to: {Email}", request.Email);
+        
+        return Ok(new 
+        { 
+            success = true,
+            message = $"Test emaili başarıyla {request.Email} adresine gönderildi. Lütfen inbox ve spam klasörünüzü kontrol edin.",
+            timestamp = DateTime.UtcNow
+        });
     }
 }
 

@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Tenant.Entities;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using System.Text.Json;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -32,14 +33,14 @@ public interface IAuditService
 
 public class AuditService : IAuditService
 {
-    private readonly TenantDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly ITenantDbContext _context;
+    private readonly Application.Common.Interfaces.ICurrentUserService _currentUserService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<AuditService> _logger;
 
     public AuditService(
-        TenantDbContext context,
-        ICurrentUserService currentUserService,
+        ITenantDbContext context,
+        Application.Common.Interfaces.ICurrentUserService currentUserService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<AuditService> logger)
     {
@@ -59,8 +60,7 @@ public class AuditService : IAuditService
     {
         try
         {
-            var tenantId = _currentUserService.TenantId ?? Guid.Empty;
-            if (tenantId == Guid.Empty)
+            if (!Guid.TryParse(_currentUserService.TenantId, out var tenantId) || tenantId == Guid.Empty)
             {
                 _logger.LogWarning("Cannot create audit log without tenant ID");
                 return;
@@ -119,7 +119,7 @@ public class AuditService : IAuditService
             _logger.LogDebug("Audit log created for {EntityName} {EntityId} - Action: {Action}",
                 entityName, entityId, action);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogError(ex, "Error creating audit log for {EntityName} {EntityId}",
                 entityName, entityId);
@@ -230,7 +230,7 @@ public class AuditService : IAuditService
                 }
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             _logger.LogWarning(ex, "Error calculating changes for audit log");
         }

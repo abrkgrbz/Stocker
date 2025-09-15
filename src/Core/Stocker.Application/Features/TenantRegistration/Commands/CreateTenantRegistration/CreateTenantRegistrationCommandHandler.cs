@@ -5,22 +5,21 @@ using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Common.ValueObjects;
-using Stocker.Persistence.Contexts;
-using Stocker.SharedKernel.Results;
 using Stocker.Application.Common.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Commands.CreateTenantRegistration;
 
 public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<CreateTenantRegistrationCommand, Result<TenantRegistrationDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantRegistrationCommandHandler> _logger;
     private readonly ICurrentUserService _currentUserService;
     private readonly IEmailService _emailService;
     private readonly ICaptchaService _captchaService;
 
     public CreateTenantRegistrationCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<CreateTenantRegistrationCommandHandler> logger,
         ICurrentUserService currentUserService,
         IEmailService emailService,

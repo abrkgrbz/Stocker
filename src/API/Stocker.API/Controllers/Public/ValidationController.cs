@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Stocker.API.Controllers.Base;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Common.Models;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -35,33 +37,23 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateEmail([FromBody] EmailValidationRequest request)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.Email))
-            {
-                return BadRequest("Email adresi boş olamaz");
-            }
+        if (string.IsNullOrWhiteSpace(request.Email))
+            throw new Stocker.Application.Common.Exceptions.ValidationException("Email", "Email adresi boş olamaz");
 
-            var result = await _validationService.ValidateEmailAsync(request.Email);
-            
-            var response = new EmailValidationResponse
-            {
-                IsValid = result.IsValid,
-                Message = result.Message,
-                NormalizedEmail = result.NormalizedEmail,
-                IsDisposable = result.IsDisposable,
-                HasMxRecord = result.HasMxRecord,
-                SuggestedEmail = result.SuggestedEmail,
-                Details = result.Details
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var result = await _validationService.ValidateEmailAsync(request.Email);
+        
+        var response = new EmailValidationResponse
         {
-            _logger.LogError(ex, "Error validating email: {Email}", request.Email);
-            return StatusCode(500, "Email doğrulama sırasında bir hata oluştu");
-        }
+            IsValid = result.IsValid,
+            Message = result.Message,
+            NormalizedEmail = result.NormalizedEmail,
+            IsDisposable = result.IsDisposable,
+            HasMxRecord = result.HasMxRecord,
+            SuggestedEmail = result.SuggestedEmail,
+            Details = result.Details
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -74,36 +66,26 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidatePhone([FromBody] PhoneValidationRequest request)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-            {
-                return BadRequest("Telefon numarası boş olamaz");
-            }
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            throw new Stocker.Application.Common.Exceptions.ValidationException("PhoneNumber", "Telefon numarası boş olamaz");
 
-            var result = await _validationService.ValidatePhoneAsync(
-                request.PhoneNumber, 
-                request.CountryCode ?? "TR");
-            
-            var response = new PhoneValidationResponse
-            {
-                IsValid = result.IsValid,
-                Message = result.Message,
-                FormattedNumber = result.FormattedNumber,
-                CountryCode = result.CountryCode,
-                CountryName = result.CountryName,
-                Carrier = result.Carrier,
-                NumberType = result.NumberType,
-                Details = result.Details
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var result = await _validationService.ValidatePhoneAsync(
+            request.PhoneNumber, 
+            request.CountryCode ?? "TR");
+        
+        var response = new PhoneValidationResponse
         {
-            _logger.LogError(ex, "Error validating phone: {Phone}", request.PhoneNumber);
-            return StatusCode(500, "Telefon doğrulama sırasında bir hata oluştu");
-        }
+            IsValid = result.IsValid,
+            Message = result.Message,
+            FormattedNumber = result.FormattedNumber,
+            CountryCode = result.CountryCode,
+            CountryName = result.CountryName,
+            Carrier = result.Carrier,
+            NumberType = result.NumberType,
+            Details = result.Details
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -116,32 +98,24 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CheckPasswordStrength([FromBody] PasswordStrengthRequest request)
     {
-        try
+        var result = await _validationService.CheckPasswordStrengthAsync(request.Password);
+        
+        var response = new PasswordStrengthResponse
         {
-            var result = await _validationService.CheckPasswordStrengthAsync(request.Password);
-            
-            var response = new PasswordStrengthResponse
-            {
-                Score = result.Score,
-                Level = result.Level,
-                Color = result.Color,
-                Suggestions = result.Suggestions,
-                HasLowercase = result.HasLowercase,
-                HasUppercase = result.HasUppercase,
-                HasNumbers = result.HasNumbers,
-                HasSpecialChars = result.HasSpecialChars,
-                Length = result.Length,
-                ContainsCommonPassword = result.ContainsCommonPassword,
-                EntropyBits = result.EntropyBits
-            };
+            Score = result.Score,
+            Level = result.Level,
+            Color = result.Color,
+            Suggestions = result.Suggestions,
+            HasLowercase = result.HasLowercase,
+            HasUppercase = result.HasUppercase,
+            HasNumbers = result.HasNumbers,
+            HasSpecialChars = result.HasSpecialChars,
+            Length = result.Length,
+            ContainsCommonPassword = result.ContainsCommonPassword,
+            EntropyBits = result.EntropyBits
+        };
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking password strength");
-            return StatusCode(500, "Şifre gücü kontrolü sırasında bir hata oluştu");
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -154,32 +128,22 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CheckDomain([FromBody] DomainCheckRequest request)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.Domain))
-            {
-                return BadRequest("Domain adı boş olamaz");
-            }
+        if (string.IsNullOrWhiteSpace(request.Domain))
+            throw new Stocker.Application.Common.Exceptions.ValidationException("Domain", "Domain adı boş olamaz");
 
-            var result = await _validationService.CheckDomainAvailabilityAsync(request.Domain);
-            
-            var response = new DomainCheckResponse
-            {
-                IsAvailable = result.IsAvailable,
-                Message = result.Message,
-                Suggestions = result.Suggestions,
-                CurrentOwner = result.CurrentOwner,
-                IsPremium = result.IsPremium,
-                Details = result.Details
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var result = await _validationService.CheckDomainAvailabilityAsync(request.Domain);
+        
+        var response = new DomainCheckResponse
         {
-            _logger.LogError(ex, "Error checking domain: {Domain}", request.Domain);
-            return StatusCode(500, "Domain kontrolü sırasında bir hata oluştu");
-        }
+            IsAvailable = result.IsAvailable,
+            Message = result.Message,
+            Suggestions = result.Suggestions,
+            CurrentOwner = result.CurrentOwner,
+            IsPremium = result.IsPremium,
+            Details = result.Details
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -192,32 +156,22 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateCompanyName([FromBody] CompanyNameValidationRequest request)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.CompanyName))
-            {
-                return BadRequest("Şirket adı boş olamaz");
-            }
+        if (string.IsNullOrWhiteSpace(request.CompanyName))
+            throw new Stocker.Application.Common.Exceptions.ValidationException("CompanyName", "Şirket adı boş olamaz");
 
-            var result = await _validationService.ValidateCompanyNameAsync(request.CompanyName);
-            
-            var response = new CompanyNameValidationResponse
-            {
-                IsValid = result.IsValid,
-                Message = result.Message,
-                IsUnique = result.IsUnique,
-                ContainsRestrictedWords = result.ContainsRestrictedWords,
-                SimilarNames = result.SimilarNames,
-                Details = result.Details
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var result = await _validationService.ValidateCompanyNameAsync(request.CompanyName);
+        
+        var response = new CompanyNameValidationResponse
         {
-            _logger.LogError(ex, "Error validating company name: {CompanyName}", request.CompanyName);
-            return StatusCode(500, "Şirket adı kontrolü sırasında bir hata oluştu");
-        }
+            IsValid = result.IsValid,
+            Message = result.Message,
+            IsUnique = result.IsUnique,
+            ContainsRestrictedWords = result.ContainsRestrictedWords,
+            SimilarNames = result.SimilarNames,
+            Details = result.Details
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -230,32 +184,22 @@ public class ValidationController : ApiController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateIdentity([FromBody] IdentityValidationRequest request)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.IdentityNumber))
-            {
-                return BadRequest("Kimlik/Vergi numarası boş olamaz");
-            }
+        if (string.IsNullOrWhiteSpace(request.IdentityNumber))
+            throw new Stocker.Application.Common.Exceptions.ValidationException("IdentityNumber", "Kimlik/Vergi numarası boş olamaz");
 
-            var result = await _validationService.ValidateIdentityNumberAsync(request.IdentityNumber);
-            
-            var response = new IdentityValidationResponse
-            {
-                IsValid = result.IsValid,
-                Message = result.Message,
-                NumberType = result.NumberType,
-                FormattedNumber = result.FormattedNumber,
-                IsTestNumber = result.IsTestNumber,
-                Details = result.Details
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var result = await _validationService.ValidateIdentityNumberAsync(request.IdentityNumber);
+        
+        var response = new IdentityValidationResponse
         {
-            _logger.LogError(ex, "Error validating identity number: {IdentityNumber}", request.IdentityNumber);
-            return StatusCode(500, "Kimlik/Vergi numarası kontrolü sırasında bir hata oluştu");
-        }
+            IsValid = result.IsValid,
+            Message = result.Message,
+            NumberType = result.NumberType,
+            FormattedNumber = result.FormattedNumber,
+            IsTestNumber = result.IsTestNumber,
+            Details = result.Details
+        };
+
+        return Ok(response);
     }
 }
 

@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Subscription;
 using AutoMapper;
 
@@ -10,12 +10,12 @@ namespace Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionById
 
 public class GetSubscriptionByIdQueryHandler : IRequestHandler<GetSubscriptionByIdQuery, Result<SubscriptionDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly IMapper _mapper;
     private readonly ILogger<GetSubscriptionByIdQueryHandler> _logger;
 
     public GetSubscriptionByIdQueryHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         IMapper mapper,
         ILogger<GetSubscriptionByIdQueryHandler> logger)
     {

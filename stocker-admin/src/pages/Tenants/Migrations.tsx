@@ -28,6 +28,7 @@ import {
   Radio,
   Checkbox,
   DatePicker,
+  Divider,
 } from 'antd';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -222,7 +223,7 @@ const MigrationsPage: React.FC = () => {
       render: (status: string, record) => (
         <Space direction="vertical" size={0} style={{ width: 120 }}>
           <Badge
-            status={statusColors[status as keyof typeof statusColors]}
+            status={statusColors[status as keyof typeof statusColors] as any}
             text={
               status === 'completed' ? 'Tamamlandı' :
               status === 'running' ? 'Çalışıyor' :
@@ -397,7 +398,7 @@ const MigrationsPage: React.FC = () => {
           </Descriptions.Item>
           <Descriptions.Item label="Durum">
             <Badge
-              status={statusColors[selectedMigration.status as keyof typeof statusColors]}
+              status={statusColors[selectedMigration.status as keyof typeof statusColors] as any}
               text={selectedMigration.status}
             />
           </Descriptions.Item>

@@ -23,6 +23,8 @@ import {
   ReloadOutlined,
   QuestionCircleOutlined,
   TranslationOutlined,
+  CustomerServiceOutlined,
+  ReconciliationOutlined,
 } from '@ant-design/icons';
 import { 
   Dropdown, 
@@ -36,6 +38,8 @@ import {
   Switch,
   Tooltip,
   message,
+  AutoComplete,
+  Divider,
 } from 'antd';
 import { useAuthStore } from '../stores/authStore';
 import trTR from 'antd/locale/tr_TR';
@@ -60,6 +64,7 @@ const MasterLayout: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [locale, setLocale] = useState('tr');
   const [searchValue, setSearchValue] = useState('');
+  const [searchOptions, setSearchOptions] = useState<any[]>([]);
   const { token } = useToken();
 
   // Load theme preference
@@ -69,6 +74,234 @@ const MasterLayout: React.FC = () => {
       setIsDarkMode(true);
     }
   }, []);
+
+  // Keyboard shortcut for global search (Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="ara"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Global search data
+  const searchData = [
+    // Pages/Routes
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Kontrol Paneli' : 'Dashboard',
+      description: locale === 'tr' ? 'Ana sayfa ve genel istatistikler' : 'Main page and overview statistics',
+      path: '/dashboard',
+      icon: <DashboardOutlined />,
+      keywords: ['dashboard', 'kontrol', 'panel', 'ana', 'istatistik', 'overview']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Analitik' : 'Analytics',
+      description: locale === 'tr' ? 'Detaylı analiz ve raporlar' : 'Detailed analytics and reports',
+      path: '/analytics',
+      icon: <LineChartOutlined />,
+      keywords: ['analytics', 'analitik', 'rapor', 'chart', 'grafik', 'istatistik', 'metrics']
+    },
+    {
+      type: 'page',
+      title: 'Tenants',
+      description: locale === 'tr' ? 'Tenant yönetimi ve ayarları' : 'Tenant management and settings',
+      path: '/tenants',
+      icon: <TeamOutlined />,
+      keywords: ['tenant', 'customer', 'müşteri', 'yönetim', 'management']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Kullanıcılar' : 'Users',
+      description: locale === 'tr' ? 'Kullanıcı yönetimi ve roller' : 'User management and roles',
+      path: '/users',
+      icon: <UserOutlined />,
+      keywords: ['user', 'kullanıcı', 'role', 'rol', 'permission', 'yetki', 'auth']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Roller' : 'Roles',
+      description: locale === 'tr' ? 'Rol ve yetki yönetimi' : 'Role and permission management',
+      path: '/users/roles',
+      icon: <SafetyOutlined />,
+      keywords: ['role', 'rol', 'yetki', 'permission', 'rbac', 'access', 'control']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'İzinler' : 'Permissions',
+      description: locale === 'tr' ? 'Yetki ve izin yönetimi' : 'Permission and access management',
+      path: '/users/permissions',
+      icon: <AuditOutlined />,
+      keywords: ['permission', 'izin', 'yetki', 'access', 'security', 'güvenlik']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Paketler' : 'Packages',
+      description: locale === 'tr' ? 'Paket ve plan yönetimi' : 'Package and plan management',
+      path: '/packages',
+      icon: <AppstoreOutlined />,
+      keywords: ['package', 'paket', 'plan', 'subscription', 'pricing', 'fiyat']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Abonelikler' : 'Subscriptions',
+      description: locale === 'tr' ? 'Abonelik ve faturalandırma' : 'Subscription and billing',
+      path: '/subscriptions',
+      icon: <CreditCardOutlined />,
+      keywords: ['subscription', 'abonelik', 'billing', 'faturalandırma', 'payment', 'ödeme']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Faturalar' : 'Invoices',
+      description: locale === 'tr' ? 'Fatura yönetimi ve geçmişi' : 'Invoice management and history',
+      path: '/invoices',
+      icon: <ReconciliationOutlined />,
+      keywords: ['invoice', 'fatura', 'billing', 'payment', 'ödeme', 'finance', 'mali']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'İzleme' : 'Monitoring',
+      description: locale === 'tr' ? 'Sistem izleme ve performans' : 'System monitoring and performance',
+      path: '/monitoring',
+      icon: <MonitorOutlined />,
+      keywords: ['monitoring', 'izleme', 'performance', 'performans', 'system', 'sistem', 'health']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Destek' : 'Support',
+      description: locale === 'tr' ? 'Destek sistemi ve ticket\'lar' : 'Support system and tickets',
+      path: '/support',
+      icon: <CustomerServiceOutlined />,
+      keywords: ['support', 'destek', 'ticket', 'help', 'yardım', 'customer', 'müşteri']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Denetim Günlükleri' : 'Audit Logs',
+      description: locale === 'tr' ? 'Sistem denetim kayıtları' : 'System audit records',
+      path: '/audit-logs',
+      icon: <AuditOutlined />,
+      keywords: ['audit', 'denetim', 'log', 'günlük', 'security', 'güvenlik', 'history', 'geçmiş']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Ayarlar' : 'Settings',
+      description: locale === 'tr' ? 'Sistem ayarları ve konfigürasyon' : 'System settings and configuration',
+      path: '/settings',
+      icon: <SettingOutlined />,
+      keywords: ['settings', 'ayarlar', 'config', 'konfigürasyon', 'preferences', 'tercihler']
+    },
+    // Quick Actions
+    {
+      type: 'action',
+      title: locale === 'tr' ? 'Yeni Tenant Oluştur' : 'Create New Tenant',
+      description: locale === 'tr' ? 'Hızlı tenant oluşturma' : 'Quick tenant creation',
+      path: '/tenants/create',
+      icon: <PlusOutlined />,
+      keywords: ['create', 'oluştur', 'new', 'yeni', 'tenant', 'add', 'ekle']
+    },
+    // Common Terms
+    {
+      type: 'term',
+      title: locale === 'tr' ? 'API Anahtarları' : 'API Keys',
+      description: locale === 'tr' ? 'API erişim anahtarları' : 'API access keys',
+      path: '/settings',
+      icon: <ApiOutlined />,
+      keywords: ['api', 'key', 'anahtar', 'token', 'access', 'erişim', 'integration']
+    },
+    {
+      type: 'term',
+      title: locale === 'tr' ? 'Güvenlik' : 'Security',
+      description: locale === 'tr' ? 'Güvenlik ayarları ve kontrolleri' : 'Security settings and controls',
+      path: '/settings',
+      icon: <SecurityScanOutlined />,
+      keywords: ['security', 'güvenlik', 'auth', 'authentication', 'kimlik', 'protection']
+    }
+  ];
+
+  // Search function
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    
+    if (!value.trim()) {
+      setSearchOptions([]);
+      return;
+    }
+
+    const searchTerm = value.toLowerCase().trim();
+    const filtered = searchData.filter(item => {
+      const titleMatch = item.title.toLowerCase().includes(searchTerm);
+      const descMatch = item.description.toLowerCase().includes(searchTerm);
+      const keywordMatch = item.keywords.some(keyword => keyword.toLowerCase().includes(searchTerm));
+      
+      return titleMatch || descMatch || keywordMatch;
+    });
+
+    const options = filtered.slice(0, 8).map((item, index) => ({
+      key: index,
+      value: item.title,
+      label: (
+        <div 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            padding: '8px 0',
+            cursor: 'pointer'
+          }}
+          onClick={() => {
+            navigate(item.path);
+            setSearchValue('');
+            setSearchOptions([]);
+          }}
+        >
+          <div style={{ marginRight: 12, fontSize: 16, color: '#667eea' }}>
+            {item.icon}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>
+              {item.title}
+            </div>
+            <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+              {item.description}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: '#bfbfbf', marginLeft: 8 }}>
+            {item.type === 'page' ? (locale === 'tr' ? 'Sayfa' : 'Page') :
+             item.type === 'action' ? (locale === 'tr' ? 'İşlem' : 'Action') :
+             locale === 'tr' ? 'Terim' : 'Term'}
+          </div>
+        </div>
+      )
+    }));
+
+    // Add "See all results" option if there are more results
+    if (filtered.length > 8) {
+      options.push({
+        key: 'see-all',
+        value: '',
+        label: (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '8px 0', 
+            borderTop: '1px solid #f0f0f0',
+            color: '#667eea',
+            cursor: 'pointer'
+          }}>
+            {locale === 'tr' ? `${filtered.length - 8} sonuç daha...` : `${filtered.length - 8} more results...`}
+          </div>
+        )
+      });
+    }
+
+    setSearchOptions(options);
+  };
 
   const menuItems: MenuItem[] = [
     {
@@ -92,14 +325,9 @@ const MasterLayout: React.FC = () => {
           icon: <TeamOutlined />,
         },
         {
-          path: '/tenants/domains',
-          name: locale === 'tr' ? 'Domain Yönetimi' : 'Domain Management',
-          icon: <GlobalOutlined />,
-        },
-        {
-          path: '/tenants/migrations',
-          name: locale === 'tr' ? 'Migrationlar' : 'Migrations',
-          icon: <CloudOutlined />,
+          path: '/tenants/create',
+          name: locale === 'tr' ? 'Yeni Tenant' : 'New Tenant',
+          icon: <PlusOutlined />,
         },
       ],
     },
@@ -138,51 +366,27 @@ const MasterLayout: React.FC = () => {
     {
       path: '/invoices',
       name: locale === 'tr' ? 'Faturalar' : 'Invoices',
-      icon: <FileTextOutlined />,
+      icon: <ReconciliationOutlined />,
     },
     {
       path: '/reports',
       name: locale === 'tr' ? 'Raporlar' : 'Reports',
       icon: <BarChartOutlined />,
-      routes: [
-        {
-          path: '/reports/revenue',
-          name: locale === 'tr' ? 'Gelir Raporları' : 'Revenue Reports',
-          icon: <LineChartOutlined />,
-        },
-        {
-          path: '/reports/usage',
-          name: locale === 'tr' ? 'Kullanım Raporları' : 'Usage Reports',
-          icon: <BarChartOutlined />,
-        },
-        {
-          path: '/reports/audit',
-          name: locale === 'tr' ? 'Denetim Raporları' : 'Audit Reports',
-          icon: <AuditOutlined />,
-        },
-      ],
     },
     {
       path: '/monitoring',
       name: locale === 'tr' ? 'İzleme' : 'Monitoring',
       icon: <MonitorOutlined />,
-      routes: [
-        {
-          path: '/monitoring/system',
-          name: locale === 'tr' ? 'Sistem İzleme' : 'System Monitoring',
-          icon: <MonitorOutlined />,
-        },
-        {
-          path: '/monitoring/logs',
-          name: locale === 'tr' ? 'Loglar' : 'Logs',
-          icon: <FileTextOutlined />,
-        },
-        {
-          path: '/monitoring/alerts',
-          name: locale === 'tr' ? 'Uyarılar' : 'Alerts',
-          icon: <BellOutlined />,
-        },
-      ],
+    },
+    {
+      path: '/support',
+      name: locale === 'tr' ? 'Destek' : 'Support',
+      icon: <CustomerServiceOutlined />,
+    },
+    {
+      path: '/audit-logs',
+      name: locale === 'tr' ? 'Denetim Günlükleri' : 'Audit Logs',
+      icon: <AuditOutlined />,
     },
     {
       path: '/settings',
@@ -213,7 +417,7 @@ const MasterLayout: React.FC = () => {
     ),
     layout: 'mix',
     splitMenus: false,
-    navTheme: isDarkMode ? 'dark' : 'light',
+    navTheme: isDarkMode ? 'realDark' : 'light',
     contentWidth: 'Fluid',
     fixedHeader: true,
     fixSiderbar: true,
@@ -266,14 +470,37 @@ const MasterLayout: React.FC = () => {
     ),
     headerContentRender: () => (
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Input
-          placeholder={locale === 'tr' ? 'Ara...' : 'Search...'}
-          prefix={<SearchOutlined />}
+        <AutoComplete
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          style={{ width: 300 }}
+          options={searchOptions}
+          onSearch={handleSearch}
+          onSelect={(value, option) => {
+            if (option.key !== 'see-all') {
+              // Navigation is handled in the option click
+            }
+          }}
+          placeholder={locale === 'tr' ? 'Sayfalar, özellikler ve daha fazlasını ara...' : 'Search pages, features and more...'}
+          style={{ width: 400 }}
+          dropdownStyle={{ 
+            minWidth: 400,
+            maxHeight: 400,
+            overflow: 'auto'
+          }}
           allowClear
-        />
+        >
+          <Input
+            prefix={<SearchOutlined />}
+            suffix={
+              searchValue && (
+                <Tooltip title={locale === 'tr' ? 'Enter ile ara' : 'Press Enter to search'}>
+                  <span style={{ fontSize: 11, color: '#bfbfbf' }}>
+                    ⌘K
+                  </span>
+                </Tooltip>
+              )
+            }
+          />
+        </AutoComplete>
       </div>
     ),
     rightContentRender: () => (

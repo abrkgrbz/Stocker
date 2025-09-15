@@ -144,7 +144,7 @@ const TenantWebhooks: React.FC = () => {
       failureCount: 23,
       description: 'Sipariş olayları için webhook',
       headers: {
-        'Authorization': 'Bearer token123',
+        'Authorization': 'Bearer [CONFIGURED]',
         'X-Custom-Header': 'value',
       },
       isVerified: true,
@@ -323,7 +323,7 @@ const TenantWebhooks: React.FC = () => {
       render: (status: keyof typeof statusColors, record) => (
         <Space direction="vertical" size={0}>
           <Badge
-            status={statusColors[status]}
+            status={statusColors[status] as any}
             text={statusTexts[status]}
           />
           {record.lastTriggered && (
@@ -342,7 +342,7 @@ const TenantWebhooks: React.FC = () => {
       render: (events: string[]) => (
         <Space direction="vertical" size={0}>
           {events.slice(0, 2).map(event => (
-            <Tag key={event} size="small" color="blue">
+            <Tag key={event} color="blue">
               {event}
             </Tag>
           ))}
@@ -465,7 +465,7 @@ const TenantWebhooks: React.FC = () => {
       width: 100,
       render: (status: keyof typeof logStatusColors) => (
         <Badge
-          status={logStatusColors[status]}
+          status={logStatusColors[status] as any}
           text={logStatusTexts[status]}
         />
       ),
@@ -827,7 +827,7 @@ const TenantWebhooks: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Badge
-                  status={statusColors[selectedWebhook.status]}
+                  status={statusColors[selectedWebhook.status] as any}
                   text={statusTexts[selectedWebhook.status]}
                 />
               </Descriptions.Item>
@@ -950,7 +950,7 @@ const TenantWebhooks: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Badge
-                  status={logStatusColors[selectedLog.status]}
+                  status={logStatusColors[selectedLog.status] as any}
                   text={logStatusTexts[selectedLog.status]}
                 />
               </Descriptions.Item>

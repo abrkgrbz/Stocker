@@ -5,16 +5,9 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Stocker.Application.Common.Exceptions;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Infrastructure.Services;
-
-public interface IEncryptionService
-{
-    string Encrypt(string plainText);
-    string Decrypt(string cipherText);
-    string HashPassword(string password);
-    bool VerifyPassword(string password, string hash);
-}
 
 public class EncryptionService : IEncryptionService
 {

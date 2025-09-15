@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Master.ValueObjects;
 
@@ -10,11 +10,11 @@ namespace Stocker.Application.Features.Packages.Commands.UpdatePackage;
 
 public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand, Result<bool>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<UpdatePackageCommandHandler> _logger;
 
     public UpdatePackageCommandHandler(
-        MasterDbContext context,
+        IMasterDbContext context,
         ILogger<UpdatePackageCommandHandler> logger)
     {
         _context = context;

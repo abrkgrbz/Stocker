@@ -1,0 +1,18 @@
+/* Global styles for login page - prevents scrolling */
+body.login-page {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+#root {
+  height: 100vh !important;
+  overflow: hidden !important;
+}

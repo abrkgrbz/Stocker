@@ -2,16 +2,16 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Common.ValueObjects;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Queries.GetTenantRegistration;
 
 public sealed class GetTenantRegistrationQueryHandler : IRequestHandler<GetTenantRegistrationQuery, Result<TenantRegistrationDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public GetTenantRegistrationQueryHandler(MasterDbContext context)
+    public GetTenantRegistrationQueryHandler(IMasterDbContext context)
     {
         _context = context;
     }

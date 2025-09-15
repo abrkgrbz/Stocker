@@ -2,17 +2,17 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantSetupChecklist.Commands.UpdateChecklistItem;
 
 public sealed class UpdateChecklistItemCommandHandler : IRequestHandler<UpdateChecklistItemCommand, Result<TenantSetupChecklistDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<UpdateChecklistItemCommandHandler> _logger;
 
-    public UpdateChecklistItemCommandHandler(MasterDbContext context, ILogger<UpdateChecklistItemCommandHandler> logger)
+    public UpdateChecklistItemCommandHandler(IMasterDbContext context, ILogger<UpdateChecklistItemCommandHandler> logger)
     {
         _context = context;
         _logger = logger;

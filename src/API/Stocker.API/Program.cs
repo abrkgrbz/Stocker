@@ -19,6 +19,26 @@ using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel server options
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    // Set maximum request body size (10MB)
+    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
+    
+    // Set maximum request header size
+    serverOptions.Limits.MaxRequestHeaderCount = 100;
+    serverOptions.Limits.MaxRequestHeadersTotalSize = 32 * 1024; // 32KB
+    
+    // Set maximum request line size
+    serverOptions.Limits.MaxRequestLineSize = 8192; // 8KB
+    
+    // Set keep-alive timeout
+    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+    
+    // Set request header timeout
+    serverOptions.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+});
+
 // Add configuration sources
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -86,7 +106,18 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("DatabaseSettings"));
 
 // Add services to the container
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Add global filters
+        options.Filters.Add<ModelValidationFilter>();
+        options.Filters.Add<FluentValidationFilter>();
+        options.Filters.Add<InputSanitizationFilter>();
+        options.Filters.Add<RequestSizeLimitFilter>();
+        options.Filters.Add<AuditActionFilter>();
+        
+        // Set maximum request body size (10MB default)
+        options.MaxModelBindingCollectionSize = 1000;
+    })
     .AddApplicationPart(typeof(Stocker.Modules.CRM.CRMModule).Assembly) // CRM Controller'larını yükle
     .AddJsonOptions(options =>
     {
@@ -375,8 +406,8 @@ builder.Services.AddAuthorization(options =>
               .RequireClaim("TenantId"));
 });
 
-// Add Tenant-based Rate Limiting - TEMPORARILY DISABLED
-// builder.Services.AddTenantRateLimiting(builder.Configuration);
+// Add Tenant-based Rate Limiting
+builder.Services.AddTenantRateLimiting(builder.Configuration);
 
 // Add Standard Rate Limiting (as fallback) - TEMPORARILY DISABLED
 /*
@@ -478,7 +509,7 @@ app.UseWebSockets(new WebSocketOptions
 });
 
 // Add Global Exception Handling Middleware
-app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseMiddleware<Stocker.API.Middleware.GlobalExceptionHandlingMiddleware>();
 
 // Configure Serilog Request Logging
 SerilogConfiguration.ConfigureRequestLogging(app);
@@ -496,7 +527,7 @@ if (!app.Environment.IsDevelopment())
 // Skip for SignalR hubs to allow WebSocket connections
 app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/hubs"),
-    appBuilder => appBuilder.UseSecurityHeaders());
+    appBuilder => Stocker.Infrastructure.Middleware.SecurityHeadersExtensions.UseSecurityHeaders(appBuilder));
 
 // Add Tenant Resolution Middleware - Authentication'dan önce olmalı
 // SignalR hub'ları için kontrol middleware'da yapılıyor
@@ -505,14 +536,14 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add Tenant-based Rate Limiting - After authentication - TEMPORARILY DISABLED
-// app.UseTenantRateLimiting();
+// Add Tenant-based Rate Limiting - After authentication
+app.UseTenantRateLimiting();
 
-// Add Standard Rate Limiting (as fallback) - TEMPORARILY DISABLED
-// app.UseRateLimiter();
-
-// Add Hangfire Dashboard (after authentication to secure it)
-app.UseHangfireDashboard(app.Configuration);
+// Add Hangfire Dashboard (after authentication to secure it) - Skip in Testing environment
+if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHangfireDashboard(app.Configuration);
+}
 
 // Map controllers
 app.MapControllers();
@@ -533,15 +564,24 @@ app.MapHub<NotificationHub>("/hubs/notification", options =>
                          Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
 }).RequireCors(corsPolicy);
 
-// Apply migrations on startup
-using (var scope = app.Services.CreateScope())
+app.MapHub<ChatHub>("/hubs/chat", options =>
 {
-    try
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
+                         Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+}).RequireCors(corsPolicy);
+
+// Apply migrations on startup (skip in test environment)
+if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
+{
+    using (var scope = app.Services.CreateScope())
     {
-        var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Persistence.Migrations.IMigrationService>();
-        await migrationService.MigrateMasterDatabaseAsync();
-        await migrationService.SeedMasterDataAsync();
-        app.Logger.LogInformation("Database migration completed successfully");
+        try
+        {
+            var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Application.Common.Interfaces.IMigrationService>();
+            await migrationService.MigrateMasterDatabaseAsync();
+            await migrationService.SeedMasterDataAsync();
+            app.Logger.LogInformation("Database migration completed successfully");
         
         // Test Seq logging
         app.Logger.LogInformation("🚀 Stocker API started successfully");
@@ -567,13 +607,14 @@ using (var scope = app.Services.CreateScope())
             throw;
         }
     }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An unexpected error occurred while migrating the database");
-        // Don't throw in production, just log the error
-        if (app.Environment.IsDevelopment())
+        catch (Exception ex)
         {
-            throw;
+            app.Logger.LogError(ex, "An unexpected error occurred while migrating the database");
+            // Don't throw in production, just log the error
+            if (app.Environment.IsDevelopment())
+            {
+                throw;
+            }
         }
     }
 }
@@ -585,3 +626,6 @@ app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service
    .WithTags("Health");
 
 app.Run();
+
+// Make Program class accessible for integration tests
+public partial class Program { }

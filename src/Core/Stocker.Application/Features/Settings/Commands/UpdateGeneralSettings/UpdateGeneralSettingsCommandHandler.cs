@@ -1,16 +1,16 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Entities.Settings;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Settings.Commands.UpdateGeneralSettings;
 
 public class UpdateGeneralSettingsCommandHandler : IRequestHandler<UpdateGeneralSettingsCommand, Result<bool>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public UpdateGeneralSettingsCommandHandler(MasterDbContext context)
+    public UpdateGeneralSettingsCommandHandler(IMasterDbContext context)
     {
         _context = context;
     }

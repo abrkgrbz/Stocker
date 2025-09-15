@@ -533,7 +533,7 @@ const PackagesPage: React.FC = () => {
         title: 'Özellik',
         dataIndex: 'name',
         key: 'name',
-        fixed: 'left',
+        fixed: 'left' as const,
         width: 200,
       },
       ...packages.map(pkg => ({

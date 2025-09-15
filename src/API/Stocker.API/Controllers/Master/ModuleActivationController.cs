@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Services;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -23,93 +25,59 @@ public class ModuleActivationController : ControllerBase
     [HttpPost("{tenantId}/modules/{moduleName}/activate")]
     public async Task<IActionResult> ActivateModule(Guid tenantId, string moduleName)
     {
-        try
+        var result = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, moduleName);
+        
+        if (result)
         {
-            var result = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, moduleName);
-            
-            if (result)
-            {
-                return Ok(new { success = true, message = $"Module {moduleName} activated successfully for tenant {tenantId}" });
-            }
-            
-            return BadRequest(new { success = false, message = $"Failed to activate module {moduleName} for tenant {tenantId}" });
+            return Ok(new { success = true, message = $"Module {moduleName} activated successfully for tenant {tenantId}" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error activating module {ModuleName} for tenant {TenantId}", moduleName, tenantId);
-            return StatusCode(500, new { success = false, message = "An error occurred while activating the module" });
-        }
+        
+        return BadRequest(new { success = false, message = $"Failed to activate module {moduleName} for tenant {tenantId}" });
     }
 
     [HttpPost("{tenantId}/modules/{moduleName}/deactivate")]
     public async Task<IActionResult> DeactivateModule(Guid tenantId, string moduleName)
     {
-        try
+        var result = await _moduleActivationService.DeactivateModuleForTenantAsync(tenantId, moduleName);
+        
+        if (result)
         {
-            var result = await _moduleActivationService.DeactivateModuleForTenantAsync(tenantId, moduleName);
-            
-            if (result)
-            {
-                return Ok(new { success = true, message = $"Module {moduleName} deactivated successfully for tenant {tenantId}" });
-            }
-            
-            return BadRequest(new { success = false, message = $"Failed to deactivate module {moduleName} for tenant {tenantId}" });
+            return Ok(new { success = true, message = $"Module {moduleName} deactivated successfully for tenant {tenantId}" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deactivating module {ModuleName} for tenant {TenantId}", moduleName, tenantId);
-            return StatusCode(500, new { success = false, message = "An error occurred while deactivating the module" });
-        }
+        
+        return BadRequest(new { success = false, message = $"Failed to deactivate module {moduleName} for tenant {tenantId}" });
     }
 
     [HttpGet("{tenantId}/modules/{moduleName}/status")]
     public async Task<IActionResult> GetModuleStatus(Guid tenantId, string moduleName)
     {
-        try
-        {
-            var isActive = await _moduleActivationService.IsModuleActiveForTenantAsync(tenantId, moduleName);
-            
-            return Ok(new 
-            { 
-                success = true, 
-                tenantId = tenantId,
-                moduleName = moduleName,
-                isActive = isActive
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking module {ModuleName} status for tenant {TenantId}", moduleName, tenantId);
-            return StatusCode(500, new { success = false, message = "An error occurred while checking module status" });
-        }
+        var isActive = await _moduleActivationService.IsModuleActiveForTenantAsync(tenantId, moduleName);
+        
+        return Ok(new 
+        { 
+            success = true, 
+            tenantId = tenantId,
+            moduleName = moduleName,
+            isActive = isActive
+        });
     }
 
     [HttpGet("{tenantId}/modules")]
     public async Task<IActionResult> GetActiveModules(Guid tenantId)
     {
-        try
-        {
-            var activeModules = await _moduleActivationService.GetActiveModulesForTenantAsync(tenantId);
-            
-            return Ok(new 
-            { 
-                success = true, 
-                tenantId = tenantId,
-                activeModules = activeModules
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting active modules for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { success = false, message = "An error occurred while getting active modules" });
-        }
+        var activeModules = await _moduleActivationService.GetActiveModulesForTenantAsync(tenantId);
+        
+        return Ok(new 
+        { 
+            success = true, 
+            tenantId = tenantId,
+            activeModules = activeModules
+        });
     }
 
     [HttpPost("{tenantId}/modules/crm/initialize")]
     public async Task<IActionResult> InitializeCRMModule(Guid tenantId)
     {
-        try
-        {
             // First activate the module
             var activationResult = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, "CRM");
             
@@ -139,11 +107,5 @@ public class ModuleActivationController : ControllerBase
                     "Lead Scoring"
                 }
             });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error initializing CRM module for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { success = false, message = "An error occurred while initializing CRM module" });
-        }
     }
 }

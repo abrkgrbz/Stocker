@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Common.Exceptions;
+using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -20,30 +22,18 @@ public class PasswordController : ControllerBase
     [HttpPost("check-strength")]
     public IActionResult CheckPasswordStrength([FromBody] PasswordCheckRequest request)
     {
-        try
+        var strength = _passwordService.CalculatePasswordStrength(request.Password);
+        
+        return Ok(new
         {
-            var strength = _passwordService.CalculatePasswordStrength(request.Password);
-            
-            return Ok(new
+            success = true,
+            data = new
             {
-                success = true,
-                data = new
-                {
-                    score = (int)strength,
-                    scoreLabel = GetScoreLabel(strength),
-                    isAcceptable = (int)strength >= (int)PasswordStrength.Good // Minimum score requirement
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new
-            {
-                success = false,
-                message = "Şifre gücü hesaplanamadı",
-                error = ex.Message
-            });
-        }
+                score = (int)strength,
+                scoreLabel = GetScoreLabel(strength),
+                isAcceptable = (int)strength >= (int)PasswordStrength.Good // Minimum score requirement
+            }
+        });
     }
 
     /// <summary>
@@ -52,50 +42,38 @@ public class PasswordController : ControllerBase
     [HttpPost("validate")]
     public IActionResult ValidatePassword([FromBody] PasswordValidationRequest request)
     {
-        try
+        var result = _passwordService.ValidatePassword(
+            request.Password, 
+            request.Username, 
+            request.Email);
+
+        if (result.IsSuccess)
         {
-            var result = _passwordService.ValidatePassword(
-                request.Password, 
-                request.Username, 
-                request.Email);
-
-            if (result.IsSuccess)
+            var strength = _passwordService.CalculatePasswordStrength(request.Password);
+            
+            return Ok(new
             {
-                var strength = _passwordService.CalculatePasswordStrength(request.Password);
-                
-                return Ok(new
+                success = true,
+                message = "Şifre geçerli",
+                data = new
                 {
-                    success = true,
-                    message = "Şifre geçerli",
-                    data = new
-                    {
-                        isValid = true,
-                        score = (int)strength,
-                        scoreLabel = GetScoreLabel(strength)
-                    }
-                });
-            }
-
-            return BadRequest(new
-            {
-                success = false,
-                message = "Şifre politikaya uygun değil",
-                errors = result.Errors.Select(e => new
-                {
-                    code = e.Code,
-                    message = e.Description
-                })
+                    isValid = true,
+                    score = (int)strength,
+                    scoreLabel = GetScoreLabel(strength)
+                }
             });
         }
-        catch (Exception ex)
+
+        return BadRequest(new
         {
-            return StatusCode(500, new
+            success = false,
+            message = "Şifre politikaya uygun değil",
+            errors = result.Errors.Select(e => new
             {
-                success = false,
-                message = "Şifre doğrulama hatası",
-                error = ex.Message
-            });
-        }
+                code = e.Code,
+                message = e.Description
+            })
+        });
     }
 
     private string GetScoreLabel(PasswordStrength strength)

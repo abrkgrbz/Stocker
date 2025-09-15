@@ -287,7 +287,7 @@ const TenantUsers: React.FC = () => {
       render: (status: string, record) => (
         <Space direction="vertical" size={0}>
           <Badge
-            status={statusColors[status as keyof typeof statusColors]}
+            status={statusColors[status as keyof typeof statusColors] as any}
             text={
               status === 'active' ? 'Aktif' :
               status === 'inactive' ? 'İnaktif' :
@@ -656,7 +656,7 @@ const TenantUsers: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Badge
-                  status={statusColors[selectedUser.status]}
+                  status={statusColors[selectedUser.status] as any}
                   text={
                     selectedUser.status === 'active' ? 'Aktif' :
                     selectedUser.status === 'inactive' ? 'İnaktif' :

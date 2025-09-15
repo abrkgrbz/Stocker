@@ -8,6 +8,7 @@ using Stocker.Application.Features.Companies.Commands.UpdateCompany;
 using Stocker.Application.Features.Companies.Queries.GetCompany;
 using Stocker.Application.Features.Companies.Queries.GetCurrentCompany;
 using Swashbuckle.AspNetCore.Annotations;
+using Stocker.Application.Common.Exceptions;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -29,7 +30,7 @@ public class CompaniesController : ApiController
         if (!tenantId.HasValue)
         {
             Logger.LogWarning("GetCurrentCompany called without TenantId");
-            return BadRequest(new { message = "Tenant bilgisi bulunamadı" });
+            throw new UnauthorizedException("Tenant bilgisi bulunamadı");
         }
 
         var query = new GetCurrentCompanyQuery { TenantId = tenantId.Value };
@@ -56,7 +57,7 @@ public class CompaniesController : ApiController
         if (!tenantId.HasValue)
         {
             Logger.LogWarning("CreateCompany called without TenantId");
-            return BadRequest(new { message = "Tenant bilgisi bulunamadı" });
+            throw new UnauthorizedException("Tenant bilgisi bulunamadı");
         }
 
         // Check user role
@@ -71,11 +72,7 @@ public class CompaniesController : ApiController
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to create company - DENIED", 
                 userEmail, userRole ?? "NO_ROLE");
-            return StatusCode(403, new { 
-                message = "Bu işlem için yetkiniz yok",
-                currentRole = userRole ?? "NO_ROLE",
-                allowedRoles = new[] { "FirmaYoneticisi", "SistemYoneticisi" }
-            });
+            throw new ForbiddenException($"Bu işlem için yetkiniz yok. Mevcut rol: {userRole ?? "NO_ROLE"}, Gerekli roller: FirmaYoneticisi, SistemYoneticisi");
         }
 
         command.TenantId = tenantId.Value;
@@ -107,7 +104,7 @@ public class CompaniesController : ApiController
         if (!tenantId.HasValue)
         {
             Logger.LogWarning("UpdateCompany called without TenantId");
-            return BadRequest(new { message = "Tenant bilgisi bulunamadı" });
+            throw new UnauthorizedException("Tenant bilgisi bulunamadı");
         }
 
         // Check user role
@@ -119,11 +116,7 @@ public class CompaniesController : ApiController
         {
             Logger.LogWarning("User {Email} with role {Role} attempted to update company - DENIED", 
                 userEmail, userRole ?? "NO_ROLE");
-            return StatusCode(403, new { 
-                message = "Bu işlem için yetkiniz yok",
-                currentRole = userRole ?? "NO_ROLE",
-                allowedRoles = new[] { "FirmaYoneticisi", "SistemYoneticisi" }
-            });
+            throw new ForbiddenException($"Bu işlem için yetkiniz yok. Mevcut rol: {userRole ?? "NO_ROLE"}, Gerekli roller: FirmaYoneticisi, SistemYoneticisi");
         }
 
         command.Id = id;
@@ -155,7 +148,7 @@ public class CompaniesController : ApiController
         if (!tenantId.HasValue)
         {
             Logger.LogWarning("GetCompany called without TenantId");
-            return BadRequest(new { message = "Tenant bilgisi bulunamadı" });
+            throw new UnauthorizedException("Tenant bilgisi bulunamadı");
         }
 
         var query = new GetCompanyQuery { Id = id, TenantId = tenantId.Value };

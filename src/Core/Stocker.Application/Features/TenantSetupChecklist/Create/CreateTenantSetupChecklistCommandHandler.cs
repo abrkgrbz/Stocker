@@ -2,17 +2,17 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantSetupChecklist.Create;
 
 public sealed class CreateTenantSetupChecklistCommandHandler : IRequestHandler<CreateTenantSetupChecklistCommand, Result<TenantSetupChecklistDto>>
 {
-    private readonly MasterDbContext _context;
+    private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantSetupChecklistCommandHandler> _logger;
 
-    public CreateTenantSetupChecklistCommandHandler(MasterDbContext context, ILogger<CreateTenantSetupChecklistCommandHandler> logger)
+    public CreateTenantSetupChecklistCommandHandler(IMasterDbContext context, ILogger<CreateTenantSetupChecklistCommandHandler> logger)
     {
         _context = context;
         _logger = logger;

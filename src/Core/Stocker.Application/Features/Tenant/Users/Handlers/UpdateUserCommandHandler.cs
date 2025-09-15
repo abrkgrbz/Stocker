@@ -26,6 +26,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, bool>
             return false;
 
         // Create value objects for update
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return false;
+        }
+        
         var emailResult = Stocker.Domain.Common.ValueObjects.Email.Create(request.Email);
         if (emailResult.IsFailure)
         {

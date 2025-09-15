@@ -70,7 +70,24 @@
       "Bash(mv:*)",
       "Bash(git checkout:*)",
       "Bash(xcopy:*)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(del \"C:\\Users\\PC\\source\\repos\\Stocker\\fix_dbcontext_refs.ps1\")",
+      "Bash(cp:*)",
+      "Bash(del \"C:\\Users\\PC\\source\\repos\\Stocker\\src\\Infrastructure\\Stocker.Infrastructure\\Services\\TenantSettingsCacheService.cs\")",
+      "Bash(dotnet sln add:*)",
+      "Bash(del:*)",
+      "Bash(dotnet test:*)",
+      "mcp__serena__list_memories",
+      "mcp__serena__list_dir",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__write_memory",
+      "Bash(npm ci:*)",
+      "Bash(timeout 5 npm run dev)",
+      "Bash(npm ls:*)",
+      "Bash(npm test:*)",
+      "Bash(cat:*)",
+      "mcp__serena__read_file"
     ],
     "deny": []
   }

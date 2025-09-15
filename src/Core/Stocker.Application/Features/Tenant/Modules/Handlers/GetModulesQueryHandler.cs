@@ -3,16 +3,16 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.Tenant.Modules;
 using Stocker.Application.Features.Tenant.Modules.Queries;
-using Stocker.Persistence.Contexts;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Tenant.Modules.Handlers;
 
 public class GetModulesQueryHandler : IRequestHandler<GetModulesQuery, List<ModuleDto>>
 {
-    private readonly TenantDbContext _context;
+    private readonly ITenantDbContext _context;
     private readonly IMapper _mapper;
 
-    public GetModulesQueryHandler(TenantDbContext context, IMapper mapper)
+    public GetModulesQueryHandler(ITenantDbContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
