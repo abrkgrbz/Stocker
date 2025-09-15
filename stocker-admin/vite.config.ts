@@ -66,15 +66,13 @@ export default defineConfig({
         manualChunks: (id) => {
           // Core vendor chunk - MUST include React and ReactDOM together
           if (id.includes('node_modules')) {
-            // React ecosystem must stay together
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
+            // React ecosystem AND Ant Design icons must stay together to avoid context issues
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
+                id.includes('scheduler') || id.includes('@ant-design/icons')) {
               return 'react-vendor';
             }
-            // Ant Design and its icons in separate chunk (depends on React being loaded first)
-            if (id.includes('@ant-design/icons')) {
-              return 'antd-icons';
-            }
-            if (id.includes('antd') || id.includes('@ant-design')) {
+            // Ant Design main library in separate chunk
+            if (id.includes('antd') || (id.includes('@ant-design') && !id.includes('@ant-design/icons'))) {
               return 'antd-vendor';
             }
             // Charts chunk
