@@ -22,7 +22,8 @@ sentryService.initialize({
 });
 
 // Initialize security measures
-initializeSecurity(import.meta.env.DEV);
+// Disabled for production - security headers are handled by nginx
+// initializeSecurity(import.meta.env.DEV);
 
 // Enable mock auth based on environment variable
 const shouldEnableMockAuth = import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true';
