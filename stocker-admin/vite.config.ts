@@ -64,12 +64,16 @@ export default defineConfig({
       output: {
         // Optimize chunk splitting
         manualChunks: (id) => {
-          // Core vendor chunk
+          // Core vendor chunk - MUST include React and ReactDOM together
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // React ecosystem must stay together
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
               return 'react-vendor';
             }
-            // Ant Design chunk
+            // Ant Design and its icons in separate chunk (depends on React being loaded first)
+            if (id.includes('@ant-design/icons')) {
+              return 'antd-icons';
+            }
             if (id.includes('antd') || id.includes('@ant-design')) {
               return 'antd-vendor';
             }

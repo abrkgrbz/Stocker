@@ -27,7 +27,9 @@ RUN echo "=== Checking current directory ===" && \
 # Build the application
 ENV NODE_ENV=production
 ENV VITE_API_URL=https://api.stoocker.app
-RUN npx vite build
+# Clear any previous builds and build with production settings
+RUN rm -rf dist && \
+    npm run build
 
 # Production stage
 FROM nginx:alpine
