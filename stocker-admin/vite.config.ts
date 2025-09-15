@@ -62,34 +62,8 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Optimize chunk splitting
-        manualChunks: (id) => {
-          // Single vendor chunk to avoid React context issues
-          if (id.includes('node_modules')) {
-            // Put React, Ant Design and all UI libraries in same chunk
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
-                id.includes('scheduler') || id.includes('antd') || id.includes('@ant-design') ||
-                id.includes('@rc-component') || id.includes('rc-')) {
-              return 'vendor';
-            }
-            // Charts in separate chunk (they don't need React context directly)
-            if (id.includes('charts') || id.includes('recharts') || id.includes('apexcharts')) {
-              return 'charts';
-            }
-            // Utils in separate chunk
-            if (id.includes('axios') || id.includes('dayjs') || id.includes('lodash') || 
-                id.includes('zustand') || id.includes('@tanstack')) {
-              return 'utils';
-            }
-            // Everything else
-            return 'libs';
-          }
-        },
-        // Optimize asset naming
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `js/[name].[hash].js`;
-        },
+        // Let Vite handle chunk splitting automatically
+        // This avoids React context and hooks issues in production
         assetFileNames: (assetInfo) => {
           const extType = assetInfo.name?.split('.').pop();
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType || '')) {
