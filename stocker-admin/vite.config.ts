@@ -64,35 +64,25 @@ export default defineConfig({
       output: {
         // Optimize chunk splitting
         manualChunks: (id) => {
-          // Core vendor chunk - MUST include React and ReactDOM together
+          // Single vendor chunk to avoid React context issues
           if (id.includes('node_modules')) {
-            // React ecosystem AND Ant Design icons must stay together to avoid context issues
+            // Put React, Ant Design and all UI libraries in same chunk
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
-                id.includes('scheduler') || id.includes('@ant-design/icons')) {
-              return 'react-vendor';
+                id.includes('scheduler') || id.includes('antd') || id.includes('@ant-design') ||
+                id.includes('@rc-component') || id.includes('rc-')) {
+              return 'vendor';
             }
-            // Ant Design main library in separate chunk
-            if (id.includes('antd') || (id.includes('@ant-design') && !id.includes('@ant-design/icons'))) {
-              return 'antd-vendor';
-            }
-            // Charts chunk
+            // Charts in separate chunk (they don't need React context directly)
             if (id.includes('charts') || id.includes('recharts') || id.includes('apexcharts')) {
-              return 'charts-vendor';
+              return 'charts';
             }
-            // Utils chunk
-            if (id.includes('axios') || id.includes('dayjs') || id.includes('lodash')) {
-              return 'utils-vendor';
+            // Utils in separate chunk
+            if (id.includes('axios') || id.includes('dayjs') || id.includes('lodash') || 
+                id.includes('zustand') || id.includes('@tanstack')) {
+              return 'utils';
             }
-            // State management chunk
-            if (id.includes('zustand') || id.includes('@tanstack')) {
-              return 'state-vendor';
-            }
-            // Forms chunk
-            if (id.includes('react-hook-form') || id.includes('zod')) {
-              return 'forms-vendor';
-            }
-            // Other vendors
-            return 'vendor';
+            // Everything else
+            return 'libs';
           }
         },
         // Optimize asset naming
