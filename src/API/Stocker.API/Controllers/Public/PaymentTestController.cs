@@ -112,11 +112,11 @@ public class PaymentTestController : ControllerBase
                 });
             }
 
-            _logger.LogWarning("Test payment failed: {Error}", result.Error?.Message);
+            _logger.LogWarning("Test payment failed: {Error}", result.Error?.Description);
             return BadRequest(new
             {
                 success = false,
-                error = result.Error?.Message,
+                error = result.Error?.Description,
                 code = result.Error?.Code,
                 testMode = true,
                 orderId = paymentRequest.OrderId
@@ -168,11 +168,11 @@ public class PaymentTestController : ControllerBase
                 });
             }
 
-            _logger.LogWarning("Test refund failed: {Error}", result.Error?.Message);
+            _logger.LogWarning("Test refund failed: {Error}", result.Error?.Description);
             return BadRequest(new
             {
                 success = false,
-                error = result.Error?.Message,
+                error = result.Error?.Description,
                 code = result.Error?.Code,
                 testMode = true
             });
@@ -222,7 +222,7 @@ public class PaymentTestController : ControllerBase
             return BadRequest(new
             {
                 success = false,
-                error = result.Error?.Message,
+                error = result.Error?.Description,
                 code = result.Error?.Code,
                 testMode = true
             });

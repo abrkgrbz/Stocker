@@ -31,7 +31,15 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Build and publish
 WORKDIR /src
-RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj -c Release -o /app/publish
+# First build to see any errors clearly
+RUN dotnet build ./src/API/Stocker.API/Stocker.API.csproj -c Release --no-restore -v minimal || true
+# Then publish with warnings suppressed
+RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:NoWarn="CS1998;ASP0026" \
+    /p:TreatWarningsAsErrors=false
 
 # Generate migration bundle (self-contained migration executable)
 WORKDIR /src
