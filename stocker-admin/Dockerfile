@@ -1,14 +1,17 @@
 # Multi-stage build for React Admin app
-FROM node:22-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy only package.json first (not package-lock.json)
 COPY stocker-admin/package.json ./
 
-# Clean install to regenerate lock file for Linux
-RUN rm -rf node_modules package-lock.json && \
-    npm install --legacy-peer-deps
+# Clean npm cache and install with compatibility flags
+RUN npm cache clean --force && \
+    rm -rf node_modules package-lock.json && \
+    npm install --force --legacy-peer-deps || \
+    (npm config set strict-peer-deps false && \
+     npm install --no-audit --no-fund)
 
 # Copy all source files
 COPY stocker-admin/ .
