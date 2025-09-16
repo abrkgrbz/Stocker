@@ -28,6 +28,7 @@ import {
   RiseOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   ExclamationCircleOutlined,
   SyncOutlined,
   GlobalOutlined,

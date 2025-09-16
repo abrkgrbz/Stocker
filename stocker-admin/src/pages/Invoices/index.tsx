@@ -69,6 +69,7 @@ import {
   CloudUploadOutlined,
   HistoryOutlined,
   MoneyCollectOutlined,
+  RiseOutlined,
   ShoppingCartOutlined,
   TagOutlined,
   NumberOutlined,
