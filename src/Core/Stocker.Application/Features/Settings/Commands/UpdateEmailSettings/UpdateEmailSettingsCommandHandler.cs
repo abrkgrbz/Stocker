@@ -29,6 +29,12 @@ public sealed class UpdateEmailSettingsCommandHandler : IRequestHandler<UpdateEm
         {
             _logger.LogInformation("Updating email settings");
 
+            // Update or create Enable Email
+            await UpdateOrCreateSettingAsync("Email.Enable", request.EnableEmail.ToString(), "Email", cancellationToken);
+            
+            // Update or create Email Provider
+            await UpdateOrCreateSettingAsync("Email.Provider", request.Provider, "Email", cancellationToken);
+
             // Update or create SMTP Host
             await UpdateOrCreateSettingAsync("Smtp.Host", request.SmtpHost, "Email", cancellationToken);
             
@@ -56,7 +62,10 @@ public sealed class UpdateEmailSettingsCommandHandler : IRequestHandler<UpdateEm
             }
             
             // Update or create EnableSsl
-            await UpdateOrCreateSettingAsync("Smtp.EnableSsl", request.EnableSsl.ToString(), "Email", cancellationToken);
+            await UpdateOrCreateSettingAsync("Smtp.EnableSsl", request.SmtpEnableSsl.ToString(), "Email", cancellationToken);
+            
+            // Update or create SMTP Encryption
+            await UpdateOrCreateSettingAsync("Smtp.Encryption", request.SmtpEncryption, "Email", cancellationToken);
             
             // Update or create FromEmail
             await UpdateOrCreateSettingAsync("Email.FromAddress", request.FromEmail, "Email", cancellationToken);
@@ -108,11 +117,14 @@ public sealed class UpdateEmailSettingsCommandHandler : IRequestHandler<UpdateEm
     {
         return key switch
         {
+            "Email.Enable" => "Enable email service",
+            "Email.Provider" => "Email service provider",
             "Smtp.Host" => "SMTP server host address",
             "Smtp.Port" => "SMTP server port number",
             "Smtp.Username" => "SMTP authentication username",
             "Smtp.Password" => "SMTP authentication password (encrypted)",
             "Smtp.EnableSsl" => "Enable SSL/TLS for SMTP connection",
+            "Smtp.Encryption" => "SMTP encryption type (SSL/TLS)",
             "Email.FromAddress" => "Default sender email address",
             "Email.FromName" => "Default sender display name",
             _ => string.Empty

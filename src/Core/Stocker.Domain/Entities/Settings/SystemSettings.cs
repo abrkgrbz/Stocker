@@ -87,15 +87,17 @@ public static class SettingKeys
     public const string MaintenanceMode = "MaintenanceMode";
     
     // Email
-    public const string EmailProvider = "EmailProvider";
-    public const string SmtpHost = "SmtpHost";
-    public const string SmtpPort = "SmtpPort";
-    public const string SmtpUsername = "SmtpUsername";
-    public const string SmtpPassword = "SmtpPassword";
-    public const string SmtpEncryption = "SmtpEncryption";
-    public const string FromEmail = "FromEmail";
-    public const string FromName = "FromName";
-    public const string EmailTestMode = "EmailTestMode";
+    public const string EmailEnable = "Email.Enable";
+    public const string EmailProvider = "Email.Provider";
+    public const string SmtpHost = "Smtp.Host";
+    public const string SmtpPort = "Smtp.Port";
+    public const string SmtpUsername = "Smtp.Username";
+    public const string SmtpPassword = "Smtp.Password";
+    public const string SmtpEnableSsl = "Smtp.EnableSsl";
+    public const string SmtpEncryption = "Smtp.Encryption";
+    public const string EmailFromAddress = "Email.FromAddress";
+    public const string EmailFromName = "Email.FromName";
+    public const string EmailTestMode = "Email.TestMode";
     
     // Security
     public const string EnforcePasswordPolicy = "EnforcePasswordPolicy";

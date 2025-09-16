@@ -59,19 +59,26 @@ public class GetAllSettingsQueryHandler : IRequestHandler<GetAllSettingsQuery, R
 
     private EmailSettingsDto GetEmailSettings(List<SystemSettings> settings)
     {
-        var category = settings.Where(s => s.Category == SettingCategories.Email).ToList();
+        // Get all email-related settings (both from Email category and keys starting with Email. or Smtp.)
+        var emailSettings = settings.Where(s => 
+            s.Category == SettingCategories.Email || 
+            s.Key.StartsWith("Email.") || 
+            s.Key.StartsWith("Smtp.")
+        ).ToList();
         
         return new EmailSettingsDto
         {
-            Provider = GetSettingValue(category, SettingKeys.EmailProvider, "SMTP"),
-            SmtpHost = GetSettingValue(category, SettingKeys.SmtpHost, "smtp.gmail.com"),
-            SmtpPort = GetSettingValue(category, SettingKeys.SmtpPort, 587),
-            SmtpUsername = GetSettingValue(category, SettingKeys.SmtpUsername, ""),
-            SmtpPassword = GetSettingValue(category, SettingKeys.SmtpPassword, ""),
-            SmtpEncryption = GetSettingValue(category, SettingKeys.SmtpEncryption, "TLS"),
-            FromEmail = GetSettingValue(category, SettingKeys.FromEmail, "noreply@stoocker.app"),
-            FromName = GetSettingValue(category, SettingKeys.FromName, "Stocker"),
-            TestMode = GetSettingValue(category, SettingKeys.EmailTestMode, false)
+            EnableEmail = GetSettingValue(emailSettings, SettingKeys.EmailEnable, true),
+            Provider = GetSettingValue(emailSettings, SettingKeys.EmailProvider, "SMTP"),
+            SmtpHost = GetSettingValue(emailSettings, SettingKeys.SmtpHost, "mail.privateemail.com"),
+            SmtpPort = GetSettingValue(emailSettings, SettingKeys.SmtpPort, 465),
+            SmtpUsername = GetSettingValue(emailSettings, SettingKeys.SmtpUsername, "info@stoocker.app"),
+            SmtpPassword = GetSettingValue(emailSettings, SettingKeys.SmtpPassword, ""),
+            SmtpEnableSsl = GetSettingValue(emailSettings, SettingKeys.SmtpEnableSsl, true),
+            SmtpEncryption = GetSettingValue(emailSettings, SettingKeys.SmtpEncryption, "SSL"),
+            FromEmail = GetSettingValue(emailSettings, SettingKeys.EmailFromAddress, "info@stoocker.app"),
+            FromName = GetSettingValue(emailSettings, SettingKeys.EmailFromName, "Stoocker"),
+            TestMode = GetSettingValue(emailSettings, SettingKeys.EmailTestMode, false)
         };
     }
 
