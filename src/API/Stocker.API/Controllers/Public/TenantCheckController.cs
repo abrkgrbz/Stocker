@@ -7,7 +7,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Stocker.API.Controllers.Public;
 
 [ApiController]
-[Route("api/tenants")]
+[Route("api/public/tenants")]
 [AllowAnonymous]
 [SwaggerTag("Public tenant validation endpoints")]
 public class TenantCheckController : ControllerBase
@@ -84,10 +84,20 @@ public class TenantCheckController : ControllerBase
                 });
             }
 
-            // Use default colors for now
-            string? primaryColor = "#667eea";
-            string? secondaryColor = "#764ba2";
-            string? logo = tenant.LogoUrl;
+            // Get tenant customization settings
+            var settings = await _context.TenantSettings
+                .Where(ts => ts.TenantId == tenant.Id)
+                .Select(ts => new
+                {
+                    ts.PrimaryColor,
+                    ts.SecondaryColor,
+                    ts.LogoUrl
+                })
+                .FirstOrDefaultAsync();
+
+            string? primaryColor = settings?.PrimaryColor ?? "#667eea";
+            string? secondaryColor = settings?.SecondaryColor ?? "#764ba2";
+            string? logo = settings?.LogoUrl ?? tenant.LogoUrl;
 
             return Ok(new
             {

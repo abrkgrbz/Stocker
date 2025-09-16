@@ -99,7 +99,7 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       setError(null);
 
       // Validate tenant exists via API
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`;
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -143,7 +143,7 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
     
     try {
       // Validate tenant exists via API
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/tenants/check/${slug}`;
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${slug}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
