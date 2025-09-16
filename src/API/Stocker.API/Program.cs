@@ -515,6 +515,9 @@ app.UseSwaggerUI(c =>
     c.DocumentTitle = "Stocker API Documentation";
 });
 
+// Add custom CORS middleware BEFORE UseCors
+app.UseMiddleware<Stocker.Infrastructure.Middleware.CustomCorsMiddleware>();
+
 // Use CORS - En başta olmalı
 // Check for production domains in the current host
 var currentHost = app.Configuration["ASPNETCORE_URLS"] ?? "";
