@@ -38,6 +38,20 @@ public class TenantResolutionMiddleware
             return;
         }
 
+        // Skip tenant resolution for public endpoints
+        if (context.Request.Path.StartsWithSegments("/api/public") ||
+            context.Request.Path.StartsWithSegments("/api/auth") ||
+            context.Request.Path.StartsWithSegments("/api/master") ||
+            context.Request.Path.StartsWithSegments("/api/admin") ||
+            context.Request.Path.StartsWithSegments("/swagger") ||
+            context.Request.Path.Value == "/" ||
+            context.Request.Path.StartsWithSegments("/hangfire"))
+        {
+            _logger.LogDebug("Skipping tenant resolution for public/master endpoint: {Path}", context.Request.Path);
+            await _next(context);
+            return;
+        }
+
         // Skip tenant resolution for SignalR hubs (they handle their own tenant resolution)
         if (context.Request.Path.StartsWithSegments("/hubs"))
         {

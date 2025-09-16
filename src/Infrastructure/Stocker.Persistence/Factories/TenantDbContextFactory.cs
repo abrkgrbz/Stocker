@@ -27,6 +27,13 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public async Task<ITenantDbContext> CreateDbContextAsync(Guid tenantId)
     {
+        // Check if tenantId is empty (default Guid)
+        if (tenantId == Guid.Empty)
+        {
+            _logger.LogError("Cannot create TenantDbContext with empty tenant ID. This usually happens when accessing tenant-specific endpoints without proper tenant resolution.");
+            throw new InvalidOperationException("Tenant ID cannot be empty. Please ensure the request includes proper tenant information (via subdomain, header, or authentication).");
+        }
+        
         var connectionString = await GetTenantConnectionStringAsync(tenantId);
         
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
@@ -56,14 +63,26 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public async Task<string> GetTenantConnectionStringAsync(Guid tenantId)
     {
+        if (tenantId == Guid.Empty)
+        {
+            _logger.LogError("Cannot get connection string for empty tenant ID");
+            throw new InvalidOperationException("Tenant ID cannot be empty");
+        }
+
         var tenant = await _masterContext.Tenants
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == tenantId);
 
         if (tenant == null)
         {
-            _logger.LogError("Tenant {TenantId} not found", tenantId);
-            throw new InvalidOperationException($"Tenant {tenantId} not found");
+            _logger.LogError("Tenant {TenantId} not found in database", tenantId);
+            throw new InvalidOperationException($"Tenant {tenantId} not found. Please ensure the tenant exists in the master database.");
+        }
+
+        if (tenant.ConnectionString == null || string.IsNullOrEmpty(tenant.ConnectionString.Value))
+        {
+            _logger.LogError("Tenant {TenantId} has no connection string configured", tenantId);
+            throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured.");
         }
 
         return tenant.ConnectionString.Value;
