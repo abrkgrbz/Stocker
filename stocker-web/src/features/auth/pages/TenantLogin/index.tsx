@@ -72,7 +72,7 @@ export const TenantLogin: React.FC = () => {
       setError(null); // Clear any previous errors
       
       // Check if tenant exists - make actual API call
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
