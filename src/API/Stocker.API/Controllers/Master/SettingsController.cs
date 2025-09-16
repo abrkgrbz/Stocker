@@ -192,62 +192,6 @@ public class SettingsController : MasterControllerBase
     }
 
     /// <summary>
-    /// Test email settings
-    /// </summary>
-    [HttpPost("test-email")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    public async Task<IActionResult> TestEmailSettings([FromBody] TestEmailRequestDto request)
-    {
-        _logger.LogInformation("Testing email settings - sending test email to {Email}", request.To);
-        
-        try
-        {
-            // TODO: Implement email test using IEmailService
-            
-            return Ok(new ApiResponse<bool>
-            {
-                Success = true,
-                Data = true,
-                Message = $"Test email sent successfully to {request.To}",
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (ExternalServiceException ex)
-        {
-            _logger.LogError(ex, "Email service error while sending test email");
-            return BadRequest(new ApiResponse<bool>
-            {
-                Success = false,
-                Data = false,
-                Message = $"Email service error: {ex.Message}",
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (ConfigurationException ex)
-        {
-            _logger.LogError(ex, "Email configuration error");
-            return BadRequest(new ApiResponse<bool>
-            {
-                Success = false,
-                Data = false,
-                Message = $"Email configuration error: {ex.Message}",
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (BusinessException ex)
-        {
-            _logger.LogError(ex, "Business error while sending test email");
-            return BadRequest(new ApiResponse<bool>
-            {
-                Success = false,
-                Data = false,
-                Message = ex.Message,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-    }
-
-    /// <summary>
     /// Trigger manual backup
     /// </summary>
     [HttpPost("backup-now")]

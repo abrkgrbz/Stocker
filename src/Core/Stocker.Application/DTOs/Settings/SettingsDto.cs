@@ -95,10 +95,3 @@ public class NotificationSettingsDto
     public bool ReportNotification { get; set; } = true;
     public List<string> NotificationEmails { get; set; } = new();
 }
-
-public class TestEmailRequestDto
-{
-    public string To { get; set; } = string.Empty;
-    public string Subject { get; set; } = "Test Email";
-    public string Body { get; set; } = "This is a test email from Stocker.";
-}
