@@ -23,7 +23,7 @@ public class EmailTestController : ControllerBase
     }
 
     [HttpPost("send-test")]
-    public async Task<IActionResult> SendTestEmail([FromBody] TestEmailRequest request)
+    public async Task<IActionResult> SendTestEmail([FromBody] EmailTestRequest request)
     {
         try
         {
@@ -79,13 +79,13 @@ public class EmailTestController : ControllerBase
             {
                 Success = false,
                 Message = $"Failed to send test email: {ex.Message}",
-                Errors = new List<string> { ex.ToString() }
+                Data = new { Error = ex.Message, Details = ex.ToString() }
             });
         }
     }
 
     [HttpPost("test-welcome")]
-    public async Task<IActionResult> SendTestWelcomeEmail([FromBody] TestWelcomeRequest request)
+    public async Task<IActionResult> SendTestWelcomeEmail([FromBody] WelcomeEmailTestRequest request)
     {
         try
         {
@@ -120,7 +120,7 @@ public class EmailTestController : ControllerBase
             {
                 Success = false,
                 Message = $"Failed to send test welcome email: {ex.Message}",
-                Errors = new List<string> { ex.ToString() }
+                Data = new { Error = ex.Message, Details = ex.ToString() }
             });
         }
     }
@@ -149,12 +149,12 @@ public class EmailTestController : ControllerBase
     }
 }
 
-public class TestEmailRequest
+public class EmailTestRequest
 {
     public string Email { get; set; } = string.Empty;
 }
 
-public class TestWelcomeRequest
+public class WelcomeEmailTestRequest
 {
     public string Email { get; set; } = string.Empty;
     public string? UserName { get; set; }

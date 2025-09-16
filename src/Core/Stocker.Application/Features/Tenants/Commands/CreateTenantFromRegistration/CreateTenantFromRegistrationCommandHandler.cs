@@ -6,9 +6,9 @@ using Stocker.Application.DTOs.Tenant;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Master.ValueObjects;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Results;
 using Stocker.SharedKernel.Repositories;
-using Stocker.SharedKernel.ValueObjects;
 
 namespace Stocker.Application.Features.Tenants.Commands.CreateTenantFromRegistration;
 
@@ -52,7 +52,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             {
                 _logger.LogWarning("Registration already has a tenant: {RegistrationId}", request.RegistrationId);
                 
-                var existingTenant = await _unitOfWork.Repository<Tenant>()
+                var existingTenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
                     .GetByIdAsync(registration.TenantId.Value);
                     
                 if (existingTenant != null)
@@ -68,10 +68,10 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             }
 
             // Check if tenant with same code already exists
-            var existingTenantByCode = await _unitOfWork.Repository<Tenant>()
-                .GetAsync(t => t.Code == registration.CompanyCode);
+            var existingTenantByCode = await _context.Tenants
+                .FirstOrDefaultAsync(t => t.Code == registration.CompanyCode, cancellationToken);
 
-            if (existingTenantByCode.Any())
+            if (existingTenantByCode != null)
             {
                 return Result<TenantDto>.Failure(Error.Conflict("Tenant.AlreadyExists", "Bu kod ile tenant zaten mevcut."));
             }
@@ -97,14 +97,14 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             }
 
             // Create email value object
-            var emailResult = Email.Create(registration.ContactEmail);
+            var emailResult = Email.Create(registration.ContactEmail.Value);
             if (emailResult.IsFailure)
             {
                 return Result<TenantDto>.Failure(emailResult.Error);
             }
 
             // Create tenant
-            var tenant = Tenant.Create(
+            var tenant = Domain.Master.Entities.Tenant.Create(
                 registration.CompanyName,
                 registration.CompanyCode,
                 databaseName,
@@ -122,10 +122,14 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 ? startDate.AddDays(package.TrialDays) 
                 : null;
 
+            var billingCycle = registration.BillingCycle == "Yillik" 
+                ? Domain.Master.Enums.BillingCycle.Yillik 
+                : Domain.Master.Enums.BillingCycle.Aylik;
+            
             var subscription = Subscription.Create(
                 tenant.Id,
                 package.Id,
-                registration.BillingCycle ?? "Monthly",
+                billingCycle,
                 package.BasePrice,
                 startDate,
                 trialEndDate
@@ -138,11 +142,10 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             }
 
             // Add to repository
-            await _unitOfWork.Repository<Tenant>().AddAsync(tenant);
+            await _unitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant);
             await _unitOfWork.Repository<Subscription>().AddAsync(subscription);
 
-            // Update registration with tenant ID
-            registration.AssignTenant(tenant.Id);
+            // Registration already has tenant ID from auto-approval
             _context.TenantRegistrations.Update(registration);
 
             // Save to database
@@ -178,7 +181,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             try
             {
                 await _emailService.SendWelcomeEmailAsync(
-                    email: registration.AdminEmail,
+                    email: registration.AdminEmail.Value,
                     userName: $"{registration.AdminFirstName} {registration.AdminLastName}",
                     companyName: tenant.Name,
                     cancellationToken);
@@ -209,25 +212,35 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
     private async Task<Guid> GetDefaultPackageId(CancellationToken cancellationToken)
     {
-        var trialPackage = await _unitOfWork.Repository<Package>()
-            .GetAsync(p => p.Name.Contains("Trial") || p.Name.Contains("Free"));
+        var trialPackage = await _context.Packages
+            .FirstOrDefaultAsync(p => p.Name.Contains("Trial") || p.Name.Contains("Free"), cancellationToken);
 
-        return trialPackage.FirstOrDefault()?.Id ?? Guid.Empty;
+        return trialPackage?.Id ?? Guid.Empty;
     }
 
-    private TenantDto MapToDto(Tenant tenant)
+    private TenantDto MapToDto(Domain.Master.Entities.Tenant tenant)
     {
+        var subscription = tenant.Subscriptions?.FirstOrDefault();
         return new TenantDto
         {
             Id = tenant.Id,
             Name = tenant.Name,
             Code = tenant.Code,
-            DatabaseName = tenant.DatabaseName,
             IsActive = tenant.IsActive,
-            SubscriptionStatus = tenant.Subscriptions?.FirstOrDefault()?.Status.ToString() ?? "None",
             Domain = tenant.Domains?.FirstOrDefault(d => d.IsPrimary)?.DomainName ?? $"{tenant.Code}.stocker.app",
             CreatedAt = tenant.CreatedAt,
-            PackageName = tenant.Subscriptions?.FirstOrDefault()?.Package?.Name ?? "Trial"
+            UpdatedAt = tenant.UpdatedAt,
+            Subscription = subscription != null ? new TenantSubscriptionDto
+            {
+                Id = subscription.Id,
+                PackageId = subscription.PackageId,
+                PackageName = subscription.Package?.Name ?? "Trial",
+                Status = subscription.Status.ToString(),
+                StartDate = subscription.StartDate,
+                EndDate = subscription.CurrentPeriodEnd,
+                TrialEndDate = subscription.TrialEndDate,
+                Price = subscription.Price.Amount
+            } : null
         };
     }
 }

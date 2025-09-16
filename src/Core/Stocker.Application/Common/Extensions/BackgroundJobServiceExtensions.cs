@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Features.Tenants.Commands.CreateTenantFromRegistration;
+using System.Dynamic;
 using System.Linq.Expressions;
 
 namespace Stocker.Application.Common.Extensions;
@@ -20,8 +21,11 @@ public static class BackgroundJobServiceExtensions
         switch (jobName)
         {
             case "CreateTenantFromRegistration":
-                if (parameters is { RegistrationId: Guid registrationId })
+                // Try to extract RegistrationId from anonymous object
+                var registrationIdProperty = parameters?.GetType().GetProperty("RegistrationId");
+                if (registrationIdProperty != null)
                 {
+                    var registrationId = (Guid)registrationIdProperty.GetValue(parameters);
                     // Use MediatR to execute the command
                     var jobId = backgroundJobService.Enqueue<IMediator>(mediator => 
                         mediator.Send(new CreateTenantFromRegistrationCommand(registrationId), CancellationToken.None));
