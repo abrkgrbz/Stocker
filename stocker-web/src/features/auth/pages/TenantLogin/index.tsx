@@ -32,6 +32,7 @@ import { motion } from 'framer-motion';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '../../../../utils/tenant';
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
+import Swal from 'sweetalert2';
 import './style.css';
 
 const { Title, Text, Link } = Typography;
@@ -93,7 +94,45 @@ export const TenantLogin: React.FC = () => {
           isActive: true
         });
       } else {
-        setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen doğru adresten eriştiğinizden emin olun.`);
+        // Show beautiful SweetAlert with custom styling
+        Swal.fire({
+          title: 'Firma Bulunamadı',
+          html: `
+            <div style="text-align: center;">
+              <p style="font-size: 16px; color: #595959; margin-bottom: 20px;">
+                <strong style="color: #ff4d4f;">"${tenantSlug}"</strong> adında bir firma bulunamadı.
+              </p>
+              <p style="font-size: 14px; color: #8c8c8c;">
+                Lütfen doğru adresten eriştiğinizden emin olun.
+              </p>
+              <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <p style="font-size: 12px; color: #8c8c8c; margin: 0;">
+                  Girmeye çalıştığınız adres:
+                </p>
+                <p style="font-size: 14px; color: #262626; margin: 5px 0 0 0; font-weight: 500;">
+                  ${window.location.hostname}
+                </p>
+              </div>
+            </div>
+          `,
+          icon: 'error',
+          confirmButtonText: 'Ana Sayfaya Dön',
+          confirmButtonColor: '#667eea',
+          showCancelButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          customClass: {
+            popup: 'tenant-error-popup',
+            title: 'tenant-error-title',
+            htmlContainer: 'tenant-error-content',
+            confirmButton: 'tenant-error-button'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = getMainDomainUrl();
+          }
+        });
+        setError('Tenant not found');
       }
       
       setTenantLoading(false);
@@ -111,7 +150,48 @@ export const TenantLogin: React.FC = () => {
           isActive: true
         });
       } else {
-        setError(`"${tenantSlug}" adında bir firma bulunamadı veya aktif değil.`);
+        // Show beautiful SweetAlert for production error
+        Swal.fire({
+          title: 'Bağlantı Hatası',
+          html: `
+            <div style="text-align: center;">
+              <p style="font-size: 16px; color: #595959; margin-bottom: 20px;">
+                <strong style="color: #ff4d4f;">"${tenantSlug}"</strong> firmasına erişilemedi.
+              </p>
+              <p style="font-size: 14px; color: #8c8c8c;">
+                Lütfen daha sonra tekrar deneyin veya yöneticinizle iletişime geçin.
+              </p>
+              <div style="margin-top: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border: 1px solid #ffe58f;">
+                <p style="font-size: 13px; color: #ad6800; margin: 0;">
+                  <strong>İpucu:</strong> Firma adresinizi kontrol edin veya IT departmanınıza başvurun.
+                </p>
+              </div>
+            </div>
+          `,
+          icon: 'warning',
+          confirmButtonText: 'Ana Sayfaya Dön',
+          confirmButtonColor: '#667eea',
+          showCancelButton: true,
+          cancelButtonText: 'Tekrar Dene',
+          cancelButtonColor: '#8c8c8c',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          customClass: {
+            popup: 'tenant-error-popup',
+            title: 'tenant-error-title',
+            htmlContainer: 'tenant-error-content',
+            confirmButton: 'tenant-error-button',
+            cancelButton: 'tenant-retry-button'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = getMainDomainUrl();
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Retry fetching tenant info
+            window.location.reload();
+          }
+        });
+        setError('Tenant connection error');
       }
       setTenantLoading(false);
     }
@@ -173,42 +253,17 @@ export const TenantLogin: React.FC = () => {
     );
   }
 
-  if (error || !tenantInfo?.isActive) {
+  // Don't show the form if there's an error (alert will handle it)
+  if (error || (!tenantLoading && !tenantInfo)) {
     return (
       <div className="tenant-login-container">
-        <Card className="error-card" style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center' }}>
-          <div style={{ marginBottom: 24 }}>
-            <GlobalOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
-          </div>
-          <Alert
-            message="Firma Bulunamadı"
-            description={
-              <div>
-                <p style={{ marginBottom: 12 }}>{error || 'Bu firma aktif değil veya bulunamadı.'}</p>
-                <p style={{ marginBottom: 0, fontSize: 12, color: '#8c8c8c' }}>
-                  URL: <strong>{window.location.hostname}</strong>
-                </p>
-              </div>
-            }
-            type="error"
-            showIcon={false}
-            style={{ marginBottom: 24 }}
+        <div className="loading-wrapper">
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 48 }} />}
+            tip="Yönlendiriliyor..."
+            size="large"
           />
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Button
-              type="primary"
-              icon={<HomeOutlined />}
-              onClick={() => window.location.href = getMainDomainUrl()}
-              size="large"
-              block
-            >
-              Ana Sayfaya Dön
-            </Button>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Firma adresinizi kontrol edin veya yöneticinize danışın
-            </Text>
-          </Space>
-        </Card>
+        </div>
       </div>
     );
   }
