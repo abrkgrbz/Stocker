@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
@@ -115,282 +116,6 @@ public class EmailService : IEmailService
         {
             _logger.LogError(ex, "Failed to send email to {To}", message.To);
             throw new ExternalServiceException("EmailService", "Failed to send email", ex);
-        }
-    }
-
-    public async Task SendBulkAsync(IEnumerable<EmailMessage> messages, CancellationToken cancellationToken = default)
-    {
-        foreach (var message in messages)
-        {
-            await SendAsync(message, cancellationToken);
-            
-            // Add a small delay to avoid rate limiting
-            await Task.Delay(100, cancellationToken);
-        }
-    }
-
-    public async Task SendEmailVerificationAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
-    {
-        var verificationUrl = $"{_emailSettings.BaseUrl}/verify-email?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
-        
-        var template = await GetEmailTemplate("EmailVerification");
-        var body = template.HtmlBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{verificationUrl}}", verificationUrl)
-            .Replace("{{baseUrl}}", _emailSettings.BaseUrl);
-
-        var message = new EmailMessage
-        {
-            To = email,
-            Subject = template.Subject.Replace("{{appName}}", "Stocker"),
-            Body = body,
-            IsHtml = true
-        };
-
-        await SendAsync(message, cancellationToken);
-    }
-
-    public async Task SendPasswordResetAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
-    {
-        var resetUrl = $"{_emailSettings.BaseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
-        
-        var template = await GetEmailTemplate("PasswordReset");
-        var body = template.HtmlBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{resetUrl}}", resetUrl)
-            .Replace("{{baseUrl}}", _emailSettings.BaseUrl);
-
-        var message = new EmailMessage
-        {
-            To = email,
-            Subject = template.Subject.Replace("{{appName}}", "Stocker"),
-            Body = body,
-            IsHtml = true
-        };
-
-        await SendAsync(message, cancellationToken);
-    }
-
-    public async Task SendWelcomeEmailAsync(string email, string userName, string companyName, CancellationToken cancellationToken = default)
-    {
-        var template = await GetEmailTemplate("Welcome");
-        var body = template.HtmlBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{companyName}}", companyName)
-            .Replace("{{baseUrl}}", _emailSettings.BaseUrl)
-            .Replace("{{loginUrl}}", $"{_emailSettings.BaseUrl}/login");
-
-        var message = new EmailMessage
-        {
-            To = email,
-            Subject = template.Subject.Replace("{{appName}}", "Stocker"),
-            Body = body,
-            IsHtml = true
-        };
-
-        await SendAsync(message, cancellationToken);
-    }
-
-    public async Task SendInvitationEmailAsync(string email, string inviterName, string companyName, string inviteToken, CancellationToken cancellationToken = default)
-    {
-        var inviteUrl = $"{_emailSettings.BaseUrl}/accept-invite?token={Uri.EscapeDataString(inviteToken)}&email={Uri.EscapeDataString(email)}";
-        
-        var template = await GetEmailTemplate("Invitation");
-        var body = template.HtmlBody
-            .Replace("{{inviterName}}", inviterName)
-            .Replace("{{companyName}}", companyName)
-            .Replace("{{inviteUrl}}", inviteUrl)
-            .Replace("{{baseUrl}}", _emailSettings.BaseUrl);
-
-        var message = new EmailMessage
-        {
-            To = email,
-            Subject = template.Subject
-                .Replace("{{inviterName}}", inviterName)
-                .Replace("{{companyName}}", companyName),
-            Body = body,
-            IsHtml = true
-        };
-
-        await SendAsync(message, cancellationToken);
-    }
-
-    public async Task<bool> IsEmailServiceAvailable()
-    {
-        if (!_emailSettings.EnableEmail)
-            return false;
-
-        try
-        {
-            using var smtp = new SmtpClient();
-            smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
-            smtp.Timeout = _emailSettings.Timeout;
-            
-            await smtp.ConnectAsync(
-                _emailSettings.SmtpHost, 
-                _emailSettings.SmtpPort, 
-                _emailSettings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : 
-                _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
-            
-            await smtp.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
-            await smtp.DisconnectAsync(true);
-            
-            return true;
-        }
-        catch (System.Exception ex)
-        {
-            _logger.LogError(ex, "Email service is not available");
-            return false;
-        }
-    }
-
-    private async Task<EmailTemplate> GetEmailTemplate(string templateName)
-    {
-        var template = new EmailTemplate();
-        
-        try
-        {
-            var htmlPath = Path.Combine(_templatesPath, $"{templateName}.html");
-            var subjectPath = Path.Combine(_templatesPath, $"{templateName}.subject.txt");
-            
-            if (File.Exists(htmlPath))
-            {
-                template.HtmlBody = await File.ReadAllTextAsync(htmlPath);
-            }
-            else
-            {
-                // Use default template if file doesn't exist
-                template.HtmlBody = GetDefaultTemplate(templateName);
-            }
-            
-            if (File.Exists(subjectPath))
-            {
-                template.Subject = await File.ReadAllTextAsync(subjectPath);
-            }
-            else
-            {
-                template.Subject = GetDefaultSubject(templateName);
-            }
-        }
-        catch (System.Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load email template: {TemplateName}", templateName);
-            template.HtmlBody = GetDefaultTemplate(templateName);
-            template.Subject = GetDefaultSubject(templateName);
-        }
-        
-        return template;
-    }
-
-    private async Task<EmailSettings> GetEmailSettingsFromDatabaseAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            _logger.LogDebug("Fetching email settings from database...");
-            
-            // Get settings from database
-            var settings = await _masterContext.SystemSettings
-                .Where(s => s.Category == "Email" || s.Key.StartsWith("Email.") || s.Key.StartsWith("Smtp."))
-                .ToListAsync(cancellationToken);
-            
-            _logger.LogDebug("Found {Count} email settings in database", settings.Count);
-
-            var emailSettings = new EmailSettings();
-
-            // SMTP Settings
-            var smtpHost = settings.FirstOrDefault(s => s.Key == "Smtp.Host")?.Value;
-            if (!string.IsNullOrEmpty(smtpHost))
-            {
-                emailSettings.SmtpHost = smtpHost;
-                _logger.LogDebug("SMTP Host set to: {Host}", smtpHost);
-            }
-            else
-            {
-                _logger.LogWarning("SMTP Host not found in database settings");
-            }
-
-            var smtpPort = settings.FirstOrDefault(s => s.Key == "Smtp.Port")?.Value;
-            if (!string.IsNullOrEmpty(smtpPort) && int.TryParse(smtpPort, out var port))
-                emailSettings.SmtpPort = port;
-
-            var smtpUsername = settings.FirstOrDefault(s => s.Key == "Smtp.Username")?.Value;
-            if (!string.IsNullOrEmpty(smtpUsername))
-                emailSettings.SmtpUsername = smtpUsername;
-
-            // SMTP Password - DECRYPT if encrypted
-            var smtpPasswordSetting = settings.FirstOrDefault(s => s.Key == "Smtp.Password");
-            if (smtpPasswordSetting != null && !string.IsNullOrEmpty(smtpPasswordSetting.Value))
-            {
-                try
-                {
-                    // Try to decrypt the password
-                    emailSettings.SmtpPassword = _encryptionService.Decrypt(smtpPasswordSetting.Value);
-                    _logger.LogDebug("SMTP password decrypted successfully");
-                }
-                catch (System.Exception ex)
-                {
-                    // If decryption fails, it might be stored as plain text (legacy)
-                    _logger.LogWarning(ex, "Failed to decrypt SMTP password, using as plain text. Consider re-saving settings.");
-                    emailSettings.SmtpPassword = smtpPasswordSetting.Value;
-                }
-            }
-
-            var enableSsl = settings.FirstOrDefault(s => s.Key == "Smtp.EnableSsl")?.Value;
-            if (!string.IsNullOrEmpty(enableSsl) && bool.TryParse(enableSsl, out var ssl))
-                emailSettings.EnableSsl = ssl;
-
-            // Email Settings
-            var fromEmail = settings.FirstOrDefault(s => s.Key == "Email.FromAddress")?.Value;
-            if (!string.IsNullOrEmpty(fromEmail))
-                emailSettings.FromEmail = fromEmail;
-
-            var fromName = settings.FirstOrDefault(s => s.Key == "Email.FromName")?.Value;
-            if (!string.IsNullOrEmpty(fromName))
-                emailSettings.FromName = fromName;
-
-            var enableEmail = settings.FirstOrDefault(s => s.Key == "Email.Enable")?.Value;
-            if (!string.IsNullOrEmpty(enableEmail) && bool.TryParse(enableEmail, out var enabled))
-                emailSettings.EnableEmail = enabled;
-
-            _logger.LogInformation("Email settings loaded - Host: {Host}, Port: {Port}, Username: {Username}, Enable: {Enable}", 
-                emailSettings.SmtpHost ?? "NULL", 
-                emailSettings.SmtpPort, 
-                emailSettings.SmtpUsername ?? "NULL",
-                emailSettings.EnableEmail);
-
-            return emailSettings;
-        }
-        catch (DatabaseException ex)
-        {
-            _logger.LogError(ex, "Database error loading email settings, using default configuration");
-            // Return default settings from configuration as fallback
-            _logger.LogWarning("Returning fallback email settings from appsettings.json");
-            return _emailSettings ?? new EmailSettings 
-            { 
-                SmtpHost = "mail.privateemail.com",
-                SmtpPort = 465,
-                SmtpUsername = "info@stoocker.app",
-                SmtpPassword = "A.bg010203",
-                EnableSsl = true,
-                FromEmail = "info@stoocker.app",
-                FromName = "Stoocker",
-                EnableEmail = true
-            };
-        }
-        catch (System.Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load email settings, using default configuration");
-            return _emailSettings ?? new EmailSettings 
-            { 
-                SmtpHost = "mail.privateemail.com",
-                SmtpPort = 465,
-                SmtpUsername = "info@stoocker.app",
-                SmtpPassword = "A.bg010203",
-                EnableSsl = true,
-                FromEmail = "info@stoocker.app",
-                FromName = "Stoocker",
-                EnableEmail = true
-            };
         }
     }
 
@@ -518,6 +243,222 @@ public class EmailService : IEmailService
             "Invitation" => "{{inviterName}} sizi {{companyName}} şirketine davet ediyor",
             _ => "{{appName}} Bildirimi"
         };
+    }
+
+    private async Task<EmailSettings> GetEmailSettingsFromDatabaseAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("Loading email settings from database");
+            
+            // Check if MasterDbContext is available
+            if (_masterContext == null)
+            {
+                _logger.LogWarning("MasterDbContext is null, using fallback email settings");
+                return GetFallbackEmailSettings();
+            }
+
+            // Get all email settings from the database
+            var settings = await _masterContext.SystemSettings
+                .Where(s => s.Category == "Email" || s.Key.StartsWith("Email.") || s.Key.StartsWith("Smtp."))
+                .ToListAsync(cancellationToken);
+
+            if (!settings.Any())
+            {
+                _logger.LogWarning("No email settings found in database, using fallback");
+                return GetFallbackEmailSettings();
+            }
+
+            // Build EmailSettings object from database values
+            var emailSettings = new EmailSettings();
+
+            // SMTP settings
+            var smtpHost = settings.FirstOrDefault(s => s.Key == "Smtp.Host")?.Value;
+            if (string.IsNullOrEmpty(smtpHost))
+            {
+                _logger.LogWarning("SMTP host not found in database, using fallback");
+                return GetFallbackEmailSettings();
+            }
+            emailSettings.SmtpHost = smtpHost;
+            
+            var smtpPortSetting = settings.FirstOrDefault(s => s.Key == "Smtp.Port")?.Value;
+            emailSettings.SmtpPort = int.TryParse(smtpPortSetting, out var port) ? port : 465;
+            
+            emailSettings.SmtpUsername = settings.FirstOrDefault(s => s.Key == "Smtp.Username")?.Value ?? "info@stoocker.app";
+            
+            // Decrypt password if encrypted
+            var passwordSetting = settings.FirstOrDefault(s => s.Key == "Smtp.Password");
+            if (passwordSetting != null && !string.IsNullOrEmpty(passwordSetting.Value))
+            {
+                try
+                {
+                    emailSettings.SmtpPassword = passwordSetting.IsEncrypted 
+                        ? _encryptionService.Decrypt(passwordSetting.Value)
+                        : passwordSetting.Value;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to decrypt SMTP password");
+                    return GetFallbackEmailSettings();
+                }
+            }
+            else
+            {
+                emailSettings.SmtpPassword = "A.bg010203"; // Fallback password
+            }
+            
+            // SSL Settings
+            var enableSslSetting = settings.FirstOrDefault(s => s.Key == "Smtp.EnableSsl")?.Value;
+            emailSettings.EnableSsl = bool.TryParse(enableSslSetting, out var enableSsl) ? enableSsl : true;
+            
+            // From settings
+            emailSettings.FromEmail = settings.FirstOrDefault(s => s.Key == "Email.FromAddress")?.Value ?? "info@stoocker.app";
+            emailSettings.FromName = settings.FirstOrDefault(s => s.Key == "Email.FromName")?.Value ?? "Stoocker";
+            
+            // Enable email
+            var enableEmailSetting = settings.FirstOrDefault(s => s.Key == "Email.Enable")?.Value;
+            emailSettings.EnableEmail = bool.TryParse(enableEmailSetting, out var enableEmail) ? enableEmail : true;
+            
+            // Template path (use default from injected settings)
+            emailSettings.TemplatesPath = _emailSettings.TemplatesPath;
+            
+            _logger.LogInformation("Email settings loaded successfully from database");
+            return emailSettings;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load email settings from database, using fallback");
+            return GetFallbackEmailSettings();
+        }
+    }
+
+    private EmailSettings GetFallbackEmailSettings()
+    {
+        _logger.LogInformation("Using fallback email settings");
+        return new EmailSettings 
+        { 
+            SmtpHost = "mail.privateemail.com",
+            SmtpPort = 465,
+            SmtpUsername = "info@stoocker.app",
+            SmtpPassword = "A.bg010203",
+            EnableSsl = true,
+            FromEmail = "info@stoocker.app",
+            FromName = "Stoocker",
+            EnableEmail = true,
+            TemplatesPath = _emailSettings.TemplatesPath ?? "EmailTemplates"
+        };
+    }
+
+    public async Task SendBulkAsync(IEnumerable<EmailMessage> messages, CancellationToken cancellationToken = default)
+    {
+        await Task.WhenAll(messages.Select(m => SendAsync(m, cancellationToken)));
+    }
+
+    public async Task SendEmailVerificationAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
+    {
+        var templateBody = GetDefaultTemplate("EmailVerification");
+        var subject = GetDefaultSubject("EmailVerification");
+        
+        var verificationUrl = $"https://stoocker.app/verify-email?token={token}";
+        
+        // Replace placeholders
+        templateBody = templateBody
+            .Replace("{{userName}}", userName)
+            .Replace("{{verificationUrl}}", verificationUrl);
+            
+        subject = subject.Replace("{{appName}}", "Stoocker");
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = templateBody,
+            IsHtml = true
+        }, cancellationToken);
+    }
+
+    public async Task SendPasswordResetAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
+    {
+        var templateBody = GetDefaultTemplate("PasswordReset");
+        var subject = GetDefaultSubject("PasswordReset");
+        
+        var resetUrl = $"https://stoocker.app/reset-password?token={token}";
+        
+        // Replace placeholders
+        templateBody = templateBody
+            .Replace("{{userName}}", userName)
+            .Replace("{{resetUrl}}", resetUrl);
+            
+        subject = subject.Replace("{{appName}}", "Stoocker");
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = templateBody,
+            IsHtml = true
+        }, cancellationToken);
+    }
+
+    public async Task SendWelcomeEmailAsync(string email, string userName, string companyName, CancellationToken cancellationToken = default)
+    {
+        var templateBody = GetDefaultTemplate("Welcome");
+        var subject = GetDefaultSubject("Welcome");
+        
+        var loginUrl = "https://stoocker.app/login";
+        
+        // Replace placeholders
+        templateBody = templateBody
+            .Replace("{{userName}}", userName)
+            .Replace("{{companyName}}", companyName)
+            .Replace("{{loginUrl}}", loginUrl);
+            
+        subject = subject.Replace("{{appName}}", "Stoocker");
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = templateBody,
+            IsHtml = true
+        }, cancellationToken);
+    }
+
+    public async Task SendInvitationEmailAsync(string email, string inviterName, string companyName, string inviteToken, CancellationToken cancellationToken = default)
+    {
+        var subject = GetDefaultSubject("Invitation");
+        subject = subject
+            .Replace("{{inviterName}}", inviterName)
+            .Replace("{{companyName}}", companyName);
+            
+        var inviteUrl = $"https://stoocker.app/accept-invite?token={inviteToken}";
+        
+        var body = $@"
+            <h2>Davetlisiniz!</h2>
+            <p>{inviterName} sizi {companyName} şirketine davet ediyor.</p>
+            <p>Daveti kabul etmek için <a href='{inviteUrl}'>buraya tıklayın</a>.</p>
+        ";
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = body,
+            IsHtml = true
+        }, cancellationToken);
+    }
+
+    public async Task<bool> IsEmailServiceAvailable()
+    {
+        try
+        {
+            var emailSettings = await GetEmailSettingsFromDatabaseAsync(CancellationToken.None);
+            return emailSettings.EnableEmail && !string.IsNullOrEmpty(emailSettings.SmtpHost);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 
