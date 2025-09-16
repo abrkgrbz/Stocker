@@ -44,10 +44,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Tenant validation response:', data);
         if (data.exists) {
           setIsValidTenant(true);
-          console.log('Tenant is valid, setting isValidTenant to true');
           // Store tenant data if needed
           if (data.id) {
             setTenantId(data.id);
@@ -55,14 +53,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         } else {
           setIsValidTenant(false);
-          console.log('Tenant does not exist, setting isValidTenant to false');
         }
       } else {
         setIsValidTenant(false);
-        console.log('Response not ok, setting isValidTenant to false');
       }
     } catch (error) {
-      console.error('Failed to validate tenant:', error);
       setIsValidTenant(false);
     }
   };
