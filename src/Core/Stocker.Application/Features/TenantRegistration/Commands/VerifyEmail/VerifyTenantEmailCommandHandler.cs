@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Extensions;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Features.Tenants.Commands.CreateTenantFromRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.SharedKernel.Results;
@@ -64,8 +66,24 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
             // Save all changes
             await _context.SaveChangesAsync(cancellationToken);
 
-            // TODO: Trigger tenant creation in a separate process after approval
-            // TODO: Send welcome email
+            // If approved, create the tenant
+            if (registration.Status == RegistrationStatus.Approved)
+            {
+                try
+                {
+                    // Create tenant directly through MediatR - Hangfire will handle the background processing
+                    var jobId = _backgroundJobService.Enqueue<IMediator>(mediator => 
+                        mediator.Send(new CreateTenantFromRegistrationCommand(registration.Id), CancellationToken.None));
+                    
+                    _logger.LogInformation("Tenant creation job enqueued with ID {JobId} for registration: {RegistrationId}", 
+                        jobId, registration.Id);
+                }
+                catch (Exception jobEx)
+                {
+                    _logger.LogError(jobEx, "Failed to enqueue tenant creation job for registration: {RegistrationId}", registration.Id);
+                    // Don't fail the verification if job enqueue fails
+                }
+            }
 
             return Result<bool>.Success(true);
         }
