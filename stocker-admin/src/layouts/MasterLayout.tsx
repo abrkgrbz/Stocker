@@ -25,6 +25,7 @@ import {
   TranslationOutlined,
   CustomerServiceOutlined,
   ReconciliationOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 import { 
   Dropdown, 
