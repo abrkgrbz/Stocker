@@ -29,7 +29,8 @@ import {
   Checkbox, 
   Divider, 
   Empty, 
-  Result, 
+  Result,
+  Progress, 
   message, 
   notification 
 } from 'antd';

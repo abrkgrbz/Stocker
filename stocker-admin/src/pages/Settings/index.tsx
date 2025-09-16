@@ -27,7 +27,8 @@ import {
   Table, 
   Modal, 
   Tooltip, 
-  Popconfirm, 
+  Popconfirm,
+  Progress, 
   message, 
   notification 
 } from 'antd';
