@@ -568,6 +568,10 @@ app.UseWhen(
 // SignalR hub'ları için kontrol middleware'da yapılıyor
 app.UseMiddleware<TenantResolutionMiddleware>();
 
+// Subdomain validation middleware (currently disabled due to dependency issues)
+// Will be enabled after resolving MasterDbContext dependency
+// app.UseMiddleware<SubdomainValidationMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

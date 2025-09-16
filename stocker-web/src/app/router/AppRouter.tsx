@@ -89,19 +89,35 @@ const HRModule = lazy(() => import('@/features/modules/pages/HRModule').then(m =
 const ProductionModule = lazy(() => import('@/features/modules/pages/ProductionModule').then(m => ({ default: m.ProductionModule })));
 
 export const AppRouter: React.FC = () => {
-  const { isSubdomain, tenantSlug } = useTenant();
+  const { isSubdomain, tenantSlug, isValidTenant } = useTenant();
 
   useEffect(() => {
     console.log('[AppRouter] Subdomain routing context:', {
       isSubdomain,
       tenantSlug,
+      isValidTenant,
       hostname: window.location.hostname,
       pathname: window.location.pathname
     });
-  }, [isSubdomain, tenantSlug]);
+  }, [isSubdomain, tenantSlug, isValidTenant]);
 
-  // If we're on a subdomain, use subdomain-specific routes
-  if (isSubdomain) {
+  // If we're on a subdomain and validation is still checking
+  if (isSubdomain && isValidTenant === null) {
+    return <PageLoader />;
+  }
+
+  // If we're on a subdomain but tenant is invalid
+  if (isSubdomain && isValidTenant === false) {
+    const InvalidTenantPage = lazy(() => import('@/features/error/pages/InvalidTenantPage'));
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <InvalidTenantPage tenantSlug={tenantSlug || undefined} />
+      </Suspense>
+    );
+  }
+
+  // If we're on a valid subdomain, use subdomain-specific routes
+  if (isSubdomain && isValidTenant === true) {
     return (
       <Suspense fallback={<PageLoader />}>
         <SubdomainRoutes />

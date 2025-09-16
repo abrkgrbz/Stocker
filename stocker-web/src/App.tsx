@@ -31,6 +31,7 @@ import '@/i18n/config';
 import { AppRouter } from '@/app/router/AppRouter';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { PageLoader } from '@/shared/components/PageLoader';
+import InvalidTenantPage from '@/features/error/pages/InvalidTenantPage';
 
 // Styles
 import './App.css';
