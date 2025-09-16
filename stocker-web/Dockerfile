@@ -15,6 +15,7 @@ COPY stocker-web/ .
 
 # Build the application
 ENV NODE_ENV=production
+ENV VITE_API_URL=https://api.stoocker.app
 ENV VITE_API_BASE_URL=https://api.stoocker.app
 RUN npx vite build
 
