@@ -28,15 +28,17 @@ public static class SystemSettingsSeed
             new SystemSettings(SettingCategories.General, SettingKeys.MaintenanceMode, "false", "Enable maintenance mode", true, false),
 
             // Email Settings
-            new SystemSettings(SettingCategories.Email, SettingKeys.EmailProvider, "SMTP", "Email service provider", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.SmtpHost, "smtp.gmail.com", "SMTP server host", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.SmtpPort, "587", "SMTP server port", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.SmtpUsername, "info@stoocker.app", "SMTP username", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.SmtpPassword, "", "SMTP password", true, true), // Encrypted
-            new SystemSettings(SettingCategories.Email, SettingKeys.SmtpEncryption, "TLS", "SMTP encryption type", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.FromEmail, "noreply@stoocker.app", "Default from email address", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.FromName, "Stocker", "Default from name", true, false),
-            new SystemSettings(SettingCategories.Email, SettingKeys.EmailTestMode, "false", "Enable email test mode", true, false),
+            new SystemSettings(SettingCategories.Email, "Email.Enable", "true", "Enable email service", true, false),
+            new SystemSettings(SettingCategories.Email, "Email.Provider", "SMTP", "Email service provider", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Host", "mail.privateemail.com", "SMTP server host", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Port", "465", "SMTP server port", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Username", "info@stoocker.app", "SMTP username", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Password", "A.bg010203", "SMTP password", true, true), // Encrypted
+            new SystemSettings(SettingCategories.Email, "Smtp.EnableSsl", "true", "Enable SSL for SMTP", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Encryption", "SSL", "SMTP encryption type", true, false),
+            new SystemSettings(SettingCategories.Email, "Email.FromAddress", "info@stoocker.app", "Default from email address", true, false),
+            new SystemSettings(SettingCategories.Email, "Email.FromName", "Stoocker", "Default from name", true, false),
+            new SystemSettings(SettingCategories.Email, "Email.TestMode", "false", "Enable email test mode", true, false),
 
             // Security Settings
             new SystemSettings(SettingCategories.Security, SettingKeys.EnforcePasswordPolicy, "true", "Enforce password policy", true, false),
