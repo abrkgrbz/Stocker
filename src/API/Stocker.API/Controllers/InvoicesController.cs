@@ -7,8 +7,9 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Tenant.Enums;
 using Stocker.SharedKernel.Pagination;
+using Stocker.API.Controllers.Tenant.DTOs;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Authorize]
@@ -756,7 +757,9 @@ public class InvoicesController : ControllerBase
     }
 }
 
-// DTOs
+namespace Stocker.API.Controllers.Tenant.DTOs;
+
+// DTOs for Tenant Invoice operations
 public class InvoiceDto
 {
     public Guid Id { get; set; }

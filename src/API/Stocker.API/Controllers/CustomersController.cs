@@ -6,8 +6,9 @@ using Stocker.Application.Common.Exceptions;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Pagination;
+using Stocker.API.Controllers.Tenant.DTOs;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Authorize]
@@ -278,6 +279,8 @@ public class CustomersController : ControllerBase
         return NoContent();
     }
 }
+
+namespace Stocker.API.Controllers.Tenant.DTOs;
 
 public class CustomerDto
 {
