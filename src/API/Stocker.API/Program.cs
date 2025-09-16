@@ -112,10 +112,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Production",
         policy =>
         {
-            policy.AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials()
-                  .SetIsOriginAllowed(origin =>
+            policy.SetIsOriginAllowed(origin =>
                   {
                       // Allow all *.stoocker.app subdomains in production
                       if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
@@ -125,6 +122,9 @@ builder.Services.AddCors(options =>
                       
                       return false;
                   })
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials()
                   .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
