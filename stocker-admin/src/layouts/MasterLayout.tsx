@@ -26,6 +26,7 @@ import {
   CustomerServiceOutlined,
   ReconciliationOutlined,
   ApiOutlined,
+  SecurityScanOutlined,
 } from '@ant-design/icons';
 import { 
   Dropdown, 
