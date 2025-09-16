@@ -38,6 +38,21 @@ const ErrorFallback: React.FC<FallbackProps> = ({ error, resetError, eventId }) 
   };
 
   const isDevelopment = !import.meta.env.PROD;
+  const showDetailedErrors = true; // Always show error details for debugging
+
+  // Extract more error information
+  const errorName = error.name || 'UnknownError';
+  const errorMessage = error.message || 'An unexpected error occurred';
+  const errorStack = error.stack || 'No stack trace available';
+  
+  // Parse error for API response errors
+  const isApiError = errorMessage.includes('401') || errorMessage.includes('403') || 
+                      errorMessage.includes('404') || errorMessage.includes('500') ||
+                      errorMessage.includes('502') || errorMessage.includes('503');
+  
+  // Get current URL and timestamp
+  const currentUrl = window.location.href;
+  const errorTime = new Date().toLocaleString('tr-TR');
 
   return (
     <div style={{
@@ -48,7 +63,7 @@ const ErrorFallback: React.FC<FallbackProps> = ({ error, resetError, eventId }) 
       padding: 24,
       background: '#f0f2f5'
     }}>
-      <Card style={{ maxWidth: 600, width: '100%' }}>
+      <Card style={{ maxWidth: 700, width: '100%' }}>
         <Result
           status="error"
           title="Oops! Something went wrong"
@@ -81,54 +96,102 @@ const ErrorFallback: React.FC<FallbackProps> = ({ error, resetError, eventId }) 
           ].filter(Boolean)}
         >
           <div style={{ marginTop: 24 }}>
-            <Paragraph>
-              <Text strong>Error ID: </Text>
-              <Text code>{eventId || 'Not available'}</Text>
-            </Paragraph>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Paragraph>
+                <Text strong>Error ID: </Text>
+                <Text code>{eventId || 'Not available'}</Text>
+              </Paragraph>
 
-            {isDevelopment && (
-              <Collapse ghost>
-                <Panel
-                  header={
-                    <Space>
-                      <WarningOutlined />
-                      <Text type="danger">Error Details (Development Only)</Text>
-                    </Space>
-                  }
-                  key="1"
-                >
-                  <Paragraph>
+              <Paragraph>
+                <Text strong>Time: </Text>
+                <Text>{errorTime}</Text>
+              </Paragraph>
+
+              <Paragraph>
+                <Text strong>Page: </Text>
+                <Text code style={{ fontSize: 12 }}>{currentUrl}</Text>
+              </Paragraph>
+            </Space>
+
+            <Collapse 
+              ghost 
+              defaultActiveKey={showDetailedErrors ? ['1'] : []}
+              style={{ marginTop: 16 }}
+            >
+              <Panel
+                header={
+                  <Space>
+                    <WarningOutlined style={{ color: '#ff4d4f' }} />
+                    <Text type="danger">Error Details</Text>
+                    {isApiError && <Text type="warning">(API Error)</Text>}
+                  </Space>
+                }
+                key="1"
+              >
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div>
+                    <Text strong>Error Type: </Text>
+                    <Text code>{errorName}</Text>
+                  </div>
+
+                  <div>
                     <Text strong>Error Message:</Text>
-                  </Paragraph>
-                  <Paragraph>
-                    <Text code style={{ whiteSpace: 'pre-wrap' }}>
-                      {error.message}
-                    </Text>
-                  </Paragraph>
+                    <Paragraph>
+                      <Text code style={{ whiteSpace: 'pre-wrap', color: '#ff4d4f' }}>
+                        {errorMessage}
+                      </Text>
+                    </Paragraph>
+                  </div>
 
-                  <Paragraph>
+                  {isApiError && (
+                    <div style={{ 
+                      padding: 12, 
+                      background: '#fff7e6', 
+                      border: '1px solid #ffd591',
+                      borderRadius: 4 
+                    }}>
+                      <Text type="warning">
+                        <WarningOutlined /> This appears to be an API connection issue. 
+                        Please check your internet connection and try again.
+                      </Text>
+                    </div>
+                  )}
+
+                  <div>
                     <Text strong>Stack Trace:</Text>
-                  </Paragraph>
-                  <Paragraph>
-                    <Text
-                      code
+                    <div
                       style={{
-                        display: 'block',
-                        whiteSpace: 'pre-wrap',
-                        fontSize: 12,
-                        maxHeight: 200,
-                        overflow: 'auto',
+                        marginTop: 8,
+                        padding: 12,
                         background: '#f5f5f5',
-                        padding: 8,
-                        borderRadius: 4
+                        border: '1px solid #d9d9d9',
+                        borderRadius: 4,
+                        maxHeight: 300,
+                        overflow: 'auto'
                       }}
                     >
-                      {error.stack}
-                    </Text>
-                  </Paragraph>
-                </Panel>
-              </Collapse>
-            )}
+                      <Text
+                        code
+                        style={{
+                          display: 'block',
+                          whiteSpace: 'pre-wrap',
+                          fontSize: 11,
+                          lineHeight: 1.5,
+                          color: '#595959'
+                        }}
+                      >
+                        {errorStack}
+                      </Text>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 12 }}>
+                    <Text strong>Browser: </Text>
+                    <Text code>{navigator.userAgent}</Text>
+                  </div>
+                </Space>
+              </Panel>
+            </Collapse>
 
             <Paragraph type="secondary" style={{ marginTop: 16 }}>
               <QuestionCircleOutlined /> If this problem persists, please contact support.
