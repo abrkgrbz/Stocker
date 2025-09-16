@@ -1,7 +1,7 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Stocker.Persistence.Master;
+using Stocker.Application.Tenants.Queries.GetTenantBySlug;
 
 namespace Stocker.Web.API.Controllers;
 
@@ -10,12 +10,12 @@ namespace Stocker.Web.API.Controllers;
 [AllowAnonymous]
 public class TenantCheckController : ControllerBase
 {
-    private readonly MasterDbContext _context;
+    private readonly IMediator _mediator;
     private readonly ILogger<TenantCheckController> _logger;
 
-    public TenantCheckController(MasterDbContext context, ILogger<TenantCheckController> logger)
+    public TenantCheckController(IMediator mediator, ILogger<TenantCheckController> logger)
     {
-        _context = context;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -30,68 +30,21 @@ public class TenantCheckController : ControllerBase
         {
             _logger.LogInformation("Checking tenant existence for slug: {Slug}", slug);
 
-            // Normalize slug
-            var normalizedSlug = slug.ToLowerInvariant().Trim();
+            var query = new GetTenantBySlugQuery { Slug = slug };
+            var result = await _mediator.Send(query);
 
-            // Query tenant by slug or identifier
-            var tenant = await _context.Tenants
-                .Where(t => t.Identifier.ToLower() == normalizedSlug || 
-                           (t.Slug != null && t.Slug.ToLower() == normalizedSlug))
-                .Select(t => new
-                {
-                    t.Id,
-                    t.Name,
-                    t.Identifier,
-                    t.Slug,
-                    t.IsActive,
-                    t.Settings
-                })
-                .FirstOrDefaultAsync();
-
-            if (tenant == null)
-            {
-                _logger.LogWarning("No tenant found with slug: {Slug}", slug);
-                return Ok(new
-                {
-                    exists = false,
-                    isActive = false,
-                    message = $"No tenant found with slug: {slug}"
-                });
-            }
-
-            // Parse settings if they exist
-            string? primaryColor = null;
-            string? secondaryColor = null;
-            string? logo = null;
-
-            if (!string.IsNullOrEmpty(tenant.Settings))
-            {
-                try
-                {
-                    var settings = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(tenant.Settings);
-                    if (settings != null)
-                    {
-                        primaryColor = settings.ContainsKey("primaryColor") ? settings["primaryColor"]?.ToString() : null;
-                        secondaryColor = settings.ContainsKey("secondaryColor") ? settings["secondaryColor"]?.ToString() : null;
-                        logo = settings.ContainsKey("logo") ? settings["logo"]?.ToString() : null;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error parsing tenant settings for tenant {TenantId}", tenant.Id);
-                }
-            }
-
+            // Return in camelCase for JavaScript frontend
             return Ok(new
             {
-                exists = true,
-                isActive = tenant.IsActive,
-                id = tenant.Id,
-                name = tenant.Name,
-                slug = tenant.Slug ?? tenant.Identifier,
-                primaryColor = primaryColor ?? "#667eea",
-                secondaryColor = secondaryColor ?? "#764ba2",
-                logo = logo
+                exists = result.Exists,
+                isActive = result.IsActive,
+                id = result.Id,
+                name = result.Name,
+                slug = result.Slug,
+                primaryColor = result.PrimaryColor,
+                secondaryColor = result.SecondaryColor,
+                logo = result.Logo,
+                message = result.Message
             });
         }
         catch (Exception ex)
@@ -110,7 +63,8 @@ public class TenantCheckController : ControllerBase
                     slug = slug,
                     primaryColor = "#667eea",
                     secondaryColor = "#764ba2",
-                    logo = (string?)null
+                    logo = (string?)null,
+                    message = (string?)null
                 });
             }
 
