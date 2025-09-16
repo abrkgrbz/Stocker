@@ -26,7 +26,8 @@ import {
   RocketOutlined,
   MailOutlined,
   EyeInvisibleOutlined,
-  EyeTwoTone
+  EyeTwoTone,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '../../../../utils/tenant';
@@ -94,45 +95,18 @@ export const TenantLogin: React.FC = () => {
           isActive: true
         });
       } else {
-        // Show beautiful SweetAlert with custom styling
-        Swal.fire({
-          title: 'Firma Bulunamadı',
-          html: `
-            <div style="text-align: center;">
-              <p style="font-size: 16px; color: #595959; margin-bottom: 20px;">
-                <strong style="color: #ff4d4f;">"${tenantSlug}"</strong> adında bir firma bulunamadı.
-              </p>
-              <p style="font-size: 14px; color: #8c8c8c;">
-                Lütfen doğru adresten eriştiğinizden emin olun.
-              </p>
-              <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-                <p style="font-size: 12px; color: #8c8c8c; margin: 0;">
-                  Girmeye çalıştığınız adres:
-                </p>
-                <p style="font-size: 14px; color: #262626; margin: 5px 0 0 0; font-weight: 500;">
-                  ${window.location.hostname}
-                </p>
-              </div>
-            </div>
-          `,
-          icon: 'error',
-          confirmButtonText: 'Ana Sayfaya Dön',
-          confirmButtonColor: '#667eea',
-          showCancelButton: false,
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          customClass: {
-            popup: 'tenant-error-popup',
-            title: 'tenant-error-title',
-            htmlContainer: 'tenant-error-content',
-            confirmButton: 'tenant-error-button'
-          }
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = getMainDomainUrl();
-          }
+        // Set error but don't redirect - show alert on login page
+        setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen doğru adresten eriştiğinizden emin olun.`);
+        // Show mock tenant for demo purposes
+        setTenantInfo({
+          id: '1',
+          slug: tenantSlug!,
+          name: 'Demo Firma',
+          logo: null,
+          primaryColor: '#667eea',
+          secondaryColor: '#764ba2',
+          isActive: false // Mark as inactive to show warning
         });
-        setError('Tenant not found');
       }
       
       setTenantLoading(false);
@@ -150,48 +124,17 @@ export const TenantLogin: React.FC = () => {
           isActive: true
         });
       } else {
-        // Show beautiful SweetAlert for production error
-        Swal.fire({
-          title: 'Bağlantı Hatası',
-          html: `
-            <div style="text-align: center;">
-              <p style="font-size: 16px; color: #595959; margin-bottom: 20px;">
-                <strong style="color: #ff4d4f;">"${tenantSlug}"</strong> firmasına erişilemedi.
-              </p>
-              <p style="font-size: 14px; color: #8c8c8c;">
-                Lütfen daha sonra tekrar deneyin veya yöneticinizle iletişime geçin.
-              </p>
-              <div style="margin-top: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border: 1px solid #ffe58f;">
-                <p style="font-size: 13px; color: #ad6800; margin: 0;">
-                  <strong>İpucu:</strong> Firma adresinizi kontrol edin veya IT departmanınıza başvurun.
-                </p>
-              </div>
-            </div>
-          `,
-          icon: 'warning',
-          confirmButtonText: 'Ana Sayfaya Dön',
-          confirmButtonColor: '#667eea',
-          showCancelButton: true,
-          cancelButtonText: 'Tekrar Dene',
-          cancelButtonColor: '#8c8c8c',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          customClass: {
-            popup: 'tenant-error-popup',
-            title: 'tenant-error-title',
-            htmlContainer: 'tenant-error-content',
-            confirmButton: 'tenant-error-button',
-            cancelButton: 'tenant-retry-button'
-          }
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = getMainDomainUrl();
-          } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Retry fetching tenant info
-            window.location.reload();
-          }
+        // For production, show error but still display login form
+        setError(`"${tenantSlug}" firmasına bağlanılamadı. Lütfen daha sonra tekrar deneyin.`);
+        setTenantInfo({
+          id: '1',
+          slug: tenantSlug!,
+          name: tenantSlug!.charAt(0).toUpperCase() + tenantSlug!.slice(1).replace('-', ' ') + ' Company',
+          logo: null,
+          primaryColor: '#667eea',
+          secondaryColor: '#764ba2',
+          isActive: false // Mark as inactive to show warning
         });
-        setError('Tenant connection error');
       }
       setTenantLoading(false);
     }
@@ -253,20 +196,6 @@ export const TenantLogin: React.FC = () => {
     );
   }
 
-  // Don't show the form if there's an error (alert will handle it)
-  if (error || (!tenantLoading && !tenantInfo)) {
-    return (
-      <div className="tenant-login-container">
-        <div className="loading-wrapper">
-          <Spin
-            indicator={<LoadingOutlined style={{ fontSize: 48 }} />}
-            tip="Yönlendiriliyor..."
-            size="large"
-          />
-        </div>
-      </div>
-    );
-  }
 
   const customStyle = tenantInfo?.primaryColor ? {
     '--primary-color': tenantInfo.primaryColor,
@@ -330,13 +259,55 @@ export const TenantLogin: React.FC = () => {
               <div className="login-form-header">
                 <div className="tenant-badge">
                   <GlobalOutlined />
-                  <span>{tenantSlug}.stocker.app</span>
+                  <span>{tenantSlug}.stoocker.app</span>
                 </div>
                 <h2 className="login-form-title">Hoş Geldiniz</h2>
                 <p className="login-form-subtitle">
-                  Hesabınıza giriş yaparak devam edin
+                  {tenantInfo?.isActive ? 'Hesabınıza giriş yaparak devam edin' : 'Demo Modunda Giriş'}
                 </p>
               </div>
+
+              {/* Show error alert if tenant not found */}
+              {error && (
+                <Alert
+                  message="Firma Doğrulanamadı"
+                  description={
+                    <div>
+                      <p style={{ margin: '8px 0' }}>{error}</p>
+                      {!tenantInfo?.isActive && (
+                        <div style={{ marginTop: 12, padding: '8px 12px', background: '#fff7e6', borderRadius: 4 }}>
+                          <Text type="warning" style={{ fontSize: 13 }}>
+                            <strong>Not:</strong> Demo modunda giriş yapabilirsiniz ancak bazı özellikler kısıtlı olabilir.
+                          </Text>
+                        </div>
+                      )}
+                    </div>
+                  }
+                  type="error"
+                  showIcon
+                  closable
+                  style={{ marginBottom: 24 }}
+                  action={
+                    <Space>
+                      <Button 
+                        size="small" 
+                        onClick={() => window.location.href = getMainDomainUrl()}
+                        icon={<HomeOutlined />}
+                      >
+                        Ana Sayfa
+                      </Button>
+                      <Button 
+                        size="small" 
+                        type="primary"
+                        onClick={() => window.location.reload()}
+                        icon={<ReloadOutlined />}
+                      >
+                        Tekrar Dene
+                      </Button>
+                    </Space>
+                  }
+                />
+              )}
 
               {/* Login Form */}
               <Form
