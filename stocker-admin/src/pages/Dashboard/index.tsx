@@ -73,10 +73,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchDashboardData();
     
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 60 seconds (reduced from 30 to avoid rate limiting)
     const interval = setInterval(() => {
       refreshData();
-    }, 30000);
+    }, 60000);
     
     return () => clearInterval(interval);
   }, []);

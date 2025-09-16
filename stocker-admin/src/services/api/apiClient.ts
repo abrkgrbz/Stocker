@@ -110,6 +110,21 @@ class ApiClient {
           });
         }
 
+        // Handle 429 Rate Limit - retry with exponential backoff
+        if (error.response?.status === 429 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          // Get retry-after header if available
+          const retryAfter = error.response.headers['retry-after'];
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : 2000; // Default 2 seconds
+          
+          console.warn(`⏳ Rate limited. Retrying after ${delay}ms...`);
+          
+          // Wait and retry
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.client(originalRequest);
+        }
+
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (!this.isRefreshing) {

@@ -72,14 +72,29 @@ export const useDashboardStore = create<DashboardState>()(
         set({ loading: true });
         
         try {
-          // Fetch all data in parallel for better performance
+          // Batch requests to avoid rate limiting - max 3 concurrent requests
+          // First batch: Core stats
           await Promise.all([
             get().fetchStats(),
-            get().fetchRevenueOverview(),
             get().fetchTenantStats(),
             get().fetchSystemHealth(),
+          ]);
+          
+          // Small delay between batches to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Second batch: Revenue and users
+          await Promise.all([
+            get().fetchRevenueOverview(),
             get().fetchRecentTenants(),
             get().fetchRecentUsers(),
+          ]);
+          
+          // Small delay
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Third batch: Activities and charts
+          await Promise.all([
             get().fetchActivities(),
             get().fetchChartData(),
           ]);
@@ -204,14 +219,15 @@ export const useDashboardStore = create<DashboardState>()(
   )
 );
 
-// Auto-refresh hook
-export const useAutoRefresh = (intervalMs: number = 30000) => {
-  const refreshData = useDashboardStore((state) => state.refreshData);
-  
-  // Set up auto-refresh
-  if (typeof window !== 'undefined') {
-    setInterval(() => {
-      refreshData();
-    }, intervalMs);
-  }
-};
+// Auto-refresh hook - DISABLED to prevent multiple intervals
+// Use the interval in Dashboard component instead
+// export const useAutoRefresh = (intervalMs: number = 60000) => {
+//   const refreshData = useDashboardStore((state) => state.refreshData);
+//   
+//   // Set up auto-refresh
+//   if (typeof window !== 'undefined') {
+//     setInterval(() => {
+//       refreshData();
+//     }, intervalMs);
+//   }
+// };

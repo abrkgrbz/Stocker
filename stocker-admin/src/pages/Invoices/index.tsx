@@ -58,6 +58,7 @@ import {
   UserOutlined,
   TeamOutlined,
   BankOutlined,
+  PhoneOutlined,
   CreditCardOutlined,
   PayCircleOutlined,
   MoreOutlined,

@@ -424,6 +424,10 @@ const MasterLayout: React.FC = () => {
     fixedHeader: true,
     fixSiderbar: true,
     colorPrimary: '#667eea',
+    contentStyle: {
+      height: 'calc(100vh - 48px)',
+      overflow: 'auto',
+    },
     token: {
       pageContainer: {
         paddingBlockPageContainerContent: 24,
