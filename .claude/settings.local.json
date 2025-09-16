@@ -87,7 +87,8 @@
       "Bash(npm ls:*)",
       "Bash(npm test:*)",
       "Bash(cat:*)",
-      "mcp__serena__read_file"
+      "mcp__serena__read_file",
+      "mcp__serena__replace_regex"
     ],
     "deny": []
   }

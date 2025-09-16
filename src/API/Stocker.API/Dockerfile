@@ -69,16 +69,22 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Create startup script that runs migrations then starts the app
 RUN echo '#!/bin/bash\n\
+echo "Setting up environment variables for Coolify..."\n\
+# Export connection strings if environment variables are present\n\
+if [ -n "$SA_PASSWORD" ] && [ -n "$DB_SERVER" ]; then\n\
+    export ConnectionStrings__MasterConnection="Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    export ConnectionStrings__TenantConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    export ConnectionStrings__DefaultConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    export ConnectionStrings__HangfireConnection="Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    echo "Connection strings set from environment variables"\n\
+fi\n\
 echo "Running database migrations..."\n\
 if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
     echo "Using MasterConnection for migrations"\n\
     ./efbundle --connection "$ConnectionStrings__MasterConnection"\n\
-elif [ -n "$MASTER_DB_CONNECTION" ]; then\n\
-    echo "Using MASTER_DB_CONNECTION for migrations"\n\
-    ./efbundle --connection "$MASTER_DB_CONNECTION"\n\
 else\n\
     echo "Building connection string from environment variables"\n\
-    CONNECTION_STRING="Server=${DB_HOST:-database};Database=${MASTER_DB_NAME:-StockerMasterDb};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"\n\
+    CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
     echo "Using constructed connection string for migrations"\n\
     ./efbundle --connection "$CONNECTION_STRING"\n\
 fi\n\
