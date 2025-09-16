@@ -155,10 +155,11 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       
-      # CORS headers for wildcard subdomains
+      # CORS headers for wildcard subdomains using regex
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization,x-bypass-rate-limit,x-requested-with,x-signalr-user-agent,x-tenant-id,x-tenant-code,x-tenant-subdomain"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://www.stoocker.app,https://admin.stoocker.app,https://master.stoocker.app,https://*.stoocker.app"
+      # Use regex pattern to match all *.stoocker.app subdomains
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlistregex=^https://([a-zA-Z0-9-]+\\.)?stoocker\\.app$$"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
