@@ -60,44 +60,71 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins(
-                    "https://stoocker.app",
-                    "https://www.stoocker.app",
-                    "https://master.stoocker.app",
-                    "https://admin.stoocker.app",
-                    "https://api.stoocker.app"
-                  )
-                  .AllowAnyMethod()
+            policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(_ => true); // SignalR için gerekli
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      // Allow all *.stoocker.app subdomains
+                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
+                      {
+                          return true;
+                      }
+                      
+                      // Also allow localhost for development
+                      if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
+                      {
+                          return true;
+                      }
+                      
+                      return false;
+                  })
+                  .WithExposedHeaders("*");
         });
     
     // SignalR için özel policy
     options.AddPolicy("SignalRPolicy",
         policy =>
         {
-            policy.WithOrigins(
-                    "https://stoocker.app",
-                    "https://www.stoocker.app",
-                    "https://master.stoocker.app",
-                    "https://admin.stoocker.app",
-                    "https://api.stoocker.app"
-                  )
-                  .AllowAnyMethod()
+            policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(_ => true);
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      // Allow all *.stoocker.app subdomains
+                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
+                      {
+                          return true;
+                      }
+                      
+                      // Also allow localhost for development
+                      if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
+                      {
+                          return true;
+                      }
+                      
+                      return false;
+                  })
+                  .WithExposedHeaders("*");
         });
     
-    // Production için geçici olarak tüm origin'lere izin ver
+    // Production için subdomain desteği
     options.AddPolicy("Production",
         policy =>
         {
             policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(_ => true) // Tüm origin'lere izin ver
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      // Allow all *.stoocker.app subdomains in production
+                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
+                      {
+                          return true;
+                      }
+                      
+                      return false;
+                  })
                   .WithExposedHeaders("*"); // Tüm header'ları expose et
         });
 });
