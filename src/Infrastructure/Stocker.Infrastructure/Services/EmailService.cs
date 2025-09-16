@@ -286,17 +286,28 @@ public class EmailService : IEmailService
     {
         try
         {
+            _logger.LogDebug("Fetching email settings from database...");
+            
             // Get settings from database
             var settings = await _masterContext.SystemSettings
                 .Where(s => s.Category == "Email" || s.Key.StartsWith("Email.") || s.Key.StartsWith("Smtp."))
                 .ToListAsync(cancellationToken);
+            
+            _logger.LogDebug("Found {Count} email settings in database", settings.Count);
 
             var emailSettings = new EmailSettings();
 
             // SMTP Settings
             var smtpHost = settings.FirstOrDefault(s => s.Key == "Smtp.Host")?.Value;
             if (!string.IsNullOrEmpty(smtpHost))
+            {
                 emailSettings.SmtpHost = smtpHost;
+                _logger.LogDebug("SMTP Host set to: {Host}", smtpHost);
+            }
+            else
+            {
+                _logger.LogWarning("SMTP Host not found in database settings");
+            }
 
             var smtpPort = settings.FirstOrDefault(s => s.Key == "Smtp.Port")?.Value;
             if (!string.IsNullOrEmpty(smtpPort) && int.TryParse(smtpPort, out var port))
@@ -341,18 +352,45 @@ public class EmailService : IEmailService
             if (!string.IsNullOrEmpty(enableEmail) && bool.TryParse(enableEmail, out var enabled))
                 emailSettings.EnableEmail = enabled;
 
+            _logger.LogInformation("Email settings loaded - Host: {Host}, Port: {Port}, Username: {Username}, Enable: {Enable}", 
+                emailSettings.SmtpHost ?? "NULL", 
+                emailSettings.SmtpPort, 
+                emailSettings.SmtpUsername ?? "NULL",
+                emailSettings.EnableEmail);
+
             return emailSettings;
         }
         catch (DatabaseException ex)
         {
             _logger.LogError(ex, "Database error loading email settings, using default configuration");
             // Return default settings from configuration as fallback
-            return _emailSettings;
+            _logger.LogWarning("Returning fallback email settings from appsettings.json");
+            return _emailSettings ?? new EmailSettings 
+            { 
+                SmtpHost = "mail.privateemail.com",
+                SmtpPort = 465,
+                SmtpUsername = "info@stoocker.app",
+                SmtpPassword = "A.bg010203",
+                EnableSsl = true,
+                FromEmail = "info@stoocker.app",
+                FromName = "Stoocker",
+                EnableEmail = true
+            };
         }
         catch (System.Exception ex)
         {
             _logger.LogError(ex, "Failed to load email settings, using default configuration");
-            return _emailSettings;
+            return _emailSettings ?? new EmailSettings 
+            { 
+                SmtpHost = "mail.privateemail.com",
+                SmtpPort = 465,
+                SmtpUsername = "info@stoocker.app",
+                SmtpPassword = "A.bg010203",
+                EnableSsl = true,
+                FromEmail = "info@stoocker.app",
+                FromName = "Stoocker",
+                EnableEmail = true
+            };
         }
     }
 
