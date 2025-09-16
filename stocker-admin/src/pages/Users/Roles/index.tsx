@@ -41,6 +41,7 @@ import {
   UserOutlined,
   TeamOutlined,
   CrownOutlined,
+  DollarOutlined,
   SettingOutlined,
   KeyOutlined,
   LockOutlined,

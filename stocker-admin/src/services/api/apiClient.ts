@@ -71,6 +71,9 @@ class ApiClient {
         const token = tokenStorage.getToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 Token added to request:', config.url, 'Token exists:', !!token);
+        } else {
+          console.warn('⚠️ No token available for request:', config.url);
         }
 
         // Add request tracking for monitoring

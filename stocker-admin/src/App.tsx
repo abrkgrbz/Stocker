@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import { useAuthStore } from './stores/authStore';
@@ -71,6 +71,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const SentryRoutes = Sentry.withSentryRouting(Routes);
 
 function App() {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  
+  // Check and restore auth state on app mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+  
   return (
     <SentryErrorBoundary>
       <BrowserRouter>
