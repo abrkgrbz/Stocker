@@ -180,8 +180,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 await _emailService.SendWelcomeEmailAsync(
                     email: registration.AdminEmail,
                     userName: $"{registration.AdminFirstName} {registration.AdminLastName}",
-                    tenantName: tenant.Name,
-                    tenantUrl: $"https://{domainName}",
+                    companyName: tenant.Name,
                     cancellationToken);
                     
                 _logger.LogInformation("Welcome email sent to {Email} for tenant {TenantId}", registration.AdminEmail, tenant.Id);
