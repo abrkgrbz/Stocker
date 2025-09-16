@@ -31,9 +31,18 @@ public class GetTenantBySlugQueryHandler : IRequestHandler<GetTenantBySlugQuery,
             // Create full domain to check
             var fullDomain = $"{normalizedSlug}.stoocker.app";
 
-            // Query tenant by Domain, Slug or Identifier
+            // First, check TenantDomains table for custom domains
+            var tenantDomain = await _context.TenantDomains
+                .Where(td => td.DomainName.ToLower() == fullDomain && td.IsActive)
+                .Select(td => new { td.TenantId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            Guid? tenantId = tenantDomain?.TenantId;
+
+            // If not found in TenantDomains, check Tenants table
             var tenant = await _context.Tenants
-                .Where(t => (t.Domain != null && t.Domain.ToLower() == fullDomain) ||
+                .Where(t => (tenantId != null && t.Id == tenantId) ||
+                           (t.Domain != null && t.Domain.ToLower() == fullDomain) ||
                            (t.Slug != null && t.Slug.ToLower() == normalizedSlug) ||
                            t.Identifier.ToLower() == normalizedSlug)
                 .Select(t => new
