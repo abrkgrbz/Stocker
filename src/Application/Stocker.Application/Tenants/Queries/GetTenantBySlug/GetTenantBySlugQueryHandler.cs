@@ -27,17 +27,22 @@ public class GetTenantBySlugQueryHandler : IRequestHandler<GetTenantBySlugQuery,
 
             // Normalize slug
             var normalizedSlug = request.Slug.ToLowerInvariant().Trim();
+            
+            // Create full domain to check
+            var fullDomain = $"{normalizedSlug}.stoocker.app";
 
-            // Query tenant by slug or identifier
+            // Query tenant by Domain, Slug or Identifier
             var tenant = await _context.Tenants
-                .Where(t => t.Identifier.ToLower() == normalizedSlug || 
-                           (t.Slug != null && t.Slug.ToLower() == normalizedSlug))
+                .Where(t => (t.Domain != null && t.Domain.ToLower() == fullDomain) ||
+                           (t.Slug != null && t.Slug.ToLower() == normalizedSlug) ||
+                           t.Identifier.ToLower() == normalizedSlug)
                 .Select(t => new
                 {
                     t.Id,
                     t.Name,
                     t.Identifier,
                     t.Slug,
+                    t.Domain,
                     t.IsActive,
                     t.Settings
                 })
@@ -45,7 +50,7 @@ public class GetTenantBySlugQueryHandler : IRequestHandler<GetTenantBySlugQuery,
 
             if (tenant == null)
             {
-                _logger.LogWarning("No tenant found with slug: {Slug}", request.Slug);
+                _logger.LogWarning("No tenant found with slug: {Slug} or domain: {Domain}", request.Slug, fullDomain);
                 return new GetTenantBySlugResponse
                 {
                     Exists = false,
