@@ -99,7 +99,9 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       setError(null);
 
       // Validate tenant exists via API
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`, {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`;
+      
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -126,8 +128,9 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
         setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen firma adını kontrol edin veya yöneticinizle iletişime geçin.`);
         setLoading(false);
       }
-    } catch (err) {
-      console.error('Tenant validation error:', err);
+    } catch (err: any) {
+      // Debug için alert ekleyelim
+      alert(`Hata: ${err.message || err}`);
       setError('Firma doğrulanamadı. Lütfen tekrar deneyin veya destek ekibiyle iletişime geçin.');
       setLoading(false);
     }
@@ -140,7 +143,9 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
     
     try {
       // Validate tenant exists via API
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${slug}`, {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/tenants/check/${slug}`;
+      
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

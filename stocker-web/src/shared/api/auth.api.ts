@@ -11,7 +11,14 @@ export const authApi = {
       hasPassword: !!data.password
     });
     
-    return apiClient.post<LoginResponse>('/api/auth/login', data).catch((error) => {
+    // If tenant code is provided, set it as header for subdomain login
+    const headers: any = {};
+    if (data.tenantCode) {
+      headers['X-Tenant-Code'] = data.tenantCode;
+      headers['X-Tenant-Id'] = data.tenantCode; // Some endpoints may use this
+    }
+    
+    return apiClient.post<LoginResponse>('/api/auth/login', data, { headers }).catch((error) => {
       console.error('AUTH API - Login error details:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
