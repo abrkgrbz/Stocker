@@ -24,61 +24,46 @@ services:
       - coolify
     
     labels:
-      # Traefik configuration for automatic subdomain routing
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       
-      # Main domain HTTPS routing
+      # Ana domain için router
       - "traefik.http.routers.web-main-secure.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
-      - "traefik.http.routers.web-main-secure.entrypoints=https"  # websecure → https
+      - "traefik.http.routers.web-main-secure.entrypoints=https"
       - "traefik.http.routers.web-main-secure.tls=true"
       - "traefik.http.routers.web-main-secure.tls.certresolver=letsencrypt"
       - "traefik.http.routers.web-main-secure.service=web-service"
       - "traefik.http.routers.web-main-secure.priority=10"
       - "traefik.http.routers.web-main-secure.middlewares=www-redirect"
       
-      # Main domain HTTP routing (redirect to HTTPS)
-      - "traefik.http.routers.web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
-      - "traefik.http.routers.web-main.entrypoints=http"
-      - "traefik.http.routers.web-main.middlewares=web-redirect-https"
-      
-      # Wildcard subdomain HTTPS routing - catches all tenant subdomains
-      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`^{subdomain:[a-z0-9-]+}\\.stoocker\\.app$$`)"
+      # Subdomain'ler için router (düzeltilmiş regex)
+      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
       - "traefik.http.routers.web-wildcard-secure.entrypoints=https"
       - "traefik.http.routers.web-wildcard-secure.tls=true"
       - "traefik.http.routers.web-wildcard-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.web-wildcard-secure.tls.domains[0].main=*.stoocker.app"
       - "traefik.http.routers.web-wildcard-secure.service=web-service"
       - "traefik.http.routers.web-wildcard-secure.priority=5"
-      - "traefik.http.routers.web-wildcard-secure.middlewares=tenant-headers"
       
-      # Wildcard subdomain HTTP routing (redirect to HTTPS)
-      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`^{subdomain:[a-z0-9-]+}\\.stoocker\\.app$$`)"
+      # HTTP -> HTTPS yönlendirmeleri
+      - "traefik.http.routers.web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.web-main.entrypoints=http"
+      - "traefik.http.routers.web-main.middlewares=redirect-https"
+      
+      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
       - "traefik.http.routers.web-wildcard.entrypoints=http"
-      - "traefik.http.routers.web-wildcard.middlewares=web-redirect-https"
+      - "traefik.http.routers.web-wildcard.middlewares=redirect-https"
       
-      # Service definition
+      # Service tanımı
       - "traefik.http.services.web-service.loadbalancer.server.port=80"
-      - "traefik.http.services.web-service.loadbalancer.server.scheme=http"
-      - "traefik.http.services.web-service.loadbalancer.passhostheader=true"
       
-      # Middlewares
-      # HTTPS redirect
-      - "traefik.http.middlewares.web-redirect-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.web-redirect-https.redirectscheme.permanent=true"
+      # Middleware tanımları
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
       
-      # WWW to non-WWW redirect
-      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
-      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$$1"
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)$"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
       - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
-      
-      # Headers middleware for tenant detection
-      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Forwarded-Host={subdomain}.stoocker.app"
-      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Tenant={subdomain}"
-      
-      # Coolify specific labels
-      - "coolify.managed=true"
-      - "coolify.type=application"
-      - "coolify.name=stocker-web"
       
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
