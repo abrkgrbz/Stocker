@@ -30,12 +30,12 @@ namespace Stocker.Infrastructure.Middleware
                         uri.Host.Contains("127.0.0.1"))
                     {
                         // Add CORS headers for OPTIONS request
-                        context.Response.Headers.Add("Access-Control-Allow-Origin", origin);
-                        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-                        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-                        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With, X-Tenant-Code, X-Tenant-Id, X-Tenant-Subdomain");
-                        context.Response.Headers.Add("Access-Control-Max-Age", "3600");
-                        context.Response.Headers.Add("Access-Control-Expose-Headers", "*");
+                        context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
+                        context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+                        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+                        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With, X-Tenant-Code, X-Tenant-Id, X-Tenant-Subdomain");
+                        context.Response.Headers.Append("Access-Control-Max-Age", "3600");
+                        context.Response.Headers.Append("Access-Control-Expose-Headers", "*");
                     }
                 }
                 
@@ -55,12 +55,12 @@ namespace Stocker.Infrastructure.Middleware
                     uri.Host.Contains("127.0.0.1"))
                 {
                     // Add CORS headers
-                    context.Response.Headers.Add("Access-Control-Allow-Origin", origin);
-                    context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-                    context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-                    context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With, X-Tenant-Code, X-Tenant-Id, X-Tenant-Subdomain");
-                    context.Response.Headers.Add("Access-Control-Max-Age", "3600");
-                    context.Response.Headers.Add("Access-Control-Expose-Headers", "*");
+                    context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
+                    context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+                    context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+                    context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Requested-With, X-Tenant-Code, X-Tenant-Id, X-Tenant-Subdomain");
+                    context.Response.Headers.Append("Access-Control-Max-Age", "3600");
+                    context.Response.Headers.Append("Access-Control-Expose-Headers", "*");
                 }
             }
 

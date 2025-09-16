@@ -116,7 +116,14 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // Tüm stoocker.app subdomain'lerini dinamik olarak kabul et
-            policy.AllowAnyMethod()
+            policy.WithOrigins(
+                    "https://stoocker.app",
+                    "https://www.stoocker.app",
+                    "https://api.stoocker.app",
+                    "https://master.stoocker.app",
+                    "https://abg-teknoloji.stoocker.app"
+                  )
+                  .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
                   .SetIsOriginAllowed(origin =>
@@ -125,10 +132,17 @@ builder.Services.AddCors(options =>
                       if (string.IsNullOrEmpty(origin))
                           return false;
                       
-                      var uri = new Uri(origin);
-                      return uri.Host.EndsWith(".stoocker.app") || 
-                             uri.Host == "stoocker.app" ||
-                             uri.Host == "www.stoocker.app";
+                      try
+                      {
+                          var uri = new Uri(origin);
+                          return uri.Host.EndsWith(".stoocker.app") || 
+                                 uri.Host == "stoocker.app" ||
+                                 uri.Host == "www.stoocker.app";
+                      }
+                      catch
+                      {
+                          return false;
+                      }
                   })
                   .WithExposedHeaders("*");
         });
@@ -515,25 +529,11 @@ app.UseSwaggerUI(c =>
     c.DocumentTitle = "Stocker API Documentation";
 });
 
-// Add custom CORS middleware BEFORE UseCors
-app.UseMiddleware<Stocker.Infrastructure.Middleware.CustomCorsMiddleware>();
-
 // Use CORS - En başta olmalı
-// Check for production domains in the current host
-var currentHost = app.Configuration["ASPNETCORE_URLS"] ?? "";
-var isProductionDomain = currentHost.Contains("stoocker.app") || 
-                        app.Environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase);
+app.UseCors("Production"); // Always use Production CORS policy which handles all subdomains
 
-if (isProductionDomain)
-{
-    app.Logger.LogInformation("Using Production CORS policy");
-    app.UseCors("Production");
-}
-else
-{
-    app.Logger.LogInformation("Using AllowAll CORS policy");
-    app.UseCors("AllowAll");
-}
+// Add custom CORS middleware as fallback for OPTIONS requests
+app.UseMiddleware<Stocker.Infrastructure.Middleware.CustomCorsMiddleware>();
 
 // Enable WebSockets for SignalR with proper configuration
 app.UseWebSockets(new WebSocketOptions
@@ -626,7 +626,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.MapControllers();
 
 // Map SignalR Hubs with CORS
-var corsPolicy = isProductionDomain ? "Production" : "AllowAll";
+var corsPolicy = "Production"; // Always use Production policy
 app.MapHub<ValidationHub>("/hubs/validation", options =>
 {
     options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
