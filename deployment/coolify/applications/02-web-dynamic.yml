@@ -36,8 +36,8 @@ services:
       - "traefik.http.routers.web-main-secure.priority=10"
       - "traefik.http.routers.web-main-secure.middlewares=www-redirect"
       
-      # Subdomain'ler için router (wildcard SSL ile)
-      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
+      # Subdomain'ler için router (wildcard SSL ile) - Traefik v3 syntax
+      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`{subdomain:[a-z0-9-]+}\\.stoocker\\.app`)"
       - "traefik.http.routers.web-wildcard-secure.entrypoints=https"
       - "traefik.http.routers.web-wildcard-secure.tls=true"
       - "traefik.http.routers.web-wildcard-secure.tls.certresolver=cloudflare"
@@ -51,7 +51,7 @@ services:
       - "traefik.http.routers.web-main.entrypoints=http"
       - "traefik.http.routers.web-main.middlewares=redirect-https"
       
-      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.stoocker.app`)"
+      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}\\.stoocker\\.app`)"
       - "traefik.http.routers.web-wildcard.entrypoints=http"
       - "traefik.http.routers.web-wildcard.middlewares=redirect-https"
       
