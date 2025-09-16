@@ -42,34 +42,34 @@ interface TenantLoginModalProps {
   onClose: () => void;
 }
 
-// Mock popular tenants for demonstration
+// Popular tenants for quick access
 const popularTenants = [
   { 
-    slug: 'demo', 
-    name: 'Demo Company', 
+    slug: 'abg-teknoloji', 
+    name: 'ABG Teknoloji', 
     users: 150,
     industry: 'Teknoloji',
+    tag: 'Premium',
+    tagColor: 'gold',
+    description: 'Yazılım geliştirme'
+  },
+  { 
+    slug: 'demo', 
+    name: 'Demo Firma', 
+    users: 50,
+    industry: 'Demo',
     tag: 'Deneme',
     tagColor: 'green',
     description: 'Ücretsiz deneme hesabı'
   },
   { 
-    slug: 'acme', 
-    name: 'ACME Corporation', 
-    users: 320,
-    industry: 'E-ticaret',
-    tag: 'Premium',
-    tagColor: 'gold',
-    description: 'Kurumsal çözüm'
-  },
-  { 
-    slug: 'techstart', 
-    name: 'TechStart Inc.', 
-    users: 89,
-    industry: 'Startup',
-    tag: 'Büyüyen',
+    slug: 'test', 
+    name: 'Test Company', 
+    users: 25,
+    industry: 'Test',
+    tag: 'Test',
     tagColor: 'blue',
-    description: 'Hızlı büyüyen işletme'
+    description: 'Test amaçlı kullanım'
   },
 ];
 
@@ -98,25 +98,78 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       setLoading(true);
       setError(null);
 
-      // TODO: Validate tenant exists via API
-      // const response = await fetch(`/api/tenants/validate/${tenantSlug}`);
-      // if (!response.ok) {
-      //   throw new Error('Tenant not found');
-      // }
-
-      // Redirect to tenant subdomain
-      setTimeout(() => {
-        redirectToTenantDomain(tenantSlug);
-      }, 500);
+      // Validate tenant exists via API
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Tenant not found');
+      }
+      
+      const data = await response.json();
+      
+      if (data.exists && data.isActive) {
+        // Tenant exists and is active, redirect to subdomain
+        setTimeout(() => {
+          redirectToTenantDomain(tenantSlug);
+        }, 500);
+      } else if (data.exists && !data.isActive) {
+        // Tenant exists but is not active
+        setError(`"${tenantSlug}" firması şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.`);
+        setLoading(false);
+      } else {
+        // Tenant does not exist
+        setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen firma adını kontrol edin veya yöneticinizle iletişime geçin.`);
+        setLoading(false);
+      }
     } catch (err) {
-      setError('Firma bulunamadı. Lütfen firma kısa adını kontrol edin.');
+      console.error('Tenant validation error:', err);
+      setError('Firma doğrulanamadı. Lütfen tekrar deneyin veya destek ekibiyle iletişime geçin.');
       setLoading(false);
     }
   };
 
-  const handleQuickAccess = (slug: string) => {
+  const handleQuickAccess = async (slug: string) => {
     setTenantSlug(slug);
-    redirectToTenantDomain(slug);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Validate tenant exists via API
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${slug}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Tenant not found');
+      }
+      
+      const data = await response.json();
+      
+      if (data.exists && data.isActive) {
+        // Tenant exists and is active, redirect to subdomain
+        redirectToTenantDomain(slug);
+      } else if (data.exists && !data.isActive) {
+        // Tenant exists but is not active
+        setError(`"${slug}" firması şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.`);
+        setLoading(false);
+      } else {
+        // Tenant does not exist
+        setError(`"${slug}" adında bir firma bulunamadı.`);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Tenant validation error:', err);
+      setError('Firma doğrulanamadı. Lütfen tekrar deneyin.');
+      setLoading(false);
+    }
   };
 
   return (

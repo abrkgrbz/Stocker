@@ -69,6 +69,7 @@ export const TenantLogin: React.FC = () => {
   const fetchTenantInfo = async () => {
     try {
       setTenantLoading(true);
+      setError(null); // Clear any previous errors
       
       // Check if tenant exists - make actual API call
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`, {
@@ -283,29 +284,11 @@ export const TenantLogin: React.FC = () => {
                       )}
                     </div>
                   }
-                  type="error"
+                  type="warning"
                   showIcon
                   closable
+                  onClose={() => setError(null)}
                   style={{ marginBottom: 24 }}
-                  action={
-                    <Space>
-                      <Button 
-                        size="small" 
-                        onClick={() => window.location.href = getMainDomainUrl()}
-                        icon={<HomeOutlined />}
-                      >
-                        Ana Sayfa
-                      </Button>
-                      <Button 
-                        size="small" 
-                        type="primary"
-                        onClick={() => window.location.reload()}
-                        icon={<ReloadOutlined />}
-                      >
-                        Tekrar Dene
-                      </Button>
-                    </Space>
-                  }
                 />
               )}
 
