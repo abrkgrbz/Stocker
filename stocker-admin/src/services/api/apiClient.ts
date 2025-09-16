@@ -235,13 +235,17 @@ class ApiClient {
 
   // Public API methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await this.client.post<ApiResponse<AuthResponse>>('/api/auth/login', credentials);
-    
-    if (!response.data.success || !response.data.data) {
-      throw new AppError(response.data.message || 'Login failed', ERROR_CODES.INVALID_CREDENTIALS);
+    try {
+      // Backend returns AuthResponse directly on success, not wrapped in ApiResponse
+      const response = await this.client.post<AuthResponse>('/api/auth/login', credentials);
+      return response.data;
+    } catch (error: any) {
+      // On error, backend returns { success: false, message: string }
+      if (error.response?.data?.message) {
+        throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
+      }
+      throw new AppError('Login failed', ERROR_CODES.INVALID_CREDENTIALS);
     }
-    
-    return response.data.data;
   }
 
   async logout(): Promise<void> {
