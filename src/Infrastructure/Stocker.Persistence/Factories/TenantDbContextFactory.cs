@@ -27,13 +27,6 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public async Task<ITenantDbContext> CreateDbContextAsync(Guid tenantId)
     {
-        // Check if tenantId is empty (default Guid)
-        if (tenantId == Guid.Empty)
-        {
-            _logger.LogError("Cannot create TenantDbContext with empty tenant ID. This usually happens when accessing tenant-specific endpoints without proper tenant resolution.");
-            throw new InvalidOperationException("Tenant ID cannot be empty. Please ensure the request includes proper tenant information (via subdomain, header, or authentication).");
-        }
-        
         var connectionString = await GetTenantConnectionStringAsync(tenantId);
         
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();

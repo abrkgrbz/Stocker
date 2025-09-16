@@ -43,15 +43,23 @@ public class EnhancedAuditService : IAuditService, IDisposable
         _cacheService = cacheService;
         _logger = logger;
         
-        // Initialize channel for async processing
-        _auditChannel = Channel.CreateUnbounded<AuditLogEntry>(new UnboundedChannelOptions
+        // Only initialize processing if we have a valid tenant context
+        if (_context != null)
         {
-            SingleReader = true,
-            SingleWriter = false
-        });
-        
-        _cancellationTokenSource = new CancellationTokenSource();
-        _processingTask = ProcessAuditLogsAsync(_cancellationTokenSource.Token);
+            // Initialize channel for async processing
+            _auditChannel = Channel.CreateUnbounded<AuditLogEntry>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false
+            });
+            
+            _cancellationTokenSource = new CancellationTokenSource();
+            _processingTask = ProcessAuditLogsAsync(_cancellationTokenSource.Token);
+        }
+        else
+        {
+            _logger.LogDebug("EnhancedAuditService initialized without tenant context - audit logging disabled for this request");
+        }
     }
 
     public async Task LogAsync(
@@ -64,6 +72,13 @@ public class EnhancedAuditService : IAuditService, IDisposable
     {
         try
         {
+            // Skip audit logging if no tenant context available
+            if (_context == null || _auditChannel == null)
+            {
+                _logger.LogDebug("Skipping audit log - no tenant context available");
+                return;
+            }
+            
             if (!Guid.TryParse(_currentUserService.TenantId, out var tenantId) || tenantId == Guid.Empty)
             {
                 _logger.LogWarning("Cannot create audit log without tenant ID");
@@ -318,19 +333,29 @@ public class EnhancedAuditService : IAuditService, IDisposable
 
     public void Dispose()
     {
-        _auditChannel.Writer.TryComplete();
-        _cancellationTokenSource.Cancel();
-        
-        try
+        if (_auditChannel != null)
         {
-            _processingTask.Wait(TimeSpan.FromSeconds(5));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during audit service disposal");
+            _auditChannel.Writer.TryComplete();
         }
         
-        _cancellationTokenSource.Dispose();
+        if (_cancellationTokenSource != null)
+        {
+            _cancellationTokenSource.Cancel();
+        }
+        
+        if (_processingTask != null)
+        {
+            try
+            {
+                _processingTask.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during audit service disposal");
+            }
+        }
+        
+        _cancellationTokenSource?.Dispose();
     }
 
     private class AuditLogEntry

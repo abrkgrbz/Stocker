@@ -118,13 +118,9 @@ public static class ServiceCollectionExtensions
                 }
                 
                 // For non-tenant specific operations or when tenant is not yet resolved
-                // Create with a default/empty context
-                logger?.LogWarning("No tenant ID available, attempting to create default context with Guid.Empty");
-                var contextFactory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
-                // Task.Run ile deadlock'ı önle
-                var defaultContext = Task.Run(async () => await contextFactory.CreateDbContextAsync(Guid.Empty)).GetAwaiter().GetResult();
-                logger?.LogWarning("Default TenantUnitOfWork created with empty tenant ID - this may cause issues!");
-                return new TenantUnitOfWork((TenantDbContext)defaultContext);
+                // Return null - tenant-specific operations should not be used without a valid tenant
+                logger?.LogInformation("No tenant ID available for ITenantUnitOfWork - returning null. This is normal for public/master endpoints.");
+                return null;
             }
             catch (Exception ex)
             {
@@ -145,16 +141,13 @@ public static class ServiceCollectionExtensions
             var factory = serviceProvider.GetRequiredService<ITenantDbContextFactory>();
             var tenantId = tenantService?.GetCurrentTenantId();
             
-            // If no tenant ID is available (e.g., during login), return a default context
-            // This context won't be used for actual operations but prevents DI errors
+            // If no tenant ID is available (e.g., during login), return null
+            // Tenant-specific operations should not be used without a valid tenant
             if (!tenantId.HasValue || tenantId.Value == Guid.Empty)
             {
                 var logger = serviceProvider.GetService<ILogger<TenantDbContext>>();
-                logger?.LogDebug("Creating TenantDbContext with empty tenant ID for non-tenant operations");
-                
-                // Create a context with empty tenant ID - it won't be used for actual DB operations
-                var defaultContext = Task.Run(async () => await factory.CreateDbContextAsync(Guid.Empty)).GetAwaiter().GetResult();
-                return (TenantDbContext)defaultContext;
+                logger?.LogDebug("No tenant ID available for TenantDbContext - returning null. This is normal for public/master endpoints.");
+                return null;
             }
             
             // Use Task.Run to avoid deadlock
@@ -168,7 +161,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         
         // Register DbContext interfaces for Application layer
-        services.AddScoped<ITenantDbContext>(provider => provider.GetRequiredService<TenantDbContext>());
+        services.AddScoped<ITenantDbContext>(provider => 
+        {
+            var context = provider.GetService<TenantDbContext>();
+            return context; // Can be null for public/master endpoints
+        });
         services.AddScoped<IMasterDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
         
