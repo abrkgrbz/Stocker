@@ -354,18 +354,22 @@ export class AuditLogger {
    * Send log to server
    */
   private async sendToServer(log: AuditLog): Promise<void> {
-    try {
-      // In production, send to audit endpoint
-      await fetch('/api/audit/log', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(log),
-      });
-    } catch (error) {
-      console.error('Failed to send audit log to server:', error);
-    }
+    // TODO: Implement audit log endpoint in backend
+    // For now, just store locally to prevent 502 errors
+    return;
+    
+    // try {
+    //   // In production, send to audit endpoint
+    //   await fetch('/api/audit/log', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(log),
+    //   });
+    // } catch (error) {
+    //   console.error('Failed to send audit log to server:', error);
+    // }
   }
   
   /**
