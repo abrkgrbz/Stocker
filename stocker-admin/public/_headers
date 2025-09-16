@@ -1,0 +1,49 @@
+/*
+  Content-Type: text/html; charset=UTF-8
+  X-Content-Type-Options: nosniff
+  
+/*.js
+  Content-Type: application/javascript; charset=UTF-8
+  X-Content-Type-Options: nosniff
+  
+/*.mjs
+  Content-Type: application/javascript; charset=UTF-8
+  X-Content-Type-Options: nosniff
+  
+/*.css
+  Content-Type: text/css; charset=UTF-8
+  X-Content-Type-Options: nosniff
+  
+/*.json
+  Content-Type: application/json; charset=UTF-8
+  X-Content-Type-Options: nosniff
+  
+/*.woff2
+  Content-Type: font/woff2
+  
+/*.woff
+  Content-Type: font/woff
+  
+/*.ttf
+  Content-Type: font/ttf
+  
+/*.svg
+  Content-Type: image/svg+xml
+  
+/*.png
+  Content-Type: image/png
+  
+/*.jpg
+  Content-Type: image/jpeg
+  
+/*.jpeg
+  Content-Type: image/jpeg
+  
+/*.gif
+  Content-Type: image/gif
+  
+/*.ico
+  Content-Type: image/x-icon
+  
+/*.webp
+  Content-Type: image/webp

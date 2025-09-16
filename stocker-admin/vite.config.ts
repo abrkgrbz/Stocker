@@ -77,8 +77,13 @@ export default defineConfig({
           }
           return `assets/[name].[hash][extname]`;
         },
+        // Ensure proper module format for ES modules
+        entryFileNames: 'js/[name].[hash].js',
+        chunkFileNames: 'js/[name].[hash].js',
       },
     },
+    // Ensure proper MIME types
+    assetsInlineLimit: 0, // Don't inline assets to avoid MIME type issues
     // Performance optimizations
     reportCompressedSize: false, // Faster builds
     chunkSizeWarningLimit: 1000, // 1MB warning limit
