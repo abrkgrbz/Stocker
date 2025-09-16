@@ -6,7 +6,7 @@ using Stocker.Application.Common.Exceptions;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Pagination;
-using Stocker.API.Controllers.Tenant.DTOs;
+using Stocker.API.DTOs.Tenant;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -278,45 +278,4 @@ public class CustomersController : ControllerBase
 
         return NoContent();
     }
-}
-
-namespace Stocker.API.Controllers.Tenant.DTOs;
-
-public class CustomerDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
-    public string Street { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string State { get; set; } = string.Empty;
-    public string PostalCode { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
-    public string? TaxNumber { get; set; }
-    public string? TaxOffice { get; set; }
-    public decimal CreditLimit { get; set; }
-    public decimal CurrentBalance { get; set; }
-    public bool IsActive { get; set; }
-}
-
-public class CreateCustomerDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
-    public string Street { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string State { get; set; } = string.Empty;
-    public string PostalCode { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
-    public string? TaxNumber { get; set; }
-    public string? TaxOffice { get; set; }
-}
-
-public class UpdateCustomerDto
-{
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
 }
