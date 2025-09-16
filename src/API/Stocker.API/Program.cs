@@ -65,6 +65,9 @@ builder.Services.AddCors(options =>
                   .AllowCredentials()
                   .SetIsOriginAllowed(origin =>
                   {
+                      if (string.IsNullOrEmpty(origin))
+                          return false;
+                          
                       // Allow all *.stoocker.app subdomains
                       if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
                       {
@@ -112,20 +115,22 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Production",
         policy =>
         {
-            policy.SetIsOriginAllowed(origin =>
-                  {
-                      // Allow all *.stoocker.app subdomains in production
-                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
-                      {
-                          return true;
-                      }
-                      
-                      return false;
-                  })
-                  .AllowAnyMethod()
+            // Tüm stoocker.app subdomain'lerini dinamik olarak kabul et
+            policy.AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .WithExposedHeaders("*"); // Tüm header'ları expose et
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      // Allow all *.stoocker.app subdomains
+                      if (string.IsNullOrEmpty(origin))
+                          return false;
+                      
+                      var uri = new Uri(origin);
+                      return uri.Host.EndsWith(".stoocker.app") || 
+                             uri.Host == "stoocker.app" ||
+                             uri.Host == "www.stoocker.app";
+                  })
+                  .WithExposedHeaders("*");
         });
 });
 
