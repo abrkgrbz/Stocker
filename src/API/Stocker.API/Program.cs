@@ -532,8 +532,11 @@ app.UseSwaggerUI(c =>
 // Use CORS - En başta olmalı
 app.UseCors("Production"); // Always use Production CORS policy which handles all subdomains
 
-// Add custom CORS middleware as fallback for OPTIONS requests
+// Add custom CORS middleware as fallback for OPTIONS requests - CRITICAL FOR SUBDOMAIN SUPPORT
 app.UseMiddleware<Stocker.Infrastructure.Middleware.CustomCorsMiddleware>();
+
+// Log to verify middleware is loaded
+app.Logger.LogInformation("CustomCorsMiddleware has been added to the pipeline");
 
 // Enable WebSockets for SignalR with proper configuration
 app.UseWebSockets(new WebSocketOptions
