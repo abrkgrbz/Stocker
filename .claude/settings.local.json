@@ -89,7 +89,8 @@
       "Bash(cat:*)",
       "mcp__serena__read_file",
       "mcp__serena__replace_regex",
-      "mcp__serena__find_file"
+      "mcp__serena__find_file",
+      "mcp__serena__activate_project"
     ],
     "deny": []
   }

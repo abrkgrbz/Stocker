@@ -101,18 +101,36 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       // Validate tenant exists via API
       const apiUrl = `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`;
       
+      console.log('Fetching URL:', apiUrl);
+      console.log('API Base URL:', import.meta.env.VITE_API_URL);
+      
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
       });
       
+      // First, get the response as text to see what we're receiving
+      const responseText = await response.text();
+      console.log('Raw response:', responseText.substring(0, 500)); // First 500 chars for debugging
+      
       if (!response.ok) {
+        console.error('Response not OK:', response.status, responseText);
         throw new Error('Tenant not found');
       }
       
-      const data = await response.json();
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        console.error('Response was:', responseText);
+        throw new Error('Invalid response format from server');
+      }
       
       if (data.exists && data.isActive) {
         // Tenant exists and is active, redirect to subdomain
@@ -129,9 +147,21 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
         setLoading(false);
       }
     } catch (err: any) {
-      // Debug için alert ekleyelim
-      alert(`Hata: ${err.message || err}`);
-      setError('Firma doğrulanamadı. Lütfen tekrar deneyin veya destek ekibiyle iletişime geçin.');
+      console.error('Tenant validation error details:', {
+        error: err,
+        message: err.message,
+        apiUrl: `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`,
+        envApiUrl: import.meta.env.VITE_API_URL
+      });
+      
+      // Check if it's a parsing error (HTML instead of JSON)
+      if (err.message && err.message.includes('Unexpected token')) {
+        setError('API bağlantı hatası. Sistem yöneticisi ile iletişime geçin. (HTML response received instead of JSON)');
+      } else if (err.message === 'Tenant not found') {
+        setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen firma adını kontrol edin.`);
+      } else {
+        setError('Firma doğrulanamadı. Lütfen tekrar deneyin veya destek ekibiyle iletişime geçin.');
+      }
       setLoading(false);
     }
   };
@@ -149,14 +179,29 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
       });
       
+      // First, get the response as text to see what we're receiving
+      const responseText = await response.text();
+      console.log('Raw response:', responseText.substring(0, 500)); // First 500 chars for debugging
+      
       if (!response.ok) {
+        console.error('Response not OK:', response.status, responseText);
         throw new Error('Tenant not found');
       }
       
-      const data = await response.json();
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        console.error('Response was:', responseText);
+        throw new Error('Invalid response format from server');
+      }
       
       if (data.exists && data.isActive) {
         // Tenant exists and is active, redirect to subdomain
