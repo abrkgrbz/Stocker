@@ -24,39 +24,42 @@ services:
       - coolify
     
     labels:
+      # COOLIFY WILDCARD CONFIGURATION
+      # IMPORTANT: Leave FQDN empty in Coolify UI for this to work
+      
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
       
       # Ana domain için router
-      - "traefik.http.routers.web-main-secure.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
-      - "traefik.http.routers.web-main-secure.entrypoints=https"
-      - "traefik.http.routers.web-main-secure.tls=true"
-      - "traefik.http.routers.web-main-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.web-main-secure.service=web-service"
-      - "traefik.http.routers.web-main-secure.priority=10"
-      - "traefik.http.routers.web-main-secure.middlewares=www-redirect"
+      - "traefik.http.routers.stocker-web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-web-main.entrypoints=https"
+      - "traefik.http.routers.stocker-web-main.tls=true"
+      - "traefik.http.routers.stocker-web-main.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-web-main.service=stocker-web-service"
+      - "traefik.http.routers.stocker-web-main.priority=10"
+      - "traefik.http.routers.stocker-web-main.middlewares=www-redirect"
       
-      # Subdomain'ler için router (wildcard SSL ile) - Traefik v3 syntax
-      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`{subdomain:[a-z0-9-]+}\\.stoocker\\.app`)"
-      - "traefik.http.routers.web-wildcard-secure.entrypoints=https"
-      - "traefik.http.routers.web-wildcard-secure.tls=true"
-      - "traefik.http.routers.web-wildcard-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.web-wildcard-secure.tls.domains[0].main=*.stoocker.app"
-      - "traefik.http.routers.web-wildcard-secure.tls.domains[0].sans=stoocker.app"
-      - "traefik.http.routers.web-wildcard-secure.service=web-service"
-      - "traefik.http.routers.web-wildcard-secure.priority=5"
+      # Wildcard subdomain router - Traefik v3 için doğru syntax
+      - "traefik.http.routers.stocker-web-wildcard.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-web-wildcard.entrypoints=https"
+      - "traefik.http.routers.stocker-web-wildcard.tls=true"
+      - "traefik.http.routers.stocker-web-wildcard.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-web-wildcard.tls.domains[0].main=*.stoocker.app"
+      - "traefik.http.routers.stocker-web-wildcard.tls.domains[0].sans=stoocker.app"
+      - "traefik.http.routers.stocker-web-wildcard.service=stocker-web-service"
+      - "traefik.http.routers.stocker-web-wildcard.priority=5"
       
       # HTTP -> HTTPS yönlendirmeleri
-      - "traefik.http.routers.web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
-      - "traefik.http.routers.web-main.entrypoints=http"
-      - "traefik.http.routers.web-main.middlewares=redirect-https"
+      - "traefik.http.routers.stocker-web-main-http.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-web-main-http.entrypoints=http"
+      - "traefik.http.routers.stocker-web-main-http.middlewares=redirect-https"
       
-      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}\\.stoocker\\.app`)"
-      - "traefik.http.routers.web-wildcard.entrypoints=http"
-      - "traefik.http.routers.web-wildcard.middlewares=redirect-https"
+      - "traefik.http.routers.stocker-web-wildcard-http.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-web-wildcard-http.entrypoints=http"
+      - "traefik.http.routers.stocker-web-wildcard-http.middlewares=redirect-https"
       
       # Service tanımı
-      - "traefik.http.services.web-service.loadbalancer.server.port=80"
+      - "traefik.http.services.stocker-web-service.loadbalancer.server.port=80"
       
       # Middleware tanımları
       - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
