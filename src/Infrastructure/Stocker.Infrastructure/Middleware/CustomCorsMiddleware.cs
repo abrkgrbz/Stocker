@@ -67,7 +67,8 @@ namespace Stocker.Infrastructure.Middleware
                 }
                 
                 context.Response.StatusCode = 200;
-                await context.Response.WriteAsync(string.Empty);
+                context.Response.ContentType = "text/plain; charset=utf-8";
+                await context.Response.WriteAsync(string.Empty, System.Text.Encoding.UTF8);
                 return;
             }
 

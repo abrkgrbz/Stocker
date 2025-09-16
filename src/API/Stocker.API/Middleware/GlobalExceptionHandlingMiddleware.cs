@@ -41,14 +41,15 @@ public class GlobalExceptionHandlingMiddleware
         var response = CreateErrorResponse(exception);
         
         context.Response.StatusCode = response.StatusCode;
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType = "application/json; charset=utf-8";
 
         var jsonResponse = JsonSerializer.Serialize(response.ProblemDetails, new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
 
-        await context.Response.WriteAsync(jsonResponse);
+        await context.Response.WriteAsync(jsonResponse, System.Text.Encoding.UTF8);
     }
 
     private (int StatusCode, ProblemDetails ProblemDetails) CreateErrorResponse(Exception exception)
