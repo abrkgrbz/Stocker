@@ -30,6 +30,8 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '../../../../utils/tenant';
+import { useAuthStore } from '@/app/store/auth.store';
+import { showApiResponse } from '@/shared/utils/sweetAlert';
 import './style.css';
 
 const { Title, Text, Link } = Typography;
@@ -47,6 +49,7 @@ export const TenantLogin: React.FC = () => {
   const [tenantLoading, setTenantLoading] = useState(true);
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { login } = useAuthStore();
 
   const tenantSlug = getTenantSlugFromDomain();
 
@@ -64,25 +67,52 @@ export const TenantLogin: React.FC = () => {
   const fetchTenantInfo = async () => {
     try {
       setTenantLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/tenants/${tenantSlug}`);
-      // const data = await response.json();
       
-      // Mock data for now
-      setTimeout(() => {
+      // Check if tenant exists - make actual API call
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants/check/${tenantSlug}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Tenant not found');
+      }
+      
+      const data = await response.json();
+      
+      if (data.exists && data.isActive) {
+        setTenantInfo({
+          id: data.id,
+          slug: tenantSlug!,
+          name: data.name || tenantSlug!,
+          logo: data.logo,
+          primaryColor: data.primaryColor || '#667eea',
+          secondaryColor: data.secondaryColor || '#764ba2',
+          isActive: true
+        });
+      } else {
+        setError(`"${tenantSlug}" adında bir firma bulunamadı. Lütfen doğru adresten eriştiğinizden emin olun.`);
+      }
+      
+      setTenantLoading(false);
+    } catch (err) {
+      console.error('Tenant fetch error:', err);
+      // For development, allow login even if tenant check fails
+      if (import.meta.env.DEV) {
         setTenantInfo({
           id: '1',
           slug: tenantSlug!,
-          name: tenantSlug!.charAt(0).toUpperCase() + tenantSlug!.slice(1) + ' Company',
+          name: tenantSlug!.charAt(0).toUpperCase() + tenantSlug!.slice(1).replace('-', ' ') + ' Company',
           logo: null,
           primaryColor: '#667eea',
           secondaryColor: '#764ba2',
           isActive: true
         });
-        setTenantLoading(false);
-      }, 500);
-    } catch (err) {
-      setError('Tenant bulunamadı veya aktif değil');
+      } else {
+        setError(`"${tenantSlug}" adında bir firma bulunamadı veya aktif değil.`);
+      }
       setTenantLoading(false);
     }
   };
@@ -91,26 +121,40 @@ export const TenantLogin: React.FC = () => {
     try {
       setLoading(true);
       
-      // TODO: Implement actual login API call
-      // const response = await fetch(`/api/tenants/${tenantSlug}/login`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(values)
-      // });
+      // Set tenant context for API calls
+      localStorage.setItem('X-Tenant-Code', tenantSlug!);
+      localStorage.setItem('current_tenant', tenantSlug!);
       
-      // Mock login
+      // Use auth store login
+      const loginData = {
+        email: values.email,
+        password: values.password,
+        tenantCode: tenantSlug
+      };
+      
+      await login(loginData);
+      
+      message.success('Giriş başarılı!');
+      
+      // Wait for auth state to update
       setTimeout(() => {
-        message.success('Giriş başarılı!');
-        // Store tenant context
-        localStorage.setItem('current_tenant', tenantSlug!);
-        localStorage.setItem('auth_token', 'mock_token_123');
-        
-        // Redirect to dashboard
-        navigate('/dashboard');
-        setLoading(false);
-      }, 1000);
-    } catch (err) {
-      message.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+        // For subdomain, redirect to clean URL
+        window.location.href = '/dashboard';
+      }, 500);
+      
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      // Show detailed error
+      if (err.response?.data?.message) {
+        message.error(err.response.data.message);
+      } else if (err.message) {
+        message.error(err.message);
+      } else {
+        message.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+      }
+      
       setLoading(false);
     }
   };
@@ -132,21 +176,38 @@ export const TenantLogin: React.FC = () => {
   if (error || !tenantInfo?.isActive) {
     return (
       <div className="tenant-login-container">
-        <Card className="error-card">
+        <Card className="error-card" style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center' }}>
+          <div style={{ marginBottom: 24 }}>
+            <GlobalOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
+          </div>
           <Alert
-            message="Erişim Hatası"
-            description={error || 'Bu tenant aktif değil veya bulunamadı.'}
+            message="Firma Bulunamadı"
+            description={
+              <div>
+                <p style={{ marginBottom: 12 }}>{error || 'Bu firma aktif değil veya bulunamadı.'}</p>
+                <p style={{ marginBottom: 0, fontSize: 12, color: '#8c8c8c' }}>
+                  URL: <strong>{window.location.hostname}</strong>
+                </p>
+              </div>
+            }
             type="error"
-            showIcon
+            showIcon={false}
+            style={{ marginBottom: 24 }}
           />
-          <Button
-            type="primary"
-            icon={<HomeOutlined />}
-            onClick={() => window.location.href = getMainDomainUrl()}
-            style={{ marginTop: 20 }}
-          >
-            Ana Sayfaya Dön
-          </Button>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Button
+              type="primary"
+              icon={<HomeOutlined />}
+              onClick={() => window.location.href = getMainDomainUrl()}
+              size="large"
+              block
+            >
+              Ana Sayfaya Dön
+            </Button>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Firma adresinizi kontrol edin veya yöneticinize danışın
+            </Text>
+          </Space>
         </Card>
       </div>
     );
