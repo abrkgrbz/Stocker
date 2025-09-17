@@ -52,13 +52,13 @@ export const useMasterLayout = (): MasterLayoutState => {
       document.documentElement.requestFullscreen().then(() => {
         setFullscreen(true);
       }).catch((err) => {
-        console.error('Failed to enter fullscreen:', err);
+        // Error handling removed for production
       });
     } else {
       document.exitFullscreen().then(() => {
         setFullscreen(false);
       }).catch((err) => {
-        console.error('Failed to exit fullscreen:', err);
+        // Error handling removed for production
       });
     }
   }, []);

@@ -103,8 +103,7 @@ export function useWebSocketData<T>(
         ws = new WebSocket(url);
 
         ws.onopen = () => {
-          console.log('WebSocket connected');
-          setConnected(true);
+                    setConnected(true);
           onOpen?.();
         };
 
@@ -114,18 +113,17 @@ export function useWebSocketData<T>(
             setData(messageData);
             onMessage?.(messageData);
           } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
+            // Error handling removed for production
           }
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          // Error handling removed for production
           onError?.(error);
         };
 
         ws.onclose = () => {
-          console.log('WebSocket disconnected');
-          setConnected(false);
+                    setConnected(false);
           onClose?.();
 
           if (reconnect) {
@@ -135,7 +133,7 @@ export function useWebSocketData<T>(
 
         setSocket(ws);
       } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
+        // Error handling removed for production
       }
     };
 
@@ -154,9 +152,7 @@ export function useWebSocketData<T>(
   const send = useCallback((data: any) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
-    } else {
-      console.warn('WebSocket is not connected');
-    }
+    } else {}
   }, [socket]);
 
   return {
@@ -182,8 +178,7 @@ export function useSSE<T>(
     const eventSource = new EventSource(url);
 
     eventSource.onopen = () => {
-      console.log('SSE connected');
-      setConnected(true);
+            setConnected(true);
       options.onOpen?.();
     };
 
@@ -193,12 +188,12 @@ export function useSSE<T>(
         setData(messageData);
         options.onMessage?.(messageData);
       } catch (error) {
-        console.error('Failed to parse SSE message:', error);
+        // Error handling removed for production
       }
     };
 
     eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
+      // Error handling removed for production
       setConnected(false);
       options.onError?.(error);
     };

@@ -29,10 +29,13 @@ import {
   CrownOutlined,
   StarFilled,
   ClockCircleOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  BankOutlined,
+  HomeOutlined,
+  ApartmentOutlined
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { redirectToTenantDomain } from '../../../../utils/tenant';
+import { redirectToTenantDomain } from '@/utils/tenant';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -42,34 +45,25 @@ interface TenantLoginModalProps {
   onClose: () => void;
 }
 
-// Popular tenants for quick access
-const popularTenants = [
+// Features for login information
+const loginFeatures = [
   { 
-    slug: 'abg-teknoloji', 
-    name: 'ABG Teknoloji', 
-    users: 150,
-    industry: 'Teknoloji',
-    tag: 'Premium',
-    tagColor: 'gold',
-    description: 'Yazılım geliştirme'
+    icon: <SafetyOutlined style={{ fontSize: 24, color: '#667eea' }} />,
+    title: 'Güvenli Bağlantı', 
+    description: '256-bit SSL şifreleme ile korunan veriler',
+    color: '#667eea'
   },
   { 
-    slug: 'demo', 
-    name: 'Demo Firma', 
-    users: 50,
-    industry: 'Demo',
-    tag: 'Deneme',
-    tagColor: 'green',
-    description: 'Ücretsiz deneme hesabı'
+    icon: <GlobalOutlined style={{ fontSize: 24, color: '#52c41a' }} />,
+    title: 'Bulut Teknolojisi', 
+    description: 'Her yerden güvenli erişim imkanı',
+    color: '#52c41a'
   },
   { 
-    slug: 'test', 
-    name: 'Test Company', 
-    users: 25,
-    industry: 'Test',
-    tag: 'Test',
-    tagColor: 'blue',
-    description: 'Test amaçlı kullanım'
+    icon: <RocketOutlined style={{ fontSize: 24, color: '#fa8c16' }} />,
+    title: 'Hızlı Performans', 
+    description: 'Optimize edilmiş altyapı ve hızlı yükleme',
+    color: '#fa8c16'
   },
 ];
 
@@ -101,10 +95,7 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       // Validate tenant exists via API
       const apiUrl = `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`;
       
-      console.log('Fetching URL:', apiUrl);
-      console.log('API Base URL:', import.meta.env.VITE_API_URL);
-      
-      const response = await fetch(apiUrl, {
+                  const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -115,10 +106,9 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       
       // First, get the response as text to see what we're receiving
       const responseText = await response.text();
-      console.log('Raw response:', responseText.substring(0, 500)); // First 500 chars for debugging
       
       if (!response.ok) {
-        console.error('Response not OK:', response.status, responseText);
+        // Error handling removed for production
         throw new Error('Tenant not found');
       }
       
@@ -127,8 +117,8 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        console.error('Response was:', responseText);
+        // Error handling removed for production
+        // Error handling removed for production
         throw new Error('Invalid response format from server');
       }
       
@@ -147,13 +137,7 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
         setLoading(false);
       }
     } catch (err: any) {
-      console.error('Tenant validation error details:', {
-        error: err,
-        message: err.message,
-        apiUrl: `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${tenantSlug}`,
-        envApiUrl: import.meta.env.VITE_API_URL
-      });
-      
+      // Error handling removed for production
       // Check if it's a parsing error (HTML instead of JSON)
       if (err.message && err.message.includes('Unexpected token')) {
         setError('API bağlantı hatası. Sistem yöneticisi ile iletişime geçin. (HTML response received instead of JSON)');
@@ -162,62 +146,6 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
       } else {
         setError('Firma doğrulanamadı. Lütfen tekrar deneyin veya destek ekibiyle iletişime geçin.');
       }
-      setLoading(false);
-    }
-  };
-
-  const handleQuickAccess = async (slug: string) => {
-    setTenantSlug(slug);
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Validate tenant exists via API
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/public/tenants/check/${slug}`;
-      
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      // First, get the response as text to see what we're receiving
-      const responseText = await response.text();
-      console.log('Raw response:', responseText.substring(0, 500)); // First 500 chars for debugging
-      
-      if (!response.ok) {
-        console.error('Response not OK:', response.status, responseText);
-        throw new Error('Tenant not found');
-      }
-      
-      // Try to parse as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        console.error('Response was:', responseText);
-        throw new Error('Invalid response format from server');
-      }
-      
-      if (data.exists && data.isActive) {
-        // Tenant exists and is active, redirect to subdomain
-        redirectToTenantDomain(slug);
-      } else if (data.exists && !data.isActive) {
-        // Tenant exists but is not active
-        setError(`"${slug}" firması şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.`);
-        setLoading(false);
-      } else {
-        // Tenant does not exist
-        setError(`"${slug}" adında bir firma bulunamadı.`);
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error('Tenant validation error:', err);
-      setError('Firma doğrulanamadı. Lütfen tekrar deneyin.');
       setLoading(false);
     }
   };
@@ -238,7 +166,7 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
         <div className="modal-header">
           <Space direction="vertical" align="center" style={{ width: '100%' }}>
             <div className="header-icon">
-              <GlobalOutlined />
+              <BankOutlined />
             </div>
             <Title level={3} style={{ margin: 0 }}>
               Firma Girişi
@@ -324,45 +252,43 @@ export const TenantLoginModal: React.FC<TenantLoginModalProps> = ({
             )}
           </div>
 
-          {/* Quick Access Section */}
+          {/* Features Section */}
           <div style={{ marginTop: 24 }}>
             <Divider style={{ margin: '16px 0' }}>
-              <Text type="secondary" style={{ fontSize: 13 }}>Hızlı Erişim</Text>
+              <Text type="secondary" style={{ fontSize: 13 }}>Sistem Özellikleri</Text>
             </Divider>
 
             <Row gutter={12}>
-              {popularTenants.map((tenant) => (
-                <Col key={tenant.slug} xs={24} sm={8}>
+              {loginFeatures.map((feature, index) => (
+                <Col key={index} xs={24} sm={8}>
                   <Card
-                    className="tenant-card"
-                    hoverable
-                    onClick={() => handleQuickAccess(tenant.slug)}
+                    className="feature-card"
                     bordered={false}
-                    bodyStyle={{ padding: 16 }}
+                    styles={{ body: { padding: 16 } }}
                   >
-                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Avatar size={40}>
-                          {tenant.name.charAt(0)}
-                        </Avatar>
-                        <Tag color={tenant.tagColor} style={{ margin: 0 }}>
-                          {tenant.tag}
-                        </Tag>
+                    <Space direction="vertical" size={12} style={{ width: '100%', textAlign: 'center' }}>
+                      <div style={{ 
+                        width: 60, 
+                        height: 60, 
+                        margin: '0 auto',
+                        background: `linear-gradient(135deg, ${feature.color}15, ${feature.color}05)`,
+                        borderRadius: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {feature.icon}
                       </div>
                       
                       <div>
-                        <Text strong>
-                          {tenant.name}
+                        <Text strong style={{ fontSize: 14 }}>
+                          {feature.title}
                         </Text>
                         <br />
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                          {tenant.slug}.stocker.app
+                          {feature.description}
                         </Text>
                       </div>
-                      
-                      <Text type="secondary" style={{ fontSize: 11 }}>
-                        <TeamOutlined /> {tenant.users} kullanıcı
-                      </Text>
                     </Space>
                   </Card>
                 </Col>

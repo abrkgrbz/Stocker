@@ -1,40 +1,22 @@
 import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ConfigProvider, App as AntApp, Spin } from 'antd';
-import { ProConfigProvider } from '@ant-design/pro-components';
 import trTR from 'antd/locale/tr_TR';
 import dayjs from 'dayjs';
-import 'dayjs/locale/tr';
 
-// Contexts
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { TenantProvider, useTenant } from '@/contexts/TenantContext';
-
-// Stores
-import { useAuthStore } from '@/app/store/auth.store';
-
-// Styles
-import '@/styles/dark-mode.css';
-import '@/features/master/styles/dark-mode-mui.css';
-
-// Monitoring & Analytics
-import { initSentry, setUser, trackPageView } from '@/services/monitoring';
-import { analytics } from '@/services/analytics';
-import { initWebVitals } from '@/services/web-vitals';
-
-// i18n
-import '@/i18n/config';
-
-// Components
 import { AppRouter } from '@/app/router/AppRouter';
+import { useAuthStore } from '@/app/store/auth.store';
+import { NavigationProvider } from '@/contexts/NavigationContext';
+import { TenantProvider, useTenant } from '@/contexts/TenantContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import InvalidTenantPage from '@/features/error/pages/InvalidTenantPage';
+import { analytics } from '@/services/analytics';
+import { initSentry, setUser, trackPageView } from '@/services/monitoring';
+import { initWebVitals } from '@/services/web-vitals';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { PageLoader } from '@/shared/components/PageLoader';
-import InvalidTenantPage from '@/features/error/pages/InvalidTenantPage';
-
-// Styles
-import './App.css';
 
 dayjs.locale('tr');
 
@@ -65,8 +47,6 @@ function App() {
   const { initializeAuth, isInitialized, isLoading, isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
-    console.log('[App] Initializing auth state...');
-    
     // Set user for monitoring
     if (user) {
       setUser({
@@ -92,18 +72,10 @@ function App() {
     initializeAuth();
   }, [initializeAuth]);
 
-  useEffect(() => {
-    console.log('[App] Auth state changed:', {
-      isInitialized,
-      isLoading,
-      isAuthenticated,
-      userRoles: user?.roles
-    });
-  }, [isInitialized, isLoading, isAuthenticated, user]);
+  // Auth state monitoring removed - no longer needed for production
 
   // Show loading spinner while checking initial auth state
   if (!isInitialized || isLoading) {
-    console.log('[App] Still initializing auth...', { isInitialized, isLoading });
     return (
       <div style={{ 
         display: 'flex', 
@@ -155,17 +127,16 @@ function App() {
           },
         }}
       >
-        <ProConfigProvider>
           <AntApp>
             <BrowserRouter>
-              <AppRouter />
+              <NavigationProvider>
+                <AppRouter />
+              </NavigationProvider>
             </BrowserRouter>
           </AntApp>
-        </ProConfigProvider>
       </ConfigProvider>
           </ThemeProvider>
         </TenantProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ErrorBoundary>
   );

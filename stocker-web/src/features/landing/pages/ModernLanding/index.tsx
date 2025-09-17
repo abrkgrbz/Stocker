@@ -46,10 +46,11 @@ import {
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
-import { FAQSection } from '../../components/FAQSection';
-import { ComparisonTable } from '../../components/ComparisonTable';
-import { TenantLoginModal } from '../../../auth/components/TenantLoginModal';
-import { isTenantDomain } from '../../../../utils/tenant';
+import { FAQSection } from '@/features/landing/components/FAQSection';
+import { ComparisonTable } from '@/features/landing/components/ComparisonTable';
+import { SectionDivider } from '@/features/landing/components/SectionDivider';
+import { TenantLoginModal } from '@/features/auth/components/TenantLoginModal';
+import { isTenantDomain } from '@/utils/tenant';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -709,6 +710,9 @@ export const ModernLanding: React.FC = () => {
         </motion.div>
       </section>
 
+      {/* Section Divider */}
+      <SectionDivider type="curve" color="#f7fafc" height={80} />
+
       {/* Stats Section */}
       <section id="stats" className="stats-section" ref={statsRef}>
         <div className="container">
@@ -740,6 +744,9 @@ export const ModernLanding: React.FC = () => {
           </Row>
         </div>
       </section>
+
+      {/* Section Divider */}
+      <SectionDivider type="curve" color="#f7fafc" height={80} />
 
       {/* Features Section */}
       <section id="features" className="features-section" ref={featuresRef}>
@@ -997,6 +1004,9 @@ export const ModernLanding: React.FC = () => {
         </div>
       </section>
 
+      {/* Section Divider */}
+      <SectionDivider type="curve" color="#f7fafc" height={80} />
+
       {/* Testimonials Section */}
       <section id="testimonials" className="testimonials-section" ref={testimonialsRef}>
         <div className="container">
@@ -1072,10 +1082,16 @@ export const ModernLanding: React.FC = () => {
         </div>
       </section>
 
+      {/* Section Divider */}
+      <SectionDivider type="curve" color="#f7fafc" height={80} />
+
       {/* Comparison Table */}
       <section id="comparison">
         <ComparisonTable />
       </section>
+
+      {/* Section Divider */}
+      <SectionDivider type="curve" color="#f7fafc" height={80} />
 
       {/* FAQ Section */}
       <section id="faq">

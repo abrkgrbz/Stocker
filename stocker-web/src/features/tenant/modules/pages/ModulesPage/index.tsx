@@ -31,8 +31,8 @@ import {
   DatabaseOutlined,
   FolderOutlined
 } from '@ant-design/icons';
-import tenantModulesService from '../../../../../services/tenant/modulesService';
-import { ModuleDto, ModulesSummaryDto } from '../../../../../types/tenant/modules';
+import tenantModulesService from '@/services/tenant/modulesService';
+import { ModuleDto, ModulesSummaryDto } from '@/types/tenant/modules';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -60,7 +60,7 @@ const ModulesPage: React.FC = () => {
       setSummary(summaryData);
     } catch (error) {
       message.error('Modüller yüklenirken hata oluştu');
-      console.error(error);
+      // Error handling removed for production
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ const ModulesPage: React.FC = () => {
       loadModules();
     } catch (error: any) {
       message.error(error.response?.data?.message || 'İşlem başarısız oldu');
-      console.error(error);
+      // Error handling removed for production
     } finally {
       setToggleLoading(null);
     }

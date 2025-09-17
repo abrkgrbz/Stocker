@@ -33,7 +33,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import invoiceService, { CreateInvoiceDto, CreateInvoiceItemDto } from '../../../../services/invoiceService';
+import invoiceService, { CreateInvoiceDto, CreateInvoiceItemDto } from '@/services/invoiceService';
 import './style.css';
 
 const { TextArea } = Input;

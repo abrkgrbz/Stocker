@@ -1,23 +1,26 @@
-# Multi-stage build for React app
-FROM node:22-alpine AS builder
+# Multi-stage build for React app - optimized for production
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy only package.json first (not package-lock.json)
-COPY stocker-web/package.json ./
+# Copy package files for better caching
+COPY package*.json ./
 
-# Clean install to regenerate lock file for Linux
-RUN rm -rf node_modules package-lock.json && \
-    npm install --legacy-peer-deps
+# Install dependencies with clean install for production
+RUN npm ci --production=false
 
-# Copy all source files
-COPY stocker-web/ .
+# Copy source files
+COPY . .
 
-# Build the application
+# Build the application with production optimizations
+ARG VITE_API_URL=https://api.stoocker.app
+ARG VITE_API_BASE_URL=https://api.stoocker.app
 ENV NODE_ENV=production
-ENV VITE_API_URL=https://api.stoocker.app
-ENV VITE_API_BASE_URL=https://api.stoocker.app
-RUN npx vite build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Build with optimizations
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
@@ -26,7 +29,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY stocker-web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

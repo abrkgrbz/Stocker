@@ -5,8 +5,8 @@ import signalRService, {
   DomainCheckResult,
   TenantCodeValidationResult,
   NotificationMessage 
-} from '../../services/signalr.service';
-import mockSignalRService from '../../services/mockSignalr.service';
+} from '@/services/signalr.service';
+import mockSignalRService from '@/services/mockSignalr.service';
 
 export const useSignalRValidation = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -40,11 +40,9 @@ export const useSignalRValidation = () => {
           );
           
           await Promise.race([connectionPromise, timeoutPromise]);
-          console.log('✅ Connected to real SignalR validation service');
-        } else {
+                  } else {
           await mockSignalRService.startValidationConnection();
-          console.log('🔧 Using mock SignalR validation service');
-        }
+                  }
         
         if (isMounted) {
           setIsConnected(true);
@@ -73,8 +71,7 @@ export const useSignalRValidation = () => {
         });
 
         service.onIdentityValidated((result) => {
-          console.log('Identity validation result received:', result);
-          setIdentityValidation(result);
+                    setIdentityValidation(result);
         });
 
         service.onTenantCodeValidated((result) => {
@@ -85,15 +82,12 @@ export const useSignalRValidation = () => {
           setError(error);
         });
 
-        service.onConnected(() => {
-        });
+        service.onConnected(() => {});
       } catch (err) {
-        console.error('Failed to connect to SignalR, falling back to mock service:', err);
-        
+        // Error handling removed for production
         // Fallback to mock service
         if (!useMockService) {
-          console.warn('⚠️ Falling back to mock validation service - API not available at', 'http://localhost:5104');
-          setUseMockService(true);
+                    setUseMockService(true);
           setError('Using mock validation service (API not available)');
         } else {
           setError('Failed to connect to validation service');
@@ -167,14 +161,12 @@ export const useSignalRValidation = () => {
   }, [service]);
 
   const validateIdentity = useCallback(async (identityNumber: string) => {
-    console.log('useSignalR validateIdentity called with:', identityNumber);
-    setError(null);
+        setError(null);
     setIdentityValidation(null);
     try {
       await service.validateIdentity(identityNumber);
-      console.log('validateIdentity call completed successfully');
-    } catch (err) {
-      console.error('Failed to validate identity number:', err);
+          } catch (err) {
+      // Error handling removed for production
       setError('Failed to validate identity number');
       // Set a fallback validation result
       setIdentityValidation({
@@ -190,7 +182,7 @@ export const useSignalRValidation = () => {
     try {
       await service.validateTenantCode(code);
     } catch (err) {
-      console.error('Failed to validate tenant code:', err);
+      // Error handling removed for production
       setError('Failed to validate tenant code');
       // Set a fallback validation result
       setTenantCodeValidation({
@@ -237,10 +229,9 @@ export const useSignalRNotifications = (token?: string) => {
           setNotifications(prev => [notification, ...prev]);
         });
 
-        signalRService.onConnected(() => {
-        });
+        signalRService.onConnected(() => {});
       } catch (err) {
-        console.error('Failed to connect to notification hub:', err);
+        // Error handling removed for production
         setError('Failed to connect to notification service');
         setIsConnected(false);
       }

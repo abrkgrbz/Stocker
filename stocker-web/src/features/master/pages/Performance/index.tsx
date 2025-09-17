@@ -38,18 +38,7 @@ import {
   GlobalOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as ChartTooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { Line, Area } from '@/components/LazyChart';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;

@@ -56,7 +56,7 @@ export const useFormAutoSave = <T extends Record<string, any>>(
         onSave(filtered);
       }
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      // Error handling removed for production
     } finally {
       setIsSaving(false);
     }
@@ -90,7 +90,7 @@ export const useFormAutoSave = <T extends Record<string, any>>(
 
       return parsed.data;
     } catch (error) {
-      console.error('Failed to restore form data:', error);
+      // Error handling removed for production
       return null;
     }
   }, [storageKey, onRestore]);

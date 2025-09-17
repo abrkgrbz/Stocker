@@ -1,7 +1,9 @@
 import React from 'react';
+
 import { Button, Space } from 'antd';
-import { showApiResponse } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
+
+import { showApiResponse } from '@/shared/utils/sweetAlert';
 
 const TestSweetAlert: React.FC = () => {
   const testSuccess = () => {

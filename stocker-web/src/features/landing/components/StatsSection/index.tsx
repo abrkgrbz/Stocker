@@ -1,9 +1,10 @@
 import React from 'react';
-import { Row, Col, Typography } from 'antd';
-import { stats } from '../../data/stats';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+import { Row, Col, Typography } from 'antd';
 import { motion } from 'framer-motion';
+
+import { stats } from '@/features/landing/data/stats';
 
 const { Title } = Typography;
 

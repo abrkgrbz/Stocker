@@ -11,27 +11,23 @@ class SignalRService {
   async startValidationConnection(): Promise<void> {
     // Check if already connected or connecting
     if (this.validationConnection?.state === signalR.HubConnectionState.Connected) {
-      console.log('ValidationHub already connected');
-      return;
+            return;
     }
     
     if (this.validationConnection?.state === signalR.HubConnectionState.Connecting) {
-      console.log('ValidationHub already connecting...');
-      return;
+            return;
     }
 
     // If we have an existing connection that's not connected, stop it first
     if (this.validationConnection) {
-      console.log('Stopping existing ValidationHub connection');
-      await this.validationConnection.stop();
+            await this.validationConnection.stop();
       this.validationConnection = null;
     }
 
     // Get tenant from localStorage or use default
     const tenantId = localStorage.getItem('X-Tenant-Id') || 'master';
     
-    console.log('Creating new ValidationHub connection');
-    this.validationConnection = new signalR.HubConnectionBuilder()
+        this.validationConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/validation`, {
         // Try WebSockets first, then SSE, then LongPolling
         transport: signalR.HttpTransportType.WebSockets | 
@@ -60,24 +56,21 @@ class SignalRService {
       .build();
 
     this.validationConnection.onreconnecting((error) => {
-      console.warn('ValidationHub reconnecting:', error);
+      // Error handling removed for production
     });
 
-    this.validationConnection.onreconnected((connectionId) => {
-      console.log('ValidationHub reconnected:', connectionId);
-    });
+    this.validationConnection.onreconnected((connectionId) => {});
 
     this.validationConnection.onclose((error) => {
-      console.error('ValidationHub connection closed:', error);
+      // Error handling removed for production
       // Set connection to null so it can be recreated
       this.validationConnection = null;
     });
 
     try {
       await this.validationConnection.start();
-      console.log('ValidationHub connected successfully');
-    } catch (err) {
-      console.error("Error connecting to validation hub:", err);
+          } catch (err) {
+      // Error handling removed for production
       // Clean up the connection on error
       if (this.validationConnection) {
         try {
@@ -115,19 +108,16 @@ class SignalRService {
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
-    this.notificationConnection.onreconnecting(() => {
-    });
+    this.notificationConnection.onreconnecting(() => {});
 
-    this.notificationConnection.onreconnected(() => {
-    });
+    this.notificationConnection.onreconnected(() => {});
 
-    this.notificationConnection.onclose(() => {
-    });
+    this.notificationConnection.onclose(() => {});
 
     try {
       await this.notificationConnection.start();
     } catch (err) {
-      console.error("Error connecting to notification hub:", err);
+      // Error handling removed for production
       throw err;
     }
   }
@@ -206,38 +196,24 @@ class SignalRService {
 
   // Identity Validation (TC Kimlik No / Vergi No)
   async validateIdentity(identityNumber: string): Promise<void> {
-    console.log('=== SignalR validateIdentity START ===');
-    console.log('Input:', identityNumber);
-    console.log('Connection state before:', this.validationConnection?.state);
-    
-    try {
+                try {
       if (!this.validationConnection || this.validationConnection.state !== signalR.HubConnectionState.Connected) {
-        console.log('Connection not ready, starting validation connection...');
-        await this.startValidationConnection();
-        console.log('Connection started, new state:', this.validationConnection?.state);
-      }
+                await this.startValidationConnection();
+              }
       
-      console.log('Invoking ValidateIdentity on hub with:', identityNumber);
-      console.log('Connection object:', this.validationConnection);
-      
-      await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
-      console.log('=== ValidateIdentity invoke SUCCESS ===');
-    } catch (error: unknown) {
-      console.error('=== ValidateIdentity ERROR ===');
-      console.error('Full error object:', error);
-      
+                  await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+          } catch (error: unknown) {
+      // Error handling removed for production
+      // Error handling removed for production
       // Check if it's a connection error
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('disconnect') || errorMessage.includes('close')) {
-        console.error('CONNECTION LOST during validateIdentity!');
-        console.log('Attempting to reconnect...');
-        try {
+        // Error handling removed for production
+                try {
           await this.startValidationConnection();
-          console.log('Reconnected, retrying validateIdentity...');
-          await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
-          console.log('Retry successful');
-        } catch (retryError) {
-          console.error('Retry failed:', retryError);
+                    await this.validationConnection!.invoke("ValidateIdentity", identityNumber);
+                  } catch (retryError) {
+          // Error handling removed for production
           throw retryError;
         }
       } else {

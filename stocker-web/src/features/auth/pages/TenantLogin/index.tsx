@@ -30,7 +30,7 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '../../../../utils/tenant';
+import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '@/utils/tenant';
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
@@ -112,7 +112,7 @@ export const TenantLogin: React.FC = () => {
       
       setTenantLoading(false);
     } catch (err) {
-      console.error('Tenant fetch error:', err);
+      // Error handling removed for production
       // For development, allow login even if tenant check fails
       if (import.meta.env.DEV) {
         setTenantInfo({
@@ -168,8 +168,7 @@ export const TenantLogin: React.FC = () => {
       
       setLoading(false);
     } catch (err: any) {
-      console.error('Login error:', err);
-      
+      // Error handling removed for production
       // Show detailed error
       if (err.response?.data?.message) {
         message.error(err.response.data.message);

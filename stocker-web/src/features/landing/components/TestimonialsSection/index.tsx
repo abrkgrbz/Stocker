@@ -1,6 +1,6 @@
 import React from 'react';
 import { Row, Col, Card, Avatar, Typography, Rate } from 'antd';
-import { testimonials } from '../../data/testimonials';
+import { testimonials } from '@/features/landing/data/testimonials';
 
 const { Title, Paragraph, Text } = Typography;
 

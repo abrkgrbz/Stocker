@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber, message } from 'antd';
+
 import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import companyService from '@/services/companyService';
+import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber, message } from 'antd';
+import Swal from 'sweetalert2';
+
 import { useAuthStore } from '@/app/store/auth.store';
 import { getCitiesForSelect, getDistrictsByCityForSelect } from '@/data/turkey-cities';
+import companyService from '@/services/companyService';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
-import Swal from 'sweetalert2';
-import './style.css';
 
 const { Step } = Steps;
 const { Option } = Select;
@@ -80,7 +81,7 @@ const CompanySetup: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking existing company:', error);
+        // Error handling removed for production
       }
     };
 
@@ -119,7 +120,7 @@ const CompanySetup: React.FC = () => {
         handleSubmit();
       }
     } catch (error) {
-      console.error('Validation failed:', error);
+      // Error handling removed for production
     }
   };
 
@@ -201,8 +202,7 @@ const CompanySetup: React.FC = () => {
         navigate('/app/default');
       }
     } catch (error: any) {
-      console.error('Company setup error:', error);
-      
+      // Error handling removed for production
       // Close loading
       Swal.close();
       

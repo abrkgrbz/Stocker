@@ -1,5 +1,6 @@
-import api from '@/services/api';
 import { AxiosResponse } from 'axios';
+
+import api from '@/services/api';
 
 interface WizardData {
   id: string;

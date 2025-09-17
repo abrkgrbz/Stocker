@@ -142,11 +142,16 @@
   text-align: center;
 }
 
+.billing-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .billing-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
-  padding: 6px;
+  padding: 4px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 100px;
   position: relative;
@@ -159,11 +164,13 @@
   font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
   transition: all 0.3s;
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-radius: 100px;
   cursor: pointer;
   position: relative;
   z-index: 2;
+  min-width: 70px;
+  text-align: center;
 }
 
 .billing-toggle span.active {
@@ -175,10 +182,10 @@
 .billing-toggle::before {
   content: '';
   position: absolute;
-  top: 6px;
-  left: 6px;
-  width: calc(50% - 6px);
-  height: calc(100% - 12px);
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
   background: white;
   border-radius: 100px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -186,7 +193,7 @@
 }
 
 .billing-toggle.yearly::before {
-  transform: translateX(calc(100% + 6px));
+  transform: translateX(calc(100% + 0px));
 }
 
 .billing-switch {
@@ -266,13 +273,20 @@
 }
 
 .pricing-card.enterprise {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  color: white;
-  border: none;
+  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+  border: 2px solid #722ed1;
+  box-shadow: 0 20px 40px rgba(114, 46, 209, 0.15);
 }
 
-.pricing-card.enterprise .ant-typography {
-  color: white !important;
+.pricing-card.enterprise .plan-icon {
+  color: #722ed1 !important;
+}
+
+.pricing-card.enterprise .plan-limits .ant-tag {
+  background: linear-gradient(135deg, #722ed1 0%, #9c27b0 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
 }
 
 .plan-badge {
@@ -361,10 +375,10 @@
 }
 
 .custom-price {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  color: #f5222d;
-  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
+  color: #722ed1;
+  background: linear-gradient(135deg, #722ed1 0%, #9c27b0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-align: center;
@@ -403,7 +417,26 @@
   border: none !important;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  justify-content: flex-start !important;
+  gap: 10px;
+  width: 100%;
+}
+
+.feature-item .ant-list-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Ant List Item için özel stil - space-between'i override et */
+.pricing-card .plan-features .ant-list-item,
+.plan-features .ant-list-item {
+  justify-content: flex-start !important;
+}
+
+.pricing-card .ant-list .ant-list-item {
+  justify-content: flex-start !important;
 }
 
 .feature-icon {
@@ -411,6 +444,11 @@
   font-size: 16px;
   margin-top: 2px;
   flex-shrink: 0;
+}
+
+.feature-item .ant-typography {
+  text-align: left;
+  font-size: 14px;
 }
 
 .plan-limitations {
@@ -447,13 +485,16 @@
 }
 
 .enterprise-button {
-  background: white !important;
-  color: #1a1a1a !important;
+  background: linear-gradient(135deg, #722ed1 0%, #9c27b0 100%) !important;
+  color: white !important;
   border: none !important;
+  font-weight: 600;
 }
 
 .enterprise-button:hover {
-  background: #f0f0f0 !important;
+  background: linear-gradient(135deg, #9c27b0 0%, #722ed1 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(114, 46, 209, 0.3);
 }
 
 .support-type {

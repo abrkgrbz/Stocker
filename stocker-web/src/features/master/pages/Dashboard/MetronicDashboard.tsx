@@ -159,8 +159,7 @@ const MetronicDashboard: React.FC = () => {
   // Debounced search for tenants
   const debouncedSearch = useDebounce((query: string) => {
     // Filter tenants based on search query
-    console.log('Searching for:', query);
-  }, 300);
+      }, 300);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);

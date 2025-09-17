@@ -137,7 +137,7 @@ const TenantDashboard: React.FC = () => {
         setRecentActivities(activitiesRes.data.data);
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      // Error handling removed for production
       message.error('Dashboard verileri yüklenemedi');
     } finally {
       setLoading(false);

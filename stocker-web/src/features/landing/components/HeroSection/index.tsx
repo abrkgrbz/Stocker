@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button, Typography } from 'antd';
-import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Button, Typography } from 'antd';
 
 const { Title, Paragraph } = Typography;
 

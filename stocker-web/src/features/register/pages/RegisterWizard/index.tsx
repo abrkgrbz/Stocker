@@ -116,8 +116,7 @@ const RegisterWizard: React.FC = () => {
 
   useEffect(() => {
     if (identityValidation) {
-      console.log('RegisterWizard: Identity validation result:', identityValidation);
-      setIsValidating(false);
+            setIsValidating(false);
     }
   }, [identityValidation]);
 
@@ -307,8 +306,7 @@ const RegisterWizard: React.FC = () => {
             throw new Error('No token received');
           }
         } catch (loginError: any) {
-          console.log('Auto-login failed:', loginError);
-          
+          // Error handling removed for production
           // If auto-login fails, still show success but redirect to login
           await showApiResponse.info(
             'Hesabınız oluşturuldu. E-posta doğrulaması sonrası giriş yapabilirsiniz.',
@@ -327,8 +325,7 @@ const RegisterWizard: React.FC = () => {
         );
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
-      
+      // Error handling removed for production
       // Close loading alert if open
       Swal.close();
       
@@ -653,12 +650,10 @@ const RegisterWizard: React.FC = () => {
                     form.setFieldsValue({ identityNumber: value });
                     if (value.length === (identityType === 'tc' ? 11 : 10)) {
                       setIsValidating(true);
-                      console.log('RegisterWizard: Validating identity:', value);
-                      try {
+                                            try {
                         await validateIdentity(value);
-                        console.log('RegisterWizard: Validation completed');
-                      } catch (error) {
-                        console.error('RegisterWizard: Validation error:', error);
+                                              } catch (error) {
+                        // Error handling removed for production
                       } finally {
                         setTimeout(() => setIsValidating(false), 1000);
                       }

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, ButtonProps } from 'antd';
+
 import { CheckOutlined, LoadingOutlined } from '@ant-design/icons';
-import './style.css';
+import { Button, ButtonProps } from 'antd';
 
 export interface EnhancedButtonProps extends ButtonProps {
   variant?: 'default' | 'gradient' | 'glass' | 'neon' | 'minimal';

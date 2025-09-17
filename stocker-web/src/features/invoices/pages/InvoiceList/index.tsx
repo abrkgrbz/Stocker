@@ -39,7 +39,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
-import invoiceService, { Invoice, InvoiceFilters } from '../../../../services/invoiceService';
+import invoiceService, { Invoice, InvoiceFilters } from '@/services/invoiceService';
 import './style.css';
 
 const { RangePicker } = DatePicker;

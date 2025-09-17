@@ -274,7 +274,7 @@ export const ActivityWidget = memo<{
   return (
     <Card 
       title="Son Aktiviteler"
-      bodyStyle={{ padding: '12px 24px' }}
+      styles={{ body: { padding: '12px 24px' } }}
       extra={
         <Badge count={activities.length} style={{ backgroundColor: '#52c41a' }} />
       }

@@ -18,28 +18,7 @@ import {
   Button,
   Segmented,
 } from 'antd';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { Line, Bar, Pie, Area, Radar } from '@/components/LazyChart';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,

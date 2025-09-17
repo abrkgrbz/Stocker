@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
+
 import { Line, Area, Column, Pie, DualAxes, Gauge, Liquid } from '@ant-design/plots';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Row,
   Col,

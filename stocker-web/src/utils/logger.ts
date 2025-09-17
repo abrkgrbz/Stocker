@@ -76,16 +76,13 @@ class Logger {
     // Console output
     switch (level) {
       case LogLevel.DEBUG:
-        console.debug(formattedMessage, data || '');
-        break;
+                break;
       case LogLevel.INFO:
-        console.info(formattedMessage, data || '');
-        break;
+                break;
       case LogLevel.WARN:
-        console.warn(formattedMessage, data || '');
-        break;
+                break;
       case LogLevel.ERROR:
-        console.error(formattedMessage, data || '');
+        // Error handling removed for production
         break;
     }
 
@@ -140,8 +137,7 @@ class Logger {
     }
 
     const formattedMessage = this.formatMessage(LogLevel.ERROR, message, context);
-    console.error(formattedMessage, error);
-
+    // Error handling removed for production
     if (env.app.isProduction) {
       this.sendToExternalService(entry);
     }

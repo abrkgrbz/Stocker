@@ -235,7 +235,7 @@ export const NotificationManager: React.FC = () => {
     try {
       localStorage.setItem('notifications', JSON.stringify(notifications));
     } catch (error) {
-      console.error('Failed to save notifications:', error);
+      // Error handling removed for production
     }
   };
 
@@ -248,7 +248,7 @@ export const NotificationManager: React.FC = () => {
         setUnreadCount(parsed.filter(n => !n.read).length);
       }
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      // Error handling removed for production
     }
   };
 
@@ -330,7 +330,7 @@ export const NotificationManager: React.FC = () => {
         width={400}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         {notifications.length > 0 ? (
           <List

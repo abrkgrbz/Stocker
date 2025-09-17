@@ -150,7 +150,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ tenantId, onComplete }) => {
         setCurrentStep(response.data.data.currentStep - 1);
       }
     } catch (error) {
-      console.error('Error fetching wizard data:', error);
+      // Error handling removed for production
       message.error('Kurulum bilgileri yüklenemedi');
     } finally {
       setLoading(false);
@@ -175,7 +175,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ tenantId, onComplete }) => {
         }
       }
     } catch (error) {
-      console.error('Error updating wizard:', error);
+      // Error handling removed for production
       message.error('İşlem sırasında hata oluştu');
     } finally {
       setSaving(false);
@@ -203,7 +203,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ tenantId, onComplete }) => {
         }
         message.info('Adım atlandı');
       } catch (error) {
-        console.error('Error skipping step:', error);
+        // Error handling removed for production
         message.error('İşlem sırasında hata oluştu');
       } finally {
         setSaving(false);
@@ -220,7 +220,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ tenantId, onComplete }) => {
       });
       message.success('Yardım talebiniz alındı. En kısa sürede size dönüş yapılacak.');
     } catch (error) {
-      console.error('Error requesting help:', error);
+      // Error handling removed for production
     }
   };
 

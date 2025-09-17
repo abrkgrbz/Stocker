@@ -1,5 +1,6 @@
-import { apiClient } from './client';
 import { cacheService } from '@/services/cache.service';
+
+import { apiClient } from './client';
 
 /**
  * Cached API wrapper for frequently accessed data

@@ -25,8 +25,8 @@ import {
   MailOutlined,
   BellOutlined
 } from '@ant-design/icons';
-import tenantSettingsService from '../../../../../services/tenant/settingsService';
-import { SettingCategoryDto, SettingDto } from '../../../../../types/tenant/settings';
+import tenantSettingsService from '@/services/tenant/settingsService';
+import { SettingCategoryDto, SettingDto } from '@/types/tenant/settings';
 import './style.css';
 
 const { Title, Text } = Typography;
@@ -59,7 +59,7 @@ const SettingsPage: React.FC = () => {
       form.setFieldsValue(formValues);
     } catch (error) {
       message.error('Ayarlar yüklenirken hata oluştu');
-      console.error(error);
+      // Error handling removed for production
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ const SettingsPage: React.FC = () => {
       loadSettings();
     } catch (error) {
       message.error('Ayarlar kaydedilirken hata oluştu');
-      console.error(error);
+      // Error handling removed for production
     } finally {
       setSaving(false);
     }

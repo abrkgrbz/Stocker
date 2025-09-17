@@ -78,7 +78,7 @@ const SystemSettingsPage: React.FC = () => {
       });
       form.setFieldsValue(formValues);
     } catch (error) {
-      console.error('Settings load error:', error);
+      // Error handling removed for production
       message.error('Ayarlar yüklenirken bir hata oluştu');
     }
     setLoading(false);
@@ -119,7 +119,7 @@ const SystemSettingsPage: React.FC = () => {
       setEditedValues({});
       await loadSettings();
     } catch (error) {
-      console.error('Save error:', error);
+      // Error handling removed for production
       message.error('Ayarlar kaydedilirken hata oluştu');
     }
     setSaving(false);

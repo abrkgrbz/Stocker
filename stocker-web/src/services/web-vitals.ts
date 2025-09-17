@@ -1,6 +1,7 @@
 import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
-import { reportWebVitals, logPerformance } from './monitoring';
+
 import { analytics } from './analytics';
+import { reportWebVitals, logPerformance } from './monitoring';
 
 export interface VitalMetric {
   name: string;
@@ -64,10 +65,7 @@ function handleMetric(metric: Metric): void {
   
   // Log poor performance
   if (rating === 'poor') {
-    console.warn(`Poor ${name} performance:`, {
-      value: Math.round(value),
-      threshold: thresholds[name as keyof typeof thresholds]?.poor,
-    });
+    // Error handling removed for production
   }
 }
 
@@ -147,11 +145,7 @@ function trackAdditionalMetrics(): void {
         
         // Track large resources
         if (resource.transferSize && resource.transferSize > 500000) {
-          console.warn('Large resource detected:', {
-            url: resource.name,
-            size: `${(resource.transferSize / 1024).toFixed(2)} KB`,
-            duration: `${resource.duration.toFixed(2)} ms`,
-          });
+          // Error handling removed for production
         }
       }
       
@@ -160,10 +154,7 @@ function trackAdditionalMetrics(): void {
         logPerformance('Long Task', entry.duration);
         
         if (entry.duration > 100) {
-          console.warn('Long task detected:', {
-            duration: `${entry.duration.toFixed(2)} ms`,
-            startTime: `${entry.startTime.toFixed(2)} ms`,
-          });
+          // Error handling removed for production
         }
       }
     }
@@ -186,11 +177,7 @@ function trackAdditionalMetrics(): void {
       const totalMemory = memory.totalJSHeapSize / 1048576;
       
       if (usedMemory > 100) {
-        console.warn('High memory usage:', {
-          used: `${usedMemory.toFixed(2)} MB`,
-          total: `${totalMemory.toFixed(2)} MB`,
-          percentage: `${((usedMemory / totalMemory) * 100).toFixed(2)}%`,
-        });
+        // Error handling removed for production
       }
     }, 30000); // Check every 30 seconds
   }
@@ -213,7 +200,7 @@ export function markEnd(name: string): void {
       analytics.timing('Custom', name, measure.duration);
     }
   } catch (error) {
-    console.error('Performance measurement error:', error);
+    // Error handling removed for production
   }
 }
 
@@ -257,11 +244,7 @@ export function checkPerformanceBudget(): void {
   Object.entries(usage).forEach(([type, size]) => {
     const budget = budgets[type as keyof typeof budgets];
     if (size > budget) {
-      console.warn(`Performance budget exceeded for ${type}:`, {
-        used: `${(size / 1024).toFixed(2)} KB`,
-        budget: `${(budget / 1024).toFixed(2)} KB`,
-        overflow: `${((size - budget) / 1024).toFixed(2)} KB`,
-      });
+      // Error handling removed for production
     }
   });
 }

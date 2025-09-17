@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, Button, Result, Spin, message, Typography } from 'antd';
+
 import { CheckCircleOutlined, CloseCircleOutlined, MailOutlined } from '@ant-design/icons';
+import { Card, Button, Result, Spin, message, Typography } from 'antd';
+
 import { authAPI } from '@/shared/api/auth.api';
-import './style.css';
 
 const { Title, Paragraph } = Typography;
 

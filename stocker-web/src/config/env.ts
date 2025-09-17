@@ -86,8 +86,7 @@ export const validateEnv = () => {
   const missing = requiredEnvVars.filter(key => !import.meta.env[key]);
   
   if (missing.length > 0) {
-    console.error(`Missing required environment variables: ${missing.join(', ')}`);
-    console.error('Please check your .env file');
+    // Error handling removed for production
   }
   
   return missing.length === 0;

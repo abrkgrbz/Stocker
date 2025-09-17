@@ -1,13 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Form, Input, Button, Typography, Space } from 'antd';
+
 import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined } from '@ant-design/icons';
-import { useAuthStore } from '@/app/store/auth.store';
-import { LoginRequest } from '@/shared/types';
-import companyService from '@/services/companyService';
-import { showApiResponse, showWelcomeAlert } from '@/shared/utils/sweetAlert';
+import { Form, Input, Button, Typography, Space } from 'antd';
 import Swal from 'sweetalert2';
-import './style.css';
+
+import { useAuthStore } from '@/app/store/auth.store';
+import companyService from '@/services/companyService';
+import { LoginRequest } from '@/shared/types';
+import { showApiResponse, showWelcomeAlert } from '@/shared/utils/sweetAlert';
 
 const { Title, Text } = Typography;
 
@@ -47,15 +48,7 @@ export const LoginPage: React.FC = () => {
       const userRole = authStore.user?.roles?.[0];
       const from = (location.state as any)?.from?.pathname;
       
-      console.log('[LoginPage] Login successful:', {
-        user: authStore.user,
-        roles: authStore.user?.roles,
-        userRole: userRole,
-        from: from,
-        isAuthenticated: authStore.isAuthenticated
-      });
-      
-      // Check if company exists for tenant users BEFORE navigation
+            // Check if company exists for tenant users BEFORE navigation
       if (userRole !== 'SystemAdmin') {
         try {
           const hasCompany = await companyService.checkCompanyExists();
@@ -70,32 +63,25 @@ export const LoginPage: React.FC = () => {
             return;
           }
         } catch (companyError) {
-          console.log('Company check skipped:', companyError);
+          // Error handling removed for production
         }
       }
       
       // Navigate FIRST, immediately based on role
       let targetPath = '/';
       if (from) {
-        console.log('[LoginPage] Redirecting to original requested path:', from);
-        targetPath = from;
+                targetPath = from;
       } else if (userRole === 'SystemAdmin') {
-        console.log('[LoginPage] SystemAdmin detected, navigating to /master');
-        targetPath = '/master';
+                targetPath = '/master';
       } else if (userRole === 'TenantAdmin' || userRole === 'Admin') {
-        console.log('[LoginPage] TenantAdmin/Admin detected, navigating to /admin');
-        targetPath = '/admin';
+                targetPath = '/admin';
       } else {
         // For regular users, we need to use the tenant ID
         const tenantId = authStore.user?.tenantId || localStorage.getItem('stocker_tenant') || 'default';
-        console.log('[LoginPage] Regular user, navigating to /app/' + tenantId);
-        targetPath = `/app/${tenantId}`;
+                targetPath = `/app/${tenantId}`;
       }
       
-      console.log('[LoginPage] Final navigation target:', targetPath);
-      console.log('[LoginPage] About to navigate...');
-      
-      // Show welcome alert first (non-blocking)
+                  // Show welcome alert first (non-blocking)
       const roleDisplayName = userRole === 'SystemAdmin' ? 'Sistem Yöneticisi' : 
                              userRole === 'TenantAdmin' ? 'Kiracı Yöneticisi' :
                              userRole === 'Admin' ? 'Yönetici' : 'Kullanıcı';
@@ -103,9 +89,7 @@ export const LoginPage: React.FC = () => {
       
       // Use window.location for hard navigation to ensure page reload
       // This will trigger a full page reload and re-initialization
-      console.log('[LoginPage] Hard navigating to:', targetPath);
-      
-      setTimeout(() => {
+            setTimeout(() => {
         // Use window.location.href for guaranteed navigation
         window.location.href = targetPath;
       }, 1000);
@@ -114,8 +98,7 @@ export const LoginPage: React.FC = () => {
       // Close loading
       Swal.close();
       
-      console.error('Login error:', error);
-      
+      // Error handling removed for production
       // Show detailed error message
       if (error.response) {
         // API returned an error response
@@ -228,28 +211,36 @@ export const LoginPage: React.FC = () => {
 
           <div className="demo-section">
             <Text type="secondary" style={{ fontSize: 12, textAlign: 'center', display: 'block', marginBottom: 12 }}>
-              DEMO HESAPLARI
+              ÖZELLİKLER
             </Text>
             <Space direction="vertical" style={{ width: '100%' }} size="small">
-              <div className="demo-credential" onClick={() => {
-                form.setFieldsValue({ email: 'admin@stocker.com', password: 'Admin@123456' });
-              }}>
-                <div className="demo-icon">👨‍💼</div>
-                <div className="demo-info">
-                  <Text strong style={{ fontSize: 13 }}>Sistem Yöneticisi</Text>
-                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>admin@stocker.com</Text>
+              <div className="feature-item">
+                <div className="feature-icon">🔒</div>
+                <div className="feature-info">
+                  <Text strong style={{ fontSize: 13 }}>Güvenli Giriş</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>256-bit SSL şifreleme ile korunan veriler</Text>
                 </div>
-                <Text className="demo-hint">Doldurmak için tıkla</Text>
               </div>
-              <div className="demo-credential" onClick={() => {
-                form.setFieldsValue({ email: 'tenant@example.com', password: 'Tenant@123456' });
-              }}>
-                <div className="demo-icon">👤</div>
-                <div className="demo-info">
-                  <Text strong style={{ fontSize: 13 }}>Kiracı Yöneticisi</Text>
-                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>tenant@example.com</Text>
+              <div className="feature-item">
+                <div className="feature-icon">📱</div>
+                <div className="feature-info">
+                  <Text strong style={{ fontSize: 13 }}>Çoklu Platform</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Mobil, tablet ve masaüstü desteği</Text>
                 </div>
-                <Text className="demo-hint">Doldurmak için tıkla</Text>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">🚀</div>
+                <div className="feature-info">
+                  <Text strong style={{ fontSize: 13 }}>Hızlı Erişim</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Otomatik oturum açma ve biyometrik giriş</Text>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">🌐</div>
+                <div className="feature-info">
+                  <Text strong style={{ fontSize: 13 }}>7/24 Erişim</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Her zaman, her yerden güvenli bağlantı</Text>
+                </div>
               </div>
             </Space>
           </div>

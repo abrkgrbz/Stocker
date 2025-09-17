@@ -1,7 +1,6 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { message } from 'antd';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-// API base URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
 
 // Create axios instance
@@ -19,12 +18,6 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // Get token from localStorage or session
     const token = localStorage.getItem('stocker_token');
-    
-    console.log('API Request Interceptor:', {
-      url: config.url,
-      token: token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN',
-      headers: config.headers
-    });
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

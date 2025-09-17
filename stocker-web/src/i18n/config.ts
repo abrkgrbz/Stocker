@@ -1,12 +1,13 @@
-import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+
+import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
+
 import env from '@/config/env';
 
-// Import translations
-import trTranslations from './locales/tr';
 import enTranslations from './locales/en';
+import trTranslations from './locales/tr';
 
 export const defaultLanguage = 'tr';
 export const supportedLanguages = ['tr', 'en'] as const;
@@ -88,9 +89,7 @@ i18n
     // Missing key handler
     saveMissing: env.app.isDevelopment,
     missingKeyHandler: (lng, ns, key, _fallbackValue) => {
-      if (env.app.isDevelopment) {
-        console.warn(`Missing translation: ${lng}/${ns}:${key}`);
-      }
+      if (env.app.isDevelopment) {}
     },
   });
 

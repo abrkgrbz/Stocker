@@ -1,0 +1,1 @@
+interface Window {  Sentry?: {    captureException: (error: Error, context?: any) => void    captureMessage: (message: string, level?: string) => void  }}

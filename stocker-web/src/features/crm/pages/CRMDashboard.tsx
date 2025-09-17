@@ -199,7 +199,7 @@ export const CRMDashboard: React.FC = () => {
           <Card 
             title="Son Kazanılanlar" 
             extra={<a href="#">Tümü</a>}
-            bodyStyle={{ padding: '12px' }}
+            styles={{ body: { padding: '12px' } }}
           >
             <List
               dataSource={recentWins}
@@ -232,7 +232,7 @@ export const CRMDashboard: React.FC = () => {
           <Card 
             title="Yaklaşan Aktiviteler" 
             extra={<a href="#">Takvim</a>}
-            bodyStyle={{ padding: '12px' }}
+            styles={{ body: { padding: '12px' } }}
           >
             <Timeline>
               {upcomingActivities.map((activity, index) => (
@@ -261,7 +261,7 @@ export const CRMDashboard: React.FC = () => {
           <Card 
             title="En İyi Satış Temsilcileri" 
             extra={<Tag color="gold">Bu Ay</Tag>}
-            bodyStyle={{ padding: '12px' }}
+            styles={{ body: { padding: '12px' } }}
           >
             <List
               dataSource={topPerformers}

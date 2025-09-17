@@ -284,22 +284,26 @@ export const PricingPage: React.FC = () => {
                 14 gün ücretsiz deneme • Kredi kartı gerekmez • İstediğiniz zaman iptal edin
               </Paragraph>
               
-              <div className={`billing-toggle ${billingPeriod}`}>
-                <span 
-                  className={billingPeriod === 'monthly' ? 'active' : ''}
-                  onClick={() => setBillingPeriod('monthly')}
-                >
-                  Aylık
-                </span>
-                <span 
-                  className={billingPeriod === 'yearly' ? 'active' : ''}
-                  onClick={() => setBillingPeriod('yearly')}
-                >
-                  Yıllık
-                  {billingPeriod === 'yearly' && (
-                    <Tag color="green" className="save-tag" style={{ marginLeft: 8 }}>%20 İndirim</Tag>
-                  )}
-                </span>
+              <div className="billing-container">
+                <div className={`billing-toggle ${billingPeriod}`}>
+                  <span 
+                    className={billingPeriod === 'monthly' ? 'active' : ''}
+                    onClick={() => setBillingPeriod('monthly')}
+                  >
+                    Aylık
+                  </span>
+                  <span 
+                    className={billingPeriod === 'yearly' ? 'active' : ''}
+                    onClick={() => setBillingPeriod('yearly')}
+                  >
+                    Yıllık
+                  </span>
+                </div>
+                {billingPeriod === 'yearly' && (
+                  <Tag color="green" className="save-tag">
+                    <GiftOutlined /> %20 İndirim
+                  </Tag>
+                )}
               </div>
             </div>
           </Badge.Ribbon>
@@ -455,7 +459,7 @@ export const PricingPage: React.FC = () => {
                   <tr>
                     <th>Özellikler</th>
                     <th>Başlangıç</th>
-                    <th className="highlighted">Profesyonel</th>
+                    <th>Profesyonel</th>
                     <th>İşletme</th>
                     <th>Kurumsal</th>
                   </tr>
@@ -481,7 +485,7 @@ export const PricingPage: React.FC = () => {
                           <Tag color="blue">{item.starter}</Tag>
                         )}
                       </td>
-                      <td className="highlighted">
+                      <td>
                         {typeof item.professional === 'boolean' ? (
                           item.professional ? (
                             <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 22 }} />

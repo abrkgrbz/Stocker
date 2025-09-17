@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Row, Col, Card, Button, Typography, Badge, List, Segmented, Space } from 'antd';
-import { CheckOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { pricingPlans } from '../../data/pricingPlans';
+
+import { CheckOutlined, CalculatorOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Button, Typography, Badge, List, Segmented, Space } from 'antd';
+
+import { pricingPlans } from '@/features/landing/data/pricingPlans';
+
 import { PricingWizard } from '../PricingWizard';
 
 const { Title, Text, Paragraph } = Typography;

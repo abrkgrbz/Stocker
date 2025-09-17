@@ -1,14 +1,14 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+
 import { Layout } from 'antd';
-import { MasterHeader } from '../../components/Layout/MasterHeader';
-import { MasterSidebar } from '../../components/Layout/MasterSidebar';
-import { MasterFooter } from '../../components/Layout/MasterFooter';
-import { NotificationProvider } from '../../contexts/NotificationContext';
+
 import { ThemeProvider } from '@/core/theme';
-import { useMasterLayout } from '../../hooks/useMasterLayout';
-import '@/core/theme/styles/variables.css';
-import './styles.css';
+import { MasterFooter } from '@/features/master/components/Layout/MasterFooter';
+import { MasterHeader } from '@/features/master/components/Layout/MasterHeader';
+import { MasterSidebar } from '@/features/master/components/Layout/MasterSidebar';
+import { NotificationProvider } from '@/features/master/contexts/NotificationContext';
+import { useMasterLayout } from '@/features/master/hooks/useMasterLayout';
 
 const { Content } = Layout;
 

@@ -25,9 +25,7 @@ export function register(config?: Config) {
 
       if (isLocalhost) {
         checkValidServiceWorker(swUrl, config);
-        navigator.serviceWorker.ready.then(() => {
-          console.log('Service worker is ready for offline-first app.');
-        });
+        navigator.serviceWorker.ready.then(() => {});
       } else {
         registerValidSW(swUrl, config);
       }
@@ -47,13 +45,11 @@ function registerValidSW(swUrl: string, config?: Config) {
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              console.log('New content available; please refresh.');
-              if (config && config.onUpdate) {
+                            if (config && config.onUpdate) {
                 config.onUpdate(registration);
               }
             } else {
-              console.log('Content cached for offline use.');
-              if (config && config.onSuccess) {
+                            if (config && config.onSuccess) {
                 config.onSuccess(registration);
               }
             }
@@ -62,7 +58,7 @@ function registerValidSW(swUrl: string, config?: Config) {
       };
     })
     .catch((error) => {
-      console.error('Service Worker registration error:', error);
+      // Error handling removed for production
     });
 }
 
@@ -85,9 +81,7 @@ function checkValidServiceWorker(swUrl: string, config?: Config) {
         registerValidSW(swUrl, config);
       }
     })
-    .catch(() => {
-      console.log('No internet connection. App running in offline mode.');
-    });
+    .catch(() => {});
 }
 
 export function unregister() {
@@ -97,7 +91,7 @@ export function unregister() {
         registration.unregister();
       })
       .catch((error) => {
-        console.error(error.message);
+        // Error handling removed for production
       });
   }
 }
@@ -189,8 +183,7 @@ export const useOfflineDetection = () => {
 // Push Notifications
 export const requestNotificationPermission = async (): Promise<boolean> => {
   if (!('Notification' in window)) {
-    console.log('Browser doesn\'t support notifications');
-    return false;
+        return false;
   }
 
   if (Notification.permission === 'granted') {
@@ -221,9 +214,8 @@ export const registerBackgroundSync = async (tag: string) => {
     try {
       const registration = await navigator.serviceWorker.ready;
       await (registration as any).sync.register(tag);
-      console.log(`Background sync registered: ${tag}`);
-    } catch (error) {
-      console.error('Background sync registration failed:', error);
+          } catch (error) {
+      // Error handling removed for production
     }
   }
 };

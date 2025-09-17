@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Typography } from 'antd';
-import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+
+import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Button, Typography } from 'antd';
+import { motion } from 'framer-motion';
 
 const { Title, Paragraph } = Typography;
 

@@ -853,7 +853,7 @@ export const MasterTenantsPage: React.FC = () => {
             message.error(response.data?.message || 'Tenant silinemedi');
           }
         } catch (error: any) {
-          console.error('Delete tenant error:', error);
+          // Error handling removed for production
           message.error(error.response?.data?.message || 'Tenant silinirken hata oluştu');
         } finally {
           setLoading(false);
@@ -876,7 +876,7 @@ export const MasterTenantsPage: React.FC = () => {
         message.error(response.data?.message || 'Tenant durumu güncellenemedi');
       }
     } catch (error: any) {
-      console.error('Toggle tenant status error:', error);
+      // Error handling removed for production
       message.error(error.response?.data?.message || 'Tenant durumu güncellenirken hata oluştu');
     } finally {
       setLoading(false);
@@ -1039,7 +1039,7 @@ export const MasterTenantsPage: React.FC = () => {
         message.error(response.data?.message || 'Tenant oluşturulamadı');
       }
     } catch (error: any) {
-      console.error('Create tenant error:', error);
+      // Error handling removed for production
       message.error(error.response?.data?.message || 'Tenant oluşturulurken hata oluştu');
     } finally {
       setLoading(false);
@@ -1155,7 +1155,7 @@ export const MasterTenantsPage: React.FC = () => {
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02 }}
             >
-              <Card className="stat-card glass-morphism" bodyStyle={{ padding: 20 }}>
+              <Card className="stat-card glass-morphism" styles={{ body: { padding: 20 } }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div className="stat-icon-wrapper" style={{ 
                     width: 60, 

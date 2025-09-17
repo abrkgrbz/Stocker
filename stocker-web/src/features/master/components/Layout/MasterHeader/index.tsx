@@ -23,7 +23,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { NotificationBell } from '../../NotificationBell';
+import { NotificationBell } from '@/features/master/components/NotificationBell';
 import { ThemeSwitcher } from '@/core/theme';
 import './styles.css';
 

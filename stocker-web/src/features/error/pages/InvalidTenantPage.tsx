@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Result } from 'antd';
+
 import { HomeOutlined, UserAddOutlined } from '@ant-design/icons';
+import { Button, Result } from 'antd';
+
 import { getMainDomainUrl } from '@/utils/tenant';
 
 interface InvalidTenantPageProps {

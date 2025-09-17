@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { WhatsAppOutlined, PhoneOutlined, MessageOutlined, QuestionCircleOutlined, CloseOutlined } from '@ant-design/icons';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const FloatingActionButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,8 +9,8 @@ export const FloatingActionButton: React.FC = () => {
   const actions = [
     { icon: <WhatsAppOutlined />, label: 'WhatsApp', color: '#25D366', link: 'https://wa.me/905555555555' },
     { icon: <PhoneOutlined />, label: 'Telefon', color: '#667eea', link: 'tel:+905555555555' },
-    { icon: <MessageOutlined />, label: 'Mesaj', color: '#1890ff', onClick: () => console.log('Chat opened') },
-    { icon: <QuestionCircleOutlined />, label: 'Yardım', color: '#764ba2', onClick: () => console.log('Help opened') }
+    { icon: <MessageOutlined />, label: 'Mesaj', color: '#1890ff', onClick: () => {} },
+    { icon: <QuestionCircleOutlined />, label: 'Yardım', color: '#764ba2', onClick: () => {} }
   ];
 
   return (

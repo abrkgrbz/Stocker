@@ -53,7 +53,7 @@ export const Captcha: React.FC<CaptchaProps> = ({
         try {
           window.grecaptcha.reset(widgetIdRef.current);
         } catch (error) {
-          console.error('Error resetting captcha:', error);
+          // Error handling removed for production
         }
       }
     };
@@ -80,7 +80,7 @@ export const Captcha: React.FC<CaptchaProps> = ({
           }
         });
       } catch (error) {
-        console.error('Error rendering captcha:', error);
+        // Error handling removed for production
       }
     }
   };

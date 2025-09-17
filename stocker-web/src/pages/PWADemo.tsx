@@ -33,9 +33,7 @@ export default function PWADemo() {
       url: window.location.origin,
     });
     
-    if (shared) {
-      console.log('Başarıyla paylaşıldı');
-    }
+    if (shared) {}
   };
 
   const handleTestNotification = () => {

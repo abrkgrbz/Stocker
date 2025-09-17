@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Tag, Input, Select, DatePicker, message, Drawer, Form, InputNumber, Row, Col, Statistic } from 'antd';
+
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, DollarOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import { Card, Table, Button, Space, Tag, Input, Select, DatePicker, message, Drawer, Form, InputNumber, Row, Col, Statistic } from 'antd';
 import dayjs from 'dayjs';
+
+import type { ColumnsType } from 'antd/es/table';
 
 interface Opportunity {
   id: number;

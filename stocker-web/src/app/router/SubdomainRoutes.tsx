@@ -1,15 +1,11 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
 import { lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-// Layouts
-import { TenantLayout } from '@/layouts/TenantLayout';
-import { PublicLayout } from '@/layouts/PublicLayout';
-
-// Components
 import { PrivateRoute } from '@/app/router/PrivateRoute';
+import { PublicLayout } from '@/layouts/PublicLayout';
+import { TenantLayout } from '@/layouts/TenantLayout';
 
-// Lazy load pages
 const TenantLogin = lazy(() => import('@/features/auth/pages/TenantLogin').then(m => ({ default: m.TenantLogin })));
 const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));

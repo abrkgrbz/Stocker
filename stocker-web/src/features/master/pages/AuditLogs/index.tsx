@@ -57,7 +57,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRealtimeData } from '../../hooks/useRealtimeData';
+import { useRealtimeData } from '@/features/master/hooks/useRealtimeData';
 import './auditLogs.css';
 
 const { Search } = Input;

@@ -1,8 +1,8 @@
 import React from 'react';
-import { PageHeader as AntPageHeader } from '@ant-design/pro-components';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import './style.css';
+
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { PageHeader as AntPageHeader } from '@ant-design/pro-components';
 
 interface BreadcrumbItem {
   title: string;

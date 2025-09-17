@@ -1,13 +1,12 @@
-import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+
+import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
-// Import translations
 import enTranslations from './locales/en.json';
 import trTranslations from './locales/tr.json';
 
-// Language configuration
 export const languages = {
   en: {
     code: 'en',

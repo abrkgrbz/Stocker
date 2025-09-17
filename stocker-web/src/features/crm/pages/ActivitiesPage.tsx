@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Tag, Input, Select, DatePicker, message, Drawer, Form, TimePicker, Row, Col, Calendar, Badge, Avatar, Timeline, Tabs, List } from 'antd';
+
 import { PlusOutlined, SearchOutlined, PhoneOutlined, MailOutlined, TeamOutlined, CalendarOutlined, ClockCircleOutlined, UserOutlined, CheckCircleOutlined, VideoCameraOutlined, FileTextOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import type { BadgeProps } from 'antd';
+import { Card, Table, Button, Space, Tag, Input, Select, DatePicker, message, Drawer, Form, TimePicker, Row, Col, Calendar, Badge, Avatar, Timeline, Tabs, List } from 'antd';
 import dayjs from 'dayjs';
+
+import type { BadgeProps } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 
 interface Activity {
   id: number;

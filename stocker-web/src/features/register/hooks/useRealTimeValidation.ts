@@ -50,8 +50,7 @@ export const useRealTimeValidation = () => {
 
     // Set up event handlers
     newConnection.on('Connected', (data) => {
-      console.log('Connected to validation hub:', data);
-      setIsConnected(true);
+            setIsConnected(true);
     });
 
     newConnection.on('EmailValidated', (result: ValidationResult) => {
@@ -91,29 +90,25 @@ export const useRealTimeValidation = () => {
 
     // Reconnection handlers
     newConnection.onreconnecting(() => {
-      console.log('Attempting to reconnect to validation hub...');
-      setIsConnected(false);
+            setIsConnected(false);
     });
 
     newConnection.onreconnected(() => {
-      console.log('Reconnected to validation hub');
-      setIsConnected(true);
+            setIsConnected(true);
       message.success('Bağlantı yeniden kuruldu');
     });
 
     newConnection.onclose(() => {
-      console.log('Connection closed');
-      setIsConnected(false);
+            setIsConnected(false);
     });
 
     // Start connection
     const startConnection = async () => {
       try {
         await newConnection.start();
-        console.log('SignalR Connected for validation');
-        setConnection(newConnection);
+                setConnection(newConnection);
       } catch (err) {
-        console.error('SignalR Connection Error:', err);
+        // Error handling removed for production
         setTimeout(startConnection, 5000);
       }
     };
@@ -146,7 +141,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('ValidateEmail', email);
       } catch (err) {
-        console.error('Email validation error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, email: false }));
       }
     }, 500);
@@ -165,7 +160,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('CheckPasswordStrength', password);
       } catch (err) {
-        console.error('Password strength check error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, password: false }));
       }
     }, 300);
@@ -184,7 +179,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('CheckDomain', domain);
       } catch (err) {
-        console.error('Domain check error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, domain: false }));
       }
     }, 800);
@@ -203,7 +198,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('ValidatePhone', phoneNumber, countryCode);
       } catch (err) {
-        console.error('Phone validation error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, phone: false }));
       }
     }, 500);
@@ -222,7 +217,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('CheckCompanyName', companyName);
       } catch (err) {
-        console.error('Company name check error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, companyName: false }));
       }
     }, 700);
@@ -241,7 +236,7 @@ export const useRealTimeValidation = () => {
       try {
         await connection.invoke('ValidateIdentity', identityNumber);
       } catch (err) {
-        console.error('Identity validation error:', err);
+        // Error handling removed for production
         setLoading(prev => ({ ...prev, identity: false }));
       }
     }, 600);

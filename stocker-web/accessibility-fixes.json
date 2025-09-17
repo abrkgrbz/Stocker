@@ -1,0 +1,617 @@
+{
+  "summary": {
+    "filesProcessed": 177,
+    "filesFixed": 124,
+    "totalFixes": 1142,
+    "timestamp": "2025-09-17T04:05:58.781Z"
+  },
+  "fixTypes": {
+    "skip-navigation": 1,
+    "antd-icon-button": 435,
+    "select-label": 293,
+    "input-label": 386,
+    "clickable-div": 27
+  },
+  "fixes": [
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/App.tsx",
+      "type": "skip-navigation",
+      "original": "No skip navigation",
+      "fixed": "Added skip navigation link"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/ErrorBoundary/ErrorBoundary.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button \r                type=\"primary\" \r                icon={<ReloadOutlined />}\r                onClick={this.handleReset}\r                key=\"reload\"\r              >",
+      "fixed": "<Button \r                type=\"primary\" \r                icon={<ReloadOutlined />}\r                onClick={this.handleReset}\r                key=\"reload\"\r               aria-label=\"reload outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/LanguageSwitcher/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r        className={className}\r        icon={<GlobalOutlined />}\r        onClick={() =>",
+      "fixed": "<Button\r        className={className}\r        icon={<GlobalOutlined />}\r        onClick={() = aria-label=\"global outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/LanguageSwitcher/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button className={className} icon={<GlobalOutlined />}>",
+      "fixed": "<Button className={className} icon={<GlobalOutlined />} aria-label=\"global outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/LanguageSwitcher/index.tsx",
+      "type": "select-label",
+      "original": "<Select\r        className={className}\r        value={currentLanguage}\r        onChange={changeLanguage}\r        style={{ width: showName ? 140 : 80 }}\r        suffixIcon={<GlobalOutlined />",
+      "fixed": "<Select\r        className={className}\r        value={currentLanguage}\r        onChange={changeLanguage}\r        style={{ width: showName ? 140 : 80 }}\r        suffixIcon={<GlobalOutlined / aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/LanguageSwitcher/index.tsx",
+      "type": "select-label",
+      "original": "<Select.Option key={lang.code} value={lang.code}>",
+      "fixed": "<Select.Option key={lang.code} value={lang.code} aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/components/ThemeToggle/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r          type=\"text\"\r          icon={\r            <motion.div\r              initial={false}\r              animate={{ rotate: themeMode === 'dark' ? 180 : 0 }}\r              transition={{ duration: 0.3 }}\r            >",
+      "fixed": "<Button\r          type=\"text\"\r          icon={\r            <motion.div\r              initial={false}\r              animate={{ rotate: themeMode === 'dark' ? 180 : 0 }}\r              transition={{ duration: 0.3 }}\r             aria-label=\"button\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/core/theme/components/ThemeSwitcher.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r          type=\"text\"\r          icon={currentIcon}\r          onClick={toggleTheme}\r          size={size}\r          className=\"theme-switcher-button\"\r        >",
+      "fixed": "<Button\r          type=\"text\"\r          icon={currentIcon}\r          onClick={toggleTheme}\r          size={size}\r          className=\"theme-switcher-button\"\r         aria-label=\"button\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/core/theme/components/ThemeSwitcher.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r        type=\"text\"\r        icon={currentIcon}\r        size={size}\r        className=\"theme-switcher-dropdown\"\r      >",
+      "fixed": "<Button\r        type=\"text\"\r        icon={currentIcon}\r        size={size}\r        className=\"theme-switcher-dropdown\"\r       aria-label=\"button\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/EmailVerification/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r                type=\"primary\"\r                size=\"large\"\r                block\r                loading={loading}\r                onClick={handleVerifyCode}\r                disabled={verificationCode.length !== 6}\r                icon={<CheckCircleOutlined />}\r              >",
+      "fixed": "<Button\r                type=\"primary\"\r                size=\"large\"\r                block\r                loading={loading}\r                onClick={handleVerifyCode}\r                disabled={verificationCode.length !== 6}\r                icon={<CheckCircleOutlined />}\r               aria-label=\"check circle outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/EmailVerification/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r                  type=\"primary\"\r                  key=\"resend\"\r                  onClick={handleResend}\r                  icon={<SendOutlined />}\r                >",
+      "fixed": "<Button\r                  type=\"primary\"\r                  key=\"resend\"\r                  onClick={handleResend}\r                  icon={<SendOutlined />}\r                 aria-label=\"send outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/EmailVerification/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r                size=\"large\"\r                placeholder=\"000000\"\r                maxLength={6}\r                value={verificationCode}\r                onChange={(e) =>",
+      "fixed": "<Input\r                size=\"large\"\r                placeholder=\"000000\"\r                maxLength={6}\r                value={verificationCode}\r                onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/EmailVerification/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r                size=\"small\"\r                placeholder=\"6 haneli kod\"\r                maxLength={6}\r                value={code}\r                onChange={(e) =>",
+      "fixed": "<Input\r                size=\"small\"\r                placeholder=\"6 haneli kod\"\r                maxLength={6}\r                value={code}\r                onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/ReferralCode/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r            icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}\r            onClick={() =>",
+      "fixed": "<Button\r            icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}\r            onClick={() = aria-label=\"button\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/ReferralCode/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r                icon={<QrcodeOutlined />}\r                onClick={() =>",
+      "fixed": "<Button\r                icon={<QrcodeOutlined />}\r                onClick={() = aria-label=\"qrcode outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/ReferralCode/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r              icon={<CopyOutlined />}\r              onClick={() =>",
+      "fixed": "<Button\r              icon={<CopyOutlined />}\r              onClick={() = aria-label=\"copy outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/ReferralCode/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r          size=\"large\"\r          placeholder={placeholder}\r          prefix={<GiftOutlined style={{ color: '#667eea' }} />",
+      "fixed": "<Input\r          size=\"large\"\r          placeholder={placeholder}\r          prefix={<GiftOutlined style={{ color: '#667eea' }} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/SocialLogin/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r          className={`social-login-btn social-login-${provider}`}\r          size={size}\r          icon={isLoading ? <Spin size=\"small\" /> : config.icon}\r          onClick={() =>",
+      "fixed": "<Button\r          className={`social-login-btn social-login-${provider}`}\r          size={size}\r          icon={isLoading ? <Spin size=\"small\" /> : config.icon}\r          onClick={() = aria-label=\"button\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TenantLoginModal/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\n                type=\"primary\"\n                size=\"large\"\n                icon={<ArrowRightOutlined />}\n                loading={loading}\n                onClick={handleTenantLogin}\n                style={{\n                  borderRadius: '0 6px 6px 0',\n                  minWidth: 120,\n                  height: 42\n                }}\n              >",
+      "fixed": "<Button\n                type=\"primary\"\n                size=\"large\"\n                icon={<ArrowRightOutlined />}\n                loading={loading}\n                onClick={handleTenantLogin}\n                style={{\n                  borderRadius: '0 6px 6px 0',\n                  minWidth: 120,\n                  height: 42\n                }}\n               aria-label=\"arrow right outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TenantLoginModal/index.tsx",
+      "type": "input-label",
+      "original": "<Input\n                size=\"large\"\n                placeholder=\"demo\"\n                value={tenantSlug}\n                onChange={(e) =>",
+      "fixed": "<Input\n                size=\"large\"\n                placeholder=\"demo\"\n                value={tenantSlug}\n                onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r                icon={<CopyOutlined />}\r                onClick={() =>",
+      "fixed": "<Button\r                icon={<CopyOutlined />}\r                onClick={() = aria-label=\"copy outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r              type=\"primary\"\r              block\r              size=\"large\"\r              icon={<CopyOutlined />}\r              onClick={() =>",
+      "fixed": "<Button\r              type=\"primary\"\r              block\r              size=\"large\"\r              icon={<CopyOutlined />}\r              onClick={() = aria-label=\"copy outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r            type=\"primary\"\r            block\r            size=\"large\"\r            loading={loading}\r            onClick={handleSMSSetup}\r            style={{ marginTop: 24 }}\r            icon={<MobileOutlined />}\r          >",
+      "fixed": "<Button\r            type=\"primary\"\r            block\r            size=\"large\"\r            loading={loading}\r            onClick={handleSMSSetup}\r            style={{ marginTop: 24 }}\r            icon={<MobileOutlined />}\r           aria-label=\"mobile outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r              size=\"large\"\r              placeholder=\"000000\"\r              maxLength={6}\r              value={verificationCode}\r              onChange={(e) =>",
+      "fixed": "<Input\r              size=\"large\"\r              placeholder=\"000000\"\r              maxLength={6}\r              value={verificationCode}\r              onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r              size=\"large\"\r              prefix={<MobileOutlined />",
+      "fixed": "<Input\r              size=\"large\"\r              prefix={<MobileOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r              size=\"large\"\r              placeholder=\"000000\"\r              maxLength={6}\r              value={verificationCode}\r              onChange={(e) =>",
+      "fixed": "<Input\r              size=\"large\"\r              placeholder=\"000000\"\r              maxLength={6}\r              value={verificationCode}\r              onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/components/TwoFactorAuth/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r          size=\"large\"\r          placeholder=\"000000\"\r          maxLength={6}\r          value={code}\r          onChange={(e) =>",
+      "fixed": "<Input\r          size=\"large\"\r          placeholder=\"000000\"\r          maxLength={6}\r          value={code}\r          onChange={(e) = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/EmailVerification/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r                  key=\"resend\"\r                  type=\"primary\"\r                  icon={<MailOutlined />}\r                  loading={isResending}\r                  disabled={resendCooldown >",
+      "fixed": "<Button\r                  key=\"resend\"\r                  type=\"primary\"\r                  icon={<MailOutlined />}\r                  loading={isResending}\r                  disabled={resendCooldown  aria-label=\"mail outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/ForgotPasswordPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r                  size=\"large\"\r                  prefix={<MailOutlined />",
+      "fixed": "<Input\r                  size=\"large\"\r                  prefix={<MailOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/ForgotPasswordPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input\r                  size=\"large\"\r                  placeholder=\"6 haneli kodu girin\"\r                  maxLength={6}\r                />",
+      "fixed": "<Input\r                  size=\"large\"\r                  placeholder=\"6 haneli kodu girin\"\r                  maxLength={6}\r                / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/ForgotPasswordPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input.Password\r                  size=\"large\"\r                  prefix={<LockOutlined />",
+      "fixed": "<Input.Password\r                  size=\"large\"\r                  prefix={<LockOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/ForgotPasswordPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input.Password\r                  size=\"large\"\r                  prefix={<LockOutlined />",
+      "fixed": "<Input.Password\r                  size=\"large\"\r                  prefix={<LockOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button \r                type=\"primary\" \r                htmlType=\"submit\" \r                loading={isLoading} \r                block\r                size=\"large\"\r                icon={<LoginOutlined />}\r                className=\"login-button\"\r              >",
+      "fixed": "<Button \r                type=\"primary\" \r                htmlType=\"submit\" \r                loading={isLoading} \r                block\r                size=\"large\"\r                icon={<LoginOutlined />}\r                className=\"login-button\"\r               aria-label=\"login outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input \r                prefix={<HomeOutlined style={{ color: '#667eea' }} />",
+      "fixed": "<Input \r                prefix={<HomeOutlined style={{ color: '#667eea' }} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input \r                prefix={<MailOutlined style={{ color: '#667eea' }} />",
+      "fixed": "<Input \r                prefix={<MailOutlined style={{ color: '#667eea' }} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input.Password\r                prefix={<LockOutlined style={{ color: '#667eea' }} />",
+      "fixed": "<Input.Password\r                prefix={<LockOutlined style={{ color: '#667eea' }} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "clickable-div",
+      "original": "<div className=\"demo-credential\" onClick={() => {\r                form.setFieldsValue({ email: 'admin@stocker.com', password: 'Admin@123456' });\r              }}>",
+      "fixed": "<div className=\"demo-credential\" onClick={() => {\r                form.setFieldsValue({ email: 'admin@stocker.com', password: 'Admin@123456' });\r              }} role=\"button\" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && () => {\r                form.setFieldsValue({ email: 'admin@stocker.com', password: 'Admin@123456' (e)}>"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/LoginPage/index.tsx",
+      "type": "clickable-div",
+      "original": "<div className=\"demo-credential\" onClick={() => {\r                form.setFieldsValue({ email: 'tenant@example.com', password: 'Tenant@123456' });\r              }}>",
+      "fixed": "<div className=\"demo-credential\" onClick={() => {\r                form.setFieldsValue({ email: 'tenant@example.com', password: 'Tenant@123456' });\r              }} role=\"button\" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && () => {\r                form.setFieldsValue({ email: 'tenant@example.com', password: 'Tenant@123456' (e)}>"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/TenantLogin/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\n                    type=\"primary\"\n                    htmlType=\"submit\"\n                    size=\"large\"\n                    loading={loading}\n                    icon={<LoginOutlined />}\n                    block\n                  >",
+      "fixed": "<Button\n                    type=\"primary\"\n                    htmlType=\"submit\"\n                    size=\"large\"\n                    loading={loading}\n                    icon={<LoginOutlined />}\n                    block\n                   aria-label=\"login outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/TenantLogin/index.tsx",
+      "type": "input-label",
+      "original": "<Input\n                    prefix={<MailOutlined />",
+      "fixed": "<Input\n                    prefix={<MailOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/auth/pages/TenantLogin/index.tsx",
+      "type": "input-label",
+      "original": "<Input.Password\n                    prefix={<LockOutlined />",
+      "fixed": "<Input.Password\n                    prefix={<LockOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/blog/pages/BlogPage/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button \r              icon={<ArrowLeftOutlined />} \r              onClick={() =>",
+      "fixed": "<Button \r              icon={<ArrowLeftOutlined />} \r              onClick={() = aria-label=\"arrow left outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/blog/pages/BlogPage/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button \r                    type=\"primary\" \r                    size=\"large\"\r                    icon={<RocketOutlined />}\r                    onClick={() =>",
+      "fixed": "<Button \r                    type=\"primary\" \r                    size=\"large\"\r                    icon={<RocketOutlined />}\r                    onClick={() = aria-label=\"rocket outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/blog/pages/BlogPage/index.tsx",
+      "type": "input-label",
+      "original": "<Input placeholder=\"E-posta adresiniz\" size=\"large\" />",
+      "fixed": "<Input placeholder=\"E-posta adresiniz\" size=\"large\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/blog/pages/BlogPage/index.tsx",
+      "type": "select-label",
+      "original": "<Select\r                defaultValue=\"all\"\r                style={{ width: 200 }}\r                onChange={setSelectedCategory}\r                size=\"large\"\r              >",
+      "fixed": "<Select\r                defaultValue=\"all\"\r                style={{ width: 200 }}\r                onChange={setSelectedCategory}\r                size=\"large\"\r               aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/blog/pages/BlogPage/index.tsx",
+      "type": "clickable-div",
+      "original": "<div className=\"logo-section\" onClick={() => navigate('/')}>",
+      "fixed": "<div className=\"logo-section\" onClick={() => navigate('/')} role=\"button\" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && () => navigate('/')(e)}>"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Vergi numaranız\" maxLength={11} />",
+      "fixed": "<Input size=\"large\" placeholder=\"Vergi numaranız\" maxLength={11} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Örn: Kadıköy V.D.\" />",
+      "fixed": "<Input size=\"large\" placeholder=\"Örn: Kadıköy V.D.\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Ticaret sicil numarası (opsiyonel)\" />",
+      "fixed": "<Input size=\"large\" placeholder=\"Ticaret sicil numarası (opsiyonel)\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"34000\" maxLength={5} />",
+      "fixed": "<Input size=\"large\" placeholder=\"34000\" maxLength={5} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber \r                    size=\"large\" \r                    min={1900} \r                    max={new Date().getFullYear()} \r                    style={{ width: '100%' }} \r                    placeholder={String(new Date().getFullYear())}\r                  />",
+      "fixed": "<InputNumber \r                    size=\"large\" \r                    min={1900} \r                    max={new Date().getFullYear()} \r                    style={{ width: '100%' }} \r                    placeholder={String(new Date().getFullYear())}\r                  / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" prefix={<GlobalOutlined />",
+      "fixed": "<Input size=\"large\" prefix={<GlobalOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Sektör seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Sektör seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\">",
+      "fixed": "<Select size=\"large\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select \r                    size=\"large\" \r                    placeholder=\"İl seçiniz\"\r                    onChange={handleCityChange}\r                    showSearch\r                    filterOption={(input, option) =>",
+      "fixed": "<Select \r                    size=\"large\" \r                    placeholder=\"İl seçiniz\"\r                    onChange={handleCityChange}\r                    showSearch\r                    filterOption={(input, option) = aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select\r                    size=\"large\"\r                    placeholder=\"Önce il seçiniz\"\r                    showSearch\r                    filterOption={(input, option) =>",
+      "fixed": "<Select\r                    size=\"large\"\r                    placeholder=\"Önce il seçiniz\"\r                    showSearch\r                    filterOption={(input, option) = aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Çalışan sayısı seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Çalışan sayısı seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\">",
+      "fixed": "<Select size=\"large\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanySetup/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\">",
+      "fixed": "<Select size=\"large\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<DownloadOutlined />} block>",
+      "fixed": "<Button icon={<DownloadOutlined />} block aria-label=\"download outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<UploadOutlined />} block>",
+      "fixed": "<Button icon={<UploadOutlined />} block aria-label=\"upload outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<DownloadOutlined />} block>",
+      "fixed": "<Button icon={<DownloadOutlined />} block aria-label=\"download outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<UploadOutlined />} block>",
+      "fixed": "<Button icon={<UploadOutlined />} block aria-label=\"upload outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<DownloadOutlined />} block>",
+      "fixed": "<Button icon={<DownloadOutlined />} block aria-label=\"download outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<UploadOutlined />} block>",
+      "fixed": "<Button icon={<UploadOutlined />} block aria-label=\"upload outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<DownloadOutlined />} block>",
+      "fixed": "<Button icon={<DownloadOutlined />} block aria-label=\"download outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button icon={<UploadOutlined />} block>",
+      "fixed": "<Button icon={<UploadOutlined />} block aria-label=\"upload outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" prefix={<BankOutlined />",
+      "fixed": "<Input size=\"large\" prefix={<BankOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Tam ticari ünvanınız\" />",
+      "fixed": "<Input size=\"large\" placeholder=\"Tam ticari ünvanınız\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"10 veya 11 haneli\" maxLength={11} />",
+      "fixed": "<Input size=\"large\" placeholder=\"10 veya 11 haneli\" maxLength={11} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Örn: Kadıköy V.D.\" />",
+      "fixed": "<Input size=\"large\" placeholder=\"Örn: Kadıköy V.D.\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" placeholder=\"Opsiyonel\" />",
+      "fixed": "<Input size=\"large\" placeholder=\"Opsiyonel\" / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" prefix={<MailOutlined />",
+      "fixed": "<Input size=\"large\" prefix={<MailOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" prefix={<PhoneOutlined />",
+      "fixed": "<Input size=\"large\" prefix={<PhoneOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<Input size=\"large\" prefix={<GlobalOutlined />",
+      "fixed": "<Input size=\"large\" prefix={<GlobalOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber \r                    size=\"large\" \r                    min={1900} \r                    max={new Date().getFullYear()} \r                    style={{ width: '100%' }}\r                    placeholder=\"2020\"\r                  />",
+      "fixed": "<InputNumber \r                    size=\"large\" \r                    min={1900} \r                    max={new Date().getFullYear()} \r                    style={{ width: '100%' }}\r                    placeholder=\"2020\"\r                  / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber\r                    size=\"large\"\r                    min={1}\r                    style={{ width: '100%' }}\r                    placeholder=\"Örn: 10\"\r                  />",
+      "fixed": "<InputNumber\r                    size=\"large\"\r                    min={1}\r                    style={{ width: '100%' }}\r                    placeholder=\"Örn: 10\"\r                  / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={100}\r                    style={{ width: '100%' }}\r                    formatter={value =>",
+      "fixed": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={100}\r                    style={{ width: '100%' }}\r                    formatter={value = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={100}\r                    style={{ width: '100%' }}\r                    formatter={value =>",
+      "fixed": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={100}\r                    style={{ width: '100%' }}\r                    formatter={value = aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber\r                    size=\"large\"\r                    min={6}\r                    max={32}\r                    style={{ width: '100%' }}\r                  />",
+      "fixed": "<InputNumber\r                    size=\"large\"\r                    min={6}\r                    max={32}\r                    style={{ width: '100%' }}\r                  / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "input-label",
+      "original": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={365}\r                    style={{ width: '100%' }}\r                    placeholder=\"0 = Süresiz\"\r                  />",
+      "fixed": "<InputNumber\r                    size=\"large\"\r                    min={0}\r                    max={365}\r                    style={{ width: '100%' }}\r                    placeholder=\"0 = Süresiz\"\r                  / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Sektör seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Sektör seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select\r                mode=\"tags\"\r                size=\"large\"\r                placeholder=\"Departman ekleyin (Enter tuşu ile)\"\r                style={{ width: '100%' }}\r              >",
+      "fixed": "<Select\r                mode=\"tags\"\r                size=\"large\"\r                placeholder=\"Departman ekleyin (Enter tuşu ile)\"\r                style={{ width: '100%' }}\r               aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select\r                mode=\"tags\"\r                size=\"large\"\r                placeholder=\"Şube ekleyin (Enter tuşu ile)\"\r                style={{ width: '100%' }}\r              >",
+      "fixed": "<Select\r                mode=\"tags\"\r                size=\"large\"\r                placeholder=\"Şube ekleyin (Enter tuşu ile)\"\r                style={{ width: '100%' }}\r               aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\">",
+      "fixed": "<Select size=\"large\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" defaultValue=\"daily\">",
+      "fixed": "<Select size=\"large\" defaultValue=\"daily\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" defaultValue=\"30\">",
+      "fixed": "<Select size=\"large\" defaultValue=\"30\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/company/pages/CompanyWizard/index.tsx",
+      "type": "select-label",
+      "original": "<Select size=\"large\" placeholder=\"Seçiniz\">",
+      "fixed": "<Select size=\"large\" placeholder=\"Seçiniz\" aria-label=\"select field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "antd-icon-button",
+      "original": "<Button\r              type=\"primary\"\r              icon={<PlusOutlined />}\r              onClick={() =>",
+      "fixed": "<Button\r              type=\"primary\"\r              icon={<PlusOutlined />}\r              onClick={() = aria-label=\"plus outlined\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input\r                  placeholder=\"Ara...\"\r                  prefix={<SearchOutlined />",
+      "fixed": "<Input\r                  placeholder=\"Ara...\"\r                  prefix={<SearchOutlined / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input />",
+      "fixed": "<Input / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input.TextArea rows={3} />",
+      "fixed": "<Input.TextArea rows={3} / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input />",
+      "fixed": "<Input / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input />",
+      "fixed": "<Input / aria-label=\"input field\">"
+    },
+    {
+      "file": "C:/Users/PC/source/repos/Stocker/stocker-web/src/features/crm/pages/ActivitiesPage.tsx",
+      "type": "input-label",
+      "original": "<Input.TextArea rows={3} placeholder=\"Aktivite sonucu hakkında notlar...\" />",
+      "fixed": "<Input.TextArea rows={3} placeholder=\"Aktivite sonucu hakkında notlar...\" / aria-label=\"input field\">"
+    }
+  ]
+}

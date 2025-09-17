@@ -1,9 +1,10 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+
 import { API_BASE_URL, TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/config/constants';
-import { getTenantCode } from '@/shared/utils/subdomain';
-import { ExponentialBackoff, apiRateLimiter, globalRequestQueue } from '@/shared/utils/rate-limiter';
-import { handleError, parseError } from '@/shared/utils/error-handler';
 import { setupAuthInterceptor } from '@/shared/utils/auth-interceptor';
+import { handleError, parseError } from '@/shared/utils/error-handler';
+import { ExponentialBackoff, apiRateLimiter, globalRequestQueue } from '@/shared/utils/rate-limiter';
+import { getTenantCode } from '@/shared/utils/subdomain';
 
 interface EnhancedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -63,8 +64,7 @@ apiClientEnhanced.interceptors.request.use(
 apiClientEnhanced.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful response for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[API Success] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+    if (process.env.NODE_ENV === 'development') {} ${response.config.url}`, {
         status: response.status,
         data: response.data,
       });
@@ -82,7 +82,8 @@ apiClientEnhanced.interceptors.response.use(
     
     // Log error for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.error(`[API Error] ${config?.method?.toUpperCase()} ${config?.url}`, {
+      // Error handling removed for production
+} ${config?.url}`, {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,

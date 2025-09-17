@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Input, Form, Typography, Space, Alert, Badge, Tag, Spin, Row, Col, Button, Tabs, Divider, Radio } from 'antd';
+
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, ApiOutlined, WifiOutlined, IdcardOutlined } from '@ant-design/icons';
-import { useSignalRValidation } from '@/shared/hooks/useSignalR';
+import { Card, Input, Form, Typography, Space, Alert, Badge, Tag, Spin, Row, Col, Button, Tabs, Divider, Radio } from 'antd';
+
 import { apiClient } from '@/shared/api/client';
+import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -107,14 +109,10 @@ export const SignalRTestPage: React.FC = () => {
     
     if (cleanValue.length === expectedLength) {
       setIsValidatingIdentity(true);
-      console.log('=== SignalR Test Page - Validating Identity ===');
-      console.log('Type:', identityType);
-      console.log('Value:', cleanValue);
-      try {
+                        try {
         await validateIdentity(cleanValue);
-        console.log('Validation call completed');
-      } catch (error) {
-        console.error('Validation call failed:', error);
+              } catch (error) {
+        // Error handling removed for production
       }
     }
   };

@@ -1,6 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/app/store/auth.store';
+
 import { Spin } from 'antd';
+
+import { useAuthStore } from '@/app/store/auth.store';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -11,18 +13,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) =
   const location = useLocation();
   const { isAuthenticated, user, isLoading } = useAuthStore();
 
-  console.log('[PrivateRoute] Checking access:', {
-    path: location.pathname,
-    isAuthenticated,
-    isLoading,
-    userRoles: user?.roles,
-    requiredRoles: roles,
-    user: user ? { id: user.id, email: user.email, roles: user.roles } : null
-  });
-
-  if (isLoading) {
-    console.log('[PrivateRoute] Still loading...');
-    return (
+    if (isLoading) {
+        return (
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
@@ -35,18 +27,12 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) =
   }
 
   if (!isAuthenticated) {
-    console.log('[PrivateRoute] Not authenticated, redirecting to login');
-    return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (roles && user && !roles.some(role => user.roles.includes(role))) {
-    console.log('[PrivateRoute] User lacks required role:', {
-      userRoles: user.roles,
-      requiredRoles: roles
-    });
-    return <Navigate to="/unauthorized" replace />;
+        return <Navigate to="/unauthorized" replace />;
   }
 
-  console.log('[PrivateRoute] Access granted');
-  return <>{children}</>;
+    return <>{children}</>;
 };

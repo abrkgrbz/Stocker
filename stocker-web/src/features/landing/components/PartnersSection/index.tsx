@@ -1,8 +1,7 @@
 import React from 'react';
+import { TeamOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Typography, Tag } from 'antd';
 import { motion } from 'framer-motion';
-import { TeamOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import './style.css';
 
 const { Title, Paragraph } = Typography;
 

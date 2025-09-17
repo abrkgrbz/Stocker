@@ -1,345 +1,332 @@
 // Analytics Service for Registration & Auth
+
+// Define proper types for analytics libraries
+interface MixpanelLib {
+  init: (token: string, config?: object) => void;
+  track: (event: string, properties?: object) => void;
+  identify: (userId: string) => void;
+  people: {
+    set: (properties: object) => void;
+    set_once: (properties: object) => void;
+  };
+  reset: () => void;
+  _i?: unknown[];
+}
+
+interface AmplitudeLib {
+  init: (apiKey: string, userId?: string) => void;
+  track: (event: string, properties?: object) => void;
+  setUserId: (userId: string) => void;
+  setUserProperties: (properties: object) => void;
+}
+
+interface HeapLib {
+  identify: (userId: string) => void;
+  addUserProperties: (properties: object) => void;
+  track: (event: string, properties?: object) => void;
+  load?: (id: string) => void;
+  appid?: string;
+  config?: object;
+  push?: (args: unknown[]) => void;
+}
+
+interface SegmentAnalytics {
+  identify: (userId: string, traits?: object) => void;
+  track: (event: string, properties?: object) => void;
+  page: (category?: string, name?: string, properties?: object) => void;
+  group: (groupId: string, traits?: object) => void;
+  reset: () => void;
+  load?: (key: string) => void;
+  initialized?: boolean;
+  invoked?: boolean;
+}
+
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
-    dataLayer?: any[];
-    mixpanel?: any;
-    amplitude?: any;
-    heap?: any;
-    _paq?: any[]; // Matomo
-    analytics?: any; // Segment
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+    mixpanel?: MixpanelLib;
+    amplitude?: AmplitudeLib;
+    heap?: HeapLib | unknown[];
+    _paq?: unknown[]; // Matomo
+    analytics?: SegmentAnalytics; // Segment
   }
 }
 
-interface AnalyticsEvent {
-  name: string;
-  properties?: Record<string, any>;
-  timestamp?: Date;
-}
-
+// User properties interface
 interface UserProperties {
-  userId?: string;
   email?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt?: string;
+  lastLogin?: string;
+  subscription?: string;
   plan?: string;
+  tenant?: string;
+  roles?: string;
   company?: string;
   referralSource?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
+}
+
+// Base event properties
+interface BaseEventProperties {
+  timestamp?: number;
+  session_id?: string;
+  user_id?: string;
+  [key: string]: string | number | boolean | object | undefined;
+}
+
+// Form data type for registration
+interface RegistrationFormData {
+  companyName?: string;
+  employeeCount?: string;
+  sector?: string;
+  [key: string]: string | undefined;
 }
 
 class AnalyticsService {
-  private isInitialized = false;
-  private queue: AnalyticsEvent[] = [];
+  private initialized = false;
   private userId: string | null = null;
-  private sessionId: string;
 
-  constructor() {
-    this.sessionId = this.generateSessionId();
-    this.loadGoogleAnalytics();
-    this.loadMixpanel();
-    this.processQueue();
+  // Initialize all analytics platforms
+  public init() {
+    if (this.initialized) return;
+
+    this.initGoogleAnalytics();
+    this.initMixpanel();
+    this.initAmplitude();
+    this.initHeap();
+    this.initSegment();
+    
+    this.initialized = true;
   }
 
-  private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }
-
-  private loadGoogleAnalytics() {
-    const GA_MEASUREMENT_ID = process.env.REACT_APP_GA_MEASUREMENT_ID;
+  // Initialize Google Analytics
+  private initGoogleAnalytics() {
+    const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
     if (!GA_MEASUREMENT_ID) return;
 
     const script = document.createElement('script');
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    
-    script.onload = () => {
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function() {
-        window.dataLayer!.push(arguments);
-      };
-      window.gtag('js', new Date());
-      window.gtag('config', GA_MEASUREMENT_ID, {
-        send_page_view: false,
-        custom_map: {
-          dimension1: 'user_type',
-          dimension2: 'company_size',
-          dimension3: 'referral_source'
-        }
-      });
-      this.isInitialized = true;
-    };
-
     document.head.appendChild(script);
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function() {
+      window.dataLayer?.push(arguments);
+    };
+    window.gtag('js', new Date());
+    window.gtag('config', GA_MEASUREMENT_ID);
   }
 
-  private loadMixpanel() {
-    const MIXPANEL_TOKEN = process.env.REACT_APP_MIXPANEL_TOKEN;
+  // Initialize Mixpanel with proper typing - minified script
+  private initMixpanel() {
+    const MIXPANEL_TOKEN = import.meta.env.VITE_MIXPANEL_TOKEN;
     if (!MIXPANEL_TOKEN) return;
 
-    (function(f: any, b: any) {
-      if (!b.__SV) {
-        var e: any, g: any, i: any, h: any;
-        window.mixpanel = b;
-        b._i = [];
-        b.init = function(e: any, f: any, c: any) {
-          function g(a: any, d: any) {
-            var b = d.split(".");
-            2 == b.length && ((a = a[b[0]]), (d = b[1]));
-            a[d] = function() {
-              a.push([d].concat(Array.prototype.slice.call(arguments, 0)));
-            };
-          }
-          var a = b;
-          "undefined" !== typeof c ? (a = b[c] = []) : (c = "mixpanel");
-          a.people = a.people || [];
-          a.toString = function(a: any) {
-            var d = "mixpanel";
-            "mixpanel" !== c && (d += "." + c);
-            a || (d += " (stub)");
-            return d;
-          };
-          a.people.toString = function() {
-            return a.toString(1) + ".people (stub)";
-          };
-          i = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" ");
-          for (h = 0; h < i.length; h++) g(a, i[h]);
-          var j = "set set_once union unset remove delete".split(" ");
-          a.get_group = function() {
-            function b(c: any) {
-              d[c] = function() {
-                call2_args = arguments;
-                call2 = [c].concat(Array.prototype.slice.call(call2_args, 0));
-                a.push([e, call2]);
-              };
-            }
-            for (var d: any = {}, e = ["get_group"].concat(Array.prototype.slice.call(arguments, 0)), c = 0; c < j.length; c++) b(j[c]);
-            return d;
-          };
-          b._i.push([e, f, c]);
-        };
-        b.__SV = 1.2;
-        e = f.createElement("script");
-        e.type = "text/javascript";
-        e.async = !0;
-        e.src = "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";
-        g = f.getElementsByTagName("script")[0];
-        g.parentNode!.insertBefore(e, g);
-      }
-    })(document, window.mixpanel || []);
+    const script = document.createElement('script');
+    script.innerHTML = `
+      (function(f,b){if(!b.__SV){var e,o,i,g;window.mixpanel=b;b._i=[];b.init=function(e,f,c){function o(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var d=b;"undefined"!==typeof c?d=b[c]=[]:c="mixpanel";d.people=d.people||[];d.toString=function(b){var a="mixpanel";"mixpanel"!==c&&(a+="."+c);b||(a+=" (stub)");return a};d.people.toString=function(){return d.toString(1)+".people (stub)"};i="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group get_group track_with_tag register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" ");
+      for(g=0;g<i.length;g++)o(d,i[g]);var h="set set_once union unset remove delete".split(" ");d.get_group=function(){function a(c){b[c]=function(){call2_args=arguments;call2=[c].concat(Array.prototype.slice.call(call2_args,0));d.push([e,call2])}}for(var b={},e=["get_group"].concat(Array.prototype.slice.call(arguments,0)),c=0;c<h.length;c++)a(h[c]);return b};b._i.push([e,f,c])};b.__SV=1.3;e=f.createElement("script");e.type="text/javascript";e.async=!0;e.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===f.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\\/\\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";o=f.getElementsByTagName("script")[0];o.parentNode.insertBefore(e,o)}})(document,window.mixpanel||[]);
+    `;
+    document.head.appendChild(script);
 
     window.mixpanel?.init(MIXPANEL_TOKEN, {
-      debug: process.env.NODE_ENV === 'development',
+      debug: import.meta.env.DEV,
       track_pageview: true,
       persistence: 'localStorage'
     });
   }
 
-  private processQueue() {
-    if (!this.isInitialized) {
-      setTimeout(() => this.processQueue(), 100);
-      return;
-    }
+  // Initialize Amplitude
+  private initAmplitude() {
+    const AMPLITUDE_API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY;
+    if (!AMPLITUDE_API_KEY) return;
 
-    while (this.queue.length > 0) {
-      const event = this.queue.shift();
-      if (event) {
-        this.sendEvent(event.name, event.properties);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://cdn.amplitude.com/libs/amplitude-js-8.21.4-min.gz.js';
+    script.onload = () => {
+      if (window.amplitude) {
+        window.amplitude.init(AMPLITUDE_API_KEY);
       }
-    }
+    };
+    document.head.appendChild(script);
   }
 
-  private sendEvent(eventName: string, properties?: Record<string, any>) {
-    const eventData = {
-      ...properties,
-      session_id: this.sessionId,
-      timestamp: new Date().toISOString(),
-      user_id: this.userId,
-      page_url: window.location.href,
-      page_title: document.title,
-      referrer: document.referrer,
-      user_agent: navigator.userAgent,
-      screen_resolution: `${window.screen.width}x${window.screen.height}`,
-      viewport_size: `${window.innerWidth}x${window.innerHeight}`,
-      locale: navigator.language
-    };
+  // Initialize Heap - minified script
+  private initHeap() {
+    const HEAP_ID = import.meta.env.VITE_HEAP_ID;
+    if (!HEAP_ID) return;
+
+    const script = document.createElement('script');
+    script.innerHTML = `
+      window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
+      heap.load("${HEAP_ID}");
+    `;
+    document.head.appendChild(script);
+  }
+
+  // Initialize Segment - minified script
+  private initSegment() {
+    const SEGMENT_WRITE_KEY = import.meta.env.VITE_SEGMENT_WRITE_KEY;
+    if (!SEGMENT_WRITE_KEY) return;
+
+    const script = document.createElement('script');
+    script.innerHTML = `
+      !function(){var i="analytics",analytics=window[i]=window[i]||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","screen","once","off","on","addSourceMiddleware","addIntegrationMiddleware","setAnonymousId","addDestinationMiddleware","register"];analytics.factory=function(e){return function(){if(window[i].initialized)return window[i][e].apply(window[i],arguments);var n=Array.prototype.slice.call(arguments);if(["track","screen","alias","group","page","identify"].indexOf(e)>-1){var c=document.querySelector("link[rel='canonical']");n.push({__t:"bpc",c:c&&c.getAttribute("href")||void 0,p:location.pathname,u:location.href,s:location.search,t:document.title,r:document.referrer})}n.unshift(e);analytics.push(n);return analytics}};for(var n=0;n<analytics.methods.length;n++){var key=analytics.methods[n];analytics[key]=analytics.factory(key)}analytics.load=function(key,n){var t=document.createElement("script");t.type="text/javascript";t.async=!0;t.src="https://cdn.segment.com/analytics.js/v1/"+key+"/analytics.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r);analytics._writeKey=key;analytics._loadOptions=n};analytics.SNIPPET_VERSION="5.2.0";
+      analytics.load("${SEGMENT_WRITE_KEY}");
+      analytics.page();
+      }}();
+    `;
+    document.head.appendChild(script);
+  }
+
+  // Track custom event
+  public track(event: string, properties: BaseEventProperties = {}) {
+    // Add timestamp if not present
+    if (!properties.timestamp) {
+      properties.timestamp = Date.now();
+    }
+
+    // Add user ID if available
+    if (this.userId && !properties.user_id) {
+      properties.user_id = this.userId;
+    }
 
     // Google Analytics
     if (window.gtag) {
-      window.gtag('event', eventName, eventData);
+      window.gtag('event', event, properties);
     }
 
     // Mixpanel
-    if (window.mixpanel) {
-      window.mixpanel.track(eventName, eventData);
+    if (window.mixpanel && 'track' in window.mixpanel) {
+      window.mixpanel.track(event, properties);
     }
 
-    // Custom backend analytics
-    this.sendToBackend(eventName, eventData);
-  }
+    // Amplitude
+    if (window.amplitude && 'track' in window.amplitude) {
+      window.amplitude.track(event, properties);
+    }
 
-  private async sendToBackend(eventName: string, properties: Record<string, any>) {
-    try {
-      await fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          event: eventName,
-          properties,
-          session_id: this.sessionId,
-          user_id: this.userId
-        })
-      });
-    } catch (error) {
-      console.error('Failed to send analytics:', error);
+    // Heap
+    if (window.heap && typeof window.heap === 'object' && 'track' in window.heap) {
+      window.heap.track(event, properties);
+    }
+
+    // Segment
+    if (window.analytics && 'track' in window.analytics) {
+      window.analytics.track(event, properties);
     }
   }
 
-  // Public methods
-  public track(eventName: string, properties?: Record<string, any>) {
-    if (!this.isInitialized) {
-      this.queue.push({ name: eventName, properties });
-      return;
-    }
-    this.sendEvent(eventName, properties);
-  }
-
-  public identify(userId: string, traits?: UserProperties) {
+  // Identify user
+  public identify(userId: string, traits: UserProperties = {}) {
     this.userId = userId;
-    
-    if (window.gtag) {
-      window.gtag('set', { user_id: userId });
-      window.gtag('set', 'user_properties', traits);
-    }
-    
-    if (window.mixpanel) {
+
+    // Mixpanel
+    if (window.mixpanel && 'identify' in window.mixpanel) {
       window.mixpanel.identify(userId);
-      if (traits) {
+      if (Object.keys(traits).length > 0 && window.mixpanel.people) {
         window.mixpanel.people.set(traits);
       }
     }
+
+    // Amplitude
+    if (window.amplitude && 'setUserId' in window.amplitude) {
+      window.amplitude.setUserId(userId);
+      if (Object.keys(traits).length > 0 && 'setUserProperties' in window.amplitude) {
+        window.amplitude.setUserProperties(traits);
+      }
+    }
+
+    // Heap
+    if (window.heap && typeof window.heap === 'object' && 'identify' in window.heap) {
+      window.heap.identify(userId);
+      if (Object.keys(traits).length > 0 && 'addUserProperties' in window.heap) {
+        window.heap.addUserProperties(traits);
+      }
+    }
+
+    // Segment
+    if (window.analytics && 'identify' in window.analytics) {
+      window.analytics.identify(userId, traits);
+    }
+
+    // Google Analytics
+    if (window.gtag) {
+      window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
+        user_id: userId
+      });
+    }
   }
 
-  public page(pageName?: string, properties?: Record<string, any>) {
-    const pageData = {
+  // Track page view
+  public trackPageView(pageName?: string, properties: BaseEventProperties = {}) {
+    const pageProps = {
+      ...properties,
       page_name: pageName || document.title,
       page_path: window.location.pathname,
-      ...properties
+      page_url: window.location.href
     };
 
-    this.track('page_view', pageData);
+    this.track('page_view', pageProps);
+    
+    // Segment specific page tracking
+    if (window.analytics && 'page' in window.analytics) {
+      window.analytics.page(pageName, pageProps);
+    }
   }
 
-  // Registration flow tracking
-  public trackRegistrationStart(source?: string) {
-    this.track('registration_started', {
-      source,
-      referrer: document.referrer,
-      utm_source: new URLSearchParams(window.location.search).get('utm_source'),
-      utm_medium: new URLSearchParams(window.location.search).get('utm_medium'),
-      utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign')
-    });
-  }
-
-  public trackRegistrationStep(step: number, stepName: string, formData?: any) {
+  // Track registration step
+  public trackRegistrationStep(step: number, stepName: string, formData?: RegistrationFormData) {
     this.track('registration_step_completed', {
       step_number: step,
       step_name: stepName,
-      form_data: formData
+      ...formData
     });
   }
 
-  public trackRegistrationComplete(userId: string, plan: string, company?: string) {
-    this.track('registration_completed', {
-      user_id: userId,
-      plan,
-      company
-    });
-    
-    this.identify(userId, { plan, company });
-  }
-
-  public trackRegistrationError(step: string, error: string) {
-    this.track('registration_error', {
-      step,
-      error_message: error
-    });
-  }
-
-  public trackFormAbandonment(step: string, filledFields: number, totalFields: number) {
-    this.track('form_abandoned', {
-      step,
-      filled_fields: filledFields,
-      total_fields: totalFields,
-      completion_percentage: (filledFields / totalFields) * 100
-    });
-  }
-
-  // Login tracking
-  public trackLoginAttempt(method: string) {
-    this.track('login_attempted', { method });
-  }
-
-  public trackLoginSuccess(userId: string, method: string) {
-    this.track('login_successful', {
-      user_id: userId,
-      method
-    });
-    this.identify(userId);
-  }
-
-  public trackLoginError(method: string, error: string) {
-    this.track('login_failed', {
+  // Track login attempt
+  public trackLoginAttempt(success: boolean, method: string) {
+    this.track(success ? 'login_success' : 'login_failed', {
       method,
-      error_message: error
+      timestamp: Date.now()
     });
   }
 
-  // Feature usage tracking
-  public trackFeatureUsed(feature: string, metadata?: Record<string, any>) {
-    this.track('feature_used', {
-      feature_name: feature,
-      ...metadata
-    });
-  }
-
-  // A/B Testing
-  public trackExperiment(experimentName: string, variant: string) {
-    this.track('experiment_viewed', {
-      experiment_name: experimentName,
-      variant
-    });
-  }
-
-  // Conversion tracking
-  public trackConversion(type: string, value?: number, metadata?: Record<string, any>) {
+  // Track conversion
+  public trackConversion(type: string, value?: number, currency?: string) {
     this.track('conversion', {
       conversion_type: type,
-      conversion_value: value,
-      ...metadata
+      value,
+      currency: currency || 'TRY'
     });
+  }
+
+  // Track error
+  public trackError(error: Error, context?: object) {
+    this.track('error_occurred', {
+      error_message: error.message,
+      error_stack: error.stack,
+      ...context
+    });
+  }
+
+  // Reset user session
+  public reset() {
+    this.userId = null;
+
+    if (window.mixpanel && 'reset' in window.mixpanel) {
+      window.mixpanel.reset();
+    }
+
+    if (window.analytics && 'reset' in window.analytics) {
+      window.analytics.reset();
+    }
   }
 }
 
-// Singleton instance
 export const analytics = new AnalyticsService();
-
-// React hooks for analytics
-import { useEffect } from 'react';
-
-export const usePageTracking = (pageName?: string) => {
-  useEffect(() => {
-    analytics.page(pageName);
-  }, [pageName]);
-};
-
-export const useEventTracking = () => {
-  return {
-    trackEvent: (eventName: string, properties?: Record<string, any>) => {
-      analytics.track(eventName, properties);
-    },
-    trackFeature: (feature: string, metadata?: Record<string, any>) => {
-      analytics.trackFeatureUsed(feature, metadata);
-    }
-  };
-};

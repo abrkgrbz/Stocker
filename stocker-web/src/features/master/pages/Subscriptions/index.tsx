@@ -110,7 +110,7 @@ export const MasterSubscriptionsPage: React.FC = () => {
         setTenants(response.data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch tenants:', error);
+      // Error handling removed for production
     }
   };
 
@@ -121,7 +121,7 @@ export const MasterSubscriptionsPage: React.FC = () => {
         setPackages(response.data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch packages:', error);
+      // Error handling removed for production
     }
   };
 

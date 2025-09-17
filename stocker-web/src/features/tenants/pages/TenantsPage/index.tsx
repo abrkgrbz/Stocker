@@ -1,8 +1,9 @@
 import React from 'react';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Card, Table, Button, Space, Tag } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+
 import { Tenant } from '@/shared/types';
 
 export const TenantsPage: React.FC = () => {

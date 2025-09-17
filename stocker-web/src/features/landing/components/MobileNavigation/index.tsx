@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useVisitorTracking } from '@/shared/hooks/useVisitorTracking';
 import { useAuthStore } from '@/app/store/auth.store';
+import { useScrollToSection } from '@/shared/hooks/useScrollToSection';
 import './style.css';
 
 interface MobileNavigationProps {
@@ -28,6 +29,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
   const navigate = useNavigate();
   const { currentVisitType, trackInterest } = useVisitorTracking();
   const { isAuthenticated, user } = useAuthStore();
+  const { scrollToSection } = useScrollToSection();
 
   const menuItems = [
     {
@@ -35,7 +37,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <HomeOutlined />,
       label: 'Ana Sayfa',
       action: () => {
-        document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('hero');
         trackInterest('navigation-home');
       },
     },
@@ -44,7 +46,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <AppstoreOutlined />,
       label: 'Özellikler',
       action: () => {
-        document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('features');
         trackInterest('navigation-features');
       },
     },
@@ -53,7 +55,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <AppstoreOutlined />,
       label: 'Modüller',
       action: () => {
-        document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('modules');
         trackInterest('navigation-modules');
       },
     },
@@ -62,7 +64,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <DollarOutlined />,
       label: 'Fiyatlandırma',
       action: () => {
-        document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('pricing');
         trackInterest('navigation-pricing');
       },
     },
@@ -71,7 +73,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <StarOutlined />,
       label: 'Referanslar',
       action: () => {
-        document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('testimonials');
         trackInterest('navigation-testimonials');
       },
     },
@@ -80,7 +82,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
       icon: <PhoneOutlined />,
       label: 'İletişim',
       action: () => {
-        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToSection('contact');
         trackInterest('navigation-contact');
       },
     },
@@ -186,7 +188,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
                 ghost
                 icon={<PlayCircleOutlined />}
                 onClick={() => {
-                  document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
+                  scrollToSection('hero');
                   setIsOpen(false);
                   trackInterest('mobile-nav-demo');
                 }}
@@ -320,7 +322,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
               <div
                 className="quick-action-item"
                 onClick={() => {
-                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                  scrollToSection('contact');
                   setIsOpen(false);
                   trackInterest('mobile-nav-contact');
                 }}

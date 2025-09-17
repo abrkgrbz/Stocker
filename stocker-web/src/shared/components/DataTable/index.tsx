@@ -1,8 +1,9 @@
 import React from 'react';
-import { Table, TableProps, Card, Input, Space, Button } from 'antd';
+
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, TableProps, Card, Input, Space, Button } from 'antd';
+
 import { EmptyState } from '../EmptyState';
-import './style.css';
 
 interface DataTableProps<T> extends Omit<TableProps<T>, 'title'> {
   title?: string;

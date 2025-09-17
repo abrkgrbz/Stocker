@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Card, Row, Col, Button, Badge, Avatar, Space, Tag, Progress, Empty, Statistic } from 'antd';
+
 import { PlusOutlined, DollarOutlined, CalendarOutlined, UserOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Badge, Avatar, Space, Tag, Progress, Empty, Statistic } from 'antd';
 import dayjs from 'dayjs';
 
 interface PipelineStage {

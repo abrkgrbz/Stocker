@@ -20,7 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    console.error('ErrorBoundary caught error:', error);
+    // Error handling removed for production
     return { 
       hasError: true, 
       error,
@@ -29,12 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary componentDidCatch:', {
-      error: error.toString(),
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack
-    });
+    // Error handling removed for production
     
     this.setState({
       error,

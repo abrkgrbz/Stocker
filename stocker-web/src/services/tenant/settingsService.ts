@@ -1,5 +1,6 @@
+import { SettingCategoryDto, SettingDto } from '@/types/tenant/settings';
+
 import api from '../api';
-import { SettingCategoryDto, SettingDto } from '../../types/tenant/settings';
 
 export interface CreateSettingRequest {
   settingKey: string;

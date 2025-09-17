@@ -153,7 +153,7 @@ const TenantDetail: React.FC = () => {
         form.setFieldsValue(tenantData);
       }
     } catch (error) {
-      console.error('Failed to fetch tenant details:', error);
+      // Error handling removed for production
       message.error('Tenant detayları yüklenemedi');
     } finally {
       setLoading(false);

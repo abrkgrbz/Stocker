@@ -1,6 +1,16 @@
 // Biometric Authentication Service
 // WebAuthn API implementation for biometric authentication
 
+interface StoredCredential {
+  credentialId: string;
+  publicKey: string;
+  createdAt: string;
+}
+
+interface CredentialsStorage {
+  [userId: string]: StoredCredential[];
+}
+
 interface PublicKeyCredentialCreationOptionsJSON {
   challenge: string;
   rp: {
@@ -44,7 +54,7 @@ class BiometricAuthService {
       try {
         this.isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       } catch (error) {
-        console.error('Error checking biometric availability:', error);
+        // Error handling removed for production
         this.isAvailable = false;
       }
     }
@@ -145,7 +155,7 @@ class BiometricAuthService {
         publicKey
       };
     } catch (error) {
-      console.error('Biometric registration failed:', error);
+      // Error handling removed for production
       throw error;
     }
   }
@@ -199,7 +209,7 @@ class BiometricAuthService {
 
       return { verified: false };
     } catch (error) {
-      console.error('Biometric authentication failed:', error);
+      // Error handling removed for production
       throw error;
     }
   }
@@ -277,7 +287,7 @@ class BiometricAuthService {
 
   // Remove biometric credential
   public removeBiometricCredential(userId: string, credentialId?: string) {
-    const credentials = JSON.parse(
+    const credentials: CredentialsStorage = JSON.parse(
       localStorage.getItem('biometric_credentials') || '{}'
     );
     
@@ -285,7 +295,7 @@ class BiometricAuthService {
       // Remove specific credential
       if (credentials[userId]) {
         credentials[userId] = credentials[userId].filter(
-          (c: any) => c.credentialId !== credentialId
+          (c) => c.credentialId !== credentialId
         );
         
         if (credentials[userId].length === 0) {

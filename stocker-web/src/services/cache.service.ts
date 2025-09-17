@@ -114,13 +114,10 @@ class CacheService {
     // Check cache first
     const cached = this.get<T>(key);
     if (cached !== null) {
-      console.log(`[Cache] Hit: ${key}`);
-      return cached;
+            return cached;
     }
 
-    console.log(`[Cache] Miss: ${key}`);
-    
-    // Fetch data
+        // Fetch data
     const data = await fetcher();
     
     // Store in cache

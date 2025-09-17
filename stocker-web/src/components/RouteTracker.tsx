@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { trackPageView, addBreadcrumb } from '@/services/monitoring';
+
 import { analytics } from '@/services/analytics';
+import { trackPageView, addBreadcrumb } from '@/services/monitoring';
 import { markEnd } from '@/services/web-vitals';
 
 export function RouteTracker() {

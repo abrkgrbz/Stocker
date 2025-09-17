@@ -105,7 +105,7 @@ export const SocialLogin: React.FC<SocialLoginProps> = ({
           throw new Error(`${provider} login not implemented`);
       }
     } catch (error) {
-      console.error(`${provider} login error:`, error);
+      // Error handling removed for production
       message.error(`${provider} ile giriş başarısız`);
       if (onError) {
         onError(provider, error);

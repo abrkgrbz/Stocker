@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { message, Spin, Modal } from 'antd';
 import Select from 'react-select';
-import { apiClient } from '@/shared/api/client';
+
+import { message, Spin, Modal } from 'antd';
+
 import { Captcha } from '@/features/auth/components/Captcha';
 import { EmailVerificationModal } from '@/features/auth/components/EmailVerification';
-// SignalR validation will be passed as props from parent component
+import { apiClient } from '@/shared/api/client';
 import {
   ShopOutlined,
   UserOutlined,
@@ -522,8 +523,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
 
   useEffect(() => {
     if (identityValidation) {
-      console.log('Identity validation result received:', identityValidation);
-      setValidating(prev => ({ ...prev, identityNumber: false }));
+            setValidating(prev => ({ ...prev, identityNumber: false }));
       if (!identityValidation.isValid) {
         setValidationErrors(prev => ({ ...prev, identityNumber: identityValidation.message || 'Geçersiz kimlik/vergi numarası' }));
         setValidationSuccess(prev => ({ ...prev, identityNumber: false }));
@@ -714,32 +714,25 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         case 'identityNumber':
           // TC Kimlik No: 11 haneli, Vergi No: 10 haneli
           const cleanNumber = value.replace(/\D/g, '');
-          console.log('Identity number changed:', cleanNumber, 'Length:', cleanNumber.length, 'Connected:', isConnected);
-          
-          if (cleanNumber.length === 10 || cleanNumber.length === 11) {
+                    if (cleanNumber.length === 10 || cleanNumber.length === 11) {
             // Sadece SignalR bağlı ise validation yap
             if (isConnected) {
-              console.log('Starting identity validation via SignalR...');
-              setValidating(prev => ({ ...prev, identityNumber: true }));
+                            setValidating(prev => ({ ...prev, identityNumber: true }));
               
               // Async validation with proper error handling
               try {
-                console.log('Calling validateIdentity...');
-                validateIdentity(cleanNumber).then(() => {
-                  console.log('ValidateIdentity completed successfully');
-                }).catch(error => {
-                  console.error('Identity validation error:', error);
+                                validateIdentity(cleanNumber).then(() => {}).catch(error => {
+                  // Error handling removed for production
                   setValidating(prev => ({ ...prev, identityNumber: false }));
                   setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
                 });
               } catch (error) {
-                console.error('Error calling validateIdentity:', error);
+                // Error handling removed for production
                 setValidating(prev => ({ ...prev, identityNumber: false }));
                 setValidationErrors(prev => ({ ...prev, identityNumber: 'Doğrulama sırasında hata oluştu' }));
               }
             } else {
-              console.log('SignalR not connected, using client-side validation');
-              // SignalR bağlı değilse basit client-side validation yap
+                            // SignalR bağlı değilse basit client-side validation yap
               const isValidLength = (formData.identityType === 'TC' && cleanNumber.length === 11) || 
                                    (formData.identityType === 'VKN' && cleanNumber.length === 10);
               if (isValidLength) {
@@ -1001,8 +994,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         billingPeriod: formData.billingPeriod || 'Monthly'
       };
 
-      console.log('Sending registration data:', registrationData);
-      const response = await apiClient.post('/api/public/register', registrationData);
+            const response = await apiClient.post('/api/public/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
         message.success('Kayıt başarıyla tamamlandı!');
@@ -1011,8 +1003,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         message.error('Kayıt sırasında bir hata oluştu');
       }
     } catch (error: any) {
-      console.error('Registration error:', error.response?.data);
-      
+      // Error handling removed for production
       // Detaylı hata mesajı
       let errorMessage = 'Kayıt işlemi başarısız';
       
@@ -1048,12 +1039,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       }
       
       // Debug için console'a detaylı bilgi
-      console.log('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.response?.data?.message,
-        errors: error.response?.data?.errors
-      });
+      // Error handling removed for production
     } finally {
       setLoading(false);
     }

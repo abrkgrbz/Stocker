@@ -131,7 +131,7 @@ export const MasterUsersPage: React.FC = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      // Error handling removed for production
       message.error('Kullanıcılar yüklenirken hata oluştu');
     } finally {
       setLoading(false);

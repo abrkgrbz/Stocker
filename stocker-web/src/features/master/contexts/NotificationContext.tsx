@@ -53,7 +53,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           timestamp: new Date(n.timestamp)
         })));
       } catch (error) {
-        console.error('Failed to load notifications:', error);
+        // Error handling removed for production
       }
     }
 
@@ -136,7 +136,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const playNotificationSound = () => {
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhEgYAABiAGYAYgBmAGIAZgBiAGYAYgBmAGIAZgBiA');
-    audio.play().catch(e => console.log('Could not play notification sound:', e));
+    audio.play().catch(e => {
+      // Error handling removed for production
+    });
   };
 
   const markAsRead = useCallback((id: string) => {

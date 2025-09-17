@@ -1,6 +1,7 @@
 import * as signalR from "@microsoft/signalr";
-import { API_BASE_URL, TOKEN_KEY } from '@/config/constants';
 import { message } from 'antd';
+
+import { API_BASE_URL, TOKEN_KEY } from '@/config/constants';
 
 class MasterDashboardService {
   private dashboardConnection: signalR.HubConnection | null = null;
@@ -12,15 +13,13 @@ class MasterDashboardService {
   async startDashboardConnection(): Promise<void> {
     // Check if already connected
     if (this.dashboardConnection?.state === signalR.HubConnectionState.Connected) {
-      console.log('MasterDashboardHub already connected');
-      return;
+            return;
     }
 
     // Get token for authentication
     const token = localStorage.getItem(TOKEN_KEY);
     
-    console.log('Creating MasterDashboardHub connection');
-    this.dashboardConnection = new signalR.HubConnectionBuilder()
+        this.dashboardConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.baseUrl}/hubs/master-dashboard`, {
         transport: signalR.HttpTransportType.WebSockets | 
                   signalR.HttpTransportType.ServerSentEvents | 
@@ -50,10 +49,9 @@ class MasterDashboardService {
 
     try {
       await this.dashboardConnection.start();
-      console.log('MasterDashboardHub connected successfully');
-      this.reconnectAttempts = 0;
+            this.reconnectAttempts = 0;
     } catch (err) {
-      console.error("Error connecting to master dashboard hub:", err);
+      // Error handling removed for production
       throw err;
     }
   }
@@ -63,19 +61,17 @@ class MasterDashboardService {
 
     // Connection lifecycle events
     this.dashboardConnection.onreconnecting((error) => {
-      console.warn('MasterDashboardHub reconnecting:', error);
+      // Error handling removed for production
       message.warning('Bağlantı yeniden kuruluyor...', 2);
     });
 
     this.dashboardConnection.onreconnected((connectionId) => {
-      console.log('MasterDashboardHub reconnected:', connectionId);
-      message.success('Bağlantı yeniden kuruldu', 2);
+            message.success('Bağlantı yeniden kuruldu', 2);
       this.reconnectAttempts = 0;
     });
 
     this.dashboardConnection.onclose(async (error) => {
-      console.error('MasterDashboardHub connection closed:', error);
-      
+      // Error handling removed for production
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
         message.info(`Bağlantı koptu, yeniden deneniyor... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`, 3);
@@ -84,7 +80,7 @@ class MasterDashboardService {
           try {
             await this.startDashboardConnection();
           } catch (err) {
-            console.error('Reconnection failed:', err);
+            // Error handling removed for production
           }
         }, 5000);
       } else {

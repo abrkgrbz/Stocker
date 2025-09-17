@@ -47,7 +47,7 @@ import {
 import { Area, Line, Column, Gauge, Liquid } from '@ant-design/charts';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
-import { useRealtimeData, useWebSocketData } from '../../hooks/useRealtimeData';
+import { useRealtimeData, useWebSocketData } from '@/features/master/hooks/useRealtimeData';
 import './monitoring.css';
 import './monitoring-enhanced.css';
 import './monitoring-text-fix.css';
@@ -264,10 +264,9 @@ const SystemMonitoring: React.FC = () => {
   //   'ws://localhost:8080/monitoring',
   //   {
   //     onMessage: (data) => {
-  //       console.log('WebSocket data received:', data);
-  //     },
+  //         //     },
   //     onError: (error) => {
-  //       console.error('WebSocket error:', error);
+  //       // Error handling removed for production
   //     },
   //   }
   // );

@@ -67,19 +67,8 @@ import {
 import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { Line, Bar, Pie } from 'recharts';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell
-} from 'recharts';
+import { Line, Bar, Pie } from '@/components/LazyChart';
+// Chart components are imported from @/components/LazyChart above
 import './api-management.css';
 import './api-management-enhanced.css';
 

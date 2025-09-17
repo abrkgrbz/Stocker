@@ -174,7 +174,7 @@ export const MasterPackagesPage: React.FC = () => {
         setPackages(mockPackages);
       }
     } catch (error) {
-      console.error('Error fetching packages:', error);
+      // Error handling removed for production
       message.error('Paket listesi yüklenirken hata oluştu');
       // Use mock data as fallback
       setPackages(mockPackages);

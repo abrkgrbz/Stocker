@@ -33,7 +33,7 @@ import {
   PlusCircleOutlined,
   AppstoreOutlined
 } from '@ant-design/icons';
-import { modules, basePackages, calculateTotalPrice, getRequiredModules, getModulesByCategory } from '../../data/modules';
+import { modules, basePackages, calculateTotalPrice, getRequiredModules, getModulesByCategory } from '@/features/register/data/modules';
 
 const { Title, Text, Paragraph } = Typography;
 

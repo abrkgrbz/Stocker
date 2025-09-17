@@ -217,7 +217,7 @@ export const FAQSection: React.FC = () => {
                         ? `0 8px 24px ${category.color}20`
                         : '0 2px 8px rgba(0,0,0,0.06)'
                     }}
-                    bodyStyle={{ padding: '20px 24px' }}
+                    styles={{ body: { padding: '20px 24px' } }}
                   >
                     <Space align="center" size={12}>
                       <div style={{ 
@@ -275,7 +275,7 @@ export const FAQSection: React.FC = () => {
                               ? '0 8px 32px rgba(0,0,0,0.08)'
                               : '0 2px 8px rgba(0,0,0,0.04)'
                           }}
-                          bodyStyle={{ padding: 0 }}
+                          styles={{ body: { padding: 0 } }}
                         >
                           <div
                             onClick={() => toggleExpand(item.id)}

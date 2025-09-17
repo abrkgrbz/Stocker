@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Card, Typography, Alert, Steps } from 'antd';
+
 import { MailOutlined, LockOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, Steps } from 'antd';
+
 import { Toast } from '@/shared/components/Toast';
 import { formRules } from '@/shared/utils/validators';
-import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { Layout, Button, Card, Row, Col, Typography, Space, Tag, Divider } from 'antd';
+
+import { useScrollToSection } from '@/shared/hooks/useScrollToSection';
 import {
   RocketOutlined,
   CustomerServiceOutlined,
@@ -21,14 +24,14 @@ import {
   ShoppingCartOutlined,
   PieChartOutlined,
 } from '@ant-design/icons';
-import { AnimatedHero } from '../../components/AnimatedHero';
-import { FeaturesSection } from '../../components/FeaturesSection';
-import { TestimonialsSection } from '../../components/TestimonialsSection';
-import { StatsSection } from '../../components/StatsSection';
-import { FloatingActionButton } from '../../components/FloatingActionButton';
-import { FAQSection } from '../../components/FAQSection';
-import { SolutionsSection } from '../../components/SolutionsSection';
-import { mainModules } from '../../data/modules';
+import { AnimatedHero } from '@/features/landing/components/AnimatedHero';
+import { FeaturesSection } from '@/features/landing/components/FeaturesSection';
+import { TestimonialsSection } from '@/features/landing/components/TestimonialsSection';
+import { StatsSection } from '@/features/landing/components/StatsSection';
+import { FloatingActionButton } from '@/features/landing/components/FloatingActionButton';
+import { FAQSection } from '@/features/landing/components/FAQSection';
+import { SolutionsSection } from '@/features/landing/components/SolutionsSection';
+import { mainModules } from '@/features/landing/data/modules';
 import './style.css';
 import './corporate-style.css';
 
@@ -37,6 +40,7 @@ const { Title, Text, Paragraph } = Typography;
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { scrollToSection } = useScrollToSection();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -68,13 +72,13 @@ export const LandingPage: React.FC = () => {
             <span className="logo-text">Stocker</span>
           </div>
           <nav className="nav-menu">
-            <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>Özellikler</a>
-            <a href="#solutions" onClick={(e) => { e.preventDefault(); document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' }); }}>Çözümler</a>
-            <a href="#modules" onClick={(e) => { e.preventDefault(); document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' }); }}>Modüller</a>
+            <a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>Özellikler</a>
+            <a href="#solutions" onClick={(e) => { e.preventDefault(); scrollToSection('solutions'); }}>Çözümler</a>
+            <a href="#modules" onClick={(e) => { e.preventDefault(); scrollToSection('modules'); }}>Modüller</a>
             <a onClick={() => navigate('/pricing')} style={{ cursor: 'pointer' }}>Fiyatlandırma</a>
             <a onClick={() => navigate('/training')} style={{ cursor: 'pointer' }}>Eğitimler</a>
             <a onClick={() => navigate('/blog')} style={{ cursor: 'pointer' }}>Blog</a>
-            <a href="#faq" onClick={(e) => { e.preventDefault(); document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }); }}>SSS</a>
+            <a href="#faq" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }}>SSS</a>
           </nav>
           <div className="header-actions">
             <Button 

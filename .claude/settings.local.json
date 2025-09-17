@@ -90,7 +90,23 @@
       "mcp__serena__read_file",
       "mcp__serena__replace_regex",
       "mcp__serena__find_file",
-      "mcp__serena__activate_project"
+      "mcp__serena__activate_project",
+      "mcp__serena__read_memory",
+      "mcp__serena__create_text_file",
+      "Bash(node:*)",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__find_symbol",
+      "Bash(git stash push:*)",
+      "Bash(./node_modules/.bin/vitest:*)",
+      "Bash(npx playwright:*)",
+      "Bash(timeout 30 npm run build)",
+      "Bash(echo \"Build status: $?\")",
+      "Bash(npm audit:*)",
+      "Bash(timeout 20 npm run build)",
+      "Bash(timeout 20 npx vite build --config ./vite.simple.config.ts)",
+      "Bash(npx eslint:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(npx depcheck:*)"
     ],
     "deny": []
   }

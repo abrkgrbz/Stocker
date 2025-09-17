@@ -253,48 +253,37 @@
   user-select: none;
 }
 
-/* Tenant Card */
-.tenant-card {
+/* Feature Card */
+.feature-card {
   background: var(--bg-primary);
   border-radius: 12px;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
   height: 100%;
   position: relative;
   overflow: hidden;
 }
 
-.tenant-card::before {
+.feature-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: var(--gradient-primary);
   transform: scaleX(0);
   transition: transform 0.3s;
 }
 
-.tenant-card:hover {
-  border-color: var(--primary-color);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
-  transform: translateY(-4px);
+.feature-card:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
-.tenant-card:hover::before {
+.feature-card:hover::before {
   transform: scaleX(1);
-}
-
-.tenant-card .ant-avatar {
-  background: var(--gradient-primary) !important;
-}
-
-.tenant-card .ant-tag {
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-weight: 500;
 }
 
 /* Tag Colors */

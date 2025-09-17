@@ -1,7 +1,9 @@
 import React from 'react';
-import { Result, Button } from 'antd';
-import { LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+
+import { LockOutlined } from '@ant-design/icons';
+import { Result, Button } from 'antd';
+
 import { usePermissions, Permission } from '@/shared/hooks/usePermissions';
 
 interface PermissionGuardProps {

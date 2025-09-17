@@ -137,7 +137,7 @@ export class BatchProcessor<T> {
     try {
       await this.processor(batch);
     } catch (error) {
-      console.error('Batch processing error:', error);
+      // Error handling removed for production
     } finally {
       this.processing = false;
       

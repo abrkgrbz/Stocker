@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { Result, Button } from 'antd';
+
 import { CloseCircleOutlined } from '@ant-design/icons';
+import { Result, Button } from 'antd';
 
 interface Props {
   children: ReactNode;
@@ -32,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Error handling removed for production
     this.setState({
       error,
       errorInfo,

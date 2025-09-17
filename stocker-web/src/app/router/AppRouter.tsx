@@ -1,18 +1,17 @@
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import { useTenant } from '@/contexts/TenantContext';
-import { SubdomainRoutes } from './SubdomainRoutes';
-import { PrivateRoute } from './PrivateRoute';
-import { PageLoader } from '@/shared/components/PageLoader';
+import { Routes, Route } from 'react-router-dom';
 
-// Layouts
+import { useTenant } from '@/contexts/TenantContext';
 import MasterLayout from '@/features/master/layouts/MasterLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
-import { TenantLayout } from '@/layouts/TenantLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
+import { TenantLayout } from '@/layouts/TenantLayout';
+import { PageLoader } from '@/shared/components/PageLoader';
 
-// Landing and public pages
+import { PrivateRoute } from './PrivateRoute';
+import { SubdomainRoutes } from './SubdomainRoutes';
+
 const ModernLanding = lazy(() => import('@/features/landing/pages/ModernLanding').then(m => ({ default: m.ModernLanding })));
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -92,13 +91,7 @@ export const AppRouter: React.FC = () => {
   const { isSubdomain, tenantSlug, isValidTenant } = useTenant();
 
   useEffect(() => {
-    console.log('[AppRouter] Subdomain routing context:', {
-      isSubdomain,
-      tenantSlug,
-      isValidTenant,
-      hostname: window.location.hostname,
-      pathname: window.location.pathname
-    });
+    if (process.env.NODE_ENV !== 'production') {}
   }, [isSubdomain, tenantSlug, isValidTenant]);
 
   // If we're on a subdomain and validation is still checking

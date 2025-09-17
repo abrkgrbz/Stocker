@@ -1,5 +1,6 @@
-import { api } from './client';
 import { Tenant, CreateTenantRequest, PaginatedResponse } from '@/shared/types';
+
+import { api } from './client';
 
 export const tenantsApi = {
   getAll: (params?: { page?: number; pageSize?: number; search?: string; isActive?: boolean }) => 

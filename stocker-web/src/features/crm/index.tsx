@@ -1,9 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LeadsPage } from './pages/LeadsPage';
-import { CustomersPage } from './pages/CustomersPage';
 
-// Lazy load for better performance when we add more pages
+import { CustomersPage } from './pages/CustomersPage';
+import { LeadsPage } from './pages/LeadsPage';
+
 const OpportunitiesPage = React.lazy(() => import('./pages/OpportunitiesPage').then(m => ({ default: m.OpportunitiesPage })));
 const PipelinePage = React.lazy(() => import('./pages/PipelinePage').then(m => ({ default: m.PipelinePage })));
 const ActivitiesPage = React.lazy(() => import('./pages/ActivitiesPage').then(m => ({ default: m.ActivitiesPage })));

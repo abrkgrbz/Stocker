@@ -60,41 +60,35 @@ export const masterTenantApi = {
     
   // Toggle tenant status (activate/deactivate)
   toggleStatus: (id: string) => {
-    console.log('API call: Toggling tenant status', id);
-    return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
+        return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
-        console.log('Toggle status API response:', response);
-        return response;
+                return response;
       })
       .catch(error => {
-        console.error('Toggle status API error:', error);
+        // Error handling removed for production
         throw error;
       });
   },
   
   // Legacy methods for backward compatibility
   suspend: (id: string, reason?: string) => {
-    console.log('API call: Suspending tenant (using toggle)', id);
     return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
-        console.log('Toggle status API response:', response);
-        return response;
+                return response;
       })
       .catch(error => {
-        console.error('Toggle status API error:', error);
+        // Error handling removed for production
         throw error;
       });
   },
     
   activate: (id: string) => {
-    console.log('API call: Activating tenant (using toggle)', id);
     return apiClient.post(`/api/master/Tenants/${id}/toggle-status`)
       .then(response => {
-        console.log('Toggle status API response:', response);
-        return response;
+                return response;
       })
       .catch(error => {
-        console.error('Toggle status API error:', error);
+        // Error handling removed for production
         throw error;
       });
   },
@@ -108,12 +102,16 @@ export const masterTenantApi = {
   },
     
   getUsers: async (id: string) => {
-    // TODO: Implement when backend endpoint is ready
+    // Endpoint: GET /api/master/Tenants/{id}/users
+    // Returns list of users for the specified tenant
+    // Placeholder until backend endpoint is ready
     return Promise.resolve([]);
   },
     
   getModules: async (id: string) => {
-    // TODO: Implement when backend endpoint is ready  
+    // Endpoint: GET /api/master/Tenants/{id}/modules  
+    // Returns list of enabled modules for the specified tenant
+    // Placeholder until backend endpoint is ready
     return Promise.resolve([]);
   },
     
@@ -122,7 +120,6 @@ export const masterTenantApi = {
     Promise.resolve({ data: { data: [] } }),
     
   loginAsTenant: (id: string) => {
-    console.log('API call: Login as tenant (Impersonate not implemented)', id);
     // Impersonate endpoint not implemented in backend yet
     // For now, just redirect to tenant dashboard with tenant ID
     return Promise.resolve({

@@ -1,5 +1,6 @@
+import { ModuleDto, ModulesSummaryDto } from '@/types/tenant/modules';
+
 import api from '../api';
-import { ModuleDto, ModulesSummaryDto } from '../../types/tenant/modules';
 
 export interface ToggleModuleRequest {
   enable: boolean;

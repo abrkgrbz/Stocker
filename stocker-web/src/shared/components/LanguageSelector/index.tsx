@@ -1,7 +1,10 @@
 import React from 'react';
-import { Dropdown, Button, Space } from 'antd';
+
 import { GlobalOutlined, CheckOutlined } from '@ant-design/icons';
+import { Dropdown, Button, Space } from 'antd';
+
 import { languages, SupportedLanguage, changeLanguage, getCurrentLanguage } from '@/i18n/config';
+
 import type { MenuProps } from 'antd';
 
 interface LanguageSelectorProps {

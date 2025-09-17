@@ -1,6 +1,6 @@
 import React from 'react';
 import { Row, Col, Card, Typography } from 'antd';
-import { features } from '../../data/features';
+import { features } from '@/features/landing/data/features';
 
 const { Title, Paragraph } = Typography;
 

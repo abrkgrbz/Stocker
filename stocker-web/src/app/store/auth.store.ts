@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { User, LoginRequest } from '@/shared/types';
-import { authApi } from '@/shared/api/auth.api';
+
 import { TOKEN_KEY, REFRESH_TOKEN_KEY, TENANT_KEY } from '@/config/constants';
+import { authApi } from '@/shared/api/auth.api';
+import { User, LoginRequest } from '@/shared/types';
 import { isTokenExpired, resetSessionTimeout } from '@/shared/utils/auth-interceptor';
 
 interface AuthState {
@@ -43,35 +44,24 @@ export const useAuthStore = create<AuthState>()(
           const token = localStorage.getItem(TOKEN_KEY);
           const state = get();
           
-          console.log('[AuthStore] initializeAuth called:', {
-            hasToken: !!token,
-            hasUser: !!state.user,
-            hasStateToken: !!state.token,
-            userRoles: state.user?.roles
-          });
-          
-          // If we already have a user and token from persisted state, check if expired
+                    // If we already have a user and token from persisted state, check if expired
           if (state.user && state.token) {
             if (!isTokenExpired(state.token)) {
-              console.log('[AuthStore] Already authenticated from persisted state');
-              resetSessionTimeout();
+                            resetSessionTimeout();
               set({ 
                 isAuthenticated: true,
                 isInitialized: true,
                 isLoading: false 
               });
             } else {
-              console.log('[AuthStore] Token expired, attempting refresh');
-              get().refreshAuthToken();
+                            get().refreshAuthToken();
             }
           } else if (token) {
             // We have a token but no user, need to fetch user data
-            console.log('[AuthStore] Token found but no user, fetching user data...');
-            get().checkAuth();
+                        get().checkAuth();
           } else {
             // No token, not authenticated
-            console.log('[AuthStore] No authentication found');
-            set({ 
+                        set({ 
               isAuthenticated: false,
               isInitialized: true,
               isLoading: false 
@@ -82,9 +72,7 @@ export const useAuthStore = create<AuthState>()(
         login: async (credentials) => {
           set({ isLoading: true, error: null });
           try {
-            console.log('Login attempt with:', { email: credentials.email, tenantCode: credentials.tenantCode });
-            
-            const response = await authApi.login(credentials);
+                        const response = await authApi.login(credentials);
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
@@ -94,21 +82,15 @@ export const useAuthStore = create<AuthState>()(
             const refreshToken = loginData.refreshToken || loginData.RefreshToken;
             const user = loginData.user || loginData.User;
             
-            console.log('Login response:', loginData);
-            console.log('Extracted token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NO TOKEN');
-            console.log('Login successful, user:', user);
-            
             localStorage.setItem(TOKEN_KEY, accessToken);
             localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
             
             // Save tenant ID if available
             if (user?.tenantId) {
               localStorage.setItem('stocker_tenant', user.tenantId);
-              console.log('Tenant ID saved:', user.tenantId);
-            } else if (user?.tenant?.id) {
+                          } else if (user?.tenant?.id) {
               localStorage.setItem('stocker_tenant', user.tenant.id);
-              console.log('Tenant ID saved from tenant object:', user.tenant.id);
-            }
+                          }
             
             resetSessionTimeout();
             
@@ -122,8 +104,7 @@ export const useAuthStore = create<AuthState>()(
               lastActivity: Date.now(),
             });
           } catch (error: unknown) {
-            console.error('Login failed:', error);
-            
+            // Error handling removed for production
             // Extract detailed error message
             let errorMessage = 'Login failed';
             if (error && typeof error === 'object' && 'response' in error) {
@@ -155,7 +136,7 @@ export const useAuthStore = create<AuthState>()(
           try {
             await authApi.logout();
           } catch (error) {
-            console.error('Logout error:', error);
+            // Error handling removed for production
           } finally {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -240,7 +221,7 @@ export const useAuthStore = create<AuthState>()(
               lastActivity: Date.now(),
             });
           } catch (error) {
-            console.error('Token refresh failed:', error);
+            // Error handling removed for production
             get().logout();
           }
         },

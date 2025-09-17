@@ -34,22 +34,22 @@ import {
 } from '@ant-design/icons';
 
 // Import all features
-import { Captcha, CaptchaV3 } from '../../../auth/components/Captcha';
-import { useRateLimit, useBruteForceProtection } from '../../../auth/hooks/useRateLimit';
-import { TwoFactorSetup, TwoFactorVerify } from '../../../auth/components/TwoFactorAuth';
-import { EmailVerification, EmailVerificationModal } from '../../../auth/components/EmailVerification';
-import { useFormAutoSave, useAutoSaveStatus } from '../../../auth/hooks/useFormAutoSave';
-import { FormProgress, CircularProgress } from '../../../auth/components/FormProgress';
-import { SocialLogin, QuickSocialLogin } from '../../../auth/components/SocialLogin';
-import { ReferralInput, ReferralShare, ReferralStats } from '../../../auth/components/ReferralCode';
-import { LiveChat } from '../../../support/components/LiveChat';
-// import { useTranslation } from '../../../i18n';
-import { OnboardingTour, OnboardingChecklist } from '../../../onboarding/components/OnboardingTour';
-import { usePWAInstall, useOfflineDetection } from '../../../pwa/serviceWorkerRegistration';
-import { useBiometricAuth } from '../../../auth/services/biometric';
-import { analytics } from '../../../auth/services/analytics';
-import { useLazyLoad, useLazyImage } from '../../../auth/hooks/useLazyLoad';
-import { useOptimisticUI } from '../../../auth/hooks/useOptimisticUI';
+import { Captcha, CaptchaV3 } from '@/features/auth/components/Captcha';
+import { useRateLimit, useBruteForceProtection } from '@/features/auth/hooks/useRateLimit';
+import { TwoFactorSetup, TwoFactorVerify } from '@/features/auth/components/TwoFactorAuth';
+import { EmailVerification, EmailVerificationModal } from '@/features/auth/components/EmailVerification';
+import { useFormAutoSave, useAutoSaveStatus } from '@/features/auth/hooks/useFormAutoSave';
+import { FormProgress, CircularProgress } from '@/features/auth/components/FormProgress';
+import { SocialLogin, QuickSocialLogin } from '@/features/auth/components/SocialLogin';
+import { ReferralInput, ReferralShare, ReferralStats } from '@/features/auth/components/ReferralCode';
+import { LiveChat } from '@/features/support/components/LiveChat';
+// import { useTranslation } from '@/features/i18n';
+import { OnboardingTour, OnboardingChecklist } from '@/features/onboarding/components/OnboardingTour';
+import { usePWAInstall, useOfflineDetection } from '@/features/pwa/serviceWorkerRegistration';
+import { useBiometricAuth } from '@/features/auth/services/biometric';
+import { analytics } from '@/features/auth/services/analytics';
+import { useLazyLoad, useLazyImage } from '@/features/auth/hooks/useLazyLoad';
+import { useOptimisticUI } from '@/features/auth/hooks/useOptimisticUI';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -59,7 +59,7 @@ const FeatureTestPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('security');
   // const { t, changeLanguage, currentLanguage } = useTranslation();
   const t = (key: string) => key; // Mock translation
-  const changeLanguage = (lang: string) => console.log('Language changed to:', lang);
+  const changeLanguage = (lang: string) => {}; // Mock language change
   const currentLanguage = 'tr';
   
   // Test states

@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import env from '@/config/env';
-import logger from '@/utils/logger';
-import errorHandler from '@/utils/errorHandler';
 import { message } from 'antd';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-// Create axios instance
+import env from '@/config/env';
+import errorHandler from '@/utils/errorHandler';
+import logger from '@/utils/logger';
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: env.api.baseURL,
   timeout: env.api.timeout,

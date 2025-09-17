@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -42,12 +42,14 @@ import {
   GiftOutlined
 } from '@ant-design/icons';
 import { apiClient } from '@/shared/api/client';
+import { useApiCall } from '@/shared/hooks/useAdvancedAsync';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { ModuleSelection } from './ModuleSelection';
 import { RegisterWizard } from './RegisterWizard';
 import { NeonWizard } from './NeonWizard';
-import { ModernWizard } from './ModernWizard';
+// Lazy load heavy component (1839 lines)
+const ModernWizard = lazy(() => import('./ModernWizard').then(module => ({ default: module.ModernWizard })));
 import { PremiumPackageCard } from './PremiumPackageCard';
 import './style.css';
 import './module-selection.css';
@@ -530,7 +532,8 @@ export const RegisterPage: React.FC = () => {
 
   const renderRegistrationForm = () => {
     return (
-      <ModernWizard 
+      <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" tip="Loading registration wizard..." /></div>}>
+        <ModernWizard 
         onComplete={handleWizardComplete}
         selectedPackage={selectedPackage}
         signalRValidation={{
@@ -552,6 +555,7 @@ export const RegisterPage: React.FC = () => {
           error: validationError
         }}
       />
+      </Suspense>
     );
   };
 

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message, Alert, Space, Typography, Divider } from 'antd';
+
 import { LockOutlined, KeyOutlined } from '@ant-design/icons';
-import PasswordStrength from '../PasswordStrength';
+import { Modal, Form, Input, Button, message, Alert, Space, Typography, Divider } from 'antd';
+
 import { apiClient } from '@/shared/api/client';
+
+import PasswordStrength from '../PasswordStrength';
 
 const { Title } = Typography;
 

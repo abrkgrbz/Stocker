@@ -1,9 +1,10 @@
 import React from 'react';
-import { Button, Tooltip } from 'antd';
+
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Button, Tooltip } from 'antd';
 import { motion } from 'framer-motion';
-import './theme-toggle.css';
+
+import { useTheme } from '@/contexts/ThemeContext';
 
 export const ThemeToggle: React.FC = () => {
   const { themeMode, toggleTheme } = useTheme();

@@ -244,7 +244,7 @@ const CompanyWizard: React.FC = () => {
         setWizardId(newWizard.id);
       }
     } catch (error) {
-      console.error('Error initializing wizard:', error);
+      // Error handling removed for production
       message.error('Wizard başlatılamadı');
     }
   };
@@ -263,7 +263,7 @@ const CompanyWizard: React.FC = () => {
       setLastSaveTime(new Date());
       message.success('İlerleme kaydedildi', 1);
     } catch (error) {
-      console.error('Error saving progress:', error);
+      // Error handling removed for production
       message.error('İlerleme kaydedilemedi');
     } finally {
       setSaving(false);
@@ -302,7 +302,7 @@ const CompanyWizard: React.FC = () => {
         handleComplete();
       }
     } catch (error) {
-      console.error('Validation failed:', error);
+      // Error handling removed for production
       message.error('Lütfen gerekli alanları doldurun');
     }
   };
@@ -369,7 +369,7 @@ const CompanyWizard: React.FC = () => {
         }
       });
     } catch (error) {
-      console.error('Error completing wizard:', error);
+      // Error handling removed for production
       message.error('Kurulum tamamlanamadı');
     } finally {
       setLoading(false);

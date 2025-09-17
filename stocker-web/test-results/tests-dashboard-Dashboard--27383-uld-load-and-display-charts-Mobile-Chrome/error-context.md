@@ -1,0 +1,776 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e7] [cursor=pointer]:
+        - img "rocket" [ref=e8] [cursor=pointer]:
+          - img [ref=e9] [cursor=pointer]
+        - generic [ref=e11] [cursor=pointer]: Stocker
+    - generic [ref=e12]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - img "fire" [ref=e17]:
+              - img [ref=e18]
+            - text: 14 Gün Ücretsiz Deneme
+          - generic [ref=e20]: 🎉 Yeni
+        - heading "İşletmenizi Dijitalleştirin|" [level=1] [ref=e21]:
+          - text: İşletmenizi Dijitalleştirin
+          - generic [ref=e22]: "|"
+        - heading "Kapsamlı ERP Çözümü ile Tek Platformda Tüm İşlemler" [level=2] [ref=e23]:
+          - text: Kapsamlı ERP Çözümü ile
+          - generic [ref=e24]: Tek Platform
+          - text: da Tüm İşlemler
+        - generic [ref=e25]: CRM, Stok, Satış, Finans, İK ve Üretim modülleriyle işletmenizin tüm süreçlerini tek bir platformdan yönetin. Bulut tabanlı, güvenli ve ölçeklenebilir ERP sistemi.
+        - generic [ref=e26]:
+          - button "rocket Hemen Başla - Ücretsiz" [ref=e29] [cursor=pointer]:
+            - img "rocket" [ref=e31] [cursor=pointer]:
+              - img [ref=e32] [cursor=pointer]
+            - generic [ref=e34] [cursor=pointer]: Hemen Başla - Ücretsiz
+          - button "play-circle Demo İzle" [ref=e37] [cursor=pointer]:
+            - img "play-circle" [ref=e39] [cursor=pointer]:
+              - img [ref=e40] [cursor=pointer]
+            - generic [ref=e43] [cursor=pointer]: Demo İzle
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - img "check-circle" [ref=e48]:
+              - img [ref=e49]
+            - text: Kredi kartı gerekmez
+          - separator [ref=e53]
+          - generic [ref=e55]:
+            - img "check-circle" [ref=e56]:
+              - img [ref=e57]
+            - text: 5 dakikada kurulum
+          - separator [ref=e61]
+          - generic [ref=e63]:
+            - img "check-circle" [ref=e64]:
+              - img [ref=e65]
+            - text: 7/24 destek
+      - generic [ref=e75]:
+        - img "dashboard" [ref=e76]:
+          - img [ref=e77]
+        - heading "Stocker ERP Dashboard" [level=3] [ref=e79]
+        - paragraph [ref=e80]: 6 Ana Modül, Tek Platform
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - img "team" [ref=e83]:
+              - img [ref=e84]
+            - generic [ref=e86]: CRM
+          - generic [ref=e87]:
+            - img "appstore" [ref=e88]:
+              - img [ref=e89]
+            - generic [ref=e91]: Stok
+          - generic [ref=e92]:
+            - img "bar-chart" [ref=e93]:
+              - img [ref=e94]
+            - generic [ref=e96]: Satış
+          - generic [ref=e97]:
+            - img "dashboard" [ref=e98]:
+              - img [ref=e99]
+            - generic [ref=e101]: Finans
+          - generic [ref=e102]:
+            - img "user" [ref=e103]:
+              - img [ref=e104]
+            - generic [ref=e106]: İK
+          - generic [ref=e107]:
+            - img "global" [ref=e108]:
+              - img [ref=e109]
+            - generic [ref=e111]: Üretim
+    - generic [ref=e114]:
+      - generic [ref=e116] [cursor=pointer]:
+        - img "appstore" [ref=e118] [cursor=pointer]:
+          - img [ref=e119] [cursor=pointer]
+        - generic [ref=e122] [cursor=pointer]: ERP Modülü
+      - generic [ref=e124] [cursor=pointer]:
+        - img "thunderbolt" [ref=e126] [cursor=pointer]:
+          - img [ref=e127] [cursor=pointer]
+        - generic [ref=e130] [cursor=pointer]: +
+        - generic [ref=e131] [cursor=pointer]: İş Süreci
+      - generic [ref=e133] [cursor=pointer]:
+        - img "api" [ref=e135] [cursor=pointer]:
+          - img [ref=e136] [cursor=pointer]
+        - generic [ref=e139] [cursor=pointer]: +
+        - generic [ref=e140] [cursor=pointer]: Entegrasyon
+      - generic [ref=e142] [cursor=pointer]:
+        - img "customer-service" [ref=e144] [cursor=pointer]:
+          - img [ref=e145] [cursor=pointer]
+        - generic [ref=e148] [cursor=pointer]: /7
+        - generic [ref=e149] [cursor=pointer]: Teknik Destek
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]: ERP Modülleri
+        - heading "İşletmenizi Dijitalleştiren 6 Ana Modül" [level=2] [ref=e154]
+        - generic [ref=e155]: Her departman için özel tasarlanmış, birbiriyle entegre çalışan güçlü modüller
+      - generic [ref=e156]:
+        - generic [ref=e160] [cursor=pointer]:
+          - generic [ref=e161] [cursor=pointer]:
+            - img "team" [ref=e163] [cursor=pointer]:
+              - img [ref=e164] [cursor=pointer]
+            - heading "CRM Modülü" [level=3] [ref=e166] [cursor=pointer]
+            - paragraph [ref=e167] [cursor=pointer]: Müşteri ilişkilerinizi profesyonelce yönetin
+          - generic [ref=e168] [cursor=pointer]:
+            - generic [ref=e169] [cursor=pointer]:
+              - generic [ref=e170] [cursor=pointer]:
+                - img "check-circle" [ref=e171] [cursor=pointer]:
+                  - img [ref=e172] [cursor=pointer]
+                - generic [ref=e175] [cursor=pointer]:
+                  - generic [ref=e176] [cursor=pointer]: Müşteri Yönetimi
+                  - generic [ref=e177] [cursor=pointer]: Detaylı müşteri kartları ve iletişim geçmişi
+              - generic [ref=e178] [cursor=pointer]:
+                - img "check-circle" [ref=e179] [cursor=pointer]:
+                  - img [ref=e180] [cursor=pointer]
+                - generic [ref=e183] [cursor=pointer]:
+                  - generic [ref=e184] [cursor=pointer]: Satış Pipeline
+                  - generic [ref=e185] [cursor=pointer]: Fırsatları takip edin ve dönüşüm oranlarınızı artırın
+              - generic [ref=e186] [cursor=pointer]:
+                - img "check-circle" [ref=e187] [cursor=pointer]:
+                  - img [ref=e188] [cursor=pointer]
+                - generic [ref=e191] [cursor=pointer]:
+                  - generic [ref=e192] [cursor=pointer]: Otomasyonlar
+                  - generic [ref=e193] [cursor=pointer]: Hatırlatmalar ve görev atamaları ile verimliliği artırın
+            - generic [ref=e194] [cursor=pointer]:
+              - generic [ref=e195] [cursor=pointer]:
+                - generic [ref=e196] [cursor=pointer]: 10K+
+                - generic [ref=e197] [cursor=pointer]: Kullanıcı
+              - generic [ref=e198] [cursor=pointer]:
+                - generic [ref=e199] [cursor=pointer]: "%45"
+                - generic [ref=e200] [cursor=pointer]: Verimlilik
+              - generic [ref=e201] [cursor=pointer]:
+                - generic [ref=e202] [cursor=pointer]: 2 saat/gün
+                - generic [ref=e203] [cursor=pointer]: Tasarruf
+            - button "Detaylı Bilgi arrow-right" [ref=e204] [cursor=pointer]:
+              - generic [ref=e205] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e206] [cursor=pointer]:
+                - img [ref=e207] [cursor=pointer]
+        - generic [ref=e212] [cursor=pointer]:
+          - generic [ref=e213] [cursor=pointer]:
+            - img "appstore" [ref=e215] [cursor=pointer]:
+              - img [ref=e216] [cursor=pointer]
+            - heading "Stok Yönetimi" [level=3] [ref=e218] [cursor=pointer]
+            - paragraph [ref=e219] [cursor=pointer]: Envanter kontrolünü tamamen dijitalleştirin
+          - generic [ref=e220] [cursor=pointer]:
+            - generic [ref=e221] [cursor=pointer]:
+              - generic [ref=e222] [cursor=pointer]:
+                - img "check-circle" [ref=e223] [cursor=pointer]:
+                  - img [ref=e224] [cursor=pointer]
+                - generic [ref=e227] [cursor=pointer]:
+                  - generic [ref=e228] [cursor=pointer]: Gerçek Zamanlı Takip
+                  - generic [ref=e229] [cursor=pointer]: Stok hareketlerini anlık olarak görüntüleyin
+              - generic [ref=e230] [cursor=pointer]:
+                - img "check-circle" [ref=e231] [cursor=pointer]:
+                  - img [ref=e232] [cursor=pointer]
+                - generic [ref=e235] [cursor=pointer]:
+                  - generic [ref=e236] [cursor=pointer]: Barkod & QR Kod
+                  - generic [ref=e237] [cursor=pointer]: Hızlı ve hatasız stok girişi/çıkışı yapın
+              - generic [ref=e238] [cursor=pointer]:
+                - img "check-circle" [ref=e239] [cursor=pointer]:
+                  - img [ref=e240] [cursor=pointer]
+                - generic [ref=e243] [cursor=pointer]:
+                  - generic [ref=e244] [cursor=pointer]: Akıllı Uyarılar
+                  - generic [ref=e245] [cursor=pointer]: Minimum ve maksimum stok seviyesi bildirimleri
+            - generic [ref=e246] [cursor=pointer]:
+              - generic [ref=e247] [cursor=pointer]:
+                - generic [ref=e248] [cursor=pointer]: 100K+
+                - generic [ref=e249] [cursor=pointer]: Ürün
+              - generic [ref=e250] [cursor=pointer]:
+                - generic [ref=e251] [cursor=pointer]: "%99.9"
+                - generic [ref=e252] [cursor=pointer]: Doğruluk
+              - generic [ref=e253] [cursor=pointer]:
+                - generic [ref=e254] [cursor=pointer]: 50+
+                - generic [ref=e255] [cursor=pointer]: Depo
+            - button "Detaylı Bilgi arrow-right" [ref=e256] [cursor=pointer]:
+              - generic [ref=e257] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e258] [cursor=pointer]:
+                - img [ref=e259] [cursor=pointer]
+        - generic [ref=e264] [cursor=pointer]:
+          - generic [ref=e265] [cursor=pointer]:
+            - img "bar-chart" [ref=e267] [cursor=pointer]:
+              - img [ref=e268] [cursor=pointer]
+            - heading "Satış & Faturalama" [level=3] [ref=e270] [cursor=pointer]
+            - paragraph [ref=e271] [cursor=pointer]: Satış süreçlerinizi baştan sona dijitalleştirin
+          - generic [ref=e272] [cursor=pointer]:
+            - generic [ref=e273] [cursor=pointer]:
+              - generic [ref=e274] [cursor=pointer]:
+                - img "check-circle" [ref=e275] [cursor=pointer]:
+                  - img [ref=e276] [cursor=pointer]
+                - generic [ref=e279] [cursor=pointer]:
+                  - generic [ref=e280] [cursor=pointer]: E-Fatura & E-Arşiv
+                  - generic [ref=e281] [cursor=pointer]: GİB entegrasyonu ile otomatik fatura oluşturma
+              - generic [ref=e282] [cursor=pointer]:
+                - img "check-circle" [ref=e283] [cursor=pointer]:
+                  - img [ref=e284] [cursor=pointer]
+                - generic [ref=e287] [cursor=pointer]:
+                  - generic [ref=e288] [cursor=pointer]: Teklif Yönetimi
+                  - generic [ref=e289] [cursor=pointer]: Profesyonel teklifler hazırlayın ve takip edin
+              - generic [ref=e290] [cursor=pointer]:
+                - img "check-circle" [ref=e291] [cursor=pointer]:
+                  - img [ref=e292] [cursor=pointer]
+                - generic [ref=e295] [cursor=pointer]:
+                  - generic [ref=e296] [cursor=pointer]: Sipariş Takibi
+                  - generic [ref=e297] [cursor=pointer]: Siparişten teslimata tüm süreci yönetin
+            - generic [ref=e298] [cursor=pointer]:
+              - generic [ref=e299] [cursor=pointer]:
+                - generic [ref=e300] [cursor=pointer]: 1M+
+                - generic [ref=e301] [cursor=pointer]: Fatura
+              - generic [ref=e302] [cursor=pointer]:
+                - generic [ref=e303] [cursor=pointer]: GİB Onaylı
+                - generic [ref=e304] [cursor=pointer]: Entegrasyon
+              - generic [ref=e305] [cursor=pointer]:
+                - generic [ref=e306] [cursor=pointer]: 10x
+                - generic [ref=e307] [cursor=pointer]: Hız
+            - button "Detaylı Bilgi arrow-right" [ref=e308] [cursor=pointer]:
+              - generic [ref=e309] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e310] [cursor=pointer]:
+                - img [ref=e311] [cursor=pointer]
+        - generic [ref=e316] [cursor=pointer]:
+          - generic [ref=e317] [cursor=pointer]:
+            - img "dashboard" [ref=e319] [cursor=pointer]:
+              - img [ref=e320] [cursor=pointer]
+            - heading "Finans & Muhasebe" [level=3] [ref=e322] [cursor=pointer]
+            - paragraph [ref=e323] [cursor=pointer]: Mali süreçlerinizi kontrol altına alın
+          - generic [ref=e324] [cursor=pointer]:
+            - generic [ref=e325] [cursor=pointer]:
+              - generic [ref=e326] [cursor=pointer]:
+                - img "check-circle" [ref=e327] [cursor=pointer]:
+                  - img [ref=e328] [cursor=pointer]
+                - generic [ref=e331] [cursor=pointer]:
+                  - generic [ref=e332] [cursor=pointer]: Gelir-Gider Takibi
+                  - generic [ref=e333] [cursor=pointer]: Nakit akışınızı anlık olarak görüntüleyin
+              - generic [ref=e334] [cursor=pointer]:
+                - img "check-circle" [ref=e335] [cursor=pointer]:
+                  - img [ref=e336] [cursor=pointer]
+                - generic [ref=e339] [cursor=pointer]:
+                  - generic [ref=e340] [cursor=pointer]: Bütçe Planlama
+                  - generic [ref=e341] [cursor=pointer]: Departman bazlı bütçeler oluşturun ve takip edin
+              - generic [ref=e342] [cursor=pointer]:
+                - img "check-circle" [ref=e343] [cursor=pointer]:
+                  - img [ref=e344] [cursor=pointer]
+                - generic [ref=e347] [cursor=pointer]:
+                  - generic [ref=e348] [cursor=pointer]: Mali Tablolar
+                  - generic [ref=e349] [cursor=pointer]: Bilanço, kar-zarar ve diğer mali raporlar
+            - generic [ref=e350] [cursor=pointer]:
+              - generic [ref=e351] [cursor=pointer]:
+                - generic [ref=e352] [cursor=pointer]: 10M+
+                - generic [ref=e353] [cursor=pointer]: İşlem
+              - generic [ref=e354] [cursor=pointer]:
+                - generic [ref=e355] [cursor=pointer]: 50+
+                - generic [ref=e356] [cursor=pointer]: Rapor
+              - generic [ref=e357] [cursor=pointer]:
+                - generic [ref=e358] [cursor=pointer]: "%100"
+                - generic [ref=e359] [cursor=pointer]: Uyumluluk
+            - button "Detaylı Bilgi arrow-right" [ref=e360] [cursor=pointer]:
+              - generic [ref=e361] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e362] [cursor=pointer]:
+                - img [ref=e363] [cursor=pointer]
+        - generic [ref=e368] [cursor=pointer]:
+          - generic [ref=e369] [cursor=pointer]:
+            - img "user" [ref=e371] [cursor=pointer]:
+              - img [ref=e372] [cursor=pointer]
+            - heading "İnsan Kaynakları" [level=3] [ref=e374] [cursor=pointer]
+            - paragraph [ref=e375] [cursor=pointer]: Modern İK yönetimi için komple çözüm
+          - generic [ref=e376] [cursor=pointer]:
+            - generic [ref=e377] [cursor=pointer]:
+              - generic [ref=e378] [cursor=pointer]:
+                - img "check-circle" [ref=e379] [cursor=pointer]:
+                  - img [ref=e380] [cursor=pointer]
+                - generic [ref=e383] [cursor=pointer]:
+                  - generic [ref=e384] [cursor=pointer]: Personel Yönetimi
+                  - generic [ref=e385] [cursor=pointer]: Dijital özlük dosyaları ve organizasyon şeması
+              - generic [ref=e386] [cursor=pointer]:
+                - img "check-circle" [ref=e387] [cursor=pointer]:
+                  - img [ref=e388] [cursor=pointer]
+                - generic [ref=e391] [cursor=pointer]:
+                  - generic [ref=e392] [cursor=pointer]: İzin & Vardiya
+                  - generic [ref=e393] [cursor=pointer]: İzin talepleri ve vardiya planlaması
+              - generic [ref=e394] [cursor=pointer]:
+                - img "check-circle" [ref=e395] [cursor=pointer]:
+                  - img [ref=e396] [cursor=pointer]
+                - generic [ref=e399] [cursor=pointer]:
+                  - generic [ref=e400] [cursor=pointer]: Bordro İşlemleri
+                  - generic [ref=e401] [cursor=pointer]: Maaş, prim ve kesintileri otomatik hesaplama
+            - generic [ref=e402] [cursor=pointer]:
+              - generic [ref=e403] [cursor=pointer]:
+                - generic [ref=e404] [cursor=pointer]: 50K+
+                - generic [ref=e405] [cursor=pointer]: Çalışan
+              - generic [ref=e406] [cursor=pointer]:
+                - generic [ref=e407] [cursor=pointer]: "%80"
+                - generic [ref=e408] [cursor=pointer]: Otomasyon
+              - generic [ref=e409] [cursor=pointer]:
+                - generic [ref=e410] [cursor=pointer]: 4.8/5
+                - generic [ref=e411] [cursor=pointer]: Memnuniyet
+            - button "Detaylı Bilgi arrow-right" [ref=e412] [cursor=pointer]:
+              - generic [ref=e413] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e414] [cursor=pointer]:
+                - img [ref=e415] [cursor=pointer]
+        - generic [ref=e420] [cursor=pointer]:
+          - generic [ref=e421] [cursor=pointer]:
+            - img "global" [ref=e423] [cursor=pointer]:
+              - img [ref=e424] [cursor=pointer]
+            - heading "Üretim Planlama" [level=3] [ref=e426] [cursor=pointer]
+            - paragraph [ref=e427] [cursor=pointer]: Üretim süreçlerinizi optimize edin
+          - generic [ref=e428] [cursor=pointer]:
+            - generic [ref=e429] [cursor=pointer]:
+              - generic [ref=e430] [cursor=pointer]:
+                - img "check-circle" [ref=e431] [cursor=pointer]:
+                  - img [ref=e432] [cursor=pointer]
+                - generic [ref=e435] [cursor=pointer]:
+                  - generic [ref=e436] [cursor=pointer]: İş Emirleri
+                  - generic [ref=e437] [cursor=pointer]: Üretim emirlerini dijital olarak yönetin
+              - generic [ref=e438] [cursor=pointer]:
+                - img "check-circle" [ref=e439] [cursor=pointer]:
+                  - img [ref=e440] [cursor=pointer]
+                - generic [ref=e443] [cursor=pointer]:
+                  - generic [ref=e444] [cursor=pointer]: Reçete Yönetimi
+                  - generic [ref=e445] [cursor=pointer]: Ürün reçetelerini ve maliyetlerini takip edin
+              - generic [ref=e446] [cursor=pointer]:
+                - img "check-circle" [ref=e447] [cursor=pointer]:
+                  - img [ref=e448] [cursor=pointer]
+                - generic [ref=e451] [cursor=pointer]:
+                  - generic [ref=e452] [cursor=pointer]: Kapasite Planlama
+                  - generic [ref=e453] [cursor=pointer]: Makine ve işgücü kapasitesini optimize edin
+            - generic [ref=e454] [cursor=pointer]:
+              - generic [ref=e455] [cursor=pointer]:
+                - generic [ref=e456] [cursor=pointer]: 1M+ ürün
+                - generic [ref=e457] [cursor=pointer]: Üretim
+              - generic [ref=e458] [cursor=pointer]:
+                - generic [ref=e459] [cursor=pointer]: "%35"
+                - generic [ref=e460] [cursor=pointer]: Optimizasyon
+              - generic [ref=e461] [cursor=pointer]:
+                - generic [ref=e462] [cursor=pointer]: "%99.5"
+                - generic [ref=e463] [cursor=pointer]: Kalite
+            - button "Detaylı Bilgi arrow-right" [ref=e464] [cursor=pointer]:
+              - generic [ref=e465] [cursor=pointer]: Detaylı Bilgi
+              - img "arrow-right" [ref=e466] [cursor=pointer]:
+                - img [ref=e467] [cursor=pointer]
+      - generic [ref=e471]:
+        - img "api" [ref=e472]:
+          - img [ref=e473]
+        - heading "Tam Entegre Çalışma" [level=3] [ref=e475]
+        - generic [ref=e476]: Tüm modüller birbiriyle senkronize çalışır. Bir modülde yapılan değişiklik, ilgili tüm modüllerde otomatik olarak güncellenir.
+    - generic [ref=e478]:
+      - generic [ref=e479]:
+        - generic [ref=e480]: Referanslar
+        - heading "Müşterilerimiz Ne Diyor?" [level=2] [ref=e481]
+        - generic [ref=e482]: Stocker ERP'yi tercih eden işletmelerden geri bildirimler
+      - generic [ref=e484]:
+        - generic [ref=e487]: TechCorp
+        - generic [ref=e490]: GlobalTrade
+        - generic [ref=e493]: RetailPlus
+        - generic [ref=e496]: LogiMove
+        - generic [ref=e499]: ProdFactory
+        - generic [ref=e502]: ServicePro
+      - generic [ref=e503]:
+        - generic [ref=e505]:
+          - generic [ref=e506]:
+            - img [ref=e508]
+            - list [ref=e509]:
+              - listitem [ref=e510]:
+                - radio "star star" [checked] [ref=e511]:
+                  - img "star" [ref=e513]:
+                    - img [ref=e514]
+                  - img "star" [ref=e517]:
+                    - img [ref=e518]
+              - listitem [ref=e520]:
+                - radio "star star" [checked] [ref=e521]:
+                  - img "star" [ref=e523]:
+                    - img [ref=e524]
+                  - img "star" [ref=e527]:
+                    - img [ref=e528]
+              - listitem [ref=e530]:
+                - radio "star star" [checked] [ref=e531]:
+                  - img "star" [ref=e533]:
+                    - img [ref=e534]
+                  - img "star" [ref=e537]:
+                    - img [ref=e538]
+              - listitem [ref=e540]:
+                - radio "star star" [checked] [ref=e541]:
+                  - img "star" [ref=e543]:
+                    - img [ref=e544]
+                  - img "star" [ref=e547]:
+                    - img [ref=e548]
+              - listitem [ref=e550]:
+                - radio "star star" [checked] [ref=e551]:
+                  - img "star" [ref=e553]:
+                    - img [ref=e554]
+                  - img "star" [ref=e557]:
+                    - img [ref=e558]
+          - paragraph [ref=e560]: "\"Stocker ERP ile tüm departmanlarımızı tek platformda topladık. Üretimden satışa kadar her şey kontrol altında.\""
+          - generic [ref=e561]:
+            - heading "Ahmet Yılmaz" [level=4] [ref=e562]
+            - generic [ref=e563]: Genel Müdür
+            - generic [ref=e564]: TechCorp
+        - generic [ref=e566]:
+          - generic [ref=e567]:
+            - img [ref=e569]
+            - list [ref=e570]:
+              - listitem [ref=e571]:
+                - radio "star star" [checked] [ref=e572]:
+                  - img "star" [ref=e574]:
+                    - img [ref=e575]
+                  - img "star" [ref=e578]:
+                    - img [ref=e579]
+              - listitem [ref=e581]:
+                - radio "star star" [checked] [ref=e582]:
+                  - img "star" [ref=e584]:
+                    - img [ref=e585]
+                  - img "star" [ref=e588]:
+                    - img [ref=e589]
+              - listitem [ref=e591]:
+                - radio "star star" [checked] [ref=e592]:
+                  - img "star" [ref=e594]:
+                    - img [ref=e595]
+                  - img "star" [ref=e598]:
+                    - img [ref=e599]
+              - listitem [ref=e601]:
+                - radio "star star" [checked] [ref=e602]:
+                  - img "star" [ref=e604]:
+                    - img [ref=e605]
+                  - img "star" [ref=e608]:
+                    - img [ref=e609]
+              - listitem [ref=e611]:
+                - radio "star star" [checked] [ref=e612]:
+                  - img "star" [ref=e614]:
+                    - img [ref=e615]
+                  - img "star" [ref=e618]:
+                    - img [ref=e619]
+          - paragraph [ref=e621]: "\"Stok ve finans modülleri mükemmel entegre. E-fatura sistemi sayesinde muhasebe işlerimiz %80 hızlandı.\""
+          - generic [ref=e622]:
+            - heading "Ayşe Demir" [level=4] [ref=e623]
+            - generic [ref=e624]: Operasyon Direktörü
+            - generic [ref=e625]: GlobalTrade
+        - generic [ref=e627]:
+          - generic [ref=e628]:
+            - img [ref=e630]
+            - list [ref=e631]:
+              - listitem [ref=e632]:
+                - radio "star star" [checked] [ref=e633]:
+                  - img "star" [ref=e635]:
+                    - img [ref=e636]
+                  - img "star" [ref=e639]:
+                    - img [ref=e640]
+              - listitem [ref=e642]:
+                - radio "star star" [checked] [ref=e643]:
+                  - img "star" [ref=e645]:
+                    - img [ref=e646]
+                  - img "star" [ref=e649]:
+                    - img [ref=e650]
+              - listitem [ref=e652]:
+                - radio "star star" [checked] [ref=e653]:
+                  - img "star" [ref=e655]:
+                    - img [ref=e656]
+                  - img "star" [ref=e659]:
+                    - img [ref=e660]
+              - listitem [ref=e662]:
+                - radio "star star" [checked] [ref=e663]:
+                  - img "star" [ref=e665]:
+                    - img [ref=e666]
+                  - img "star" [ref=e669]:
+                    - img [ref=e670]
+              - listitem [ref=e672]:
+                - radio "star star" [checked] [ref=e673]:
+                  - img "star" [ref=e675]:
+                    - img [ref=e676]
+                  - img "star" [ref=e679]:
+                    - img [ref=e680]
+          - paragraph [ref=e682]: "\"CRM modülü ile müşteri memnuniyetimiz arttı. Tüm şubelerimizi tek yerden yönetiyoruz.\""
+          - generic [ref=e683]:
+            - heading "Mehmet Kara" [level=4] [ref=e684]
+            - generic [ref=e685]: Satış Müdürü
+            - generic [ref=e686]: RetailPlus
+    - generic [ref=e689]:
+      - generic [ref=e690]:
+        - generic [ref=e691]:
+          - img "star" [ref=e692]:
+            - img [ref=e693]
+          - text: Karşılaştırma
+        - heading "Size En Uygun Planı Seçin" [level=2] [ref=e695]
+        - generic [ref=e696]: İhtiyacınıza göre esnek fiyatlandırma seçenekleri
+      - generic [ref=e698]:
+        - button "Genel Bakış" [ref=e700] [cursor=pointer]:
+          - generic [ref=e701] [cursor=pointer]: Genel Bakış
+        - button "Detaylı Karşılaştırma" [ref=e703] [cursor=pointer]:
+          - generic [ref=e704] [cursor=pointer]: Detaylı Karşılaştırma
+      - generic [ref=e706]:
+        - generic [ref=e710] [cursor=pointer]:
+          - generic [ref=e711] [cursor=pointer]:
+            - img "rocket" [ref=e713] [cursor=pointer]:
+              - img [ref=e714] [cursor=pointer]
+            - heading "Başlangıç" [level=3] [ref=e716] [cursor=pointer]
+            - generic [ref=e717] [cursor=pointer]: Küçük işletmeler ve yeni başlayanlar için
+          - generic [ref=e719] [cursor=pointer]:
+            - generic [ref=e720] [cursor=pointer]: ₺
+            - generic [ref=e721] [cursor=pointer]: "499"
+            - generic [ref=e722] [cursor=pointer]: /ay
+          - generic [ref=e723] [cursor=pointer]:
+            - strong [ref=e726] [cursor=pointer]: Dahil Özellikler
+            - generic [ref=e727] [cursor=pointer]:
+              - generic [ref=e729] [cursor=pointer]:
+                - img "check-circle" [ref=e730] [cursor=pointer]:
+                  - img [ref=e731] [cursor=pointer]
+                - generic [ref=e734] [cursor=pointer]: 5 Kullanıcı
+              - generic [ref=e736] [cursor=pointer]:
+                - img "check-circle" [ref=e737] [cursor=pointer]:
+                  - img [ref=e738] [cursor=pointer]
+                - generic [ref=e741] [cursor=pointer]: 10 GB Depolama
+              - generic [ref=e743] [cursor=pointer]:
+                - img "check-circle" [ref=e744] [cursor=pointer]:
+                  - img [ref=e745] [cursor=pointer]
+                - generic [ref=e748] [cursor=pointer]: 3 Ana Modül (CRM, Stok, Satış)
+              - generic [ref=e750] [cursor=pointer]:
+                - img "check-circle" [ref=e751] [cursor=pointer]:
+                  - img [ref=e752] [cursor=pointer]
+                - generic [ref=e755] [cursor=pointer]: Temel Raporlar
+              - generic [ref=e757] [cursor=pointer]:
+                - img "check-circle" [ref=e758] [cursor=pointer]:
+                  - img [ref=e759] [cursor=pointer]
+                - generic [ref=e762] [cursor=pointer]: E-posta Desteği
+              - generic [ref=e764] [cursor=pointer]:
+                - img "check-circle" [ref=e765] [cursor=pointer]:
+                  - img [ref=e766] [cursor=pointer]
+                - generic [ref=e769] [cursor=pointer]: Günlük Yedekleme
+            - separator [ref=e770] [cursor=pointer]
+            - generic [ref=e771] [cursor=pointer]:
+              - generic [ref=e773] [cursor=pointer]:
+                - img "close-circle" [ref=e774] [cursor=pointer]:
+                  - img [ref=e775] [cursor=pointer]
+                - generic [ref=e777] [cursor=pointer]: E-Fatura Entegrasyonu
+              - generic [ref=e779] [cursor=pointer]:
+                - img "close-circle" [ref=e780] [cursor=pointer]:
+                  - img [ref=e781] [cursor=pointer]
+                - generic [ref=e783] [cursor=pointer]: API Erişimi
+              - generic [ref=e785] [cursor=pointer]:
+                - img "close-circle" [ref=e786] [cursor=pointer]:
+                  - img [ref=e787] [cursor=pointer]
+                - generic [ref=e789] [cursor=pointer]: 7/24 Telefon Destek
+          - button "Hemen Başla" [ref=e791] [cursor=pointer]:
+            - generic [ref=e792] [cursor=pointer]: Hemen Başla
+        - generic [ref=e796] [cursor=pointer]:
+          - superscript [ref=e799] [cursor=pointer]: EN POPÜLER
+          - generic [ref=e800] [cursor=pointer]:
+            - img "thunderbolt" [ref=e802] [cursor=pointer]:
+              - img [ref=e803] [cursor=pointer]
+            - heading "Profesyonel" [level=3] [ref=e805] [cursor=pointer]
+            - generic [ref=e806] [cursor=pointer]: Büyüyen işletmeler için tam kapsamlı çözüm
+          - generic [ref=e808] [cursor=pointer]:
+            - generic [ref=e809] [cursor=pointer]: ₺
+            - generic [ref=e810] [cursor=pointer]: "999"
+            - generic [ref=e811] [cursor=pointer]: /ay
+            - generic [ref=e813] [cursor=pointer]: En popüler seçim
+          - generic [ref=e814] [cursor=pointer]:
+            - strong [ref=e817] [cursor=pointer]: Dahil Özellikler
+            - generic [ref=e818] [cursor=pointer]:
+              - generic [ref=e820] [cursor=pointer]:
+                - img "check-circle" [ref=e821] [cursor=pointer]:
+                  - img [ref=e822] [cursor=pointer]
+                - generic [ref=e825] [cursor=pointer]: 25 Kullanıcı
+              - generic [ref=e827] [cursor=pointer]:
+                - img "check-circle" [ref=e828] [cursor=pointer]:
+                  - img [ref=e829] [cursor=pointer]
+                - generic [ref=e832] [cursor=pointer]: 100 GB Depolama
+              - generic [ref=e834] [cursor=pointer]:
+                - img "check-circle" [ref=e835] [cursor=pointer]:
+                  - img [ref=e836] [cursor=pointer]
+                - generic [ref=e839] [cursor=pointer]: Tüm Standart Modüller (5 Modül)
+              - generic [ref=e841] [cursor=pointer]:
+                - img "check-circle" [ref=e842] [cursor=pointer]:
+                  - img [ref=e843] [cursor=pointer]
+                - generic [ref=e846] [cursor=pointer]: API Erişimi
+              - generic [ref=e848] [cursor=pointer]:
+                - img "check-circle" [ref=e849] [cursor=pointer]:
+                  - img [ref=e850] [cursor=pointer]
+                - generic [ref=e853] [cursor=pointer]: Gelişmiş Raporlar & Analizler
+              - generic [ref=e855] [cursor=pointer]:
+                - img "check-circle" [ref=e856] [cursor=pointer]:
+                  - img [ref=e857] [cursor=pointer]
+                - generic [ref=e860] [cursor=pointer]: 7/24 Telefon & Canlı Destek
+            - separator [ref=e861] [cursor=pointer]
+            - generic [ref=e862] [cursor=pointer]:
+              - generic [ref=e864] [cursor=pointer]:
+                - img "close-circle" [ref=e865] [cursor=pointer]:
+                  - img [ref=e866] [cursor=pointer]
+                - generic [ref=e868] [cursor=pointer]: Üretim Planlama Modülü
+              - generic [ref=e870] [cursor=pointer]:
+                - img "close-circle" [ref=e871] [cursor=pointer]:
+                  - img [ref=e872] [cursor=pointer]
+                - generic [ref=e874] [cursor=pointer]: Multi-Şirket Yönetimi
+              - generic [ref=e876] [cursor=pointer]:
+                - img "close-circle" [ref=e877] [cursor=pointer]:
+                  - img [ref=e878] [cursor=pointer]
+                - generic [ref=e880] [cursor=pointer]: White Label
+          - button "Hemen Başla" [ref=e882] [cursor=pointer]:
+            - generic [ref=e883] [cursor=pointer]: Hemen Başla
+        - generic [ref=e887] [cursor=pointer]:
+          - generic [ref=e888] [cursor=pointer]:
+            - img "crown" [ref=e890] [cursor=pointer]:
+              - img [ref=e891] [cursor=pointer]
+            - heading "Kurumsal" [level=3] [ref=e893] [cursor=pointer]
+            - generic [ref=e894] [cursor=pointer]: Büyük ölçekli işletmeler için özel çözümler
+          - generic [ref=e896] [cursor=pointer]:
+            - generic [ref=e897] [cursor=pointer]: Özel Fiyat
+            - generic [ref=e899] [cursor=pointer]: En kapsamlı paket
+          - generic [ref=e900] [cursor=pointer]:
+            - strong [ref=e903] [cursor=pointer]: Dahil Özellikler
+            - generic [ref=e904] [cursor=pointer]:
+              - generic [ref=e906] [cursor=pointer]:
+                - img "check-circle" [ref=e907] [cursor=pointer]:
+                  - img [ref=e908] [cursor=pointer]
+                - generic [ref=e911] [cursor=pointer]: Sınırsız Kullanıcı
+              - generic [ref=e913] [cursor=pointer]:
+                - img "check-circle" [ref=e914] [cursor=pointer]:
+                  - img [ref=e915] [cursor=pointer]
+                - generic [ref=e918] [cursor=pointer]: Sınırsız Depolama
+              - generic [ref=e920] [cursor=pointer]:
+                - img "check-circle" [ref=e921] [cursor=pointer]:
+                  - img [ref=e922] [cursor=pointer]
+                - generic [ref=e925] [cursor=pointer]: Tüm Modüller + Özel Modüller
+              - generic [ref=e927] [cursor=pointer]:
+                - img "check-circle" [ref=e928] [cursor=pointer]:
+                  - img [ref=e929] [cursor=pointer]
+                - generic [ref=e932] [cursor=pointer]: Gelişmiş API & Webhook
+              - generic [ref=e934] [cursor=pointer]:
+                - img "check-circle" [ref=e935] [cursor=pointer]:
+                  - img [ref=e936] [cursor=pointer]
+                - generic [ref=e939] [cursor=pointer]: Özel Raporlar & BI Entegrasyonu
+              - generic [ref=e941] [cursor=pointer]:
+                - img "check-circle" [ref=e942] [cursor=pointer]:
+                  - img [ref=e943] [cursor=pointer]
+                - generic [ref=e946] [cursor=pointer]: Özel Hesap Yöneticisi
+          - button "Teklif Al" [ref=e948] [cursor=pointer]:
+            - generic [ref=e949] [cursor=pointer]: Teklif Al
+      - generic [ref=e952]:
+        - heading "Hangi plan size uygun?" [level=3] [ref=e953]
+        - generic [ref=e954]: İhtiyacınızı tam olarak belirleyemiyorsanız, uzman ekibimiz size en uygun çözümü önermekten mutluluk duyar.
+        - generic [ref=e955]:
+          - button "customer-service Ücretsiz Demo Talebi" [ref=e957] [cursor=pointer]:
+            - img "customer-service" [ref=e959] [cursor=pointer]:
+              - img [ref=e960] [cursor=pointer]
+            - generic [ref=e962] [cursor=pointer]: Ücretsiz Demo Talebi
+          - button "Fiyat Hesaplayıcı" [ref=e964] [cursor=pointer]:
+            - generic [ref=e965] [cursor=pointer]: Fiyat Hesaplayıcı
+    - generic [ref=e968]:
+      - generic [ref=e969]:
+        - generic [ref=e970]:
+          - img "question-circle" [ref=e971]:
+            - img [ref=e972]
+          - text: SSS
+        - heading "Sıkça Sorulan Sorular" [level=2] [ref=e975]
+        - generic [ref=e976]: Stocker ERP hakkında merak ettiğiniz her şey
+      - generic [ref=e978]:
+        - generic [ref=e983] [cursor=pointer]:
+          - img "rocket" [ref=e986] [cursor=pointer]:
+            - img [ref=e987] [cursor=pointer]
+          - strong [ref=e991] [cursor=pointer]: Genel Bilgiler
+        - generic [ref=e996] [cursor=pointer]:
+          - img "dollar" [ref=e999] [cursor=pointer]:
+            - img [ref=e1000] [cursor=pointer]
+          - strong [ref=e1004] [cursor=pointer]: Fiyatlandırma & Deneme
+        - generic [ref=e1009] [cursor=pointer]:
+          - img "safety" [ref=e1012] [cursor=pointer]:
+            - img [ref=e1013] [cursor=pointer]
+          - strong [ref=e1018] [cursor=pointer]: Güvenlik & Veri
+        - generic [ref=e1023] [cursor=pointer]:
+          - img "cloud" [ref=e1026] [cursor=pointer]:
+            - img [ref=e1027] [cursor=pointer]
+          - strong [ref=e1031] [cursor=pointer]: Teknik & Kurulum
+        - generic [ref=e1036] [cursor=pointer]:
+          - img "customer-service" [ref=e1039] [cursor=pointer]:
+            - img [ref=e1040] [cursor=pointer]
+          - strong [ref=e1044] [cursor=pointer]: Destek & Eğitim
+      - generic [ref=e1048]:
+        - generic [ref=e1051]:
+          - generic [ref=e1052] [cursor=pointer]:
+            - strong [ref=e1054] [cursor=pointer]: Stocker ERP nedir ve kimler için uygundur?
+            - button "minus" [ref=e1055] [cursor=pointer]:
+              - img "minus" [ref=e1057] [cursor=pointer]:
+                - img [ref=e1058] [cursor=pointer]
+          - generic [ref=e1061]:
+            - generic [ref=e1062]: Stocker, küçük ve orta ölçekli işletmeler için tasarlanmış bulut tabanlı, modüler bir ERP çözümüdür. CRM, Stok, Satış, Finans, İK ve Üretim modülleriyle işletmenizin tüm süreçlerini tek platformda yönetebilirsiniz. Perakende, üretim, hizmet ve dağıtım sektörlerindeki 10-500 çalışanlı işletmeler için idealdir.
+            - generic [ref=e1063]:
+              - generic [ref=e1066]: 6 Ana Modül
+              - generic [ref=e1069]: Bulut Tabanlı
+              - generic [ref=e1072]: Sektörel Çözümler
+              - generic [ref=e1075]: Ölçeklenebilir
+        - generic [ref=e1079] [cursor=pointer]:
+          - strong [ref=e1081] [cursor=pointer]: Diğer ERP sistemlerinden farkı nedir?
+          - button "plus" [ref=e1082] [cursor=pointer]:
+            - img "plus" [ref=e1084] [cursor=pointer]:
+              - img [ref=e1085] [cursor=pointer]
+        - generic [ref=e1091] [cursor=pointer]:
+          - strong [ref=e1093] [cursor=pointer]: Hangi sektörler için özel çözümler sunuyorsunuz?
+          - button "plus" [ref=e1094] [cursor=pointer]:
+            - img "plus" [ref=e1096] [cursor=pointer]:
+              - img [ref=e1097] [cursor=pointer]
+      - generic [ref=e1102]:
+        - heading "Sorunuz mu var?" [level=4] [ref=e1103]
+        - generic [ref=e1104]: Aradığınız cevabı bulamadıysanız, destek ekibimiz size yardımcı olmaktan mutluluk duyar.
+        - generic [ref=e1105]:
+          - button "customer-service Destek Talebi Oluştur" [ref=e1107] [cursor=pointer]:
+            - img "customer-service" [ref=e1109] [cursor=pointer]:
+              - img [ref=e1110] [cursor=pointer]
+            - generic [ref=e1112] [cursor=pointer]: Destek Talebi Oluştur
+          - button "mobile 0850 200 12 34" [ref=e1114] [cursor=pointer]:
+            - img "mobile" [ref=e1116] [cursor=pointer]:
+              - img [ref=e1117] [cursor=pointer]
+            - generic [ref=e1119] [cursor=pointer]: 0850 200 12 34
+    - contentinfo [ref=e1120]:
+      - generic [ref=e1121]:
+        - generic [ref=e1122]:
+          - generic [ref=e1123]:
+            - generic [ref=e1124]:
+              - img "rocket" [ref=e1125]:
+                - img [ref=e1126]
+              - text: Stocker
+            - paragraph [ref=e1128]: Modern işletmeler için dijital dönüşüm platformu
+          - generic [ref=e1129]:
+            - heading "Ürün" [level=4] [ref=e1130]
+            - list [ref=e1131]:
+              - listitem [ref=e1132]:
+                - link "Özellikler" [ref=e1133] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1134]:
+                - link "Fiyatlandırma" [ref=e1135] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1136]:
+                - link "Entegrasyonlar" [ref=e1137] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e1138]:
+            - heading "Şirket" [level=4] [ref=e1139]
+            - list [ref=e1140]:
+              - listitem [ref=e1141]:
+                - link "Hakkımızda" [ref=e1142] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1143]:
+                - link "Kariyer" [ref=e1144] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1145]:
+                - link "İletişim" [ref=e1146] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e1147]:
+            - heading "Destek" [level=4] [ref=e1148]
+            - list [ref=e1149]:
+              - listitem [ref=e1150]:
+                - link "Yardım Merkezi" [ref=e1151] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1152]:
+                - link "API Dokümantasyon" [ref=e1153] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e1154]:
+                - link "Durum" [ref=e1155] [cursor=pointer]:
+                  - /url: "#"
+        - separator [ref=e1156]
+        - generic [ref=e1157]:
+          - paragraph [ref=e1158]: © 2024 Stocker. Tüm hakları saklıdır.
+          - generic [ref=e1159]:
+            - link "Gizlilik" [ref=e1161] [cursor=pointer]:
+              - /url: "#"
+            - link "Şartlar" [ref=e1163] [cursor=pointer]:
+              - /url: "#"
+            - link "Çerezler" [ref=e1165] [cursor=pointer]:
+              - /url: "#"
+  - generic [ref=e1166]:
+    - img [ref=e1168]
+    - button "Open Tanstack query devtools" [ref=e1216] [cursor=pointer]:
+      - img [ref=e1217] [cursor=pointer]
+```

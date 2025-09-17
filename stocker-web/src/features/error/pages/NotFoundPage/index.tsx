@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Result, Button, Space } from 'antd';
+
 import { HomeOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import './style.css';
+import { Result, Button, Space } from 'antd';
 
 export const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();

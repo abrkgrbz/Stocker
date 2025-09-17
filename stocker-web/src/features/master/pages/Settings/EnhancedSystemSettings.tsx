@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Row,
   Col,
@@ -263,6 +263,7 @@ const EnhancedSystemSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [testingConnection, setTestingConnection] = useState(false);
   const [form] = Form.useForm();
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Mock configuration data
   const mockConfig: SystemConfig = {
@@ -1187,11 +1188,11 @@ const EnhancedSystemSettings: React.FC = () => {
           </Text>
         </div>
         <Space>
-          <Button icon={<ImportOutlined />} onClick={() => document.getElementById('import-settings')?.click()}>
+          <Button icon={<ImportOutlined />} onClick={() => importInputRef.current?.click()}>
             İçe Aktar
           </Button>
           <input
-            id="import-settings"
+            ref={importInputRef}
             type="file"
             accept=".json"
             style={{ display: 'none' }}

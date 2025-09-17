@@ -1,17 +1,10 @@
-import { apiClient } from './client';
 import { LoginRequest, LoginResponse, User } from '@/shared/types';
 
-// Tenant kullanıcıları için auth API
+import { apiClient } from './client';
+
 export const authApi = {
   login: (data: LoginRequest) => {
-    console.log('AUTH API - Login request:', {
-      url: `${apiClient.defaults.baseURL}/api/auth/login`,
-      email: data.email,
-      tenantCode: data.tenantCode,
-      hasPassword: !!data.password
-    });
-    
-    // If tenant code is provided, set it as header for subdomain login
+        // If tenant code is provided, set it as header for subdomain login
     const headers: any = {};
     if (data.tenantCode) {
       headers['X-Tenant-Code'] = data.tenantCode;
@@ -19,12 +12,7 @@ export const authApi = {
     }
     
     return apiClient.post<LoginResponse>('/api/auth/login', data, { headers }).catch((error) => {
-      console.error('AUTH API - Login error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers
-      });
+      // Error handling removed for production
       throw error;
     });
   },

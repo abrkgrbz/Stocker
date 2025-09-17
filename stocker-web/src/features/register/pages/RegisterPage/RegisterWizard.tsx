@@ -21,7 +21,7 @@ import {
 } from 'antd';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { showRegistrationSuccess, showApiResponse } from '../../../../shared/utils/sweetAlert';
+import { showRegistrationSuccess, showApiResponse } from '@/shared/utils/sweetAlert';
 import {
   UserOutlined,
   ShopOutlined,
@@ -45,7 +45,7 @@ import {
 } from '@ant-design/icons';
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
-import { useRealTimeValidation } from '../../hooks/useRealTimeValidation';
+import { useRealTimeValidation } from '@/features/register/hooks/useRealTimeValidation';
 import ReCAPTCHA from 'react-google-recaptcha';
 import './register-wizard.css';
 
@@ -212,7 +212,7 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
     } catch (error: any) {
       // Detaylı hata alert'i - sweetAlert utility'sini kullan
       await showApiResponse.error(error, 'Kayıt işlemi sırasında bir hata oluştu');
-      console.error('Registration error:', error);
+      // Error handling removed for production
     } finally {
       setLoading(false);
     }

@@ -200,14 +200,7 @@ export function handleError(error: any, options?: {
   const apiError = parseError(error);
   
   // Log error for debugging
-  console.error(`[Error${context ? ` - ${context}` : ''}]:`, {
-    message: apiError.message,
-    code: apiError.code,
-    statusCode: apiError.statusCode,
-    details: apiError.details,
-    originalError: error,
-  });
-  
+  // Error handling removed for production
   // Handle specific error codes
   switch (apiError.statusCode) {
     case 401:
@@ -268,11 +261,12 @@ export function handleError(error: any, options?: {
 
 // Error boundary handler
 export function handleErrorBoundary(error: Error, errorInfo: any): void {
-  console.error('Error Boundary Caught:', error, errorInfo);
-  
+  // Error handling removed for production
   // Send error to monitoring service (e.g., Sentry)
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    // TODO: Send to monitoring service
+    // Send error to monitoring service (Sentry, LogRocket, etc.)
+    // Implementation depends on chosen monitoring service
+    // Example: window.Sentry?.captureException(error);
   }
   
   notification.error({

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Empty, Button } from 'antd';
+
 import { PlusOutlined } from '@ant-design/icons';
+import { Empty, Button } from 'antd';
 
 interface EmptyStateProps {
   title?: string;

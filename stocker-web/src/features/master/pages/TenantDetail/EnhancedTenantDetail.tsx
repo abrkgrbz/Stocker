@@ -197,7 +197,7 @@ const EnhancedTenantDetail: React.FC = () => {
       country: apiTenant.country || 'Türkiye',
       status: apiTenant.isActive ? 'active' : 'inactive',
       plan: apiTenant.subscription?.packageName || 'Standart',
-      maxUsers: 100, // TODO: Get from package details
+      maxUsers: apiTenant.subscription?.maxUsers || 100, // Default to 100 if not specified in package
       currentUsers: apiTenant.userCount || 0,
       storage: {
         used: statistics?.storageUsed || 0,
@@ -206,7 +206,7 @@ const EnhancedTenantDetail: React.FC = () => {
       createdAt: apiTenant.createdAt,
       expiresAt: apiTenant.subscription?.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       lastLogin: apiTenant.updatedAt || apiTenant.createdAt,
-      modules: [], // TODO: Get from subscription modules
+      modules: apiTenant.subscription?.modules || [], // Get enabled modules from subscription
       subscription: apiTenant.subscription ? {
         id: apiTenant.subscription.id,
         plan: apiTenant.subscription.packageName,

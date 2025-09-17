@@ -159,7 +159,7 @@ export function usePWA() {
         message.info('Uygulama yüklenmedi');
       }
     } catch (error) {
-      console.error('Install error:', error);
+      // Error handling removed for production
       message.error('Yükleme sırasında bir hata oluştu');
     }
   }, [pwaStatus.installPrompt]);
@@ -212,7 +212,7 @@ export function usePWA() {
         const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
         
         if (!vapidPublicKey) {
-          console.error('VAPID public key not configured');
+          // Error handling removed for production
           return null;
         }
         
@@ -235,7 +235,7 @@ export function usePWA() {
       
       return subscription;
     } catch (error) {
-      console.error('Push subscription error:', error);
+      // Error handling removed for production
       message.error('Push bildirimleri etkinleştirilemedi');
       return null;
     }
@@ -262,7 +262,7 @@ export function usePWA() {
         message.success('Push bildirimleri devre dışı bırakıldı');
       }
     } catch (error) {
-      console.error('Push unsubscribe error:', error);
+      // Error handling removed for production
       message.error('Push bildirimleri devre dışı bırakılamadı');
     }
   }, []);
@@ -279,7 +279,7 @@ export function usePWA() {
       return true;
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        console.error('Share error:', error);
+        // Error handling removed for production
         message.error('Paylaşım başarısız');
       }
       return false;

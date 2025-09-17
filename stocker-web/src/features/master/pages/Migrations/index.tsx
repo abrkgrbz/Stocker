@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Tag, message, Modal, Spin, Alert, Tooltip, Badge, Divider } from 'antd';
+
 import { SyncOutlined, CheckCircleOutlined, ExclamationCircleOutlined, DatabaseOutlined, HistoryOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import api from '@/services/api';
+import { Card, Table, Button, Space, Tag, message, Modal, Spin, Alert, Tooltip, Badge, Divider } from 'antd';
 import Swal from 'sweetalert2';
-import './styles.css';
+
+import api from '@/services/api';
 
 interface TenantMigration {
   tenantId: string;
@@ -42,16 +43,14 @@ const MigrationsPage: React.FC = () => {
       setMigrations(response.data.data || []);
     } catch (error) {
       message.error('Migration durumu alınamadı');
-      console.error('Error fetching migrations:', error);
+      // Error handling removed for production
     } finally {
       setLoading(false);
     }
   };
 
   const applyMigrationToTenant = async (tenantId: string, tenantName: string) => {
-    console.log('Migration uygula clicked:', { tenantId, tenantName });
-    
-    const result = await Swal.fire({
+        const result = await Swal.fire({
       title: 'Migration Uygula',
       html: `
         <div>
@@ -69,13 +68,11 @@ const MigrationsPage: React.FC = () => {
       confirmButtonColor: '#ff4d4f',
       showLoaderOnConfirm: true,
       preConfirm: async () => {
-        console.log('PreConfirm started for tenant:', tenantId);
-        try {
+                try {
           const response = await api.post(`/api/master/migrations/apply/${tenantId}`);
-          console.log('API Response:', response.data);
-          return response.data;
+                    return response.data;
         } catch (error: any) {
-          console.error('API Error:', error);
+          // Error handling removed for production
           Swal.showValidationMessage(
             `Hata: ${error.response?.data?.message || error.message || 'Migration uygulanamadı'}`
           );

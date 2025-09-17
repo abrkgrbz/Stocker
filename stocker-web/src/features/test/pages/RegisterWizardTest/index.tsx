@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Button, Space, Typography, Divider, Tag, Alert } from 'antd';
-import { ReloadOutlined, ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+
+import { ReloadOutlined, ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Button, Space, Typography, Divider, Tag, Alert } from 'antd';
+
 import { ModernWizard } from '@/features/register/pages/RegisterPage/ModernWizard';
-import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -14,8 +15,7 @@ export const RegisterWizardTest: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
 
   const handleWizardComplete = (data: any) => {
-    console.log('Wizard Completed with data:', data);
-    setCompletedData(data);
+        setCompletedData(data);
     setShowResult(true);
   };
 

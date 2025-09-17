@@ -1,6 +1,8 @@
 import { message, notification } from 'antd';
-import logger from './logger';
+
 import env from '@/config/env';
+
+import logger from './logger';
 
 export interface AppError {
   code: string;

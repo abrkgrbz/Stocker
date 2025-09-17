@@ -257,7 +257,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
         setChecklistData(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching checklist:', error);
+      // Error handling removed for production
       message.error('Checklist bilgileri yüklenemedi');
     } finally {
       setLoading(false);
@@ -296,7 +296,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
         setDetailDrawerVisible(false);
       }
     } catch (error) {
-      console.error('Error updating checklist item:', error);
+      // Error handling removed for production
       message.error('İşlem sırasında hata oluştu');
     }
   };
