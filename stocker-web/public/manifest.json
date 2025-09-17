@@ -12,69 +12,9 @@
   "categories": ["business", "productivity", "finance"],
   "lang": "tr",
   "dir": "ltr",
-  "icons": [
-    {
-      "src": "/pwa-64x64.png",
-      "sizes": "64x64",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/pwa-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/pwa-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/maskable-icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/dashboard.png",
-      "type": "image/png",
-      "sizes": "1280x720",
-      "label": "Dashboard"
-    },
-    {
-      "src": "/screenshots/mobile.png",
-      "type": "image/png",
-      "sizes": "750x1334",
-      "label": "Mobile View"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "Ana kontrol paneli",
-      "url": "/master",
-      "icons": [{ "src": "/icons/dashboard.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Tenants",
-      "short_name": "Tenants",
-      "description": "Tenant yönetimi",
-      "url": "/master/tenants",
-      "icons": [{ "src": "/icons/tenants.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Reports",
-      "short_name": "Raporlar",
-      "description": "Raporlar ve analizler",
-      "url": "/master/reports",
-      "icons": [{ "src": "/icons/reports.png", "sizes": "96x96" }]
-    }
-  ],
+  "icons": [],
+  "screenshots": [],
+  "shortcuts": [],
   "related_applications": [],
   "prefer_related_applications": false,
   "protocol_handlers": [
