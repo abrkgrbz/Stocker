@@ -7,9 +7,9 @@ WORKDIR /app
 COPY stocker-web/package*.json ./
 
 # Install dependencies with clean install for production
-# Fix for rollup on Alpine Linux
+# Fix for rollup on Alpine Linux - install the specific module
 RUN npm ci --production=false && \
-    npm rebuild @rollup/rollup-linux-x64-musl
+    npm install @rollup/rollup-linux-x64-musl --save-optional
 
 # Copy source files
 COPY stocker-web/ .
