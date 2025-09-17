@@ -4,13 +4,13 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files for better caching
-COPY package*.json ./
+COPY stocker-web/package*.json ./
 
 # Install dependencies with clean install for production
 RUN npm ci --production=false
 
 # Copy source files
-COPY . .
+COPY stocker-web/ .
 
 # Build the application with production optimizations
 ARG VITE_API_URL=https://api.stoocker.app
