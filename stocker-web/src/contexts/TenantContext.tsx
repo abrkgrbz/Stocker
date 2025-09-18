@@ -80,7 +80,17 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsValidTenant(false);
       }
     } catch (error) {
-      setIsValidTenant(false);
+      console.warn('Tenant validation failed, using fallback:', error);
+      // For development, assume tenant is valid when API is not available
+      if (import.meta.env.DEV || window.location.hostname === 'localhost') {
+        setIsValidTenant(true);
+        // Set a mock tenant ID for development
+        const mockTenantId = 'dev-tenant-' + tenantSlug;
+        setTenantId(mockTenantId);
+        localStorage.setItem('tenant_id', mockTenantId);
+      } else {
+        setIsValidTenant(false);
+      }
     }
   };
 
