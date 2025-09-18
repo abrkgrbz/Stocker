@@ -58,12 +58,14 @@ export default defineConfig({
         inlineDynamicImports: false,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Keep all React ecosystem together to prevent module loading issues
+            // Keep ALL React-dependent packages together to prevent loading issues
             if (id.includes('react-dom') || 
                 id.includes('react/') || 
                 id.includes('react-is') ||
                 id.includes('scheduler') ||
-                id.includes('react-router')) {
+                id.includes('react-router') ||
+                id.includes('@emotion') ||
+                id.includes('@mui')) {
               return 'react-vendor';
             }
             
@@ -102,12 +104,6 @@ export default defineConfig({
               return 'd3-lazy';
             }
             
-            // MUI and Emotion - must be loaded with React
-            if (id.includes('@mui/material') || 
-                id.includes('@mui/icons-material') || 
-                id.includes('@emotion')) {
-              return 'mui-vendor';
-            }
             
             // Utilities - split by size and usage
             if (id.includes('axios')) {
