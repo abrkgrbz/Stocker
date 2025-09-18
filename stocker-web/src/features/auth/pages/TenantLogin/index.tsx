@@ -166,11 +166,8 @@ export const TenantLogin: React.FC = () => {
       
       message.success('Giriş başarılı!');
       
-      // Wait for auth state to update
-      setTimeout(() => {
-        // For subdomain, redirect to root (module selection)
-        window.location.href = '/';
-      }, 500);
+      // For now, just stay on login page after successful login
+      // Post-login features will be added after refactoring
       
       setLoading(false);
     } catch (err: any) {

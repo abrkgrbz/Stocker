@@ -5,7 +5,6 @@ import { TOKEN_KEY, REFRESH_TOKEN_KEY, TENANT_KEY } from '@/config/constants';
 import { authApi } from '@/shared/api/auth.api';
 import { User, LoginRequest } from '@/shared/types';
 import { isTokenExpired, resetSessionTimeout } from '@/shared/utils/auth-interceptor';
-import { modulesApi, UserModule } from '@/shared/api/modules.api';
 
 interface AuthState {
   user: User | null;
@@ -16,9 +15,6 @@ interface AuthState {
   isInitialized: boolean;
   error: string | null;
   lastActivity: number;
-  userModules: UserModule[];
-  isCompanyOwner: boolean;
-  permissions: string[];
   
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
@@ -29,7 +25,6 @@ interface AuthState {
   clearError: () => void;
   setTenant: (tenantId: string) => void;
   updateActivity: () => void;
-  fetchUserModules: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -44,32 +39,29 @@ export const useAuthStore = create<AuthState>()(
         isInitialized: false,
         error: null,
         lastActivity: Date.now(),
-        userModules: [],
-        isCompanyOwner: false,
-        permissions: [],
 
         initializeAuth: () => {
           const token = localStorage.getItem(TOKEN_KEY);
           const state = get();
           
-                    // If we already have a user and token from persisted state, check if expired
+          // If we already have a user and token from persisted state, check if expired
           if (state.user && state.token) {
             if (!isTokenExpired(state.token)) {
-                            resetSessionTimeout();
+              resetSessionTimeout();
               set({ 
                 isAuthenticated: true,
                 isInitialized: true,
                 isLoading: false 
               });
             } else {
-                            get().refreshAuthToken();
+              get().refreshAuthToken();
             }
           } else if (token) {
             // We have a token but no user, need to fetch user data
-                        get().checkAuth();
+            get().checkAuth();
           } else {
             // No token, not authenticated
-                        set({ 
+            set({ 
               isAuthenticated: false,
               isInitialized: true,
               isLoading: false 
@@ -80,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
         login: async (credentials) => {
           set({ isLoading: true, error: null });
           try {
-                        const response = await authApi.login(credentials);
+            const response = await authApi.login(credentials);
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
@@ -96,9 +88,9 @@ export const useAuthStore = create<AuthState>()(
             // Save tenant ID if available
             if (user?.tenantId) {
               localStorage.setItem('stocker_tenant', user.tenantId);
-                          } else if (user?.tenant?.id) {
+            } else if (user?.tenant?.id) {
               localStorage.setItem('stocker_tenant', user.tenant.id);
-                          }
+            }
             
             resetSessionTimeout();
             
@@ -111,11 +103,7 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: true,
               lastActivity: Date.now(),
             });
-            
-            // Fetch user modules after successful login
-            await get().fetchUserModules();
           } catch (error: unknown) {
-            // Error handling removed for production
             // Extract detailed error message
             let errorMessage = 'Login failed';
             if (error && typeof error === 'object' && 'response' in error) {
@@ -246,25 +234,6 @@ export const useAuthStore = create<AuthState>()(
         updateActivity: () => {
           set({ lastActivity: Date.now() });
           resetSessionTimeout();
-        },
-
-        fetchUserModules: async () => {
-          try {
-            const response = await modulesApi.getUserModules();
-            set({
-              userModules: response.modules,
-              isCompanyOwner: response.isCompanyOwner,
-              permissions: response.permissions
-            });
-          } catch (error) {
-            console.error('Failed to fetch user modules:', error);
-            // Set default empty values on error
-            set({
-              userModules: [],
-              isCompanyOwner: false,
-              permissions: []
-            });
-          }
         },
       }),
       {
