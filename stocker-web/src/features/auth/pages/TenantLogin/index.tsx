@@ -168,8 +168,8 @@ export const TenantLogin: React.FC = () => {
       
       // Wait for auth state to update
       setTimeout(() => {
-        // For subdomain, redirect to clean URL
-        window.location.href = '/dashboard';
+        // For subdomain, redirect to module selection page
+        window.location.href = '/modules';
       }, 500);
       
       setLoading(false);
