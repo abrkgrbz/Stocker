@@ -5,6 +5,7 @@ import { TOKEN_KEY, REFRESH_TOKEN_KEY, TENANT_KEY } from '@/config/constants';
 import { authApi } from '@/shared/api/auth.api';
 import { User, LoginRequest } from '@/shared/types';
 import { isTokenExpired, resetSessionTimeout } from '@/shared/utils/auth-interceptor';
+import { modulesApi, UserModule } from '@/shared/api/modules.api';
 
 interface AuthState {
   user: User | null;
@@ -15,6 +16,9 @@ interface AuthState {
   isInitialized: boolean;
   error: string | null;
   lastActivity: number;
+  userModules: UserModule[];
+  isCompanyOwner: boolean;
+  permissions: string[];
   
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
@@ -25,6 +29,7 @@ interface AuthState {
   clearError: () => void;
   setTenant: (tenantId: string) => void;
   updateActivity: () => void;
+  fetchUserModules: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,6 +44,9 @@ export const useAuthStore = create<AuthState>()(
         isInitialized: false,
         error: null,
         lastActivity: Date.now(),
+        userModules: [],
+        isCompanyOwner: false,
+        permissions: [],
 
         initializeAuth: () => {
           const token = localStorage.getItem(TOKEN_KEY);
@@ -103,6 +111,9 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: true,
               lastActivity: Date.now(),
             });
+            
+            // Fetch user modules after successful login
+            await get().fetchUserModules();
           } catch (error: unknown) {
             // Error handling removed for production
             // Extract detailed error message
@@ -235,6 +246,25 @@ export const useAuthStore = create<AuthState>()(
         updateActivity: () => {
           set({ lastActivity: Date.now() });
           resetSessionTimeout();
+        },
+
+        fetchUserModules: async () => {
+          try {
+            const response = await modulesApi.getUserModules();
+            set({
+              userModules: response.modules,
+              isCompanyOwner: response.isCompanyOwner,
+              permissions: response.permissions
+            });
+          } catch (error) {
+            console.error('Failed to fetch user modules:', error);
+            // Set default empty values on error
+            set({
+              userModules: [],
+              isCompanyOwner: false,
+              permissions: []
+            });
+          }
         },
       }),
       {

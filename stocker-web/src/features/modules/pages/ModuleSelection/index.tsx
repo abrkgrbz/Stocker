@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Card, Typography, Badge, Tooltip, Space, Avatar, Button, Tag } from 'antd';
+import { Row, Col, Card, Typography, Badge, Tooltip, Space, Avatar, Button, Tag, Spin, Empty, message } from 'antd';
 import {
   ShoppingCartOutlined,
   TeamOutlined,
@@ -19,7 +19,11 @@ import {
   RightOutlined,
   LogoutOutlined,
   UserOutlined,
-  BellOutlined
+  BellOutlined,
+  LoadingOutlined,
+  SafetyCertificateOutlined,
+  UsergroupAddOutlined,
+  DashboardOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/app/store/auth.store';
@@ -29,123 +33,190 @@ const { Title, Text, Paragraph } = Typography;
 
 interface Module {
   id: string;
+  code: string;
   name: string;
   description: string;
-  icon: React.ReactNode;
+  icon: React.ReactNode | string;
   color: string;
-  gradient: string;
+  gradient?: string;
   route: string;
   badge?: string;
   isPremium?: boolean;
   isActive: boolean;
   features?: string[];
-  usageCount?: number;
+  order?: number;
 }
 
-const modules: Module[] = [
-  {
-    id: 'sales',
-    name: 'Satış Yönetimi',
-    description: 'Satış süreçlerini yönet, faturalar oluştur ve müşteri siparişlerini takip et',
-    icon: <ShoppingCartOutlined />,
-    color: '#667eea',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    route: '/sales/dashboard',
-    badge: 'Popüler',
-    isActive: true,
-    features: ['Fatura Yönetimi', 'Sipariş Takibi', 'Müşteri Yönetimi'],
-    usageCount: 1250
-  },
-  {
-    id: 'crm',
-    name: 'CRM',
-    description: 'Müşteri ilişkilerini güçlendir, satış fırsatlarını takip et',
-    icon: <TeamOutlined />,
-    color: '#f093fb',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    route: '/crm/dashboard',
-    isActive: true,
-    features: ['Müşteri Takibi', 'Fırsat Yönetimi', 'Aktivite Takibi'],
-    usageCount: 890
-  },
-  {
-    id: 'inventory',
-    name: 'Stok Yönetimi',
-    description: 'Stok seviyelerini kontrol et, ürün hareketlerini takip et',
-    icon: <ShopOutlined />,
-    color: '#4facfe',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    route: '/inventory/dashboard',
-    isActive: true,
-    features: ['Stok Takibi', 'Depo Yönetimi', 'Transfer İşlemleri'],
-    usageCount: 2100
-  },
-  {
-    id: 'finance',
-    name: 'Finans',
-    description: 'Gelir-gider takibi, finansal raporlar ve bütçe yönetimi',
-    icon: <DollarOutlined />,
-    color: '#43e97b',
-    gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    route: '/finance/dashboard',
-    isPremium: true,
-    isActive: true,
-    features: ['Gelir-Gider', 'Finansal Raporlar', 'Bütçe Planlama'],
-    usageCount: 650
-  },
-  {
-    id: 'reports',
-    name: 'Raporlar',
-    description: 'Detaylı iş analizleri ve özelleştirilebilir raporlar',
-    icon: <BarChartOutlined />,
-    color: '#fa709a',
-    gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    route: '/reports/dashboard',
-    isActive: true,
-    features: ['Satış Raporları', 'Stok Analizleri', 'Performans Metrikleri'],
-    usageCount: 1800
-  },
-  {
-    id: 'documents',
-    name: 'Dokümanlar',
-    description: 'Şirket dokümanlarını yönet ve paylaş',
-    icon: <FileTextOutlined />,
-    color: '#30cfd0',
-    gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-    route: '/documents/dashboard',
-    isActive: false,
-    features: ['Doküman Yönetimi', 'Paylaşım', 'Versiyon Kontrolü']
-  },
-  {
-    id: 'settings',
-    name: 'Ayarlar',
-    description: 'Sistem ayarları ve kullanıcı yönetimi',
-    icon: <SettingOutlined />,
-    color: '#a8edea',
-    gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    route: '/settings',
-    isActive: true,
-    features: ['Kullanıcı Yönetimi', 'Rol Yönetimi', 'Sistem Ayarları']
-  },
-  {
-    id: 'marketplace',
-    name: 'Uygulama Mağazası',
-    description: 'Yeni modüller ekle ve entegrasyonları yönet',
-    icon: <AppstoreOutlined />,
-    color: '#ffecd2',
-    gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-    route: '/marketplace',
-    badge: 'Yeni',
-    isActive: true,
-    features: ['Entegrasyonlar', 'Eklentiler', 'API Bağlantıları']
-  }
-];
+// Icon mapping for module codes
+const getModuleIcon = (iconName: string): React.ReactNode => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'ShoppingCartOutlined': <ShoppingCartOutlined />,
+    'TeamOutlined': <TeamOutlined />,
+    'ShopOutlined': <ShopOutlined />,
+    'DollarOutlined': <DollarOutlined />,
+    'BarChartOutlined': <BarChartOutlined />,
+    'FileTextOutlined': <FileTextOutlined />,
+    'SettingOutlined': <SettingOutlined />,
+    'AppstoreOutlined': <AppstoreOutlined />,
+    'UsergroupAddOutlined': <UsergroupAddOutlined />,
+    'SafetyCertificateOutlined': <SafetyCertificateOutlined />,
+    'DashboardOutlined': <DashboardOutlined />
+  };
+  return iconMap[iconName] || <AppstoreOutlined />;
+};
+
+// Default gradients for modules
+const getModuleGradient = (color: string): string => {
+  const gradientMap: { [key: string]: string } = {
+    '#667eea': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    '#f093fb': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    '#4facfe': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    '#43e97b': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    '#fa709a': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    '#30cfd0': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    '#a8edea': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    '#ffecd2': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    '#ff6b6b': 'linear-gradient(135deg, #ff6b6b 0%, #4e4e4e 100%)'
+  };
+  return gradientMap[color] || `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`;
+};
 
 export const ModuleSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, userModules, isCompanyOwner, fetchUserModules } = useAuthStore();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [hoveredModule, setHoveredModule] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [modules, setModules] = useState<Module[]>([]);
+
+  useEffect(() => {
+    loadUserModules();
+  }, []);
+
+  const loadUserModules = async () => {
+    try {
+      setLoading(true);
+      
+      // If modules not already loaded, fetch them
+      if (!userModules || userModules.length === 0) {
+        await fetchUserModules();
+      }
+      
+      // For development, use fallback modules if API fails
+      if (!userModules || userModules.length === 0) {
+        const fallbackModules: Module[] = [
+          {
+            id: '1',
+            code: 'sales',
+            name: 'Satış Yönetimi',
+            description: 'Satış süreçlerini yönet, faturalar oluştur ve müşteri siparişlerini takip et',
+            icon: 'ShoppingCartOutlined',
+            color: '#667eea',
+            route: '/sales',
+            isActive: true,
+            features: ['Fatura Yönetimi', 'Sipariş Takibi', 'Müşteri Yönetimi']
+          },
+          {
+            id: '2',
+            code: 'crm',
+            name: 'CRM',
+            description: 'Müşteri ilişkilerini güçlendir, satış fırsatlarını takip et',
+            icon: 'TeamOutlined',
+            color: '#f093fb',
+            route: '/crm',
+            isActive: true,
+            features: ['Müşteri Takibi', 'Fırsat Yönetimi', 'Aktivite Takibi']
+          },
+          {
+            id: '3',
+            code: 'inventory',
+            name: 'Stok Yönetimi',
+            description: 'Stok seviyelerini kontrol et, ürün hareketlerini takip et',
+            icon: 'ShopOutlined',
+            color: '#4facfe',
+            route: '/inventory',
+            isActive: true,
+            features: ['Stok Takibi', 'Depo Yönetimi', 'Transfer İşlemleri']
+          },
+          {
+            id: '4',
+            code: 'finance',
+            name: 'Finans',
+            description: 'Gelir-gider takibi, finansal raporlar ve bütçe yönetimi',
+            icon: 'DollarOutlined',
+            color: '#43e97b',
+            route: '/finance',
+            isPremium: true,
+            isActive: true,
+            features: ['Gelir-Gider', 'Finansal Raporlar', 'Bütçe Planlama']
+          },
+          {
+            id: '5',
+            code: 'settings',
+            name: 'Ayarlar',
+            description: 'Sistem ayarları ve kullanıcı yönetimi',
+            icon: 'SettingOutlined',
+            color: '#a8edea',
+            route: '/settings',
+            isActive: true,
+            features: ['Kullanıcı Yönetimi', 'Rol Yönetimi', 'Sistem Ayarları']
+          }
+        ];
+        
+        // Add admin panel if user is company owner
+        if (isCompanyOwner) {
+          fallbackModules.push({
+            id: 'admin',
+            code: 'admin',
+            name: 'Yönetim Paneli',
+            description: 'Kullanıcıları yönet, roller ata ve sistem ayarlarını yapılandır',
+            icon: 'SafetyCertificateOutlined',
+            color: '#ff6b6b',
+            route: '/admin',
+            badge: 'Admin',
+            isActive: true,
+            features: ['Kullanıcı Yönetimi', 'Rol Atama', 'Modül Yönetimi', 'Sistem Ayarları']
+          });
+        }
+        
+        setModules(fallbackModules);
+      } else {
+        // Use actual user modules from API
+        const processedModules: Module[] = userModules.map(m => ({
+          ...m,
+          icon: m.icon || 'AppstoreOutlined',
+          gradient: getModuleGradient(m.color)
+        }));
+        
+        // Add admin panel if user is company owner
+        if (isCompanyOwner) {
+          processedModules.push({
+            id: 'admin',
+            code: 'admin',
+            name: 'Yönetim Paneli',
+            description: 'Kullanıcıları yönet, roller ata ve sistem ayarlarını yapılandır',
+            icon: 'SafetyCertificateOutlined',
+            color: '#ff6b6b',
+            gradient: getModuleGradient('#ff6b6b'),
+            route: '/admin',
+            badge: 'Admin',
+            isActive: true,
+            features: ['Kullanıcı Yönetimi', 'Rol Atama', 'Modül Yönetimi', 'Sistem Ayarları']
+          });
+        }
+        
+        // Sort modules by order if available
+        processedModules.sort((a, b) => (a.order || 999) - (b.order || 999));
+        
+        setModules(processedModules);
+      }
+    } catch (error) {
+      console.error('Failed to load modules:', error);
+      message.error('Modüller yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleModuleClick = (module: Module) => {
     if (!module.isActive) {
@@ -171,6 +242,14 @@ export const ModuleSelection: React.FC = () => {
     hidden: { y: 20, opacity: 0 },
     show: { y: 0, opacity: 1 }
   };
+
+  if (loading) {
+    return (
+      <div className="module-selection-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} tip="Modüller yükleniyor..." size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="module-selection-container">
@@ -230,14 +309,20 @@ export const ModuleSelection: React.FC = () => {
 
       {/* Module Grid */}
       <div className="module-content">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="module-grid-wrapper"
-        >
-          <Row gutter={[24, 24]} className="module-grid">
-            {modules.map((module) => (
+        {modules.length === 0 ? (
+          <Empty
+            description="Kullanılabilir modül bulunamadı"
+            style={{ marginTop: 100 }}
+          />
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="module-grid-wrapper"
+          >
+            <Row gutter={[24, 24]} className="module-grid">
+              {modules.map((module) => (
               <Col xs={24} sm={12} md={8} lg={6} key={module.id}>
                 <motion.div variants={item}>
                   <Card
@@ -268,10 +353,10 @@ export const ModuleSelection: React.FC = () => {
                     {/* Module Icon */}
                     <div 
                       className="module-icon"
-                      style={{ background: module.gradient }}
+                      style={{ background: module.gradient || getModuleGradient(module.color) }}
                     >
                       <div className="module-icon-inner">
-                        {module.icon}
+                        {typeof module.icon === 'string' ? getModuleIcon(module.icon) : module.icon}
                       </div>
                     </div>
 
@@ -305,17 +390,6 @@ export const ModuleSelection: React.FC = () => {
                         </motion.div>
                       )}
 
-                      {/* Usage Stats */}
-                      {module.usageCount && module.isActive && (
-                        <div className="module-stats">
-                          <Space>
-                            <StarOutlined style={{ color: '#faad14', fontSize: 12 }} />
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {module.usageCount} kullanıcı
-                            </Text>
-                          </Space>
-                        </div>
-                      )}
 
                       {/* Action Button */}
                       <div className="module-action">
@@ -345,6 +419,7 @@ export const ModuleSelection: React.FC = () => {
             ))}
           </Row>
         </motion.div>
+        )}
       </div>
 
       {/* Quick Stats */}

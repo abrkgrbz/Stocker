@@ -1,0 +1,131 @@
+.admin-panel-layout {
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.admin-sider {
+  background: white !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+}
+
+.admin-sider-header {
+  padding: 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-sider .ant-menu {
+  border-right: none;
+}
+
+.admin-content {
+  padding: 24px;
+  overflow: auto;
+}
+
+.admin-header {
+  margin-bottom: 24px;
+}
+
+.admin-header .ant-typography {
+  margin-top: 12px;
+}
+
+.admin-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.admin-card .ant-table-wrapper {
+  background: white;
+}
+
+.admin-stats {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.module-access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.module-access-item {
+  padding: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.module-access-item:hover {
+  border-color: #667eea;
+  background: #f7f8ff;
+}
+
+.module-access-item.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-sider {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .admin-sider.open {
+    transform: translateX(0);
+  }
+  
+  .admin-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .admin-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

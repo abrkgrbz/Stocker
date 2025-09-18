@@ -19,6 +19,7 @@ const TenantSettingsNew = lazy(() => import('@/features/tenant/pages/SystemSetti
 const TenantModules = lazy(() => import('@/features/tenant/modules/pages/ModulesPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVerification'));
+const AdminPanel = lazy(() => import('@/features/admin/pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 // Module pages
 const CRMRoutes = lazy(() => import('@/features/crm').then(m => ({ default: m.CRMRoutes })));
@@ -70,6 +71,7 @@ export const SubdomainRoutes: React.FC = () => {
         <Route path="users" element={<TenantUsers />} />
         <Route path="settings-old" element={<TenantSettings />} />
         <Route path="settings" element={<TenantSettingsNew />} />
+        <Route path="admin/*" element={<AdminPanel />} />
       </Route>
     </Routes>
   );
