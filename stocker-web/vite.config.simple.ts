@@ -25,20 +25,19 @@ export default defineConfig({
     minify: 'esbuild', // Use esbuild for faster builds
     rollupOptions: {
       output: {
-        // Single vendor chunk strategy to ensure correct loading order
+        // Put ALL React-dependent libraries in a single chunk to fix loading order
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Core React packages in one chunk
+            // Include ALL React ecosystem and UI libraries together
             if (id.includes('react') || 
                 id.includes('scheduler') ||
                 id.includes('@emotion') ||
-                id.includes('@mui')) {
+                id.includes('@mui') ||
+                id.includes('antd') || 
+                id.includes('@ant-design') ||
+                id.includes('@rc-component') ||
+                id.includes('rc-')) {
               return 'vendor-react';
-            }
-            
-            // Ant Design in separate chunk
-            if (id.includes('antd') || id.includes('@ant-design')) {
-              return 'vendor-antd';
             }
             
             // Everything else
