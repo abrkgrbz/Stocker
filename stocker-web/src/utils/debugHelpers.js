@@ -95,6 +95,63 @@ window.stopLoop = () => {
   console.log('✅ Redirect blocking enabled. Check console for blocked redirects.');
 };
 
+// Test company creation API
+window.testCompanyCreate = async () => {
+  const token = localStorage.getItem('stocker_token');
+  const tenantId = localStorage.getItem('stocker_tenant');
+  const tenantCode = localStorage.getItem('X-Tenant-Code');
+  
+  console.log('Testing company creation with:', {
+    token: token ? 'Present' : 'Missing',
+    tenantId,
+    tenantCode
+  });
+  
+  try {
+    const response = await fetch('https://api.stoocker.app/api/tenant/companies', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+        'X-Tenant-Id': tenantId || '',
+        'X-Tenant-Code': tenantCode || ''
+      },
+      body: JSON.stringify({
+        name: 'Test Company',
+        code: `test_${Date.now()}`,
+        legalName: 'Test Company Ltd.',
+        identityType: 'TaxNumber',
+        identityNumber: '12345678901',
+        taxNumber: '12345678901',
+        taxOffice: 'Test V.D.',
+        email: 'test@test.com',
+        phone: '0212 123 45 67',
+        currency: 'TRY',
+        timezone: 'Europe/Istanbul',
+        country: 'Türkiye',
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        addressLine: 'Test Address'
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Response status:', response.status);
+    console.log('Response data:', data);
+    
+    if (!response.ok) {
+      console.error('❌ API Error:', data);
+    } else {
+      console.log('✅ Success:', data);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('❌ Network Error:', error);
+    return error;
+  }
+};
+
 console.log('🔧 Debug helpers loaded. Available commands:');
 console.log('- window.checkAuthStatus() - Show all auth related data');
 console.log('- window.forceCompanySetupComplete() - Mark company as setup');
@@ -102,3 +159,4 @@ console.log('- window.clearCompanySetup() - Clear company setup flag');
 console.log('- window.forceLogin() - Set dummy auth tokens');
 console.log('- window.clearAuth() - Clear all auth data');
 console.log('- window.stopLoop() - Block all redirects to debug loop');
+console.log('- window.testCompanyCreate() - Test company creation API');

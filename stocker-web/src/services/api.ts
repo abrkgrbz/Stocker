@@ -28,6 +28,24 @@ axiosInstance.interceptors.request.use(
     if (tenantId) {
       config.headers['X-Tenant-Id'] = tenantId;
     }
+    
+    // Add tenant code if available (for multi-tenant operations)
+    const tenantCode = localStorage.getItem('X-Tenant-Code');
+    if (tenantCode) {
+      config.headers['X-Tenant-Code'] = tenantCode;
+    }
+    
+    // Debug: Log request details in development
+    if (import.meta.env.DEV) {
+      console.log('🚀 API Request:', {
+        url: config.url,
+        method: config.method,
+        headers: config.headers,
+        hasToken: !!token,
+        hasTenantId: !!tenantId,
+        hasTenantCode: !!tenantCode
+      });
+    }
 
     return config;
   },

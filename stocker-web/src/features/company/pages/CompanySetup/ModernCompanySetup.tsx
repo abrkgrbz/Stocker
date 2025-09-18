@@ -193,6 +193,26 @@ const ModernCompanySetup: React.FC = () => {
       const values = await form.validateFields();
       const finalData = { ...formData, ...values };
       
+      // Check if we have authentication
+      const token = localStorage.getItem('stocker_token');
+      const tenantId = localStorage.getItem('stocker_tenant');
+      const tenantCode = localStorage.getItem('X-Tenant-Code');
+      
+      if (!token) {
+        message.error('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+      
+      console.log('🔑 Auth Check:', {
+        hasToken: !!token,
+        tokenLength: token?.length,
+        hasTenantId: !!tenantId,
+        tenantId,
+        hasTenantCode: !!tenantCode,
+        tenantCode
+      });
+      
       setLoading(true);
       
       // Show loading message
@@ -222,6 +242,8 @@ const ModernCompanySetup: React.FC = () => {
         postalCode: finalData.postalCode,
         addressLine: finalData.addressLine
       };
+      
+      console.log('📦 Company Data to Send:', companyData);
       
       await companyService.createCompany(companyData);
       
@@ -272,7 +294,32 @@ const ModernCompanySetup: React.FC = () => {
       
     } catch (error: any) {
       message.destroy();
-      message.error(error.message || 'Şirket kurulumu sırasında bir hata oluştu');
+      
+      console.error('🔴 Company Setup Error:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        message.error('Oturum süreniz dolmuş. Yeniden giriş yapmanız gerekiyor.');
+        localStorage.removeItem('stocker_token');
+        localStorage.removeItem('stocker_refresh_token');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (error.response?.status === 403) {
+        message.error('Bu işlem için yetkiniz bulunmuyor.');
+      } else if (error.response?.status === 400) {
+        const errorMsg = error.response?.data?.message || 'Girdiğiniz bilgileri kontrol edin.';
+        message.error(errorMsg);
+      } else if (error.response?.status === 500) {
+        message.error('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      } else {
+        message.error(error.response?.data?.message || error.message || 'Şirket kurulumu sırasında bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
