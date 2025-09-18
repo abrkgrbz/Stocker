@@ -65,20 +65,9 @@ const CompanySetup: React.FC = () => {
         const hasCompany = await companyService.checkCompanyExists();
         if (hasCompany) {
           message.info('Şirket bilgileriniz zaten mevcut, yönlendiriliyorsunuz...');
-          
-          const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
-          const userRole = currentUser.roles?.[0];
-          const tenantId = currentUser.tenantId || currentUser.tenant?.id;
-          
-          if (userRole === 'SystemAdmin') {
-            navigate('/master');
-          } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
-            navigate('/admin');
-          } else if (tenantId) {
-            navigate(`/app/${tenantId}/dashboard`);
-          } else {
-            navigate('/app/default');
-          }
+          // Company exists, redirect to app main page
+          localStorage.setItem('company_setup_complete', 'true');
+          navigate('/app');
         }
       } catch (error) {
         // Error handling removed for production

@@ -27,13 +27,14 @@ export const SubdomainRoutes: React.FC = () => {
   useEffect(() => {
     // Check if company setup is complete
     const checkCompanySetup = async () => {
-      if (isAuthenticated) {
+      // Only check if user is authenticated
+      if (isAuthenticated === true) {
+        // Start with null to show loading
+        setIsCompanySetupComplete(null);
+        
         try {
           // Check localStorage first for quick initial state
           const localCompanySetup = localStorage.getItem('company_setup_complete');
-          if (localCompanySetup === 'true') {
-            setIsCompanySetupComplete(true);
-          }
           
           // Then verify with actual API
           console.log('Checking company setup status from API...');
@@ -44,30 +45,37 @@ export const SubdomainRoutes: React.FC = () => {
           localStorage.setItem('company_setup_complete', hasCompany ? 'true' : 'false');
           
           if (!hasCompany) {
-            console.log('Company not found, redirecting to setup...');
+            console.log('Company not found, user needs to complete setup');
           }
         } catch (error) {
           console.error('Error checking company setup:', error);
           
-          // If API fails in development, allow access for testing
-          if (import.meta.env.DEV) {
+          // Check localStorage as fallback
+          const localCompanySetup = localStorage.getItem('company_setup_complete');
+          
+          if (localCompanySetup === 'true') {
+            // Trust localStorage if it says setup is complete
+            setIsCompanySetupComplete(true);
+          } else if (import.meta.env.DEV) {
+            // In development, allow access for testing
             console.warn('API error in development, allowing access for testing');
             setIsCompanySetupComplete(true);
             localStorage.setItem('company_setup_complete', 'true');
           } else {
-            // In production, if API fails, assume no company setup
+            // In production, if API fails and no localStorage, assume no company
             setIsCompanySetupComplete(false);
             localStorage.setItem('company_setup_complete', 'false');
           }
         }
-      } else {
+      } else if (isAuthenticated === false) {
         // If not authenticated, set to false
         setIsCompanySetupComplete(false);
       }
+      // If isAuthenticated is null (still loading), don't do anything
     };
 
     checkCompanySetup();
-  }, [user, isAuthenticated]);
+  }, [isAuthenticated]); // Only depend on isAuthenticated, not user
 
   return (
     <Routes>
