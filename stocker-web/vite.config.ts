@@ -54,6 +54,8 @@ export default defineConfig({
     // Ultra-aggressive chunk splitting for < 2MB total
     rollupOptions: {
       output: {
+        // Ensure proper module load order
+        inlineDynamicImports: false,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
             // Keep all React ecosystem together to prevent module loading issues
@@ -65,56 +67,11 @@ export default defineConfig({
               return 'react-vendor';
             }
             
-            // Split Ant Design into many small chunks
-            if (id.includes('antd/es/') || id.includes('antd/lib/')) {
-              const parts = id.split('/');
-              const componentIndex = parts.findIndex(p => p === 'es' || p === 'lib') + 1;
-              const component = parts[componentIndex];
-              
-              // Group by component type
-              if (['button', 'input', 'checkbox', 'radio', 'switch'].includes(component)) {
-                return 'antd-inputs';
-              }
-              if (['form', 'select', 'cascader', 'date-picker', 'time-picker'].includes(component)) {
-                return 'antd-forms';
-              }
-              if (['modal', 'drawer', 'message', 'notification', 'popover', 'tooltip'].includes(component)) {
-                return 'antd-feedback';
-              }
-              if (['table', 'list', 'tree', 'tree-select'].includes(component)) {
-                return 'antd-data';
-              }
-              if (['menu', 'dropdown', 'breadcrumb', 'pagination', 'steps'].includes(component)) {
-                return 'antd-nav';
-              }
-              if (['layout', 'grid', 'space', 'divider', 'row', 'col'].includes(component)) {
-                return 'antd-layout';
-              }
-              if (['tabs', 'card', 'collapse', 'carousel'].includes(component)) {
-                return 'antd-display';
-              }
-              // Everything else
-              return 'antd-misc';
+            // Ant Design and its icons must be in one chunk to prevent loading issues
+            if (id.includes('@ant-design/icons') || id.includes('antd')) {
+              return 'antd-vendor';
             }
             
-            // Split icons into multiple chunks
-            if (id.includes('@ant-design/icons')) {
-              if (id.includes('/es/icons/')) {
-                const iconName = id.split('/es/icons/')[1];
-                // Group common icons
-                if (iconName && iconName.match(/^(Close|Check|Plus|Minus|Edit|Delete|Search|Loading)/)) {
-                  return 'icons-common';
-                }
-                if (iconName && iconName.match(/^(User|Team|Mail|Phone|Home|Setting)/)) {
-                  return 'icons-user';
-                }
-                if (iconName && iconName.match(/^(File|Folder|Download|Upload|Cloud|Database)/)) {
-                  return 'icons-file';
-                }
-                return 'icons-other';
-              }
-              return 'icons-base';
-            }
             
             // Charts - lazy load these
             if (id.includes('@ant-design/charts') || id.includes('@ant-design/plots')) {
