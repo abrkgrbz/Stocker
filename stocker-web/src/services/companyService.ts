@@ -147,7 +147,9 @@ class CompanyService {
     try {
       const company = await this.getCompany();
       return !!company;
-    } catch {
+    } catch (error) {
+      // Log error but don't throw - return false as default
+      console.warn('Could not check company existence:', error);
       return false;
     }
   }

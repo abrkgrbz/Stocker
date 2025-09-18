@@ -40,11 +40,19 @@
         padding: 0 !important;
       }
     </style>
-    <script type="module" crossorigin src="/index-BPxQejjZ.js"></script>
-    <link rel="modulepreload" crossorigin href="/vendor-BpphTYoY.js">
+    <script type="module" crossorigin src="/index-LKOhT3zZ.js"></script>
+    <link rel="modulepreload" crossorigin href="/vendor-DTzG36cd.js">
     <link rel="stylesheet" crossorigin href="/index-BQYIWrpF.css">
   </head>
   <body>
     <div id="root"></div>
+    <!-- Debug helpers for development -->
+    <script>
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const script = document.createElement('script');
+        script.src = '/src/utils/debugHelpers.js';
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 </html>
