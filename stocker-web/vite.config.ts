@@ -30,9 +30,9 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+        drop_console: false,  // Temporarily keep console logs for debugging
+        drop_debugger: false, // Keep debugger statements
+        pure_funcs: [], // Don't remove any functions
         dead_code: true,
         unused: true,
         passes: 2,
@@ -265,8 +265,8 @@ export default defineConfig({
     },
     // Lower chunk size warning limit
     chunkSizeWarningLimit: 200, // 200KB warning threshold
-    // Disable source maps for smaller build
-    sourcemap: false,
+    // Enable source maps for debugging
+    sourcemap: 'hidden', // Generate source maps but don't reference them in the code
     // Lower assets inlining threshold
     assetsInlineLimit: 2048, // 2kb
     // Aggressive CSS code splitting
