@@ -38,6 +38,7 @@ import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '@/utils/t
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
+import { ForgotPasswordModal } from '@/features/auth/components/ForgotPasswordModal';
 import './style.css';
 
 const { Title, Text, Link } = Typography;
@@ -55,6 +56,7 @@ export const TenantLogin: React.FC = () => {
   const [tenantLoading, setTenantLoading] = useState(true);
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
   const { login } = useAuthStore();
 
   const tenantSlug = getTenantSlugFromDomain();
@@ -340,7 +342,7 @@ export const TenantLogin: React.FC = () => {
                   <Form.Item name="remember" valuePropName="checked" noStyle>
                     <Checkbox>Beni hatırla</Checkbox>
                   </Form.Item>
-                  <Link onClick={() => navigate('/forgot-password')}>
+                  <Link onClick={() => setForgotPasswordVisible(true)}>
                     Şifremi unuttum
                   </Link>
                 </div>
@@ -381,6 +383,13 @@ export const TenantLogin: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        visible={forgotPasswordVisible}
+        onCancel={() => setForgotPasswordVisible(false)}
+        tenantSlug={tenantSlug || undefined}
+      />
     </div>
   );
 };
