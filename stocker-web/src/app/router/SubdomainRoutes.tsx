@@ -66,7 +66,13 @@ export const SubdomainRoutes: React.FC = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<PublicLayout />}>
-        <Route index element={isAuthenticated ? <Navigate to="/app" replace /> : <TenantLogin />} />
+        <Route index element={
+          isAuthenticated === true ? <Navigate to="/app" replace /> : 
+          isAuthenticated === false ? <TenantLogin /> : 
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <Spin size="large" tip="Kontrol ediliyor..." />
+          </div>
+        } />
         <Route path="login" element={<TenantLogin />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="verify-email" element={<EmailVerificationPage />} />
