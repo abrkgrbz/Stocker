@@ -227,16 +227,43 @@ const ModernCompanySetup: React.FC = () => {
       
       message.destroy();
       
-      // Show success modal
+      // Trigger confetti animation
+      triggerConfetti();
+      
+      // Show enhanced success modal
       Modal.success({
-        title: 'Tebrikler! 🎉',
+        title: <span style={{ fontSize: '24px' }}>Tebrikler! 🎉🎆✨</span>,
         content: (
-          <div>
-            <p>Şirket kurulumunuz başarıyla tamamlandı!</p>
-            <p>Artık sistemi kullanmaya başlayabilirsiniz.</p>
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: '60px', marginBottom: '20px' }}>🏆</div>
+            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea', marginBottom: '10px' }}>
+              Şirket kurulumunuz başarıyla tamamlandı!
+            </p>
+            <p style={{ fontSize: '16px', color: '#718096' }}>
+              Artık sistemi kullanmaya başlayabilirsiniz.
+            </p>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <Tag color="green" icon={<CheckCircleOutlined />}>Hazır</Tag>
+              <Tag color="blue" icon={<RocketOutlined />}>Başlayabilirsiniz</Tag>
+              <Tag color="purple" icon={<TrophyOutlined />}>Başarılı</Tag>
+            </div>
           </div>
         ),
-        okText: 'Başla',
+        okText: '🚀 Hemen Başla',
+        okButtonProps: {
+          size: 'large',
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none',
+            height: '45px',
+            borderRadius: '50px',
+            fontWeight: 'bold'
+          }
+        },
+        width: 500,
+        centered: true,
+        maskClosable: false,
+        className: 'success-modal-premium',
         onOk: () => {
           localStorage.setItem('company_setup_complete', 'true');
           navigate('/app');
@@ -270,16 +297,39 @@ const ModernCompanySetup: React.FC = () => {
                 style={{ cursor: index < currentStep ? 'pointer' : 'default' }}
               >
                 <Badge
-                  count={status === 'completed' ? <CheckOutlined style={{ color: '#52c41a' }} /> : null}
-                  offset={[-5, 5]}
+                  count={status === 'completed' 
+                    ? <CheckOutlined style={{ 
+                        color: '#fff', 
+                        backgroundColor: '#52c41a',
+                        borderRadius: '50%',
+                        padding: '2px',
+                        fontSize: '12px'
+                      }} /> 
+                    : status === 'current'
+                    ? <LoadingOutlined style={{ 
+                        color: step.color,
+                        fontSize: '14px'
+                      }} />
+                    : null}
+                  offset={[-8, 8]}
                 >
                   <Avatar
-                    size={48}
+                    size={56}
                     icon={step.icon}
                     style={{
-                      backgroundColor: status === 'current' ? step.color : '#f0f0f0',
-                      color: status === 'current' ? '#fff' : '#8c8c8c',
-                      border: status === 'current' ? `3px solid ${step.color}` : 'none'
+                      background: status === 'current' 
+                        ? `linear-gradient(135deg, ${step.color}, ${step.color}dd)`
+                        : status === 'completed'
+                        ? 'linear-gradient(135deg, #48bb78, #38a169)'
+                        : '#f0f0f0',
+                      color: status === 'pending' ? '#8c8c8c' : '#fff',
+                      border: status === 'current' ? `3px solid ${step.color}` : 'none',
+                      boxShadow: status === 'current' 
+                        ? `0 0 20px ${step.color}66`
+                        : status === 'completed'
+                        ? '0 0 15px #48bb7833'
+                        : 'none',
+                      transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                     }}
                   />
                 </Badge>
@@ -318,12 +368,23 @@ const ModernCompanySetup: React.FC = () => {
           <div className="step-animation">
             <Card bordered={false} className="step-card">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div className="step-header">
-                  <Title level={3}>
-                    <BankOutlined /> Şirket Bilgileri
+                <div className="step-header" style={{ 
+                  background: 'linear-gradient(135deg, #667eea11 0%, #764ba211 100%)',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <Title level={3} style={{ 
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '8px'
+                  }}>
+                    <BankOutlined style={{ color: '#667eea', marginRight: '10px' }} /> 
+                    Şirket Bilgileri
                   </Title>
-                  <Paragraph type="secondary">
-                    İşletmenizin temel bilgilerini girin
+                  <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: '16px' }}>
+                    ✨ İşletmenizin temel bilgilerini girin
                   </Paragraph>
                 </div>
 
@@ -422,12 +483,23 @@ const ModernCompanySetup: React.FC = () => {
           <div className="step-animation">
             <Card bordered={false} className="step-card">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div className="step-header">
-                  <Title level={3}>
-                    <PhoneOutlined /> İletişim Bilgileri
+                <div className="step-header" style={{ 
+                  background: 'linear-gradient(135deg, #48bb7811 0%, #38a16911 100%)',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <Title level={3} style={{ 
+                    background: 'linear-gradient(135deg, #48bb78, #38a169)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '8px'
+                  }}>
+                    <PhoneOutlined style={{ color: '#48bb78', marginRight: '10px' }} /> 
+                    İletişim Bilgileri
                   </Title>
-                  <Paragraph type="secondary">
-                    Müşterilerinizin size ulaşabileceği bilgiler
+                  <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: '16px' }}>
+                    ✨ Müşterilerinizin size ulaşabileceği bilgiler
                   </Paragraph>
                 </div>
 
@@ -531,12 +603,23 @@ const ModernCompanySetup: React.FC = () => {
           <div className="step-animation">
             <Card bordered={false} className="step-card">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div className="step-header">
-                  <Title level={3}>
-                    <EnvironmentOutlined /> Adres Bilgileri
+                <div className="step-header" style={{ 
+                  background: 'linear-gradient(135deg, #ed893611 0%, #dd6b2011 100%)',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <Title level={3} style={{ 
+                    background: 'linear-gradient(135deg, #ed8936, #dd6b20)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '8px'
+                  }}>
+                    <EnvironmentOutlined style={{ color: '#ed8936', marginRight: '10px' }} /> 
+                    Adres Bilgileri
                   </Title>
-                  <Paragraph type="secondary">
-                    Şirket merkez adresi bilgileri
+                  <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: '16px' }}>
+                    ✨ Şirket merkez adresi bilgileri
                   </Paragraph>
                 </div>
 
@@ -638,12 +721,23 @@ const ModernCompanySetup: React.FC = () => {
           <div className="step-animation">
             <Card bordered={false} className="step-card">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div className="step-header">
-                  <Title level={3}>
-                    <InfoCircleOutlined /> Ek Bilgiler
+                <div className="step-header" style={{ 
+                  background: 'linear-gradient(135deg, #9f7aea11 0%, #805ad511 100%)',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <Title level={3} style={{ 
+                    background: 'linear-gradient(135deg, #9f7aea, #805ad5)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '8px'
+                  }}>
+                    <InfoCircleOutlined style={{ color: '#9f7aea', marginRight: '10px' }} /> 
+                    Ek Bilgiler
                   </Title>
-                  <Paragraph type="secondary">
-                    İşletmeniz hakkında detaylı bilgiler
+                  <Paragraph type="secondary" style={{ marginBottom: 0, fontSize: '16px' }}>
+                    ✨ İşletmeniz hakkında detaylı bilgiler
                   </Paragraph>
                 </div>
 
@@ -751,8 +845,34 @@ const ModernCompanySetup: React.FC = () => {
     }
   };
 
+  // Add confetti effect on completion
+  const triggerConfetti = () => {
+    const confettiColors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'];
+    const confettiCount = 150;
+    const container = document.querySelector('.modern-company-setup');
+    
+    if (container) {
+      for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        container.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+  };
+
   return (
     <div className="modern-company-setup">
+      {/* Floating orbs for extra visual effect */}
+      <div className="floating-orb floating-orb-1" />
+      <div className="floating-orb floating-orb-2" />
+      <div className="floating-orb floating-orb-3" />
+      
       <div className="setup-container">
         <div className="setup-header">
           <div className="header-animation">
