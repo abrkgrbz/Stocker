@@ -12,7 +12,7 @@ import companyService from '@/services/companyService';
 const TenantLogin = lazy(() => import('@/features/auth/pages/TenantLogin').then(m => ({ default: m.TenantLogin })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVerification'));
-const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup'));
+const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup/ModernCompanySetup'));
 const CompanyWizard = lazy(() => import('@/features/company/pages/CompanyWizard'));
 const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen').then(m => ({ default: m.ModulesScreen })));
 
