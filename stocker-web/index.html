@@ -30,26 +30,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Debug script to check module loading
-      console.log('=== HTML SCRIPT: Module Loading Check ===');
-      console.log('Document ready state:', document.readyState);
-      
-      window.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Content Loaded');
-      });
-      
-      // Track script loading
-      window.__scriptLoadOrder = [];
-      const originalAppendChild = HTMLHeadElement.prototype.appendChild;
-      HTMLHeadElement.prototype.appendChild = function(element) {
-        if (element.tagName === 'SCRIPT') {
-          console.log('Loading script:', element.src || 'inline');
-          window.__scriptLoadOrder.push(element.src || 'inline');
-        }
-        return originalAppendChild.call(this, element);
-      };
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

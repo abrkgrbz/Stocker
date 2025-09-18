@@ -30,9 +30,9 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: false,  // Temporarily keep console logs for debugging
-        drop_debugger: false, // Keep debugger statements
-        pure_funcs: [], // Don't remove any functions
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
         dead_code: true,
         unused: true,
         passes: 2,
@@ -56,12 +56,13 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Critical React core (must load first) ~150KB
-            if (id.includes('react/index') || id.includes('react/cjs')) {
-              return 'react-core';
-            }
-            if (id.includes('react-dom/index') || id.includes('react-dom/cjs')) {
-              return 'react-dom';
+            // Keep all React ecosystem together to prevent module loading issues
+            if (id.includes('react-dom') || 
+                id.includes('react/') || 
+                id.includes('react-is') ||
+                id.includes('scheduler') ||
+                id.includes('react-router')) {
+              return 'react-vendor';
             }
             
             // Split Ant Design into many small chunks
@@ -177,10 +178,6 @@ export default defineConfig({
               return 'query';
             }
             
-            // Router
-            if (id.includes('react-router')) {
-              return 'router';
-            }
             
             // i18n - can be lazy loaded
             if (id.includes('i18next')) {
@@ -265,8 +262,8 @@ export default defineConfig({
     },
     // Lower chunk size warning limit
     chunkSizeWarningLimit: 200, // 200KB warning threshold
-    // Enable source maps for debugging
-    sourcemap: 'hidden', // Generate source maps but don't reference them in the code
+    // Disable source maps for production
+    sourcemap: false,
     // Lower assets inlining threshold
     assetsInlineLimit: 2048, // 2kb
     // Aggressive CSS code splitting
