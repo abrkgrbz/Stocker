@@ -32,9 +32,10 @@ const PaymentPage = lazy(() => import('@/features/payment/pages/PaymentPage').th
 const FeatureTestPage = lazy(() => import('@/features/test/pages/FeatureTestPage'));
 const RegisterWizardTest = lazy(() => import('@/features/test/pages/RegisterWizardTest').then(m => ({ default: m.RegisterWizardTest })));
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
+const ModuleSelection = lazy(() => import('@/features/modules/pages/ModuleSelection').then(m => ({ default: m.ModuleSelection })));
 
 // Master pages
-const MasterDashboard = lazy(() => import('@/features/master/pages/Dashboard').then(m => ({ default: m.MasterDashboard })));
+// Dashboard removed - using module selection only
 const MasterTenantsPage = lazy(() => import('@/features/master/pages/Tenants').then(m => ({ default: m.MasterTenantsPage })));
 const MasterPackagesPage = lazy(() => import('@/features/master/pages/Packages').then(m => ({ default: m.MasterPackagesPage })));
 const MasterSettingsPage = lazy(() => import('@/features/master/pages/Settings').then(m => ({ default: m.MasterSettingsPage })));
@@ -61,14 +62,14 @@ const PWADemo = lazy(() => import('@/pages/PWADemo').then(m => ({ default: m.def
 const I18nDemo = lazy(() => import('@/pages/I18nDemo').then(m => ({ default: m.default })));
 
 // Admin pages
-const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+// Dashboard removed - using module selection only
 const TenantsPage = lazy(() => import('@/features/tenants/pages/TenantsPage').then(m => ({ default: m.TenantsPage })));
 const PackagesPage = lazy(() => import('@/features/packages/pages/PackagesPage').then(m => ({ default: m.PackagesPage })));
 const SubscriptionsPage = lazy(() => Promise.resolve({ default: () => <div>Subscriptions</div> }));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage').then(m => ({ default: m.UsersPage })));
 
 // Tenant pages
-const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
+// Dashboard removed - using module selection only
 const InvoiceList = lazy(() => import('@/features/invoices/pages/InvoiceList'));
 const CreateInvoice = lazy(() => import('@/features/invoices/pages/CreateInvoice'));
 const InvoiceDetail = lazy(() => import('@/features/invoices/pages/InvoiceDetail').then(m => ({ default: m.InvoiceDetail })));
@@ -174,7 +175,7 @@ export const AppRouter: React.FC = () => {
             </PrivateRoute>
           }
         >
-          <Route index element={<MasterDashboard />} />
+          <Route index element={<MasterTenantsPage />} />
           <Route path="tenants" element={<MasterTenantsPage />} />
           <Route path="tenants/:id" element={<EnhancedTenantDetail />} />
           <Route path="subscriptions/*" element={<MasterSubscriptionsPage />} />
@@ -210,7 +211,7 @@ export const AppRouter: React.FC = () => {
             </PrivateRoute>
           }
         >
-          <Route index element={<AdminDashboard />} />
+          <Route index element={<ModuleSelection />} />
           <Route path="tenants" element={<TenantsPage />} />
           <Route path="packages" element={<PackagesPage />} />
           <Route path="subscriptions" element={<SubscriptionsPage />} />
@@ -228,9 +229,8 @@ export const AppRouter: React.FC = () => {
             </PrivateRoute>
           }
         >
-          <Route index element={<TenantDashboard />} />
+          <Route index element={<ModuleSelection />} />
           <Route path="welcome" element={<WelcomePage />} />
-          <Route path="dashboard" element={<TenantDashboard />} />
           <Route path="invoices" element={<InvoiceList />} />
           <Route path="invoices/new" element={<CreateInvoice />} />
           <Route path="invoices/:id" element={<InvoiceDetail />} />
