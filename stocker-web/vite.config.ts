@@ -102,15 +102,11 @@ export default defineConfig({
               return 'd3-lazy';
             }
             
-            // MUI - lazy load
-            if (id.includes('@mui/material')) {
-              return 'mui-material-lazy';
-            }
-            if (id.includes('@mui/icons-material')) {
-              return 'mui-icons-lazy';
-            }
-            if (id.includes('@emotion')) {
-              return 'emotion-lazy';
+            // MUI and Emotion - must be loaded with React
+            if (id.includes('@mui/material') || 
+                id.includes('@mui/icons-material') || 
+                id.includes('@emotion')) {
+              return 'mui-vendor';
             }
             
             // Utilities - split by size and usage
