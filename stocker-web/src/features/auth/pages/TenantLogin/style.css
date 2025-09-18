@@ -69,7 +69,7 @@
 
 .login-content {
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
 }
 
 .login-card {
@@ -78,7 +78,10 @@
   box-shadow: var(--shadow-2xl);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
-  padding: 40px;
+  padding: 35px 30px;
+  overflow: visible;
+  width: 100%;
+  max-width: 100%;
 }
 
 .login-card .ant-card-body {
@@ -190,7 +193,7 @@
 
 /* Form Styles */
 .login-form .ant-form-item {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   position: relative;
 }
 
@@ -232,16 +235,18 @@
 .login-form .ant-input-affix-wrapper,
 .login-form .ant-input,
 .login-form .ant-input-password {
-  height: 58px;
-  border-radius: 16px;
+  height: 56px;
+  border-radius: 14px;
   border: 2px solid transparent;
-  font-size: 16px;
+  font-size: 15px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(#fff, #fff) padding-box,
               linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) border-box;
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .login-form .ant-input-affix-wrapper:hover,
@@ -259,15 +264,15 @@
 .login-form .ant-input-password-focused {
   background: linear-gradient(#fff, #fff) padding-box,
               linear-gradient(135deg, var(--primary), var(--secondary)) border-box;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 16px rgba(102, 126, 234, 0.2);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08), 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-1px);
 }
 
 .login-form .ant-input-prefix,
 .login-form .ant-input-password-icon {
-  margin-right: 16px;
+  margin-right: 12px;
   color: var(--primary);
-  font-size: 22px;
+  font-size: 20px;
   transition: all 0.3s;
   display: flex;
   align-items: center;
@@ -603,7 +608,13 @@
 
 @media (max-width: 480px) {
   .login-content {
-    padding: 0 20px;
+    max-width: 100%;
+    padding: 0 10px;
+  }
+  
+  .login-card {
+    padding: 25px 20px;
+    border-radius: 16px;
   }
   
   .login-form-title {
@@ -617,5 +628,12 @@
   
   .brand-logo svg {
     font-size: 40px;
+  }
+  
+  .login-form .ant-input-affix-wrapper,
+  .login-form .ant-input,
+  .login-form .ant-input-password {
+    height: 52px;
+    font-size: 14px;
   }
 }
