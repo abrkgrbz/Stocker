@@ -53,11 +53,18 @@ axiosInstance.interceptors.response.use(
       switch (response.status) {
         case 401:
           // Handle unauthorized access
-          message.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
-          localStorage.removeItem('stocker_token');
-          localStorage.removeItem('stocker_refresh_token');
-          localStorage.removeItem('stocker_tenant');
-          window.location.href = '/login';
+          // Don't redirect if already on login or public pages
+          const currentPath = window.location.pathname;
+          const publicPaths = ['/', '/login', '/forgot-password', '/register', '/verify-email'];
+          
+          if (!publicPaths.includes(currentPath)) {
+            message.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
+            localStorage.removeItem('stocker_token');
+            localStorage.removeItem('stocker_refresh_token');
+            localStorage.removeItem('stocker_tenant');
+            localStorage.removeItem('company_setup_complete');
+            window.location.href = '/login';
+          }
           break;
         
         case 403:

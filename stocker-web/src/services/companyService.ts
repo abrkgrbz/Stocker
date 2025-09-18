@@ -156,6 +156,13 @@ class CompanyService {
 
   async checkCompanyExists(): Promise<boolean> {
     try {
+      // Check if we have a token before making API call
+      const token = localStorage.getItem('stocker_token');
+      if (!token) {
+        console.log('No token found, cannot check company existence');
+        return false;
+      }
+      
       const company = await this.getCompany();
       return !!company;
     } catch (error) {

@@ -61,6 +61,13 @@ const CompanySetup: React.FC = () => {
   // Check if company already exists on mount
   useEffect(() => {
     const checkExistingCompany = async () => {
+      // Only check if we have a token (authenticated)
+      const token = localStorage.getItem('stocker_token');
+      if (!token) {
+        console.log('No token, skipping company check in CompanySetup');
+        return;
+      }
+      
       try {
         const hasCompany = await companyService.checkCompanyExists();
         if (hasCompany) {
@@ -70,12 +77,13 @@ const CompanySetup: React.FC = () => {
           navigate('/app');
         }
       } catch (error) {
-        // Error handling removed for production
+        console.error('Error checking existing company:', error);
+        // Don't redirect on error, let user complete setup
       }
     };
 
     checkExistingCompany();
-  }, [navigate, user]);
+  }, [navigate]);
 
   // Handle city change to update districts
   const handleCityChange = (cityName: string) => {
