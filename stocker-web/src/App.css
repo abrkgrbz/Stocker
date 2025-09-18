@@ -1,15 +1,38 @@
+/* Global Reset - Remove all browser defaults */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+}
+
+body {
   margin: 0 !important;
   padding: 0 !important;
   width: 100%;
   height: 100%;
   overflow-x: hidden;
+  display: block !important;
+  position: relative;
+}
+
+/* Override any browser agent styles */
+body[cz-shortcut-listen="true"] {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #root {
