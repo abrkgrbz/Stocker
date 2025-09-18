@@ -211,6 +211,8 @@ export const TenantLogin: React.FC = () => {
           <div className="shape" />
           <div className="shape" />
           <div className="shape" />
+          <div className="shape shape-4" />
+          <div className="shape shape-5" />
         </div>
         
         <motion.div
