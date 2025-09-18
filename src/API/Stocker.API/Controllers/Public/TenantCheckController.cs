@@ -9,6 +9,7 @@ namespace Stocker.API.Controllers.Public;
 [ApiController]
 [Route("api/public/tenants")]
 [AllowAnonymous]
+[ApiExplorerSettings(GroupName = "public")]
 [SwaggerTag("Public tenant validation endpoints")]
 public class TenantCheckController : ControllerBase
 {
