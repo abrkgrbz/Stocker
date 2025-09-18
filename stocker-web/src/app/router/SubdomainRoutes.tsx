@@ -25,13 +25,16 @@ export const SubdomainRoutes: React.FC = () => {
   useEffect(() => {
     // Check if company setup is complete
     // This could be from user data or a separate API call
-    if (user) {
+    if (user || isAuthenticated) {
       // Check if user has company data
       // For now, we'll assume if they don't have a companyId, they need to set up
-      const hasCompany = user.companyId || user.company || localStorage.getItem('company_setup_complete');
+      const hasCompany = user?.companyId || user?.company || localStorage.getItem('company_setup_complete');
       setIsCompanySetupComplete(!!hasCompany);
+    } else {
+      // If not authenticated, default to false
+      setIsCompanySetupComplete(false);
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   return (
     <Routes>
@@ -54,7 +57,9 @@ export const SubdomainRoutes: React.FC = () => {
           <Route 
             path="app" 
             element={
-              isCompanySetupComplete === false 
+              isCompanySetupComplete === null 
+                ? <div>Yükleniyor...</div> 
+                : isCompanySetupComplete === false 
                 ? <Navigate to="/company-setup" replace /> 
                 : <ModulesScreen />
             } 

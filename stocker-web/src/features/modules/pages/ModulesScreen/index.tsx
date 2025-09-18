@@ -18,7 +18,6 @@ import {
   CrownOutlined,
   RocketOutlined
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 import { useAuthStore } from '@/app/store/auth.store';
 import { availableModules, Module } from '@/types/modules';
 import './style.css';
@@ -84,28 +83,6 @@ export const ModulesScreen: React.FC = () => {
     { key: 'hr', label: 'İK', icon: <UserOutlined /> }
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100
-      }
-    }
-  };
-
   return (
     <div className="modules-screen">
       <div className="modules-header">
@@ -163,15 +140,9 @@ export const ModulesScreen: React.FC = () => {
             style={{ marginTop: 100 }}
           />
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Row gutter={[24, 24]}>
-              {filteredModules.map(module => (
-                <Col key={module.id} xs={24} sm={12} md={8} lg={6} xl={6}>
-                  <motion.div variants={itemVariants}>
+          <Row gutter={[24, 24]}>
+            {filteredModules.map(module => (
+              <Col key={module.id} xs={24} sm={12} md={8} lg={6} xl={6}>
                     <Badge.Ribbon
                       text={module.isComingSoon ? "Yakında" : module.isActive ? "Aktif" : "Kilitli"}
                       color={module.isComingSoon ? "orange" : module.isActive ? "green" : "gray"}
@@ -235,11 +206,9 @@ export const ModulesScreen: React.FC = () => {
                         </div>
                       </Card>
                     </Badge.Ribbon>
-                  </motion.div>
-                </Col>
-              ))}
-            </Row>
-          </motion.div>
+              </Col>
+            ))}
+          </Row>
         )}
       </div>
 
