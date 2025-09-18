@@ -78,10 +78,11 @@
   box-shadow: var(--shadow-2xl);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
-  padding: 35px 30px;
+  padding: 35px 25px;
   overflow: visible;
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .login-card .ant-card-body {
@@ -192,9 +193,15 @@
 }
 
 /* Form Styles */
+.login-form {
+  width: 100%;
+  max-width: 100%;
+}
+
 .login-form .ant-form-item {
   margin-bottom: 24px;
   position: relative;
+  width: 100%;
 }
 
 .login-form .ant-form-item-label {
@@ -235,27 +242,38 @@
 .login-form .ant-input-affix-wrapper,
 .login-form .ant-input,
 .login-form .ant-input-password {
-  height: 56px;
-  border-radius: 14px;
-  border: 2px solid transparent;
-  font-size: 15px;
+  height: 56px !important;
+  border-radius: 14px !important;
+  border: 2px solid transparent !important;
+  font-size: 15px !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(#fff, #fff) padding-box,
               linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) border-box;
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   position: relative;
-  width: 100%;
-  box-sizing: border-box;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Override Ant Design large input styles */
+.login-form .ant-input-lg {
+  height: 56px !important;
+  padding: 11px 15px !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
 }
 
 .login-form .ant-input-affix-wrapper:hover,
 .login-form .ant-input:hover,
 .login-form .ant-input-password:hover {
   background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)) border-box;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateY(-1px);
+              linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)) border-box !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .login-form .ant-input-affix-wrapper:focus,
@@ -263,9 +281,11 @@
 .login-form .ant-input-affix-wrapper-focused,
 .login-form .ant-input-password-focused {
   background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, var(--primary), var(--secondary)) border-box;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08), 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateY(-1px);
+              linear-gradient(135deg, var(--primary), var(--secondary)) border-box !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08), 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .login-form .ant-input-prefix,
@@ -324,7 +344,22 @@
 /* Adjust input padding when has prefix */
 .login-form .ant-input-affix-wrapper .ant-input,
 .login-form .ant-input-password .ant-input {
-  padding-left: 0;
+  padding-left: 0 !important;
+  height: auto !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Fix for Ant Design input-affix-wrapper */
+.login-form .ant-input-affix-wrapper-lg {
+  padding: 11px 15px !important;
+  height: 56px !important;
+}
+
+.login-form .ant-input-password.ant-input-affix-wrapper-lg {
+  padding: 11px 15px !important;
+  height: 56px !important;
 }
 
 /* Password visibility toggle */
