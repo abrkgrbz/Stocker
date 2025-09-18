@@ -7,7 +7,6 @@ import { PublicLayout } from '@/layouts/PublicLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
 
 const TenantLogin = lazy(() => import('@/features/auth/pages/TenantLogin').then(m => ({ default: m.TenantLogin })));
-const TenantDashboard = lazy(() => import('@/features/dashboard/pages/TenantDashboard').then(m => ({ default: m.TenantDashboard })));
 const ModuleSelection = lazy(() => import('@/features/modules/pages/ModuleSelection').then(m => ({ default: m.ModuleSelection })));
 const WelcomePage = lazy(() => import('@/features/welcome/pages/WelcomePage'));
 const InvoiceList = lazy(() => import('@/features/invoices/pages/InvoiceList'));
@@ -57,8 +56,6 @@ export const SubdomainRoutes: React.FC = () => {
         }
       >
         <Route index element={<ModuleSelection />} />
-        <Route path="modules" element={<ModuleSelection />} />
-        <Route path="dashboard" element={<TenantDashboard />} />
         <Route path="welcome" element={<WelcomePage />} />
         <Route path="invoices" element={<InvoiceList />} />
         <Route path="invoices/new" element={<CreateInvoice />} />
@@ -73,7 +70,6 @@ export const SubdomainRoutes: React.FC = () => {
         <Route path="users" element={<TenantUsers />} />
         <Route path="settings-old" element={<TenantSettings />} />
         <Route path="settings" element={<TenantSettingsNew />} />
-        <Route path="modules" element={<TenantModules />} />
       </Route>
     </Routes>
   );
