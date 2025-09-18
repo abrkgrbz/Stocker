@@ -25,9 +25,13 @@ import {
   GlobalOutlined,
   RocketOutlined,
   MailOutlined,
+  MailFilled,
+  LockFilled,
   EyeInvisibleOutlined,
   EyeTwoTone,
-  ReloadOutlined
+  ReloadOutlined,
+  SafetyOutlined,
+  KeyOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '@/utils/tenant';
@@ -304,14 +308,15 @@ export const TenantLogin: React.FC = () => {
               >
                 <Form.Item
                   name="email"
+                  label="E-posta Adresi"
                   rules={[
                     { required: true, message: 'E-posta adresinizi girin' },
                     { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
                   ]}
                 >
                   <Input
-                    prefix={<MailOutlined />}
-                    placeholder="E-posta adresiniz"
+                    prefix={<MailFilled style={{ color: '#667eea' }} />}
+                    placeholder="ornek@firma.com"
                     size="large"
                     autoComplete="email"
                   />
@@ -319,14 +324,15 @@ export const TenantLogin: React.FC = () => {
 
                 <Form.Item
                   name="password"
+                  label="Şifre"
                   rules={[{ required: true, message: 'Şifrenizi girin' }]}
                 >
                   <Input.Password
-                    prefix={<LockOutlined />}
-                    placeholder="Şifreniz"
+                    prefix={<KeyOutlined style={{ color: '#667eea' }} />}
+                    placeholder="••••••••"
                     size="large"
                     autoComplete="current-password"
-                    iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                    iconRender={(visible) => (visible ? <EyeTwoTone twoToneColor="#667eea" /> : <EyeInvisibleOutlined />)}
                   />
                 </Form.Item>
 
