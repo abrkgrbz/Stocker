@@ -106,7 +106,8 @@
       "Bash(timeout 20 npx vite build --config ./vite.simple.config.ts)",
       "Bash(npx eslint:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(npx depcheck:*)"
+      "Bash(npx depcheck:*)",
+      "Bash(timeout 20 npx vite preview:*)"
     ],
     "deny": []
   }
