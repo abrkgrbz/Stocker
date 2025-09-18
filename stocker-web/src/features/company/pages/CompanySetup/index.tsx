@@ -188,19 +188,11 @@ const CompanySetup: React.FC = () => {
         timerProgressBar: true
       });
       
-      // Navigate based on user role
-      const userRole = currentUser.roles?.[0];
-      const tenantId = currentUser.tenantId || currentUser.tenant?.id;
+      // Mark company setup as complete
+      localStorage.setItem('company_setup_complete', 'true');
       
-      if (userRole === 'SystemAdmin') {
-        navigate('/master');
-      } else if (userRole === 'Admin' || userRole === 'TenantAdmin') {
-        navigate('/admin');
-      } else if (tenantId) {
-        navigate(`/app/${tenantId}/dashboard`);
-      } else {
-        navigate('/app/default');
-      }
+      // Navigate to main app
+      navigate('/app');
     } catch (error: any) {
       // Error handling removed for production
       // Close loading

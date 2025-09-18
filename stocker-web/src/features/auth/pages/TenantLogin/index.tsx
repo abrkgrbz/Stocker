@@ -166,8 +166,9 @@ export const TenantLogin: React.FC = () => {
       
       message.success('Giriş başarılı!');
       
-      // For now, just stay on login page after successful login
-      // Post-login features will be added after refactoring
+      // Navigate to app after successful login
+      // The app will redirect to company setup if needed
+      navigate('/app');
       
       setLoading(false);
     } catch (err: any) {

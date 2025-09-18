@@ -365,7 +365,8 @@ const CompanyWizard: React.FC = () => {
           </div>
         ),
         onOk: () => {
-          navigate('/admin/dashboard');
+          localStorage.setItem('company_setup_complete', 'true');
+          navigate('/app');
         }
       });
     } catch (error) {
