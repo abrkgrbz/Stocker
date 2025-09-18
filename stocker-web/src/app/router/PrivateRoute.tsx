@@ -18,7 +18,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) =
     if (!isInitialized) {
       initializeAuth();
     }
-  }, [isInitialized, initializeAuth]);
+  }, []); // Empty dependency array - only run on mount
 
   // Show loading while auth is initializing
   if (!isInitialized || isLoading) {

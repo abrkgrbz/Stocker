@@ -109,7 +109,8 @@
       "Bash(npx depcheck:*)",
       "Bash(timeout 20 npx vite preview:*)",
       "Bash(git rm:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "mcp__serena__execute_shell_command"
     ],
     "deny": []
   }

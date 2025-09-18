@@ -73,7 +73,9 @@ export const SubdomainRoutes: React.FC = () => {
             <Spin size="large" tip="Kontrol ediliyor..." />
           </div>
         } />
-        <Route path="login" element={<TenantLogin />} />
+        <Route path="login" element={
+          isAuthenticated === true ? <Navigate to="/app" replace /> : <TenantLogin />
+        } />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="verify-email" element={<EmailVerificationPage />} />
       </Route>

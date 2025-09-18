@@ -69,8 +69,11 @@ function App() {
   
   useEffect(() => {
     // Initialize auth state on app load
-    initializeAuth();
-  }, [initializeAuth]);
+    // Only run once on mount, not on every render
+    if (!isInitialized) {
+      initializeAuth();
+    }
+  }, []); // Empty dependency array - only run on mount
 
   // Auth state monitoring removed - no longer needed for production
 

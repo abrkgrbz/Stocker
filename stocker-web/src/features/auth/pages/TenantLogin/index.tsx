@@ -33,7 +33,6 @@ import {
   SafetyOutlined,
   KeyOutlined
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '@/utils/tenant';
 import { useAuthStore } from '@/app/store/auth.store';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
@@ -219,12 +218,7 @@ export const TenantLogin: React.FC = () => {
           <div className="shape shape-5" />
         </div>
         
-        <motion.div
-          className="brand-section"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
+        <div className="brand-section">
           <div className="brand-logo">
             <RocketOutlined />
           </div>
@@ -249,18 +243,14 @@ export const TenantLogin: React.FC = () => {
               Çoklu cihaz desteği
             </li>
           </ul>
-        </motion.div>
+        </div>
       </div>
 
       {/* Right Section - Login Form */}
       <div className="login-right-section">
         <div className="login-content">
           <Card className="login-card">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <div>
               {/* Form Header */}
               <div className="login-form-header">
                 <div className="tenant-badge">
@@ -377,7 +367,7 @@ export const TenantLogin: React.FC = () => {
                   </Space>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </Card>
         </div>
       </div>
