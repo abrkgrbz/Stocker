@@ -28,30 +28,37 @@ export const SubdomainRoutes: React.FC = () => {
     // Check if company setup is complete
     const checkCompanySetup = async () => {
       if (isAuthenticated) {
-        // First check localStorage for quick access
-        const localCompanySetup = localStorage.getItem('company_setup_complete');
-        
-        // For now, default to true if authenticated (since API is down)
-        // In production, this would check the actual API
-        if (localCompanySetup === 'true') {
-          setIsCompanySetupComplete(true);
-        } else {
-          // Set as true by default for development since API is not available
-          console.log('API is not available, defaulting company setup to complete');
-          localStorage.setItem('company_setup_complete', 'true');
-          setIsCompanySetupComplete(true);
-        }
-        
-        // Optionally try API but don't block on it
         try {
+          // Check localStorage first for quick initial state
+          const localCompanySetup = localStorage.getItem('company_setup_complete');
+          if (localCompanySetup === 'true') {
+            setIsCompanySetupComplete(true);
+          }
+          
+          // Then verify with actual API
+          console.log('Checking company setup status from API...');
           const hasCompany = await companyService.checkCompanyExists();
-          if (hasCompany !== null) {
-            setIsCompanySetupComplete(hasCompany);
-            localStorage.setItem('company_setup_complete', hasCompany ? 'true' : 'false');
+          
+          console.log('Company exists:', hasCompany);
+          setIsCompanySetupComplete(hasCompany);
+          localStorage.setItem('company_setup_complete', hasCompany ? 'true' : 'false');
+          
+          if (!hasCompany) {
+            console.log('Company not found, redirecting to setup...');
           }
         } catch (error) {
-          console.warn('Company API not available, using default:', error);
-          // Keep the default value set above
+          console.error('Error checking company setup:', error);
+          
+          // If API fails in development, allow access for testing
+          if (import.meta.env.DEV) {
+            console.warn('API error in development, allowing access for testing');
+            setIsCompanySetupComplete(true);
+            localStorage.setItem('company_setup_complete', 'true');
+          } else {
+            // In production, if API fails, assume no company setup
+            setIsCompanySetupComplete(false);
+            localStorage.setItem('company_setup_complete', 'false');
+          }
         }
       } else {
         // If not authenticated, set to false

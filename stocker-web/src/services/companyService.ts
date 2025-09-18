@@ -95,9 +95,20 @@ class CompanyService {
 
   async getCompany(): Promise<Company | null> {
     try {
-      const response = await api.get<Company>('/api/tenant/companies/current');
+      const response = await api.get<Company>('/api/tenant/companies/current', {
+        timeout: 10000 // 10 seconds timeout
+      });
       return response.data;
-    } catch {
+    } catch (error: any) {
+      // Log the error for debugging
+      if (error.response?.status === 404) {
+        // Company not found is expected for new tenants
+        console.log('Company not found for current tenant');
+      } else if (error.response?.status === 401) {
+        console.log('Unauthorized - user needs to login');
+      } else {
+        console.warn('Error fetching company:', error.message);
+      }
       return null;
     }
   }
