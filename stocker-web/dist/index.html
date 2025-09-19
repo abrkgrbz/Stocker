@@ -40,7 +40,7 @@
         padding: 0 !important;
       }
     </style>
-    <script type="module" crossorigin src="/index-CsDe7mZ5.js"></script>
+    <script type="module" crossorigin src="/index-BpYhsNA-.js"></script>
     <link rel="modulepreload" crossorigin href="/vendor-BZsP0xjx.js">
     <link rel="stylesheet" crossorigin href="/index-BQYIWrpF.css">
   </head>
@@ -55,13 +55,9 @@
         const tenant = localStorage.getItem('stocker_tenant');
         const tenantCode = localStorage.getItem('X-Tenant-Code');
         const currentTenant = localStorage.getItem('current_tenant');
+        const lastLogin = localStorage.getItem('last_login_time');
         
         const allKeys = Object.keys(localStorage);
-        const tokenKeys = allKeys.filter(key => 
-          key.toLowerCase().includes('token') || 
-          key.toLowerCase().includes('auth') ||
-          key.toLowerCase().includes('jwt')
-        );
         
         console.log('=== Auth Status ===');
         console.log('Token:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
@@ -70,19 +66,12 @@
         console.log('Tenant ID:', tenant || 'Missing');
         console.log('Tenant Code:', tenantCode || 'Missing');
         console.log('Current Tenant:', currentTenant || 'Missing');
+        console.log('Last Login:', lastLogin ? new Date(parseInt(lastLogin)).toLocaleString() : 'Missing');
+        console.log('Time Since Login:', lastLogin ? Math.round((Date.now() - parseInt(lastLogin)) / 1000) + ' seconds' : 'N/A');
         console.log('Current URL:', window.location.href);
         console.log('Current Path:', window.location.pathname);
         console.log('---');
         console.log('All localStorage keys:', allKeys);
-        console.log('Token-related keys found:', tokenKeys);
-        
-        if (tokenKeys.length > 0) {
-          console.log('Token values:');
-          tokenKeys.forEach(key => {
-            const value = localStorage.getItem(key);
-            console.log(`  ${key}: ${value ? value.substring(0, 30) + '...' : 'null'}`);
-          });
-        }
         
         return {
           token,
@@ -91,8 +80,8 @@
           tenant,
           tenantCode,
           currentTenant,
-          allKeys,
-          tokenKeys
+          lastLogin,
+          allKeys
         };
       };
       

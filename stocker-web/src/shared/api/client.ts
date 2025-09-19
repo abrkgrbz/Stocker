@@ -93,6 +93,16 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
+      // Don't redirect immediately after login - give it some time
+      const loginTime = localStorage.getItem('last_login_time');
+      const timeSinceLogin = loginTime ? Date.now() - parseInt(loginTime) : Infinity;
+      
+      // If we just logged in (within last 5 seconds), don't redirect
+      if (timeSinceLogin < 5000) {
+        console.log('⚠️ 401 received shortly after login, not redirecting');
+        return Promise.reject(error);
+      }
+      
       try {
         const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
         if (refreshToken) {
@@ -111,10 +121,12 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, redirect to login
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        window.location.href = '/login';
+        // Refresh failed, redirect to login only if not recently logged in
+        if (timeSinceLogin > 5000) {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

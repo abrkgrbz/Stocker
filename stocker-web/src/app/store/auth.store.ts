@@ -190,6 +190,9 @@ export const useAuthStore = create<AuthState>()(
             
             resetSessionTimeout();
             
+            // Save login time for 401 protection
+            localStorage.setItem('last_login_time', Date.now().toString());
+            
             set({
               user,
               token: accessToken,
