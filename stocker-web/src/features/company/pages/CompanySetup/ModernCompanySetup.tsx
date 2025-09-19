@@ -149,7 +149,9 @@ const ModernCompanySetup: React.FC = () => {
       if (hasCompany) {
         message.info('Şirket bilgileriniz zaten mevcut');
         localStorage.setItem('company_setup_complete', 'true');
-        navigate('/app');
+        setTimeout(() => {
+          navigate('/app');
+        }, 100);
       }
     } catch (error) {
       console.error('Error checking company:', error);
@@ -288,7 +290,10 @@ const ModernCompanySetup: React.FC = () => {
         className: 'success-modal-premium',
         onOk: () => {
           localStorage.setItem('company_setup_complete', 'true');
-          navigate('/app');
+          // Add a small delay to ensure localStorage is saved
+          setTimeout(() => {
+            navigate('/app');
+          }, 100);
         }
       });
       

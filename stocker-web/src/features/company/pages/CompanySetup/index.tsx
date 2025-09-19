@@ -74,7 +74,9 @@ const CompanySetup: React.FC = () => {
           message.info('Şirket bilgileriniz zaten mevcut, yönlendiriliyorsunuz...');
           // Company exists, redirect to app main page
           localStorage.setItem('company_setup_complete', 'true');
-          navigate('/app');
+          setTimeout(() => {
+            navigate('/app');
+          }, 100);
         }
       } catch (error) {
         console.error('Error checking existing company:', error);
@@ -188,8 +190,10 @@ const CompanySetup: React.FC = () => {
       // Mark company setup as complete
       localStorage.setItem('company_setup_complete', 'true');
       
-      // Navigate to main app
-      navigate('/app');
+      // Navigate to main app with a small delay to ensure localStorage is saved
+      setTimeout(() => {
+        navigate('/app');
+      }, 100);
     } catch (error: any) {
       // Error handling removed for production
       // Close loading

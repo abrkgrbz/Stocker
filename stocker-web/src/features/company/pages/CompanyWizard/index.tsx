@@ -366,7 +366,10 @@ const CompanyWizard: React.FC = () => {
         ),
         onOk: () => {
           localStorage.setItem('company_setup_complete', 'true');
-          navigate('/app');
+          // Add a small delay to ensure localStorage is saved
+          setTimeout(() => {
+            navigate('/app');
+          }, 100);
         }
       });
     } catch (error) {
