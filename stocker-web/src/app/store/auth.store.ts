@@ -178,14 +178,23 @@ export const useAuthStore = create<AuthState>()(
             }
             
             if (tenantId) {
-              localStorage.setItem('stocker_tenant', tenantId);
-              localStorage.setItem('X-Tenant-Id', tenantId);
-              console.log('✅ Saved tenant ID:', tenantId);
+              // Check if tenantId is actually a GUID
+              const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+              if (guidRegex.test(tenantId)) {
+                localStorage.setItem('stocker_tenant', tenantId);
+                localStorage.setItem('X-Tenant-Id', tenantId);
+                console.log('✅ Saved tenant ID (valid GUID):', tenantId);
+              } else {
+                // It's not a GUID, treat it as a tenant code
+                console.log('⚠️ Received tenant ID is not a GUID, treating as tenant code:', tenantId);
+                localStorage.setItem('X-Tenant-Code', tenantId);
+                localStorage.setItem('current_tenant', tenantId);
+                // Do NOT save as X-Tenant-Id since backend expects GUID
+              }
             } else if (tenantCode) {
-              // If no tenantId but we have tenantCode, use tenantCode as ID temporarily
-              localStorage.setItem('stocker_tenant', tenantCode);
-              localStorage.setItem('X-Tenant-Id', tenantCode);
-              console.log('⚠️ No tenant ID found, using tenant code as ID:', tenantCode);
+              // Only save as tenant code, not as ID
+              console.log('ℹ️ No tenant ID found, only tenant code available:', tenantCode);
+              // Do NOT save as X-Tenant-Id since it's not a GUID
             }
             
             resetSessionTimeout();

@@ -40,7 +40,7 @@
         padding: 0 !important;
       }
     </style>
-    <script type="module" crossorigin src="/index-DXlkM_k1.js"></script>
+    <script type="module" crossorigin src="/index-DAjwDhvo.js"></script>
     <link rel="modulepreload" crossorigin href="/vendor-BZsP0xjx.js">
     <link rel="stylesheet" crossorigin href="/index-BQYIWrpF.css">
   </head>
@@ -48,46 +48,6 @@
     <div id="root"></div>
     <!-- Debug helpers for development -->
     <script>
-      // Add inline debug helper for production testing
-      window.checkAuthStatus = function() {
-        console.log('=== Auth Status Check ===');
-        const token = localStorage.getItem('stocker_token');
-        const refreshToken = localStorage.getItem('stocker_refresh_token');
-        const tenantId = localStorage.getItem('X-Tenant-Id') || localStorage.getItem('stocker_tenant');
-        const tenantCode = localStorage.getItem('X-Tenant-Code');
-        const currentTenant = localStorage.getItem('current_tenant');
-        const companySetup = localStorage.getItem('company_setup_complete');
-        const loginTime = localStorage.getItem('last_login_time');
-        
-        console.log('Token:', token ? 'Present (' + token.substring(0, 20) + '...)' : 'Missing');
-        console.log('Refresh Token:', refreshToken ? 'Present' : 'Missing');
-        console.log('Tenant ID:', tenantId || 'Missing');
-        console.log('Tenant Code:', tenantCode || 'Missing');
-        console.log('Current Tenant:', currentTenant || 'Missing');
-        console.log('Company Setup Complete:', companySetup || 'false');
-        console.log('Last Login Time:', loginTime ? new Date(parseInt(loginTime)).toISOString() : 'Missing');
-        
-        // Check if tenant ID is a valid GUID
-        if (tenantId) {
-          const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          const isValidGuid = guidRegex.test(tenantId);
-          console.log('Tenant ID is valid GUID:', isValidGuid);
-          if (!isValidGuid) {
-            console.warn('⚠️ Tenant ID is not a valid GUID. Backend expects GUID format for X-Tenant-Id');
-            console.log('Will use X-Tenant-Code instead:', tenantCode);
-          }
-        }
-        
-        return {
-          hasToken: !!token,
-          hasTenantId: !!tenantId,
-          hasTenantCode: !!tenantCode,
-          isAuthenticated: !!token && (!!tenantId || !!tenantCode)
-        };
-      };
-      
-      console.log('🔧 Debug helper loaded. Use window.checkAuthStatus() to check auth status');
-      
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         const script = document.createElement('script');
         script.src = '/src/utils/debugHelpers.js';
