@@ -40,19 +40,64 @@
         padding: 0 !important;
       }
     </style>
-    <script type="module" crossorigin src="/index-CXZK-Bb5.js"></script>
+    <script type="module" crossorigin src="/index-B3gxSTwV.js"></script>
     <link rel="modulepreload" crossorigin href="/vendor-BZsP0xjx.js">
     <link rel="stylesheet" crossorigin href="/index-BQYIWrpF.css">
   </head>
   <body>
-    <div id="root"></div>
-    <!-- Debug helpers for development -->
+    <div id="root"></div>
+    <!-- Debug helpers -->
     <script>
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        const script = document.createElement('script');
-        script.src = '/src/utils/debugHelpers.js';
-        document.body.appendChild(script);
-      }
+      // Inline debug helpers for production debugging
+      window.checkAuthStatus = () => {
+        const token = localStorage.getItem('stocker_token');
+        const refreshToken = localStorage.getItem('stocker_refresh_token');
+        const companySetup = localStorage.getItem('company_setup_complete');
+        const tenant = localStorage.getItem('stocker_tenant');
+        const tenantCode = localStorage.getItem('X-Tenant-Code');
+        const currentTenant = localStorage.getItem('current_tenant');
+        
+        const allKeys = Object.keys(localStorage);
+        const tokenKeys = allKeys.filter(key => 
+          key.toLowerCase().includes('token') || 
+          key.toLowerCase().includes('auth') ||
+          key.toLowerCase().includes('jwt')
+        );
+        
+        console.log('=== Auth Status ===');
+        console.log('Token:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+        console.log('Refresh Token:', refreshToken ? 'Present' : 'Missing');
+        console.log('Company Setup:', companySetup === 'true' ? 'Complete' : 'Not Complete');
+        console.log('Tenant ID:', tenant || 'Missing');
+        console.log('Tenant Code:', tenantCode || 'Missing');
+        console.log('Current Tenant:', currentTenant || 'Missing');
+        console.log('Current URL:', window.location.href);
+        console.log('Current Path:', window.location.pathname);
+        console.log('---');
+        console.log('All localStorage keys:', allKeys);
+        console.log('Token-related keys found:', tokenKeys);
+        
+        if (tokenKeys.length > 0) {
+          console.log('Token values:');
+          tokenKeys.forEach(key => {
+            const value = localStorage.getItem(key);
+            console.log(`  ${key}: ${value ? value.substring(0, 30) + '...' : 'null'}`);
+          });
+        }
+        
+        return {
+          token,
+          refreshToken,
+          companySetup,
+          tenant,
+          tenantCode,
+          currentTenant,
+          allKeys,
+          tokenKeys
+        };
+      };
+      
+      console.log('🔧 Debug helpers loaded. Available: window.checkAuthStatus()');
     </script>
   </body>
 </html>

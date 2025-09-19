@@ -62,6 +62,13 @@ export interface Company {
 
 class CompanyService {
   async createCompany(data: CompanyData): Promise<Company> {
+    console.log('🏢 Creating company with data:', data);
+    console.log('🔑 Current auth state:', {
+      token: localStorage.getItem('stocker_token') ? 'Present' : 'Missing',
+      tenantId: localStorage.getItem('stocker_tenant'),
+      tenantCode: localStorage.getItem('X-Tenant-Code')
+    });
+    
     const response = await api.post<Company>('/api/tenant/companies', {
       name: data.name,
       code: data.code,

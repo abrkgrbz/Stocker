@@ -26,12 +26,38 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Add tenant header from subdomain or localStorage
-    const tenantCode = getTenantCode();
+    // Add tenant headers from multiple sources
+    const tenantCodeFromSubdomain = getTenantCode();
+    const tenantCodeFromStorage = localStorage.getItem('X-Tenant-Code');
+    const tenantIdFromStorage = localStorage.getItem('X-Tenant-Id') || localStorage.getItem('stocker_tenant');
+    
+    const tenantCode = tenantCodeFromSubdomain || tenantCodeFromStorage;
+    
     if (tenantCode && config.headers) {
       config.headers['X-Tenant-Code'] = tenantCode;
       config.headers['X-Tenant-Subdomain'] = tenantCode;
     }
+    
+    if (tenantIdFromStorage && config.headers) {
+      config.headers['X-Tenant-Id'] = tenantIdFromStorage;
+    }
+    
+    // Always log for debugging (remove after fixing)
+    console.log('📡 API Request:', {
+      url: config.url,
+      method: config.method,
+      headers: {
+        authorization: config.headers?.Authorization ? 'Bearer token present' : 'Missing',
+        'X-Tenant-Code': config.headers?.['X-Tenant-Code'] || 'Missing',
+        'X-Tenant-Id': config.headers?.['X-Tenant-Id'] || 'Missing',
+        'X-Tenant-Subdomain': config.headers?.['X-Tenant-Subdomain'] || 'Missing'
+      },
+      localStorage: {
+        tenantCodeFromStorage,
+        tenantIdFromStorage,
+        tenantCodeFromSubdomain
+      }
+    });
     
     return config;
   },
@@ -42,8 +68,25 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for handling errors
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful responses
+    console.log('✅ API Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   async (error: AxiosError<ApiResponse>) => {
+    // Log error details
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.config?.headers
+    });
+    
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Handle 401 Unauthorized

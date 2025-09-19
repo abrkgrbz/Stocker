@@ -144,11 +144,48 @@ export const useAuthStore = create<AuthState>()(
               tokenStart: localStorage.getItem(TOKEN_KEY)?.substring(0, 20)
             });
             
-            // Save tenant ID if available
-            if (user?.tenantId) {
-              localStorage.setItem('stocker_tenant', user.tenantId);
-            } else if (user?.tenant?.id) {
-              localStorage.setItem('stocker_tenant', user.tenant.id);
+            // Save tenant information - check multiple possible fields
+            // Try to extract from various possible response structures
+            const tenantId = user?.tenantId || 
+                            user?.tenant?.id || 
+                            user?.TenantId ||
+                            loginData.tenantId ||
+                            loginData.tenant?.id ||
+                            loginData.TenantId;
+                            
+            const tenantCode = user?.tenantCode || 
+                              user?.tenant?.code || 
+                              user?.TenantCode ||
+                              loginData.tenantCode ||
+                              loginData.tenant?.code ||
+                              loginData.TenantCode ||
+                              credentials.tenantCode;
+            
+            console.log('🏢 Tenant Info Extraction:', {
+              tenantId,
+              tenantCode,
+              userObject: user,
+              loginDataObject: loginData,
+              credentialsTenantCode: credentials.tenantCode,
+              fullResponse: response.data
+            });
+            
+            // Always save tenant code from credentials if available
+            if (credentials.tenantCode) {
+              localStorage.setItem('X-Tenant-Code', credentials.tenantCode);
+              localStorage.setItem('current_tenant', credentials.tenantCode);
+              console.log('✅ Saved tenant code from credentials:', credentials.tenantCode);
+            }
+            
+            if (tenantId) {
+              localStorage.setItem('stocker_tenant', tenantId);
+              localStorage.setItem('X-Tenant-Id', tenantId);
+              console.log('✅ Saved tenant ID:', tenantId);
+            } else if (tenantCode) {
+              // If no tenantId but we have tenantCode, use tenantCode as ID temporarily
+              localStorage.setItem('stocker_tenant', tenantCode);
+              localStorage.setItem('X-Tenant-Id', tenantCode);
+              console.log('⚠️ No tenant ID found, using tenant code as ID:', tenantCode);
             }
             
             resetSessionTimeout();
