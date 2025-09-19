@@ -33,13 +33,24 @@ apiClient.interceptors.request.use(
     
     const tenantCode = tenantCodeFromSubdomain || tenantCodeFromStorage;
     
+    // IMPORTANT: Backend expects X-Tenant-Code for tenant resolution
+    // X-Tenant-Id should only be set if we have a valid GUID
     if (tenantCode && config.headers) {
       config.headers['X-Tenant-Code'] = tenantCode;
       config.headers['X-Tenant-Subdomain'] = tenantCode;
     }
     
+    // Only set X-Tenant-Id if it's a valid GUID
     if (tenantIdFromStorage && config.headers) {
-      config.headers['X-Tenant-Id'] = tenantIdFromStorage;
+      // Check if it's a valid GUID format
+      const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (guidRegex.test(tenantIdFromStorage)) {
+        config.headers['X-Tenant-Id'] = tenantIdFromStorage;
+      }
+      // If it's not a GUID but we have a tenant code, use X-Tenant-Code instead
+      else if (tenantCode) {
+        console.log('⚠️ Tenant ID is not a valid GUID, using X-Tenant-Code instead');
+      }
     }
     
     // Always log for debugging (remove after fixing)
@@ -56,7 +67,8 @@ apiClient.interceptors.request.use(
         tenantCodeFromStorage,
         tenantIdFromStorage,
         tenantCodeFromSubdomain
-      }
+      },
+      actualHeaders: config.headers
     });
     
     return config;
