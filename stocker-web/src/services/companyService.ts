@@ -1,4 +1,5 @@
-import api from './api';
+// Use the unified API client that has proper auth interceptors
+import { apiClient as api } from '@/shared/api/client';
 
 export interface CompanyData {
   name: string;
