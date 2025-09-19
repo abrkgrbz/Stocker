@@ -49,27 +49,11 @@ apiClient.interceptors.request.use(
       }
       // If it's not a GUID but we have a tenant code, use X-Tenant-Code instead
       else if (tenantCode) {
-        console.log('⚠️ Tenant ID is not a valid GUID, using X-Tenant-Code instead');
+        // Tenant ID is not a valid GUID, using X-Tenant-Code instead
       }
     }
     
-    // Always log for debugging (remove after fixing)
-    console.log('📡 API Request:', {
-      url: config.url,
-      method: config.method,
-      headers: {
-        authorization: config.headers?.Authorization ? 'Bearer token present' : 'Missing',
-        'X-Tenant-Code': config.headers?.['X-Tenant-Code'] || 'Missing',
-        'X-Tenant-Id': config.headers?.['X-Tenant-Id'] || 'Missing',
-        'X-Tenant-Subdomain': config.headers?.['X-Tenant-Subdomain'] || 'Missing'
-      },
-      localStorage: {
-        tenantCodeFromStorage,
-        tenantIdFromStorage,
-        tenantCodeFromSubdomain
-      },
-      actualHeaders: config.headers
-    });
+    // API request configured
     
     return config;
   },
@@ -81,23 +65,11 @@ apiClient.interceptors.request.use(
 // Response interceptor for handling errors
 apiClient.interceptors.response.use(
   (response) => {
-    // Log successful responses
-    console.log('✅ API Response:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data
-    });
+    // API response successful
     return response;
   },
   async (error: AxiosError<ApiResponse>) => {
-    // Log error details
-    console.error('❌ API Error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      headers: error.config?.headers
-    });
+    // API error occurred
     
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -111,7 +83,7 @@ apiClient.interceptors.response.use(
       
       // If we just logged in (within last 5 seconds), don't redirect
       if (timeSinceLogin < 5000) {
-        console.log('⚠️ 401 received shortly after login, not redirecting');
+        // 401 received shortly after login, not redirecting
         return Promise.reject(error);
       }
       

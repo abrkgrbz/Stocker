@@ -40,13 +40,7 @@ export const AppRouter: React.FC = () => {
   const { isSubdomain, tenantSlug, isValidTenant } = useTenant();
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('AppRouter Debug:', {
-        isSubdomain,
-        tenantSlug,
-        isValidTenant
-      });
-    }
+    // Debug logging removed for production
   }, [isSubdomain, tenantSlug, isValidTenant]);
 
   // If we're on a subdomain and validation is still checking

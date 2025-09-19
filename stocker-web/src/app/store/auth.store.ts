@@ -99,9 +99,7 @@ export const useAuthStore = create<AuthState>()(
           try {
             const response = await authApi.login(credentials);
             
-            // Debug: Log the full response
-            console.log('🔐 Login Response:', response);
-            console.log('🔐 Login Response Data:', response.data);
+            // Login response processed
             
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
@@ -121,14 +119,10 @@ export const useAuthStore = create<AuthState>()(
                                 
             const user = loginData.user || loginData.User || loginData;
             
-            console.log('🔑 Extracted tokens:', {
-              accessToken: accessToken ? 'Found' : 'Not found',
-              refreshToken: refreshToken ? 'Found' : 'Not found',
-              user: user ? 'Found' : 'Not found'
-            });
+            // Tokens extracted
             
             if (!accessToken) {
-              console.error('⚠️ No access token found in response:', loginData);
+              // No access token found in response
               throw new Error('No access token received from server');
             }
             
@@ -137,12 +131,7 @@ export const useAuthStore = create<AuthState>()(
               localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
             }
             
-            // Verify tokens were saved
-            console.log('💾 Token saved to localStorage:', {
-              key: TOKEN_KEY,
-              saved: !!localStorage.getItem(TOKEN_KEY),
-              tokenStart: localStorage.getItem(TOKEN_KEY)?.substring(0, 20)
-            });
+            // Token saved to localStorage
             
             // Save tenant information - check multiple possible fields
             // Try to extract from various possible response structures
@@ -161,20 +150,13 @@ export const useAuthStore = create<AuthState>()(
                               loginData.TenantCode ||
                               credentials.tenantCode;
             
-            console.log('🏢 Tenant Info Extraction:', {
-              tenantId,
-              tenantCode,
-              userObject: user,
-              loginDataObject: loginData,
-              credentialsTenantCode: credentials.tenantCode,
-              fullResponse: response.data
-            });
+            // Tenant info extracted
             
             // Always save tenant code from credentials if available
             if (credentials.tenantCode) {
               localStorage.setItem('X-Tenant-Code', credentials.tenantCode);
               localStorage.setItem('current_tenant', credentials.tenantCode);
-              console.log('✅ Saved tenant code from credentials:', credentials.tenantCode);
+              // Saved tenant code from credentials
             }
             
             if (tenantId) {
@@ -183,17 +165,17 @@ export const useAuthStore = create<AuthState>()(
               if (guidRegex.test(tenantId)) {
                 localStorage.setItem('stocker_tenant', tenantId);
                 localStorage.setItem('X-Tenant-Id', tenantId);
-                console.log('✅ Saved tenant ID (valid GUID):', tenantId);
+                // Saved tenant ID (valid GUID)
               } else {
                 // It's not a GUID, treat it as a tenant code
-                console.log('⚠️ Received tenant ID is not a GUID, treating as tenant code:', tenantId);
+                // Received tenant ID is not a GUID, treating as tenant code
                 localStorage.setItem('X-Tenant-Code', tenantId);
                 localStorage.setItem('current_tenant', tenantId);
                 // Do NOT save as X-Tenant-Id since backend expects GUID
               }
             } else if (tenantCode) {
               // Only save as tenant code, not as ID
-              console.log('ℹ️ No tenant ID found, only tenant code available:', tenantCode);
+              // No tenant ID found, only tenant code available
               // Do NOT save as X-Tenant-Id since it's not a GUID
             }
             

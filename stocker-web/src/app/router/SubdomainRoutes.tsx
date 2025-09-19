@@ -29,7 +29,7 @@ export const SubdomainRoutes: React.FC = () => {
     const checkCompanySetup = async () => {
       // Wait for auth to be initialized
       if (!isInitialized) {
-        console.log('Auth not initialized yet, waiting...');
+        // Auth not initialized yet, waiting...
         return;
       }
       
@@ -46,18 +46,18 @@ export const SubdomainRoutes: React.FC = () => {
           const localCompanySetup = localStorage.getItem('company_setup_complete');
           
           // Then verify with actual API
-          console.log('Checking company setup status from API...');
+          // Checking company setup status from API...
           const hasCompany = await companyService.checkCompanyExists();
           
-          console.log('Company exists:', hasCompany);
+          // Company exists: hasCompany
           setIsCompanySetupComplete(hasCompany);
           localStorage.setItem('company_setup_complete', hasCompany ? 'true' : 'false');
           
           if (!hasCompany) {
-            console.log('Company not found, user needs to complete setup');
+            // Company not found, user needs to complete setup
           }
         } catch (error) {
-          console.error('Error checking company setup:', error);
+          // Error checking company setup: error
           
           // Check localStorage as fallback
           const localCompanySetup = localStorage.getItem('company_setup_complete');
@@ -67,7 +67,7 @@ export const SubdomainRoutes: React.FC = () => {
             setIsCompanySetupComplete(true);
           } else if (import.meta.env.DEV) {
             // In development, allow access for testing
-            console.warn('API error in development, allowing access for testing');
+            // API error in development, allowing access for testing
             setIsCompanySetupComplete(true);
             localStorage.setItem('company_setup_complete', 'true');
           } else {
