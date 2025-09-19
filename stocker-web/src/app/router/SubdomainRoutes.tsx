@@ -14,7 +14,7 @@ const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswo
 const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVerification'));
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup/ModernCompanySetup'));
 const CompanyWizard = lazy(() => import('@/features/company/pages/CompanyWizard'));
-const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen').then(m => ({ default: m.ModulesScreen })));
+const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen/ModernModulesScreen'));
 
 /**
  * Routes for subdomain access (e.g., tenant.stoocker.app)
