@@ -83,6 +83,20 @@ public abstract class ApiController : ControllerBase
 
     protected Guid? GetTenantId()
     {
+        // First try to get from HttpContext.Items (set by TenantResolutionMiddleware)
+        if (HttpContext.Items.TryGetValue("TenantId", out var tenantIdObj))
+        {
+            if (tenantIdObj is Guid tenantGuid)
+            {
+                return tenantGuid;
+            }
+            if (tenantIdObj is string tenantIdStr && Guid.TryParse(tenantIdStr, out var parsedGuid))
+            {
+                return parsedGuid;
+            }
+        }
+        
+        // Fallback to getting from claims (for backwards compatibility)
         var tenantIdClaim = User.FindFirst("TenantId")?.Value;
         return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
     }

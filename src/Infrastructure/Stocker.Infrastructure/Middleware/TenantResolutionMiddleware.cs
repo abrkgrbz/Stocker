@@ -75,8 +75,26 @@ public class TenantResolutionMiddleware
             tenantService.SetCurrentTenant(tenantId.Value);
             _logger.LogInformation("Tenant resolved: {TenantId}", tenantId.Value);
             
-            // Add tenant info to response headers for debugging
+            // Add tenant info to HttpContext.Items for controllers to access
+            context.Items["TenantId"] = tenantId.Value;
+            context.Items["TenantIdString"] = tenantId.Value.ToString();
+            
+            // Also add to response headers for debugging
             context.Response.Headers.Add("X-Tenant-Id", tenantId.Value.ToString());
+            
+            // Add TenantId to the user claims if user is authenticated
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new System.Security.Claims.Claim("TenantId", tenantId.Value.ToString())
+                };
+                
+                var appIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+                context.User.AddIdentity(appIdentity);
+                
+                _logger.LogDebug("Added TenantId claim to authenticated user");
+            }
         }
         else
         {
