@@ -21,16 +21,25 @@ const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen'
  * Handles both public auth routes and private tenant routes
  */
 export const SubdomainRoutes: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isInitialized } = useAuthStore();
   const [isCompanySetupComplete, setIsCompanySetupComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Check if company setup is complete
     const checkCompanySetup = async () => {
+      // Wait for auth to be initialized
+      if (!isInitialized) {
+        console.log('Auth not initialized yet, waiting...');
+        return;
+      }
+      
       // Only check if user is authenticated
       if (isAuthenticated === true) {
         // Start with null to show loading
         setIsCompanySetupComplete(null);
+        
+        // Add a small delay to ensure token is in localStorage
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         try {
           // Check localStorage first for quick initial state
@@ -75,7 +84,7 @@ export const SubdomainRoutes: React.FC = () => {
     };
 
     checkCompanySetup();
-  }, [isAuthenticated]); // Only depend on isAuthenticated, not user
+  }, [isAuthenticated, isInitialized]); // Depend on both isAuthenticated and isInitialized
 
   return (
     <Routes>

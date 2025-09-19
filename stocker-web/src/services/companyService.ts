@@ -171,7 +171,12 @@ class CompanyService {
         return false;
       }
       
+      // Add a small delay to ensure headers are set
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      console.log('Checking company existence with token:', token.substring(0, 20) + '...');
       const company = await this.getCompany();
+      console.log('Company check result:', company ? 'Found' : 'Not found');
       return !!company;
     } catch (error) {
       // Log error but don't throw - return false as default

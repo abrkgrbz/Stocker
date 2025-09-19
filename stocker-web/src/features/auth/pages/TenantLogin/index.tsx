@@ -165,9 +165,12 @@ export const TenantLogin: React.FC = () => {
       
       message.success('Giriş başarılı!');
       
-      // Navigate to app after successful login
-      // The app will redirect to company setup if needed
-      navigate('/app');
+      // Small delay to ensure auth state is properly updated
+      setTimeout(() => {
+        // Navigate to app after successful login
+        // The app will redirect to company setup if needed
+        navigate('/app');
+      }, 100);
       
       setLoading(false);
     } catch (err: any) {
