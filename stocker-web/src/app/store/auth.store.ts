@@ -99,16 +99,50 @@ export const useAuthStore = create<AuthState>()(
           try {
             const response = await authApi.login(credentials);
             
+            // Debug: Log the full response
+            console.log('🔐 Login Response:', response);
+            console.log('🔐 Login Response Data:', response.data);
+            
             // Axios response structure: response.data contains the actual data
             const loginData = response.data || response;
             
-            // Handle both camelCase and PascalCase field names from backend
-            const accessToken = loginData.accessToken || loginData.AccessToken;
-            const refreshToken = loginData.refreshToken || loginData.RefreshToken;
-            const user = loginData.user || loginData.User;
+            // Handle multiple possible field names from backend
+            const accessToken = loginData.accessToken || 
+                               loginData.AccessToken || 
+                               loginData.access_token || 
+                               loginData.token || 
+                               loginData.Token || 
+                               loginData.jwt || 
+                               loginData.JWT;
+                               
+            const refreshToken = loginData.refreshToken || 
+                                loginData.RefreshToken || 
+                                loginData.refresh_token;
+                                
+            const user = loginData.user || loginData.User || loginData;
+            
+            console.log('🔑 Extracted tokens:', {
+              accessToken: accessToken ? 'Found' : 'Not found',
+              refreshToken: refreshToken ? 'Found' : 'Not found',
+              user: user ? 'Found' : 'Not found'
+            });
+            
+            if (!accessToken) {
+              console.error('⚠️ No access token found in response:', loginData);
+              throw new Error('No access token received from server');
+            }
             
             localStorage.setItem(TOKEN_KEY, accessToken);
-            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+            if (refreshToken) {
+              localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+            }
+            
+            // Verify tokens were saved
+            console.log('💾 Token saved to localStorage:', {
+              key: TOKEN_KEY,
+              saved: !!localStorage.getItem(TOKEN_KEY),
+              tokenStart: localStorage.getItem(TOKEN_KEY)?.substring(0, 20)
+            });
             
             // Save tenant ID if available
             if (user?.tenantId) {

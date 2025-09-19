@@ -23,10 +23,19 @@ export default defineConfig({
   esbuild: {
     // Keep JSX runtime imports
     jsx: 'automatic',
+    // Don't drop console and debugger in production for debugging
+    drop: [],
   },
   build: {
     target: 'es2015',
     minify: 'esbuild',
+    // Keep console logs for debugging
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: false,
+      },
+    },
     rollupOptions: {
       output: {
         // Single vendor chunk for ALL dependencies

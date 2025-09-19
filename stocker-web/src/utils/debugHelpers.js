@@ -13,7 +13,7 @@ window.clearCompanySetup = () => {
   window.location.reload();
 };
 
-// Check auth status
+// Check auth status - Enhanced version
 window.checkAuthStatus = () => {
   const token = localStorage.getItem('stocker_token');
   const refreshToken = localStorage.getItem('stocker_refresh_token');
@@ -22,8 +22,16 @@ window.checkAuthStatus = () => {
   const tenantCode = localStorage.getItem('X-Tenant-Code');
   const currentTenant = localStorage.getItem('current_tenant');
   
+  // Check all possible token keys
+  const allKeys = Object.keys(localStorage);
+  const tokenKeys = allKeys.filter(key => 
+    key.toLowerCase().includes('token') || 
+    key.toLowerCase().includes('auth') ||
+    key.toLowerCase().includes('jwt')
+  );
+  
   console.log('=== Auth Status ===');
-  console.log('Token:', token ? 'Present' : 'Missing');
+  console.log('Token:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
   console.log('Refresh Token:', refreshToken ? 'Present' : 'Missing');
   console.log('Company Setup:', companySetup === 'true' ? 'Complete' : 'Not Complete');
   console.log('Tenant ID:', tenant || 'Missing');
@@ -31,6 +39,17 @@ window.checkAuthStatus = () => {
   console.log('Current Tenant:', currentTenant || 'Missing');
   console.log('Current URL:', window.location.href);
   console.log('Current Path:', window.location.pathname);
+  console.log('---');
+  console.log('All localStorage keys:', allKeys);
+  console.log('Token-related keys found:', tokenKeys);
+  
+  if (tokenKeys.length > 0) {
+    console.log('Token values:');
+    tokenKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      console.log(`  ${key}: ${value ? value.substring(0, 30) + '...' : 'null'}`);
+    });
+  }
   
   return {
     token,
@@ -38,7 +57,9 @@ window.checkAuthStatus = () => {
     companySetup,
     tenant,
     tenantCode,
-    currentTenant
+    currentTenant,
+    allKeys,
+    tokenKeys
   };
 };
 
