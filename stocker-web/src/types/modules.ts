@@ -25,7 +25,7 @@ export const availableModules: Module[] = [
     description: 'Müşteri İlişkileri Yönetimi',
     icon: 'TeamOutlined',
     route: '/crm',
-    color: '#1890ff',
+    color: '#3b82f6',
     isActive: true,
     category: 'core'
   },
@@ -35,7 +35,7 @@ export const availableModules: Module[] = [
     description: 'Satış ve Sipariş Yönetimi',
     icon: 'ShoppingCartOutlined',
     route: '/sales',
-    color: '#52c41a',
+    color: '#10b981',
     isActive: true,
     category: 'core'
   },
@@ -45,7 +45,7 @@ export const availableModules: Module[] = [
     description: 'Envanter ve Stok Takibi',
     icon: 'InboxOutlined',
     route: '/inventory',
-    color: '#fa8c16',
+    color: '#f59e0b',
     isActive: true,
     category: 'operations'
   },
@@ -55,7 +55,7 @@ export const availableModules: Module[] = [
     description: 'Finansal İşlemler ve Raporlama',
     icon: 'CalculatorOutlined',
     route: '/accounting',
-    color: '#722ed1',
+    color: '#8b5cf6',
     isActive: true,
     category: 'finance'
   },
@@ -65,7 +65,7 @@ export const availableModules: Module[] = [
     description: 'Personel ve Bordro Yönetimi',
     icon: 'UserOutlined',
     route: '/hr',
-    color: '#eb2f96',
+    color: '#ec4899',
     isActive: true,
     category: 'hr'
   },
@@ -75,7 +75,7 @@ export const availableModules: Module[] = [
     description: 'Üretim Planlama ve Takibi',
     icon: 'ToolOutlined',
     route: '/production',
-    color: '#13c2c2',
+    color: '#14b8a6',
     isActive: false,
     isComingSoon: true,
     category: 'operations'
@@ -86,7 +86,7 @@ export const availableModules: Module[] = [
     description: 'Proje ve Görev Yönetimi',
     icon: 'ProjectOutlined',
     route: '/projects',
-    color: '#f5222d',
+    color: '#ef4444',
     isActive: false,
     isComingSoon: true,
     category: 'operations'
@@ -97,7 +97,7 @@ export const availableModules: Module[] = [
     description: 'Raporlama ve İş Zekası',
     icon: 'BarChartOutlined',
     route: '/analytics',
-    color: '#faad14',
+    color: '#06b6d4',
     isActive: false,
     isComingSoon: true,
     category: 'analytics'

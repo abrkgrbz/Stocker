@@ -124,12 +124,12 @@ const ModernModulesScreen: React.FC = () => {
   });
 
   const categories = [
-    { key: 'all', label: 'Tümü', icon: <AppstoreOutlined />, color: '#667eea' },
-    { key: 'core', label: 'Temel', icon: <RocketOutlined />, color: '#f368e0' },
-    { key: 'finance', label: 'Finans', icon: <CalculatorOutlined />, color: '#48dbfb' },
-    { key: 'operations', label: 'Operasyon', icon: <ToolOutlined />, color: '#ff9ff3' },
-    { key: 'analytics', label: 'Analiz', icon: <BarChartOutlined />, color: '#54a0ff' },
-    { key: 'hr', label: 'İK', icon: <UserOutlined />, color: '#feca57' }
+    { key: 'all', label: 'Tümü', icon: <AppstoreOutlined />, color: '#3b82f6' },
+    { key: 'core', label: 'Temel', icon: <RocketOutlined />, color: '#8b5cf6' },
+    { key: 'finance', label: 'Finans', icon: <CalculatorOutlined />, color: '#10b981' },
+    { key: 'operations', label: 'Operasyon', icon: <ToolOutlined />, color: '#f59e0b' },
+    { key: 'analytics', label: 'Analiz', icon: <BarChartOutlined />, color: '#06b6d4' },
+    { key: 'hr', label: 'İK', icon: <UserOutlined />, color: '#ec4899' }
   ];
 
   const containerVariants = {
@@ -254,21 +254,21 @@ const ModernModulesScreen: React.FC = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="stat-card">
-            <FireOutlined className="stat-icon" style={{ color: '#ff6b6b' }} />
+            <FireOutlined className="stat-icon" style={{ color: '#f59e0b' }} />
             <div className="stat-content">
               <span className="stat-value">{modules.filter(m => m.isActive).length}</span>
               <span className="stat-label">Aktif Modül</span>
             </div>
           </div>
           <div className="stat-card">
-            <ThunderboltOutlined className="stat-icon" style={{ color: '#ffd93d' }} />
+            <ThunderboltOutlined className="stat-icon" style={{ color: '#8b5cf6' }} />
             <div className="stat-content">
               <span className="stat-value">∞</span>
               <span className="stat-label">İşlem/Gün</span>
             </div>
           </div>
           <div className="stat-card">
-            <StarOutlined className="stat-icon" style={{ color: '#6bcf7f' }} />
+            <StarOutlined className="stat-icon" style={{ color: '#10b981' }} />
             <div className="stat-content">
               <span className="stat-value">Premium</span>
               <span className="stat-label">Paket</span>
