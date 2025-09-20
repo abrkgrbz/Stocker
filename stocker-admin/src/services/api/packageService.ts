@@ -191,6 +191,14 @@ class PackageService {
    * Convert backend PackageDto to frontend Package format
    */
   mapToFrontendPackage(dto: PackageDto): any {
+    // Helper function to decode HTML entities
+    const decodeHtmlEntities = (text: string): string => {
+      if (!text) return text;
+      const textArea = document.createElement('textarea');
+      textArea.innerHTML = text;
+      return textArea.value;
+    };
+
     // Map billing cycle
     const billingCycleMap: { [key: string]: 'monthly' | 'yearly' | 'one-time' } = {
       'Monthly': 'monthly',
@@ -211,8 +219,8 @@ class PackageService {
     return {
       id: dto.id,
       name: dto.name.toLowerCase().replace(/\s+/g, '-'),
-      displayName: dto.name,
-      description: dto.description || '',
+      displayName: decodeHtmlEntities(dto.name),
+      description: decodeHtmlEntities(dto.description || ''),
       price: dto.basePrice.amount,
       billingCycle: billingCycleMap[dto.billingCycle] || 'monthly',
       currency: dto.currency,
@@ -234,7 +242,7 @@ class PackageService {
       },
       features: dto.features
         .filter(f => f.isEnabled)
-        .map(f => f.featureName),
+        .map(f => decodeHtmlEntities(f.featureName)),
       addons: dto.modules
         .filter(m => m.isIncluded)
         .map(m => m.moduleCode),
