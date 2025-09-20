@@ -85,13 +85,20 @@ public static class ServiceCollectionExtensions
                 {
                     Console.WriteLine($"JWT Message Received. Authorization Header: {context.Request.Headers["Authorization"]}");
                     
-                    // SignalR için token'ı query string'den alma
-                    var accessToken = context.Request.Query["access_token"];
-                    var path = context.HttpContext.Request.Path;
+                    // First try to get token from cookie
+                    var token = context.Request.Cookies["access_token"];
                     
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    // If no cookie, try query string (for SignalR)
+                    if (string.IsNullOrEmpty(token))
                     {
-                        context.Token = accessToken;
+                        token = context.Request.Query["access_token"];
+                    }
+                    
+                    // If we found a token, use it
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                        Console.WriteLine($"Token found and set from {(context.Request.Cookies.ContainsKey("access_token") ? "cookie" : "query string")}");
                     }
                     
                     return Task.CompletedTask;

@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { API_BASE_URL, TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/config/constants';
+import { API_BASE_URL } from '@/config/constants';
+import { tokenService } from '@/services/tokenService';
 import { ApiResponse } from '@/shared/types';
 import { getTenantCode } from '@/shared/utils/subdomain';
 
@@ -19,8 +20,8 @@ export const api = apiClient;
 // Request interceptor for adding auth token and tenant header
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    
+    // Get token from tokenService (memory)
+    const token = tokenService.getAccessToken();
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -88,27 +89,19 @@ apiClient.interceptors.response.use(
       }
       
       try {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
-            accessToken: localStorage.getItem(TOKEN_KEY),
-            refreshToken,
-          });
-          
-          const { accessToken } = response.data;
-          localStorage.setItem(TOKEN_KEY, accessToken);
-          
+        // Try to refresh token using tokenService
+        const newToken = await tokenService.refreshAccessToken();
+        if (newToken) {
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
           }
           
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, redirect to login only if not recently logged in
+        // Refresh failed, clear tokens and redirect
         if (timeSinceLogin > 5000) {
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          await tokenService.logout();
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
