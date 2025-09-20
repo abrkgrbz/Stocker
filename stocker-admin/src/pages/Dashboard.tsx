@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Progress, Space, Button, List, Avatar, Typography, Spin, Badge, Tooltip } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Progress, Space, Button, List, Avatar, Typography, Spin, Badge, Tooltip, notification } from 'antd';
 import {
   TeamOutlined,
   ShopOutlined,
@@ -141,67 +141,239 @@ const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Simulated data - replace with actual API calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Load real data from API with sequential calls to avoid rate limiting
       
-      // Set mock data for demonstration
-      setStats({
-        totalTenants: 156,
-        activeTenants: 142,
-        totalUsers: 3847,
-        monthlyRevenue: 48750,
-        growthRate: 12.5,
-        newTenantsThisMonth: 18,
-        activeSubscriptions: 142,
-        pendingPayments: 7
-      });
+      // 1. Get dashboard stats
+      try {
+        const statsData = await dashboardService.getStats();
+        if (statsData) {
+          setStats({
+            totalTenants: statsData.totalTenants || 0,
+            activeTenants: statsData.activeTenants || 0,
+            totalUsers: statsData.totalUsers || statsData.activeUsers || 0,
+            monthlyRevenue: statsData.monthlyRevenue || statsData.totalRevenue || 0,
+            growthRate: statsData.growthRate || 0,
+            newTenantsThisMonth: statsData.newTenantsThisMonth || 0,
+            activeSubscriptions: statsData.activeTenants || 0, // Use activeTenants as proxy for active subscriptions
+            pendingPayments: 0 // This field doesn't exist in the API, default to 0
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+        // Use fallback data if API fails
+        setStats({
+          totalTenants: 0,
+          activeTenants: 0,
+          totalUsers: 0,
+          monthlyRevenue: 0,
+          growthRate: 0,
+          newTenantsThisMonth: 0,
+          activeSubscriptions: 0,
+          pendingPayments: 0
+        });
+      }
 
-      setRecentTenants([
-        { id: '1', name: 'ABC Teknoloji', status: 'active', package: 'Premium', userCount: 45, createdAt: '2024-01-15' },
-        { id: '2', name: 'XYZ Market', status: 'active', package: 'Basic', userCount: 12, createdAt: '2024-01-14' },
-        { id: '3', name: 'Demo Şirket', status: 'inactive', package: 'Trial', userCount: 5, createdAt: '2024-01-13' },
-        { id: '4', name: 'Test AŞ', status: 'active', package: 'Enterprise', userCount: 125, createdAt: '2024-01-12' },
-        { id: '5', name: 'Örnek Ltd', status: 'suspended', package: 'Basic', userCount: 8, createdAt: '2024-01-11' }
-      ]);
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      setSystemHealth([
-        { service: 'API Server', status: 'healthy', uptime: '99.95%', responseTime: 45 },
-        { service: 'Database', status: 'healthy', uptime: '99.99%', responseTime: 12 },
-        { service: 'Cache Server', status: 'healthy', uptime: '100%', responseTime: 2 },
-        { service: 'File Storage', status: 'degraded', uptime: '98.5%', responseTime: 156 }
-      ]);
+      // 2. Get recent tenants
+      try {
+        const tenants = await dashboardService.getRecentTenants();
+        if (tenants && Array.isArray(tenants)) {
+          setRecentTenants(tenants.slice(0, 5).map((t: any) => ({
+            id: t.id,
+            name: t.name || t.companyName || 'İsimsiz Firma',
+            status: t.status || 'active',
+            package: t.packageName || 'Basic',
+            userCount: t.userCount || 0,
+            createdAt: t.createdAt || new Date().toISOString()
+          })));
+        }
+      } catch (error) {
+        console.error('Failed to load tenants:', error);
+        setRecentTenants([]);
+      }
 
-      // Revenue trend data for last 7 days
-      setRevenueData([
-        { date: '2024-01-09', revenue: 6500 },
-        { date: '2024-01-10', revenue: 7200 },
-        { date: '2024-01-11', revenue: 6800 },
-        { date: '2024-01-12', revenue: 7500 },
-        { date: '2024-01-13', revenue: 5900 },
-        { date: '2024-01-14', revenue: 8200 },
-        { date: '2024-01-15', revenue: 7650 }
-      ]);
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      // Tenant growth data for last 6 months
-      setTenantGrowthData([
-        { month: 'Ağustos', count: 89 },
-        { month: 'Eylül', count: 102 },
-        { month: 'Ekim', count: 115 },
-        { month: 'Kasım', count: 128 },
-        { month: 'Aralık', count: 138 },
-        { month: 'Ocak', count: 156 }
-      ]);
+      // 3. Get system health
+      try {
+        const health = await dashboardService.getSystemHealth();
+        if (health) {
+          const healthData = [];
+          
+          // API Server status
+          if (health.apiStatus !== undefined) {
+            healthData.push({ 
+              service: 'API Server', 
+              status: health.apiStatus as any, 
+              uptime: health.uptime || 'N/A', 
+              responseTime: 0 
+            });
+          }
+          
+          // Database status
+          if (health.databaseStatus !== undefined) {
+            healthData.push({ 
+              service: 'Database', 
+              status: health.databaseStatus as any, 
+              uptime: health.uptime || 'N/A', 
+              responseTime: 0 
+            });
+          }
+          
+          // Cache status
+          if (health.cacheStatus !== undefined) {
+            healthData.push({ 
+              service: 'Cache Server', 
+              status: health.cacheStatus as any, 
+              uptime: health.uptime || 'N/A', 
+              responseTime: 0 
+            });
+          }
+          
+          // Queue status (instead of File Storage)
+          if (health.queueStatus !== undefined) {
+            healthData.push({ 
+              service: 'Queue Service', 
+              status: health.queueStatus as any, 
+              uptime: health.uptime || 'N/A', 
+              responseTime: 0 
+            });
+          }
+          
+          setSystemHealth(healthData.length > 0 ? healthData : [
+            { service: 'API Server', status: 'healthy' as any, uptime: health.uptime || 'N/A', responseTime: 0 },
+            { service: 'Database', status: 'healthy' as any, uptime: 'N/A', responseTime: 0 },
+            { service: 'Cache Server', status: 'healthy' as any, uptime: 'N/A', responseTime: 0 },
+            { service: 'Queue Service', status: 'healthy' as any, uptime: 'N/A', responseTime: 0 }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load system health:', error);
+        setSystemHealth([
+          { service: 'API Server', status: 'unknown' as any, uptime: 'N/A', responseTime: 0 },
+          { service: 'Database', status: 'unknown' as any, uptime: 'N/A', responseTime: 0 },
+          { service: 'Cache Server', status: 'unknown' as any, uptime: 'N/A', responseTime: 0 },
+          { service: 'Queue Service', status: 'unknown' as any, uptime: 'N/A', responseTime: 0 }
+        ]);
+      }
 
-      // Package distribution
-      setPackageDistribution([
-        { type: 'Basic', value: 65 },
-        { type: 'Premium', value: 52 },
-        { type: 'Enterprise', value: 25 },
-        { type: 'Trial', value: 14 }
-      ]);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 4. Get revenue data
+      try {
+        const revenue = await dashboardService.getRevenueOverview();
+        if (revenue && revenue.daily && revenue.daily.length > 0) {
+          // Use daily data from the API
+          setRevenueData(revenue.daily.slice(0, 7).map((item: any) => ({
+            date: item.date,
+            revenue: item.revenue || 0
+          })));
+        } else if (revenue && revenue.monthly && revenue.monthly.length > 0) {
+          // Fallback to monthly data if daily is not available
+          setRevenueData(revenue.monthly.slice(0, 7).map((item: any) => ({
+            date: item.date,
+            revenue: item.revenue || 0
+          })));
+        } else {
+          // Generate last 7 days with zero values if no data
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            return {
+              date: date.toISOString().split('T')[0],
+              revenue: 0
+            };
+          });
+          setRevenueData(last7Days);
+        }
+      } catch (error) {
+        console.error('Failed to load revenue data:', error);
+        // Generate last 7 days with zero values as fallback
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (6 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            revenue: 0
+          };
+        });
+        setRevenueData(last7Days);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 5. Get tenant growth data
+      try {
+        const growthChart = await dashboardService.getTenantGrowthChartData();
+        if (growthChart && growthChart.labels && growthChart.datasets[0]) {
+          const growthData = growthChart.labels.map((label, index) => ({
+            month: label,
+            count: growthChart.datasets[0].data[index] || 0
+          }));
+          setTenantGrowthData(growthData);
+        } else {
+          // Generate last 6 months with zero values if no data
+          const last6Months = Array.from({ length: 6 }, (_, i) => {
+            const date = new Date();
+            date.setMonth(date.getMonth() - (5 - i));
+            return {
+              month: date.toLocaleDateString('tr-TR', { month: 'short' }),
+              count: 0
+            };
+          });
+          setTenantGrowthData(last6Months);
+        }
+      } catch (error) {
+        console.error('Failed to load tenant growth:', error);
+        // Generate last 6 months with zero values as fallback
+        const last6Months = Array.from({ length: 6 }, (_, i) => {
+          const date = new Date();
+          date.setMonth(date.getMonth() - (5 - i));
+          return {
+            month: date.toLocaleDateString('tr-TR', { month: 'short' }),
+            count: 0
+          };
+        });
+        setTenantGrowthData(last6Months);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 6. Get package distribution
+      try {
+        const packageChart = await dashboardService.getPackageDistribution();
+        if (packageChart && packageChart.labels && packageChart.datasets[0]) {
+          const packageData = packageChart.labels.map((label, index) => ({
+            type: label,
+            value: packageChart.datasets[0].data[index] || 0
+          }));
+          setPackageDistribution(packageData);
+        } else {
+          // Default package distribution
+          setPackageDistribution([
+            { type: 'Basic', value: 0 },
+            { type: 'Pro', value: 0 },
+            { type: 'Enterprise', value: 0 }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load package distribution:', error);
+        setPackageDistribution([
+          { type: 'Basic', value: 0 },
+          { type: 'Pro', value: 0 },
+          { type: 'Enterprise', value: 0 }
+        ]);
+      }
 
     } catch (error) {
       console.error('Dashboard data loading failed:', error);
+      notification.error({
+        message: 'Veri Yükleme Hatası',
+        description: 'Dashboard verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.',
+        placement: 'topRight'
+      });
     } finally {
       setLoading(false);
     }
