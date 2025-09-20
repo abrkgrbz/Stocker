@@ -160,14 +160,14 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       
-      # CORS headers for wildcard subdomains using regex
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization,x-bypass-rate-limit,x-requested-with,x-signalr-user-agent,x-tenant-id,x-tenant-code,x-tenant-subdomain"
-      # Updated regex pattern to properly match all *.stoocker.app subdomains including admin.stoocker.app
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlistregex=^https://(([a-zA-Z0-9-]+\\.)?stoocker\\.app)$"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
+      # CORS is handled by backend CustomCorsMiddleware, not by Traefik
+      # Commenting out Traefik CORS to avoid conflicts
+      # - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+      # - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization,x-bypass-rate-limit,x-requested-with,x-signalr-user-agent,x-tenant-id,x-tenant-code,x-tenant-subdomain"
+      # - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlistregex=^https://(([a-zA-Z0-9-]+\\.)?stoocker\\.app)$"
+      # - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
+      # - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
+      # - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
       
       # UTF-8 encoding headers to prevent HTML entity encoding
       - "traefik.http.middlewares.api-headers.headers.customrequestheaders.Content-Type=application/json; charset=utf-8"
@@ -176,8 +176,8 @@ services:
       # Disable compression that might cause encoding issues
       - "traefik.http.middlewares.api-compress.compress=false"
       
-      # Apply all middlewares to HTTPS router
-      - "traefik.http.routers.api-secure.middlewares=api-cors,api-headers,api-compress"
+      # Apply middlewares to HTTPS router (CORS handled by backend)
+      - "traefik.http.routers.api-secure.middlewares=api-headers,api-compress"
       
       # Coolify labels
       - "coolify.managed=true"
