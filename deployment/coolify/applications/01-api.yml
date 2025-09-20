@@ -160,11 +160,13 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       
-      # CORS headers for wildcard subdomains using regex
+      # CORS headers - handle preflight and actual requests
+      - "traefik.http.middlewares.api-cors.headers.browserXssFilter=true"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization,x-bypass-rate-limit,x-requested-with,x-signalr-user-agent,x-tenant-id,x-tenant-code,x-tenant-subdomain"
-      # Updated regex pattern to properly match all *.stoocker.app subdomains including admin.stoocker.app
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlistregex=^https://(([a-zA-Z0-9-]+\\.)?stoocker\\.app)$"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolexposeheaders=*"
+      # List all allowed origins
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://admin.stoocker.app,https://stoocker.app,https://www.stoocker.app,https://master.stoocker.app"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
