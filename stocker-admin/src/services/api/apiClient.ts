@@ -322,6 +322,10 @@ class ApiClient {
 
   async put<T = any>(url: string, data?: any): Promise<T> {
     return rateLimiter.throttle(url, async () => {
+      // Debug: Log what we're sending
+      console.log('PUT request data:', data);
+      console.log('PUT request JSON:', JSON.stringify(data));
+      
       const response = await this.client.put<ApiResponse<T>>(url, data);
       
       if (!response.data.success) {

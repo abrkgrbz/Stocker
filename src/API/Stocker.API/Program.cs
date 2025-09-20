@@ -169,10 +169,13 @@ builder.Services.AddControllers(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        // Don't use any encoder - let characters pass through as-is for proper UTF-8 handling
+        // Use UnsafeRelaxedJsonEscaping for both reading and writing to handle UTF-8 properly
         options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.JsonSerializerOptions.WriteIndented = false;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        // Ensure proper UTF-8 handling for deserialization
+        options.JsonSerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
+        options.JsonSerializerOptions.AllowTrailingCommas = true;
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

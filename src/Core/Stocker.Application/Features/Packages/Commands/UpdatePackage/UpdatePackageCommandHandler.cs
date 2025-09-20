@@ -67,6 +67,10 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
                 maxApiCalls: 10000 // Default value
             );
 
+            // Log before update
+            _logger.LogInformation("Updating package entity with Name: {Name}, Description: {Description}", 
+                request.Name, request.Description);
+            
             // Use domain method to update
             package.Update(
                 name: request.Name,
@@ -77,6 +81,10 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
                 displayOrder: package.DisplayOrder, // Keep existing display order
                 isPublic: package.IsPublic // Keep existing public status
             );
+            
+            // Log after update
+            _logger.LogInformation("Package entity updated. New Name: {Name}, New Description: {Description}", 
+                package.Name, package.Description);
 
             // Update activation status if changed
             if (request.IsActive && !package.IsActive)
