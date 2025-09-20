@@ -61,7 +61,6 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Accept': 'application/json',
-        'Accept-Charset': 'utf-8',
       },
     });
 
