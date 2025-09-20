@@ -68,10 +68,17 @@ public static class HangfireConfiguration
     {
         var dashboardPath = configuration.GetValue<string>("Hangfire:DashboardPath") ?? "/hangfire";
         
+        // Get JWT settings for authorization
+        var jwtSecret = configuration["JwtSettings:Secret"];
+        var jwtIssuer = configuration["JwtSettings:Issuer"] ?? "Stocker";
+        var jwtAudience = configuration["JwtSettings:Audience"] ?? "Stocker";
+        
         app.UseHangfireDashboard(dashboardPath, new DashboardOptions
         {
             DashboardTitle = "Stocker - Background Jobs",
-            Authorization = new[] { new HangfireAuthorizationFilter() },
+            Authorization = new[] { 
+                new HangfireJwtAuthorizationFilter(jwtSecret, jwtIssuer, jwtAudience) 
+            },
             IgnoreAntiforgeryToken = true
         });
 

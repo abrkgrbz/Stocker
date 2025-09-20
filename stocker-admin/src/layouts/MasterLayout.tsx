@@ -381,6 +381,11 @@ const MasterLayout: React.FC = () => {
       icon: <MonitorOutlined />,
     },
     {
+      path: '/hangfire',
+      name: 'Hangfire Dashboard',
+      icon: <ApiOutlined />,
+    },
+    {
       path: '/support',
       name: locale === 'tr' ? 'Destek' : 'Support',
       icon: <CustomerServiceOutlined />,

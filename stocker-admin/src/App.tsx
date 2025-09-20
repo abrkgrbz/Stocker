@@ -43,6 +43,7 @@ const MonitoringPage = lazy(() => import('./pages/Monitoring'));
 const SupportPage = lazy(() => import('./pages/Support'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogs'));
 const ApiStatusPage = lazy(() => import('./pages/ApiStatus'));
+const HangfireDashboard = lazy(() => import('./pages/Hangfire/HangfireDashboard'));
 
 // Loading component
 const PageLoader: React.FC = () => (
@@ -212,6 +213,11 @@ function App() {
           <Route path="packages" element={
             <Suspense fallback={<PageLoader />}>
               <PackagesPage />
+            </Suspense>
+          } />
+          <Route path="hangfire" element={
+            <Suspense fallback={<PageLoader />}>
+              <HangfireDashboard />
             </Suspense>
           } />
           <Route path="subscriptions" element={
