@@ -24,10 +24,8 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
             return httpContext.User.Identity?.IsAuthenticated == true;
         }
 
-        // Production and all other cases: require authentication and proper roles
+        // Production and all other cases: require authentication and SistemYoneticisi role
         return httpContext.User.Identity?.IsAuthenticated == true &&
-               (httpContext.User.IsInRole("SistemYoneticisi") || 
-                httpContext.User.IsInRole("FirmaYoneticisi") ||
-                httpContext.User.IsInRole("Admin"));
+               httpContext.User.IsInRole("SistemYoneticisi");
     }
 }

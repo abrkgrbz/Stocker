@@ -111,19 +111,14 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
             return false;
         }
 
-        // Check for required roles
-        var hasRequiredRole = user.IsInRole("SistemYoneticisi") || 
-                             user.IsInRole("FirmaYoneticisi") ||
-                             user.IsInRole("Admin");
+        // Check for required role - only SistemYoneticisi
+        var hasRequiredRole = user.IsInRole("SistemYoneticisi");
 
         // Also check for role claims in JWT
         if (!hasRequiredRole)
         {
             var roleClaims = user.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role");
-            hasRequiredRole = roleClaims.Any(c => 
-                c.Value == "SistemYoneticisi" || 
-                c.Value == "FirmaYoneticisi" || 
-                c.Value == "Admin");
+            hasRequiredRole = roleClaims.Any(c => c.Value == "SistemYoneticisi");
         }
 
         return hasRequiredRole;

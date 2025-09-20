@@ -12,13 +12,13 @@ const HangfireDashboard: React.FC = () => {
   const hangfireUrl = `${import.meta.env.VITE_API_URL}/hangfire`;
 
   useEffect(() => {
-    // Check if user has required role
+    // Check if user has required role - only SistemYoneticisi
     const hasRequiredRole = user?.roles?.some(role => 
-      ['Admin', 'SistemYoneticisi', 'FirmaYoneticisi'].includes(role)
+      role === 'SistemYoneticisi'
     );
 
     if (!hasRequiredRole) {
-      setError('Bu sayfaya erişim yetkiniz bulunmamaktadır. Admin, Sistem Yöneticisi veya Firma Yöneticisi rolüne sahip olmanız gerekmektedir.');
+      setError('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sistem Yöneticisi rolüne sahip olmanız gerekmektedir.');
       setLoading(false);
       return;
     }
