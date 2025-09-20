@@ -43,7 +43,7 @@ export const LoginPage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Get the fresh user data after login
-      const authStore = useAuthStore.getState();
+      const authStore = useSecureAuthStore.getState();
       const userName = authStore.user?.firstName || authStore.user?.email || 'Kullanıcı';
       const userRole = authStore.user?.roles?.[0];
       const from = (location.state as any)?.from?.pathname;
