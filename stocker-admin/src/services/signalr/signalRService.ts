@@ -75,14 +75,13 @@ class SignalRService {
     this.notificationHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/notification`, {
         accessTokenFactory: () => token || '',
-        // Try SSE first for better compatibility, then WebSockets, then LongPolling
+        // Use only SSE and LongPolling - no WebSockets due to proxy issues
         transport: signalR.HttpTransportType.ServerSentEvents | 
-                  signalR.HttpTransportType.LongPolling |
-                  signalR.HttpTransportType.WebSockets,
+                  signalR.HttpTransportType.LongPolling,
         skipNegotiation: false, // Allow negotiation for transport selection
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Information)
+      .configureLogging(signalR.LogLevel.Warning) // Reduce log verbosity
       .build();
 
     // Initialize Validation Hub (for real-time validation)
@@ -366,11 +365,15 @@ class SignalRService {
 export const signalRService = new SignalRService();
 
 // Auto-connect when module is imported with delay to avoid rate limiting
-if (typeof window !== 'undefined') {
-  // Only auto-connect in browser environment after a delay
+if (typeof window !== 'undefined' && import.meta.env.VITE_ENABLE_SIGNALR === 'true') {
+  // Only auto-connect in browser environment if SignalR is enabled
   setTimeout(() => {
-    signalRService.connect().catch(error => {
-      console.error('Initial SignalR connection failed:', error);
-    });
-  }, 3000); // 3 second delay to avoid rate limiting on initial page load
+    const token = tokenStorage.getToken();
+    if (token) {
+      // Only connect if user is authenticated
+      signalRService.connect().catch(error => {
+        console.warn('Initial SignalR connection deferred:', error.message);
+      });
+    }
+  }, 5000); // 5 second delay to avoid rate limiting on initial page load
 }
