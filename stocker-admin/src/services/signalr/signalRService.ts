@@ -71,11 +71,15 @@ class SignalRService {
     const baseUrl = this.getBaseUrl();
     const token = tokenStorage.getToken();
 
-    // Initialize Notification Hub
+    // Initialize Notification Hub with fallback transport methods
     this.notificationHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/notification`, {
         accessTokenFactory: () => token || '',
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+        // Try SSE first for better compatibility, then WebSockets, then LongPolling
+        transport: signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling |
+                  signalR.HttpTransportType.WebSockets,
+        skipNegotiation: false, // Allow negotiation for transport selection
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Information)
@@ -84,7 +88,9 @@ class SignalRService {
     // Initialize Validation Hub (for real-time validation)
     this.validationHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/validation`, {
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+        transport: signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling,
+        skipNegotiation: false,
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
@@ -94,7 +100,9 @@ class SignalRService {
     this.chatHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/chat`, {
         accessTokenFactory: () => token || '',
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+        transport: signalR.HttpTransportType.ServerSentEvents | 
+                  signalR.HttpTransportType.LongPolling,
+        skipNegotiation: false,
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
