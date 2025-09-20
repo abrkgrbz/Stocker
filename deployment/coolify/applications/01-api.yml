@@ -16,7 +16,7 @@ services:
       # ==================================
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      - ASPNETCORE_SWAGGER_ENABLED=false
+      - ASPNETCORE_SWAGGER_ENABLED=true
       - LANG=C.UTF-8
       - LC_ALL=C.UTF-8
       - LC_CTYPE=C.UTF-8
