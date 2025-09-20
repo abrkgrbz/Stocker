@@ -57,6 +57,7 @@ class SignalRService {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 5000; // 5 seconds
+  private initialConnectionDelay = 2000; // 2 seconds delay before first connection
 
   constructor() {
     this.initializeHubs();
@@ -356,10 +357,12 @@ class SignalRService {
 // Create singleton instance
 export const signalRService = new SignalRService();
 
-// Auto-connect when module is imported
+// Auto-connect when module is imported with delay to avoid rate limiting
 if (typeof window !== 'undefined') {
-  // Only auto-connect in browser environment
-  signalRService.connect().catch(error => {
-    console.error('Initial SignalR connection failed:', error);
-  });
+  // Only auto-connect in browser environment after a delay
+  setTimeout(() => {
+    signalRService.connect().catch(error => {
+      console.error('Initial SignalR connection failed:', error);
+    });
+  }, 3000); // 3 second delay to avoid rate limiting on initial page load
 }

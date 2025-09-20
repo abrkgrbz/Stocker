@@ -63,16 +63,24 @@ const Dashboard: React.FC = () => {
     setLoading(LOADING_KEYS.DASHBOARD_STATS, true);
     
     try {
-      const [statsData, revenue, health, tenants] = await Promise.all([
-        dashboardService.getStats(),
-        dashboardService.getRevenueOverview(),
-        dashboardService.getSystemHealth(),
-        dashboardService.getRecentTenants(),
-      ]);
-      
+      // Load data sequentially with small delays to avoid rate limiting
+      const statsData = await dashboardService.getStats();
       setStats(statsData);
+      
+      // Small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const revenue = await dashboardService.getRevenueOverview();
       setRevenueData(revenue);
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const health = await dashboardService.getSystemHealth();
       setSystemHealth(health);
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const tenants = await dashboardService.getRecentTenants();
       setRecentTenants(tenants);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);

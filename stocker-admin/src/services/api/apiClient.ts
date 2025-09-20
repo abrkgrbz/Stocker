@@ -1,10 +1,12 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { rateLimiter } from '../../utils/rateLimiter';
 
 // Extend InternalAxiosRequestConfig to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   metadata?: {
     startTime: number;
   };
+  skipRateLimit?: boolean;
 }
 import { tokenStorage } from '../../utils/tokenStorage';
 import { errorService, AppError, ERROR_CODES } from '../errorService';
@@ -292,45 +294,53 @@ class ApiClient {
     return response.data;
   }
 
-  // Generic request methods for other API calls
+  // Generic request methods for other API calls with rate limiting
   async get<T = any>(url: string, params?: any): Promise<T> {
-    const response = await this.client.get<ApiResponse<T>>(url, { params });
-    
-    if (!response.data.success) {
-      throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
-    }
-    
-    return response.data.data as T;
+    return rateLimiter.throttle(url, async () => {
+      const response = await this.client.get<ApiResponse<T>>(url, { params });
+      
+      if (!response.data.success) {
+        throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
+      }
+      
+      return response.data.data as T;
+    });
   }
 
   async post<T = any>(url: string, data?: any): Promise<T> {
-    const response = await this.client.post<ApiResponse<T>>(url, data);
-    
-    if (!response.data.success) {
-      throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
-    }
-    
-    return response.data.data as T;
+    return rateLimiter.throttle(url, async () => {
+      const response = await this.client.post<ApiResponse<T>>(url, data);
+      
+      if (!response.data.success) {
+        throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
+      }
+      
+      return response.data.data as T;
+    });
   }
 
   async put<T = any>(url: string, data?: any): Promise<T> {
-    const response = await this.client.put<ApiResponse<T>>(url, data);
-    
-    if (!response.data.success) {
-      throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
-    }
-    
-    return response.data.data as T;
+    return rateLimiter.throttle(url, async () => {
+      const response = await this.client.put<ApiResponse<T>>(url, data);
+      
+      if (!response.data.success) {
+        throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
+      }
+      
+      return response.data.data as T;
+    });
   }
 
   async delete<T = any>(url: string): Promise<T> {
-    const response = await this.client.delete<ApiResponse<T>>(url);
-    
-    if (!response.data.success) {
-      throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
-    }
-    
-    return response.data.data as T;
+    return rateLimiter.throttle(url, async () => {
+      const response = await this.client.delete<ApiResponse<T>>(url);
+      
+      if (!response.data.success) {
+        throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
+      }
+      
+      return response.data.data as T;
+    });
   }
 
   // Get axios instance for advanced use cases
