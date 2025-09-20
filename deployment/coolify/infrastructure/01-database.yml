@@ -18,8 +18,9 @@ services:
       - MSSQL_AGENT_ENABLED=true
       - MSSQL_ENABLE_HADR=0
       - MSSQL_TCP_PORT=1433
-      - MSSQL_COLLATION=Turkish_CI_AS
+      - MSSQL_COLLATION=Turkish_100_CI_AS_SC_UTF8
       - MSSQL_MEMORY_LIMIT_MB=2048
+      - MSSQL_LCID=1055
       - TZ=Europe/Istanbul
     volumes:
       - mssql_data:/var/opt/mssql/data
