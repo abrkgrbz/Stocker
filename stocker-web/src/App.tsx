@@ -7,7 +7,7 @@ import trTR from 'antd/locale/tr_TR';
 import dayjs from 'dayjs';
 
 import { AppRouter } from '@/app/router/AppRouter';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { TenantProvider, useTenant } from '@/contexts/TenantContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -44,7 +44,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { initializeAuth, isInitialized, isLoading, isAuthenticated, user } = useAuthStore();
+  const { initializeAuth, isInitialized, isLoading, isAuthenticated, user } = useSecureAuthStore();
 
   useEffect(() => {
     // Set user for monitoring

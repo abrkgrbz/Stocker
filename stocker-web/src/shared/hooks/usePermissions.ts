@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 
 export type Permission = 
   | 'view_dashboard'
@@ -55,7 +55,7 @@ const rolePermissions: RolePermissions = {
 };
 
 export function usePermissions() {
-  const { user } = useAuthStore();
+  const { user } = useSecureAuthStore();
 
   const permissions = useMemo(() => {
     if (!user?.roles) return [];

@@ -27,7 +27,7 @@ import {
   SettingOutlined,
   LogoutOutlined
 } from '@ant-design/icons';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { availableModules, Module } from '@/types/modules';
 import './modern-style.css';
 
@@ -56,7 +56,7 @@ const patterns = [
 
 const ModernModulesScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useSecureAuthStore();
   const [modules, setModules] = useState<Module[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

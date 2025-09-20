@@ -44,7 +44,7 @@ import {
 import { useSignalRValidation } from '@/shared/hooks/useSignalR';
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { showApiResponse, showRegistrationSuccess } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
 import { navigateToSubdomain } from '@/shared/utils/subdomain';

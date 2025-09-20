@@ -2,7 +2,7 @@ import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Spin } from 'antd';
 
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 
 interface PrivateRouteProps {
   children?: React.ReactNode;
@@ -11,7 +11,7 @@ interface PrivateRouteProps {
 
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
   const location = useLocation();
-  const { isAuthenticated, user, isLoading, isInitialized, initializeAuth } = useAuthStore();
+  const { isAuthenticated, user, isLoading, isInitialized, initializeAuth } = useSecureAuthStore();
 
   useEffect(() => {
     // Initialize auth if not already initialized

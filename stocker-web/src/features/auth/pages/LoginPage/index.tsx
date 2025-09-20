@@ -5,7 +5,7 @@ import { MailOutlined, LockOutlined, LoginOutlined, RocketOutlined, HomeOutlined
 import { Form, Input, Button, Typography, Space } from 'antd';
 import Swal from 'sweetalert2';
 
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import companyService from '@/services/companyService';
 import { LoginRequest } from '@/shared/types';
 import { showApiResponse, showWelcomeAlert } from '@/shared/utils/sweetAlert';
@@ -15,7 +15,7 @@ const { Title, Text } = Typography;
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading } = useSecureAuthStore();
   const [form] = Form.useForm();
 
   const handleSubmit = async (values: any) => {

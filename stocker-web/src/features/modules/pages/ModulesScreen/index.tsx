@@ -18,7 +18,7 @@ import {
   CrownOutlined,
   RocketOutlined
 } from '@ant-design/icons';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { availableModules, Module } from '@/types/modules';
 import './style.css';
 
@@ -39,7 +39,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
 
 export const ModulesScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useSecureAuthStore();
   const [modules, setModules] = useState<Module[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

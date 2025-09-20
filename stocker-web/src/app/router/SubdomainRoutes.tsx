@@ -6,7 +6,7 @@ import { Spin } from 'antd';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { TenantLayout } from '@/layouts/TenantLayout';
 import { PrivateRoute } from './PrivateRoute';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import companyService from '@/services/companyService';
 
 const TenantLogin = lazy(() => import('@/features/auth/pages/TenantLogin').then(m => ({ default: m.TenantLogin })));
@@ -21,7 +21,7 @@ const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen/
  * Handles both public auth routes and private tenant routes
  */
 export const SubdomainRoutes: React.FC = () => {
-  const { isAuthenticated, user, isInitialized } = useAuthStore();
+  const { isAuthenticated, user, isInitialized } = useSecureAuthStore();
   const [isCompanySetupComplete, setIsCompanySetupComplete] = useState<boolean | null>(null);
 
   useEffect(() => {

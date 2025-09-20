@@ -5,7 +5,7 @@ import { BankOutlined, GlobalOutlined, CheckCircleOutlined } from '@ant-design/i
 import { Button, Form, Input, Select, Steps, Card, Row, Col, InputNumber, message } from 'antd';
 import Swal from 'sweetalert2';
 
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { getCitiesForSelect, getDistrictsByCityForSelect } from '@/data/turkey-cities';
 import companyService from '@/services/companyService';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
@@ -43,7 +43,7 @@ const CompanySetup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useSecureAuthStore();
   
   const [formData, setFormData] = useState<CompanyFormData>({
     taxNumber: '',

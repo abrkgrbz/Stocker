@@ -34,7 +34,7 @@ import {
   KeyOutlined
 } from '@ant-design/icons';
 import { getTenantSlugFromDomain, getMainDomainUrl, TenantInfo } from '@/utils/tenant';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { showApiResponse } from '@/shared/utils/sweetAlert';
 import Swal from 'sweetalert2';
 import { ForgotPasswordModal } from '@/features/auth/components/ForgotPasswordModal';
@@ -56,7 +56,7 @@ export const TenantLogin: React.FC = () => {
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
-  const { login } = useAuthStore();
+  const { login } = useSecureAuthStore();
 
   const tenantSlug = getTenantSlugFromDomain();
 

@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useVisitorTracking } from '@/shared/hooks/useVisitorTracking';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { useScrollToSection } from '@/shared/hooks/useScrollToSection';
 import './style.css';
 
@@ -28,7 +28,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className })
   const [activeSection, setActiveSection] = useState('home');
   const navigate = useNavigate();
   const { currentVisitType, trackInterest } = useVisitorTracking();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user } = useSecureAuthStore();
   const { scrollToSection } = useScrollToSection();
 
   const menuItems = [

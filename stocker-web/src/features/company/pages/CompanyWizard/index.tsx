@@ -61,7 +61,7 @@ import {
   WarningOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import { getCitiesForSelect, getDistrictsByCityForSelect } from '@/data/turkey-cities';
 import wizardService from '@/services/wizardService';
 import companyService from '@/services/companyService';
@@ -93,7 +93,7 @@ const CompanyWizard: React.FC = () => {
   const [wizardId, setWizardId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useSecureAuthStore();
   
   const [wizardData, setWizardData] = useState<any>({});
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());

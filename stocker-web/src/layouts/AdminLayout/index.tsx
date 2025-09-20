@@ -12,7 +12,7 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Avatar } from 'antd';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 
 const menuItems = [
   {
@@ -55,7 +55,7 @@ const menuItems = [
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useSecureAuthStore();
   const [collapsed, setCollapsed] = useState(false);
 
   const settings: ProLayoutProps = {

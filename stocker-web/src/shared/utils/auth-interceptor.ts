@@ -1,10 +1,5 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/config/constants';
-
-interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { tokenService } from '@/services/tokenService';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -18,43 +13,25 @@ function onTokenRefreshed(token: string) {
   refreshSubscribers = [];
 }
 
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-  
-  if (!refreshToken) {
-    return null;
-  }
-
-  try {
-    const response = await axios.post<TokenResponse>('/api/auth/refresh', {
-      refreshToken,
-    });
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
-    
-    localStorage.setItem(TOKEN_KEY, accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
-    
-    return accessToken;
-  } catch (error) {
-    // Refresh failed, clear tokens
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    
-    // Redirect to login
-    window.location.href = '/login';
-    return null;
-  }
-}
-
 export function setupAuthInterceptor(axiosInstance: AxiosInstance) {
   // Request interceptor - add token to headers
   axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-      const token = localStorage.getItem(TOKEN_KEY);
+      const token = tokenService.getAccessToken();
       
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Add tenant headers if available (non-sensitive)
+      const tenantCode = localStorage.getItem('X-Tenant-Code');
+      if (tenantCode && config.headers) {
+        config.headers['X-Tenant-Code'] = tenantCode;
+      }
+      
+      const tenantId = localStorage.getItem('tenant_id');
+      if (tenantId && config.headers) {
+        config.headers['X-Tenant-Id'] = tenantId;
       }
       
       return config;
@@ -79,7 +56,7 @@ export function setupAuthInterceptor(axiosInstance: AxiosInstance) {
         if (!isRefreshing) {
           isRefreshing = true;
           
-          const newToken = await refreshAccessToken();
+          const newToken = await tokenService.refreshAccessToken();
           
           isRefreshing = false;
           
@@ -91,6 +68,10 @@ export function setupAuthInterceptor(axiosInstance: AxiosInstance) {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
             return axiosInstance(originalRequest);
+          } else {
+            // Refresh failed, logout and redirect
+            await tokenService.logout();
+            window.location.href = '/login';
           }
         } else {
           // Wait for token refresh to complete
@@ -119,16 +100,20 @@ export function resetSessionTimeout() {
     clearTimeout(sessionTimeout);
   }
 
-  sessionTimeout = setTimeout(() => {
+  sessionTimeout = setTimeout(async () => {
     // Show warning before logout
     const shouldLogout = window.confirm('Oturumunuz zaman aşımına uğradı. Devam etmek ister misiniz?');
     
     if (!shouldLogout) {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      await tokenService.logout();
       window.location.href = '/login';
     } else {
-      refreshAccessToken();
+      // Try to refresh token
+      const newToken = await tokenService.refreshAccessToken();
+      if (!newToken) {
+        await tokenService.logout();
+        window.location.href = '/login';
+      }
     }
   }, SESSION_TIMEOUT);
 }
@@ -145,19 +130,17 @@ if (typeof window !== 'undefined') {
   resetSessionTimeout();
 }
 
-// Token expiry checker
-export function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const exp = payload.exp * 1000; // Convert to milliseconds
-    return Date.now() > exp;
-  } catch {
-    return true;
-  }
+// Token expiry checker (uses tokenService)
+export function isTokenExpired(): boolean {
+  const token = tokenService.getAccessToken();
+  return tokenService.isTokenExpired(token || undefined);
 }
 
 // Permission checker from token
-export function getTokenPermissions(token: string): string[] {
+export function getTokenPermissions(): string[] {
+  const token = tokenService.getAccessToken();
+  if (!token) return [];
+  
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.permissions || [];
@@ -167,7 +150,10 @@ export function getTokenPermissions(token: string): string[] {
 }
 
 // Role checker from token
-export function getTokenRoles(token: string): string[] {
+export function getTokenRoles(): string[] {
+  const token = tokenService.getAccessToken();
+  if (!token) return [];
+  
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.roles || payload.role ? [payload.role] : [];

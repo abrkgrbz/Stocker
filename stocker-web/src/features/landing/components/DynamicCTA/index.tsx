@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useVisitorTracking } from '@/shared/hooks/useVisitorTracking';
-import { useAuthStore } from '@/app/store/auth.store';
+import { useSecureAuthStore } from '@/app/store/secureAuth.store';
 import './style.css';
 
 interface DynamicCTAProps {
@@ -24,7 +24,7 @@ export const DynamicCTA: React.FC<DynamicCTAProps> = ({
 }) => {
   const navigate = useNavigate();
   const { currentVisitType, trackInterest } = useVisitorTracking();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user } = useSecureAuthStore();
 
   const handleCTAClick = (action: string, route: string) => {
     trackInterest(action);
