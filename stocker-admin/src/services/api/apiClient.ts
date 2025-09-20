@@ -59,7 +59,9 @@ class ApiClient {
       baseURL,
       timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Accept-Charset': 'utf-8',
       },
     });
 
