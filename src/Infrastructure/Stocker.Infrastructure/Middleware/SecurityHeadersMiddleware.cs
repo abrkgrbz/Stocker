@@ -42,6 +42,10 @@ public class SecurityHeadersMiddleware
     private void AddSecurityHeaders(HttpContext context)
     {
         var headers = context.Response.Headers;
+        var path = context.Request.Path.ToString().ToLower();
+        
+        // Skip frame-related security headers for Hangfire dashboard to allow iframe embedding
+        var isHangfirePath = path.StartsWith("/hangfire");
 
         // X-Content-Type-Options: Prevent MIME type sniffing
         if (_options.AddXContentTypeOptions && !headers.ContainsKey("X-Content-Type-Options"))
@@ -49,8 +53,8 @@ public class SecurityHeadersMiddleware
             headers.Append("X-Content-Type-Options", "nosniff");
         }
 
-        // X-Frame-Options: Prevent clickjacking attacks
-        if (_options.AddXFrameOptions && !headers.ContainsKey("X-Frame-Options"))
+        // X-Frame-Options: Prevent clickjacking attacks (skip for Hangfire)
+        if (!isHangfirePath && _options.AddXFrameOptions && !headers.ContainsKey("X-Frame-Options"))
         {
             headers.Append("X-Frame-Options", _options.XFrameOptionsValue ?? "DENY");
         }
@@ -70,7 +74,7 @@ public class SecurityHeadersMiddleware
         // Content-Security-Policy: Prevent XSS, clickjacking, and other attacks
         if (_options.AddContentSecurityPolicy && !headers.ContainsKey("Content-Security-Policy"))
         {
-            var csp = BuildContentSecurityPolicy();
+            var csp = isHangfirePath ? BuildHangfireContentSecurityPolicy() : BuildContentSecurityPolicy();
             headers.Append("Content-Security-Policy", csp);
         }
 
@@ -130,6 +134,26 @@ public class SecurityHeadersMiddleware
         {
             return _options.CustomContentSecurityPolicy;
         }
+
+        return string.Join("; ", policies);
+    }
+    
+    private string BuildHangfireContentSecurityPolicy()
+    {
+        // Special CSP for Hangfire that allows iframe embedding from admin.stoocker.app
+        var policies = new List<string>
+        {
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+            "font-src 'self' data: https://fonts.gstatic.com",
+            "img-src 'self' data: https: blob:",
+            "connect-src 'self' wss: https:",
+            "frame-ancestors https://admin.stoocker.app https://localhost:* http://localhost:*",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "upgrade-insecure-requests"
+        };
 
         return string.Join("; ", policies);
     }

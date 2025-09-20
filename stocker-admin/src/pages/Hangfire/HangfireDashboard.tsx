@@ -6,7 +6,7 @@ import { LoadingOutlined, ExportOutlined, ReloadOutlined } from '@ant-design/ico
 const { Title, Text } = Typography;
 
 const HangfireDashboard: React.FC = () => {
-  const { user, token } = useAuthStore();
+  const { user, accessToken } = useAuthStore();  // Use accessToken instead of token
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hangfireUrl = `${import.meta.env.VITE_API_URL}/hangfire`;
@@ -29,7 +29,7 @@ const HangfireDashboard: React.FC = () => {
 
   const openHangfireInNewTab = () => {
     // Open Hangfire dashboard with token in query string
-    const urlWithToken = `${hangfireUrl}?access_token=${encodeURIComponent(token || '')}`;
+    const urlWithToken = `${hangfireUrl}?access_token=${encodeURIComponent(accessToken || '')}`;
     window.open(urlWithToken, '_blank');
   };
 
@@ -37,7 +37,7 @@ const HangfireDashboard: React.FC = () => {
     // Reload iframe with fresh token
     const iframe = document.getElementById('hangfire-iframe') as HTMLIFrameElement;
     if (iframe) {
-      iframe.src = `${hangfireUrl}?access_token=${encodeURIComponent(token || '')}`;
+      iframe.src = `${hangfireUrl}?access_token=${encodeURIComponent(accessToken || '')}`;
     }
   };
 
@@ -120,7 +120,7 @@ const HangfireDashboard: React.FC = () => {
         {/* Try to embed Hangfire dashboard in iframe with token */}
         <iframe
           id="hangfire-iframe"
-          src={`${hangfireUrl}?access_token=${encodeURIComponent(token || '')}`}
+          src={`${hangfireUrl}?access_token=${encodeURIComponent(accessToken || '')}`}
           style={{ 
             width: '100%', 
             height: '800px', 
