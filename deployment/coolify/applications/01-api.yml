@@ -148,8 +148,9 @@ services:
       - "traefik.http.routers.api-secure.entrypoints=https"
       - "traefik.http.routers.api-secure.tls=true"
       - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-secure.service=api"
-      - "traefik.http.services.api.loadbalancer.server.port=5000"
+      - "traefik.http.routers.api-secure.service=api-service"
+      - "traefik.http.routers.api-secure.priority=90"
+      - "traefik.http.services.api-service.loadbalancer.server.port=5000"
       
       # API routing - HTTP (redirect to HTTPS)
       - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"

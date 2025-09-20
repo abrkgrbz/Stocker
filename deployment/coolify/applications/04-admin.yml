@@ -36,7 +36,8 @@ services:
       - "traefik.http.routers.admin-secure.entrypoints=https"
       - "traefik.http.routers.admin-secure.tls=true"
       - "traefik.http.routers.admin-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.admin-secure.service=admin"
+      - "traefik.http.routers.admin-secure.service=admin-service"
+      - "traefik.http.routers.admin-secure.priority=85"
       
       # HTTP Router (redirect to HTTPS)
       - "traefik.http.routers.admin.rule=Host(`admin.stoocker.app`)"
@@ -44,7 +45,7 @@ services:
       - "traefik.http.routers.admin.middlewares=redirect-to-https"
       
       # Service
-      - "traefik.http.services.admin.loadbalancer.server.port=80"
+      - "traefik.http.services.admin-service.loadbalancer.server.port=80"
       
       # Middlewares
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
