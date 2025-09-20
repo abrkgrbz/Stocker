@@ -203,7 +203,7 @@ public class SecureAuthController : ControllerBase
     /// </summary>
     [HttpGet("me")]
     [Authorize]
-    [ProducesResponseType(typeof(UserInfo), 200)]
+    [ProducesResponseType(typeof(SecureUserInfo), 200)]
     public IActionResult GetCurrentUser()
     {
         var user = GetUserFromPrincipal(User);
@@ -249,9 +249,9 @@ public class SecureAuthController : ControllerBase
         Response.Cookies.Delete("refresh_token", cookieOptions);
     }
 
-    private UserInfo GetUserFromPrincipal(ClaimsPrincipal principal)
+    private SecureUserInfo GetUserFromPrincipal(ClaimsPrincipal principal)
     {
-        return new UserInfo
+        return new SecureUserInfo
         {
             Id = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
             Email = principal.FindFirst(ClaimTypes.Email)?.Value,
@@ -271,7 +271,7 @@ public class SecureAuthController : ControllerBase
         public bool IsAuthenticated { get; set; }
         public bool NeedsRefresh { get; set; }
         public string AccessToken { get; set; }
-        public UserInfo User { get; set; }
+        public SecureUserInfo User { get; set; }
     }
 
     public class SecureAuthResponse
@@ -288,7 +288,7 @@ public class SecureAuthController : ControllerBase
         public string AccessToken { get; set; }
     }
 
-    public class UserInfo
+    public class SecureUserInfo
     {
         public string Id { get; set; }
         public string Email { get; set; }
