@@ -142,6 +142,8 @@ services:
       - "traefik.docker.network=coolify"
       
       # API routing - HTTPS
+      # Note: Hangfire dashboard is available at api.stoocker.app/hangfire
+      # Requires authentication with Admin, SistemYoneticisi, or FirmaYoneticisi role
       - "traefik.http.routers.api-secure.rule=Host(`api.stoocker.app`)"
       - "traefik.http.routers.api-secure.entrypoints=https"
       - "traefik.http.routers.api-secure.tls=true"
