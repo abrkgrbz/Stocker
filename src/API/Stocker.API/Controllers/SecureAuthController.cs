@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace Stocker.API.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("api/secure-auth")]
 [ApiExplorerSettings(GroupName = "public")]
 [SwaggerTag("Secure Authentication - Cookie-based authentication with httpOnly cookies")]
 public class SecureAuthController : ControllerBase

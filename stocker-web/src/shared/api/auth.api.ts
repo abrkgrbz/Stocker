@@ -11,20 +11,20 @@ export const authApi = {
       headers['X-Tenant-Id'] = data.tenantCode; // Some endpoints may use this
     }
     
-    return apiClient.post<LoginResponse>('/api/auth/login', data, { headers }).catch((error) => {
+    return apiClient.post<LoginResponse>('/api/secure-auth/login', data, { headers }).catch((error) => {
       // Error handling removed for production
       throw error;
     });
   },
     
   logout: () => 
-    apiClient.post('/api/auth/logout'),
+    apiClient.post('/api/secure-auth/logout'),
     
   refreshToken: (refreshToken: string) => 
-    apiClient.post<{ token: string; refreshToken: string }>('/api/auth/refresh-token', { refreshToken }),
+    apiClient.post<{ token: string; refreshToken: string }>('/api/secure-auth/refresh', { refreshToken }),
     
   getCurrentUser: () => 
-    apiClient.get<User>('/api/auth/me'),
+    apiClient.get<User>('/api/secure-auth/me'),
     
   changePassword: (data: { currentPassword: string; newPassword: string }) => 
     apiClient.post('/api/auth/change-password', data),

@@ -17,7 +17,7 @@ class TokenService {
   async initialize(): Promise<void> {
     // Check if we have valid session
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      const response = await fetch(`${API_BASE_URL}/api/secure-auth/session`, {
         method: 'GET',
         credentials: 'include', // Include cookies
         headers: {
@@ -85,7 +85,7 @@ class TokenService {
    */
   async refreshAccessToken(): Promise<string | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/api/secure-auth/refresh`, {
         method: 'POST',
         credentials: 'include', // Include cookies
         headers: {
@@ -117,7 +117,7 @@ class TokenService {
    */
   async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      await fetch(`${API_BASE_URL}/api/secure-auth/logout`, {
         method: 'POST',
         credentials: 'include', // Include cookies to clear them
         headers: {
