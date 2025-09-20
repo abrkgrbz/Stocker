@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -30,6 +30,8 @@ import {
   Result,
   Timeline,
   Progress,
+  Spin,
+  notification,
 } from 'antd';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import {
@@ -68,6 +70,7 @@ import {
   BulbOutlined,
   ExperimentOutlined,
 } from '@ant-design/icons';
+import { packageService } from '../../services/api/packageService';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -109,137 +112,41 @@ interface Package {
 }
 
 const PackagesPage: React.FC = () => {
-  const [packages, setPackages] = useState<Package[]>([
-    {
-      id: '1',
-      name: 'starter',
-      displayName: 'Starter',
-      description: 'Küçük işletmeler ve yeni başlayanlar için ideal',
-      price: 99,
-      billingCycle: 'monthly',
-      currency: 'TRY',
-      status: 'active',
-      tier: 'starter',
-      isPopular: false,
-      isBestValue: false,
-      trialDays: 14,
-      limits: {
-        users: 10,
-        storage: 10,
-        apiCalls: 10000,
-        projects: 3,
-        customDomains: 0,
-        emailSupport: true,
-        phoneSupport: false,
-        prioritySupport: false,
-        sla: 95,
-      },
-      features: [
-        'Temel özellikler',
-        'E-posta desteği',
-        '10 GB depolama',
-        '10 kullanıcı',
-        'Standart raporlar',
-        'Mobil uygulama erişimi',
-      ],
-      addons: [],
-      subscriberCount: 450,
-      revenue: 44550,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-11-15',
-    },
-    {
-      id: '2',
-      name: 'professional',
-      displayName: 'Professional',
-      description: 'Büyüyen işletmeler için gelişmiş özellikler',
-      price: 299,
-      originalPrice: 399,
-      billingCycle: 'monthly',
-      currency: 'TRY',
-      status: 'active',
-      tier: 'professional',
-      isPopular: true,
-      isBestValue: true,
-      trialDays: 30,
-      limits: {
-        users: 50,
-        storage: 100,
-        apiCalls: 100000,
-        projects: 20,
-        customDomains: 3,
-        emailSupport: true,
-        phoneSupport: true,
-        prioritySupport: false,
-        sla: 99,
-      },
-      features: [
-        'Tüm Starter özellikleri',
-        'Gelişmiş analitik',
-        'API erişimi',
-        'Özel raporlar',
-        'Telefon desteği',
-        '100 GB depolama',
-        '50 kullanıcı',
-        'Özel domain desteği',
-        'Webhook entegrasyonları',
-        'Gelişmiş güvenlik',
-      ],
-      addons: ['extra-storage', 'advanced-analytics'],
-      subscriberCount: 280,
-      revenue: 83720,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-11-20',
-    },
-    {
-      id: '3',
-      name: 'enterprise',
-      displayName: 'Enterprise',
-      description: 'Büyük organizasyonlar için kurumsal çözüm',
-      price: 999,
-      billingCycle: 'monthly',
-      currency: 'TRY',
-      status: 'active',
-      tier: 'enterprise',
-      isPopular: false,
-      isBestValue: false,
-      trialDays: 30,
-      limits: {
-        users: 99999,
-        storage: 99999,
-        apiCalls: 99999999,
-        projects: 99999,
-        customDomains: 99999,
-        emailSupport: true,
-        phoneSupport: true,
-        prioritySupport: true,
-        sla: 99.9,
-      },
-      features: [
-        'Tüm Professional özellikleri',
-        'Sınırsız kullanıcı',
-        'Sınırsız depolama',
-        'Öncelikli destek',
-        'SLA garantisi',
-        'Özel onboarding',
-        'Dedicated account manager',
-        'Custom entegrasyonlar',
-        'White-label seçeneği',
-        'Gelişmiş güvenlik ve uyumluluk',
-        'Custom contract',
-      ],
-      addons: ['white-label', 'dedicated-support', 'custom-integration'],
-      subscriberCount: 45,
-      revenue: 44955,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-12-01',
-    },
-  ]);
-
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Load packages from API on component mount
+  useEffect(() => {
+    loadPackages();
+  }, []);
+
+  const loadPackages = async () => {
+    setLoading(true);
+    try {
+      const apiPackages = await packageService.getAll({ includeInactive: true });
+      
+      // Map API response to frontend format
+      const mappedPackages = apiPackages.map(pkg => packageService.mapToFrontendPackage(pkg));
+      
+      setPackages(mappedPackages);
+    } catch (error) {
+      console.error('Failed to load packages:', error);
+      notification.error({
+        message: 'Veri Yükleme Hatası',
+        description: 'Paketler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.',
+        placement: 'topRight'
+      });
+      
+      // Set empty array on error
+      setPackages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const allFeatures = [
     { value: 'basic-features', label: 'Temel Özellikler' },
@@ -309,9 +216,19 @@ const PackagesPage: React.FC = () => {
       ),
       okText: 'Sil',
       okType: 'danger',
-      onOk: () => {
-        setPackages(packages.filter(p => p.id !== pkg.id));
-        message.success('Paket silindi');
+      onOk: async () => {
+        try {
+          const success = await packageService.delete(pkg.id);
+          if (success) {
+            setPackages(packages.filter(p => p.id !== pkg.id));
+            message.success('Paket başarıyla silindi');
+          } else {
+            throw new Error('Silme işlemi başarısız');
+          }
+        } catch (error) {
+          console.error('Failed to delete package:', error);
+          message.error('Paket silinirken bir hata oluştu');
+        }
       },
     });
   };
@@ -320,9 +237,9 @@ const PackagesPage: React.FC = () => {
     try {
       const values = await form.validateFields();
       
-      const newPackage: Package = {
+      const packageData: Package = {
         ...values,
-        id: editingPackage?.id || Date.now().toString(),
+        id: editingPackage?.id || '',
         limits: {
           users: values['limits.users'],
           storage: values['limits.storage'],
@@ -336,16 +253,46 @@ const PackagesPage: React.FC = () => {
         },
         subscriberCount: editingPackage?.subscriberCount || 0,
         revenue: editingPackage?.revenue || 0,
-        createdAt: editingPackage?.createdAt || new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
+        createdAt: editingPackage?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       if (editingPackage) {
-        setPackages(packages.map(p => p.id === editingPackage.id ? newPackage : p));
-        message.success('Paket güncellendi');
+        // Update existing package
+        try {
+          const updateCommand = packageService.mapToUpdateCommand(packageData);
+          const success = await packageService.update(editingPackage.id, updateCommand);
+          
+          if (success) {
+            message.success('Paket başarıyla güncellendi');
+            // Reload packages to get updated data
+            await loadPackages();
+          } else {
+            throw new Error('Güncelleme başarısız');
+          }
+        } catch (error) {
+          console.error('Failed to update package:', error);
+          message.error('Paket güncellenirken bir hata oluştu');
+          return;
+        }
       } else {
-        setPackages([...packages, newPackage]);
-        message.success('Yeni paket oluşturuldu');
+        // Create new package
+        try {
+          const createCommand = packageService.mapToCreateCommand(packageData);
+          const newPackage = await packageService.create(createCommand);
+          
+          if (newPackage) {
+            message.success('Yeni paket başarıyla oluşturuldu');
+            // Reload packages to get new data
+            await loadPackages();
+          } else {
+            throw new Error('Oluşturma başarısız');
+          }
+        } catch (error) {
+          console.error('Failed to create package:', error);
+          message.error('Paket oluşturulurken bir hata oluştu');
+          return;
+        }
       }
 
       setIsModalVisible(false);
@@ -587,6 +534,26 @@ const PackagesPage: React.FC = () => {
       />
     );
   };
+
+  if (loading) {
+    return (
+      <PageContainer
+        header={{
+          title: 'Paket Yönetimi',
+          breadcrumb: {
+            items: [
+              { title: 'Ana Sayfa' },
+              { title: 'Paketler' },
+            ],
+          },
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Spin size="large" tip="Paketler yükleniyor..." />
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer
