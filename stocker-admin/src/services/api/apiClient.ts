@@ -62,6 +62,14 @@ class ApiClient {
         'Content-Type': 'application/json; charset=utf-8',
         'Accept': 'application/json',
       },
+      // Ensure proper UTF-8 handling
+      transformRequest: [(data, headers) => {
+        if (data && typeof data === 'object') {
+          // Don't transform the data, just stringify it
+          return JSON.stringify(data);
+        }
+        return data;
+      }],
     });
 
     this.setupInterceptors();
@@ -322,10 +330,6 @@ class ApiClient {
 
   async put<T = any>(url: string, data?: any): Promise<T> {
     return rateLimiter.throttle(url, async () => {
-      // Debug: Log what we're sending
-      console.log('PUT request data:', data);
-      console.log('PUT request JSON:', JSON.stringify(data));
-      
       const response = await this.client.put<ApiResponse<T>>(url, data);
       
       if (!response.data.success) {

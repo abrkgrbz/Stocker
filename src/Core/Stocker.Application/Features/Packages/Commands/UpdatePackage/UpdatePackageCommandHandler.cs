@@ -67,14 +67,18 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
                 maxApiCalls: 10000 // Default value
             );
 
+            // Decode HTML entities that might come from proxy/WAF
+            var decodedName = System.Net.WebUtility.HtmlDecode(request.Name);
+            var decodedDescription = System.Net.WebUtility.HtmlDecode(request.Description);
+            
             // Log before update
             _logger.LogInformation("Updating package entity with Name: {Name}, Description: {Description}", 
-                request.Name, request.Description);
+                decodedName, decodedDescription);
             
             // Use domain method to update
             package.Update(
-                name: request.Name,
-                description: request.Description,
+                name: decodedName,
+                description: decodedDescription,
                 basePrice: basePrice,
                 limits: limits,
                 trialDays: package.TrialDays, // Keep existing trial days

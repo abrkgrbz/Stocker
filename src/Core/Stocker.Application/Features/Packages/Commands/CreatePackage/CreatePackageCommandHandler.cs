@@ -48,13 +48,17 @@ public class CreatePackageCommandHandler : IRequestHandler<CreatePackageCommand,
                 maxApiCalls: 10000 // Default value
             );
 
+            // Decode HTML entities that might come from proxy/WAF
+            var decodedName = System.Net.WebUtility.HtmlDecode(request.Name);
+            var decodedDescription = System.Net.WebUtility.HtmlDecode(request.Description);
+            
             // Use factory method to create Package
             var package = Package.Create(
-                name: request.Name,
+                name: decodedName,
                 type: PackageType.Baslangic, // Default type
                 basePrice: basePrice,
                 limits: limits,
-                description: request.Description,
+                description: decodedDescription,
                 trialDays: 14, // Default trial days
                 displayOrder: 0,
                 isPublic: true
