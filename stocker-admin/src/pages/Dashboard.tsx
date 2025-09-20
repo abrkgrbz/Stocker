@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-white min-h-screen">
       {/* Real-time Features */}
       <NotificationCenter position="top-right" />
       <ConnectionStatus showDetails={true} />
@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-gray-900">
               Dashboard
               {latestDashboardUpdate && (
                 <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -145,20 +145,20 @@ const Dashboard: React.FC = () => {
                 </span>
               )}
             </h1>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-gray-600">
               Real-time overview of your system
             </p>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={isRealTimeEnabled}
                 onChange={(e) => setIsRealTimeEnabled(e.target.checked)}
-                className="form-checkbox h-4 w-4 text-blue-600"
+                className="w-4 h-4 text-blue-600 rounded"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Real-time Updates</span>
+              <span className="text-sm text-gray-700">Real-time Updates</span>
             </label>
             
             <button
@@ -174,60 +174,60 @@ const Dashboard: React.FC = () => {
       {/* Stats Grid */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Tenants</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {stats.totalTenants}
+                <p className="text-sm text-gray-600">Total Tenants</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {stats.totalTenants || 0}
                 </p>
                 <p className="text-xs text-green-600 mt-2">
-                  +{stats.newTenantsThisMonth} this month
+                  +{stats.newTenantsThisMonth || 0} this month
                 </p>
               </div>
               <span className="text-2xl">🏢</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {stats.activeUsers}
+                <p className="text-sm text-gray-600">Active Users</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {stats.activeUsers || 0}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  of {stats.totalUsers} total
+                  of {stats.totalUsers || 0} total
                 </p>
               </div>
               <span className="text-2xl">👥</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  ${stats.monthlyRevenue?.toLocaleString()}
+                <p className="text-sm text-gray-600">Monthly Revenue</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  ${stats.monthlyRevenue?.toLocaleString() || 0}
                 </p>
                 <p className="text-xs text-green-600 mt-2">
-                  {stats.growthRate > 0 ? '+' : ''}{stats.growthRate}% growth
+                  {stats.growthRate > 0 ? '+' : ''}{stats.growthRate || 0}% growth
                 </p>
               </div>
               <span className="text-2xl">💰</span>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active Tenants</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {stats.activeTenants}
+                <p className="text-sm text-gray-600">Active Tenants</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {stats.activeTenants || 0}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  {((stats.activeTenants / stats.totalTenants) * 100).toFixed(0)}% active
+                  {stats.totalTenants ? ((stats.activeTenants / stats.totalTenants) * 100).toFixed(0) : 0}% active
                 </p>
               </div>
               <span className="text-2xl">✅</span>
@@ -239,43 +239,43 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* System Health */}
         {systemHealth && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               System Health
             </h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">API</span>
+                <span className="text-sm text-gray-600">API</span>
                 <span className={`font-medium ${getHealthColor(systemHealth.apiStatus)}`}>
                   {getHealthIcon(systemHealth.apiStatus)} {systemHealth.apiStatus}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Database</span>
+                <span className="text-sm text-gray-600">Database</span>
                 <span className={`font-medium ${getHealthColor(systemHealth.databaseStatus)}`}>
                   {getHealthIcon(systemHealth.databaseStatus)} {systemHealth.databaseStatus}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Cache</span>
+                <span className="text-sm text-gray-600">Cache</span>
                 <span className={`font-medium ${getHealthColor(systemHealth.cacheStatus)}`}>
                   {getHealthIcon(systemHealth.cacheStatus)} {systemHealth.cacheStatus}
                 </span>
               </div>
               
-              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-3 border-t border-gray-200">
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">CPU Usage</span>
-                    <span>{systemHealth.cpuUsage}%</span>
+                    <span>{systemHealth.cpuUsage || 0}%</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Memory</span>
-                    <span>{systemHealth.memoryUsage}%</span>
+                    <span>{systemHealth.memoryUsage || 0}%</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Uptime</span>
-                    <span>{systemHealth.uptime}</span>
+                    <span>{systemHealth.uptime || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -284,8 +284,8 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Recent Tenants */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Tenants
             {latestTenantUpdate && (
               <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
@@ -294,31 +294,37 @@ const Dashboard: React.FC = () => {
             )}
           </h2>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {recentTenants.map((tenant) => (
-              <div key={tenant.id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {tenant.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {tenant.packageName} • {tenant.userCount} users
-                  </p>
+            {recentTenants && recentTenants.length > 0 ? (
+              recentTenants.map((tenant) => (
+                <div key={tenant.id} className="flex items-center justify-between p-2 hover:bg-white rounded">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {tenant.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {tenant.packageName || 'Basic'} • {tenant.userCount || 0} users
+                    </p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    tenant.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {tenant.status}
+                  </span>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  tenant.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {tenant.status}
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No tenants available
+              </p>
+            )}
           </div>
         </div>
 
         {/* User Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Live Activity
             <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
               {activities.length} events
@@ -327,7 +333,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {activities.slice(0, 10).map((activity, index) => (
               <div key={index} className="text-xs border-l-2 border-blue-400 pl-3 py-1">
-                <p className="font-medium text-gray-900 dark:text-white">
+                <p className="font-medium text-gray-900">
                   {activity.userName} - {activity.action}
                 </p>
                 <p className="text-gray-500">
