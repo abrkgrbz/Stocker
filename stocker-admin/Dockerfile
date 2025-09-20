@@ -41,7 +41,9 @@ ENV VITE_COOKIE_SAME_SITE=strict
 
 # Clear any previous builds and build with production settings
 RUN rm -rf dist && \
-    npm run build
+    npm run build && \
+    echo "Build completed, checking dist folder:" && \
+    ls -la dist/
 
 # Production stage
 FROM nginx:alpine

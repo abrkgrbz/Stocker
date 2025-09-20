@@ -6,6 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/', // Ensure assets are loaded from root
   plugins: [
     react(),
     visualizer({
