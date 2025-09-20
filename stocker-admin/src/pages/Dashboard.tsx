@@ -22,6 +22,7 @@ import { useAuthStore } from '../stores/authStore';
 import { dashboardService } from '../services/api/dashboardService';
 import { useDashboardSignalR, useRealtimeTenants, useSystemHealthMonitor } from '../hooks/useDashboardSignalR';
 import { signalRService } from '../services/signalr/signalRService';
+import { tokenStorage } from '../utils/tokenStorage';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -79,9 +80,12 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     loadDashboardData();
     
-    // Connect to SignalR if not connected
-    if (!signalRService.isConnected()) {
-      signalRService.connect();
+    // Connect to SignalR if not connected and user is authenticated
+    const token = tokenStorage.getToken();
+    if (token && !signalRService.isConnected()) {
+      signalRService.connect().catch(error => {
+        console.warn('SignalR connection failed:', error);
+      });
     }
   }, []);
   

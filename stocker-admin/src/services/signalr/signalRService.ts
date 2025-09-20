@@ -69,12 +69,11 @@ class SignalRService {
 
   private initializeHubs() {
     const baseUrl = this.getBaseUrl();
-    const token = tokenStorage.getToken();
 
     // Initialize Notification Hub with fallback transport methods
     this.notificationHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/notification`, {
-        accessTokenFactory: () => token || '',
+        accessTokenFactory: () => tokenStorage.getToken() || '',
         // Use only SSE and LongPolling - no WebSockets due to proxy issues
         transport: signalR.HttpTransportType.ServerSentEvents | 
                   signalR.HttpTransportType.LongPolling,
@@ -87,6 +86,7 @@ class SignalRService {
     // Initialize Validation Hub (for real-time validation)
     this.validationHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/validation`, {
+        accessTokenFactory: () => tokenStorage.getToken() || '',
         transport: signalR.HttpTransportType.ServerSentEvents | 
                   signalR.HttpTransportType.LongPolling,
         skipNegotiation: false,
@@ -98,7 +98,7 @@ class SignalRService {
     // Initialize Chat Hub (for support chat)
     this.chatHub = new signalR.HubConnectionBuilder()
       .withUrl(`${baseUrl}/hubs/chat`, {
-        accessTokenFactory: () => token || '',
+        accessTokenFactory: () => tokenStorage.getToken() || '',
         transport: signalR.HttpTransportType.ServerSentEvents | 
                   signalR.HttpTransportType.LongPolling,
         skipNegotiation: false,
