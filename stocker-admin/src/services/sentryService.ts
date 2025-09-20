@@ -92,7 +92,7 @@ export class SentryService {
           }),
           
           // Session replay
-          new Sentry.Replay({
+          Sentry.replayIntegration({
             maskAllText: false,
             blockAllMedia: false,
             // Mask sensitive data
@@ -343,15 +343,18 @@ export class SentryService {
   startTransaction(
     name: string,
     op: string = 'navigation'
-  ): Sentry.Transaction | undefined {
+  ): any {
     if (!this.initialized) return;
     
-    return Sentry.startTransaction({
+    // Use startSpan for newer Sentry versions
+    return Sentry.startSpan({
       name,
       op,
-      tags: {
+      attributes: {
         module: 'stocker-admin'
       }
+    }, () => {
+      // Span callback
     });
   }
 

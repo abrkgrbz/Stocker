@@ -12,7 +12,7 @@ interface RequestQueue {
 
 class RateLimiter {
   private requests: Map<string, number[]> = new Map();
-  private queue: RequestQueue[] = [];
+  private requestQueue: RequestQueue[] = [];
   private processing = false;
   
   private readonly defaultConfig: RateLimitConfig = {
@@ -120,7 +120,7 @@ class RateLimiter {
 
   async queue<T>(endpoint: string, requestFn: () => Promise<T>): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.queue.push({
+      this.requestQueue.push({
         request: () => this.throttle(endpoint, requestFn),
         resolve,
         reject
@@ -131,14 +131,14 @@ class RateLimiter {
   }
 
   private async processQueue(): Promise<void> {
-    if (this.processing || this.queue.length === 0) {
+    if (this.processing || this.requestQueue.length === 0) {
       return;
     }
 
     this.processing = true;
 
-    while (this.queue.length > 0) {
-      const item = this.queue.shift();
+    while (this.requestQueue.length > 0) {
+      const item = this.requestQueue.shift();
       if (!item) continue;
 
       try {
@@ -149,7 +149,7 @@ class RateLimiter {
       }
 
       // Small delay between queued requests
-      if (this.queue.length > 0) {
+      if (this.requestQueue.length > 0) {
         await this.delay(100);
       }
     }
@@ -186,7 +186,7 @@ class RateLimiter {
   // Clear all rate limit history
   reset(): void {
     this.requests.clear();
-    this.queue = [];
+    this.requestQueue = [];
     this.processing = false;
   }
 
