@@ -1,379 +1,409 @@
-import React, { useState, useEffect } from 'react';
-import { useSignalRDashboard, useSignalRTenantUpdates, useSignalRUserActivity } from '../hooks/useSignalR';
+import React, { useEffect, useState } from 'react';
+import { Card, Row, Col, Statistic, Table, Tag, Progress, Space, Button, List, Avatar, Typography, Spin } from 'antd';
+import {
+  TeamOutlined,
+  ShopOutlined,
+  DollarOutlined,
+  RiseOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  SyncOutlined,
+  DatabaseOutlined,
+  CloudServerOutlined,
+  ApiOutlined,
+  UserAddOutlined,
+  ShoppingCartOutlined
+} from '@ant-design/icons';
+import { Line, Column, Pie } from '@ant-design/charts';
+import { useAuthStore } from '../stores/authStore';
 import { dashboardService } from '../services/api/dashboardService';
-import { useLoadingStore, LOADING_KEYS } from '../stores/loadingStore';
-import { ConnectionStatus } from '../components/SignalR/ConnectionStatus';
-import { NotificationCenter } from '../components/Notifications/NotificationCenter';
+
+const { Title, Text, Paragraph } = Typography;
+
+interface TenantInfo {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive' | 'suspended';
+  package: string;
+  userCount: number;
+  createdAt: string;
+}
+
+interface SystemHealth {
+  service: string;
+  status: 'healthy' | 'degraded' | 'down';
+  uptime: string;
+  responseTime: number;
+}
 
 const Dashboard: React.FC = () => {
-  const { registerUpdateHandler, latestDashboardUpdate } = useSignalRDashboard();
-  const { latestUpdate: latestTenantUpdate } = useSignalRTenantUpdates();
-  const { activities } = useSignalRUserActivity();
-  const { setLoading, isLoading } = useLoadingStore();
-  
-  // Initialize with mock data for testing
-  const [stats, setStats] = useState<any>({
-    totalTenants: 45,
-    newTenantsThisMonth: 8,
-    activeUsers: 1234,
-    totalUsers: 1500,
-    monthlyRevenue: 125000,
-    growthRate: 15.5,
-    activeTenants: 42
+  const user = useAuthStore((state) => state.user);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalTenants: 0,
+    activeTenants: 0,
+    totalUsers: 0,
+    monthlyRevenue: 0,
+    growthRate: 0,
+    newTenantsThisMonth: 0,
+    activeSubscriptions: 0,
+    pendingPayments: 0
   });
   
-  const [revenueData, setRevenueData] = useState<any>(null);
-  
-  const [systemHealth, setSystemHealth] = useState<any>({
-    apiStatus: 'healthy',
-    databaseStatus: 'healthy',
-    cacheStatus: 'healthy',
-    cpuUsage: 45,
-    memoryUsage: 62,
-    uptime: '15 days'
-  });
-  
-  const [recentTenants, setRecentTenants] = useState<any[]>([
-    { id: '1', name: 'Acme Corp', packageName: 'Premium', userCount: 25, status: 'active' },
-    { id: '2', name: 'Tech Solutions', packageName: 'Basic', userCount: 10, status: 'active' },
-    { id: '3', name: 'Global Industries', packageName: 'Enterprise', userCount: 100, status: 'active' }
-  ]);
-  const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true);
+  const [recentTenants, setRecentTenants] = useState<TenantInfo[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [tenantGrowthData, setTenantGrowthData] = useState<any[]>([]);
+  const [packageDistribution, setPackageDistribution] = useState<any[]>([]);
 
-  // Load initial data
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  // Register real-time update handlers
-  useEffect(() => {
-    if (!isRealTimeEnabled) return;
-
-    const unsubscribeStats = registerUpdateHandler('stats', (data) => {
-      setStats(data);
-      console.log('📊 Real-time stats update:', data);
-    });
-
-    const unsubscribeRevenue = registerUpdateHandler('revenue', (data) => {
-      setRevenueData(data);
-      console.log('💰 Real-time revenue update:', data);
-    });
-
-    const unsubscribeTenants = registerUpdateHandler('tenants', (data) => {
-      setRecentTenants(data);
-      console.log('🏢 Real-time tenants update:', data);
-    });
-
-    return () => {
-      unsubscribeStats();
-      unsubscribeRevenue();
-      unsubscribeTenants();
-    };
-  }, [registerUpdateHandler, isRealTimeEnabled]);
-
-  // React to tenant status changes
-  useEffect(() => {
-    if (latestTenantUpdate) {
-      // Update tenant list if status changed
-      loadRecentTenants();
-      
-      // Show notification (handled by NotificationCenter)
-      console.log('🔄 Tenant status updated:', latestTenantUpdate);
-    }
-  }, [latestTenantUpdate]);
-
   const loadDashboardData = async () => {
-    setLoading(LOADING_KEYS.DASHBOARD_STATS, true);
-    
+    setLoading(true);
     try {
-      // Load data sequentially with small delays to avoid rate limiting
-      const statsData = await dashboardService.getStats();
-      if (statsData) setStats(statsData);
+      // Simulated data - replace with actual API calls
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const revenue = await dashboardService.getRevenueOverview();
-      if (revenue) setRevenueData(revenue);
-      
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const health = await dashboardService.getSystemHealth();
-      if (health) setSystemHealth(health);
-      
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const tenants = await dashboardService.getRecentTenants();
-      if (tenants && tenants.length > 0) setRecentTenants(tenants);
+      // Set mock data for demonstration
+      setStats({
+        totalTenants: 156,
+        activeTenants: 142,
+        totalUsers: 3847,
+        monthlyRevenue: 48750,
+        growthRate: 12.5,
+        newTenantsThisMonth: 18,
+        activeSubscriptions: 142,
+        pendingPayments: 7
+      });
+
+      setRecentTenants([
+        { id: '1', name: 'ABC Teknoloji', status: 'active', package: 'Premium', userCount: 45, createdAt: '2024-01-15' },
+        { id: '2', name: 'XYZ Market', status: 'active', package: 'Basic', userCount: 12, createdAt: '2024-01-14' },
+        { id: '3', name: 'Demo Şirket', status: 'inactive', package: 'Trial', userCount: 5, createdAt: '2024-01-13' },
+        { id: '4', name: 'Test AŞ', status: 'active', package: 'Enterprise', userCount: 125, createdAt: '2024-01-12' },
+        { id: '5', name: 'Örnek Ltd', status: 'suspended', package: 'Basic', userCount: 8, createdAt: '2024-01-11' }
+      ]);
+
+      setSystemHealth([
+        { service: 'API Server', status: 'healthy', uptime: '99.95%', responseTime: 45 },
+        { service: 'Database', status: 'healthy', uptime: '99.99%', responseTime: 12 },
+        { service: 'Cache Server', status: 'healthy', uptime: '100%', responseTime: 2 },
+        { service: 'File Storage', status: 'degraded', uptime: '98.5%', responseTime: 156 }
+      ]);
+
+      // Revenue trend data for last 7 days
+      setRevenueData([
+        { date: '2024-01-09', revenue: 6500 },
+        { date: '2024-01-10', revenue: 7200 },
+        { date: '2024-01-11', revenue: 6800 },
+        { date: '2024-01-12', revenue: 7500 },
+        { date: '2024-01-13', revenue: 5900 },
+        { date: '2024-01-14', revenue: 8200 },
+        { date: '2024-01-15', revenue: 7650 }
+      ]);
+
+      // Tenant growth data for last 6 months
+      setTenantGrowthData([
+        { month: 'Ağustos', count: 89 },
+        { month: 'Eylül', count: 102 },
+        { month: 'Ekim', count: 115 },
+        { month: 'Kasım', count: 128 },
+        { month: 'Aralık', count: 138 },
+        { month: 'Ocak', count: 156 }
+      ]);
+
+      // Package distribution
+      setPackageDistribution([
+        { type: 'Basic', value: 65 },
+        { type: 'Premium', value: 52 },
+        { type: 'Enterprise', value: 25 },
+        { type: 'Trial', value: 14 }
+      ]);
+
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-      // Keep mock data on error
-      console.log('Using mock data for display');
+      console.error('Dashboard data loading failed:', error);
     } finally {
-      setLoading(LOADING_KEYS.DASHBOARD_STATS, false);
+      setLoading(false);
     }
   };
 
-  const loadRecentTenants = async () => {
-    try {
-      const tenants = await dashboardService.getRecentTenants();
-      setRecentTenants(tenants);
-    } catch (error) {
-      console.error('Failed to load recent tenants:', error);
+  const tenantColumns = [
+    {
+      title: 'Firma Adı',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Paket',
+      dataIndex: 'package',
+      key: 'package',
+      render: (pkg: string) => {
+        const color = pkg === 'Enterprise' ? 'gold' : pkg === 'Premium' ? 'blue' : pkg === 'Trial' ? 'green' : 'default';
+        return <Tag color={color}>{pkg}</Tag>;
+      }
+    },
+    {
+      title: 'Kullanıcı',
+      dataIndex: 'userCount',
+      key: 'userCount',
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const color = status === 'active' ? 'green' : status === 'suspended' ? 'orange' : 'red';
+        const icon = status === 'active' ? <CheckCircleOutlined /> : 
+                    status === 'suspended' ? <ExclamationCircleOutlined /> : 
+                    <ClockCircleOutlined />;
+        return <Tag icon={icon} color={color}>{status === 'active' ? 'Aktif' : status === 'suspended' ? 'Askıda' : 'Pasif'}</Tag>;
+      }
+    }
+  ];
+
+  const revenueChartConfig = {
+    data: revenueData,
+    xField: 'date',
+    yField: 'revenue',
+    smooth: true,
+    height: 200,
+    xAxis: {
+      label: {
+        formatter: (text: string) => {
+          const date = new Date(text);
+          return `${date.getDate()}/${date.getMonth() + 1}`;
+        }
+      }
+    },
+    yAxis: {
+      label: {
+        formatter: (text: string) => `₺${text}`
+      }
+    },
+    point: {
+      size: 3,
+      shape: 'circle',
+    },
+    tooltip: {
+      formatter: (datum: any) => {
+        return {
+          name: 'Gelir',
+          value: `₺${datum.revenue.toLocaleString('tr-TR')}`
+        };
+      }
     }
   };
 
-  const getHealthColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-500';
-      case 'degraded': return 'text-yellow-500';
-      case 'down': return 'text-red-500';
-      default: return 'text-gray-500';
+  const tenantGrowthConfig = {
+    data: tenantGrowthData,
+    xField: 'month',
+    yField: 'count',
+    height: 200,
+    color: '#1890ff',
+    columnStyle: {
+      radius: [8, 8, 0, 0],
+    },
+    label: {
+      position: 'top',
+      style: {
+        fill: '#666',
+      }
     }
   };
 
-  const getHealthIcon = (status: string) => {
-    switch (status) {
-      case 'healthy': return '✅';
-      case 'degraded': return '⚠️';
-      case 'down': return '❌';
-      default: return '⚪';
-    }
+  const packageDistConfig = {
+    data: packageDistribution,
+    angleField: 'value',
+    colorField: 'type',
+    radius: 0.8,
+    height: 200,
+    label: {
+      text: 'value',
+      style: {
+        fontSize: 14,
+        fontWeight: 'bold',
+      }
+    },
+    legend: {
+      position: 'bottom',
+    },
+    interactions: [
+      {
+        type: 'element-active',
+      }
+    ],
   };
 
-  if (isLoading(LOADING_KEYS.DASHBOARD_STATS)) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip="Dashboard yükleniyor..." />
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-white min-h-screen">
-      {/* Real-time Features */}
-      <NotificationCenter position="top-right" />
-      <ConnectionStatus showDetails={true} />
-      
+    <div style={{ padding: '24px' }}>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Dashboard
-              {latestDashboardUpdate && (
-                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  Live
+      <div style={{ marginBottom: 24 }}>
+        <Title level={2}>Hoş Geldiniz, {user?.fullName || user?.username}! 👋</Title>
+        <Paragraph>Stocker SaaS platformunun genel durumu ve istatistikleri</Paragraph>
+      </div>
+
+      {/* Statistics Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Toplam Firma"
+              value={stats.totalTenants}
+              prefix={<ShopOutlined style={{ color: '#1890ff' }} />}
+              suffix={
+                <span style={{ fontSize: 14, color: '#52c41a' }}>
+                  +{stats.newTenantsThisMonth} bu ay
                 </span>
+              }
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Aktif Kullanıcı"
+              value={stats.totalUsers}
+              prefix={<TeamOutlined style={{ color: '#52c41a' }} />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Aylık Gelir"
+              value={stats.monthlyRevenue}
+              prefix={<DollarOutlined style={{ color: '#faad14' }} />}
+              suffix="₺"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Büyüme Oranı"
+              value={stats.growthRate}
+              prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
+              suffix="%"
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Charts Row */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={8}>
+          <Card title="Gelir Trendi (Son 7 Gün)" bordered={false}>
+            <Line {...revenueChartConfig} />
+          </Card>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card title="Firma Büyümesi (Son 6 Ay)" bordered={false}>
+            <Column {...tenantGrowthConfig} />
+          </Card>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card title="Paket Dağılımı" bordered={false}>
+            <Pie {...packageDistConfig} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Tables and Lists Row */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={14}>
+          <Card 
+            title="Son Eklenen Firmalar" 
+            bordered={false}
+            extra={<Button type="link">Tümünü Gör</Button>}
+          >
+            <Table 
+              columns={tenantColumns} 
+              dataSource={recentTenants} 
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} lg={10}>
+          <Card 
+            title="Sistem Durumu" 
+            bordered={false}
+            extra={<SyncOutlined spin style={{ color: '#52c41a' }} />}
+          >
+            <List
+              dataSource={systemHealth}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={
+                      <Avatar 
+                        style={{ 
+                          backgroundColor: item.status === 'healthy' ? '#52c41a' : 
+                                         item.status === 'degraded' ? '#faad14' : '#ff4d4f' 
+                        }}
+                        icon={
+                          item.service.includes('API') ? <ApiOutlined /> :
+                          item.service.includes('Database') ? <DatabaseOutlined /> :
+                          item.service.includes('Cache') ? <CloudServerOutlined /> :
+                          <CloudServerOutlined />
+                        }
+                      />
+                    }
+                    title={
+                      <Space>
+                        <Text>{item.service}</Text>
+                        <Tag color={item.status === 'healthy' ? 'green' : item.status === 'degraded' ? 'orange' : 'red'}>
+                          {item.status === 'healthy' ? 'Sağlıklı' : item.status === 'degraded' ? 'Düşük' : 'Hatalı'}
+                        </Tag>
+                      </Space>
+                    }
+                    description={
+                      <Space size="large">
+                        <Text type="secondary">Uptime: {item.uptime}</Text>
+                        <Text type="secondary">Response: {item.responseTime}ms</Text>
+                      </Space>
+                    }
+                  />
+                </List.Item>
               )}
-            </h1>
-            <p className="mt-1 text-gray-600">
-              Real-time overview of your system
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isRealTimeEnabled}
-                onChange={(e) => setIsRealTimeEnabled(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded"
-              />
-              <span className="text-sm text-gray-700">Real-time Updates</span>
-            </label>
-            
-            <button
-              onClick={loadDashboardData}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
-      </div>
+            />
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Stats Grid */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600">Total Tenants</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalTenants || 0}
-                </p>
-                <p className="text-xs text-green-600 mt-2">
-                  +{stats.newTenantsThisMonth || 0} this month
-                </p>
-              </div>
-              <span className="text-2xl">🏢</span>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.activeUsers || 0}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  of {stats.totalUsers || 0} total
-                </p>
-              </div>
-              <span className="text-2xl">👥</span>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  ${stats.monthlyRevenue?.toLocaleString() || 0}
-                </p>
-                <p className="text-xs text-green-600 mt-2">
-                  {stats.growthRate > 0 ? '+' : ''}{stats.growthRate || 0}% growth
-                </p>
-              </div>
-              <span className="text-2xl">💰</span>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600">Active Tenants</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.activeTenants || 0}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {stats.totalTenants ? ((stats.activeTenants / stats.totalTenants) * 100).toFixed(0) : 0}% active
-                </p>
-              </div>
-              <span className="text-2xl">✅</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* System Health */}
-        {systemHealth && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              System Health
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">API</span>
-                <span className={`font-medium ${getHealthColor(systemHealth.apiStatus)}`}>
-                  {getHealthIcon(systemHealth.apiStatus)} {systemHealth.apiStatus}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Database</span>
-                <span className={`font-medium ${getHealthColor(systemHealth.databaseStatus)}`}>
-                  {getHealthIcon(systemHealth.databaseStatus)} {systemHealth.databaseStatus}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Cache</span>
-                <span className={`font-medium ${getHealthColor(systemHealth.cacheStatus)}`}>
-                  {getHealthIcon(systemHealth.cacheStatus)} {systemHealth.cacheStatus}
-                </span>
-              </div>
-              
-              <div className="pt-3 border-t border-gray-200">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">CPU Usage</span>
-                    <span>{systemHealth.cpuUsage || 0}%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Memory</span>
-                    <span>{systemHealth.memoryUsage || 0}%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Uptime</span>
-                    <span>{systemHealth.uptime || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Tenants */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Tenants
-            {latestTenantUpdate && (
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                Updated
-              </span>
-            )}
-          </h2>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {recentTenants && recentTenants.length > 0 ? (
-              recentTenants.map((tenant) => (
-                <div key={tenant.id} className="flex items-center justify-between p-2 hover:bg-white rounded">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {tenant.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {tenant.packageName || 'Basic'} • {tenant.userCount || 0} users
-                    </p>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    tenant.status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {tenant.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No tenants available
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* User Activity */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Live Activity
-            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-              {activities.length} events
-            </span>
-          </h2>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {activities.slice(0, 10).map((activity, index) => (
-              <div key={index} className="text-xs border-l-2 border-blue-400 pl-3 py-1">
-                <p className="font-medium text-gray-900">
-                  {activity.userName} - {activity.action}
-                </p>
-                <p className="text-gray-500">
-                  {new Date(activity.timestamp).toLocaleTimeString()}
-                </p>
-              </div>
-            ))}
-            {activities.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No recent activity
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Quick Actions */}
+      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+        <Col span={24}>
+          <Card title="Hızlı İşlemler" bordered={false}>
+            <Space size="large">
+              <Button type="primary" icon={<UserAddOutlined />} size="large">
+                Yeni Firma Ekle
+              </Button>
+              <Button icon={<TeamOutlined />} size="large">
+                Kullanıcı Yönetimi
+              </Button>
+              <Button icon={<ShoppingCartOutlined />} size="large">
+                Paket Yönetimi
+              </Button>
+              <Button icon={<DollarOutlined />} size="large">
+                Faturalar
+              </Button>
+            </Space>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };
