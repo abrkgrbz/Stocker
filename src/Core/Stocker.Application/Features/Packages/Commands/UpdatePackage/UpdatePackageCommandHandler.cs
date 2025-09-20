@@ -25,6 +25,19 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
     {
         try
         {
+            // Log the incoming request to see what data we're receiving
+            _logger.LogInformation("Received UpdatePackageCommand: {@Command}", new 
+            {
+                request.Id,
+                request.Name,
+                request.Description,
+                request.BasePrice,
+                request.BillingCycle,
+                request.MaxUsers,
+                request.MaxStorage,
+                request.IsActive
+            });
+            
             var package = await _context.Packages
                 .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 

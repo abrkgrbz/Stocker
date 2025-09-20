@@ -88,6 +88,17 @@ public class PackagesController : MasterControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePackageCommand command)
     {
         _logger.LogInformation("Updating package ID: {PackageId}", id);
+        _logger.LogInformation("Received UpdatePackageCommand in Controller: {@Command}", new 
+        {
+            command.Id,
+            command.Name,
+            command.Description,
+            command.BasePrice,
+            command.BillingCycle,
+            command.MaxUsers,
+            command.MaxStorage,
+            command.IsActive
+        });
         
         command.Id = id;
         command.ModifiedBy = CurrentUserId;
