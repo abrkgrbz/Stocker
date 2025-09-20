@@ -228,7 +228,7 @@ class ApiClient {
 
   private async refreshAccessToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
     const response = await axios.post<ApiResponse<AuthResponse>>(
-      `${this.client.defaults.baseURL}/api/auth/refresh-token`,
+      `${this.client.defaults.baseURL}/api/master/auth/refresh`,
       { refreshToken }
     );
     
@@ -254,11 +254,18 @@ class ApiClient {
   // Public API methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Backend returns AuthResponse directly on success, not wrapped in ApiResponse
-      const response = await this.client.post<AuthResponse>('/api/auth/login', credentials);
-      return response.data;
+      // Use master auth endpoint for admin login
+      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/login', credentials);
+      
+      // Check if the response is successful
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      // Handle error response
+      throw new AppError(response.data.message || 'Login failed', ERROR_CODES.INVALID_CREDENTIALS);
     } catch (error: any) {
-      // On error, backend returns { success: false, message: string }
+      // Handle network or other errors
       if (error.response?.data?.message) {
         throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
       }
@@ -268,7 +275,7 @@ class ApiClient {
 
   async logout(): Promise<void> {
     try {
-      await this.client.post('/api/auth/logout');
+      await this.client.post('/api/master/auth/logout');
     } catch (error) {
       // Logout should always succeed locally even if API call fails
       console.error('Logout API call failed:', error);

@@ -42,6 +42,7 @@ const SettingsPage = lazy(() => import('./pages/Settings'));
 const MonitoringPage = lazy(() => import('./pages/Monitoring'));
 const SupportPage = lazy(() => import('./pages/Support'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogs'));
+const ApiStatusPage = lazy(() => import('./pages/ApiStatus'));
 
 // Loading component
 const PageLoader: React.FC = () => (
@@ -246,6 +247,11 @@ function App() {
           <Route path="audit-logs" element={
             <Suspense fallback={<PageLoader />}>
               <AuditLogsPage />
+            </Suspense>
+          } />
+          <Route path="api-status" element={
+            <Suspense fallback={<PageLoader />}>
+              <ApiStatusPage />
             </Suspense>
           } />
         </Route>
