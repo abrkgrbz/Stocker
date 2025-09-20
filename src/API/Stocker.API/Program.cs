@@ -120,6 +120,7 @@ builder.Services.AddCors(options =>
                     "https://stoocker.app",
                     "https://www.stoocker.app",
                     "https://api.stoocker.app",
+                    "https://admin.stoocker.app",
                     "https://master.stoocker.app",
                     "https://abg-teknoloji.stoocker.app"
                   )
