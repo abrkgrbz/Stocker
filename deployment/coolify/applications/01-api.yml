@@ -160,17 +160,6 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       
-      # CORS headers - handle preflight and actual requests
-      - "traefik.http.middlewares.api-cors.headers.browserXssFilter=true"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolexposeheaders=*"
-      # List all allowed origins
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://admin.stoocker.app,https://stoocker.app,https://www.stoocker.app,https://master.stoocker.app"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
-      
       # UTF-8 encoding headers to prevent HTML entity encoding
       - "traefik.http.middlewares.api-headers.headers.customrequestheaders.Content-Type=application/json; charset=utf-8"
       - "traefik.http.middlewares.api-headers.headers.customresponseheaders.Content-Type=application/json; charset=utf-8"
@@ -178,8 +167,8 @@ services:
       # Disable compression that might cause encoding issues
       - "traefik.http.middlewares.api-compress.compress=false"
       
-      # Apply all middlewares to HTTPS router
-      - "traefik.http.routers.api-secure.middlewares=api-cors,api-headers,api-compress"
+      # Apply middlewares to HTTPS router (NO CORS - handled by backend)
+      - "traefik.http.routers.api-secure.middlewares=api-headers,api-compress"
       
       # Coolify labels
       - "coolify.managed=true"
