@@ -146,6 +146,7 @@ class PackageService {
    */
   async update(id: string, command: UpdatePackageCommand): Promise<boolean> {
     try {
+      console.log('Sending update command:', JSON.stringify(command, null, 2));
       const response = await apiClient.put<boolean>(`${this.basePath}/${id}`, command);
       return response === true;
     } catch (error) {
