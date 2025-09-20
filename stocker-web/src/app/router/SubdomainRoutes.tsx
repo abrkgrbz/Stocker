@@ -21,8 +21,18 @@ const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen/
  * Handles both public auth routes and private tenant routes
  */
 export const SubdomainRoutes: React.FC = () => {
-  const { isAuthenticated, user, isInitialized } = useSecureAuthStore();
+  const { isAuthenticated, user, isInitialized, initializeAuth } = useSecureAuthStore();
   const [isCompanySetupComplete, setIsCompanySetupComplete] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Initialize auth only if we're not on a login page
+    const currentPath = window.location.pathname;
+    const isLoginPage = currentPath === '/' || currentPath === '/login' || currentPath === '/forgot-password';
+    
+    if (!isInitialized && !isLoginPage) {
+      initializeAuth();
+    }
+  }, [isInitialized, initializeAuth]);
 
   useEffect(() => {
     // Check if company setup is complete
@@ -92,10 +102,7 @@ export const SubdomainRoutes: React.FC = () => {
       <Route path="/" element={<PublicLayout />}>
         <Route index element={
           isAuthenticated === true ? <Navigate to="/app" replace /> : 
-          isAuthenticated === false ? <TenantLogin /> : 
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <Spin size="large" tip="Kontrol ediliyor..." />
-          </div>
+          <TenantLogin />
         } />
         <Route path="login" element={
           isAuthenticated === true ? <Navigate to="/app" replace /> : <TenantLogin />

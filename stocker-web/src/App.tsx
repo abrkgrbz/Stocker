@@ -70,7 +70,12 @@ function App() {
   useEffect(() => {
     // Initialize auth state on app load
     // Only run once on mount, not on every render
-    if (!isInitialized) {
+    // Skip initialization on public routes to avoid unnecessary auth checks
+    const currentPath = window.location.pathname;
+    const publicPaths = ['/login', '/register', '/forgot-password', '/verify-email', '/pricing', '/blog', '/training'];
+    const isPublicRoute = publicPaths.some(path => currentPath.startsWith(path)) || currentPath === '/';
+    
+    if (!isInitialized && !isPublicRoute) {
       initializeAuth();
     }
   }, []); // Empty dependency array - only run on mount
