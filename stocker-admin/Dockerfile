@@ -24,9 +24,21 @@ RUN echo "=== Checking current directory ===" && \
     echo "=== Checking features ===" && \
     ls -la src/features/ || echo "features not found"
 
-# Build the application
+# Set production environment variables for build
 ENV NODE_ENV=production
 ENV VITE_API_URL=https://api.stoocker.app
+ENV VITE_API_TIMEOUT=30000
+ENV VITE_APP_NAME="Stocker Admin"
+ENV VITE_APP_VERSION=1.0.0
+ENV VITE_APP_ENVIRONMENT=production
+ENV VITE_ENABLE_MOCK_AUTH=false
+ENV VITE_ENABLE_SENTRY=false
+ENV VITE_ENABLE_SIGNALR=true
+ENV VITE_ENABLE_TENANT_SWITCH=true
+ENV VITE_ENABLE_2FA=true
+ENV VITE_COOKIE_SECURE=true
+ENV VITE_COOKIE_SAME_SITE=strict
+
 # Clear any previous builds and build with production settings
 RUN rm -rf dist && \
     npm run build

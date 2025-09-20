@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient, dashboardService, tenantService, userService } from '../services/api';
+import { apiClient } from '../services/api/apiClient';
+import { dashboardService } from '../services/api/dashboardService';
+import { tenantService } from '../services/api/tenantService';
+import { userService } from '../services/api/userService';
 import { useLoadingStore, LOADING_KEYS } from '../stores/loadingStore';
 
 interface ApiEndpoint {

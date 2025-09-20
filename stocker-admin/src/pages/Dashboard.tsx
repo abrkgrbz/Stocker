@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSignalRDashboard, useSignalRTenantUpdates, useSignalRUserActivity } from '../hooks/useSignalR';
-import { dashboardService } from '../services/api';
+import { dashboardService } from '../services/api/dashboardService';
 import { useLoadingStore, LOADING_KEYS } from '../stores/loadingStore';
 import { ConnectionStatus } from '../components/SignalR/ConnectionStatus';
 import { NotificationCenter } from '../components/Notifications/NotificationCenter';
