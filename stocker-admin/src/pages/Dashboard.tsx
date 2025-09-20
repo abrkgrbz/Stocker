@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Progress, Space, Button, List, Avatar, Typography, Spin } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Progress, Space, Button, List, Avatar, Typography, Spin, Badge, Tooltip } from 'antd';
 import {
   TeamOutlined,
   ShopOutlined,
@@ -13,11 +13,15 @@ import {
   CloudServerOutlined,
   ApiOutlined,
   UserAddOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  WifiOutlined,
+  DisconnectOutlined
 } from '@ant-design/icons';
 import { Line, Column, Pie } from '@ant-design/charts';
 import { useAuthStore } from '../stores/authStore';
 import { dashboardService } from '../services/api/dashboardService';
+import { useDashboardSignalR, useRealtimeTenants, useSystemHealthMonitor } from '../hooks/useDashboardSignalR';
+import { signalRService } from '../services/signalr/signalRService';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -40,6 +44,21 @@ interface SystemHealth {
 const Dashboard: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const [loading, setLoading] = useState(true);
+  
+  // SignalR hooks
+  const { 
+    isConnected, 
+    stats: realtimeStats, 
+    systemHealth: realtimeHealth, 
+    revenueUpdates, 
+    recentActivity,
+    requestDashboardRefresh 
+  } = useDashboardSignalR();
+  
+  const { tenants: realtimeTenants, lastUpdate: tenantLastUpdate } = useRealtimeTenants();
+  const { health: monitoredHealth, overallStatus } = useSystemHealthMonitor();
+  
+  // Local state with real-time updates
   const [stats, setStats] = useState({
     totalTenants: 0,
     activeTenants: 0,
@@ -59,7 +78,65 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
+    
+    // Connect to SignalR if not connected
+    if (!signalRService.isConnected()) {
+      signalRService.connect();
+    }
   }, []);
+  
+  // Update stats when real-time data arrives
+  useEffect(() => {
+    if (realtimeStats) {
+      setStats(realtimeStats);
+    }
+  }, [realtimeStats]);
+  
+  // Update system health from real-time monitoring
+  useEffect(() => {
+    if (monitoredHealth && monitoredHealth.length > 0) {
+      setSystemHealth(monitoredHealth.map(h => ({
+        service: h.service,
+        status: h.status,
+        uptime: h.uptime,
+        responseTime: h.responseTime
+      })));
+    }
+  }, [monitoredHealth]);
+  
+  // Update tenants from real-time updates
+  useEffect(() => {
+    if (realtimeTenants && realtimeTenants.length > 0) {
+      setRecentTenants(realtimeTenants.slice(0, 5).map(t => ({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        package: t.packageName || 'Basic',
+        userCount: t.userCount || 0,
+        createdAt: t.createdAt
+      })));
+    }
+  }, [realtimeTenants]);
+  
+  // Process revenue updates
+  useEffect(() => {
+    if (revenueUpdates && revenueUpdates.length > 0) {
+      // Update revenue data with latest updates
+      const latestRevenue = revenueUpdates[revenueUpdates.length - 1];
+      if (latestRevenue) {
+        setRevenueData(prev => {
+          const updated = [...prev];
+          const existingIndex = updated.findIndex(r => r.date === latestRevenue.date);
+          if (existingIndex >= 0) {
+            updated[existingIndex].revenue += latestRevenue.amount;
+          } else {
+            updated.push({ date: latestRevenue.date, revenue: latestRevenue.amount });
+          }
+          return updated.slice(-7); // Keep last 7 days
+        });
+      }
+    }
+  }, [revenueUpdates]);
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -247,10 +324,44 @@ const Dashboard: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* Header */}
+      {/* Header with Connection Status */}
       <div style={{ marginBottom: 24 }}>
-        <Title level={2}>Hoş Geldiniz, {user?.fullName || user?.username}! 👋</Title>
-        <Paragraph>Stocker SaaS platformunun genel durumu ve istatistikleri</Paragraph>
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Title level={2}>Hoş Geldiniz, {user?.fullName || user?.username}! 👋</Title>
+            <Paragraph>Stocker SaaS platformunun genel durumu ve istatistikleri</Paragraph>
+          </Col>
+          <Col>
+            <Space>
+              <Tooltip title={isConnected ? 'Canlı bağlantı aktif' : 'Bağlantı yok'}>
+                <Badge 
+                  status={isConnected ? 'success' : 'error'} 
+                  text={
+                    <Space>
+                      {isConnected ? <WifiOutlined /> : <DisconnectOutlined />}
+                      {isConnected ? 'Canlı Bağlantı' : 'Bağlantı Kesildi'}
+                    </Space>
+                  }
+                />
+              </Tooltip>
+              {tenantLastUpdate && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Son güncelleme: {new Date(tenantLastUpdate).toLocaleTimeString('tr-TR')}
+                </Text>
+              )}
+              <Button 
+                icon={<SyncOutlined spin={loading} />} 
+                onClick={() => {
+                  loadDashboardData();
+                  requestDashboardRefresh();
+                }}
+                disabled={loading}
+              >
+                Yenile
+              </Button>
+            </Space>
+          </Col>
+        </Row>
       </div>
 
       {/* Statistics Cards */}
@@ -383,6 +494,61 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Real-time Activity Feed */}
+      {recentActivity && recentActivity.length > 0 && (
+        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+          <Col span={24}>
+            <Card 
+              title={
+                <Space>
+                  <span>Canlı Aktiviteler</span>
+                  <Badge count={recentActivity.length} style={{ backgroundColor: '#52c41a' }} />
+                </Space>
+              }
+              bordered={false}
+            >
+              <List
+                size="small"
+                dataSource={recentActivity.slice(0, 5)}
+                renderItem={(activity: any) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar 
+                          size="small" 
+                          style={{ 
+                            backgroundColor: activity.type === 'tenant_status' ? '#1890ff' : '#52c41a' 
+                          }}
+                        >
+                          {activity.type === 'tenant_status' ? '🏢' : '👤'}
+                        </Avatar>
+                      }
+                      title={
+                        activity.type === 'tenant_status' 
+                          ? `${activity.tenantName} durumu değişti: ${activity.oldStatus} → ${activity.newStatus}`
+                          : `${activity.userName} - ${activity.action}`
+                      }
+                      description={
+                        <Space>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {new Date(activity.timestamp).toLocaleString('tr-TR')}
+                          </Text>
+                          {activity.changedBy && (
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              • {activity.changedBy} tarafından
+                            </Text>
+                          )}
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
+      
       {/* Quick Actions */}
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         <Col span={24}>
