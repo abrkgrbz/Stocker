@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, ExternalLink, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Card, Alert, Button, Spin, Typography, Space } from 'antd';
+import { LoadingOutlined, ExportOutlined, ReloadOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 const HangfireDashboard: React.FC = () => {
   const { user, token } = useAuthStore();
@@ -43,76 +43,98 @@ const HangfireDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '400px' 
+      }}>
+        <Spin 
+          indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />} 
+          tip="Yükleniyor..."
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Erişim Reddedildi"
+          description={error}
+          type="error"
+          showIcon
+        />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ padding: '24px' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px'
+      }}>
         <div>
-          <h1 className="text-3xl font-bold">Hangfire Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
+          <Title level={2} style={{ margin: 0 }}>Hangfire Dashboard</Title>
+          <Text type="secondary" style={{ display: 'block', marginTop: '8px' }}>
             Arka plan işlemleri ve zamanlanmış görevleri yönetin
-          </p>
+          </Text>
         </div>
         <Button 
+          type="primary"
+          icon={<ExportOutlined />}
           onClick={openHangfireInNewTab}
-          className="flex items-center gap-2"
         >
-          <ExternalLink className="w-4 h-4" />
           Yeni Sekmede Aç
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="bg-muted/50 p-4 border-b">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Hangfire Dashboard Yükleniyor...</p>
-                <p className="text-xs text-muted-foreground">
-                  Eğer dashboard yüklenmezse, yukarıdaki "Yeni Sekmede Aç" butonunu kullanın
-                </p>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={openHangfireInIframe}
-              >
-                Yenile
-              </Button>
-            </div>
+      <Card
+        title={
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center' 
+          }}>
+            <Space direction="vertical" size={0}>
+              <Text strong>Hangfire Dashboard Yükleniyor...</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                Eğer dashboard yüklenmezse, yukarıdaki "Yeni Sekmede Aç" butonunu kullanın
+              </Text>
+            </Space>
+            <Button 
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={openHangfireInIframe}
+            >
+              Yenile
+            </Button>
           </div>
-          
-          {/* Try to embed Hangfire dashboard in iframe with token */}
-          <iframe
-            id="hangfire-iframe"
-            src={`${hangfireUrl}?access_token=${encodeURIComponent(token || '')}`}
-            className="w-full h-[800px] border-0"
-            title="Hangfire Dashboard"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            onLoad={() => {
-              console.log('Hangfire iframe loaded');
-            }}
-            onError={(e) => {
-              console.error('Hangfire iframe error:', e);
-            }}
-          />
-        </CardContent>
+        }
+        bodyStyle={{ padding: 0 }}
+      >
+        {/* Try to embed Hangfire dashboard in iframe with token */}
+        <iframe
+          id="hangfire-iframe"
+          src={`${hangfireUrl}?access_token=${encodeURIComponent(token || '')}`}
+          style={{ 
+            width: '100%', 
+            height: '800px', 
+            border: 'none' 
+          }}
+          title="Hangfire Dashboard"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          onLoad={() => {
+            console.log('Hangfire iframe loaded');
+          }}
+          onError={(e) => {
+            console.error('Hangfire iframe error:', e);
+          }}
+        />
       </Card>
     </div>
   );
