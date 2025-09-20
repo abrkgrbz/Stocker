@@ -12,6 +12,7 @@ interface AdminUser {
   email: string;
   name: string;
   role: 'super_admin' | 'admin' | 'user';
+  roles?: string[];  // Keep original roles array from API
   tenantId?: string;
   tenantName?: string;
 }
@@ -55,8 +56,9 @@ export const useAuthStore = create<AuthState>()(
             id: response.user.id,
             email: response.user.email,
             name: response.user.fullName || response.user.username || 'Admin User',
-            role: response.user.roles.includes('SystemAdmin') ? 'super_admin' : 
+            role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' : 
                   response.user.roles.includes('Admin') ? 'admin' : 'user',
+            roles: response.user.roles,  // Keep original roles array
             tenantId: response.user.tenantId,
             tenantName: response.user.tenantName,
           };

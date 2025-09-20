@@ -13,9 +13,9 @@ const HangfireDashboard: React.FC = () => {
 
   useEffect(() => {
     // Check if user has required role - only SistemYoneticisi
-    const hasRequiredRole = user?.roles?.some(role => 
-      role === 'SistemYoneticisi'
-    );
+    const hasRequiredRole = 
+      user?.roles?.includes('SistemYoneticisi') ||  // Check roles array from API
+      user?.role === 'super_admin';  // Or check if mapped to super_admin
 
     if (!hasRequiredRole) {
       setError('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sistem Yöneticisi rolüne sahip olmanız gerekmektedir.');
