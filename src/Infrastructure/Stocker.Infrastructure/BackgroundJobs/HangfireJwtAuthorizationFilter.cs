@@ -40,18 +40,20 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
             return true; // Allow static resources without authentication
         }
 
-        // Store token in session for subsequent AJAX calls
+        // Get token from various sources
         var token = GetJwtToken(httpContext);
-        if (!string.IsNullOrEmpty(token) && httpContext.Session != null)
+        
+        // If we have a valid token from query string, save it to cookie for AJAX requests
+        if (!string.IsNullOrEmpty(token) && httpContext.Request.Query.ContainsKey("access_token"))
         {
-            try 
+            // Set a secure cookie with the token for subsequent AJAX calls
+            httpContext.Response.Cookies.Append("HangfireAuthToken", token, new CookieOptions
             {
-                httpContext.Session.SetString("HangfireToken", token);
-            }
-            catch 
-            {
-                // Session might not be available
-            }
+                HttpOnly = true,
+                Secure = httpContext.Request.IsHttps,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
         }
 
         // Allow Hangfire API endpoints (stats, recurring jobs, etc.) if user is already authenticated
@@ -62,39 +64,31 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
             path.Contains("/hangfire/jobs") ||
             path.Contains("/hangfire/api"))
         {
-            // First check session for stored token
-            string sessionToken = null;
-            try
+            // First check cookie for stored token (from previous request)
+            if (string.IsNullOrEmpty(token))
             {
-                sessionToken = httpContext.Session?.GetString("HangfireToken");
-            }
-            catch
-            {
-                // Session might not be available
-            }
-
-            if (!string.IsNullOrEmpty(sessionToken) && ValidateToken(sessionToken))
-            {
-                return true;
-            }
-
-            // Check if we have a valid token in the referrer's query string
-            var referer = httpContext.Request.Headers["Referer"].ToString();
-            if (!string.IsNullOrEmpty(referer) && referer.Contains("access_token="))
-            {
-                // Extract token from referrer URL
-                var tokenMatch = System.Text.RegularExpressions.Regex.Match(referer, @"access_token=([^&]+)");
-                if (tokenMatch.Success)
+                if (httpContext.Request.Cookies.TryGetValue("HangfireAuthToken", out var cookieToken))
                 {
-                    var refererToken = System.Net.WebUtility.UrlDecode(tokenMatch.Groups[1].Value);
-                    if (ValidateToken(refererToken))
+                    token = cookieToken;
+                }
+            }
+            
+            // Check if we have a valid token in the referrer's query string
+            if (string.IsNullOrEmpty(token))
+            {
+                var referer = httpContext.Request.Headers["Referer"].ToString();
+                if (!string.IsNullOrEmpty(referer) && referer.Contains("access_token="))
+                {
+                    // Extract token from referrer URL
+                    var tokenMatch = System.Text.RegularExpressions.Regex.Match(referer, @"access_token=([^&]+)");
+                    if (tokenMatch.Success)
                     {
-                        return true;
+                        token = System.Net.WebUtility.UrlDecode(tokenMatch.Groups[1].Value);
                     }
                 }
             }
 
-            // Also try to get token directly
+            // Validate token if found
             if (!string.IsNullOrEmpty(token) && ValidateToken(token))
             {
                 return true;
@@ -158,7 +152,13 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
             return authHeader.Substring("Bearer ".Length).Trim();
         }
 
-        // Try to get token from cookie
+        // Try to get token from HangfireAuthToken cookie (set by us)
+        if (httpContext.Request.Cookies.TryGetValue("HangfireAuthToken", out var hangfireToken))
+        {
+            return hangfireToken;
+        }
+
+        // Try to get token from Authorization cookie
         if (httpContext.Request.Cookies.TryGetValue("Authorization", out var cookieToken))
         {
             if (cookieToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
