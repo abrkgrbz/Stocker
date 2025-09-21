@@ -27,6 +27,14 @@ public interface ITenantDbContext : IDisposable, IAsyncDisposable
     DbSet<SetupWizard> SetupWizards { get; }
     DbSet<SetupWizardStep> SetupWizardSteps { get; }
     
+    // Security & Compliance
+    DbSet<Domain.Tenant.Entities.TenantSecuritySettings> TenantSecuritySettings { get; }
+    DbSet<Domain.Tenant.Entities.TenantApiKey> TenantApiKeys { get; }
+    
+    // Activity & Notifications
+    DbSet<Domain.Tenant.Entities.TenantActivityLog> TenantActivityLogs { get; }
+    DbSet<Domain.Tenant.Entities.TenantNotification> TenantNotifications { get; }
+    
     // Customer & Product Management
     DbSet<Customer> Customers { get; }
     DbSet<Product> Products { get; }

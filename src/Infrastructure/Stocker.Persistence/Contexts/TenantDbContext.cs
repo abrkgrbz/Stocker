@@ -51,6 +51,14 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     public DbSet<SetupWizard> SetupWizards => Set<SetupWizard>();
     public DbSet<SetupWizardStep> SetupWizardSteps => Set<SetupWizardStep>();
     
+    // Security & Compliance (Moved from Master to Tenant for better isolation)
+    public DbSet<TenantSecuritySettings> TenantSecuritySettings => Set<TenantSecuritySettings>();
+    public DbSet<TenantApiKey> TenantApiKeys => Set<TenantApiKey>();
+    
+    // Activity & Notifications (Moved from Master to Tenant for better isolation)
+    public DbSet<TenantActivityLog> TenantActivityLogs => Set<TenantActivityLog>();
+    public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
+    
     // Financial
     public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();
     public DbSet<Domain.Tenant.Entities.InvoiceItem> InvoiceItems => Set<Domain.Tenant.Entities.InvoiceItem>();
