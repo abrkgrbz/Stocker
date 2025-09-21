@@ -587,13 +587,7 @@ app.UseAuthorization();
 // Add Tenant-based Rate Limiting - After authentication
 app.UseTenantRateLimiting();
 
-// Add Hangfire Dashboard (after authentication to secure it) - Skip in Testing environment
-if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
-{
-    app.UseHangfireDashboard(app.Configuration);
-}
-
-// Configure static file options with proper MIME types
+// Configure static file options with proper MIME types - BEFORE Hangfire
 app.UseStaticFiles(new StaticFileOptions
 {
     ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider
@@ -630,6 +624,22 @@ app.UseStaticFiles(new StaticFileOptions
         }
     }
 });
+
+// Add custom Hangfire authentication middleware
+if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
+{
+    var jwtSecret = app.Configuration["JwtSettings:Secret"];
+    var jwtIssuer = app.Configuration["JwtSettings:Issuer"] ?? "Stocker";
+    var jwtAudience = app.Configuration["JwtSettings:Audience"] ?? "Stocker";
+    
+    app.UseMiddleware<HangfireAuthMiddleware>(jwtSecret, jwtIssuer, jwtAudience);
+}
+
+// Add Hangfire Dashboard (after static files and auth middleware) - Skip in Testing environment
+if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHangfireDashboard(app.Configuration);
+}
 
 // Map controllers
 app.MapControllers();
