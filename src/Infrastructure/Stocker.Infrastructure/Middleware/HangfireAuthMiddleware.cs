@@ -40,22 +40,28 @@ public class HangfireAuthMiddleware
         }
 
         // Allow static resources (CSS, JS) without authentication
-        // These are identified by their path patterns
-        if (path.Contains("/css") || path.Contains("/js") || path.Contains("/font") || 
+        // Hangfire generates resource URLs with numeric patterns like css18210556519183
+        if (path.Contains("css") || path.Contains("js") || path.Contains("font") || 
             path.EndsWith(".css") || path.EndsWith(".js") || path.EndsWith(".woff") || 
-            path.EndsWith(".woff2") || path.EndsWith(".ttf"))
+            path.EndsWith(".woff2") || path.EndsWith(".ttf") ||
+            System.Text.RegularExpressions.Regex.IsMatch(path, @"css\d+") ||
+            System.Text.RegularExpressions.Regex.IsMatch(path, @"js\d+"))
         {
             // Set proper MIME types for static resources
             if (path.Contains("css"))
             {
-                context.Response.ContentType = "text/css";
+                context.Response.ContentType = "text/css; charset=utf-8";
             }
             else if (path.Contains("js"))
             {
-                context.Response.ContentType = "application/javascript";
+                context.Response.ContentType = "application/javascript; charset=utf-8";
+            }
+            else if (path.Contains("font") || path.EndsWith(".woff") || path.EndsWith(".woff2"))
+            {
+                context.Response.ContentType = "font/woff2";
             }
             
-            // Skip authentication for static resources
+            // Skip authentication for static resources but pass through
             await _next(context);
             return;
         }

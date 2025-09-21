@@ -1,4 +1,5 @@
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -79,7 +80,9 @@ public static class HangfireConfiguration
             Authorization = new[] { 
                 new HangfireJwtAuthorizationFilter(jwtSecret, jwtIssuer, jwtAudience) 
             },
-            IgnoreAntiforgeryToken = true
+            IgnoreAntiforgeryToken = true,
+            DisplayStorageConnectionString = false,
+            IsReadOnlyFunc = (DashboardContext context) => false
         });
 
         return app;

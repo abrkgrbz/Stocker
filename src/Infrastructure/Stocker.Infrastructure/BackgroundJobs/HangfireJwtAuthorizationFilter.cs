@@ -26,6 +26,19 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
     public bool Authorize([NotNull] DashboardContext context)
     {
         var httpContext = context.GetHttpContext();
+        var path = httpContext.Request.Path.ToString().ToLower();
+
+        // Allow static resources without authentication
+        // Hangfire serves CSS and JS with specific numeric patterns in the URL
+        if (path.Contains("css") || path.Contains("js") || 
+            path.Contains("font") || path.EndsWith(".css") || 
+            path.EndsWith(".js") || path.EndsWith(".woff") || 
+            path.EndsWith(".woff2") || path.EndsWith(".ttf") ||
+            System.Text.RegularExpressions.Regex.IsMatch(path, @"css\d+") ||
+            System.Text.RegularExpressions.Regex.IsMatch(path, @"js\d+"))
+        {
+            return true; // Allow static resources without authentication
+        }
 
         // Check environment
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
