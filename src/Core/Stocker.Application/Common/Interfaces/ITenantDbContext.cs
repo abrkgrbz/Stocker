@@ -23,6 +23,10 @@ public interface ITenantDbContext : IDisposable, IAsyncDisposable
     DbSet<UserRole> UserRoles { get; }
     DbSet<UserPermission> UserPermissions { get; }
     
+    // Setup & Onboarding
+    DbSet<SetupWizard> SetupWizards { get; }
+    DbSet<SetupWizardStep> SetupWizardSteps { get; }
+    
     // Customer & Product Management
     DbSet<Customer> Customers { get; }
     DbSet<Product> Products { get; }

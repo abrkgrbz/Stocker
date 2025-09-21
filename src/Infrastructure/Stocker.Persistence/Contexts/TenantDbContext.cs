@@ -46,8 +46,10 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     // public DbSet<TenantModule> TenantModule => Set<TenantModule>(); // TODO: Add entity or remove
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     // public DbSet<UserSession> UserSessions => Set<UserSession>(); // TODO: Add entity or remove
-    // public DbSet<TenantSetupWizard> TenantSetupWizards => Set<TenantSetupWizard>(); // Moved to Master
-    // public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>(); // Moved to Master
+    
+    // Setup & Onboarding (Moved from Master to Tenant for better isolation)
+    public DbSet<SetupWizard> SetupWizards => Set<SetupWizard>();
+    public DbSet<SetupWizardStep> SetupWizardSteps => Set<SetupWizardStep>();
     
     // Financial
     public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();

@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
 // using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Dashboard;
+using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Application.Features.Tenant.Dashboard.Queries;
+using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -125,6 +127,40 @@ public class DashboardController : ApiController
             Success = true,
             Data = result,
             Message = "Dashboard özeti başarıyla yüklendi"
+        });
+    }
+
+    [HttpGet("setup-wizard")]
+    [ProducesResponseType(typeof(ApiResponse<TenantSetupWizardDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 500)]
+    public async Task<IActionResult> GetSetupWizardStatus()
+    {
+        // TODO: Get TenantId from current tenant service
+        var tenantId = Guid.NewGuid(); // _currentTenantService.TenantId
+        
+        var query = new GetSetupWizardQuery
+        {
+            TenantId = tenantId
+        };
+        
+        var result = await _mediator.Send(query);
+        
+        if (result.IsSuccess)
+        {
+            return Ok(new ApiResponse<TenantSetupWizardDto>
+            {
+                Success = true,
+                Data = result.Value,
+                Message = "Kurulum sihirbazı durumu başarıyla yüklendi"
+            });
+        }
+        
+        // If no wizard exists, it will be created automatically by GetSetupWizardQueryHandler
+        return Ok(new ApiResponse<TenantSetupWizardDto>
+        {
+            Success = true,
+            Data = result.Value,
+            Message = "Kurulum sihirbazı oluşturuldu"
         });
     }
 }
