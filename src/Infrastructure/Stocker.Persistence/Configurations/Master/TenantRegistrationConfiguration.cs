@@ -43,6 +43,8 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("ContactEmail")
                 .IsRequired()
                 .HasMaxLength(256);
+
+            email.WithOwner();
         });
         
         builder.OwnsOne(x => x.ContactPhone, phone =>
@@ -51,6 +53,8 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("ContactPhone")
                 .IsRequired()
                 .HasMaxLength(50);
+
+            phone.WithOwner();
         });
         
         builder.Property(x => x.CompanyWebsite)
@@ -104,6 +108,8 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("AdminEmail")
                 .IsRequired()
                 .HasMaxLength(256);
+
+            email.WithOwner();
         });
             
         // Package Selection
