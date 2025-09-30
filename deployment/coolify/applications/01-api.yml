@@ -21,9 +21,10 @@ services:
       # ==================================
       # DATABASE CONNECTIONS
       # ==================================
-      - ConnectionStrings__MasterConnection=Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__TenantConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
-      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      # These are injected by Coolify at runtime
+      - ConnectionStrings__MasterConnection
+      - ConnectionStrings__TenantConnection
+      - ConnectionStrings__DefaultConnection
       
       # ==================================
       # LOGGING (SEQ)
@@ -84,8 +85,9 @@ services:
       - Hangfire__WorkerCount=4
       - Hangfire__Queues=critical,default,low
       - Hangfire__RetryAttempts=3
-      - Hangfire__ConnectionString=Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
-      - ConnectionStrings__HangfireConnection=Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+      # Hangfire connection injected by Coolify at runtime
+      - Hangfire__ConnectionString
+      - ConnectionStrings__HangfireConnection
       
       # ==================================
       # PASSWORD POLICY

@@ -17,7 +17,9 @@
       "Bash(dotnet list:*)",
       "Bash(dotnet ef migrations:*)",
       "Bash(dotnet ef database update:*)",
-      "Bash(sqllocaldb info:*)"
+      "Bash(sqllocaldb info:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []
