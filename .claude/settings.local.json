@@ -20,7 +20,8 @@
       "Bash(sqllocaldb info:*)",
       "Bash(dotnet sln:*)",
       "Bash(dotnet restore:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(Select-String -Pattern \"Hata|Error|Uyarı.*error\" -Context 0,2)"
     ],
     "deny": [],
     "ask": []
