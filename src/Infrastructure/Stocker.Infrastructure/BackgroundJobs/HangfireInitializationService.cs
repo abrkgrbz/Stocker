@@ -62,14 +62,14 @@ public class HangfireInitializationService : IHostedService
                     PrepareSchemaIfNecessary = true
                 };
 
+                // Install Hangfire tables by creating storage and forcing initialization
                 var storage = new SqlServerStorage(connectionString, options);
-                
-                // This will create the tables
-                using (var storageConnection = storage.GetConnection())
-                {
-                    // Force schema creation by accessing the connection
-                    _logger.LogInformation("Hangfire schema and tables created successfully");
-                }
+
+                // Force schema and tables creation by getting monitoring API
+                var monitoringApi = storage.GetMonitoringApi();
+                _ = monitoringApi.Servers(); // This forces table creation
+
+                _logger.LogInformation("Hangfire schema and tables created successfully");
             }
             else
             {
