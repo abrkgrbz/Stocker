@@ -73,6 +73,29 @@ public class MigrationService : IMigrationService
             {
                 _logger.LogInformation("Hangfire database already exists: {DatabaseName}", databaseName);
             }
+            
+            // Now connect to the Hangfire database and create schema if needed
+            _logger.LogInformation("Initializing Hangfire schema...");
+            using var hangfireConnection = new Microsoft.Data.SqlClient.SqlConnection(hangfireConnectionString);
+            await hangfireConnection.OpenAsync();
+            
+            // Check if Hangfire schema exists
+            var checkSchemaCommand = hangfireConnection.CreateCommand();
+            checkSchemaCommand.CommandText = "SELECT schema_id FROM sys.schemas WHERE name = 'Hangfire'";
+            var schemaExists = await checkSchemaCommand.ExecuteScalarAsync();
+            
+            if (schemaExists == null)
+            {
+                _logger.LogInformation("Creating Hangfire schema...");
+                var createSchemaCommand = hangfireConnection.CreateCommand();
+                createSchemaCommand.CommandText = "CREATE SCHEMA [Hangfire]";
+                await createSchemaCommand.ExecuteNonQueryAsync();
+                _logger.LogInformation("Hangfire schema created successfully");
+            }
+            else
+            {
+                _logger.LogInformation("Hangfire schema already exists");
+            }
         }
         catch (Microsoft.Data.SqlClient.SqlException ex)
         {
