@@ -160,13 +160,17 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
             // Queue verification email as background job
             try
             {
-                _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
+                _logger.LogInformation("Attempting to queue verification email for {Email} with token {Token}",
+                    registration.ContactEmail.Value,
+                    registration.EmailVerificationToken ?? "NULL");
+
+                var jobId = _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
                     job.SendVerificationEmailAsync(
                         registration.ContactEmail.Value,
                         registration.EmailVerificationToken ?? "",
                         $"{registration.ContactPersonName} {registration.ContactPersonSurname}"));
 
-                _logger.LogInformation("Verification email queued for {Email}", registration.ContactEmail.Value);
+                _logger.LogInformation("Verification email queued successfully with JobId: {JobId} for {Email}", jobId, registration.ContactEmail.Value);
             }
             catch (Exception emailEx)
             {
