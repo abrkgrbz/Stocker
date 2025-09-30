@@ -4,7 +4,6 @@ import Select from 'react-select';
 import { message, Spin, Modal } from 'antd';
 
 import { Captcha } from '@/features/auth/components/Captcha';
-import { EmailVerificationModal } from '@/features/auth/components/EmailVerification';
 import { apiClient } from '@/shared/api/client';
 import {
   ShopOutlined,
@@ -74,8 +73,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
   const captchaRef = useRef<any>(null);
   
   const [formData, setFormData] = useState({
@@ -919,7 +916,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   };
 
   const handleSubmit = async () => {
-    // Önce captcha ve e-posta doğrulaması yap
+    // Önce captcha doğrulaması yap
     if (!captchaToken) {
       message.warning('Lütfen önce güvenlik doğrulamasını tamamlayın');
       // Captcha modal'ını aç
@@ -935,13 +932,8 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                 setCaptchaToken(token);
                 message.success('Güvenlik doğrulaması başarılı!');
                 Modal.destroyAll();
-                // Captcha tamamlandı, şimdi e-posta doğrulaması
-                if (!emailVerified) {
-                  setShowEmailVerification(true);
-                } else {
-                  // Her ikisi de tamamsa kayıt işlemini başlat
-                  performRegistration();
-                }
+                // Captcha tamamlandı, kayıt işlemini başlat
+                performRegistration();
               }}
               onError={() => {
                 message.error('Güvenlik doğrulaması başarısız!');
@@ -955,15 +947,8 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       });
       return;
     }
-    
-    // E-posta doğrulaması kontrolü
-    if (!emailVerified) {
-      setShowEmailVerification(true);
-      message.warning('Lütfen e-posta adresinizi doğrulayın');
-      return;
-    }
-    
-    // Her şey tamam, kayıt işlemini başlat
+
+    // Captcha tamam, kayıt işlemini başlat
     performRegistration();
   };
   
@@ -997,7 +982,10 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
             const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
-        message.success('Kayıt başarıyla tamamlandı!');
+        message.success({
+          content: 'Kayıt başarıyla tamamlandı! E-posta adresinize doğrulama kodu gönderildi.',
+          duration: 5
+        });
         onComplete(response.data.data);
       } else {
         message.error('Kayıt sırasında bir hata oluştu');
@@ -1806,21 +1794,6 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         </div>
       </div>
       
-      {/* E-posta Doğrulama Modal */}
-      <EmailVerificationModal
-        visible={showEmailVerification}
-        email={formData.contactEmail}
-        onClose={() => setShowEmailVerification(false)}
-        onVerified={() => {
-          setEmailVerified(true);
-          setShowEmailVerification(false);
-          message.success('E-posta adresiniz başarıyla doğrulandı!');
-          // Eğer captcha da tamamlandıysa kayıt işlemini başlat
-          if (captchaToken) {
-            performRegistration();
-          }
-        }}
-      />
     </div>
   );
 };

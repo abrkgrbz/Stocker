@@ -21,6 +21,7 @@ import {
   SafetyOutlined
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { authAPI } from '@/shared/api/auth.api';
 import './style.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -64,9 +65,14 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
   const sendVerificationEmail = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      if (onResend) {
+        await onResend();
+      } else {
+        // If no custom onResend provided, just mark as sent
+        // The backend should send email when user submits registration form
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       setStatus('sent');
       setResendTimer(60); // 60 seconds cooldown
       message.success(`Doğrulama e-postası ${email} adresine gönderildi`);
@@ -102,21 +108,24 @@ export const EmailVerification: React.FC<EmailVerificationProps> = ({
 
     setLoading(true);
     try {
-      // Simulate verification
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock verification - in real app, check with backend
-      if (verificationCode === '123456') {
+      // Call real backend verification endpoint
+      const response = await authAPI.verifyEmail({
+        email,
+        token: verificationCode
+      });
+
+      if (response.data.success) {
         setStatus('verified');
         message.success('E-posta adresiniz başarıyla doğrulandı!');
         setTimeout(() => {
           onVerified();
         }, 2000);
       } else {
-        message.error('Doğrulama kodu hatalı');
+        message.error(response.data.message || 'Doğrulama kodu hatalı');
       }
-    } catch (error) {
-      message.error('Doğrulama başarısız');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || 'Doğrulama başarısız';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -325,11 +334,12 @@ export const InlineEmailVerification: React.FC<InlineEmailVerificationProps> = (
   const handleSend = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await authAPI.resendVerificationEmail({ email });
       setSent(true);
       message.success('Doğrulama kodu gönderildi');
-    } catch (error) {
-      message.error('Kod gönderilemedi');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || 'Kod gönderilemedi';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -337,14 +347,23 @@ export const InlineEmailVerification: React.FC<InlineEmailVerificationProps> = (
 
   const handleVerify = async () => {
     if (code.length !== 6) return;
-    
+
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      message.success('E-posta doğrulandı!');
-      onVerified();
-    } catch (error) {
-      message.error('Doğrulama başarısız');
+      const response = await authAPI.verifyEmail({
+        email,
+        token: code
+      });
+
+      if (response.data.success) {
+        message.success('E-posta doğrulandı!');
+        onVerified();
+      } else {
+        message.error(response.data.message || 'Doğrulama kodu hatalı');
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || 'Doğrulama başarısız';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
