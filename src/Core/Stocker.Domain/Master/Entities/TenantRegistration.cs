@@ -283,8 +283,14 @@ public sealed class TenantRegistration : Entity
     
     private static string GenerateVerificationCode()
     {
-        var random = new Random();
-        return random.Next(100000, 999999).ToString();
+        // Use cryptographically secure random number generator
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[4];
+        rng.GetBytes(bytes);
+        var number = BitConverter.ToUInt32(bytes, 0);
+        // Generate 6-digit code between 100000-999999
+        var code = (number % 900000) + 100000;
+        return code.ToString();
     }
 }
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.Interfaces;
 using System.Text.Json;
 
 namespace Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardStep;
@@ -11,11 +12,19 @@ namespace Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardSt
 public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizardStepCommand, Result<TenantSetupWizardDto>>
 {
     private readonly ITenantDbContext _context;
+    private readonly IMigrationService _migrationService;
+    private readonly ITenantService _tenantService;
     private readonly ILogger<UpdateWizardStepCommandHandler> _logger;
 
-    public UpdateWizardStepCommandHandler(ITenantDbContext context, ILogger<UpdateWizardStepCommandHandler> logger)
+    public UpdateWizardStepCommandHandler(
+        ITenantDbContext context, 
+        IMigrationService migrationService,
+        ITenantService tenantService,
+        ILogger<UpdateWizardStepCommandHandler> logger)
     {
         _context = context;
+        _migrationService = migrationService;
+        _tenantService = tenantService;
         _logger = logger;
     }
 
@@ -74,6 +83,7 @@ public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizar
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            // Create DTO first
             var dto = new TenantSetupWizardDto
             {
                 Id = wizard.Id,
