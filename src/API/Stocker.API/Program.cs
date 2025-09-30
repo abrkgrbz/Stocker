@@ -675,6 +675,11 @@ if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalI
         try
         {
             var migrationService = scope.ServiceProvider.GetRequiredService<Stocker.Application.Common.Interfaces.IMigrationService>();
+            
+            // Create Hangfire database first
+            await migrationService.CreateHangfireDatabaseAsync();
+            
+            // Then migrate master database
             await migrationService.MigrateMasterDatabaseAsync();
             await migrationService.SeedMasterDataAsync();
             app.Logger.LogInformation("Database migration completed successfully");

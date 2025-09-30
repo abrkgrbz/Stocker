@@ -25,6 +25,70 @@ public class MigrationService : IMigrationService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    public async Task CreateHangfireDatabaseAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var configuration = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+        
+        var hangfireConnectionString = configuration.GetConnectionString("HangfireConnection");
+        
+        if (string.IsNullOrEmpty(hangfireConnectionString))
+        {
+            _logger.LogWarning("Hangfire connection string not found. Skipping Hangfire database creation.");
+            return;
+        }
+
+        try
+        {
+            _logger.LogInformation("Checking Hangfire database...");
+            
+            // Parse connection string to get database name and server
+            var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(hangfireConnectionString);
+            var databaseName = builder.InitialCatalog;
+            
+            // Create connection string to master database
+            builder.InitialCatalog = "master";
+            var masterConnectionString = builder.ConnectionString;
+            
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(masterConnectionString);
+            await connection.OpenAsync();
+            
+            // Check if database exists
+            var checkDbCommand = connection.CreateCommand();
+            checkDbCommand.CommandText = $"SELECT database_id FROM sys.databases WHERE Name = '{databaseName}'";
+            var dbExists = await checkDbCommand.ExecuteScalarAsync();
+            
+            if (dbExists == null)
+            {
+                _logger.LogInformation("Creating Hangfire database: {DatabaseName}...", databaseName);
+                
+                var createDbCommand = connection.CreateCommand();
+                createDbCommand.CommandText = $"CREATE DATABASE [{databaseName}]";
+                await createDbCommand.ExecuteNonQueryAsync();
+                
+                _logger.LogInformation("Hangfire database created successfully: {DatabaseName}", databaseName);
+            }
+            else
+            {
+                _logger.LogInformation("Hangfire database already exists: {DatabaseName}", databaseName);
+            }
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex)
+        {
+            _logger.LogError(ex, "SQL error while creating Hangfire database.");
+            throw new DatabaseException("Migration.HangfireFailed", "Failed to create Hangfire database", ex);
+        }
+        catch (DatabaseException)
+        {
+            throw;
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "An unexpected error occurred while creating Hangfire database.");
+            throw new ApplicationException("Unexpected error during Hangfire database creation", ex);
+        }
+    }
+
     public async Task MigrateMasterDatabaseAsync()
     {
         using var scope = _serviceProvider.CreateScope();

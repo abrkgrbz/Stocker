@@ -19,7 +19,8 @@
       "Bash(dotnet ef database update:*)",
       "Bash(sqllocaldb info:*)",
       "Bash(dotnet sln:*)",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

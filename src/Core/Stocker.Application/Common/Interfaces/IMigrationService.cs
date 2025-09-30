@@ -9,6 +9,11 @@ public interface IMigrationService
     /// Applies migrations to the master database
     /// </summary>
     Task MigrateMasterDatabaseAsync();
+
+    /// <summary>
+    /// Creates the Hangfire database if it doesn't exist
+    /// </summary>
+    Task CreateHangfireDatabaseAsync();
     
     /// <summary>
     /// Applies migrations to a specific tenant's database
