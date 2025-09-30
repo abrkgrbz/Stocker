@@ -57,7 +57,7 @@ public class EmailBackgroundJob : IEmailBackgroundJob
         try
         {
             _logger.LogInformation("Sending verification email to {Email}", email);
-            await _emailService.SendEmailVerificationAsync(email, token, userName);
+            await _emailService.SendEmailVerificationAsync(email, token, userName, CancellationToken.None);
             _logger.LogInformation("Verification email sent to {Email}", email);
         }
         catch (Exception ex)
