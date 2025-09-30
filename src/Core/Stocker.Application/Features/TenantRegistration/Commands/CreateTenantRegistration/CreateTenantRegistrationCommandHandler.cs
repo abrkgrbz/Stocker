@@ -16,20 +16,20 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
     private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantRegistrationCommandHandler> _logger;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundJobService _backgroundJobService;
     private readonly ICaptchaService _captchaService;
 
     public CreateTenantRegistrationCommandHandler(
         IMasterDbContext context,
         ILogger<CreateTenantRegistrationCommandHandler> logger,
         ICurrentUserService currentUserService,
-        IEmailService emailService,
+        IBackgroundJobService backgroundJobService,
         ICaptchaService captchaService)
     {
         _context = context;
         _logger = logger;
         _currentUserService = currentUserService;
-        _emailService = emailService;
+        _backgroundJobService = backgroundJobService;
         _captchaService = captchaService;
     }
 
@@ -157,21 +157,21 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
 
             _logger.LogInformation("Tenant registration created successfully. Code: {RegistrationCode}", registration.RegistrationCode);
 
-            // Send email verification
+            // Queue verification email as background job
             try
             {
-                await _emailService.SendEmailVerificationAsync(
-                    email: registration.ContactEmail.Value,
-                    token: registration.EmailVerificationToken ?? "",
-                    userName: $"{registration.ContactPersonName} {registration.ContactPersonSurname}",
-                    cancellationToken);
-                
-                _logger.LogInformation("Verification email sent to {Email}", registration.ContactEmail.Value);
+                _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
+                    job.SendVerificationEmailAsync(
+                        registration.ContactEmail.Value,
+                        registration.EmailVerificationToken ?? "",
+                        $"{registration.ContactPersonName} {registration.ContactPersonSurname}"));
+
+                _logger.LogInformation("Verification email queued for {Email}", registration.ContactEmail.Value);
             }
             catch (Exception emailEx)
             {
-                _logger.LogError(emailEx, "Failed to send verification email, but registration was successful");
-                // Don't fail the registration if email fails
+                _logger.LogError(emailEx, "Failed to queue verification email, but registration was successful");
+                // Don't fail the registration if email queueing fails
             }
 
             return Result<TenantRegistrationDto>.Success(dto);
