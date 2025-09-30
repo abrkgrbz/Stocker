@@ -374,6 +374,10 @@ public sealed class TenantNotification : Entity
             DeliveryError = error;
             Status = NotificationStatus.Failed;
         }
+        else
+        {
+            DeliveryError = null; // Clear error on successful delivery
+        }
     }
     
     public bool IsExpired()

@@ -10,10 +10,10 @@ namespace Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardSt
 
 public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizardStepCommand, Result<TenantSetupWizardDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
     private readonly ILogger<UpdateWizardStepCommandHandler> _logger;
 
-    public UpdateWizardStepCommandHandler(IMasterDbContext context, ILogger<UpdateWizardStepCommandHandler> logger)
+    public UpdateWizardStepCommandHandler(ITenantDbContext context, ILogger<UpdateWizardStepCommandHandler> logger)
     {
         _context = context;
         _logger = logger;
@@ -23,36 +23,37 @@ public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizar
     {
         try
         {
-            var wizard = await _context.TenantSetupWizards
+            var wizard = await _context.SetupWizards
+                .Include(x => x.Steps)
                 .FirstOrDefaultAsync(x => x.Id == request.WizardId, cancellationToken);
 
             if (wizard == null)
                 return Result<TenantSetupWizardDto>.Failure(Error.NotFound("Wizard.NotFound", "Wizard bulunamadı."));
 
-            // Save step data if provided
-            if (request.StepData != null && request.StepData.Count > 0)
-            {
-                wizard.SaveProgress(JsonSerializer.Serialize(request.StepData));
-            }
+            // Step data should be saved directly to the step
+            var stepDataJson = request.StepData != null && request.StepData.Count > 0 
+                ? JsonSerializer.Serialize(request.StepData) 
+                : null;
 
             // Process action
             switch (request.Action.ToLower())
             {
                 case "complete":
-                    wizard.CompleteCurrentStep();
+                    wizard.CompleteCurrentStep("User", stepDataJson);
                     _logger.LogInformation("Wizard step completed. WizardId: {WizardId}, Step: {Step}", 
-                        wizard.Id, wizard.CurrentStep);
+                        wizard.Id, wizard.CurrentStepIndex);
                     break;
 
                 case "skip":
-                    if (!wizard.CanSkipCurrentStep)
+                    var currentStep = wizard.Steps.FirstOrDefault(s => s.Status == Domain.Tenant.Entities.StepStatus.Current);
+                    if (currentStep == null || !currentStep.CanSkip)
                         return Result<TenantSetupWizardDto>.Failure(Error.Validation("Step.CannotSkip", "Bu adım atlanamaz."));
-                    wizard.SkipCurrentStep(request.Reason ?? "User skipped");
+                    wizard.SkipCurrentStep("User", request.Reason ?? "User skipped");
                     break;
 
                 case "previous":
-                    wizard.GoToPreviousStep();
-                    break;
+                    // Previous step functionality not available in new API
+                    return Result<TenantSetupWizardDto>.Failure(Error.Validation("Wizard.UnsupportedAction", "Previous step not supported"));
 
                 case "pause":
                     wizard.PauseWizard();
@@ -63,7 +64,8 @@ public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizar
                     break;
 
                 case "requesthelp":
-                    wizard.RequestHelp(request.Notes ?? "Help requested");
+                    // Help request functionality not available in new API
+                    _logger.LogInformation("Help requested for wizard {WizardId}: {Notes}", wizard.Id, request.Notes);
                     break;
 
                 default:
@@ -75,17 +77,17 @@ public sealed class UpdateWizardStepCommandHandler : IRequestHandler<UpdateWizar
             var dto = new TenantSetupWizardDto
             {
                 Id = wizard.Id,
-                TenantId = wizard.TenantId,
+                TenantId = Guid.Empty, // Tenant ID tracked separately
                 WizardType = wizard.WizardType.ToString(),
                 Status = wizard.Status.ToString(),
                 TotalSteps = wizard.TotalSteps,
                 CompletedSteps = wizard.CompletedSteps,
-                CurrentStep = wizard.CurrentStep,
+                CurrentStep = wizard.CurrentStepIndex,
                 ProgressPercentage = wizard.ProgressPercentage,
-                CurrentStepName = wizard.CurrentStepName,
-                CurrentStepDescription = wizard.CurrentStepDescription,
-                IsCurrentStepRequired = wizard.IsCurrentStepRequired,
-                CanSkipCurrentStep = wizard.CanSkipCurrentStep,
+                CurrentStepName = wizard.Steps.FirstOrDefault(s => s.Status == Domain.Tenant.Entities.StepStatus.Current)?.Title ?? string.Empty,
+                CurrentStepDescription = wizard.Steps.FirstOrDefault(s => s.Status == Domain.Tenant.Entities.StepStatus.Current)?.Description ?? string.Empty,
+                IsCurrentStepRequired = wizard.Steps.FirstOrDefault(s => s.Status == Domain.Tenant.Entities.StepStatus.Current)?.IsRequired ?? false,
+                CanSkipCurrentStep = wizard.Steps.FirstOrDefault(s => s.Status == Domain.Tenant.Entities.StepStatus.Current)?.CanSkip ?? false,
                 StartedAt = wizard.StartedAt,
                 CompletedAt = wizard.CompletedAt
             };

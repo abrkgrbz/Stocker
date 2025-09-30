@@ -39,6 +39,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="appsettings.Testing.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Stocker.Identity\Stocker.Identity.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Stocker.Infrastructure\Stocker.Infrastructure.csproj" />

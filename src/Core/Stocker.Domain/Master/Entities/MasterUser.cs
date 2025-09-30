@@ -9,7 +9,8 @@ namespace Stocker.Domain.Master.Entities;
 public sealed class MasterUser : AggregateRoot
 {
     private readonly List<ValueObjects.RefreshToken> _refreshTokens = new();
-    private readonly List<UserTenant> _tenants = new();
+    // UserTenant has been moved to Tenant domain - relationship managed differently
+    // private readonly List<UserTenant> _tenants = new();
     private readonly List<UserLoginHistory> _loginHistory = new();
 
     public string Username { get; private set; }
@@ -361,23 +362,25 @@ public sealed class MasterUser : AggregateRoot
 
     public void AssignToTenant(Guid tenantId, UserType userType)
     {
-        if (_tenants.Any(t => t.TenantId == tenantId))
-        {
-            throw new InvalidOperationException($"User is already assigned to tenant '{tenantId}'.");
-        }
-
-        _tenants.Add(new UserTenant(Id, tenantId, userType));
+        // UserTenant management moved to Tenant domain
+        // if (_tenants.Any(t => t.TenantId == tenantId))
+        // {
+        //     throw new InvalidOperationException($"User is already assigned to tenant '{tenantId}'.");
+        // }
+        //
+        // _tenants.Add(new UserTenant(Id, tenantId, userType));
     }
 
     public void RemoveFromTenant(Guid tenantId)
     {
-        var userTenant = _tenants.FirstOrDefault(t => t.TenantId == tenantId);
-        if (userTenant == null)
-        {
-            throw new InvalidOperationException($"User is not assigned to tenant '{tenantId}'.");
-        }
-
-        _tenants.Remove(userTenant);
+        // UserTenant management moved to Tenant domain
+        // var userTenant = _tenants.FirstOrDefault(t => t.TenantId == tenantId);
+        // if (userTenant == null)
+        // {
+        //     throw new InvalidOperationException($"User is not assigned to tenant '{tenantId}'.");
+        // }
+        //
+        // _tenants.Remove(userTenant);
     }
 
     public void UpdateProfile(
@@ -411,7 +414,10 @@ public sealed class MasterUser : AggregateRoot
 
     public bool HasAccessToTenant(Guid tenantId)
     {
-        return UserType == UserType.SistemYoneticisi || _tenants.Any(t => t.TenantId == tenantId);
+        // UserTenant has been moved to Tenant domain
+        // For system administrators, always return true
+        // For other users, this check should be performed through Tenant database context
+        return UserType == UserType.SistemYoneticisi;
     }
 
     // Helper methods for Identity layer
@@ -453,12 +459,14 @@ public sealed class MasterUser : AggregateRoot
 
     public void AddTenant(Guid tenantId, bool isActive)
     {
-        if (_tenants.Any(t => t.TenantId == tenantId))
-        {
-            return;
-        }
-        _tenants.Add(new UserTenant(Id, tenantId, UserType.Personel));
+        // UserTenant management moved to Tenant domain
+        // if (_tenants.Any(t => t.TenantId == tenantId))
+        // {
+        //     return;
+        // }
+        // _tenants.Add(new UserTenant(Id, tenantId, UserType.Personel));
     }
 
-    public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();
+    // UserTenant collection moved to Tenant domain
+    // public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();
 }

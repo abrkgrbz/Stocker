@@ -72,7 +72,6 @@ public class TenantDataSeeder
     private TenantEntities.Role CreateAdminRole()
     {
         var adminRole = TenantEntities.Role.Create(
-            tenantId: _tenantId,
             name: "Administrator",
             description: "Full system access",
             isSystemRole: true);
@@ -93,7 +92,6 @@ public class TenantDataSeeder
     private TenantEntities.Role CreateManagerRole()
     {
         var managerRole = TenantEntities.Role.Create(
-            tenantId: _tenantId,
             name: "Manager",
             description: "Department/Branch manager access",
             isSystemRole: true);
@@ -118,7 +116,6 @@ public class TenantDataSeeder
     private TenantEntities.Role CreateEmployeeRole()
     {
         var employeeRole = TenantEntities.Role.Create(
-            tenantId: _tenantId,
             name: "Employee",
             description: "Basic employee access",
             isSystemRole: true);
@@ -136,7 +133,6 @@ public class TenantDataSeeder
     private TenantEntities.Role CreateReadOnlyRole()
     {
         var readOnlyRole = TenantEntities.Role.Create(
-            tenantId: _tenantId,
             name: "Read-Only",
             description: "View-only access",
             isSystemRole: true);
@@ -154,7 +150,6 @@ public class TenantDataSeeder
     private TenantEntities.Role CreateDepartmentHeadRole()
     {
         var deptHeadRole = TenantEntities.Role.Create(
-            tenantId: _tenantId,
             name: "Department Head",
             description: "Department head with special permissions",
             isSystemRole: true);
@@ -172,99 +167,6 @@ public class TenantDataSeeder
         return deptHeadRole;
     }
 
-    private async Task SeedDefaultRolesAsync()
-    {
-        if (await _context.Roles.AnyAsync())
-        {
-            _logger.LogInformation("Roles already seeded.");
-            return;
-        }
-
-        var tenantId = _tenantId;
-
-        if (tenantId == Guid.Empty)
-        {
-            _logger.LogWarning("Cannot seed roles without a valid tenant context.");
-            return;
-        }
-
-        var roles = new List<TenantEntities.Role>();
-
-        // Admin Role
-        var adminRole = TenantEntities.Role.Create(
-            tenantId: tenantId,
-            name: "Administrator",
-            description: "Full system access",
-            isSystemRole: true);
-
-        // Add all permissions
-        var resources = new[] { "Company", "User", "Role", "Department", "Branch", "Reports", "Settings" };
-        foreach (var resource in resources)
-        {
-            foreach (PermissionType permissionType in Enum.GetValues(typeof(PermissionType)))
-            {
-                adminRole.AddPermission(resource, permissionType);
-            }
-        }
-
-        roles.Add(adminRole);
-
-        // Manager Role
-        var managerRole = TenantEntities.Role.Create(
-            tenantId: tenantId,
-            name: "Manager",
-            description: "Department/Branch manager access",
-            isSystemRole: true);
-
-        // Manager permissions
-        var managerResources = new[] { "User", "Department", "Branch", "Reports" };
-        foreach (var resource in managerResources)
-        {
-            managerRole.AddPermission(resource, PermissionType.View);
-            managerRole.AddPermission(resource, PermissionType.Create);
-            managerRole.AddPermission(resource, PermissionType.Edit);
-            
-            if (resource == "Reports")
-            {
-                managerRole.AddPermission(resource, PermissionType.Export);
-            }
-        }
-
-        roles.Add(managerRole);
-
-        // Employee Role
-        var employeeRole = TenantEntities.Role.Create(
-            tenantId: tenantId,
-            name: "Employee",
-            description: "Basic employee access",
-            isSystemRole: true);
-
-        // Employee permissions
-        employeeRole.AddPermission("User", PermissionType.View); // View own profile
-        employeeRole.AddPermission("Department", PermissionType.View);
-        employeeRole.AddPermission("Branch", PermissionType.View);
-        employeeRole.AddPermission("Reports", PermissionType.View);
-
-        roles.Add(employeeRole);
-
-        // Read-Only Role
-        var readOnlyRole = TenantEntities.Role.Create(
-            tenantId: tenantId,
-            name: "Read-Only",
-            description: "View-only access",
-            isSystemRole: true);
-
-        // Read-only permissions
-        foreach (var resource in resources)
-        {
-            readOnlyRole.AddPermission(resource, PermissionType.View);
-        }
-
-        roles.Add(readOnlyRole);
-
-        await _context.Roles.AddRangeAsync(roles);
-        _logger.LogInformation("Seeded {Count} default roles.", roles.Count);
-    }
 
     private async Task SeedDefaultAdminUserAsync()
     {

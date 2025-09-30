@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Tenant.Entities;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -9,23 +9,23 @@ namespace Stocker.Application.Features.TenantRegistration.Queries.GetSetupCheckl
 
 public sealed class GetSetupChecklistQueryHandler : IRequestHandler<GetSetupChecklistQuery, Result<TenantSetupChecklistDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public GetSetupChecklistQueryHandler(IMasterDbContext context)
+    public GetSetupChecklistQueryHandler(ITenantDbContext context)
     {
         _context = context;
     }
 
     public async Task<Result<TenantSetupChecklistDto>> Handle(GetSetupChecklistQuery request, CancellationToken cancellationToken)
     {
+        // TenantSetupChecklist no longer has TenantId - need to track tenant association separately
         var checklist = await _context.TenantSetupChecklists
-            .Where(x => x.TenantId == request.TenantId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (checklist == null)
         {
             // Create new checklist if not exists
-            checklist = Domain.Master.Entities.TenantSetupChecklist.Create(request.TenantId, "System");
+            checklist = Domain.Tenant.Entities.TenantSetupChecklist.Create("System");
             _context.TenantSetupChecklists.Add(checklist);
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -33,7 +33,7 @@ public sealed class GetSetupChecklistQueryHandler : IRequestHandler<GetSetupChec
         var dto = new TenantSetupChecklistDto
         {
             Id = checklist.Id,
-            TenantId = checklist.TenantId,
+            TenantId = _context.TenantId, // Get from context (database-per-tenant)
             Status = checklist.Status.ToString(),
             
             // Basic Setup
@@ -68,7 +68,7 @@ public sealed class GetSetupChecklistQueryHandler : IRequestHandler<GetSetupChec
             RequiredCompletedItems = checklist.RequiredCompletedItems,
             OverallProgress = checklist.OverallProgress,
             RequiredProgress = checklist.RequiredProgress,
-            CanGoLive = checklist.CanGoLive()
+            CanGoLive = checklist.RequiredProgress >= 100 // Check if all required items are completed
         };
 
         return Result<TenantSetupChecklistDto>.Success(dto);

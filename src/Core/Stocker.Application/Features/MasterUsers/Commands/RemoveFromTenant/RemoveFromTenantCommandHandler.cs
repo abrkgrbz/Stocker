@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Extensions;
+using Stocker.Domain.Tenant.Entities;
+using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
 
@@ -9,14 +11,17 @@ namespace Stocker.Application.Features.MasterUsers.Commands.RemoveFromTenant;
 
 public class RemoveFromTenantCommandHandler : IRequestHandler<RemoveFromTenantCommand, Result<bool>>
 {
-    private readonly IMasterUnitOfWork _unitOfWork;
+    private readonly IMasterUnitOfWork _masterUnitOfWork;
+    private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ILogger<RemoveFromTenantCommandHandler> _logger;
 
     public RemoveFromTenantCommandHandler(
-        IMasterUnitOfWork unitOfWork,
+        IMasterUnitOfWork masterUnitOfWork,
+        ITenantContextFactory tenantContextFactory,
         ILogger<RemoveFromTenantCommandHandler> logger)
     {
-        _unitOfWork = unitOfWork;
+        _masterUnitOfWork = masterUnitOfWork;
+        _tenantContextFactory = tenantContextFactory;
         _logger = logger;
     }
 
@@ -24,9 +29,9 @@ public class RemoveFromTenantCommandHandler : IRequestHandler<RemoveFromTenantCo
     {
         try
         {
-            var user = await _unitOfWork.MasterUsers()
+            // Get user from Master DB
+            var user = await _masterUnitOfWork.MasterUsers()
                 .AsQueryable()
-                .Include(u => u.UserTenants)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
@@ -35,18 +40,30 @@ public class RemoveFromTenantCommandHandler : IRequestHandler<RemoveFromTenantCo
                     Error.NotFound("MasterUser.NotFound", "Kullanıcı bulunamadı"));
             }
 
-            // Check if user is assigned to this tenant
-            if (!user.UserTenants.Any(ut => ut.TenantId == request.TenantId))
+            // Switch to the target tenant's database context
+            using (var tenantContext = await _tenantContextFactory.CreateAsync(request.TenantId))
             {
-                return Result<bool>.Failure(
-                    Error.NotFound("MasterUser.NotAssigned", "Kullanıcı bu tenant'a atanmamış"));
+                // Find and remove UserTenant record from tenant's database
+                var userTenant = await tenantContext.Set<UserTenant>()
+                    .FirstOrDefaultAsync(ut => ut.UserId == request.UserId, cancellationToken);
+
+                if (userTenant == null)
+                {
+                    return Result<bool>.Failure(
+                        Error.NotFound("MasterUser.NotAssigned", "Kullanıcı bu tenant'a atanmamış"));
+                }
+
+                // Deactivate the user in tenant (soft delete)
+                userTenant.Deactivate(request.RemovedBy, "Removed from tenant");
+                
+                await tenantContext.SaveChangesAsync(cancellationToken);
             }
 
-            // Remove user from tenant
+            // Remove user from tenant in Master DB
             user.RemoveFromTenant(request.TenantId);
 
-            await _unitOfWork.MasterUsers().UpdateAsync(user, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _masterUnitOfWork.MasterUsers().UpdateAsync(user, cancellationToken);
+            await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("User {UserId} removed from tenant {TenantId} by {RemovedBy}", 
                 request.UserId, request.TenantId, request.RemovedBy);

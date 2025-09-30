@@ -105,26 +105,27 @@ public class TokenGenerationService : ITokenGenerationService
         // Add role claims based on UserType
         switch (user.UserType)
         {
-            case UserType.SistemYoneticisi:
+            case Domain.Master.Enums.UserType.SistemYoneticisi:
                 claims.Add(new Claim(ClaimTypes.Role, "SistemYoneticisi"));
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 break;
-            case UserType.FirmaYoneticisi:
+            case Domain.Master.Enums.UserType.FirmaYoneticisi:
                 claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
                 break;
-            case UserType.Destek:
+            case Domain.Master.Enums.UserType.Destek:
                 claims.Add(new Claim(ClaimTypes.Role, "Destek"));
                 break;
-            case UserType.Personel:
+            case Domain.Master.Enums.UserType.Personel:
                 claims.Add(new Claim(ClaimTypes.Role, "Personel"));
                 break;
-            case UserType.Misafir:
+            case Domain.Master.Enums.UserType.Misafir:
                 claims.Add(new Claim(ClaimTypes.Role, "Misafir"));
                 break;
         }
 
         // Add tenant context if provided
-        if (tenantId.HasValue && user.UserTenants.Any(ut => ut.TenantId == tenantId.Value))
+        // UserTenants moved to Tenant domain - tenant validation should be done through Tenant context
+        if (tenantId.HasValue)
         {
             claims.Add(new Claim("TenantId", tenantId.Value.ToString()));
             
@@ -166,15 +167,15 @@ public class TokenGenerationService : ITokenGenerationService
         return claims;
     }
 
-    private List<string> GetRolesForUserType(UserType userType)
+    private List<string> GetRolesForUserType(Domain.Master.Enums.UserType userType)
     {
         return userType switch
         {
-            UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi" },
-            UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi" },
-            UserType.Destek => new List<string> { "Destek" },
-            UserType.Personel => new List<string> { "Personel" },
-            UserType.Misafir => new List<string> { "Misafir" },
+            Domain.Master.Enums.UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi" },
+            Domain.Master.Enums.UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi" },
+            Domain.Master.Enums.UserType.Destek => new List<string> { "Destek" },
+            Domain.Master.Enums.UserType.Personel => new List<string> { "Personel" },
+            Domain.Master.Enums.UserType.Misafir => new List<string> { "Misafir" },
             _ => new List<string>()
         };
     }

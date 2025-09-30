@@ -85,20 +85,11 @@ public class TenantCheckController : ControllerBase
                 });
             }
 
-            // Get tenant customization settings
-            var settings = await _context.TenantSettings
-                .Where(ts => ts.TenantId == tenant.Id)
-                .Select(ts => new
-                {
-                    ts.PrimaryColor,
-                    ts.SecondaryColor,
-                    ts.LogoUrl
-                })
-                .FirstOrDefaultAsync();
-
-            string? primaryColor = settings?.PrimaryColor ?? "#667eea";
-            string? secondaryColor = settings?.SecondaryColor ?? "#764ba2";
-            string? logo = settings?.LogoUrl ?? tenant.LogoUrl;
+            // TenantSettings moved to Tenant domain - use default values for now
+            // Settings should be retrieved from Tenant context
+            string? primaryColor = "#667eea";
+            string? secondaryColor = "#764ba2";
+            string? logo = tenant.LogoUrl;
 
             return Ok(new
             {

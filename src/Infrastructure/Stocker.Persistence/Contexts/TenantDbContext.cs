@@ -59,6 +59,27 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     public DbSet<TenantActivityLog> TenantActivityLogs => Set<TenantActivityLog>();
     public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
     
+    // Onboarding & Initial Setup (Moved from Master to Tenant for better isolation)
+    public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>();
+    public DbSet<TenantInitialData> TenantInitialData => Set<TenantInitialData>();
+    
+    // User Management (Moved from Master to Tenant for better isolation)
+    public DbSet<UserTenant> UserTenants => Set<UserTenant>();
+    
+    // Phase 3 Entities (New additions)
+    public DbSet<TenantWebhook> TenantWebhooks => Set<TenantWebhook>();
+    public DbSet<TenantCompliance> TenantCompliances => Set<TenantCompliance>();
+    public DbSet<TenantCustomization> TenantCustomizations => Set<TenantCustomization>();
+    public DbSet<TenantOnboarding> TenantOnboardings => Set<TenantOnboarding>();
+    public DbSet<OnboardingStep> OnboardingSteps => Set<OnboardingStep>();
+    public DbSet<OnboardingTask> OnboardingTasks => Set<OnboardingTask>();
+    public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
+    public DbSet<PasswordHistory> PasswordHistories => Set<PasswordHistory>();
+    
+    // Documents & Integrations (Moved from Master to Tenant for better isolation)
+    public DbSet<TenantDocument> TenantDocuments => Set<TenantDocument>();
+    public DbSet<TenantIntegration> TenantIntegrations => Set<TenantIntegration>();
+    
     // Financial
     public DbSet<Domain.Tenant.Entities.Invoice> Invoices => Set<Domain.Tenant.Entities.Invoice>();
     public DbSet<Domain.Tenant.Entities.InvoiceItem> InvoiceItems => Set<Domain.Tenant.Entities.InvoiceItem>();
@@ -96,16 +117,32 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
             modelBuilder.HasDefaultSchema("tenant");
         }
         
-        // Apply only Tenant configurations
-        var tenantConfigNamespace = "Stocker.Persistence.Configurations.Tenant";
+        // Apply configurations from root namespace only (not Tenant subfolder to avoid duplicates)
+        var rootConfigNamespace = "Stocker.Persistence.Configurations";
         
         var configurations = GetType().Assembly.GetTypes()
-            .Where(t => t.Namespace == tenantConfigNamespace && 
+            .Where(t => t.Namespace == rootConfigNamespace && 
                        !t.IsAbstract && 
                        !t.IsGenericTypeDefinition &&
                        t.GetInterfaces().Any(i => i.IsGenericType && 
                                                   i.GetGenericTypeDefinition() == typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>)))
             .ToList();
+            
+        // Also apply configurations from Tenant namespace, but filter out Phase 3 entities
+        var tenantConfigNamespace = "Stocker.Persistence.Configurations.Tenant";
+        var phase3Entities = new[] { "TenantWebhook", "TenantCompliance", "TenantCustomization", 
+                                     "TenantOnboarding", "TenantFeature", "PasswordHistory" };
+        
+        var tenantConfigurations = GetType().Assembly.GetTypes()
+            .Where(t => t.Namespace == tenantConfigNamespace && 
+                       !t.IsAbstract && 
+                       !t.IsGenericTypeDefinition &&
+                       !phase3Entities.Any(e => t.Name.Contains(e)) &&
+                       t.GetInterfaces().Any(i => i.IsGenericType && 
+                                                  i.GetGenericTypeDefinition() == typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>)))
+            .ToList();
+            
+        configurations.AddRange(tenantConfigurations);
 
         // CRM configurations are now handled in the separate CRMDbContext
 
@@ -126,7 +163,7 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
             modelBuilder.Entity<Department>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<Branch>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<TenantUser>().HasQueryFilter(e => e.TenantId == currentTenantId);
-            modelBuilder.Entity<Role>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            // Role artık TenantId içermiyor - database-per-tenant yapısı kullanıldığı için gerek yok
             modelBuilder.Entity<TenantSettings>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<TenantModules>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<Customer>().HasQueryFilter(e => e.TenantId == currentTenantId);
@@ -134,6 +171,9 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
             modelBuilder.Entity<Domain.Tenant.Entities.Invoice>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<Domain.Tenant.Entities.InvoiceItem>().HasQueryFilter(e => e.TenantId == currentTenantId);
             modelBuilder.Entity<Domain.Tenant.Entities.Payment>().HasQueryFilter(e => e.TenantId == currentTenantId);
+            
+            // Phase 3 Entities - No query filters needed (database-per-tenant approach)
+            // Each tenant has its own database, so no need for TenantId filtering
         }
         // Inventory entities moved to Stocker.Modules.Inventory
         // modelBuilder.Entity<Product>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());

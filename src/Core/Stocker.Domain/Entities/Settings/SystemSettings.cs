@@ -34,7 +34,14 @@ public class SystemSettings : Entity
     {
         if (DataType == "json")
         {
-            return JsonSerializer.Deserialize<T>(Value) ?? default!;
+            try
+            {
+                return JsonSerializer.Deserialize<T>(Value) ?? default!;
+            }
+            catch
+            {
+                return default!;
+            }
         }
         
         return (T)Convert.ChangeType(Value, typeof(T));
@@ -52,7 +59,7 @@ public class SystemSettings : Entity
         else
         {
             Value = value.ToString() ?? string.Empty;
-            DataType = typeof(T).Name.ToLower();
+            DataType = typeof(T).Name.ToLowerInvariant();
         }
         
     }

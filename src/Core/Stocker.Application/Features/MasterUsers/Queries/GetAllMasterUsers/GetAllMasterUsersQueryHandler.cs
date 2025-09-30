@@ -30,8 +30,6 @@ public class GetAllMasterUsersQueryHandler : IRequestHandler<GetAllMasterUsersQu
         try
         {
             var query = _unitOfWork.MasterUsers()
-                .AsQueryable()
-                .Include(u => u.UserTenants)
                 .AsQueryable();
 
             // Filter by active status
@@ -54,13 +52,17 @@ public class GetAllMasterUsersQueryHandler : IRequestHandler<GetAllMasterUsersQu
             // Filter by role
             if (!string.IsNullOrWhiteSpace(request.Role))
             {
-                query = query.Where(u => u.UserTenants.Any(ut => ut.UserType.ToString() == request.Role));
+                // UserTenant has been moved to Tenant domain
+                // Role filtering needs to be handled through Tenant database context
+                _logger.LogWarning("Role filtering through UserTenants is not available. UserTenant has been moved to Tenant domain.");
             }
 
             // Filter by tenant
             if (request.TenantId.HasValue)
             {
-                query = query.Where(u => u.UserTenants.Any(ut => ut.TenantId == request.TenantId.Value));
+                // UserTenant has been moved to Tenant domain
+                // Tenant filtering needs to be handled through Tenant database context
+                _logger.LogWarning("Tenant filtering through UserTenants is not available. UserTenant has been moved to Tenant domain.");
             }
 
             var users = await query

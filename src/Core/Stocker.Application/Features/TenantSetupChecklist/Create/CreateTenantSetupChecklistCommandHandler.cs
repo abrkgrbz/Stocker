@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Tenant.Entities;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -9,10 +9,10 @@ namespace Stocker.Application.Features.TenantSetupChecklist.Create;
 
 public sealed class CreateTenantSetupChecklistCommandHandler : IRequestHandler<CreateTenantSetupChecklistCommand, Result<TenantSetupChecklistDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
     private readonly ILogger<CreateTenantSetupChecklistCommandHandler> _logger;
 
-    public CreateTenantSetupChecklistCommandHandler(IMasterDbContext context, ILogger<CreateTenantSetupChecklistCommandHandler> logger)
+    public CreateTenantSetupChecklistCommandHandler(ITenantDbContext context, ILogger<CreateTenantSetupChecklistCommandHandler> logger)
     {
         _context = context;
         _logger = logger;
@@ -23,7 +23,7 @@ public sealed class CreateTenantSetupChecklistCommandHandler : IRequestHandler<C
         try
         {
             // Create setup checklist
-            var checklist = Domain.Master.Entities.TenantSetupChecklist.Create(request.TenantId, "System");
+            var checklist = Domain.Tenant.Entities.TenantSetupChecklist.Create("System");
 
             _context.TenantSetupChecklists.Add(checklist);
             await _context.SaveChangesAsync(cancellationToken);
@@ -31,7 +31,7 @@ public sealed class CreateTenantSetupChecklistCommandHandler : IRequestHandler<C
             var dto = new TenantSetupChecklistDto
             {
                 Id = checklist.Id,
-                TenantId = checklist.TenantId,
+                TenantId = _context.TenantId, // Get from context (database-per-tenant)
                 Status = checklist.Status.ToString(),
                 
                 // Basic Setup
@@ -66,16 +66,16 @@ public sealed class CreateTenantSetupChecklistCommandHandler : IRequestHandler<C
                 RequiredCompletedItems = checklist.RequiredCompletedItems,
                 OverallProgress = checklist.OverallProgress,
                 RequiredProgress = checklist.RequiredProgress,
-                CanGoLive = checklist.CanGoLive()
+                CanGoLive = checklist.RequiredProgress >= 100 // Check if all required items are completed
             };
 
-            _logger.LogInformation("Setup checklist created for tenant {TenantId}", request.TenantId);
+            _logger.LogInformation("Setup checklist created for tenant {TenantId}", _context.TenantId);
 
             return Result<TenantSetupChecklistDto>.Success(dto);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating setup checklist for tenant {TenantId}", request.TenantId);
+            _logger.LogError(ex, "Error creating setup checklist for tenant {TenantId}", _context.TenantId);
             return Result<TenantSetupChecklistDto>.Failure(Error.Failure("Checklist.CreateFailed", $"Checklist oluşturulurken hata oluştu: {ex.Message}"));
         }
     }

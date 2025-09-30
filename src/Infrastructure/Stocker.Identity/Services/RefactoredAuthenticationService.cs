@@ -199,7 +199,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
 
             // Find master user
             var masterUser = await _masterContext.MasterUsers
-                .Include(u => u.UserTenants)
+                // UserTenants moved to Tenant domain
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (masterUser == null)
@@ -255,7 +255,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 firstName: request.FirstName,
                 lastName: request.LastName,
                 phoneNumber: request.PhoneNumber,
-                userType: UserType.FirmaYoneticisi);
+                userType: Domain.Master.Enums.UserType.FirmaYoneticisi);
 
             return await _tokenGenerationService.GenerateForMasterUserAsync(masterUser);
         }
@@ -300,7 +300,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 firstName: request.FirstName,
                 lastName: request.LastName,
                 phoneNumber: request.PhoneNumber,
-                userType: UserType.FirmaYoneticisi);
+                userType: Domain.Master.Enums.UserType.FirmaYoneticisi);
 
             // Then ensure tenant user exists
             await _userManagementService.EnsureTenantUserExistsAsync(masterUser, tenantId);

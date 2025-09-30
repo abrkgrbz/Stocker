@@ -26,7 +26,6 @@ public class DeleteMasterUserCommandHandler : IRequestHandler<DeleteMasterUserCo
         {
             var user = await _unitOfWork.MasterUsers()
                 .AsQueryable()
-                .Include(u => u.UserTenants)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
@@ -52,11 +51,9 @@ public class DeleteMasterUserCommandHandler : IRequestHandler<DeleteMasterUserCo
             //     }
             // }
 
-            // Remove user from all tenants
-            foreach (var tenantAssociation in user.UserTenants.ToList())
-            {
-                user.RemoveFromTenant(tenantAssociation.TenantId);
-            }
+            // UserTenant has been moved to Tenant domain
+            // Tenant associations need to be handled through Tenant database context
+            _logger.LogWarning("UserTenant management has been moved to Tenant domain. Manual cleanup may be required for user {UserId}", request.UserId);
 
             // Soft delete - just deactivate
             user.Deactivate();

@@ -26,16 +26,29 @@ public sealed class ConnectionString : ValueObject
         }
 
         // Basic validation - check for required components
-        if (!value.Contains("Server=", StringComparison.OrdinalIgnoreCase) &&
-            !value.Contains("Data Source=", StringComparison.OrdinalIgnoreCase))
+        var hasServerInfo = value.Contains("Server=", StringComparison.OrdinalIgnoreCase) ||
+                           value.Contains("Data Source=", StringComparison.OrdinalIgnoreCase);
+        
+        if (!hasServerInfo)
         {
             return Result<ConnectionString>.Failure(new Error("ConnectionString.NoServer", "Connection string must contain server information.", ErrorType.Validation));
         }
 
-        if (!value.Contains("Database=", StringComparison.OrdinalIgnoreCase) &&
-            !value.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase))
+        // SQLite uses Data Source without Database field
+        var isSqlite = value.Contains("Data Source=", StringComparison.OrdinalIgnoreCase) && 
+                      (value.Contains(".db", StringComparison.OrdinalIgnoreCase) || 
+                       value.Contains(".sqlite", StringComparison.OrdinalIgnoreCase) ||
+                       value.Contains(":memory:", StringComparison.OrdinalIgnoreCase));
+        
+        if (!isSqlite)
         {
-            return Result<ConnectionString>.Failure(new Error("ConnectionString.NoDatabase", "Connection string must contain database information.", ErrorType.Validation));
+            var hasDatabaseInfo = value.Contains("Database=", StringComparison.OrdinalIgnoreCase) ||
+                                 value.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase);
+            
+            if (!hasDatabaseInfo)
+            {
+                return Result<ConnectionString>.Failure(new Error("ConnectionString.NoDatabase", "Connection string must contain database information.", ErrorType.Validation));
+            }
         }
 
         return Result<ConnectionString>.Success(new ConnectionString(value));

@@ -18,7 +18,7 @@ public class TenantResolver : ITenantResolver
     {
         var tenant = await _masterDbContext.Tenants
             .Include(t => t.Domains)
-            .Include(t => t.Features)
+            // Features moved to Tenant domain
             .FirstOrDefaultAsync(t => 
                 t.Code == identifier || 
                 t.Domains.Any(d => d.DomainName == identifier && d.IsVerified));
@@ -30,7 +30,7 @@ public class TenantResolver : ITenantResolver
     {
         var tenant = await _masterDbContext.Tenants
             .Include(t => t.Domains)
-            .Include(t => t.Features)
+            // Features moved to Tenant domain
             .FirstOrDefaultAsync(t => t.Id == tenantId);
 
         return MapToTenantInfo(tenant);
@@ -40,7 +40,7 @@ public class TenantResolver : ITenantResolver
     {
         var tenant = await _masterDbContext.Tenants
             .Include(t => t.Domains)
-            .Include(t => t.Features)
+            // Features moved to Tenant domain
             .FirstOrDefaultAsync(t => t.Domains.Any(d => d.DomainName == domain.ToLowerInvariant() && d.IsVerified));
 
         return MapToTenantInfo(tenant);
@@ -84,14 +84,7 @@ public class TenantResolver : ITenantResolver
         if (primaryDomain != null)
             tenantInfo.Properties["PrimaryDomain"] = primaryDomain.DomainName;
 
-        // Add active features
-        var activeFeatures = tenant.Features
-            .Where(f => f.IsActive())
-            .Select(f => f.FeatureCode)
-            .ToList();
-
-        if (activeFeatures.Any())
-            tenantInfo.Properties["ActiveFeatures"] = string.Join(",", activeFeatures);
+        // Features moved to Tenant domain - feature information should be retrieved from Tenant context
 
         return tenantInfo;
     }

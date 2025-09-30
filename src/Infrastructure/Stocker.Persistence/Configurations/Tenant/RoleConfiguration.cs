@@ -13,9 +13,6 @@ public class RoleConfiguration : BaseEntityTypeConfiguration<Role>
         builder.ToTable("Roles", "tenant");
 
         // Properties
-        builder.Property(r => r.TenantId)
-            .IsRequired();
-
         builder.Property(r => r.Name)
             .IsRequired()
             .HasMaxLength(100);
@@ -39,12 +36,9 @@ public class RoleConfiguration : BaseEntityTypeConfiguration<Role>
             .OnDelete(DeleteBehavior.Cascade);
 
         // Indexes
-        builder.HasIndex(r => r.TenantId)
-            .HasDatabaseName("IX_Roles_TenantId");
-
-        builder.HasIndex(r => new { r.TenantId, r.Name })
+        builder.HasIndex(r => r.Name)
             .IsUnique()
-            .HasDatabaseName("IX_Roles_TenantId_Name");
+            .HasDatabaseName("IX_Roles_Name");
 
         builder.HasIndex(r => r.IsActive)
             .HasDatabaseName("IX_Roles_IsActive");

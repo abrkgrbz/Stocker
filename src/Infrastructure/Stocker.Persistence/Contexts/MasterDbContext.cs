@@ -11,38 +11,26 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     {
     }
 
-    // Tenant Management
+    // Tenant Management (Core - Stays in Master)
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
-    public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
-    public DbSet<TenantApiKey> TenantApiKeys => Set<TenantApiKey>();
-    public DbSet<TenantWebhook> TenantWebhooks => Set<TenantWebhook>();
-    public DbSet<TenantIntegration> TenantIntegrations => Set<TenantIntegration>();
-    public DbSet<TenantActivityLog> TenantActivityLogs => Set<TenantActivityLog>();
-    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
-    public DbSet<TenantSecuritySettings> TenantSecuritySettings => Set<TenantSecuritySettings>();
     public DbSet<TenantHealthCheck> TenantHealthChecks => Set<TenantHealthCheck>();
     public DbSet<TenantBackup> TenantBackups => Set<TenantBackup>();
+    public DbSet<TenantLimits> TenantLimits => Set<TenantLimits>();
     
-    // Tenant Registration & Onboarding
+    // Tenant Registration & Contracts (Stays in Master)
     public DbSet<TenantRegistration> TenantRegistrations => Set<TenantRegistration>();
     public DbSet<TenantContract> TenantContracts => Set<TenantContract>();
     public DbSet<TenantBilling> TenantBillings => Set<TenantBilling>();
-    public DbSet<TenantOnboarding> TenantOnboardings => Set<TenantOnboarding>();
-    public DbSet<TenantLimits> TenantLimits => Set<TenantLimits>();
-    public DbSet<OnboardingStep> OnboardingSteps => Set<OnboardingStep>();
-    public DbSet<OnboardingTask> OnboardingTasks => Set<OnboardingTask>();
     
-    // Tenant Management & Compliance
-    public DbSet<TenantNotification> TenantNotifications => Set<TenantNotification>();
-    public DbSet<TenantCustomization> TenantCustomizations => Set<TenantCustomization>();
-    public DbSet<TenantCompliance> TenantCompliances => Set<TenantCompliance>();
-    public DbSet<TenantDocument> TenantDocuments => Set<TenantDocument>();
+    // All tenant-specific entities have been moved to Tenant DB
     
-    // Tenant Setup & Wizard
-    public DbSet<TenantSetupWizard> TenantSetupWizards => Set<TenantSetupWizard>();
-    public DbSet<TenantInitialData> TenantInitialData => Set<TenantInitialData>();
-    public DbSet<TenantSetupChecklist> TenantSetupChecklists => Set<TenantSetupChecklist>();
+    // NOTE: Following entities have been MOVED to Tenant DB (Phase 1-3):
+    // Phase 1-2: TenantApiKey, TenantActivityLog, TenantSecuritySettings, TenantNotification
+    //           TenantSetupWizard (now SetupWizard), TenantSetupChecklist, TenantInitialData
+    //           TenantDocument, TenantIntegration, UserTenant, TenantSettings
+    // Phase 3:  TenantWebhook, TenantCompliance, TenantCustomization, TenantOnboarding
+    //           OnboardingStep, OnboardingTask, TenantFeature, PasswordHistory
 
     // Package & Subscription Management
     public DbSet<Package> Packages => Set<Package>();
@@ -59,8 +47,8 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // User Management
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
-    public DbSet<UserTenant> UserTenants => Set<UserTenant>();
     public DbSet<UserLoginHistory> UserLoginHistories => Set<UserLoginHistory>();
+    // UserTenant has been moved to Tenant DB
     
     // System Settings
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();

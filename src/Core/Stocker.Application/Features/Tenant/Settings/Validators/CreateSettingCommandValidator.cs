@@ -77,6 +77,9 @@ public class CreateSettingCommandValidator : AbstractValidator<CreateSettingComm
 
     private bool NotBeReservedKey(string key)
     {
+        if (string.IsNullOrEmpty(key))
+            return true; // Let other validators handle null/empty validation
+            
         var reservedKeys = new[]
         {
             "system.version",
@@ -120,7 +123,9 @@ public class CreateSettingCommandValidator : AbstractValidator<CreateSettingComm
         if (string.IsNullOrEmpty(value))
             return false;
 
-        return decimal.TryParse(value, out _);
+        // Check for valid number format (int or decimal with single decimal point)
+        return decimal.TryParse(value, System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out _);
     }
 
     private bool BeValidDate(string? value)

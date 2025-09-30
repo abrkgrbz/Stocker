@@ -45,7 +45,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 _logger.LogDebug("Attempting to query with owned entity navigation");
                 user = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                     .AsQueryable()
-                    .Include(u => u.UserTenants)
+                    // UserTenants moved to Tenant domain
                     .FirstOrDefaultAsync(u => u.Email.Value == emailValue, cancellationToken);
             }
             catch (Exception queryEx)
@@ -56,10 +56,10 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 _logger.LogDebug("Using in-memory filtering as fallback");
                 var allUsers = await _unitOfWork.Repository<Domain.Master.Entities.MasterUser>()
                     .AsQueryable()
-                    .Include(u => u.UserTenants)
+                    // UserTenants moved to Tenant domain
                     .ToListAsync(cancellationToken);
                 
-                _logger.LogDebug("Loaded {Count} users, filtering by email", allUsers.Count);
+                _logger.LogDebug($"Loaded {allUsers.Count} users, filtering by email");
                 user = allUsers.FirstOrDefault(u => u.Email?.Value == emailValue);
             }
 
@@ -74,24 +74,17 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             if (user.IsEmailVerified)
             {
                 _logger.LogInformation("Email already verified for user: {UserId}", user.Id);
-                var userTenant = user.UserTenants.FirstOrDefault();
-                string? existingTenantName = null;
-                
-                if (userTenant != null)
-                {
-                    var existingTenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
-                        .AsQueryable()
-                        .FirstOrDefaultAsync(t => t.Id == userTenant.TenantId, cancellationToken);
-                    existingTenantName = existingTenant?.Name;
-                }
+                // UserTenant has been moved to Tenant domain
+                // Tenant association should be retrieved from Tenant context
+                // For now, returning without tenant information
                 
                 return Result<VerifyEmailResponse>.Success(new VerifyEmailResponse
                 {
                     Success = true,
                     Message = "Email adresiniz zaten doğrulanmış. Giriş yapabilirsiniz.",
                     RedirectUrl = "/login",
-                    TenantId = userTenant?.TenantId,
-                    TenantName = existingTenantName
+                    TenantId = null,
+                    TenantName = null
                 });
             }
 
@@ -118,27 +111,14 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
             }
 
             // Get tenant information
-            var userTenantInfo = user.UserTenants.FirstOrDefault();
+            // UserTenant has been moved to Tenant domain
+            // Tenant association should be retrieved from Tenant context
             Domain.Master.Entities.Tenant? tenant = null;
             string? tenantName = null;
+            Guid? tenantId = null;
             
-            if (userTenantInfo != null)
-            {
-                // Load tenant separately
-                tenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
-                    .AsQueryable()
-                    .FirstOrDefaultAsync(t => t.Id == userTenantInfo.TenantId, cancellationToken);
-                
-                if (tenant != null)
-                {
-                    tenantName = tenant.Name;
-                    if (!tenant.IsActive)
-                    {
-                        tenant.Activate();
-                        _logger.LogInformation("Tenant activated after email verification: {TenantId}", tenant.Id);
-                    }
-                }
-            }
+            // For now, we'll skip tenant lookup since UserTenant is in Tenant domain
+            // This should be handled through a service that can access both contexts
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -149,7 +129,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 Success = true,
                 Message = "Email adresiniz başarıyla doğrulandı! Şirket bilgilerinizi tamamlayarak başlayabilirsiniz.",
                 RedirectUrl = "/company-setup",
-                TenantId = userTenantInfo?.TenantId,
+                TenantId = tenantId,
                 TenantName = tenantName
             });
         }

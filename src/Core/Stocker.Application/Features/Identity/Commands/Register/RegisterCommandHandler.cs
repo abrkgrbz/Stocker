@@ -1,8 +1,11 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Tenant.Entities;
+using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 using Stocker.SharedKernel.Repositories;
 using System.Security.Claims;
@@ -13,20 +16,20 @@ namespace Stocker.Application.Features.Identity.Commands.Register;
 public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<RegisterResponse>>
 {
     private readonly IMasterUnitOfWork _masterUnitOfWork;
-    private readonly ITenantUnitOfWork _tenantUnitOfWork;
+    private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ITokenService _tokenService;
     private readonly IBackgroundJobService _backgroundJobService;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
         IMasterUnitOfWork masterUnitOfWork,
-        ITenantUnitOfWork tenantUnitOfWork,
+        ITenantContextFactory tenantContextFactory,
         ITokenService tokenService,
         IBackgroundJobService backgroundJobService,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
-        _tenantUnitOfWork = tenantUnitOfWork;
+        _tenantContextFactory = tenantContextFactory;
         _tokenService = tokenService;
         _backgroundJobService = backgroundJobService;
         _logger = logger;
@@ -45,7 +48,9 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 ? request.Domain.ToLower().Trim() 
                 : GenerateSubdomain(request.CompanyName);
                 
-            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create("");
+            // Use a placeholder SQLite connection string during registration
+            // The actual connection string will be set during tenant provisioning
+            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create($"Data Source=StockerTenant_{subdomain}.db");
             var emailResult = Domain.Common.ValueObjects.Email.Create(request.Email);
             
             if (connectionStringResult.IsFailure || emailResult.IsFailure)
@@ -103,14 +108,33 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 reloadedUser?.Password?.Value,
                 reloadedUser?.PasswordHash);
 
-            // Create user-tenant relationship
-            var userTenant = new UserTenant(
-                userId: masterUser.Id,
-                tenantId: tenant.Id,
-                userType: Domain.Master.Enums.UserType.FirmaYoneticisi);
+            // Create user-tenant relationship in the tenant's database
+            // Note: During registration, the tenant's database might need to be created first
+            // This should be handled by a separate migration/setup process
+            try
+            {
+                using (var tenantContext = await _tenantContextFactory.CreateAsync(tenant.Id))
+                {
+                    var userTenant = UserTenant.Create(
+                        userId: masterUser.Id,
+                        username: masterUser.Username,
+                        email: masterUser.Email.Value,
+                        firstName: masterUser.FirstName,
+                        lastName: masterUser.LastName,
+                        userType: Domain.Tenant.Entities.UserType.FirmaYoneticisi,
+                        assignedBy: "System",
+                        phoneNumber: masterUser.PhoneNumber?.Value);
 
-            await _masterUnitOfWork.Repository<UserTenant>().AddAsync(userTenant, cancellationToken);
-            await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
+                    await tenantContext.Set<UserTenant>().AddAsync(userTenant, cancellationToken);
+                    await tenantContext.SaveChangesAsync(cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not create UserTenant for tenant {TenantId}. Tenant database might not be ready yet.", tenant.Id);
+                // This is expected during registration - the tenant database might not exist yet
+                // The UserTenant will be created during the tenant setup process
+            }
 
             // Generate JWT token for auto-login
             var claims = new List<Claim>

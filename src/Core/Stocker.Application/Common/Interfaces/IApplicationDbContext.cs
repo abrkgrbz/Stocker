@@ -17,17 +17,17 @@ public interface IApplicationDbContext
     // Settings
     DbSet<SystemSettings> SystemSettings { get; }
     
-    // Tenant Related Entities
-    DbSet<TenantApiKey> TenantApiKeys { get; }
-    DbSet<TenantWebhook> TenantWebhooks { get; }
-    DbSet<TenantIntegration> TenantIntegrations { get; }
-    DbSet<TenantActivityLog> TenantActivityLogs { get; }
-    DbSet<TenantSettings> TenantSettings { get; }
-    DbSet<TenantSecuritySettings> TenantSecuritySettings { get; }
+    // Tenant Core Management (Remaining in Master)
     DbSet<TenantHealthCheck> TenantHealthChecks { get; }
     DbSet<TenantBackup> TenantBackups { get; }
     DbSet<TenantDomain> TenantDomains { get; }
-    DbSet<TenantFeature> TenantFeatures { get; }
+    
+    // REMOVED - Moved to Tenant DB (All phases completed):
+    // Phase 1-2: TenantApiKey, TenantActivityLog, TenantSecuritySettings, TenantSettings
+    //           TenantIntegration, TenantNotification, TenantSetupWizard, TenantSetupChecklist
+    //           TenantInitialData, TenantDocument, UserTenant
+    // Phase 3:  TenantWebhook, TenantFeature, TenantCompliance, TenantCustomization
+    //           TenantOnboarding, OnboardingStep, OnboardingTask, PasswordHistory
     
     // Common method
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

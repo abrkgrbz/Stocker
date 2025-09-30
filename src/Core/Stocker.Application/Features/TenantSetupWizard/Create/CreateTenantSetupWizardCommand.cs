@@ -6,6 +6,6 @@ namespace Stocker.Application.Features.TenantSetupWizard.Create;
 
 public sealed class CreateTenantSetupWizardCommand : IRequest<Result<TenantSetupWizardDto>>
 {
-    public Guid TenantId { get; set; }
+    // TenantId removed - each tenant has its own database
     public string WizardType { get; set; } = "Onboarding";
 }

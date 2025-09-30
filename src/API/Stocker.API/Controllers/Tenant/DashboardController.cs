@@ -140,7 +140,7 @@ public class DashboardController : ApiController
         
         var query = new GetSetupWizardQuery
         {
-            TenantId = tenantId
+            // TenantId removed - each tenant has its own database
         };
         
         var result = await _mediator.Send(query);

@@ -341,7 +341,7 @@ public class TenantsController : MasterControllerBase
     {
         _logger.LogInformation("Getting setup wizard for tenant {TenantId}", id);
         
-        var query = new GetSetupWizardQuery { TenantId = id };
+        var query = new GetSetupWizardQuery { /* TenantId removed - each tenant has its own database */ };
         var result = await _mediator.Send(query);
         
         return HandleResult(result);
@@ -373,7 +373,7 @@ public class TenantsController : MasterControllerBase
     {
         _logger.LogInformation("Getting setup checklist for tenant {TenantId}", id);
         
-        var query = new GetSetupChecklistQuery { TenantId = id };
+        var query = new GetSetupChecklistQuery { /* TenantId removed - each tenant has its own database */ };
         var result = await _mediator.Send(query);
         
         return HandleResult(result);

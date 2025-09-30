@@ -22,8 +22,8 @@ public class DashboardRepository : IDashboardRepository
         var stats = new DashboardStatsDto();
 
         // Get invoice statistics
+        // Get invoice statistics - no TenantId filter needed (database-per-tenant)
         var invoices = await _tenantContext.Invoices
-            .Where(i => i.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
         var currentMonth = DateTime.UtcNow.Month;
@@ -47,9 +47,8 @@ public class DashboardRepository : IDashboardRepository
             ? ((double)(stats.TotalOrders - lastMonthOrders) / lastMonthOrders) * 100 
             : 0;
 
-        // Get customer count (from TenantUsers for now)
+        // Get customer count (from TenantUsers for now) - no TenantId filter needed
         stats.TotalCustomers = await _tenantContext.TenantUsers
-            .Where(u => u.TenantId == tenantId)
             .CountAsync(cancellationToken);
         
         // Product count - will be updated when inventory module is integrated
@@ -91,8 +90,8 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<List<ActivityDto>> GetRecentActivitiesAsync(Guid tenantId, int count = 10, CancellationToken cancellationToken = default)
     {
+        // No TenantId filter needed (database-per-tenant)
         var activities = await _tenantContext.AuditLogs
-            .Where(a => a.TenantId == tenantId)
             .OrderByDescending(a => a.Timestamp)
             .Take(count)
             .Select(a => new ActivityDto
@@ -112,9 +111,8 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<List<NotificationDto>> GetNotificationsAsync(Guid tenantId, string userId, CancellationToken cancellationToken = default)
     {
-        // For now, generate notifications from audit logs
+        // For now, generate notifications from audit logs - no TenantId filter needed
         var notifications = await _tenantContext.AuditLogs
-            .Where(a => a.TenantId == tenantId)
             .OrderByDescending(a => a.Timestamp)
             .Take(20)
             .Select(a => new NotificationDto
@@ -141,8 +139,8 @@ public class DashboardRepository : IDashboardRepository
             Comparison = new List<decimal>()
         };
 
+        // Get invoice statistics - no TenantId filter needed (database-per-tenant)
         var invoices = await _tenantContext.Invoices
-            .Where(i => i.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
         if (period.ToLower() == "daily")
@@ -229,12 +227,13 @@ public class DashboardRepository : IDashboardRepository
     {
         var summary = new DashboardSummaryDto
         {
-            TotalUsers = await _tenantContext.TenantUsers.Where(u => u.TenantId == tenantId).CountAsync(cancellationToken),
-            ActiveUsers = await _tenantContext.TenantUsers.Where(u => u.TenantId == tenantId && u.Status == Domain.Tenant.Enums.TenantUserStatus.Active).CountAsync(cancellationToken),
-            TotalInvoices = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId).CountAsync(cancellationToken),
-            PendingInvoices = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status == Domain.Tenant.Enums.InvoiceStatus.Draft).CountAsync(cancellationToken),
-            TotalRevenue = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId).SumAsync(i => i.TotalAmount.Amount, cancellationToken),
-            OutstandingAmount = await _tenantContext.Invoices.Where(i => i.TenantId == tenantId && i.Status != Domain.Tenant.Enums.InvoiceStatus.Paid).SumAsync(i => i.TotalAmount.Amount, cancellationToken)
+            // No TenantId filters needed (database-per-tenant)
+            TotalUsers = await _tenantContext.TenantUsers.CountAsync(cancellationToken),
+            ActiveUsers = await _tenantContext.TenantUsers.Where(u => u.Status == Domain.Tenant.Enums.TenantUserStatus.Active).CountAsync(cancellationToken),
+            TotalInvoices = await _tenantContext.Invoices.CountAsync(cancellationToken),
+            PendingInvoices = await _tenantContext.Invoices.Where(i => i.Status == Domain.Tenant.Enums.InvoiceStatus.Draft).CountAsync(cancellationToken),
+            TotalRevenue = await _tenantContext.Invoices.SumAsync(i => i.TotalAmount.Amount, cancellationToken),
+            OutstandingAmount = await _tenantContext.Invoices.Where(i => i.Status != Domain.Tenant.Enums.InvoiceStatus.Paid).SumAsync(i => i.TotalAmount.Amount, cancellationToken)
         };
 
         return summary;
@@ -362,7 +361,7 @@ public class DashboardRepository : IDashboardRepository
                 plan = "Premium",
                 createdAt = t.CreatedAt,
                 status = t.IsActive ? "Active" : "Inactive",
-                userCount = _masterContext.UserTenants.Count(ut => ut.TenantId == t.Id)
+                userCount = 0 // UserTenants moved to Tenant domain - count should be retrieved from Tenant context
             })
             .ToListAsync(cancellationToken);
 
@@ -379,7 +378,7 @@ public class DashboardRepository : IDashboardRepository
                 id = u.Id,
                 name = u.FirstName + " " + u.LastName,
                 email = u.Email.Value,
-                tenant = _masterContext.UserTenants.Where(ut => ut.UserId == u.Id).Join(_masterContext.Tenants, ut => ut.TenantId, t => t.Id, (ut, t) => t.Name).FirstOrDefault() ?? "N/A",
+                tenant = "N/A", // UserTenants moved to Tenant domain - tenant info should be retrieved from Tenant context
                 createdAt = u.CreatedAt,
                 status = u.IsActive ? "Active" : "Inactive",
                 role = "User" // This would come from role assignments

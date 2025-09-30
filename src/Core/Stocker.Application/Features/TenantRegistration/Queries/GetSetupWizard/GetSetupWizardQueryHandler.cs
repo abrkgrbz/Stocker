@@ -1,9 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Domain.Master.Entities;
-using Stocker.Domain.Master.Enums;
-using StepCategory = Stocker.Domain.Master.Enums.StepCategory;
+using Stocker.Domain.Tenant.Entities;
+using Stocker.Domain.Tenant.Enums;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -11,54 +10,48 @@ namespace Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard
 
 public sealed class GetSetupWizardQueryHandler : IRequestHandler<GetSetupWizardQuery, Result<TenantSetupWizardDto>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public GetSetupWizardQueryHandler(IMasterDbContext context)
+    public GetSetupWizardQueryHandler(ITenantDbContext context)
     {
         _context = context;
     }
 
     public async Task<Result<TenantSetupWizardDto>> Handle(GetSetupWizardQuery request, CancellationToken cancellationToken)
     {
-        var wizard = await _context.TenantSetupWizards
-            .Where(x => x.TenantId == request.TenantId && x.WizardType == WizardType.InitialSetup)
+        // SetupWizard no longer has TenantId - need to track tenant association separately
+        var wizard = await _context.SetupWizards
+            .Include(x => x.Steps)
+            .Where(x => x.WizardType == WizardType.InitialSetup)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (wizard == null)
         {
             // Create new wizard if not exists
-            wizard = Domain.Master.Entities.TenantSetupWizard.Create(
-                tenantId: request.TenantId,
+            wizard = SetupWizard.Create(
                 wizardType: WizardType.InitialSetup,
-                totalSteps: 6,
                 startedBy: "System");
 
             wizard.StartWizard();
-            wizard.UpdateStepDetails(
-                "Şirket Bilgileri",
-                "Temel şirket bilgilerini tamamlayın",
-                Domain.Master.Entities.StepCategory.Required,
-                true,
-                false);
 
-            _context.TenantSetupWizards.Add(wizard);
+            _context.SetupWizards.Add(wizard);
             await _context.SaveChangesAsync(cancellationToken);
         }
 
         var dto = new TenantSetupWizardDto
         {
             Id = wizard.Id,
-            TenantId = wizard.TenantId,
+            TenantId = _context.TenantId, // Get from context (database-per-tenant)
             WizardType = wizard.WizardType.ToString(),
             Status = wizard.Status.ToString(),
             TotalSteps = wizard.TotalSteps,
             CompletedSteps = wizard.CompletedSteps,
-            CurrentStep = wizard.CurrentStep,
+            CurrentStep = wizard.CurrentStepIndex,
             ProgressPercentage = wizard.ProgressPercentage,
-            CurrentStepName = wizard.CurrentStepName,
-            CurrentStepDescription = wizard.CurrentStepDescription,
-            IsCurrentStepRequired = wizard.IsCurrentStepRequired,
-            CanSkipCurrentStep = wizard.CanSkipCurrentStep,
+            CurrentStepName = wizard.Steps.FirstOrDefault(s => s.Status == StepStatus.Current)?.Title ?? string.Empty,
+            CurrentStepDescription = wizard.Steps.FirstOrDefault(s => s.Status == StepStatus.Current)?.Description ?? string.Empty,
+            IsCurrentStepRequired = wizard.Steps.FirstOrDefault(s => s.Status == StepStatus.Current)?.IsRequired ?? false,
+            CanSkipCurrentStep = wizard.Steps.FirstOrDefault(s => s.Status == StepStatus.Current)?.CanSkip ?? false,
             StartedAt = wizard.StartedAt,
             CompletedAt = wizard.CompletedAt
         };

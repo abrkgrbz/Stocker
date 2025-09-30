@@ -72,7 +72,7 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetSetupWizard(Guid tenantId)
     {
-        var query = new GetSetupWizardQuery { TenantId = tenantId };
+        var query = new GetSetupWizardQuery { /* TenantId removed - each tenant has its own database */ };
         var result = await _mediator.Send(query);
         
         if (!result.IsSuccess)
@@ -113,7 +113,7 @@ public class TenantRegistrationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetSetupChecklist(Guid tenantId)
     {
-        var query = new GetSetupChecklistQuery { TenantId = tenantId };
+        var query = new GetSetupChecklistQuery { /* TenantId removed - each tenant has its own database */ };
         var result = await _mediator.Send(query);
         
         if (!result.IsSuccess)

@@ -9,7 +9,8 @@ namespace Stocker.Domain.Master.Entities;
 public sealed class Tenant : AggregateRoot
 {
     private readonly List<TenantDomain> _domains = new();
-    private readonly List<TenantFeature> _features = new();
+    // TenantFeature moved to Tenant domain
+    // private readonly List<TenantFeature> _features = new();
     private readonly List<Subscription> _subscriptions = new();
 
     public string Name { get; private set; }
@@ -28,24 +29,26 @@ public sealed class Tenant : AggregateRoot
     
     // Navigation properties
     public IReadOnlyList<TenantDomain> Domains => _domains.AsReadOnly();
-    public IReadOnlyList<TenantFeature> Features => _features.AsReadOnly();
+    // TenantFeature moved to Tenant domain
+    // public IReadOnlyList<TenantFeature> Features => _features.AsReadOnly();
     public IReadOnlyList<Subscription> Subscriptions => _subscriptions.AsReadOnly();
     
     // New Navigation Properties for Registration Process
     public TenantRegistration? Registration { get; private set; }
     public TenantContract? ActiveContract { get; private set; }
     public TenantBilling? BillingInfo { get; private set; }
-    public TenantOnboarding? Onboarding { get; private set; }
+    // TenantOnboarding moved to Tenant domain
+    // public TenantOnboarding? Onboarding { get; private set; }
     public TenantLimits? Limits { get; private set; }
     
-    // Existing Navigation Properties
-    public TenantSettings? Settings { get; private set; }
-    public TenantSecuritySettings? SecuritySettings { get; private set; }
+    // Entities moved to Tenant domain - relationships managed differently
+    // public TenantSettings? Settings { get; private set; }
+    // public TenantSecuritySettings? SecuritySettings { get; private set; }
     public ICollection<TenantContract> Contracts { get; private set; } = new List<TenantContract>();
-    public ICollection<TenantApiKey> ApiKeys { get; private set; } = new List<TenantApiKey>();
-    public ICollection<TenantWebhook> Webhooks { get; private set; } = new List<TenantWebhook>();
-    public ICollection<TenantIntegration> Integrations { get; private set; } = new List<TenantIntegration>();
-    public ICollection<TenantActivityLog> ActivityLogs { get; private set; } = new List<TenantActivityLog>();
+    // public ICollection<TenantApiKey> ApiKeys { get; private set; } = new List<TenantApiKey>();
+    // public ICollection<TenantWebhook> Webhooks { get; private set; } = new List<TenantWebhook>();
+    // public ICollection<TenantIntegration> Integrations { get; private set; } = new List<TenantIntegration>();
+    // public ICollection<TenantActivityLog> ActivityLogs { get; private set; } = new List<TenantActivityLog>();
     public ICollection<TenantHealthCheck> HealthChecks { get; private set; } = new List<TenantHealthCheck>();
     public ICollection<TenantBackup> Backups { get; private set; } = new List<TenantBackup>();
 
@@ -195,37 +198,23 @@ public sealed class Tenant : AggregateRoot
 
     public void EnableFeature(string featureCode, DateTime? expiresAt = null)
     {
-        if (string.IsNullOrWhiteSpace(featureCode))
-        {
-            throw new ArgumentException("Feature code cannot be empty.", nameof(featureCode));
-        }
-
-        var existingFeature = _features.FirstOrDefault(f => f.FeatureCode == featureCode);
-        if (existingFeature != null)
-        {
-            existingFeature.Enable(expiresAt);
-        }
-        else
-        {
-            _features.Add(new TenantFeature(Id, featureCode, true, expiresAt));
-        }
+        // TenantFeature has been moved to Tenant domain
+        // Feature management should now be handled through the Tenant database context
+        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
     }
 
     public void DisableFeature(string featureCode)
     {
-        var feature = _features.FirstOrDefault(f => f.FeatureCode == featureCode);
-        if (feature == null)
-        {
-            throw new InvalidOperationException($"Feature '{featureCode}' not found for this tenant.");
-        }
-
-        feature.Disable();
+        // TenantFeature has been moved to Tenant domain
+        // Feature management should now be handled through the Tenant database context
+        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
     }
 
     public bool HasFeature(string featureCode)
     {
-        var feature = _features.FirstOrDefault(f => f.FeatureCode == featureCode);
-        return feature?.IsActive() ?? false;
+        // TenantFeature has been moved to Tenant domain
+        // Feature checking should now be handled through the Tenant database context
+        throw new NotSupportedException("Feature management has been moved to Tenant domain. Use ITenantDbContext for feature operations.");
     }
     
     // New Methods for Registration Process
@@ -248,9 +237,10 @@ public sealed class Tenant : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void StartOnboarding(TenantOnboarding onboarding)
+    public void StartOnboarding()
     {
-        Onboarding = onboarding ?? throw new ArgumentNullException(nameof(onboarding));
+        // TenantOnboarding has been moved to Tenant domain
+        // Onboarding should now be handled through the Tenant database context
         UpdatedAt = DateTime.UtcNow;
         
         RaiseDomainEvent(new TenantOnboardingStartedDomainEvent(Id));
@@ -264,10 +254,8 @@ public sealed class Tenant : AggregateRoot
     
     public void CompleteOnboarding()
     {
-        if (Onboarding == null)
-            throw new InvalidOperationException("No onboarding process found.");
-            
-        Onboarding.Complete();
+        // TenantOnboarding has been moved to Tenant domain
+        // Onboarding completion should be tracked through the Tenant database context
         UpdatedAt = DateTime.UtcNow;
         
         RaiseDomainEvent(new TenantOnboardingCompletedDomainEvent(Id));
@@ -275,7 +263,9 @@ public sealed class Tenant : AggregateRoot
     
     public bool IsOnboardingComplete()
     {
-        return Onboarding?.Status == OnboardingStatus.Completed;
+        // TenantOnboarding has been moved to Tenant domain
+        // Onboarding status should be checked through the Tenant database context
+        throw new NotSupportedException("Onboarding management has been moved to Tenant domain. Use ITenantDbContext for onboarding operations.");
     }
     
     public bool HasActiveContract()

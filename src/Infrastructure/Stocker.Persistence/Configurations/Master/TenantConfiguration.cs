@@ -78,10 +78,7 @@ public class TenantConfiguration : BaseEntityTypeConfiguration<Domain.Master.Ent
             .HasForeignKey(d => d.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(t => t.Features)
-            .WithOne()
-            .HasForeignKey(f => f.TenantId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // Features moved to Tenant domain
 
         builder.HasMany(t => t.Subscriptions)
             .WithOne(s => s.Tenant)

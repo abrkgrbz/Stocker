@@ -177,7 +177,21 @@ public sealed class SetupWizardStep : Entity
         ValidationErrors = null;
         if (Status == StepStatus.Error)
         {
-            Status = StartedAt.HasValue ? StepStatus.InProgress : StepStatus.Current;
+            // If it was started (has StartedBy), go back to InProgress
+            // If it was just marked as current (has StartedAt but no StartedBy), go back to Current
+            // Otherwise go back to Pending
+            if (StartedBy != null)
+            {
+                Status = StepStatus.InProgress;
+            }
+            else if (StartedAt.HasValue)
+            {
+                Status = StepStatus.Current;
+            }
+            else
+            {
+                Status = StepStatus.Pending;
+            }
         }
     }
     

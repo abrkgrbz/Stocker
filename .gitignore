@@ -3,32 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# ===================================
-# SECURITY - NEVER COMMIT THESE FILES
-# ===================================
-.env
-.env.local
-.env.development
-.env.production
-.env.staging
-*.pfx
-*.key
-*.pem
-*.crt
-secrets.json
-appsettings.Production.json
-appsettings.Staging.json
-local.settings.json
-keyvault.config
-
-# Docker secrets
-docker-compose.override.yml
-.docker/secrets/
-
-# Backup files that might contain passwords
-*.bak
-*_backup.*
-
 # User-specific files
 *.rsuser
 *.suo
@@ -84,10 +58,13 @@ dlldata.c
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
 
-# .NET Core
+# .NET
 project.lock.json
 project.fragment.lock.json
 artifacts/
+
+# Tye
+.tye/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -222,13 +199,10 @@ PublishScripts/
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
-# The packages folder can be ignored because of Package Restore (NuGet)
-# **/[Pp]ackages/*
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
-# !**/[Pp]ackages/build/
-# Exception for React components
-!stocker-admin/src/features/packages/
-!stocker-web/src/features/packages/
+!**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
@@ -273,9 +247,8 @@ orleans.codegen.cs
 # (https://github.com/github/gitignore/pull/2483#issue-259490424)
 #*.snk
 
-# Since there are multiple workflows, uncomment next line to ignore bower_components
-# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
-#bower_components/
+# Since there are multiple workflows, check to see what ignore rules apply
+# .github/workflows
 
 # RIA/Silverlight projects
 Generated_Code/
@@ -390,3 +363,81 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+##
+## Visual Studio Code
+##
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+##
+## Project specific
+##
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Configuration files with sensitive data
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+
+# JWT Keys and certificates
+*.key
+*.pem
+*.pfx
+*.cer
+
+# Logs
+logs/
+*.log
+
+# Test coverage results
+coverage/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage.cobertura.xml
+coverage.opencover.xml
+coverage.json
+
+# Build outputs
+dist/
+build/
+publish/
+
+# IDE specific
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Node modules (for frontend projects)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Claude-specific
+claudedocs/
+.claude/

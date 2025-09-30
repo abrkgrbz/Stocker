@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
+using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -130,56 +131,11 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
             // Add to context
             _context.TenantRegistrations.Add(registration);
 
-            // Create TenantInitialData for setup process
-            var initialData = TenantInitialData.Create(
-                tenantId: Guid.Empty, // Will be updated after tenant creation
-                companyName: request.CompanyName,
-                contactEmail: request.ContactEmail,
-                contactPhone: request.ContactPhone,
-                adminUserEmail: request.AdminEmail,
-                adminUserName: request.AdminUsername,
-                createdBy: request.AdminEmail);
-
-            initialData.UpdateCompanyDetails(
-                request.TaxNumber,
-                request.TaxOffice,
-                request.TradeRegistryNumber,
-                request.MersisNumber,
-                request.Website);
-
-            initialData.UpdateAddress(
-                request.AddressLine1,
-                request.AddressLine2,
-                request.City,
-                request.State,
-                request.Country,
-                request.PostalCode);
-
-            initialData.UpdateBusinessInfo(
-                request.IndustryType,
-                request.BusinessType,
-                ParseEmployeeCount(request.EmployeeCountRange),
-                request.AnnualRevenue,
-                request.Currency,
-                null);
-
-            initialData.UpdateAdminUser(
-                request.AdminFirstName,
-                request.AdminLastName,
-                request.AdminPhone);
-
-            initialData.UpdateDefaultSettings(
-                request.PreferredLanguage,
-                request.PreferredTimeZone,
-                "dd.MM.yyyy",
-                "HH:mm",
-                request.Currency ?? "TRY",
-                "light");
-
-            _context.TenantInitialData.Add(initialData);
-
             // Save changes
             await _context.SaveChangesAsync(cancellationToken);
+            
+            // Note: TenantInitialData will be created after tenant approval and database creation
+            // in the specific tenant's database context
 
             // Map to DTO
             var dto = new TenantRegistrationDto
@@ -196,8 +152,7 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                 RequestedAt = registration.RegistrationDate,
                 PackageId = registration.SelectedPackageId,
                 PackageName = registration.PackageName,
-                BillingCycle = registration.BillingCycle,
-                InitialDataId = initialData.Id
+                BillingCycle = registration.BillingCycle
             };
 
             _logger.LogInformation("Tenant registration created successfully. Code: {RegistrationCode}", registration.RegistrationCode);

@@ -74,5 +74,5 @@ public sealed class Money : ValueObject
         yield return Currency;
     }
 
-    public override string ToString() => $"{Amount:F2} {Currency}";
+    public override string ToString() => $"{Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} {Currency}";
 }

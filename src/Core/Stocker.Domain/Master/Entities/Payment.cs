@@ -7,7 +7,7 @@ namespace Stocker.Domain.Master.Entities;
 public sealed class Payment : Entity
 {
     public Guid InvoiceId { get; private set; }
-    public PaymentMethod Method { get; private set; }
+    public Enums.PaymentMethod Method { get; private set; }
     public PaymentStatus Status { get; private set; }
     public Money Amount { get; private set; }
     public string? TransactionId { get; private set; }
@@ -20,7 +20,7 @@ public sealed class Payment : Entity
 
     private Payment(
         Guid invoiceId,
-        PaymentMethod method,
+        Enums.PaymentMethod method,
         Money amount,
         string? transactionId = null,
         string? notes = null,
@@ -41,7 +41,7 @@ public sealed class Payment : Entity
 
     public static Payment Create(
         Guid invoiceId,
-        PaymentMethod method,
+        Enums.PaymentMethod method,
         Money amount,
         string? transactionId = null,
         string? notes = null)
@@ -71,7 +71,7 @@ public sealed class Payment : Entity
 
         return new Payment(
             invoiceId,
-            PaymentMethod.Diger,
+            Enums.PaymentMethod.Diger,
             amount,
             isRefund: true,
             refundReason: reason);

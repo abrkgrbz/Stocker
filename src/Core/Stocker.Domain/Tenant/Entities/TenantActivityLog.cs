@@ -188,14 +188,14 @@ public sealed class TenantActivityLog : Entity
         return activityType.ToLowerInvariant() switch
         {
             var type when type.Contains("auth") || type.Contains("login") || type.Contains("logout") => ActivityCategory.Authentication,
+            var type when type.Contains("config") || type.Contains("setting") => ActivityCategory.Configuration,
+            var type when type.Contains("security") || type.Contains("permission") => ActivityCategory.Security,
+            var type when type.Contains("system") || type.Contains("maintenance") => ActivityCategory.System,
             var type when type.Contains("create") || type.Contains("add") || type.Contains("insert") => ActivityCategory.Create,
             var type when type.Contains("update") || type.Contains("edit") || type.Contains("modify") => ActivityCategory.Update,
             var type when type.Contains("delete") || type.Contains("remove") => ActivityCategory.Delete,
             var type when type.Contains("read") || type.Contains("view") || type.Contains("get") => ActivityCategory.Read,
             var type when type.Contains("export") || type.Contains("import") => ActivityCategory.DataTransfer,
-            var type when type.Contains("config") || type.Contains("setting") => ActivityCategory.Configuration,
-            var type when type.Contains("security") || type.Contains("permission") => ActivityCategory.Security,
-            var type when type.Contains("system") || type.Contains("maintenance") => ActivityCategory.System,
             _ => ActivityCategory.Other
         };
     }
@@ -239,4 +239,40 @@ public enum ActivitySeverity
     High = 3,
     Critical = 4,
     Error = 5
+}
+
+// Extension class for backward compatibility with tests
+public static class TenantActivityLogExtensions
+{
+    // Legacy Create method for test compatibility
+    public static TenantActivityLog Create(
+        Guid userId,
+        string userName,
+        string action,
+        string entity,
+        string entityId,
+        string details,
+        string ipAddress,
+        string userAgent)
+    {
+        var log = TenantActivityLog.Create(
+            activityType: action,
+            entityType: entity,
+            action: action,
+            description: details,
+            userId: userId,
+            userName: userName,
+            userEmail: $"{userName}@test.com");
+        
+        log.SetEntityReference(Guid.TryParse(entityId, out var guid) ? guid : Guid.Empty);
+        log.SetUserContext(null, ipAddress, userAgent, null);
+        
+        return log;
+    }
+    
+    // Add properties for backward compatibility
+    public static string Entity(this TenantActivityLog log) => log.EntityType;
+    public static string EntityId(this TenantActivityLog log) => log.EntityId?.ToString() ?? string.Empty;
+    public static string Details(this TenantActivityLog log) => log.Description;
+    public static DateTime CreatedDate(this TenantActivityLog log) => log.ActivityAt;
 }

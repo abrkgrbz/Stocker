@@ -14,6 +14,7 @@ using Stocker.Persistence.Repositories;
 using Stocker.Persistence.Services;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Repositories;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Interfaces.Repositories;
@@ -133,6 +134,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
         services.AddScoped<ITenantUnitOfWorkFactory, TenantUnitOfWorkFactory>();
+        services.AddScoped<ITenantContextFactory, TenantContextFactory>();
         
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>

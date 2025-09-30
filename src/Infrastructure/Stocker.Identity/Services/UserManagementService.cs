@@ -33,7 +33,7 @@ public class UserManagementService : IUserManagementService
     {
         // First try to find by username
         var user = await _masterContext.MasterUsers
-            .Include(u => u.UserTenants) 
+            // UserTenants moved to Tenant domain
             .Include(u => u.RefreshTokens)
             .Include(x => x.LoginHistory)
             .Where(u => u.Username == usernameOrEmail)
@@ -43,7 +43,7 @@ public class UserManagementService : IUserManagementService
         if (user == null)
         {
             var users = await _masterContext.MasterUsers
-                .Include(u => u.UserTenants)
+                // UserTenants moved to Tenant domain
                 .Include(u => u.RefreshTokens)
                 .Include(x => x.LoginHistory)
                 .ToListAsync();
@@ -71,7 +71,7 @@ public class UserManagementService : IUserManagementService
         string firstName,
         string lastName,
         string? phoneNumber = null,
-        UserType userType = UserType.FirmaYoneticisi)
+        Domain.Master.Enums.UserType userType = Domain.Master.Enums.UserType.FirmaYoneticisi)
     {
         // Check if user already exists
         var existingUser = await _masterContext.MasterUsers
@@ -171,12 +171,8 @@ public class UserManagementService : IUserManagementService
             // tenantContext.TenantUsers.Add(tenantUser);
             // await tenantContext.SaveChangesAsync();
 
-            // Add tenant relationship to master user
-            if (!masterUser.UserTenants.Any(ut => ut.TenantId == tenantId))
-            {
-                masterUser.AddTenant(tenantId, true);
-                await _masterContext.SaveChangesAsync();
-            }
+            // UserTenants moved to Tenant domain - tenant relationship now managed in Tenant context
+            // The relationship should be created through the Tenant context, not here
 
             _logger.LogInformation(
                 "Created TenantUser for MasterUser {Username} in tenant {TenantId}", 
@@ -221,7 +217,7 @@ public interface IUserManagementService
         string firstName,
         string lastName,
         string? phoneNumber = null,
-        UserType userType = UserType.FirmaYoneticisi);
+        Domain.Master.Enums.UserType userType = Domain.Master.Enums.UserType.FirmaYoneticisi);
     Task EnsureTenantUserExistsAsync(MasterUser masterUser, Guid tenantId);
     Task UpdateLastLoginAsync(MasterUser user);
     Task UpdateLastLoginAsync(TenantUser user);

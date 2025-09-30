@@ -23,7 +23,7 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
             .Must(BeValidBasedOnKey).WithMessage("Ayar değeri, ayar tipine uygun değil");
 
         // Email validations
-        When(x => x.SettingKey.Contains("email"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && x.SettingKey.Contains("email"), () =>
         {
             RuleFor(x => x.SettingValue)
                 .EmailAddress().When(x => !string.IsNullOrEmpty(x.SettingValue))
@@ -31,7 +31,7 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
         });
 
         // URL validations
-        When(x => x.SettingKey.Contains("url") || x.SettingKey.Contains("website"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && (x.SettingKey.Contains("url") || x.SettingKey.Contains("website")), () =>
         {
             RuleFor(x => x.SettingValue)
                 .Must(BeValidUrl).When(x => !string.IsNullOrEmpty(x.SettingValue))
@@ -39,16 +39,16 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
         });
 
         // Phone validations
-        When(x => x.SettingKey.Contains("phone") || x.SettingKey.Contains("tel"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && (x.SettingKey.Contains("phone") || x.SettingKey.Contains("tel")), () =>
         {
             RuleFor(x => x.SettingValue)
-                .Matches(@"^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,5}[-\s\.]?[0-9]{1,5}$")
+                .Must(BeValidPhoneNumber)
                 .When(x => !string.IsNullOrEmpty(x.SettingValue))
                 .WithMessage("Geçerli bir telefon numarası giriniz");
         });
 
         // Tax number validations
-        When(x => x.SettingKey.Contains("tax"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && x.SettingKey.Contains("tax"), () =>
         {
             RuleFor(x => x.SettingValue)
                 .Matches(@"^\d{10,11}$").When(x => !string.IsNullOrEmpty(x.SettingValue))
@@ -56,7 +56,7 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
         });
 
         // Number validations
-        When(x => x.SettingKey.Contains("limit") || x.SettingKey.Contains("count") || x.SettingKey.Contains("size"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && (x.SettingKey.Contains("limit") || x.SettingKey.Contains("count") || x.SettingKey.Contains("size")), () =>
         {
             RuleFor(x => x.SettingValue)
                 .Must(BeNumeric).When(x => !string.IsNullOrEmpty(x.SettingValue))
@@ -64,7 +64,7 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
         });
 
         // Boolean validations
-        When(x => x.SettingKey.Contains("enabled") || x.SettingKey.Contains("active") || x.SettingKey.Contains("allow"), () =>
+        When(x => !string.IsNullOrEmpty(x.SettingKey) && (x.SettingKey.Contains("enabled") || x.SettingKey.Contains("active") || x.SettingKey.Contains("allow")), () =>
         {
             RuleFor(x => x.SettingValue)
                 .Must(BeBoolean).When(x => !string.IsNullOrEmpty(x.SettingValue))
@@ -96,7 +96,9 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
         if (string.IsNullOrEmpty(value))
             return true;
 
-        return int.TryParse(value, out _) || decimal.TryParse(value, out _);
+        // Check for valid number format (int or decimal with single decimal point)
+        return decimal.TryParse(value, System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out _);
     }
 
     private bool BeBoolean(string? value)
@@ -106,5 +108,18 @@ public class UpdateSettingCommandValidator : AbstractValidator<UpdateSettingComm
 
         return value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
                value.Equals("false", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool BeValidPhoneNumber(string? phoneNumber)
+    {
+        if (string.IsNullOrEmpty(phoneNumber))
+            return true;
+
+        // Remove all non-digit characters
+        var digitsOnly = Regex.Replace(phoneNumber, @"[^\d]", "");
+
+        // Phone number should be between 7 and 15 digits
+        // Raw phone number should not exceed 17 characters (allowing for formatting)
+        return digitsOnly.Length >= 7 && digitsOnly.Length <= 15 && phoneNumber.Length <= 17;
     }
 }

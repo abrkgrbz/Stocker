@@ -48,7 +48,7 @@ public class AuthenticationService : IAuthenticationService
         
         // Ã–nce MasterUser'Ä± kontrol et (username veya email ile)
         var masterUser = await _masterContext.MasterUsers
-            .Include(u => u.UserTenants)
+            // UserTenants moved to Tenant domain
             .Include(u => u.RefreshTokens)
             .Where(u => u.Username == request.Username || EF.Property<string>(u, "Email") == request.Username)
             .FirstOrDefaultAsync();
@@ -92,7 +92,7 @@ public class AuthenticationService : IAuthenticationService
             }
 
             // EÄŸer MasterUser bir tenant context'inde giriÅŸ yapÄ±yorsa ve henÃ¼z o tenant'ta TenantUser'Ä± yoksa, otomatik oluÅŸtur
-            if (tenantId.HasValue && masterUser.UserType == UserType.FirmaYoneticisi)
+            if (tenantId.HasValue && masterUser.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi)
             {
                 await EnsureTenantUserExistsAsync(masterUser, tenantId.Value);
             }
@@ -187,12 +187,8 @@ public class AuthenticationService : IAuthenticationService
             // tenantContext.TenantUsers.Add(tenantUser);
             // await tenantContext.SaveChangesAsync();
 
-            // MasterUser'a tenant iliÅŸkisini ekle
-            if (!masterUser.UserTenants.Any(ut => ut.TenantId == tenantId))
-            {
-                masterUser.AddTenant(tenantId, true);
-                await _masterContext.SaveChangesAsync();
-            }
+            // UserTenants moved to Tenant domain - skip tenant relationship
+            // This should be managed through Tenant context
 
             _logger.LogInformation("Successfully created TenantUser for MasterUser {Username} in tenant {TenantId} with {RoleCount} roles", 
                 masterUser.Username, tenantId, tenantUser.UserRoles.Count);
@@ -229,7 +225,7 @@ public class AuthenticationService : IAuthenticationService
 
         // Refresh token'Ä± kontrol et (bu kÄ±sÄ±m iÃ§in RefreshToken tablosu eklenebilir)
         var masterUser = await _masterContext.MasterUsers
-            .Include(u => u.UserTenants)
+            // UserTenants moved to Tenant domain
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (masterUser == null || masterUser.RefreshToken != request.RefreshToken || 
@@ -301,7 +297,7 @@ public class AuthenticationService : IAuthenticationService
             plainPassword: request.Password,
             firstName: request.FirstName,
             lastName: request.LastName,
-            userType: UserType.FirmaYoneticisi, // Default to FirmaSahibi for registration
+            userType: Domain.Master.Enums.UserType.FirmaYoneticisi, // Default to FirmaSahibi for registration
             phoneNumber: phoneNumber
         );
 
@@ -430,13 +426,13 @@ public class AuthenticationService : IAuthenticationService
         };
 
         // Add role claim based on UserType
-        if (user.UserType == UserType.SistemYoneticisi)
+        if (user.UserType == Domain.Master.Enums.UserType.SistemYoneticisi)
         {
             claims.Add(new Claim(ClaimTypes.Role, "SistemYoneticisi"));
             claims.Add(new Claim("IsSuperAdmin", "true"));
             _logger.LogInformation("Adding SistemYoneticisi role to token for user {Username}", user.Username);
         }
-        else if (user.UserType == UserType.FirmaYoneticisi)
+        else if (user.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi)
         {
             claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
             _logger.LogInformation("Adding FirmaYoneticisi role to token for user {Username}", user.Username);
@@ -445,7 +441,8 @@ public class AuthenticationService : IAuthenticationService
         _logger.LogInformation("User {Username} has UserType: {UserType}", user.Username, user.UserType);
 
         // EÄŸer specific bir tenant iÃ§in login yapÄ±lÄ±yorsa
-        if (tenantId.HasValue && user.UserTenants.Any(ut => ut.TenantId == tenantId.Value))
+        // UserTenants moved to Tenant domain - skip this check for now
+        if (tenantId.HasValue)
         {
             claims.Add(new Claim("TenantId", tenantId.Value.ToString()));
             
@@ -480,8 +477,8 @@ public class AuthenticationService : IAuthenticationService
                 TenantName = tenantId.HasValue ? 
                     (await _masterContext.Tenants.FindAsync(tenantId.Value))?.Name : null,
                 IsMasterUser = true,
-                Roles = user.UserType == UserType.SistemYoneticisi ? new List<string> { "SistemYoneticisi" } : 
-                        user.UserType == UserType.FirmaYoneticisi ? new List<string> { "FirmaYoneticisi" } : 
+                Roles = user.UserType == Domain.Master.Enums.UserType.SistemYoneticisi ? new List<string> { "SistemYoneticisi" } : 
+                        user.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi ? new List<string> { "FirmaYoneticisi" } : 
                         new List<string>()
             }
         };

@@ -6,5 +6,5 @@ namespace Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard
 
 public sealed class GetSetupWizardQuery : IRequest<Result<TenantSetupWizardDto>>
 {
-    public Guid TenantId { get; set; }
+    // TenantId removed - each tenant has its own database
 }

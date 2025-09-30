@@ -31,7 +31,6 @@ public class GetMasterUserByIdQueryHandler : IRequestHandler<GetMasterUserByIdQu
         {
             var user = await _unitOfWork.MasterUsers()
                 .AsQueryable()
-                .Include(u => u.UserTenants)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)

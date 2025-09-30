@@ -122,7 +122,7 @@ public sealed class Invoice : AggregateRoot
         Status = InvoiceStatus.Gonderildi;
     }
 
-    public void AddPayment(PaymentMethod method, Money amount, string? transactionId = null, string? notes = null)
+    public void AddPayment(Enums.PaymentMethod method, Money amount, string? transactionId = null, string? notes = null)
     {
         if (Status == InvoiceStatus.IptalEdildi || Status == InvoiceStatus.IadeEdildi)
         {

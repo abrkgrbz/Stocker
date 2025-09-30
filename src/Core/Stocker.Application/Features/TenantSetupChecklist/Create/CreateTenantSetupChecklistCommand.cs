@@ -6,5 +6,5 @@ namespace Stocker.Application.Features.TenantSetupChecklist.Create;
 
 public sealed class CreateTenantSetupChecklistCommand : IRequest<Result<TenantSetupChecklistDto>>
 {
-    public Guid TenantId { get; set; }
+    // TenantId removed - each tenant has its own database
 }

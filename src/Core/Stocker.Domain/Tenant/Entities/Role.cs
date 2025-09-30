@@ -1,8 +1,8 @@
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.Domain.Tenant.Entities;
 
-public sealed class Role : TenantAggregateRoot
+public sealed class Role : AggregateRoot<Guid>
 {
     private readonly List<RolePermission> _permissions = new();
 
@@ -17,13 +17,11 @@ public sealed class Role : TenantAggregateRoot
     private Role() { } // EF Constructor
 
     private Role(
-        Guid tenantId,
         string name,
         string? description = null,
         bool isSystemRole = false)
     {
         Id = Guid.NewGuid();
-        SetTenantId(tenantId);
         Name = name;
         Description = description;
         IsSystemRole = isSystemRole;
@@ -32,7 +30,6 @@ public sealed class Role : TenantAggregateRoot
     }
 
     public static Role Create(
-        Guid tenantId,
         string name,
         string? description = null,
         bool isSystemRole = false)
@@ -42,7 +39,7 @@ public sealed class Role : TenantAggregateRoot
             throw new ArgumentException("Role name cannot be empty.", nameof(name));
         }
 
-        return new Role(tenantId, name, description, isSystemRole);
+        return new Role(name, description, isSystemRole);
     }
 
     public void Update(string name, string? description)
@@ -122,4 +119,7 @@ public sealed class Role : TenantAggregateRoot
     {
         return _permissions.Any(p => p.Resource == resource && p.PermissionType == permissionType);
     }
+    
+    // Backward compatibility property for tests
+    public DateTime CreatedDate => CreatedAt;
 }
