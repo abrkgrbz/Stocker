@@ -14,7 +14,10 @@
       "Bash(Select-String -Pattern \"Hata|Error|Uyarı|Warning\")",
       "Bash(Select-Object -Last 20)",
       "Bash(findstr:*)",
-      "Bash(dotnet list:*)"
+      "Bash(dotnet list:*)",
+      "Bash(dotnet ef migrations:*)",
+      "Bash(dotnet ef database update:*)",
+      "Bash(sqllocaldb info:*)"
     ],
     "deny": [],
     "ask": []
