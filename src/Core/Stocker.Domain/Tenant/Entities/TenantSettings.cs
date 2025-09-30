@@ -28,6 +28,7 @@ public sealed class TenantSettings : TenantAggregateRoot
         bool isEncrypted = false,
         bool isPublic = false)
     {
+        Id = Guid.NewGuid();
         SetTenantId(tenantId);
         SettingKey = settingKey;
         SettingValue = settingValue;
@@ -117,4 +118,13 @@ public sealed class TenantSettings : TenantAggregateRoot
         IsPublic = false;
         UpdatedAt = DateTime.UtcNow;
     }
+    
+    // Alias for UpdateValue to maintain backward compatibility with tests
+    public void Update(string newValue)
+    {
+        UpdateValue(newValue);
+    }
+    
+    // Backward compatibility property for tests
+    public DateTime CreatedDate => CreatedAt;
 }

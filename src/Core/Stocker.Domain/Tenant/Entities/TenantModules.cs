@@ -34,6 +34,7 @@ public sealed class TenantModules : TenantAggregateRoot
         DateTime? expiryDate = null,
         bool isTrial = false)
     {
+        Id = Guid.NewGuid();
         SetTenantId(tenantId);
         ModuleName = moduleName;
         ModuleCode = moduleCode;
@@ -62,6 +63,11 @@ public sealed class TenantModules : TenantAggregateRoot
         DateTime? expiryDate = null,
         bool isTrial = false)
     {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID cannot be empty.", nameof(tenantId));
+        }
+        
         if (string.IsNullOrWhiteSpace(moduleName))
         {
             throw new ArgumentException("Module name cannot be empty.", nameof(moduleName));
