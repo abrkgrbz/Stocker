@@ -185,12 +185,60 @@ WHERE TABLE_SCHEMA = 'dbo';
 
 ---
 
+## 🔧 Hangfire Database (StockerHangfireDb)
+
+Hangfire arka plan işleri için ayrı bir veritabanı kullanılır.
+
+### Schema: `Hangfire`
+
+**Otomatik oluşturulan tablolar** (Hangfire.SqlServer tarafından):
+
+| Tablo | Açıklama |
+|-------|----------|
+| `AggregatedCounter` | Toplu sayaçlar |
+| `Counter` | Performans sayaçları |
+| `Hash` | Key-value hash depolaması |
+| `Job` | İş tanımları ve durumları |
+| `JobParameter` | İş parametreleri |
+| `JobQueue` | İş kuyruğu |
+| `List` | Liste veri yapıları |
+| `Schema` | Hangfire schema versiyonu |
+| `Server` | Aktif Hangfire sunucuları |
+| `Set` | Set veri yapıları |
+| `State` | İş durum geçişleri |
+
+### Yapılandırma
+
+**Kaynak:** `src/Infrastructure/Stocker.Infrastructure/BackgroundJobs/HangfireConfiguration.cs`
+
+**Satır 54:** `PrepareSchemaIfNecessary = true`
+- Hangfire tabloları **otomatik oluşturulur**
+- Database yoksa oluşturulur
+- Schema güncellemeleri otomatik yapılır
+
+**Connection String:**
+```bash
+# Development
+Server=(localdb)\mssqllocaldb;Database=StockerHangfireDb;Trusted_Connection=True
+
+# Production (Environment Variables)
+Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD}
+```
+
+**Dashboard:** `/hangfire` (JWT authentication ile korumalı)
+
+### 📋 Hangfire DB: ~11 Tablo
+
+---
+
 ## 📊 Toplam İstatistikler
 
 - **Master Database:** 20 tablo
 - **Tenant Database:** 34 tablo (her tenant için)
-- **Toplam:** 54 tablo yapısı
+- **Hangfire Database:** ~11 tablo
+- **Toplam:** 65 tablo yapısı (3 database)
 - **Migration Files:** 20 migration (10 Master + 10 Tenant)
+- **Databases:** 3 (Master + Hangfire + N×Tenant)
 
 ---
 
@@ -198,10 +246,12 @@ WHERE TABLE_SCHEMA = 'dbo';
 
 1. **Master DB** deploy sırasında otomatik oluşturulur
 2. **Tenant DB** her yeni firma kaydında ayrı ayrı oluşturulur
-3. Tüm migration'lar `MigrateAsync()` ile otomatik uygulanır
-4. Database yoksa otomatik oluşturulur
-5. Production'da connection string environment variable'lardan gelir
-6. Seed data sadece ilk deployment'ta eklenir
+3. **Hangfire DB** ilk Hangfire işi çalıştığında otomatik oluşturulur
+4. Tüm migration'lar `MigrateAsync()` ile otomatik uygulanır
+5. Database yoksa otomatik oluşturulur
+6. Production'da connection string environment variable'lardan gelir
+7. Seed data sadece ilk deployment'ta eklenir
+8. Hangfire dashboard: `/hangfire` (JWT token gerekir)
 
 ---
 
@@ -210,5 +260,6 @@ WHERE TABLE_SCHEMA = 'dbo';
 - Migration Service: `src/Infrastructure/Stocker.Persistence/Migrations/MigrationService.cs`
 - Master DbContext: `src/Infrastructure/Stocker.Persistence/Contexts/MasterDbContext.cs`
 - Tenant DbContext: `src/Infrastructure/Stocker.Persistence/Contexts/TenantDbContext.cs`
+- Hangfire Configuration: `src/Infrastructure/Stocker.Infrastructure/BackgroundJobs/HangfireConfiguration.cs`
 - Startup: `src/API/Stocker.API/Program.cs` (Line 670-716)
 - Docker: `src/API/Stocker.API/Dockerfile` (Line 40-95)
