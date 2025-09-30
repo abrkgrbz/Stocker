@@ -994,7 +994,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         billingPeriod: formData.billingPeriod || 'Monthly'
       };
 
-            const response = await apiClient.post('/api/public/register', registrationData);
+            const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
         message.success('Kayıt başarıyla tamamlandı!');

@@ -122,7 +122,7 @@ export const NeonWizard: React.FC<NeonWizardProps> = ({ onComplete, selectedPack
         billingPeriod: 'Monthly'
       };
 
-      const response = await apiClient.post('/api/public/register', registrationData);
+      const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success) {
         message.success('Kayıt başarılı! Yönlendiriliyorsunuz...');

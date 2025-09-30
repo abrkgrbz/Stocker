@@ -356,7 +356,7 @@ export const RegisterPage: React.FC = () => {
       };
 
       // API call to register tenant (creates INACTIVE tenant)
-      const response = await apiClient.post('/api/public/register', registrationData);
+      const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
         // Store tenant ID for payment step
