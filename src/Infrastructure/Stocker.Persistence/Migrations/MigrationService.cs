@@ -66,14 +66,20 @@ public class MigrationService : IMigrationService
                 var createDbCommand = connection.CreateCommand();
                 createDbCommand.CommandText = $"CREATE DATABASE [{databaseName}]";
                 await createDbCommand.ExecuteNonQueryAsync();
-                
+
                 _logger.LogInformation("Hangfire database created successfully: {DatabaseName}", databaseName);
+
+                // Wait for database to be fully ready
+                await Task.Delay(2000); // 2 second delay for SQL Server to complete database creation
             }
             else
             {
                 _logger.LogInformation("Hangfire database already exists: {DatabaseName}", databaseName);
             }
-            
+
+            // Close master connection before connecting to Hangfire database
+            await connection.CloseAsync();
+
             // Now connect to the Hangfire database and create schema if needed
             _logger.LogInformation("Initializing Hangfire schema...");
             using var hangfireConnection = new Microsoft.Data.SqlClient.SqlConnection(hangfireConnectionString);
