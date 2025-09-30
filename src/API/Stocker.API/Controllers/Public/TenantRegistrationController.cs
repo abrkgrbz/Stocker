@@ -33,10 +33,19 @@ public class TenantRegistrationController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateTenantRegistrationCommand command)
     {
+        _logger.LogInformation("🔵 TenantRegistration endpoint hit - Company: {CompanyName}, Email: {Email}",
+            command.CompanyName, command.ContactEmail);
+
         var result = await _mediator.Send(command);
-        
+
+        _logger.LogInformation("🔵 TenantRegistration result - Success: {Success}, HasData: {HasData}",
+            result.IsSuccess, result.Value != null);
+
         if (!result.IsSuccess)
+        {
+            _logger.LogError("🔴 TenantRegistration failed - Error: {Error}", result.Error?.Description);
             throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+        }
 
         return Ok(new
         {

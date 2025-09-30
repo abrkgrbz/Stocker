@@ -1,27 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet test:*)",
-      "Bash(dir scripts)",
-      "Bash(dotnet build:*)",
-      "Bash(powershell:*)",
-      "Bash(dir:*)",
-      "Bash(Select-String -Pattern \"Test Run|Failed|Passed|Skipped|Total tests|Line coverage\")",
-      "Bash(Select-Object -Last 50)",
-      "Bash(del:*)",
-      "Bash(find:*)",
-      "Bash(Select-String -Pattern \"Stocker\\.|Line coverage\")",
-      "Bash(Select-String -Pattern \"Hata|Error|Uyarı|Warning\")",
-      "Bash(Select-Object -Last 20)",
-      "Bash(findstr:*)",
-      "Bash(dotnet list:*)",
-      "Bash(dotnet ef migrations:*)",
-      "Bash(dotnet ef database update:*)",
-      "Bash(sqllocaldb info:*)",
-      "Bash(dotnet sln:*)",
-      "Bash(dotnet restore:*)",
-      "Bash(git add:*)",
-      "Bash(Select-String -Pattern \"Hata|Error|Uyarı.*error\" -Context 0,2)"
+      "Bash(git commit -m \"$(cat <<''EOF''\ndebug: Add endpoint entry logging to TenantRegistrationController\n\nAdded detailed logging at controller level to verify:\n1. Request is reaching the endpoint\n2. MediatR command is being sent\n3. Handler result is being returned\n\nLogs to check in Seq (with emoji markers for easy search):\n- 🔵 \"TenantRegistration endpoint hit\" - Request received\n- 🔵 \"TenantRegistration result\" - Handler completed\n- 🔴 \"TenantRegistration failed\" - Error occurred\n\nThis helps identify if the issue is:\n- Frontend not calling endpoint\n- Controller not receiving request\n- Handler not being invoked\n- Background job not being queued\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
