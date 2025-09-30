@@ -959,24 +959,33 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
       const lastName = lastNameParts.join(' ') || firstName;
 
       const registrationData = {
+        // Company Information
         companyName: formData.companyName,
         companyCode: formData.companyCode,
-        identityType: formData.identityType,
-        identityNumber: formData.identityNumber,
-        sector: formData.sector,
-        employeeCount: formData.employeeCount,
-        contactName: formData.contactName,
+
+        // Contact Information
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        contactTitle: formData.contactTitle,
-        email: formData.contactEmail,
-        username: formData.contactEmail.split('@')[0] || formData.companyCode,
-        firstName: firstName,
-        lastName: lastName,
-        password: formData.password,
-        domain: formData.companyCode,
+
+        // Admin User Information
+        adminEmail: formData.contactEmail,
+        adminUsername: formData.contactEmail.split('@')[0] || formData.companyCode,
+        adminFirstName: firstName,
+        adminLastName: lastName,
+        adminPhone: formData.contactPhone,
+        adminTitle: formData.contactTitle,
+        adminPassword: formData.password,
+
+        // Package & Subscription
         packageId: formData.packageId || selectedPackage?.id,
-        billingPeriod: formData.billingPeriod || 'Monthly'
+        billingCycle: formData.billingPeriod || 'Monthly',
+
+        // Preferences
+        preferredLanguage: 'tr-TR',
+        preferredTimeZone: 'Turkey Standard Time',
+        acceptTerms: true,
+        acceptPrivacyPolicy: true,
+        allowMarketing: false
       };
 
             const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
