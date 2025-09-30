@@ -38,14 +38,14 @@ public class TenantRegistrationController : ControllerBase
 
         var result = await _mediator.Send(command);
 
-        _logger.LogInformation("🔵 TenantRegistration result - Success: {Success}, HasData: {HasData}",
-            result.IsSuccess, result.Value != null);
-
         if (!result.IsSuccess)
         {
             _logger.LogError("🔴 TenantRegistration failed - Error: {Error}", result.Error?.Description);
             throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
         }
+
+        _logger.LogInformation("🔵 TenantRegistration success - Data: {HasData}",
+            result.Value != null);
 
         return Ok(new
         {
