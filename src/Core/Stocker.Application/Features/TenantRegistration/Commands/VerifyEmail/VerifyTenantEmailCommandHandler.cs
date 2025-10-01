@@ -62,38 +62,16 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
 
             // Verify email
             matchingRegistration.VerifyEmail(request.Token);
+            
+            _logger.LogInformation("Email verified successfully for: {Email}, Company: {CompanyCode}", 
+                matchingRegistration.ContactEmail.Value, 
+                matchingRegistration.CompanyCode);
 
-            // Auto-approve if pending
-            if (matchingRegistration.Status == RegistrationStatus.Pending)
-            {
-                // Approve registration first
-                matchingRegistration.Approve("System-AutoApproval", Guid.NewGuid());
-                
-                _logger.LogInformation("Email verified and registration approved for: {CompanyCode}", 
-                    matchingRegistration.CompanyCode);
-            }
-
-            // Save all changes
+            // Save email verification
             await _context.SaveChangesAsync(cancellationToken);
-
-            // If approved, create the tenant
-            if (matchingRegistration.Status == RegistrationStatus.Approved)
-            {
-                try
-                {
-                    // Create tenant directly through MediatR - Hangfire will handle the background processing
-                    var jobId = _backgroundJobService.Enqueue<IMediator>(mediator => 
-                        mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
-                    
-                    _logger.LogInformation("Tenant creation job enqueued with ID {JobId} for registration: {RegistrationId}", 
-                        jobId, matchingRegistration.Id);
-                }
-                catch (Exception jobEx)
-                {
-                    _logger.LogError(jobEx, "Failed to enqueue tenant creation job for registration: {RegistrationId}", matchingRegistration.Id);
-                    // Don't fail the verification if job enqueue fails
-                }
-            }
+            
+            // NOTE: Approval and tenant creation should be handled by admin panel or separate workflow
+            // For now, email verification is just marking the email as verified
 
             return Result<bool>.Success(true);
         }
