@@ -37,25 +37,21 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
             .IsRequired()
             .HasMaxLength(100);
             
-        builder.OwnsOne(x => x.ContactEmail, email =>
-        {
-            email.Property(e => e.Value)
-                .HasColumnName("ContactEmail")
-                .IsRequired()
-                .HasMaxLength(256);
-        })
-        .Navigation(x => x.ContactEmail)
-        .IsRequired();
+        builder.Property(x => x.ContactEmail)
+            .HasConversion(
+                v => v.Value,
+                v => Domain.Common.ValueObjects.Email.Create(v).Value)
+            .HasColumnName("ContactEmail")
+            .IsRequired()
+            .HasMaxLength(256);
         
-        builder.OwnsOne(x => x.ContactPhone, phone =>
-        {
-            phone.Property(p => p.Value)
-                .HasColumnName("ContactPhone")
-                .IsRequired()
-                .HasMaxLength(50);
-        })
-        .Navigation(x => x.ContactPhone)
-        .IsRequired();
+        builder.Property(x => x.ContactPhone)
+            .HasConversion(
+                v => v.Value,
+                v => Domain.Common.ValueObjects.PhoneNumber.Create(v).Value)
+            .HasColumnName("ContactPhone")
+            .IsRequired()
+            .HasMaxLength(50);
         
         builder.Property(x => x.CompanyWebsite)
             .HasMaxLength(256);
@@ -101,16 +97,14 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
         builder.Property(x => x.RejectedBy)
             .HasMaxLength(100);
             
-        // Configure AdminEmail as owned type
-        builder.OwnsOne(x => x.AdminEmail, email =>
-        {
-            email.Property(e => e.Value)
-                .HasColumnName("AdminEmail")
-                .IsRequired()
-                .HasMaxLength(256);
-        })
-        .Navigation(x => x.AdminEmail)
-        .IsRequired();
+        // Configure AdminEmail with value conversion
+        builder.Property(x => x.AdminEmail)
+            .HasConversion(
+                v => v.Value,
+                v => Domain.Common.ValueObjects.Email.Create(v).Value)
+            .HasColumnName("AdminEmail")
+            .IsRequired()
+            .HasMaxLength(256);
             
         // Package Selection
         builder.Property(x => x.ReferralCode)
