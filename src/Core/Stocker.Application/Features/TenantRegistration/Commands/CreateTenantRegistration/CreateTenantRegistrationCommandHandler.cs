@@ -165,8 +165,9 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                     registration.EmailVerificationToken ?? "NULL");
 
                 var jobId = _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
-                    job.SendVerificationEmailAsync(
+                    job.SendTenantVerificationEmailAsync(
                         registration.ContactEmail.Value,
+                        registration.EmailVerificationCode ?? "",
                         registration.EmailVerificationToken ?? "",
                         $"{registration.ContactPersonName} {registration.ContactPersonSurname}"));
 

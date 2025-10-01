@@ -7,6 +7,7 @@ public interface IEmailService
     
     // Specific email types
     Task SendEmailVerificationAsync(string email, string token, string userName, CancellationToken cancellationToken = default);
+    Task SendTenantEmailVerificationAsync(string email, string code, string token, string userName, CancellationToken cancellationToken = default);
     Task SendPasswordResetAsync(string email, string token, string userName, CancellationToken cancellationToken = default);
     Task SendWelcomeEmailAsync(string email, string userName, string companyName, CancellationToken cancellationToken = default);
     Task SendInvitationEmailAsync(string email, string inviterName, string companyName, string inviteToken, CancellationToken cancellationToken = default);

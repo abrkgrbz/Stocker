@@ -56,7 +56,8 @@ public sealed class TenantRegistration : Entity
     // Verification
     public bool EmailVerified { get; private set; }
     public DateTime? EmailVerifiedAt { get; private set; }
-    public string? EmailVerificationToken { get; private set; }
+    public string? EmailVerificationToken { get; private set; } // For link-based verification
+    public string? EmailVerificationCode { get; private set; }  // For code-based verification (6-digit)
     public bool PhoneVerified { get; private set; }
     public DateTime? PhoneVerifiedAt { get; private set; }
     public string? PhoneVerificationCode { get; private set; }
@@ -113,7 +114,8 @@ public sealed class TenantRegistration : Entity
         AdminLastName = adminLastName;
         Status = RegistrationStatus.Pending;
         RegistrationDate = DateTime.UtcNow;
-        EmailVerificationToken = GenerateVerificationToken();
+        EmailVerificationToken = GenerateVerificationToken(); // For link-based verification
+        EmailVerificationCode = GenerateVerificationCode();  // For code-based verification
         PhoneVerificationCode = GenerateVerificationCode();
         BillingCycle = "Monthly"; // Default
         PackageName = "Trial"; // Default
@@ -200,13 +202,18 @@ public sealed class TenantRegistration : Entity
     {
         if (EmailVerified)
             throw new InvalidOperationException("Email already verified.");
-            
-        if (EmailVerificationToken != token)
-            throw new InvalidOperationException("Invalid verification token.");
-            
+
+        // Accept both token (link-based) and code (6-digit)
+        var isTokenValid = EmailVerificationToken != null && EmailVerificationToken == token;
+        var isCodeValid = EmailVerificationCode != null && EmailVerificationCode == token;
+
+        if (!isTokenValid && !isCodeValid)
+            throw new InvalidOperationException("Invalid verification token or code.");
+
         EmailVerified = true;
         EmailVerifiedAt = DateTime.UtcNow;
         EmailVerificationToken = null;
+        EmailVerificationCode = null;
     }
     
     public void VerifyPhone(string code)

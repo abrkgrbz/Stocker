@@ -157,6 +157,50 @@ public class EmailService : IEmailService
                     </div>
                 </body>
                 </html>",
+            "TenantEmailVerification" => @"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .code-box { background: white; border: 2px dashed #667eea; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }
+                        .code { font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; font-family: monospace; }
+                        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+                        .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>Email Doğrulama</h1>
+                        </div>
+                        <div class='content'>
+                            <p>Merhaba {{userName}},</p>
+                            <p>Stocker'a hoşgeldiniz! Hesabınızı aktifleştirmek için aşağıdaki <strong>6 haneli doğrulama kodunu</strong> girin:</p>
+                            <div class='code-box'>
+                                <div class='code'>{{verificationCode}}</div>
+                            </div>
+                            <p style='text-align: center; color: #666;'>Bu kod <strong>24 saat</strong> geçerlidir.</p>
+                            <div class='note'>
+                                <strong>💡 İpucu:</strong> Kodu kayıt sayfasında açılan popup'a girebilirsiniz.
+                            </div>
+                            <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+                            <p style='font-size: 14px; color: #666;'><strong>Alternatif:</strong> Doğrudan link ile de doğrulayabilirsiniz:</p>
+                            <div style='text-align: center;'>
+                                <a href='{{verificationUrl}}' class='button'>Email Adresimi Doğrula</a>
+                            </div>
+                            <p style='font-size: 12px; color: #999; text-align: center;'>{{verificationUrl}}</p>
+                        </div>
+                        <div class='footer'>
+                            <p>© 2024 Stocker. Tüm hakları saklıdır.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>",
             "PasswordReset" => @"
                 <!DOCTYPE html>
                 <html>
@@ -238,6 +282,7 @@ public class EmailService : IEmailService
         return templateName switch
         {
             "EmailVerification" => "{{appName}} - Email Adresinizi Doğrulayın",
+            "TenantEmailVerification" => "{{appName}} - Email Doğrulama Kodunuz",
             "PasswordReset" => "{{appName}} - Şifre Sıfırlama Talebi",
             "Welcome" => "{{appName}} - Hoşgeldiniz!",
             "Invitation" => "{{inviterName}} sizi {{companyName}} şirketine davet ediyor",
@@ -358,15 +403,39 @@ public class EmailService : IEmailService
     {
         var templateBody = GetDefaultTemplate("EmailVerification");
         var subject = GetDefaultSubject("EmailVerification");
-        
+
         var verificationUrl = $"https://stoocker.app/verify-email?token={token}";
-        
+
         // Replace placeholders
         templateBody = templateBody
             .Replace("{{userName}}", userName)
             .Replace("{{verificationUrl}}", verificationUrl);
-            
+
         subject = subject.Replace("{{appName}}", "Stoocker");
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = templateBody,
+            IsHtml = true
+        }, cancellationToken);
+    }
+
+    public async Task SendTenantEmailVerificationAsync(string email, string code, string token, string userName, CancellationToken cancellationToken = default)
+    {
+        var templateBody = GetDefaultTemplate("TenantEmailVerification");
+        var subject = GetDefaultSubject("TenantEmailVerification");
+
+        var verificationUrl = $"https://stoocker.app/verify-email?token={token}";
+
+        // Replace placeholders - includes both code and link
+        templateBody = templateBody
+            .Replace("{{userName}}", userName)
+            .Replace("{{verificationCode}}", code)
+            .Replace("{{verificationUrl}}", verificationUrl);
+
+        subject = subject.Replace("{{appName}}", "Stocker");
 
         await SendAsync(new EmailMessage
         {
@@ -510,6 +579,18 @@ public class DevelopmentEmailService : IEmailService
             To = email,
             Subject = "Email Verification",
             Body = $"<p>Hello {userName}, please verify your email. Token: {token}</p>",
+            IsHtml = true
+        };
+        await SendAsync(message, cancellationToken);
+    }
+
+    public async Task SendTenantEmailVerificationAsync(string email, string code, string token, string userName, CancellationToken cancellationToken = default)
+    {
+        var message = new EmailMessage
+        {
+            To = email,
+            Subject = "Tenant Email Verification",
+            Body = $"<p>Hello {userName}, your verification code is: <strong>{code}</strong></p><p>Or use this link: https://stoocker.app/verify-email?token={token}</p>",
             IsHtml = true
         };
         await SendAsync(message, cancellationToken);

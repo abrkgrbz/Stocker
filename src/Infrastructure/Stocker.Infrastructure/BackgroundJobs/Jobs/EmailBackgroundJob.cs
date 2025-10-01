@@ -69,6 +69,23 @@ public class EmailBackgroundJob : IEmailBackgroundJob
 
     [Queue("critical")]
     [AutomaticRetry(Attempts = 5, DelaysInSeconds = new[] { 30, 60, 300, 900, 1800 })]
+    public async Task SendTenantVerificationEmailAsync(string email, string code, string token, string userName)
+    {
+        try
+        {
+            _logger.LogInformation("Sending tenant verification email to {Email} with code {Code}", email, code);
+            await _emailService.SendTenantEmailVerificationAsync(email, code, token, userName, CancellationToken.None);
+            _logger.LogInformation("Tenant verification email sent to {Email}", email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send tenant verification email to {Email}", email);
+            throw;
+        }
+    }
+
+    [Queue("critical")]
+    [AutomaticRetry(Attempts = 5, DelaysInSeconds = new[] { 30, 60, 300, 900, 1800 })]
     public async Task SendPasswordResetEmailAsync(string email, string token, string userName)
     {
         try
