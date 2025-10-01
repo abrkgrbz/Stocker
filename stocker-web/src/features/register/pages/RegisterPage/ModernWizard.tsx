@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { message, Spin, Modal } from 'antd';
 
 import { Captcha } from '@/features/auth/components/Captcha';
+import { EmailVerificationModal } from '../../components/EmailVerificationModal';
 import { apiClient } from '@/shared/api/client';
 import {
   ShopOutlined,
@@ -74,6 +75,9 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<any>(null);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [registrationCode, setRegistrationCode] = useState('');
   
   const [formData, setFormData] = useState({
     // Step 1 - Company Info
@@ -991,11 +995,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
             const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
       
       if (response.data?.success && response.data?.data?.id) {
+        // E-posta doğrulama modalını göster
+        setRegistrationEmail(formData.contactEmail);
+        setRegistrationCode(response.data.data.registrationCode || '');
+        setShowVerificationModal(true);
         message.success({
           content: 'Kayıt başarıyla tamamlandı! E-posta adresinize doğrulama kodu gönderildi.',
           duration: 5
         });
-        onComplete(response.data.data);
       } else {
         message.error('Kayıt sırasında bir hata oluştu');
       }
@@ -1802,6 +1809,23 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           </div>
         </div>
       </div>
+      
+      {/* Email Verification Modal */}
+      <EmailVerificationModal
+        visible={showVerificationModal}
+        email={registrationEmail}
+        registrationCode={registrationCode}
+        onSuccess={() => {
+          setShowVerificationModal(false);
+          message.success('E-posta doğrulandı! Yönlendiriliyorsunuz...');
+          // Call onComplete to redirect to login or dashboard
+          onComplete({ email: registrationEmail, verified: true });
+        }}
+        onCancel={() => {
+          setShowVerificationModal(false);
+          message.info('E-posta doğrulamasını daha sonra yapabilirsiniz');
+        }}
+      />
       
     </div>
   );
