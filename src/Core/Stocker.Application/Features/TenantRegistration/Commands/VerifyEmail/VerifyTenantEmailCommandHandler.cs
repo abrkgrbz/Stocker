@@ -34,53 +34,55 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
         try
         {
             // Find registration by email and token
+            // Use ToList() first to avoid EF Core translation issue with Value Object
             var registration = await _context.TenantRegistrations
-                .FirstOrDefaultAsync(r => 
-                    r.ContactEmail.Value == request.Email && 
-                    r.EmailVerificationToken == request.Token, 
-                    cancellationToken);
+                .Where(r => r.EmailVerificationToken == request.Token || r.EmailVerificationCode == request.Token)
+                .ToListAsync(cancellationToken);
+            
+            var matchingRegistration = registration
+                .FirstOrDefault(r => r.ContactEmail.Value == request.Email);
 
-            if (registration == null)
+            if (matchingRegistration == null)
             {
                 return Result<bool>.Failure(Error.NotFound("Registration.NotFound", "Kayıt bulunamadı veya doğrulama kodu geçersiz."));
             }
 
-            if (registration.EmailVerified)
+            if (matchingRegistration.EmailVerified)
             {
                 return Result<bool>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
             }
 
             // Verify email
-            registration.VerifyEmail(request.Token);
+            matchingRegistration.VerifyEmail(request.Token);
 
             // Auto-approve if pending
-            if (registration.Status == RegistrationStatus.Pending)
+            if (matchingRegistration.Status == RegistrationStatus.Pending)
             {
                 // Approve registration first
-                registration.Approve("System-AutoApproval", Guid.NewGuid());
+                matchingRegistration.Approve("System-AutoApproval", Guid.NewGuid());
                 
                 _logger.LogInformation("Email verified and registration approved for: {CompanyCode}", 
-                    registration.CompanyCode);
+                    matchingRegistration.CompanyCode);
             }
 
             // Save all changes
             await _context.SaveChangesAsync(cancellationToken);
 
             // If approved, create the tenant
-            if (registration.Status == RegistrationStatus.Approved)
+            if (matchingRegistration.Status == RegistrationStatus.Approved)
             {
                 try
                 {
                     // Create tenant directly through MediatR - Hangfire will handle the background processing
                     var jobId = _backgroundJobService.Enqueue<IMediator>(mediator => 
-                        mediator.Send(new CreateTenantFromRegistrationCommand(registration.Id), CancellationToken.None));
+                        mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
                     
                     _logger.LogInformation("Tenant creation job enqueued with ID {JobId} for registration: {RegistrationId}", 
-                        jobId, registration.Id);
+                        jobId, matchingRegistration.Id);
                 }
                 catch (Exception jobEx)
                 {
-                    _logger.LogError(jobEx, "Failed to enqueue tenant creation job for registration: {RegistrationId}", registration.Id);
+                    _logger.LogError(jobEx, "Failed to enqueue tenant creation job for registration: {RegistrationId}", matchingRegistration.Id);
                     // Don't fail the verification if job enqueue fails
                 }
             }

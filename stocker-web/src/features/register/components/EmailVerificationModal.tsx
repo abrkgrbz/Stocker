@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Button, message, Space, Typography, Alert } from 'antd';
-import { MailOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Modal, Input, Button, message, Space, Typography } from 'antd';
+import { MailOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '@/shared/api/client';
+import './EmailVerificationModal.css';
 
 const { Title, Text } = Typography;
 
@@ -72,12 +73,8 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
 
     try {
       // TODO: Backend'de resend email endpoint eklenecek
-      // await apiClient.post('/api/public/tenant-registration/resend-verification', {
-      //   registrationCode
-      // });
-
       message.success('Doğrulama kodu tekrar gönderildi');
-      setCountdown(60); // 60 saniye beklet
+      setCountdown(60);
     } catch (error) {
       message.error('Kod gönderilemedi, lütfen tekrar deneyin');
     }
@@ -86,52 +83,50 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
   return (
     <Modal
       open={visible}
-      title={
-        <Space direction="vertical" size={0}>
-          <Title level={4} style={{ margin: 0 }}>
-            <MailOutlined /> E-posta Doğrulama
-          </Title>
-        </Space>
-      }
       onCancel={onCancel}
       footer={null}
       centered
-      width={500}
+      width={480}
       maskClosable={false}
+      className="email-verification-modal"
+      closeIcon={<span className="modal-close">×</span>}
     >
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <Alert
-          message="Doğrulama Kodu Gönderildi"
-          description={
-            <div>
-              <Text>{email}</Text> adresine 6 haneli doğrulama kodu gönderdik.
-              <br />
-              Lütfen e-postanızı kontrol edin ve kodu aşağıya girin.
-            </div>
-          }
-          type="info"
-          showIcon
-          icon={<SafetyOutlined />}
-        />
+      <div className="verification-container">
+        {/* Icon Header */}
+        <div className="verification-icon">
+          <MailOutlined />
+        </div>
 
-        <Input
-          size="large"
-          placeholder="6 haneli kod (örn: 123456)"
-          maxLength={6}
-          value={verificationCode}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, ''); // Sadece rakam
-            setVerificationCode(value);
-          }}
-          onPressEnter={handleVerify}
-          style={{
-            fontSize: '24px',
-            textAlign: 'center',
-            letterSpacing: '8px'
-          }}
-        />
+        {/* Title */}
+        <Title level={3} className="verification-title">
+          E-posta Doğrulama
+        </Title>
 
-        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+        {/* Description */}
+        <Text className="verification-description">
+          <strong>{email}</strong> adresine 6 haneli doğrulama kodu gönderdik.
+          Lütfen e-postanızı kontrol edin.
+        </Text>
+
+        {/* Code Input */}
+        <div className="code-input-container">
+          <Input
+            size="large"
+            placeholder="• • • • • •"
+            maxLength={6}
+            value={verificationCode}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, '');
+              setVerificationCode(value);
+            }}
+            onPressEnter={handleVerify}
+            className="code-input"
+            autoFocus
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Button
             type="primary"
             size="large"
@@ -139,6 +134,8 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             loading={loading}
             onClick={handleVerify}
             disabled={verificationCode.length !== 6}
+            className="verify-button"
+            icon={<CheckCircleOutlined />}
           >
             Doğrula ve Devam Et
           </Button>
@@ -148,6 +145,8 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             block
             onClick={handleResendCode}
             disabled={countdown > 0}
+            className="resend-button"
+            icon={<ClockCircleOutlined />}
           >
             {countdown > 0
               ? `Tekrar Gönder (${countdown}s)`
@@ -156,19 +155,18 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
           </Button>
         </Space>
 
-        <Alert
-          message="E-posta gelmedi mi?"
-          description={
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
-              <li>Spam/gereksiz klasörünü kontrol edin</li>
-              <li>E-posta adresinizi doğru yazdığınızdan emin olun</li>
-              <li>Birkaç dakika bekleyin ve tekrar deneyin</li>
-            </ul>
-          }
-          type="warning"
-          showIcon
-        />
-      </Space>
+        {/* Help Text */}
+        <div className="verification-help">
+          <Text type="secondary" className="help-text">
+            📧 E-posta gelmedi mi?
+          </Text>
+          <ul className="help-list">
+            <li>Spam klasörünü kontrol edin</li>
+            <li>E-posta adresinizi doğru yazdığınızdan emin olun</li>
+            <li>Birkaç dakika bekleyip tekrar deneyin</li>
+          </ul>
+        </div>
+      </div>
     </Modal>
   );
 };
