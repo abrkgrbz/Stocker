@@ -47,6 +47,7 @@ import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useRealTimeValidation } from '@/features/register/hooks/useRealTimeValidation';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { EmailVerificationModal } from '@/features/register/components/EmailVerificationModal';
 import './register-wizard.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -66,6 +67,11 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const recaptchaRef = React.useRef<ReCAPTCHA>(null);
+
+  // Email verification modal state
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [registrationCode, setRegistrationCode] = useState('');
   
   // Real-time validation hook
   const {
@@ -196,12 +202,15 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
       };
 
       const response = await apiClient.post('/api/public/tenant-registration/register', registrationData);
-      
+
       if (response.data?.success) {
-        // Başarılı kayıt alert'i - sweetAlert utility'sini kullan
-        await showRegistrationSuccess(allValues.email);
-        
-        onComplete(response.data.data);
+        // Store registration data for verification
+        setRegistrationEmail(allValues.email);
+        setRegistrationCode(response.data.data?.registrationCode || '');
+
+        // Show verification modal instead of success alert
+        setShowVerificationModal(true);
+        message.success('Kayıt başarılı! E-posta doğrulama kodunu girin.');
       } else {
         // Hata alert'i - sweetAlert utility'sini kullan
         await showApiResponse.error(
@@ -1038,8 +1047,24 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
   };
 
   return (
-    <div className="register-wizard-container">
-      <Card className="wizard-card">
+    <>
+      <EmailVerificationModal
+        visible={showVerificationModal}
+        email={registrationEmail}
+        registrationCode={registrationCode}
+        onSuccess={async () => {
+          setShowVerificationModal(false);
+          await showRegistrationSuccess(registrationEmail);
+          onComplete({ email: registrationEmail });
+        }}
+        onCancel={() => {
+          setShowVerificationModal(false);
+          message.info('E-posta doğrulamasını daha sonra yapabilirsiniz');
+        }}
+      />
+
+      <div className="register-wizard-container">
+        <Card className="wizard-card">
         <div className="wizard-header">
           <h2>Stocker'a Hoş Geldiniz</h2>
           <p>İşletmenizi dijitalleştirmek için doğru yerdesiniz</p>
@@ -1126,5 +1151,6 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
         </div>
       </Card>
     </div>
+    </>
   );
 };
