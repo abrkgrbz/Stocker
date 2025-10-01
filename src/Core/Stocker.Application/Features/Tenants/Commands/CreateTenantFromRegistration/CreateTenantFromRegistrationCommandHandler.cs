@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
@@ -10,7 +9,6 @@ using Stocker.Domain.Master.ValueObjects;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Results;
 using Stocker.SharedKernel.Repositories;
-using Stocker.SignalR.Hubs;
 
 namespace Stocker.Application.Features.Tenants.Commands.CreateTenantFromRegistration;
 
@@ -21,22 +19,19 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly IMigrationService _migrationService;
     private readonly IEmailService _emailService;
     private readonly ILogger<CreateTenantFromRegistrationCommandHandler> _logger;
-    private readonly IHubContext<NotificationHub>? _notificationHub;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
         IMasterUnitOfWork unitOfWork,
         IMigrationService migrationService,
         IEmailService emailService,
-        ILogger<CreateTenantFromRegistrationCommandHandler> logger,
-        IHubContext<NotificationHub>? notificationHub = null)
+        ILogger<CreateTenantFromRegistrationCommandHandler> logger)
     {
         _context = context;
         _unitOfWork = unitOfWork;
         _migrationService = migrationService;
         _emailService = emailService;
         _logger = logger;
-        _notificationHub = notificationHub;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -180,31 +175,9 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 
                 _logger.LogInformation("Tenant database setup completed for tenant: {TenantId}", tenant.Id);
-                
-                // Send SignalR notification that tenant is ready
-                if (_notificationHub != null)
-                {
-                    try
-                    {
-                        await _notificationHub.Clients.Group($"registration-{registration.ContactEmail.Value}")
-                            .SendAsync("TenantReady", new
-                            {
-                                tenantId = tenant.Id,
-                                companyCode = tenant.Code,
-                                companyName = tenant.Name,
-                                message = "Hesabınız hazır! Giriş yapabilirsiniz.",
-                                timestamp = DateTime.UtcNow
-                            }, cancellationToken);
-                        
-                        _logger.LogInformation("SignalR notification sent for tenant: {TenantId}, Email: {Email}", 
-                            tenant.Id, registration.ContactEmail.Value);
-                    }
-                    catch (Exception notificationEx)
-                    {
-                        _logger.LogWarning(notificationEx, "Failed to send SignalR notification for tenant: {TenantId}", tenant.Id);
-                        // Don't fail the whole operation if notification fails
-                    }
-                }
+
+                // TODO: Send SignalR notification that tenant is ready
+                // This will be handled by Infrastructure layer after refactoring to use proper event pattern
             }
             catch (Exception ex)
             {
