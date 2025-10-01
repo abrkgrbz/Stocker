@@ -43,9 +43,9 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("ContactEmail")
                 .IsRequired()
                 .HasMaxLength(256);
-
-            email.WithOwner();
-        });
+        })
+        .Navigation(x => x.ContactEmail)
+        .IsRequired();
         
         builder.OwnsOne(x => x.ContactPhone, phone =>
         {
@@ -53,9 +53,9 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("ContactPhone")
                 .IsRequired()
                 .HasMaxLength(50);
-
-            phone.WithOwner();
-        });
+        })
+        .Navigation(x => x.ContactPhone)
+        .IsRequired();
         
         builder.Property(x => x.CompanyWebsite)
             .HasMaxLength(256);
@@ -108,9 +108,9 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
                 .HasColumnName("AdminEmail")
                 .IsRequired()
                 .HasMaxLength(256);
-
-            email.WithOwner();
-        });
+        })
+        .Navigation(x => x.AdminEmail)
+        .IsRequired();
             
         // Package Selection
         builder.Property(x => x.ReferralCode)
