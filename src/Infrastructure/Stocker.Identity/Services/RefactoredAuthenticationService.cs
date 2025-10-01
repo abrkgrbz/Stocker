@@ -115,7 +115,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "GeÃ§ersiz kullanÄ±cÄ± adÄ± veya ÅŸifre" }
+                            Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
                         };
                     }
 
@@ -126,7 +126,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "GeÃ§ersiz kullanÄ±cÄ± adÄ± veya ÅŸifre" }
+                            Errors = new List<string> { "Geçersiz kullanıcı adı veya şifre" }
                         };
                     }
 
@@ -137,7 +137,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
                         return new AuthenticationResult
                         {
                             Success = false,
-                            Errors = new List<string> { "KullanÄ±cÄ± hesabÄ± aktif deÄŸil" }
+                            Errors = new List<string> { "Kullanıcı hesabı aktif değil" }
                         };
                     }
 
