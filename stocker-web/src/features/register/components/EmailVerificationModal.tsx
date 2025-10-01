@@ -49,13 +49,19 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
         message.success('E-posta doğrulandı! Yönlendiriliyorsunuz...');
         onSuccess();
       } else {
-        message.error(response.data?.message || 'Doğrulama başarısız');
+        const errorMsg = response.data?.message || response.data?.error?.description || 'Doğrulama başarısız';
+        const errorCode = response.data?.error?.code;
+        message.error(errorCode ? `${errorMsg} (${errorCode})` : errorMsg, 5);
       }
     } catch (error: any) {
-      message.error(
-        error.response?.data?.message ||
-        'Doğrulama kodu hatalı veya süresi dolmuş'
-      );
+      // RFC 7807 Problem Details format
+      const problemDetails = error.response?.data;
+      const detail = problemDetails?.detail ||
+                    problemDetails?.message ||
+                    error.message ||
+                    'Doğrulama kodu hatalı veya süresi dolmuş';
+
+      message.error(detail, 6);
     } finally {
       setLoading(false);
     }

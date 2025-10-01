@@ -212,16 +212,39 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
         setShowVerificationModal(true);
         message.success('Kayıt başarılı! E-posta doğrulama kodunu girin.');
       } else {
-        // Hata alert'i - sweetAlert utility'sini kullan
+        // Backend'den gelen hata mesajını göster
+        const errorMessage = response.data?.message || response.data?.error?.description || 'Kayıt işlemi sırasında bir hata oluştu.';
+        const errorDetails = response.data?.error?.code || response.data?.errors;
+
         await showApiResponse.error(
-          response.data?.message || 'Kayıt işlemi sırasında bir hata oluştu.',
+          errorDetails ? `${errorMessage}\n\nDetay: ${JSON.stringify(errorDetails)}` : errorMessage,
           'Kayıt Başarısız'
         );
       }
     } catch (error: any) {
-      // Detaylı hata alert'i - sweetAlert utility'sini kullan
-      await showApiResponse.error(error, 'Kayıt işlemi sırasında bir hata oluştu');
-      // Error handling removed for production
+      // RFC 7807 Problem Details format
+      const statusCode = error.response?.status;
+      const problemDetails = error.response?.data;
+
+      // RFC 7807 standard fields
+      const title = problemDetails?.title || 'Kayıt Hatası';
+      const detail = problemDetails?.detail ||
+                    problemDetails?.message ||
+                    error.message ||
+                    'Kayıt işlemi sırasında bir hata oluştu';
+      const errorCode = problemDetails?.code;
+
+      let displayMessage = detail;
+
+      if (statusCode && statusCode !== 422) {
+        displayMessage = `HTTP ${statusCode}: ${detail}`;
+      }
+
+      if (errorCode && errorCode !== 'BUSINESS_RULE') {
+        displayMessage += `\n\nHata Kodu: ${errorCode}`;
+      }
+
+      await showApiResponse.error(displayMessage, title);
     } finally {
       setLoading(false);
     }
