@@ -34,13 +34,21 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
         try
         {
             // Find registration by email and token
-            // Use ToList() first to avoid EF Core translation issue with Value Object
-            var registration = await _context.TenantRegistrations
+            // Fetch candidates first, then filter by Value Object in memory
+            var candidates = await _context.TenantRegistrations
                 .Where(r => r.EmailVerificationToken == request.Token || r.EmailVerificationCode == request.Token)
                 .ToListAsync(cancellationToken);
             
-            var matchingRegistration = registration
+            var matchingRegistration = candidates
                 .FirstOrDefault(r => r.ContactEmail.Value == request.Email);
+            
+            // If found in memory list, get the tracked entity from context
+            if (matchingRegistration != null)
+            {
+                // Re-fetch the entity to ensure it's tracked
+                matchingRegistration = await _context.TenantRegistrations
+                    .FirstOrDefaultAsync(r => r.Id == matchingRegistration.Id, cancellationToken);
+            }
 
             if (matchingRegistration == null)
             {
