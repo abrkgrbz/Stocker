@@ -117,7 +117,8 @@ public sealed class Tenant : AggregateRoot
         IsActive = true;
         UpdatedAt = DateTime.UtcNow;
 
-        RaiseDomainEvent(new TenantActivatedDomainEvent(Id));
+        // Note: TenantActivatedDomainEvent is raised in the command handler
+        // where we have access to registration contact email for SignalR notification
     }
 
     public void Deactivate()

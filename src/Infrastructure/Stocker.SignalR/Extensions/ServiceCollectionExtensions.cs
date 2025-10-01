@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Application.Interfaces.Notifications;
 using Stocker.SignalR.Hubs;
 using Stocker.SignalR.Services;
 
@@ -34,7 +35,10 @@ public static class ServiceCollectionExtensions
         // Register SignalR services
         services.AddSingleton<IConnectionManager, ConnectionManager>();
         services.AddScoped<INotificationService, NotificationService>();
-        
+
+        // Register tenant notification service for real-time notifications
+        services.AddScoped<ITenantNotificationService, SignalRTenantNotificationService>();
+
         // Add SignalR user ID provider for authentication
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 

@@ -5,6 +5,7 @@ using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
+using Stocker.Domain.Master.Events;
 using Stocker.Domain.Master.ValueObjects;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.SharedKernel.Results;
@@ -19,19 +20,22 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly IMigrationService _migrationService;
     private readonly IEmailService _emailService;
     private readonly ILogger<CreateTenantFromRegistrationCommandHandler> _logger;
+    private readonly IPublisher _publisher;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
         IMasterUnitOfWork unitOfWork,
         IMigrationService migrationService,
         IEmailService emailService,
-        ILogger<CreateTenantFromRegistrationCommandHandler> logger)
+        ILogger<CreateTenantFromRegistrationCommandHandler> logger,
+        IPublisher publisher)
     {
         _context = context;
         _unitOfWork = unitOfWork;
         _migrationService = migrationService;
         _emailService = emailService;
         _logger = logger;
+        _publisher = publisher;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -176,8 +180,18 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 
                 _logger.LogInformation("Tenant database setup completed for tenant: {TenantId}", tenant.Id);
 
-                // TODO: Send SignalR notification that tenant is ready
-                // This will be handled by Infrastructure layer after refactoring to use proper event pattern
+                // Publish domain event for real-time notification
+                var tenantActivatedEvent = new TenantActivatedDomainEvent(
+                    tenant.Id,
+                    tenant.Code,
+                    tenant.Name,
+                    registration.ContactEmail.Value);
+
+                await _publisher.Publish(tenantActivatedEvent, cancellationToken);
+
+                _logger.LogInformation(
+                    "📢 Published TenantActivatedDomainEvent for tenant: {TenantId}",
+                    tenant.Id);
             }
             catch (Exception ex)
             {
