@@ -61,10 +61,16 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 }
             }
 
-            // Check if approved
-            if (registration.Status != RegistrationStatus.Approved)
+            // Check if email verified (minimum requirement for tenant creation)
+            if (!registration.EmailVerified)
             {
-                return Result<TenantDto>.Failure(Error.Validation("Registration.NotApproved", "Kayıt henüz onaylanmamış."));
+                return Result<TenantDto>.Failure(Error.Validation("Registration.EmailNotVerified", "E-posta adresi doğrulanmamış."));
+            }
+            
+            // Status can be Pending (will be approved after tenant creation) or Approved
+            if (registration.Status != RegistrationStatus.Pending && registration.Status != RegistrationStatus.Approved)
+            {
+                return Result<TenantDto>.Failure(Error.Validation("Registration.InvalidStatus", "Kayıt durumu tenant oluşturma için uygun değil."));
             }
 
             // Check if tenant with same code already exists

@@ -67,11 +67,40 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 matchingRegistration.ContactEmail.Value, 
                 matchingRegistration.CompanyCode);
 
-            // Save email verification
+            // Save email verification first
             await _context.SaveChangesAsync(cancellationToken);
             
-            // NOTE: Approval and tenant creation should be handled by admin panel or separate workflow
-            // For now, email verification is just marking the email as verified
+            // Auto-approve and create tenant after email verification
+            if (matchingRegistration.Status == RegistrationStatus.Pending)
+            {
+                // Create tenant first to get the TenantId
+                var createTenantResult = await _mediator.Send(
+                    new CreateTenantFromRegistrationCommand(matchingRegistration.Id), 
+                    cancellationToken);
+                
+                if (createTenantResult.IsSuccess && createTenantResult.Value?.Id != null)
+                {
+                    // Now approve with the real TenantId
+                    matchingRegistration.Approve("System-AutoApproval-EmailVerified", createTenantResult.Value.Id);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    
+                    _logger.LogInformation(
+                        "Registration approved and tenant created for: {CompanyCode}, TenantId: {TenantId}", 
+                        matchingRegistration.CompanyCode, 
+                        createTenantResult.Value.Id);
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Failed to create tenant for registration: {RegistrationId}, Error: {Error}", 
+                        matchingRegistration.Id, 
+                        createTenantResult.Error?.Description);
+                    
+                    return Result<bool>.Failure(
+                        Error.Failure("TenantCreation.Failed", 
+                            $"E-posta doğrulandı ancak tenant oluşturulamadı: {createTenantResult.Error?.Description}"));
+                }
+            }
 
             return Result<bool>.Success(true);
         }
