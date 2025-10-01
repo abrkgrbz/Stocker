@@ -70,36 +70,23 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
             // Save email verification first
             await _context.SaveChangesAsync(cancellationToken);
             
-            // Auto-approve and create tenant after email verification
+            // Enqueue tenant provisioning job (async) - don't block user
             if (matchingRegistration.Status == RegistrationStatus.Pending)
             {
-                // Create tenant first to get the TenantId
-                var createTenantResult = await _mediator.Send(
-                    new CreateTenantFromRegistrationCommand(matchingRegistration.Id), 
-                    cancellationToken);
+                // Enqueue background job for tenant creation
+                // This will create tenant, database, run migrations, and seed data
+                var jobId = _backgroundJobService.Enqueue<IMediator>(mediator => 
+                    mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
                 
-                if (createTenantResult.IsSuccess && createTenantResult.Value?.Id != null)
-                {
-                    // Now approve with the real TenantId
-                    matchingRegistration.Approve("System-AutoApproval-EmailVerified", createTenantResult.Value.Id);
-                    await _context.SaveChangesAsync(cancellationToken);
-                    
-                    _logger.LogInformation(
-                        "Registration approved and tenant created for: {CompanyCode}, TenantId: {TenantId}", 
-                        matchingRegistration.CompanyCode, 
-                        createTenantResult.Value.Id);
-                }
-                else
-                {
-                    _logger.LogError(
-                        "Failed to create tenant for registration: {RegistrationId}, Error: {Error}", 
-                        matchingRegistration.Id, 
-                        createTenantResult.Error?.Description);
-                    
-                    return Result<bool>.Failure(
-                        Error.Failure("TenantCreation.Failed", 
-                            $"E-posta doğrulandı ancak tenant oluşturulamadı: {createTenantResult.Error?.Description}"));
-                }
+                _logger.LogInformation(
+                    "Tenant provisioning job enqueued with ID {JobId} for registration: {RegistrationId}, Company: {CompanyCode}", 
+                    jobId, 
+                    matchingRegistration.Id,
+                    matchingRegistration.CompanyCode);
+                
+                // Note: Tenant will be created asynchronously by Hangfire (typically 10-30 seconds)
+                // Frontend should show "Account is being prepared..." message
+                // User can try to login after a few seconds, or we can add polling/notification
             }
 
             return Result<bool>.Success(true);
