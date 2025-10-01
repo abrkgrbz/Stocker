@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Text.RegularExpressions;
-using System.Web;
 using System.Reflection;
 using System.Collections;
 
@@ -121,23 +120,31 @@ public class InputSanitizationFilter : IActionFilter
             return input;
 
         var original = input;
-        
-        // HTML encode to prevent XSS
-        var sanitized = HttpUtility.HtmlEncode(input);
+        var sanitized = input;
 
-        // Check for potential SQL injection patterns
-        if (ContainsSqlInjectionPattern(input))
-        {
-            _logger.LogWarning("Potential SQL injection detected and blocked: {Input}", input);
-            // Remove SQL keywords and dangerous patterns
-            sanitized = RemoveSqlPatterns(sanitized);
-        }
+        // DO NOT HTML encode here - it breaks UTF-8 characters (ü → &#252;)
+        // HTML encoding should be done during rendering (frontend/email templates)
+        // instead of during data storage
 
-        // Check for script tags
-        if (_scriptTagRegex.IsMatch(input))
+        // Check for script tags and remove them (XSS protection)
+        if (_scriptTagRegex.IsMatch(sanitized))
         {
             _logger.LogWarning("Script tag detected and removed: {Input}", input);
             sanitized = _scriptTagRegex.Replace(sanitized, string.Empty);
+        }
+
+        // Check for dangerous HTML tags (but allow safe formatting)
+        if (ContainsDangerousHtml(sanitized))
+        {
+            _logger.LogWarning("Dangerous HTML detected and removed: {Input}", input);
+            sanitized = RemoveDangerousHtml(sanitized);
+        }
+
+        // Check for potential SQL injection patterns
+        if (ContainsSqlInjectionPattern(sanitized))
+        {
+            _logger.LogWarning("Potential SQL injection detected and blocked: {Input}", input);
+            sanitized = RemoveSqlPatterns(sanitized);
         }
 
         // Log if content was modified
@@ -168,12 +175,48 @@ public class InputSanitizationFilter : IActionFilter
         // Remove SQL comments
         input = Regex.Replace(input, @"--.*$", string.Empty, RegexOptions.Multiline);
         input = Regex.Replace(input, @"/\*.*?\*/", string.Empty, RegexOptions.Singleline);
-        
+
         // Remove dangerous SQL keywords (but keep the rest of the text)
         foreach (var keyword in _sqlKeywords)
         {
             input = Regex.Replace(input, $@"\b{keyword}\b", string.Empty, RegexOptions.IgnoreCase);
         }
+
+        return input.Trim();
+    }
+
+    private bool ContainsDangerousHtml(string input)
+    {
+        // Check for dangerous HTML events and attributes
+        var dangerousPatterns = new[]
+        {
+            @"on\w+\s*=",           // onclick, onload, onerror, etc.
+            @"javascript:",         // javascript: protocol
+            @"vbscript:",          // vbscript: protocol
+            @"data:text/html",     // data: protocol with html
+            @"<iframe",            // iframe tags
+            @"<embed",             // embed tags
+            @"<object",            // object tags
+        };
+
+        return dangerousPatterns.Any(pattern =>
+            Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase));
+    }
+
+    private string RemoveDangerousHtml(string input)
+    {
+        // Remove dangerous HTML events
+        input = Regex.Replace(input, @"on\w+\s*=\s*[""'][^""']*[""']", string.Empty, RegexOptions.IgnoreCase);
+
+        // Remove dangerous protocols
+        input = Regex.Replace(input, @"javascript:", string.Empty, RegexOptions.IgnoreCase);
+        input = Regex.Replace(input, @"vbscript:", string.Empty, RegexOptions.IgnoreCase);
+        input = Regex.Replace(input, @"data:text/html", string.Empty, RegexOptions.IgnoreCase);
+
+        // Remove dangerous tags
+        input = Regex.Replace(input, @"<iframe[^>]*>.*?</iframe>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        input = Regex.Replace(input, @"<embed[^>]*>", string.Empty, RegexOptions.IgnoreCase);
+        input = Regex.Replace(input, @"<object[^>]*>.*?</object>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         return input.Trim();
     }

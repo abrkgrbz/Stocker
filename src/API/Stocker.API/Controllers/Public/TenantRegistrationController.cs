@@ -33,8 +33,8 @@ public class TenantRegistrationController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateTenantRegistrationCommand command)
     {
-        _logger.LogInformation("🔵 TenantRegistration endpoint hit - Company: {CompanyName}, Email: {Email}",
-            command.CompanyName, command.ContactEmail);
+        _logger.LogInformation("🔵 TenantRegistration endpoint hit - Company: {CompanyName}, Email: {Email}, AdminFirstName: {AdminFirstName}, AdminLastName: {AdminLastName}",
+            command.CompanyName, command.ContactEmail, command.AdminFirstName, command.AdminLastName);
 
         var result = await _mediator.Send(command);
 
