@@ -50,6 +50,7 @@ import { FAQSection } from '@/features/landing/components/FAQSection';
 import { ComparisonTable } from '@/features/landing/components/ComparisonTable';
 import { SectionDivider } from '@/features/landing/components/SectionDivider';
 import { TenantLoginModal } from '@/features/auth/components/TenantLoginModal';
+import { Logo } from '@/shared/components/Logo';
 import { isTenantDomain } from '@/utils/tenant';
 import './style.css';
 
@@ -426,8 +427,7 @@ export const ModernLanding: React.FC = () => {
       >
         <div className="nav-container">
           <div className="nav-logo" onClick={() => navigate('/')}>
-            <RocketOutlined style={{ fontSize: 28 }} />
-            <span>Stocker</span>
+            <Logo width={140} height={36} style={{ cursor: 'pointer' }} />
           </div>
           <div className="nav-menu">
             <a 
@@ -1104,7 +1104,7 @@ export const ModernLanding: React.FC = () => {
           <Row gutter={[32, 32]}>
             <Col xs={24} sm={12} lg={6}>
               <div className="footer-brand">
-                <RocketOutlined /> Stocker
+                <Logo width={120} height={32} />
               </div>
               <p>Modern işletmeler için dijital dönüşüm platformu</p>
             </Col>
