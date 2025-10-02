@@ -1059,7 +1059,7 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
               <p className="form-subtitle">İşletmenizin temel bilgilerini girin</p>
             </div>
 
-            <div className="form-row">
+            <div className="form-row single">
               <div className="form-group">
                 <label className="form-label">
                   Şirket Adı <span className="form-label-required">*</span>
@@ -1152,7 +1152,9 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                   </div>
                 )}
               </div>
+            </div>
 
+            <div className="form-row single">
               <div className="form-group">
                 <label className="form-label">
                   Şirket Kodu (Subdomain) <span className="form-label-required">*</span>
