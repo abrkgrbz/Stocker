@@ -69,24 +69,44 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
 
             // Save email verification first
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             // Enqueue tenant provisioning job (async) - don't block user
-            if (matchingRegistration.Status == RegistrationStatus.Pending)
+            // Only if tenant doesn't already exist
+            if (!matchingRegistration.TenantId.HasValue || matchingRegistration.TenantId.Value == Guid.Empty)
             {
-                // Enqueue background job for tenant creation
-                // This will create tenant, database, run migrations, and seed data
-                var jobId = _backgroundJobService.Enqueue<IMediator>(mediator => 
-                    mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
-                
+                // Status must be Pending or Approved
+                if (matchingRegistration.Status == RegistrationStatus.Pending ||
+                    matchingRegistration.Status == RegistrationStatus.Approved)
+                {
+                    // Enqueue background job for tenant creation
+                    // This will create tenant, database, run migrations, and seed data
+                    var jobId = _backgroundJobService.Enqueue<IMediator>(mediator =>
+                        mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
+
+                    _logger.LogInformation(
+                        "🚀 Tenant provisioning job enqueued with ID {JobId} for registration: {RegistrationId}, Company: {CompanyCode}, Status: {Status}",
+                        jobId,
+                        matchingRegistration.Id,
+                        matchingRegistration.CompanyCode,
+                        matchingRegistration.Status);
+
+                    // Note: Tenant will be created asynchronously by Hangfire (typically 10-30 seconds)
+                    // Frontend will receive real-time SignalR notification when ready
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "⚠️ Tenant provisioning NOT enqueued - Invalid status: {Status} for registration: {RegistrationId}",
+                        matchingRegistration.Status,
+                        matchingRegistration.Id);
+                }
+            }
+            else
+            {
                 _logger.LogInformation(
-                    "Tenant provisioning job enqueued with ID {JobId} for registration: {RegistrationId}, Company: {CompanyCode}", 
-                    jobId, 
+                    "ℹ️ Tenant already exists for registration: {RegistrationId}, TenantId: {TenantId}",
                     matchingRegistration.Id,
-                    matchingRegistration.CompanyCode);
-                
-                // Note: Tenant will be created asynchronously by Hangfire (typically 10-30 seconds)
-                // Frontend should show "Account is being prepared..." message
-                // User can try to login after a few seconds, or we can add polling/notification
+                    matchingRegistration.TenantId);
             }
 
             return Result<bool>.Success(true);
