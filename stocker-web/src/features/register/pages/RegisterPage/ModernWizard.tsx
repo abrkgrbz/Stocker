@@ -1131,35 +1131,96 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                     <InfoCircleOutlined style={{ marginLeft: 8, color: '#999', fontSize: 14 }} />
                   </Tooltip>
                 </label>
-                <div className="input-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
-                  <span className="input-icon"><IdcardOutlined /></span>
-                  <input
-                    type="text"
-                    className={`form-input form-input-icon ${validationErrors.companyCode ? 'input-error' : ''} ${validationSuccess.companyCode ? 'input-success' : ''} ${validating.companyCode ? 'input-validating' : ''}`}
-                    placeholder="Örn: abc-tech"
-                    value={formData.companyCode}
-                    onChange={(e) => handleInputChange('companyCode', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    onBlur={() => {
-                      if (formData.companyCode && formData.companyCode.length >= 3 && !validating.companyCode) {
-                        setValidating(prev => ({ ...prev, companyCode: true }));
-                        // Use tenant code validation if available, fallback to domain check
-                        if (validateTenantCode) {
-                          validateTenantCode(formData.companyCode);
-                        } else if (checkDomain) {
-                          checkDomain(formData.companyCode);
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'stretch',
+                    border: `2px solid ${validationErrors.companyCode ? '#ff4d4f' : validationSuccess.companyCode ? '#52c41a' : '#d9d9d9'}`,
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    background: '#fff'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      paddingLeft: '16px',
+                      color: '#999'
+                    }}>
+                      <IdcardOutlined style={{ fontSize: 18 }} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="abc-teknoloji"
+                      value={formData.companyCode}
+                      onChange={(e) => handleInputChange('companyCode', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      onBlur={() => {
+                        if (formData.companyCode && formData.companyCode.length >= 3 && !validating.companyCode) {
+                          setValidating(prev => ({ ...prev, companyCode: true }));
+                          if (validateTenantCode) {
+                            validateTenantCode(formData.companyCode);
+                          } else if (checkDomain) {
+                            checkDomain(formData.companyCode);
+                          }
                         }
-                      }
-                    }}
-                    style={{ borderRadius: '8px 0 0 8px' }}
-                  />
-                  <span style={{ padding: '12px 16px', background: '#f5f5f5', border: '1px solid #d9d9d9', borderLeft: 'none', borderRadius: '0 8px 8px 0', fontWeight: 600, color: '#667eea' }}>.stocker.app</span>
-                  {validating.companyCode && <Spin size="small" className="input-spinner" />}
-                  {validationErrors.companyCode && <span className="error-message">{validationErrors.companyCode}</span>}
-                {validationSuccess.companyCode && !validationErrors.companyCode && <span className="success-message">✓ Şirket kodu kullanılabilir</span>}
+                      }}
+                      style={{
+                        border: 'none',
+                        outline: 'none',
+                        padding: '14px 12px',
+                        fontSize: '15px',
+                        flex: 1,
+                        minWidth: 0
+                      }}
+                    />
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '14px 20px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: '#fff',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      .stocker.app
+                    </div>
+                  </div>
+                  {validating.companyCode && (
+                    <div style={{ position: 'absolute', right: '150px', top: '50%', transform: 'translateY(-50%)' }}>
+                      <Spin size="small" />
+                    </div>
+                  )}
+                  {validationSuccess.companyCode && !validating.companyCode && (
+                    <div style={{ position: 'absolute', right: '150px', top: '50%', transform: 'translateY(-50%)', color: '#52c41a', fontSize: 18 }}>
+                      <CheckCircleOutlined />
+                    </div>
+                  )}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
-                  Sisteme giriş için kullanacağınız benzersiz URL: <strong style={{ color: '#667eea' }}>{formData.companyCode || 'abc-tech'}.stocker.app</strong>
+                <div style={{
+                  marginTop: 12,
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(102, 126, 234, 0.2)'
+                }}>
+                  <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+                    🌐 Sizin URL adresiniz:
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: '#667eea', fontFamily: 'monospace' }}>
+                    {formData.companyCode || 'abc-teknoloji'}.stocker.app
+                  </div>
                 </div>
+                {validationErrors.companyCode && (
+                  <div style={{ marginTop: 8, color: '#ff4d4f', fontSize: 13 }}>
+                    ❌ {validationErrors.companyCode}
+                  </div>
+                )}
+                {validationSuccess.companyCode && !validationErrors.companyCode && (
+                  <div style={{ marginTop: 8, color: '#52c41a', fontSize: 13, fontWeight: 500 }}>
+                    ✓ Şirket kodu kullanılabilir
+                  </div>
+                )}
               </div>
             </div>
 
