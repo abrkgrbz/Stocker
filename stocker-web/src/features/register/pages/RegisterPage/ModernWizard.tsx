@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 
-import { message, Spin, Modal } from 'antd';
+import { message, Spin, Modal, Tooltip } from 'antd';
 
 import { Captcha } from '@/features/auth/components/Captcha';
 import { EmailVerificationModal } from '../../components/EmailVerificationModal';
@@ -1126,9 +1126,12 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
 
               <div className="form-group">
                 <label className="form-label">
-                  Şirket Kodu <span className="form-label-required">*</span>
+                  Şirket Kodu (Subdomain) <span className="form-label-required">*</span>
+                  <Tooltip title="Sisteme giriş yapacağınız benzersiz URL adresi. Örnek: abc-teknoloji.stocker.app">
+                    <InfoCircleOutlined style={{ marginLeft: 8, color: '#999', fontSize: 14 }} />
+                  </Tooltip>
                 </label>
-                <div className="input-wrapper">
+                <div className="input-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
                   <span className="input-icon"><IdcardOutlined /></span>
                   <input
                     type="text"
@@ -1147,10 +1150,15 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                         }
                       }
                     }}
+                    style={{ borderRadius: '8px 0 0 8px' }}
                   />
+                  <span style={{ padding: '12px 16px', background: '#f5f5f5', border: '1px solid #d9d9d9', borderLeft: 'none', borderRadius: '0 8px 8px 0', fontWeight: 600, color: '#667eea' }}>.stocker.app</span>
                   {validating.companyCode && <Spin size="small" className="input-spinner" />}
                   {validationErrors.companyCode && <span className="error-message">{validationErrors.companyCode}</span>}
                 {validationSuccess.companyCode && !validationErrors.companyCode && <span className="success-message">✓ Şirket kodu kullanılabilir</span>}
+                </div>
+                <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
+                  Sisteme giriş için kullanacağınız benzersiz URL: <strong style={{ color: '#667eea' }}>{formData.companyCode || 'abc-tech'}.stocker.app</strong>
                 </div>
               </div>
             </div>
