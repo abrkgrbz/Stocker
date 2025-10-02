@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"$(cat <<''EOF''\ndebug: Add endpoint entry logging to TenantRegistrationController\n\nAdded detailed logging at controller level to verify:\n1. Request is reaching the endpoint\n2. MediatR command is being sent\n3. Handler result is being returned\n\nLogs to check in Seq (with emoji markers for easy search):\n- 🔵 \"TenantRegistration endpoint hit\" - Request received\n- 🔵 \"TenantRegistration result\" - Handler completed\n- 🔴 \"TenantRegistration failed\" - Error occurred\n\nThis helps identify if the issue is:\n- Frontend not calling endpoint\n- Controller not receiving request\n- Handler not being invoked\n- Background job not being queued\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\ndebug: Add endpoint entry logging to TenantRegistrationController\n\nAdded detailed logging at controller level to verify:\n1. Request is reaching the endpoint\n2. MediatR command is being sent\n3. Handler result is being returned\n\nLogs to check in Seq (with emoji markers for easy search):\n- 🔵 \"TenantRegistration endpoint hit\" - Request received\n- 🔵 \"TenantRegistration result\" - Handler completed\n- 🔴 \"TenantRegistration failed\" - Error occurred\n\nThis helps identify if the issue is:\n- Frontend not calling endpoint\n- Controller not receiving request\n- Handler not being invoked\n- Background job not being queued\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add:*)",
+      "Bash(dotnet build:*)",
+      "Bash(git restore:*)",
+      "Bash(ls:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
