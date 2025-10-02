@@ -1064,27 +1064,48 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                 <label className="form-label">
                   Şirket Adı <span className="form-label-required">*</span>
                 </label>
-                <div className="input-wrapper">
-                  <span className="input-icon"><ShopOutlined /></span>
-                  <input
-                    type="text"
-                    className={`form-input form-input-icon ${validationErrors.companyName ? 'input-error' : ''} ${validationSuccess.companyName ? 'input-success' : ''} ${validating.companyName ? 'input-validating' : ''}`}
-                    placeholder="Örn: ABC Teknoloji A.Ş."
-                    value={formData.companyName}
-                    onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    onFocus={() => {
-                      if (formData.companyName && formData.companyName.length >= 2) {
-                        const generatedSuggestions = generateCompanySuggestions(formData.companyName);
-                        setCompanySuggestions(generatedSuggestions);
-                        setShowCompanySuggestions(generatedSuggestions.length > 0);
-                      }
-                    }}
-                    onBlur={() => {
-                      // Delay to allow click on suggestions
-                      setTimeout(() => setShowCompanySuggestions(false), 200);
-                    }}
-                  />
-                  {validating.companyName && <Spin size="small" className="input-spinner" />}
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: `2px solid ${validationErrors.companyName ? '#ff4d4f' : validationSuccess.companyName ? '#52c41a' : '#d9d9d9'}`,
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    transition: 'all 0.3s ease',
+                    background: '#fff'
+                  }}>
+                    <ShopOutlined style={{ fontSize: 18, color: '#999', marginRight: 12 }} />
+                    <input
+                      type="text"
+                      placeholder="Örn: ABC Teknoloji A.Ş."
+                      value={formData.companyName}
+                      onChange={(e) => handleInputChange('companyName', e.target.value)}
+                      onFocus={() => {
+                        if (formData.companyName && formData.companyName.length >= 2) {
+                          const generatedSuggestions = generateCompanySuggestions(formData.companyName);
+                          setCompanySuggestions(generatedSuggestions);
+                          setShowCompanySuggestions(generatedSuggestions.length > 0);
+                        }
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => setShowCompanySuggestions(false), 200);
+                      }}
+                      style={{
+                        border: 'none',
+                        outline: 'none',
+                        fontSize: '15px',
+                        flex: 1,
+                        minWidth: 0,
+                        background: 'transparent'
+                      }}
+                    />
+                    {validating.companyName && (
+                      <Spin size="small" />
+                    )}
+                    {validationSuccess.companyName && !validating.companyName && (
+                      <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />
+                    )}
+                  </div>
                   
                   {/* Autocomplete Suggestions */}
                   {showCompanySuggestions && (
@@ -1120,8 +1141,16 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
                     </div>
                   )}
                 </div>
-                {validationErrors.companyName && <span className="error-message">{validationErrors.companyName}</span>}
-                {validationSuccess.companyName && !validationErrors.companyName && <span className="success-message">✓ Şirket adı kullanılabilir</span>}
+                {validationErrors.companyName && (
+                  <div style={{ marginTop: 8, color: '#ff4d4f', fontSize: 13 }}>
+                    ❌ {validationErrors.companyName}
+                  </div>
+                )}
+                {validationSuccess.companyName && !validationErrors.companyName && (
+                  <div style={{ marginTop: 8, color: '#52c41a', fontSize: 13, fontWeight: 500 }}>
+                    ✓ Şirket adı kullanılabilir
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
