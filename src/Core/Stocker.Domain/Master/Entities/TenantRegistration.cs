@@ -26,6 +26,7 @@ public sealed class TenantRegistration : Entity
     public string AdminLastName { get; private set; }
     public string? AdminPhone { get; private set; }
     public string? AdminTitle { get; private set; }
+    public string? AdminPasswordHash { get; private set; } // Hashed password for MasterUser creation
     
     // Package and Billing
     public string PackageName { get; private set; }
@@ -191,7 +192,15 @@ public sealed class TenantRegistration : Entity
         AdminPhone = adminPhone;
         AdminTitle = adminTitle;
     }
-    
+
+    public void SetAdminPassword(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
+
+        AdminPasswordHash = passwordHash;
+    }
+
     public void SetBillingInfo(string packageName, string billingCycle)
     {
         PackageName = packageName;

@@ -13,13 +13,29 @@ public class TenantDataSeeder
     private readonly ILogger<TenantDataSeeder> _logger;
     private readonly Guid _tenantId;
     private readonly string? _packageType;
+    private readonly Guid? _masterUserId;
+    private readonly string? _adminEmail;
+    private readonly string? _adminFirstName;
+    private readonly string? _adminLastName;
 
-    public TenantDataSeeder(TenantDbContext context, ILogger<TenantDataSeeder> logger, Guid tenantId, string? packageType = null)
+    public TenantDataSeeder(
+        TenantDbContext context,
+        ILogger<TenantDataSeeder> logger,
+        Guid tenantId,
+        string? packageType = null,
+        Guid? masterUserId = null,
+        string? adminEmail = null,
+        string? adminFirstName = null,
+        string? adminLastName = null)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _tenantId = tenantId;
         _packageType = packageType;
+        _masterUserId = masterUserId;
+        _adminEmail = adminEmail;
+        _adminFirstName = adminFirstName;
+        _adminLastName = adminLastName;
     }
 
     public async Task SeedAsync()
@@ -170,23 +186,81 @@ public class TenantDataSeeder
 
     private async Task SeedDefaultAdminUserAsync()
     {
-        // Bu metod şu an için devre dışı bırakılmıştır.
-        // Tenant admin kullanıcısı, MasterDataSeeder'da oluşturulan "tenantadmin" kullanıcısı ile
-        // tenant oluşturulduktan sonra API üzerinden giriş yapılarak eklenmelidir.
-        // 
-        // Kullanım:
-        // 1. MasterDataSeeder'ı çalıştırın (otomatik olarak çalışır)
-        // 2. Tenant oluşturun
-        // 3. "tenantadmin" kullanıcısı ile o tenant'a giriş yapın:
-        //    POST /api/auth/login
-        
-        await Task.CompletedTask;
-        //    Headers: X-Tenant-Code: {tenant-code}
-        //    Body: { "username": "tenantadmin", "password": "Admin123!" }
-        // 
-        // Bu işlem otomatik olarak TenantUser kaydı oluşturacaktır.
-        
-        _logger.LogInformation("Tenant admin user should be created by logging in with the 'tenantadmin' MasterUser.");
+        // Validate we have required data
+        if (!_masterUserId.HasValue || _masterUserId.Value == Guid.Empty)
+        {
+            _logger.LogWarning("MasterUserId not provided - TenantUser will not be created");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_adminEmail))
+        {
+            _logger.LogWarning("Admin email not provided - TenantUser will not be created");
+            return;
+        }
+
+        // Check if TenantUser already exists for this MasterUser
+        var existingUser = await _context.TenantUsers
+            .FirstOrDefaultAsync(u => u.MasterUserId == _masterUserId.Value);
+
+        if (existingUser != null)
+        {
+            _logger.LogInformation("TenantUser already exists for MasterUser: {MasterUserId}", _masterUserId);
+            return;
+        }
+
+        // Get Administrator role
+        var adminRole = await _context.Roles
+            .FirstOrDefaultAsync(r => r.Name == "Administrator");
+
+        if (adminRole == null)
+        {
+            _logger.LogError("Administrator role not found - cannot create TenantUser");
+            return;
+        }
+
+        try
+        {
+            _logger.LogInformation("Creating TenantUser for MasterUser: {MasterUserId}, Email: {Email}",
+                _masterUserId, _adminEmail);
+
+            // Create Email value object
+            var emailResult = Email.Create(_adminEmail);
+            if (emailResult.IsFailure)
+            {
+                _logger.LogError("Invalid email format: {Email}", _adminEmail);
+                return;
+            }
+
+            // Create TenantUser (shadow user referencing MasterUser)
+            var tenantUser = TenantEntities.TenantUser.Create(
+                tenantId: _tenantId,
+                masterUserId: _masterUserId.Value,
+                username: _adminEmail,
+                email: emailResult.Value,
+                firstName: _adminFirstName ?? "Admin",
+                lastName: _adminLastName ?? "User"
+            );
+
+            // Activate user
+            tenantUser.Activate();
+
+            // Assign Administrator role
+            tenantUser.AssignRole(adminRole.Id);
+
+            _context.TenantUsers.Add(tenantUser);
+
+            _logger.LogInformation(
+                "✅ TenantUser created successfully - MasterUserId: {MasterUserId}, Email: {Email}, TenantId: {TenantId}",
+                _masterUserId, _adminEmail, _tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "❌ Failed to create TenantUser for MasterUser: {MasterUserId}, Email: {Email}",
+                _masterUserId, _adminEmail);
+            throw;
+        }
     }
      
 }

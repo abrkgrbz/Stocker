@@ -144,8 +144,9 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
   const handleSubmit = async (allValues: any) => {
     setLoading(true);
     try {
-      const [firstName, ...lastNameParts] = allValues.contactName?.split(' ') || ['', ''];
-      const lastName = lastNameParts.join(' ') || firstName;
+      const nameParts = allValues.contactName?.trim().split(/\s+/) || [''];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'N/A';
       
       const registrationData = {
         // Company Information
@@ -174,7 +175,6 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
         industryType: allValues.sector,
         businessType: allValues.identityType === 'vergi' ? 'Kurumsal' : 'Şahıs',
         employeeCountRange: allValues.employeeCount,
-        annualRevenue: allValues.annualRevenue || null,
         currency: 'TRY',
         
         // Admin User Information
@@ -284,8 +284,8 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                   name="companyCode"
                   label={
                     <Space>
-                      Şirket Kodu
-                      <Tooltip title="URL'de kullanılacak benzersiz kod">
+                      Şirket Kodu (Subdomain)
+                      <Tooltip title="Sisteme giriş yapacağınız benzersiz URL adresi. Örnek: abc-teknoloji.stocker.app">
                         <InfoCircleOutlined className="wizard-tooltip" />
                       </Tooltip>
                     </Space>
@@ -296,7 +296,7 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                     { pattern: /^[a-z0-9-]+$/, message: 'Küçük harf, rakam ve tire kullanın' }
                   ]}
                   validateStatus={
-                    validationResults.domain?.isAvailable === false ? 'error' : 
+                    validationResults.domain?.isAvailable === false ? 'error' :
                     validationResults.domain?.isAvailable === true ? 'success' : ''
                   }
                   help={
@@ -305,10 +305,10 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                   }
                   hasFeedback={!!validationResults.domain}
                 >
-                  <Input 
+                  <Input
                     size="large"
-                    placeholder="abc-teknoloji" 
-                    addonAfter=".stocker.app"
+                    placeholder="abc-teknoloji"
+                    addonAfter={<span style={{ fontWeight: 600, color: '#667eea' }}>.stocker.app</span>}
                     onChange={(e) => {
                       const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
                       form.setFieldValue('companyCode', value);
@@ -532,26 +532,11 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
                   label="MERSİS No"
                   className="wizard-form-item"
                 >
-                  <Input 
+                  <Input
                     size="large"
-                    placeholder="0123456789012345" 
+                    placeholder="0123456789012345"
                     maxLength={16}
                   />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="annualRevenue"
-                  label="Yıllık Ciro (Opsiyonel)"
-                  className="wizard-form-item"
-                >
-                  <Select size="large" placeholder="Yıllık ciro aralığı">
-                    <Select.Option value="0-1M">0 - 1 Milyon TL</Select.Option>
-                    <Select.Option value="1M-5M">1 - 5 Milyon TL</Select.Option>
-                    <Select.Option value="5M-10M">5 - 10 Milyon TL</Select.Option>
-                    <Select.Option value="10M-50M">10 - 50 Milyon TL</Select.Option>
-                    <Select.Option value="50M+">50+ Milyon TL</Select.Option>
-                  </Select>
                 </Form.Item>
               </Col>
             </Row>

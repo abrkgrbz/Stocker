@@ -275,29 +275,72 @@ public class MigrationService : IMigrationService
             .Include(t => t.Subscriptions)
                 .ThenInclude(s => s.Package)
             .FirstOrDefaultAsync(t => t.Id == tenantId);
-        
+
         if (tenant == null)
         {
             _logger.LogError("Tenant {TenantId} not found", tenantId);
             return;
         }
 
+        // Get registration data to find admin email
+        var registration = await masterDbContext.TenantRegistrations
+            .FirstOrDefaultAsync(r => r.TenantId == tenantId);
+
+        // Find MasterUser for this tenant's admin
+        Guid? masterUserId = null;
+        string? adminEmail = null;
+        string? adminFirstName = null;
+        string? adminLastName = null;
+
+        if (registration != null)
+        {
+            adminEmail = registration.AdminEmail?.Value;
+            adminFirstName = registration.AdminFirstName;
+            adminLastName = registration.AdminLastName;
+
+            if (!string.IsNullOrEmpty(adminEmail))
+            {
+                var masterUser = await masterDbContext.MasterUsers
+                    .FirstOrDefaultAsync(u => u.Email.Value == adminEmail);
+
+                if (masterUser != null)
+                {
+                    masterUserId = masterUser.Id;
+                    _logger.LogInformation("Found MasterUser {MasterUserId} for admin email: {Email}",
+                        masterUserId, adminEmail);
+                }
+                else
+                {
+                    _logger.LogWarning("MasterUser not found for admin email: {Email} - TenantUser will not be created",
+                        adminEmail);
+                }
+            }
+        }
+
         try
         {
             _logger.LogInformation("Starting tenant data seeding for tenant {TenantId}...", tenantId);
-            
+
             // Get package name for seed data
             var packageName = tenant.Subscriptions?.FirstOrDefault()?.Package?.Name ?? "Starter";
-            
+
             // Create DbContext with the background tenant service
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
             optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-            
+
             using var context = new TenantDbContext(optionsBuilder.Options, backgroundTenantService);
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<TenantDataSeeder>>();
-            var seeder = new TenantDataSeeder(context, logger, tenantId, packageName);
+            var seeder = new TenantDataSeeder(
+                context,
+                logger,
+                tenantId,
+                packageName,
+                masterUserId,
+                adminEmail,
+                adminFirstName,
+                adminLastName);
             await seeder.SeedAsync();
-            
+
             _logger.LogInformation("Tenant data seeding completed successfully for tenant {TenantId}.", tenantId);
         }
         catch (DbUpdateException ex)

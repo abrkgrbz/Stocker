@@ -7,6 +7,7 @@ using Stocker.Application.Extensions;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Master.Entities;
+using Stocker.Domain.Master.Enums;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
 
@@ -90,12 +91,13 @@ public class CreateMasterUserCommandHandler : IRequestHandler<CreateMasterUserCo
             }
             
             var user = MasterUser.Create(
-                request.Username,
-                emailResult.Value,
-                _passwordService.GetCombinedHash(hashedPassword), // Convert to string
-                request.FirstName,
-                request.LastName,
-                phoneNumber);
+                username: request.Username,
+                email: emailResult.Value,
+                plainPassword: request.Password, // Use plainPassword, not pre-hashed
+                firstName: request.FirstName,
+                lastName: request.LastName,
+                userType: UserType.Personel, // Default user type
+                phoneNumber: phoneNumber);
 
             // TODO: Add IsSystemAdmin support to MasterUser entity
             // if (request.IsSystemAdmin)

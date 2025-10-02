@@ -162,8 +162,78 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Tenant '{TenantName}' created successfully with ID: {TenantId} from registration: {RegistrationId}", 
+            _logger.LogInformation("Tenant '{TenantName}' created successfully with ID: {TenantId} from registration: {RegistrationId}",
                 tenant.Name, tenant.Id, registration.Id);
+
+            // Create MasterUser for admin (required for login)
+            try
+            {
+                _logger.LogInformation("Creating MasterUser for admin: {Email}", registration.AdminEmail.Value);
+
+                var adminEmail = Email.Create(registration.AdminEmail.Value);
+                if (adminEmail.IsFailure)
+                {
+                    _logger.LogError("Invalid admin email: {Email}", registration.AdminEmail.Value);
+                    throw new InvalidOperationException($"Invalid admin email: {registration.AdminEmail.Value}");
+                }
+
+                // Create phone number if provided
+                PhoneNumber? adminPhone = null;
+                if (!string.IsNullOrEmpty(registration.AdminPhone))
+                {
+                    var phoneResult = PhoneNumber.Create(registration.AdminPhone);
+                    if (phoneResult.IsSuccess)
+                    {
+                        adminPhone = phoneResult.Value;
+                    }
+                }
+
+                // Get admin password hash from registration
+                string adminPassword;
+                if (!string.IsNullOrEmpty(registration.AdminPasswordHash))
+                {
+                    // Use password provided during registration (already hashed)
+                    adminPassword = registration.AdminPasswordHash;
+                    _logger.LogInformation("Using user-provided password for MasterUser creation");
+                }
+                else
+                {
+                    // Fallback to default password (shouldn't happen with proper validation)
+                    _logger.LogWarning("No password hash found in registration - using default password");
+                    var defaultHashedPassword = Domain.Master.ValueObjects.HashedPassword.Create("Admin123!");
+                    adminPassword = defaultHashedPassword.Value;
+                }
+
+                // Create MasterUser with credentials (using pre-hashed password)
+                var masterUser = MasterUser.CreateFromHash(
+                    username: registration.AdminUsername,
+                    email: adminEmail.Value,
+                    passwordHash: adminPassword, // Use hashed password from registration
+                    firstName: registration.AdminFirstName,
+                    lastName: registration.AdminLastName,
+                    userType: UserType.FirmaYoneticisi,
+                    phoneNumber: adminPhone
+                );
+
+                // Activate and verify email (already verified during registration)
+                masterUser.Activate();
+                masterUser.VerifyEmail();
+
+                // Assign to tenant
+                masterUser.AssignToTenant(tenant.Id, UserType.FirmaYoneticisi);
+
+                // Save MasterUser
+                await _unitOfWork.Repository<MasterUser>().AddAsync(masterUser);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("✅ MasterUser created successfully for {Email}, MasterUserId: {MasterUserId}, TenantId: {TenantId}",
+                    registration.AdminEmail.Value, masterUser.Id, tenant.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create MasterUser for tenant: {TenantId}", tenant.Id);
+                throw; // Critical error - cannot proceed without admin user
+            }
 
             // Create and migrate tenant database
             try

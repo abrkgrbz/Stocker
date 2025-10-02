@@ -32,7 +32,6 @@ public sealed class CreateTenantRegistrationCommand : IRequest<Result<TenantRegi
     public string? IndustryType { get; set; }
     public string? BusinessType { get; set; }
     public string? EmployeeCountRange { get; set; }
-    public decimal? AnnualRevenue { get; set; }
     public string? Currency { get; set; }
     
     // Admin User Information

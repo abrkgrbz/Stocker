@@ -110,7 +110,19 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                 
             // Set admin info
             registration.SetAdminInfo(request.AdminPhone, request.AdminTitle);
-            
+
+            // Set admin password (hash it using HashedPassword value object)
+            if (!string.IsNullOrEmpty(request.AdminPassword))
+            {
+                var hashedPassword = Domain.Master.ValueObjects.HashedPassword.Create(request.AdminPassword);
+                registration.SetAdminPassword(hashedPassword.Value);
+            }
+            else
+            {
+                // If no password provided, log warning - this shouldn't happen with proper validation
+                _logger.LogWarning("Admin password not provided for registration: {CompanyCode}", request.CompanyCode);
+            }
+
             // Set billing info
             registration.SetBillingInfo(
                 request.PackageId.HasValue ? "Professional" : "Trial",

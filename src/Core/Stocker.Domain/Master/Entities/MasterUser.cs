@@ -98,12 +98,13 @@ public sealed class MasterUser : AggregateRoot
         return new MasterUser(username, email, hashedPassword, firstName, lastName, userType, phoneNumber);
     }
 
-    public static MasterUser Create(
+    public static MasterUser CreateFromHash(
         string username,
         Email email,
         string passwordHash,
         string firstName,
         string lastName,
+        UserType userType = UserType.Personel,
         PhoneNumber? phoneNumber = null)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -123,7 +124,7 @@ public sealed class MasterUser : AggregateRoot
 
         var hashedPassword = HashedPassword.CreateFromHash(passwordHash);
 
-        return new MasterUser(username, email, hashedPassword, firstName, lastName, UserType.Personel, phoneNumber);
+        return new MasterUser(username, email, hashedPassword, firstName, lastName, userType, phoneNumber);
     }
 
     public void Activate()
