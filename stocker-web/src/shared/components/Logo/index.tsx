@@ -15,7 +15,7 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   return (
     <img
-      src="/src/assets/stoocker-logo.svg"
+      src="/stoocker-logo.svg"
       alt="Stocker"
       width={width}
       height={height}
