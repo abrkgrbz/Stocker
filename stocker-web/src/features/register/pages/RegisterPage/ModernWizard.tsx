@@ -1855,8 +1855,18 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
 
         <div className="wizard-brand">
           <h1>
-            <span className="wizard-brand-icon">📊</span>
-            Stocker
+            <span className="wizard-brand-icon">
+              <img
+                src="/favicon.svg"
+                alt="Stoocker"
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  verticalAlign: 'middle'
+                }}
+              />
+            </span>
+            STOOCKER
           </h1>
           <p>İşletmenizi dijitalleştirin, büyütün</p>
           {isConnected && (
