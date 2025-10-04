@@ -16,6 +16,7 @@ const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup/Mo
 const CompanyWizard = lazy(() => import('@/features/company/pages/CompanyWizard'));
 const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen/ModernModulesScreen'));
 const AdaptiveDashboard = lazy(() => import('@/features/dashboard/pages/AdaptiveDashboard'));
+const ModulePlaceholder = lazy(() => import('@/features/modules/pages/ModulePlaceholder'));
 
 /**
  * Routes for subdomain access (e.g., tenant.stoocker.app)
@@ -120,29 +121,43 @@ export const SubdomainRoutes: React.FC = () => {
           <Route path="company-wizard" element={<CompanyWizard />} />
           
           {/* Main Application Route - Check for company setup */}
-          <Route 
-            path="app" 
+          <Route
+            path="app"
             element={
-              isCompanySetupComplete === null 
+              isCompanySetupComplete === null
                 ? <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                     <Spin size="large" tip="Yükleniyor..." />
-                  </div> 
-                : isCompanySetupComplete === false 
-                ? <Navigate to="/company-setup" replace /> 
+                  </div>
+                : isCompanySetupComplete === false
+                ? <Navigate to="/company-setup" replace />
                 : <Suspense fallback={
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                      <Spin size="large" tip="Modüller yükleniyor..." />
+                      <Spin size="large" tip="Dashboard yükleniyor..." />
                     </div>
                   }>
-                    <ModulesScreen />
+                    <AdaptiveDashboard />
                   </Suspense>
-            } 
+            }
           />
           
+          {/* Module Placeholder Routes */}
+          <Route
+            path="app/:module"
+            element={
+              <Suspense fallback={
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                  <Spin size="large" tip="Modül yükleniyor..." />
+                </div>
+              }>
+                <ModulePlaceholder />
+              </Suspense>
+            }
+          />
+
           {/* Future module routes will go here */}
-          {/* <Route path="crm/*" element={<CRMModule />} /> */}
-          {/* <Route path="inventory/*" element={<InventoryModule />} /> */}
-          {/* <Route path="settings" element={<Settings />} /> */}
+          {/* <Route path="app/crm/*" element={<CRMModule />} /> */}
+          {/* <Route path="app/inventory/*" element={<InventoryModule />} /> */}
+          {/* <Route path="app/settings" element={<Settings />} /> */}
         </Route>
       </Route>
 
