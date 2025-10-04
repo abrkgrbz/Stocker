@@ -6,7 +6,9 @@
       "Bash(dotnet build:*)",
       "Bash(git restore:*)",
       "Bash(ls:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(git checkout:*)",
+      "Read(//c/Users/PC/Desktop/**)"
     ],
     "deny": [],
     "ask": []

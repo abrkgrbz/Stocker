@@ -46,6 +46,7 @@ import {
 import { apiClient } from '@/shared/api/client';
 import PasswordStrength from '@/shared/components/PasswordStrength';
 import { useRealTimeValidation } from '@/features/register/hooks/useRealTimeValidation';
+import { useTenantRegistrationSignalR } from '@/features/register/hooks/useTenantRegistrationSignalR';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { EmailVerificationModal } from '@/features/register/components/EmailVerificationModal';
 import './register-wizard.css';
@@ -86,6 +87,17 @@ export const RegisterWizard: React.FC<RegisterWizardProps> = ({ onComplete, sele
     validateIdentity,
     clearValidation
   } = useRealTimeValidation();
+
+  // Tenant registration SignalR hook
+  const { isConnected: isSignalRConnected } = useTenantRegistrationSignalR({
+    companyCode: formData.companyCode,
+    onTenantReady: (data) => {
+      console.log('🎉 Tenant is ready!', data);
+      message.success(`${data.companyName} hesabınız hazır! Giriş yapabilirsiniz.`);
+      // Optionally redirect to login
+      // window.location.href = `/login?tenant=${data.companyCode}`;
+    }
+  });
 
   const steps = [
     {

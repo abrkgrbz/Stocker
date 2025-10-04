@@ -23,6 +23,7 @@ import {
   TruckOutlined,
   ShoppingCartOutlined,
   PieChartOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import { AnimatedHero } from '@/features/landing/components/AnimatedHero';
 import { FeaturesSection } from '@/features/landing/components/FeaturesSection';
@@ -31,6 +32,9 @@ import { StatsSection } from '@/features/landing/components/StatsSection';
 import { FloatingActionButton } from '@/features/landing/components/FloatingActionButton';
 import { FAQSection } from '@/features/landing/components/FAQSection';
 import { SolutionsSection } from '@/features/landing/components/SolutionsSection';
+import { TrustBadges } from '@/features/landing/components/TrustBadges';
+import { CustomerLogos } from '@/features/landing/components/CustomerLogos';
+import { DemoBookingModal } from '@/features/landing/components/DemoBookingModal';
 import { mainModules } from '@/features/landing/data/modules';
 import './style.css';
 import './corporate-style.css';
@@ -42,6 +46,7 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { scrollToSection } = useScrollToSection();
   const [scrolled, setScrolled] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,15 +86,26 @@ export const LandingPage: React.FC = () => {
             <a href="#faq" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }}>SSS</a>
           </nav>
           <div className="header-actions">
-            <Button 
+            <Button
+              onClick={() => setShowDemoModal(true)}
+              icon={<CalendarOutlined />}
+              style={{
+                marginRight: '8px',
+                color: scrolled ? '#667eea' : 'white',
+                borderColor: scrolled ? '#667eea' : 'white'
+              }}
+            >
+              Demo İste
+            </Button>
+            <Button
               type={scrolled ? 'default' : 'primary'}
               ghost={scrolled}
               onClick={() => navigate('/login')}
               icon={<UserOutlined />}
-              style={{ 
+              style={{
                 marginRight: '8px',
-                ...(scrolled ? {} : { 
-                  background: 'transparent', 
+                ...(scrolled ? {} : {
+                  background: 'transparent',
                   border: '2px solid #667eea',
                   color: '#667eea'
                 })
@@ -97,8 +113,8 @@ export const LandingPage: React.FC = () => {
             >
               Giriş Yap
             </Button>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={() => navigate('/register')}
               icon={<RocketOutlined />}
               style={{
@@ -115,7 +131,17 @@ export const LandingPage: React.FC = () => {
 
       <Content>
         {/* Hero Section */}
-        <AnimatedHero />
+        <AnimatedHero onDemoClick={() => setShowDemoModal(true)} />
+
+        {/* Trust Badges - Social Proof */}
+        <section style={{ padding: '40px 20px', background: 'white' }}>
+          <div className="section-container">
+            <TrustBadges />
+          </div>
+        </section>
+
+        {/* Customer Logos */}
+        <CustomerLogos />
 
         {/* Stats Section */}
         <StatsSection />
@@ -345,6 +371,12 @@ export const LandingPage: React.FC = () => {
       
       {/* Floating Action Button */}
       <FloatingActionButton />
+
+      {/* Demo Booking Modal */}
+      <DemoBookingModal
+        visible={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+      />
     </Layout>
   );
 };

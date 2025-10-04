@@ -1,0 +1,78 @@
+.customer-logos-section {
+  padding: 40px 0;
+  overflow: hidden;
+  background: white;
+}
+
+.logos-marquee {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logos-track {
+  display: flex;
+  gap: 40px;
+  animation: scroll 30s linear infinite;
+  width: fit-content;
+}
+
+.logo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 140px;
+  padding: 20px;
+  background: #fafbfc;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.logo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
+}
+
+.logo-emoji {
+  font-size: 32px;
+  filter: grayscale(0.3);
+  transition: filter 0.3s ease;
+}
+
+.logo-item:hover .logo-emoji {
+  filter: grayscale(0);
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.logos-marquee:hover .logos-track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 768px) {
+  .logos-track {
+    gap: 20px;
+  }
+
+  .logo-item {
+    min-width: 100px;
+    padding: 12px;
+  }
+
+  .logo-emoji {
+    font-size: 24px;
+  }
+}

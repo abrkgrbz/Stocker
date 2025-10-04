@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { RocketOutlined, PlayCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { Button, Typography } from 'antd';
 import { motion } from 'framer-motion';
 
 const { Title, Paragraph } = Typography;
 
-export const AnimatedHero: React.FC = () => {
+interface AnimatedHeroProps {
+  onDemoClick?: () => void;
+}
+
+export const AnimatedHero: React.FC<AnimatedHeroProps> = ({ onDemoClick }) => {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState('');
   const fullText = 'Tüm İşletme Süreçleriniz Tek Platformda';
@@ -120,7 +124,7 @@ export const AnimatedHero: React.FC = () => {
               Stocker ERP ile işletmenizi dijitalleştirin, verimliliğinizi %40 artırın.
             </Paragraph>
 
-            <motion.div 
+            <motion.div
               style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -147,7 +151,28 @@ export const AnimatedHero: React.FC = () => {
                   14 Gün Ücretsiz Dene
                 </Button>
               </motion.div>
-              
+
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  size="large"
+                  icon={<CalendarOutlined />}
+                  onClick={onDemoClick}
+                  ghost
+                  style={{
+                    height: 56,
+                    paddingLeft: 40,
+                    paddingRight: 40,
+                    fontSize: 18,
+                    color: 'white',
+                    borderColor: 'rgba(255,255,255,0.8)',
+                    borderWidth: 2,
+                    fontWeight: 500
+                  }}
+                >
+                  Demo Rezervasyonu
+                </Button>
+              </motion.div>
+
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   size="large"

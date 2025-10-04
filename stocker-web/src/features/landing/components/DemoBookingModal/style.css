@@ -1,0 +1,103 @@
+.demo-booking-modal .ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.demo-modal-header {
+  text-align: center;
+  padding: 32px 24px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: -24px -24px 24px;
+}
+
+.demo-header-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 32px;
+  backdrop-filter: blur(10px);
+}
+
+.demo-modal-header h2 {
+  color: white;
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.demo-modal-header p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 14px;
+}
+
+.demo-booking-form {
+  padding: 8px 0;
+}
+
+.demo-booking-form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.demo-booking-form .ant-input,
+.demo-booking-form .ant-select-selector,
+.demo-booking-form .ant-picker {
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.demo-booking-form .ant-input:focus,
+.demo-booking-form .ant-select-focused .ant-select-selector,
+.demo-booking-form .ant-picker-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.demo-form-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.demo-modal-info {
+  background: #f8f9ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.demo-modal-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .demo-modal-header {
+    padding: 24px 16px 16px;
+  }
+
+  .demo-header-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .demo-modal-header h2 {
+    font-size: 20px;
+  }
+}

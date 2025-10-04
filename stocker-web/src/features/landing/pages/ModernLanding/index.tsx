@@ -42,7 +42,8 @@ import {
   FireOutlined,
   ShopOutlined,
   TruckOutlined,
-  ArrowUpOutlined
+  ArrowUpOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
@@ -52,6 +53,10 @@ import { SectionDivider } from '@/features/landing/components/SectionDivider';
 import { TenantLoginModal } from '@/features/auth/components/TenantLoginModal';
 import { Logo } from '@/shared/components/Logo';
 import { isTenantDomain } from '@/utils/tenant';
+import { DemoBookingModal } from '@/features/landing/components/DemoBookingModal';
+import { TrustBadges } from '@/features/landing/components/TrustBadges';
+import { CustomerLogos } from '@/features/landing/components/CustomerLogos';
+import { AIFeaturesSection } from '@/features/landing/components/AIFeaturesSection';
 import './style.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -66,6 +71,7 @@ export const ModernLanding: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
   const [showTenantModal, setShowTenantModal] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
   
   // Section IDs for navigation
   const sections = [
@@ -141,22 +147,42 @@ export const ModernLanding: React.FC = () => {
     threshold: 0.1
   });
 
-  // Hero typing animation
+  // Hero rotating headlines with typing animation
+  const headlines = [
+    'İşletmenizi Dijitalleştirin',
+    'Verimliliğinizi Artırın',
+    'Maliyetlerinizi Düşürün',
+    'İş Süreçlerinizi Optimize Edin'
+  ];
+  const [currentHeadlineIndex, setCurrentHeadlineIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
-  const fullText = 'İşletmenizi Dijitalleştirin';
-  
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index <= fullText.length) {
-        setDisplayText(fullText.slice(0, index));
-        index++;
-      } else {
-        clearInterval(timer);
-      }
-    }, 100);
-    return () => clearInterval(timer);
-  }, []);
+    const currentHeadline = headlines[currentHeadlineIndex];
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting && displayText === currentHeadline) {
+      // Pause before deleting
+      timer = setTimeout(() => setIsDeleting(true), 2000);
+    } else if (isDeleting && displayText === '') {
+      // Move to next headline
+      setIsDeleting(false);
+      setCurrentHeadlineIndex((prev) => (prev + 1) % headlines.length);
+    } else {
+      // Type or delete character
+      const delay = isDeleting ? 50 : 100;
+      timer = setTimeout(() => {
+        setDisplayText(current =>
+          isDeleting
+            ? current.slice(0, -1)
+            : currentHeadline.slice(0, current.length + 1)
+        );
+      }, delay);
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, currentHeadlineIndex]);
 
   // Auto-rotate features
   useEffect(() => {
@@ -466,6 +492,12 @@ export const ModernLanding: React.FC = () => {
             >
               SSS
             </a>
+            <Button
+              icon={<CalendarOutlined />}
+              onClick={() => setShowDemoModal(true)}
+            >
+              Demo İste
+            </Button>
             <Button type="default" onClick={() => setShowTenantModal(true)}>Giriş</Button>
             <Button type="primary" onClick={() => navigate('/register')}>
               Ücretsiz Başla
@@ -644,6 +676,44 @@ export const ModernLanding: React.FC = () => {
                 <span><CheckCircleOutlined /> 7/24 destek</span>
               </Space>
             </div>
+
+            {/* Mini Stats in Hero */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.6 }}
+              style={{
+                marginTop: '40px',
+                display: 'flex',
+                gap: '40px',
+                flexWrap: 'wrap'
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#667eea' }}>
+                  <CountUp end={5000} duration={2.5} separator="," suffix="+" />
+                </div>
+                <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>Aktif Kullanıcı</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#667eea' }}>
+                  <CountUp end={98} duration={2.5} suffix="%" />
+                </div>
+                <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>Müşteri Memnuniyeti</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#667eea' }}>
+                  <CountUp end={500} duration={2.5} separator="," suffix="+" />
+                </div>
+                <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>İşletme</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#667eea' }}>
+                  <CountUp end={24} duration={2.5} suffix="/7" />
+                </div>
+                <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>Destek</div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -709,6 +779,16 @@ export const ModernLanding: React.FC = () => {
           </div>
         </motion.div>
       </section>
+
+      {/* Social Proof Section */}
+      <div style={{ background: '#ffffff', padding: '60px 0' }}>
+        <div className="container">
+          <TrustBadges />
+          <div style={{ marginTop: '60px' }}>
+            <CustomerLogos />
+          </div>
+        </div>
+      </div>
 
       {/* Section Divider */}
       <SectionDivider type="curve" color="#f7fafc" height={80} />
@@ -1005,6 +1085,12 @@ export const ModernLanding: React.FC = () => {
       </section>
 
       {/* Section Divider */}
+      <SectionDivider type="wave" color="#ffffff" height={80} />
+
+      {/* AI Features Section */}
+      <AIFeaturesSection />
+
+      {/* Section Divider */}
       <SectionDivider type="curve" color="#f7fafc" height={80} />
 
       {/* Testimonials Section */}
@@ -1171,6 +1257,12 @@ export const ModernLanding: React.FC = () => {
       <TenantLoginModal
         visible={showTenantModal}
         onClose={() => setShowTenantModal(false)}
+      />
+
+      {/* Demo Booking Modal */}
+      <DemoBookingModal
+        visible={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
       />
     </div>
   );

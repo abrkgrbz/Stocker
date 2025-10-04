@@ -42,6 +42,9 @@ public static class ServiceCollectionExtensions
         // Add SignalR user ID provider for authentication
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
+        // Register MediatR handlers from this assembly (for domain event handlers)
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
+
         return services;
     }
 
