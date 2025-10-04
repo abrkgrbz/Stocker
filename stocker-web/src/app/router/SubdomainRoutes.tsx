@@ -15,6 +15,7 @@ const EmailVerificationPage = lazy(() => import('@/features/auth/pages/EmailVeri
 const CompanySetup = lazy(() => import('@/features/company/pages/CompanySetup/ModernCompanySetup'));
 const CompanyWizard = lazy(() => import('@/features/company/pages/CompanyWizard'));
 const ModulesScreen = lazy(() => import('@/features/modules/pages/ModulesScreen/ModernModulesScreen'));
+const AdaptiveDashboard = lazy(() => import('@/features/dashboard/pages/AdaptiveDashboard'));
 
 /**
  * Routes for subdomain access (e.g., tenant.stoocker.app)

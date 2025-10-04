@@ -1,0 +1,25 @@
+.adaptive-dashboard {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.module-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.module-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.module-card .ant-card-body {
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .adaptive-dashboard {
+    padding: 16px;
+  }
+}
