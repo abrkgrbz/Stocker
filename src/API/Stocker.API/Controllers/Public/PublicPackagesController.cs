@@ -49,11 +49,11 @@ public class PublicPackagesController : ControllerBase
             return Ok(result.Value);
         }
 
-        _logger.LogWarning("Failed to get public packages: {Error}", result.Error?.Message);
+        _logger.LogWarning("Failed to get public packages: {Error}", result.Error?.Description);
         return BadRequest(new
         {
             success = false,
-            message = result.Error?.Message ?? "Failed to retrieve public packages",
+            message = result.Error?.Description ?? "Failed to retrieve public packages",
             timestamp = DateTime.UtcNow
         });
     }
