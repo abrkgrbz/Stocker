@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Packages.Commands.CreatePackage;
 using Stocker.Application.Features.Packages.Commands.UpdatePackage;
 using Stocker.Application.Features.Packages.Commands.DeletePackage;
+using Stocker.Application.Features.Packages.Commands.AddPackageFeature;
+using Stocker.Application.Features.Packages.Commands.RemovePackageFeature;
+using Stocker.Application.Features.Packages.Commands.AddPackageModule;
+using Stocker.Application.Features.Packages.Commands.RemovePackageModule;
 using Stocker.Application.Features.Packages.Queries.GetPackageById;
 using Stocker.Application.Features.Packages.Queries.GetPackagesList;
 using Stocker.Application.DTOs.Package;
@@ -134,6 +138,102 @@ public class PackagesController : MasterControllerBase
                 id, CurrentUserEmail);
         }
         
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Add feature to package
+    /// </summary>
+    [HttpPost("{id}/features")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> AddFeature(Guid id, [FromBody] AddPackageFeatureCommand command)
+    {
+        _logger.LogInformation("Adding feature {FeatureCode} to package {PackageId}", command.FeatureCode, id);
+
+        command.PackageId = id;
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Feature {FeatureCode} added to package {PackageId}", command.FeatureCode, id);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Remove feature from package
+    /// </summary>
+    [HttpDelete("{id}/features/{featureCode}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> RemoveFeature(Guid id, string featureCode)
+    {
+        _logger.LogInformation("Removing feature {FeatureCode} from package {PackageId}", featureCode, id);
+
+        var command = new RemovePackageFeatureCommand
+        {
+            PackageId = id,
+            FeatureCode = featureCode
+        };
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Feature {FeatureCode} removed from package {PackageId}", featureCode, id);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Add module to package
+    /// </summary>
+    [HttpPost("{id}/modules")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> AddModule(Guid id, [FromBody] AddPackageModuleCommand command)
+    {
+        _logger.LogInformation("Adding module {ModuleCode} to package {PackageId}", command.ModuleCode, id);
+
+        command.PackageId = id;
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Module {ModuleCode} added to package {PackageId}", command.ModuleCode, id);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Remove module from package
+    /// </summary>
+    [HttpDelete("{id}/modules/{moduleCode}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> RemoveModule(Guid id, string moduleCode)
+    {
+        _logger.LogInformation("Removing module {ModuleCode} from package {PackageId}", moduleCode, id);
+
+        var command = new RemovePackageModuleCommand
+        {
+            PackageId = id,
+            ModuleCode = moduleCode
+        };
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Module {ModuleCode} removed from package {PackageId}", moduleCode, id);
+        }
+
         return HandleResult(result);
     }
 }
