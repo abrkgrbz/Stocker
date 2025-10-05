@@ -33,6 +33,8 @@ const TenantCompliance = lazy(() => import('./pages/Tenants/Compliance'));
 const UsersPage = lazy(() => import('./pages/Users'));
 const UserRolesPage = lazy(() => import('./pages/Users/Roles'));
 const UserPermissionsPage = lazy(() => import('./pages/Users/Permissions'));
+const FeaturesPage = lazy(() => import('./pages/Features'));
+const ModulesPage = lazy(() => import('./pages/Modules'));
 const PackagesPage = lazy(() => import('./pages/Packages'));
 const SubscriptionsPage = lazy(() => import('./pages/Subscriptions'));
 const InvoicesPage = lazy(() => import('./pages/Invoices'));
@@ -213,6 +215,16 @@ function App() {
           <Route path="packages" element={
             <Suspense fallback={<PageLoader />}>
               <PackagesPage />
+            </Suspense>
+          } />
+          <Route path="features" element={
+            <Suspense fallback={<PageLoader />}>
+              <FeaturesPage />
+            </Suspense>
+          } />
+          <Route path="modules" element={
+            <Suspense fallback={<PageLoader />}>
+              <ModulesPage />
             </Suspense>
           } />
           <Route path="hangfire" element={
