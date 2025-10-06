@@ -7,14 +7,14 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY stocker-nextjs/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY stocker-nextjs/ .
+COPY . .
 
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
