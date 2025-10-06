@@ -1,12 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.Features.Packages.Queries.GetPublicPackages;
 using Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 using Stocker.Application.Features.Subscriptions.Commands.ProcessPayment;
+using Stocker.Persistence.Contexts;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
@@ -22,15 +24,18 @@ public class PublicController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<PublicController> _logger;
     private readonly IEmailService _emailService;
+    private readonly MasterDbContext _masterContext;
 
     public PublicController(
-        IMediator mediator, 
+        IMediator mediator,
         ILogger<PublicController> logger,
-        IEmailService emailService)
+        IEmailService emailService,
+        MasterDbContext masterContext)
     {
         _mediator = mediator;
         _logger = logger;
         _emailService = emailService;
+        _masterContext = masterContext;
     }
 
     /// <summary>
@@ -161,7 +166,7 @@ public class PublicController : ControllerBase
     public async Task<IActionResult> TestEmail([FromBody] TestEmailRequest request)
     {
         _logger.LogInformation("Testing email service to: {Email}", request.Email);
-        
+
         var emailMessage = new EmailMessage
         {
             To = request.Email,
@@ -182,18 +187,123 @@ public class PublicController : ControllerBase
             ",
             IsHtml = true
         };
-        
+
         await _emailService.SendAsync(emailMessage);
-        
+
         _logger.LogInformation("Test email sent successfully to: {Email}", request.Email);
-        
-        return Ok(new 
-        { 
+
+        return Ok(new
+        {
             success = true,
             message = $"Test emaili başarıyla {request.Email} adresine gönderildi. Lütfen inbox ve spam klasörünüzü kontrol edin.",
             timestamp = DateTime.UtcNow
         });
     }
+
+    /// <summary>
+    /// Check if email exists and return tenant information
+    /// </summary>
+    [HttpPost("check-email")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest request)
+    {
+        _logger.LogInformation("Checking email existence: {Email}", request.Email);
+
+        try
+        {
+            var normalizedEmail = request.Email.ToLowerInvariant().Trim();
+
+            // Find MasterUser by email
+            var masterUser = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
+                .Where(u => u.Email.Value.ToLower() == normalizedEmail)
+                .Select(u => new { u.Id, Email = u.Email.Value, u.IsActive })
+                .FirstOrDefaultAsync();
+
+            if (masterUser == null)
+            {
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        exists = false,
+                        tenant = (object?)null
+                    }
+                });
+            }
+
+            // Find tenant through TenantRegistration
+            var registration = await _masterContext.TenantRegistrations
+                .Where(r => r.AdminEmail.Value.ToLower() == normalizedEmail && r.TenantId != null)
+                .Select(r => new { r.TenantId })
+                .FirstOrDefaultAsync();
+
+            Guid? tenantId = registration?.TenantId;
+
+            // Fallback: try Tenant.ContactEmail
+            if (!tenantId.HasValue)
+            {
+                tenantId = await _masterContext.Tenants
+                    .Where(t => t.ContactEmail.Value.ToLower() == normalizedEmail)
+                    .Select(t => (Guid?)t.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (!tenantId.HasValue)
+            {
+                _logger.LogWarning("User {Email} found but not associated with tenant", request.Email);
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        exists = true,
+                        tenant = (object?)null
+                    }
+                });
+            }
+
+            // Get tenant info
+            var tenant = await _masterContext.Tenants
+                .Where(t => t.Id == tenantId.Value)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    name = t.Name,
+                    code = t.Code,
+                    logoUrl = t.LogoUrl,
+                    isActive = t.IsActive
+                })
+                .FirstOrDefaultAsync();
+
+            _logger.LogInformation("User {Email} found with tenant: {TenantName}", request.Email, tenant?.name ?? "None");
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    exists = true,
+                    tenant
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking email: {Email}", request.Email);
+            return BadRequest(new
+            {
+                success = false,
+                message = "An error occurred while checking email"
+            });
+        }
+    }
+}
+
+public class CheckEmailRequest
+{
+    public string Email { get; set; } = string.Empty;
 }
 
 public class TestEmailRequest

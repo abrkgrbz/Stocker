@@ -135,7 +135,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
         services.AddScoped<ITenantUnitOfWorkFactory, TenantUnitOfWorkFactory>();
         services.AddScoped<ITenantContextFactory, TenantContextFactory>();
-        
+        services.AddScoped<ITenantResolver, TenantResolver>();
+
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>
         {
