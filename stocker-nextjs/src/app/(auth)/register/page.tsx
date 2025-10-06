@@ -114,19 +114,19 @@ export default function UltraPremiumRegisterPage() {
     formData.identityType === 'tax' ? formData.taxNumber : formData.nationalId
 
   const availableModules = [
-    { code: 'CRM', name: 'M├╝┼şteri ─░li┼şkileri', icon: '­şæÑ', description: 'M├╝┼şteri y├Ânetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
-    { code: 'FINANCE', name: 'Finans', icon: '­şÆ░', description: 'Muhasebe ve finans y├Ânetimi', color: 'from-green-500 to-emerald-500' },
-    { code: 'HR', name: '─░nsan Kaynaklar─▒', icon: '­şæö', description: 'Personel ve bordro y├Ânetimi', color: 'from-purple-500 to-pink-500' },
-    { code: 'INVENTORY', name: 'Envanter', icon: '­şôĞ', description: 'Stok ve depo y├Ânetimi', color: 'from-orange-500 to-red-500' },
-    { code: 'PURCHASE', name: 'Sat─▒n Alma', icon: '­şøÆ', description: 'Tedarik ve sat─▒n alma', color: 'from-indigo-500 to-blue-500' },
-    { code: 'SALES', name: 'Sat─▒┼ş', icon: '­şôê', description: 'Sat─▒┼ş ve sipari┼ş y├Ânetimi', color: 'from-pink-500 to-rose-500' }
+    { code: 'CRM', name: 'Müşteri İlişkileri', icon: '­şæÑ', description: 'Müşteri yönetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
+    { code: 'FINANCE', name: 'Finans', icon: '­şÆ░', description: 'Muhasebe ve finans yönetimi', color: 'from-green-500 to-emerald-500' },
+    { code: 'HR', name: 'İnsan Kaynakları', icon: '­şæö', description: 'Personel ve bordro yönetimi', color: 'from-purple-500 to-pink-500' },
+    { code: 'INVENTORY', name: 'Envanter', icon: '­şôĞ', description: 'Stok ve depo yönetimi', color: 'from-orange-500 to-red-500' },
+    { code: 'PURCHASE', name: 'Satın Alma', icon: '­şøÆ', description: 'Tedarik ve satın alma', color: 'from-indigo-500 to-blue-500' },
+    { code: 'SALES', name: 'Satış', icon: '­şôê', description: 'Satış ve sipariş yönetimi', color: 'from-pink-500 to-rose-500' }
   ]
 
   const steps = [
-    { number: 1, title: '┼Şirket', icon: '­şÅó' },
+    { number: 1, title: 'Şirket', icon: '­şÅó' },
     { number: 2, title: 'Paket', icon: '­şÆÄ' },
-    { number: 3, title: '─░leti┼şim', icon: '­şôğ' },
-    { number: 4, title: 'Y├Ânetici', icon: '­şæñ' },
+    { number: 3, title: 'İletişim', icon: '­şôğ' },
+    { number: 4, title: 'Yönetici', icon: '­şæñ' },
     { number: 5, title: 'Tamamla', icon: 'Ô£ô' }
   ]
 
@@ -275,7 +275,7 @@ export default function UltraPremiumRegisterPage() {
         ...prev,
         identity: {
           status: valid ? 'success' : 'error',
-          message: valid ? 'Vergi numarasi dogrulandi' : 'Vergi numarasi 10 haneli olmalidir'
+          message: valid ? 'Vergi numarası doğrulandı' : 'Vergi numarası 10 haneli olmalıdır'
         }
       }))
     } else {
@@ -284,7 +284,7 @@ export default function UltraPremiumRegisterPage() {
         ...prev,
         identity: {
           status: valid ? 'success' : 'error',
-          message: valid ? 'TC kimlik numarasi dogrulandi' : 'Gecerli bir TC kimlik numarasi giriniz'
+          message: valid ? 'TC kimlik numarası doğrulandı' : 'Geçerli bir TC kimlik numarası giriniz'
         }
       }))
     }
@@ -333,27 +333,27 @@ export default function UltraPremiumRegisterPage() {
     switch (step) {
       case 1: {
         if (!formData.companyName || !formData.companyCode) {
-          setError('Sirket adi ve kodu zorunludur')
+          setError('Şirket adı ve kodu zorunludur')
           return false
         }
         if (validations.companyCode.status === 'error') {
-          setError('Gecerli bir sirket kodu giriniz')
+          setError('Geçerli bir şirket kodu giriniz')
           return false
         }
         const identityValue = getActiveIdentityNumber()
         if (!identityValue) {
-          setError('Vergi veya kimlik numarasi zorunludur')
+          setError('Vergi veya kimlik numarası zorunludur')
           return false
         }
         const identityValid = formData.identityType === 'tax'
           ? isValidTaxNumber(identityValue)
           : isValidNationalId(identityValue)
         if (!identityValid) {
-          setError(formData.identityType === 'tax' ? 'Gecerli bir vergi numarasi giriniz' : 'Gecerli bir TC kimlik numarasi giriniz')
+          setError(formData.identityType === 'tax' ? 'Geçerli bir vergi numarası giriniz' : 'Geçerli bir TC kimlik numarası giriniz')
           return false
         }
         if (validations.identity.status === 'error') {
-          setError(validations.identity.message || 'Kimlik bilgisi dogrulanamadi')
+          setError(validations.identity.message || 'Kimlik bilgisi doğrulanamadı')
           return false
         }
         if (formData.identityType === 'tax' && !formData.taxOffice) {
@@ -380,21 +380,21 @@ export default function UltraPremiumRegisterPage() {
         return true
       case 4:
         if (!formData.adminEmail || !formData.adminUsername || !formData.adminFirstName || !formData.adminLastName) {
-          setError('Tum yonetici bilgileri zorunludur')
+          setError('Tüm yönetici bilgileri zorunludur')
           return false
         }
         if (!formData.adminPassword || formData.adminPassword.length < 8) {
-          setError('Sifre en az 8 karakter olmalidir')
+          setError('Şifre en az 8 karakter olmalıdır')
           return false
         }
         if (formData.adminPassword !== formData.adminPasswordConfirm) {
-          setError('Sifreler eslesmiyor')
+          setError('Şifreler eşleşmiyor')
           return false
         }
         return true
       case 5:
         if (!formData.acceptTerms || !formData.acceptPrivacyPolicy) {
-          setError('Kullanim sartlarini ve gizlilik politikasini kabul etmelisiniz')
+          setError('Kullanım şartlarını ve gizlilik politikasını kabul etmelisiniz')
           return false
         }
         return true
@@ -428,13 +428,13 @@ export default function UltraPremiumRegisterPage() {
 
       const data = await response.json()
       if (!data.success) {
-        setError(data.message || 'Kay─▒t s─▒ras─▒nda bir hata olu┼ştu')
+        setError(data.message || 'Kayıt sırasında bir hata oluştu')
         return
       }
 
       router.push(`/register/verify-email?email=${encodeURIComponent(formData.contactEmail)}`)
     } catch (err) {
-      setError('Bir hata olu┼ştu. L├╝tfen tekrar deneyin.')
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
     }
@@ -467,10 +467,10 @@ export default function UltraPremiumRegisterPage() {
             <div className="space-y-8">
               <div>
                 <h1 className="text-5xl font-bold mb-4 leading-tight">
-                  Modern ─░┼şletme<br />Y├Ânetimi Ba┼şl─▒yor
+                  Modern İşletme<br />Yönetimi Başlıyor
                 </h1>
                 <p className="text-xl text-white/70 max-w-md">
-                  Stoocker ile i┼şletmenizi dijital ├ğa─şa ta┼ş─▒y─▒n. G├╝├ğl├╝ ├Âzellikler, kolay kullan─▒m.
+                  Stoocker ile işletmenizi dijital çağa taşıyın. Güçlü özellikler, kolay kullanım.
                 </p>
               </div>
 
@@ -483,8 +483,8 @@ export default function UltraPremiumRegisterPage() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">Ger├ğek Zamanl─▒ Do─şrulama</div>
-                    <p className="text-sm text-white/60">Form doldururken anl─▒k validasyon</p>
+                    <div className="font-semibold mb-1">Gerçek Zamanlı Doğrulama</div>
+                    <p className="text-sm text-white/60">Form doldururken anlık validasyon</p>
                   </div>
                 </div>
 
@@ -495,8 +495,8 @@ export default function UltraPremiumRegisterPage() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">G├╝venli Altyap─▒</div>
-                    <p className="text-sm text-white/60">256-bit ┼şifreleme ile korunan veriler</p>
+                    <div className="font-semibold mb-1">Güvenli Altyapı</div>
+                    <p className="text-sm text-white/60">256-bit şifreleme ile korunan veriler</p>
                   </div>
                 </div>
 
@@ -507,8 +507,8 @@ export default function UltraPremiumRegisterPage() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">H─▒zl─▒ Ba┼şlang─▒├ğ</div>
-                    <p className="text-sm text-white/60">5 dakikada sistemi kullanmaya ba┼şlay─▒n</p>
+                    <div className="font-semibold mb-1">Hızlı Başlangıç</div>
+                    <p className="text-sm text-white/60">5 dakikada sistemi kullanmaya başlayın</p>
                   </div>
                 </div>
               </div>
@@ -523,11 +523,11 @@ export default function UltraPremiumRegisterPage() {
             </div>
             <div>
               <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">2M+</div>
-              <div className="text-sm text-white/60 mt-1">─░┼şlem</div>
+              <div className="text-sm text-white/60 mt-1">İşlem</div>
             </div>
             <div>
               <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">256-bit</div>
-              <div className="text-sm text-white/60 mt-1">┼Şifreleme</div>
+              <div className="text-sm text-white/60 mt-1">Şifreleme</div>
             </div>
           </div>
         </div>
@@ -545,7 +545,7 @@ export default function UltraPremiumRegisterPage() {
           {isConnected && (
             <div className="mb-6 inline-flex items-center space-x-2 px-4 py-2 bg-green-50 border border-green-200 rounded-xl">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm text-green-700 font-medium">Ger├ğek zamanl─▒ do─şrulama aktif</span>
+              <span className="text-sm text-green-700 font-medium">Gerçek zamanlı doğrulama aktif</span>
             </div>
           )}
 
@@ -597,18 +597,18 @@ export default function UltraPremiumRegisterPage() {
             {/* Step 1: Company Information */}
             {currentStep === 1 && (
               <div className="space-y-5">
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">┼Şirket Bilgileri</h3>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">Şirket Bilgileri</h3>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">┼Şirket Ad─▒ *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Şirket Adı *</label>
                     <div className="relative">
                       <input
                         type="text"
                         value={formData.companyName}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
                         className="w-full px-4 py-4 pr-12 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 text-lg placeholder:text-gray-400"
-                        placeholder="├ûrnek Teknoloji A.┼Ş."
+                        placeholder="Örnek Teknoloji A.Ş."
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         {getValidationIcon(validations.companyName.status)}
@@ -622,7 +622,7 @@ export default function UltraPremiumRegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">┼Şirket Kodu *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Şirket Kodu *</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -664,18 +664,18 @@ export default function UltraPremiumRegisterPage() {
                   </div>
 
                   <div className="mb-5">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">─░┼şletme T├╝r├╝ *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">İşletme Türü *</label>
                     <select
                       value={formData.businessType}
                       onChange={(e) => handleInputChange('businessType', e.target.value)}
                       className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900"
                     >
-                      <option value="">Se├ğiniz</option>
-                      <option value="sahis">┼Şah─▒s ┼Şirketi</option>
-                      <option value="limited">Limited ┼Şirket</option>
-                      <option value="anonim">Anonim ┼Şirket</option>
-                      <option value="kolektif">Kolektif ┼Şirket</option>
-                      <option value="komandit">Komandit ┼Şirket</option>
+                      <option value="">Seçiniz</option>
+                      <option value="sahis">Şahıs Şirketi</option>
+                      <option value="limited">Limited Şirket</option>
+                      <option value="anonim">Anonim Şirket</option>
+                      <option value="kolektif">Kolektif Şirket</option>
+                      <option value="komandit">Komandit Şirket</option>
                     </select>
                   </div>
 
@@ -695,7 +695,7 @@ export default function UltraPremiumRegisterPage() {
                     ) : (
                       <>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Vergi Numaras─▒</label>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Vergi Numarası</label>
                           <input
                             type="text"
                             value={formData.taxNumber}
@@ -712,7 +712,7 @@ export default function UltraPremiumRegisterPage() {
                             value={formData.taxOffice}
                             onChange={(e) => handleInputChange('taxOffice', e.target.value)}
                             className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                            placeholder="Kad─▒k├Ây"
+                            placeholder="Kadıköy"
                           />
                         </div>
                       </>
@@ -725,8 +725,8 @@ export default function UltraPremiumRegisterPage() {
             {/* Step 2: Package Selection */}
             {currentStep === 2 && (
               <div className="space-y-5">
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">Paketinizi Se├ğin</h3>
-                <p className="text-gray-600 mb-6">─░┼şletmeniz i├ğin en uygun paketi se├ğin. ─░stedi─şiniz zaman de─şi┼ştirebilirsiniz.</p>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">Paketinizi Seçin</h3>
+                <p className="text-gray-600 mb-6">İşletmeniz için en uygun paketi seçin. İstediğiniz zaman değiştirebilirsiniz.</p>
 
                 {loadingPackages ? (
                   <div className="flex items-center justify-center py-12">
@@ -752,7 +752,7 @@ export default function UltraPremiumRegisterPage() {
                           {isPopular && (
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                               <div className="px-4 py-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-xs font-bold rounded-full shadow-lg">
-                                Ô¡É POP├£LER
+                                Ô¡É POPÜLER
                               </div>
                             </div>
                           )}
@@ -815,7 +815,7 @@ export default function UltraPremiumRegisterPage() {
                             {/* Limits */}
                             <div className="pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
                               <div className="flex items-center justify-between">
-                                <span>­şæÑ Max Kullan─▒c─▒:</span>
+                                <span>­şæÑ Max Kullanıcı:</span>
                                 <span className="font-semibold text-gray-900">{pkg.maxUsers}</span>
                               </div>
                               <div className="flex items-center justify-between">
@@ -833,7 +833,7 @@ export default function UltraPremiumRegisterPage() {
                 {formData.packageId && !loadingPackages && (
                   <div className="mt-6 p-4 bg-violet-50 border border-violet-200 rounded-2xl">
                     <p className="text-sm text-violet-700 font-medium">
-                      Ô£ô Paket se├ğildi
+                      Ô£ô Paket seçildi
                     </p>
                   </div>
                 )}
@@ -843,7 +843,7 @@ export default function UltraPremiumRegisterPage() {
             {/* Step 3: Contact Information */}
             {currentStep === 3 && (
               <div className="space-y-5">
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">─░leti┼şim Bilgileri</h3>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">İletişim Bilgileri</h3>
 
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -903,24 +903,24 @@ export default function UltraPremiumRegisterPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">┼Şehir *</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Şehir *</label>
                       <input
                         type="text"
                         value={formData.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                        placeholder="─░stanbul"
+                        placeholder="İstanbul"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">─░l├ğe</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">İlçe</label>
                       <input
                         type="text"
                         value={formData.state}
                         onChange={(e) => handleInputChange('state', e.target.value)}
                         className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                        placeholder="Kad─▒k├Ây"
+                        placeholder="Kadıköy"
                       />
                     </div>
 
@@ -942,7 +942,7 @@ export default function UltraPremiumRegisterPage() {
             {/* Step 4: Admin User */}
             {currentStep === 4 && (
               <div className="space-y-5">
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">Y├Ânetici Hesab─▒</h3>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">Yönetici Hesabı</h3>
 
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -975,7 +975,7 @@ export default function UltraPremiumRegisterPage() {
                         value={formData.adminEmail}
                         onChange={(e) => handleInputChange('adminEmail', e.target.value)}
                         className="w-full px-4 py-4 pr-12 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                        placeholder="yonetici@ornek.com"
+                        placeholder="yönetici@ornek.com"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         {getValidationIcon(validations.adminEmail.status)}
@@ -989,18 +989,18 @@ export default function UltraPremiumRegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Kullan─▒c─▒ Ad─▒ *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Kullanıcı Adı *</label>
                     <input
                       type="text"
                       value={formData.adminUsername}
                       onChange={(e) => handleInputChange('adminUsername', e.target.value.toLowerCase())}
                       className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                      placeholder="yonetici"
+                      placeholder="yönetici"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">┼Şifre *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Şifre *</label>
                     <div className="relative">
                       <input
                         type="password"
@@ -1016,7 +1016,7 @@ export default function UltraPremiumRegisterPage() {
                     {validations.adminPassword.strength > 0 && (
                       <div className="mt-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700">┼Şifre G├╝c├╝: {validations.adminPassword.level}</span>
+                          <span className="text-sm font-medium text-gray-700">Şifre Gücü: {validations.adminPassword.level}</span>
                           <span className="text-sm font-medium" style={{ color: validations.adminPassword.color }}>
                             {validations.adminPassword.strength}/5
                           </span>
@@ -1035,7 +1035,7 @@ export default function UltraPremiumRegisterPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">┼Şifre Tekrar *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Şifre Tekrar *</label>
                     <input
                       type="password"
                       value={formData.adminPasswordConfirm}
@@ -1059,11 +1059,11 @@ export default function UltraPremiumRegisterPage() {
                       <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white text-lg">
                         ­şÅó
                       </div>
-                      <h4 className="font-bold text-gray-900 text-lg">┼Şirket</h4>
+                      <h4 className="font-bold text-gray-900 text-lg">Şirket</h4>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-600">┼Şirket:</span>
+                        <span className="text-gray-600">Şirket:</span>
                         <p className="font-semibold text-gray-900 mt-1">{formData.companyName}</p>
                       </div>
                       <div>
@@ -1078,7 +1078,7 @@ export default function UltraPremiumRegisterPage() {
                       <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-lg">
                         ­şÆÄ
                       </div>
-                      <h4 className="font-bold text-gray-900 text-lg">Se├ğili Paket</h4>
+                      <h4 className="font-bold text-gray-900 text-lg">Seçili Paket</h4>
                     </div>
                     <div className="space-y-3">
                       {(() => {
@@ -1109,7 +1109,7 @@ export default function UltraPremiumRegisterPage() {
                             </div>
                           </>
                         ) : (
-                          <p className="text-sm text-gray-500">Paket se├ğilmedi</p>
+                          <p className="text-sm text-gray-500">Paket seçilmedi</p>
                         )
                       })()}
                     </div>
@@ -1120,7 +1120,7 @@ export default function UltraPremiumRegisterPage() {
                       <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center text-white text-lg">
                         ­şôğ
                       </div>
-                      <h4 className="font-bold text-gray-900 text-lg">─░leti┼şim</h4>
+                      <h4 className="font-bold text-gray-900 text-lg">İletişim</h4>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -1139,7 +1139,7 @@ export default function UltraPremiumRegisterPage() {
                       <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white text-lg">
                         ­şæñ
                       </div>
-                      <h4 className="font-bold text-gray-900 text-lg">Y├Ânetici</h4>
+                      <h4 className="font-bold text-gray-900 text-lg">Yönetici</h4>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -1187,7 +1187,7 @@ export default function UltraPremiumRegisterPage() {
                       className="mt-1 w-5 h-5 text-violet-600 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-violet-500/20"
                     />
                     <span className="text-sm text-gray-700 group-hover:text-gray-900 font-medium">
-                      Kampanya ve duyurular i├ğin e-posta almak istiyorum
+                      Kampanya ve duyurular için e-posta almak istiyorum
                     </span>
                   </label>
                 </div>
@@ -1224,11 +1224,11 @@ export default function UltraPremiumRegisterPage() {
                     {loading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Olu┼şturuluyor...</span>
+                        <span>Oluşturuluyor...</span>
                       </>
                     ) : (
                       <>
-                        <span>Hesap Olu┼ştur</span>
+                        <span>Hesap Oluştur</span>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
