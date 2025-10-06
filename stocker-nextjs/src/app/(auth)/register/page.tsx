@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -27,7 +27,7 @@ export default function UltraPremiumRegisterPage() {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const response = await fetch('https://api.stoocker.app/api/packages?OnlyActive=true')
+        const response = await fetch('https://api.stoocker.app/api/public/packages?OnlyActive=true')
         const data = await response.json()
         if (data.success && data.data) {
           setPackages(data.data)
