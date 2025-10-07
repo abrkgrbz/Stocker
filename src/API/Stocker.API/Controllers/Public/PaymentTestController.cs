@@ -5,9 +5,10 @@ using Microsoft.Extensions.Configuration;
 
 namespace Stocker.API.Controllers.Public;
 
+#if DEBUG
 /// <summary>
 /// Payment Test Controller for testing Iyzico integration
-/// Only available in development/staging environments
+/// ONLY AVAILABLE IN DEBUG BUILD - Excluded from production for security
 /// </summary>
 [ApiController]
 [Route("api/public/payment-test")]
@@ -319,3 +320,5 @@ public class TestRefundRequest
 }
 
 #endregion
+
+#endif // DEBUG

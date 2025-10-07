@@ -477,18 +477,26 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-// Swagger'ı hem development hem de production'da kullanılabilir yap
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Swagger - Only enabled in Development for security
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
-    c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
-    c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
-    c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
-    c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
-    c.RoutePrefix = string.Empty; // Swagger UI at root
-    c.DocumentTitle = "Stocker API Documentation";
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
+        c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
+        c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
+        c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
+        c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+        c.RoutePrefix = string.Empty; // Swagger UI at root
+        c.DocumentTitle = "Stocker API Documentation";
+    });
+    app.Logger.LogInformation("Swagger UI is enabled for Development environment");
+}
+else
+{
+    app.Logger.LogInformation("Swagger UI is disabled in Production for security");
+}
 
 // Use CORS - Environment based policy selection
 var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
@@ -633,12 +641,14 @@ if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalI
             await migrationService.MigrateMasterDatabaseAsync();
             await migrationService.SeedMasterDataAsync();
             app.Logger.LogInformation("Database migration completed successfully");
-        
-        // Test Seq logging
-        app.Logger.LogInformation("🚀 Stocker API started successfully");
-        app.Logger.LogDebug("Debug: Seq connection test");
-        app.Logger.LogWarning("Warning: This is a test warning for Seq");
-        app.Logger.LogError("Error: This is a test error for Seq (not a real error)");
+
+        app.Logger.LogInformation("Stocker API started successfully");
+
+        // Log environment-specific information
+        if (app.Environment.IsDevelopment())
+        {
+            app.Logger.LogDebug("Running in Development mode");
+        }
     }
     catch (Stocker.SharedKernel.Exceptions.DatabaseException ex)
     {
