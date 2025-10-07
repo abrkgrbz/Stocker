@@ -57,86 +57,37 @@ SerilogConfiguration.ConfigureLogging(builder.Configuration, builder.Host);
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    // Development policy - for local development
+    options.AddPolicy("Development",
         policy =>
         {
-            policy.AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials()
-                  .SetIsOriginAllowed(origin =>
-                  {
-                      if (string.IsNullOrEmpty(origin))
-                          return false;
-                          
-                      // Allow all *.stoocker.app subdomains
-                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
-                      {
-                          return true;
-                      }
-                      
-                      // Also allow localhost for development
-                      if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
-                      {
-                          return true;
-                      }
-                      
-                      return false;
-                  })
-                  .WithExposedHeaders("*");
-        });
-    
-    // SignalR için özel policy
-    options.AddPolicy("SignalRPolicy",
-        policy =>
-        {
-            policy.AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials()
-                  .SetIsOriginAllowed(origin =>
-                  {
-                      // Allow all *.stoocker.app subdomains
-                      if (origin.EndsWith(".stoocker.app") || origin == "https://stoocker.app")
-                      {
-                          return true;
-                      }
-                      
-                      // Also allow localhost for development
-                      if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
-                      {
-                          return true;
-                      }
-                      
-                      return false;
-                  })
-                  .WithExposedHeaders("*");
-        });
-    
-    // Production için subdomain desteği
-    options.AddPolicy("Production",
-        policy =>
-        {
-            // Tüm stoocker.app subdomain'lerini dinamik olarak kabul et
             policy.WithOrigins(
-                    "https://stoocker.app",
-                    "https://www.stoocker.app",
-                    "https://api.stoocker.app",
-                    "https://admin.stoocker.app",
-                    "https://master.stoocker.app",
-                    "https://abg-teknoloji.stoocker.app"
+                    "http://localhost:3000",
+                    "http://localhost:3001",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:3000",
+                    "http://127.0.0.1:5173"
                   )
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials()
-                  .SetIsOriginAllowed(origin =>
+                  .WithExposedHeaders("Content-Disposition", "X-Total-Count", "X-Tenant-Code", "X-Tenant-Id");
+        });
+
+    // Production policy - for production domains only
+    options.AddPolicy("Production",
+        policy =>
+        {
+            policy.SetIsOriginAllowed(origin =>
                   {
-                      // Allow all *.stoocker.app subdomains
                       if (string.IsNullOrEmpty(origin))
                           return false;
-                      
+
                       try
                       {
                           var uri = new Uri(origin);
-                          return uri.Host.EndsWith(".stoocker.app") || 
+                          // Only allow stoocker.app and its subdomains
+                          return uri.Host.EndsWith(".stoocker.app") ||
                                  uri.Host == "stoocker.app" ||
                                  uri.Host == "www.stoocker.app";
                       }
@@ -145,7 +96,10 @@ builder.Services.AddCors(options =>
                           return false;
                       }
                   })
-                  .WithExposedHeaders("*");
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials()
+                  .WithExposedHeaders("Content-Disposition", "X-Total-Count", "X-Tenant-Code", "X-Tenant-Id");
         });
 });
 
@@ -536,13 +490,10 @@ app.UseSwaggerUI(c =>
     c.DocumentTitle = "Stocker API Documentation";
 });
 
-// Add custom CORS middleware BEFORE UseCors to handle OPTIONS requests properly
-// CRITICAL: This MUST come before UseCors() to intercept OPTIONS requests
-app.UseMiddleware<Stocker.Infrastructure.Middleware.CustomCorsMiddleware>();
-app.Logger.LogInformation("CustomCorsMiddleware has been added to the pipeline BEFORE UseCors");
-
-// Use CORS - This comes AFTER CustomCorsMiddleware
-app.UseCors("Production"); // Handles non-OPTIONS requests
+// Use CORS - Environment based policy selection
+var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
+app.UseCors(corsPolicy);
+app.Logger.LogInformation($"CORS policy '{corsPolicy}' has been applied for {app.Environment.EnvironmentName} environment");
 
 // Enable WebSockets for SignalR with proper configuration
 app.UseWebSockets(new WebSocketOptions
@@ -644,8 +595,7 @@ if (!app.Environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalI
 // Map controllers
 app.MapControllers();
 
-// Map SignalR Hubs with CORS
-var corsPolicy = "Production"; // Always use Production policy
+// Map SignalR Hubs with CORS - Use the same environment-based policy
 app.MapHub<ValidationHub>("/hubs/validation", options =>
 {
     options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
