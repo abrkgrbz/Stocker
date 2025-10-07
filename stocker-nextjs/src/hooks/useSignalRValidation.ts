@@ -27,8 +27,11 @@ export function useSignalRValidation() {
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({})
 
   useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    const hubUrl = `${apiUrl}/hubs/validation`
+
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:5000/hubs/validation', {
+      .withUrl(hubUrl, {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets
       })
