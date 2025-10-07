@@ -596,7 +596,7 @@ export default function UltraPremiumRegisterPage() {
                         ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-2xl shadow-violet-500/50 ring-4 ring-violet-100 scale-105'
                         : 'bg-gray-100 text-gray-400'
                     }`}>
-                      {currentStep > step.number ? 'Ô£ô' : step.icon}
+                      {currentStep > step.number ? '✓' : step.icon}
                     </div>
                     <div className="mt-3 text-center">
                       <div className={`text-sm font-semibold ${currentStep >= step.number ? 'text-gray-900' : 'text-gray-400'}`}>
