@@ -56,7 +56,7 @@ export default function UltraPremiumRegisterPage() {
   const [formData, setFormData] = useState({
     companyName: '',
     companyCode: '',
-    identityType: 'tax',
+    identityType: 'corporate', // 'corporate' or 'individual'
     taxNumber: '',
     nationalId: '',
     taxOffice: '',
@@ -111,7 +111,7 @@ export default function UltraPremiumRegisterPage() {
   }
 
   const getActiveIdentityNumber = () =>
-    formData.identityType === 'tax' ? formData.taxNumber : formData.nationalId
+    formData.identityType === 'corporate' ? formData.taxNumber : formData.nationalId
 
   const availableModules = [
     { code: 'CRM', name: 'Müşteri İlişkileri', icon: '👥', description: 'Müşteri yönetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
@@ -664,29 +664,50 @@ export default function UltraPremiumRegisterPage() {
                   </div>
 
                   <div className="mb-5">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">İşletme Türü *</label>
-                    <select
-                      value={formData.businessType}
-                      onChange={(e) => handleInputChange('businessType', e.target.value)}
-                      className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900"
-                    >
-                      <option value="">Seçiniz</option>
-                      <option value="sahis">Şahıs Şirketi</option>
-                      <option value="limited">Limited Şirket</option>
-                      <option value="anonim">Anonim Şirket</option>
-                      <option value="kolektif">Kolektif Şirket</option>
-                      <option value="komandit">Komandit Şirket</option>
-                    </select>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">İşletme Türü *</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('identityType', 'individual')}
+                        className={`p-6 rounded-2xl border-2 transition-all ${
+                          formData.identityType === 'individual'
+                            ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-500/20'
+                            : 'border-gray-200 bg-white hover:border-violet-300'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-3xl mb-2">👤</div>
+                          <div className="font-bold text-gray-900">Şahıs Şirketi</div>
+                          <div className="text-sm text-gray-500 mt-1">TC Kimlik No ile</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('identityType', 'corporate')}
+                        className={`p-6 rounded-2xl border-2 transition-all ${
+                          formData.identityType === 'corporate'
+                            ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-500/20'
+                            : 'border-gray-200 bg-white hover:border-violet-300'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-3xl mb-2">🏢</div>
+                          <div className="font-bold text-gray-900">Kurumsal</div>
+                          <div className="text-sm text-gray-500 mt-1">Vergi No ile</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {formData.businessType === 'sahis' ? (
+                    {formData.identityType === 'individual' ? (
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">TC Kimlik No</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">TC Kimlik No *</label>
                         <input
                           type="text"
-                          value={formData.taxNumber}
-                          onChange={(e) => handleInputChange('taxNumber', e.target.value)}
+                          value={formData.nationalId}
+                          onChange={(e) => handleInputChange('nationalId', e.target.value)}
                           className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
                           placeholder="12345678901"
                           maxLength={11}
@@ -695,7 +716,7 @@ export default function UltraPremiumRegisterPage() {
                     ) : (
                       <>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Vergi Numarası</label>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Vergi Numarası *</label>
                           <input
                             type="text"
                             value={formData.taxNumber}
