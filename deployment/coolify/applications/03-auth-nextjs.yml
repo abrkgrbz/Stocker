@@ -1,7 +1,8 @@
 version: '3.8'
 
 # Stocker Auth Application (Next.js)
-# Handles authentication and registration on auth subdomain
+# Handles landing page, authentication and registration
+# Serves both root domain (stoocker.app) and auth subdomain (auth.stoocker.app)
 
 services:
   auth:
@@ -27,6 +28,15 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=coolify"
 
+      # Root domain router (stoocker.app and www.stoocker.app)
+      - "traefik.http.routers.stocker-root.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-root.entrypoints=https"
+      - "traefik.http.routers.stocker-root.tls=true"
+      - "traefik.http.routers.stocker-root.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-root.service=stocker-auth-service"
+      - "traefik.http.routers.stocker-root.priority=20"
+      - "traefik.http.routers.stocker-root.middlewares=www-redirect"
+
       # Auth subdomain router (auth.stoocker.app)
       - "traefik.http.routers.stocker-auth.rule=Host(`auth.stoocker.app`)"
       - "traefik.http.routers.stocker-auth.entrypoints=https"
@@ -35,7 +45,12 @@ services:
       - "traefik.http.routers.stocker-auth.service=stocker-auth-service"
       - "traefik.http.routers.stocker-auth.priority=15"
 
-      # HTTP -> HTTPS redirect
+      # HTTP -> HTTPS redirect for root domain
+      - "traefik.http.routers.stocker-root-http.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-root-http.entrypoints=http"
+      - "traefik.http.routers.stocker-root-http.middlewares=redirect-https"
+
+      # HTTP -> HTTPS redirect for auth subdomain
       - "traefik.http.routers.stocker-auth-http.rule=Host(`auth.stoocker.app`)"
       - "traefik.http.routers.stocker-auth-http.entrypoints=http"
       - "traefik.http.routers.stocker-auth-http.middlewares=redirect-https"
@@ -46,6 +61,11 @@ services:
       # Middleware for HTTPS redirect
       - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+
+      # Middleware for WWW to non-WWW redirect
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$$1"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
 
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
