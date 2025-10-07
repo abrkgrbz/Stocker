@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import { Typography, Card, Row, Col, Button } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
