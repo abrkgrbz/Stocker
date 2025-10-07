@@ -9,6 +9,10 @@ services:
     build:
       context: ./stocker-nextjs
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.stoocker.app
+        NEXT_PUBLIC_APP_URL: https://auth.stoocker.app
+        NEXT_PUBLIC_MAIN_APP_URL: https://stoocker.app
     container_name: stocker-auth
     restart: unless-stopped
     environment:
