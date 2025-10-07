@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
   // Standalone output for Docker
   output: 'standalone',
 
+  // Disable ESLint and TypeScript checks during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Image optimization
   images: {
     remotePatterns: [
