@@ -114,20 +114,20 @@ export default function UltraPremiumRegisterPage() {
     formData.identityType === 'tax' ? formData.taxNumber : formData.nationalId
 
   const availableModules = [
-    { code: 'CRM', name: 'Müşteri İlişkileri', icon: '­şæÑ', description: 'Müşteri yönetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
-    { code: 'FINANCE', name: 'Finans', icon: '­şÆ░', description: 'Muhasebe ve finans yönetimi', color: 'from-green-500 to-emerald-500' },
-    { code: 'HR', name: 'İnsan Kaynakları', icon: '­şæö', description: 'Personel ve bordro yönetimi', color: 'from-purple-500 to-pink-500' },
-    { code: 'INVENTORY', name: 'Envanter', icon: '­şôĞ', description: 'Stok ve depo yönetimi', color: 'from-orange-500 to-red-500' },
-    { code: 'PURCHASE', name: 'Satın Alma', icon: '­şøÆ', description: 'Tedarik ve satın alma', color: 'from-indigo-500 to-blue-500' },
-    { code: 'SALES', name: 'Satış', icon: '­şôê', description: 'Satış ve sipariş yönetimi', color: 'from-pink-500 to-rose-500' }
+    { code: 'CRM', name: 'Müşteri İlişkileri', icon: '👥', description: 'Müşteri yönetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
+    { code: 'FINANCE', name: 'Finans', icon: '💰', description: 'Muhasebe ve finans yönetimi', color: 'from-green-500 to-emerald-500' },
+    { code: 'HR', name: 'İnsan Kaynakları', icon: '👨', description: 'Personel ve bordro yönetimi', color: 'from-purple-500 to-pink-500' },
+    { code: 'INVENTORY', name: 'Envanter', icon: '📦', description: 'Stok ve depo yönetimi', color: 'from-orange-500 to-red-500' },
+    { code: 'PURCHASE', name: 'Satın Alma', icon: '🛒', description: 'Tedarik ve satın alma', color: 'from-indigo-500 to-blue-500' },
+    { code: 'SALES', name: 'Satış', icon: '📊', description: 'Satış ve sipariş yönetimi', color: 'from-pink-500 to-rose-500' }
   ]
 
   const steps = [
-    { number: 1, title: 'Şirket', icon: '­şÅó' },
-    { number: 2, title: 'Paket', icon: '­şÆÄ' },
-    { number: 3, title: 'İletişim', icon: '­şôğ' },
-    { number: 4, title: 'Yönetici', icon: '­şæñ' },
-    { number: 5, title: 'Tamamla', icon: 'Ô£ô' }
+    { number: 1, title: 'Şirket', icon: '🏢' },
+    { number: 2, title: 'Paket', icon: '💎' },
+    { number: 3, title: 'İletişim', icon: '📧' },
+    { number: 4, title: 'Yönetici', icon: '👤' },
+    { number: 5, title: 'Tamamla', icon: '✓' }
   ]
 
   const handleInputChange = (field: string, value: any) => {
@@ -1243,9 +1243,9 @@ export default function UltraPremiumRegisterPage() {
           {/* Footer */}
           <div className="text-center mt-8">
             <p className="text-gray-600">
-              Zaten hesab─▒n─▒z var m─▒?{' '}
+              Zaten hesabınız var mı?{' '}
               <Link href="/login" className="font-bold text-violet-600 hover:text-violet-700 underline">
-                Giri┼ş Yap─▒n
+                Giriş Yapın
               </Link>
             </p>
           </div>
