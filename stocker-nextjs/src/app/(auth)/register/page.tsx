@@ -1222,7 +1222,7 @@ export default function UltraPremiumRegisterPage() {
                 disabled={currentStep === 1}
                 className="px-6 py-3.5 text-gray-600 hover:text-gray-900 font-semibold disabled:opacity-0 disabled:cursor-not-allowed transition-all hover:bg-gray-100 rounded-xl"
               >
-                ÔåÉ Geri
+                ← Geri
               </button>
 
               <div className="flex items-center space-x-3">
