@@ -1069,7 +1069,7 @@ export default function UltraPremiumRegisterPage() {
                         value={formData.adminPassword}
                         onChange={(e) => handleInputChange('adminPassword', e.target.value)}
                         className="w-full px-4 py-4 pr-12 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                        placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó"
+                        placeholder="••••••••"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         {getValidationIcon(validations.adminPassword.status)}
@@ -1103,7 +1103,7 @@ export default function UltraPremiumRegisterPage() {
                       value={formData.adminPasswordConfirm}
                       onChange={(e) => handleInputChange('adminPasswordConfirm', e.target.value)}
                       className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                      placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó"
+                      placeholder="••••••••"
                     />
                   </div>
                 </div>
@@ -1119,7 +1119,7 @@ export default function UltraPremiumRegisterPage() {
                   <div className="p-6 bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-2xl border-2 border-violet-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white text-lg">
-                        ­şÅó
+                        🏢
                       </div>
                       <h4 className="font-bold text-gray-900 text-lg">Şirket</h4>
                     </div>
@@ -1138,7 +1138,7 @@ export default function UltraPremiumRegisterPage() {
                   <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-lg">
-                        ­şÆÄ
+                        💎
                       </div>
                       <h4 className="font-bold text-gray-900 text-lg">Seçili Paket</h4>
                     </div>
@@ -1153,16 +1153,16 @@ export default function UltraPremiumRegisterPage() {
                             </div>
                             <div>
                               <span className="text-gray-600">Fiyat:</span>
-                              <p className="font-semibold text-gray-900 mt-1">Ôé║{selectedPackage.basePrice.amount.toLocaleString('tr-TR')}/ay</p>
+                              <p className="font-semibold text-gray-900 mt-1">₺{selectedPackage.basePrice.amount.toLocaleString('tr-TR')}/ay</p>
                             </div>
                             <div>
-                              <span className="text-gray-600 text-sm">Dahil Mod├╝ller:</span>
+                              <span className="text-gray-600 text-sm">Dahil Modüller:</span>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {selectedPackage.modules.filter((m: any) => m.isIncluded).map((module: any) => {
                                   const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
                                   return (
                                     <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
-                                      <span>{moduleInfo?.icon || '­şôĞ'}</span>
+                                      <span>{moduleInfo?.icon || '📦'}</span>
                                       <span className="font-medium text-gray-700">{module.moduleName}</span>
                                     </div>
                                   )
@@ -1180,7 +1180,7 @@ export default function UltraPremiumRegisterPage() {
                   <div className="p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl border-2 border-cyan-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center text-white text-lg">
-                        ­şôğ
+                        📧
                       </div>
                       <h4 className="font-bold text-gray-900 text-lg">İletişim</h4>
                     </div>
