@@ -773,7 +773,7 @@ export default function UltraPremiumRegisterPage() {
                           {isPopular && (
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                               <div className="px-4 py-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-xs font-bold rounded-full shadow-lg">
-                                Ô¡É POPÜLER
+                                ⭐ POPÜLER
                               </div>
                             </div>
                           )}
@@ -803,7 +803,7 @@ export default function UltraPremiumRegisterPage() {
                             {/* Price */}
                             <div className="flex items-baseline space-x-2">
                               <span className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                                Ôé║{pkg.basePrice.amount.toLocaleString('tr-TR')}
+                                ₺{pkg.basePrice.amount.toLocaleString('tr-TR')}
                               </span>
                               <span className="text-gray-600 text-sm">/ay</span>
                             </div>
@@ -812,20 +812,20 @@ export default function UltraPremiumRegisterPage() {
                             {pkg.trialDays > 0 && (
                               <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
                                 <span className="text-xs font-bold text-green-700">
-                                  ­şÄü {pkg.trialDays} g├╝n ├╝cretsiz deneme
+                                  🎁 {pkg.trialDays} gün ücretsiz deneme
                                 </span>
                               </div>
                             )}
 
                             {/* Modules */}
                             <div className="space-y-2">
-                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dahil Mod├╝ller</p>
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dahil Modüller</p>
                               <div className="flex flex-wrap gap-2">
                                 {pkg.modules.filter((m: any) => m.isIncluded).map((module: any) => {
                                   const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
                                   return (
                                     <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs">
-                                      <span>{moduleInfo?.icon || '­şôĞ'}</span>
+                                      <span>{moduleInfo?.icon || '📦'}</span>
                                       <span className="font-medium text-gray-700">{module.moduleName}</span>
                                     </div>
                                   )
@@ -836,11 +836,11 @@ export default function UltraPremiumRegisterPage() {
                             {/* Limits */}
                             <div className="pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
                               <div className="flex items-center justify-between">
-                                <span>­şæÑ Max Kullanıcı:</span>
+                                <span>👥 Max Kullanıcı:</span>
                                 <span className="font-semibold text-gray-900">{pkg.maxUsers}</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span>­şÆ¥ Depolama:</span>
+                                <span>💾 Depolama:</span>
                                 <span className="font-semibold text-gray-900">{pkg.maxStorage} GB</span>
                               </div>
                             </div>
@@ -854,7 +854,7 @@ export default function UltraPremiumRegisterPage() {
                 {formData.packageId && !loadingPackages && (
                   <div className="mt-6 p-4 bg-violet-50 border border-violet-200 rounded-2xl">
                     <p className="text-sm text-violet-700 font-medium">
-                      Ô£ô Paket seçildi
+                      ✓ Paket seçildi
                     </p>
                   </div>
                 )}
