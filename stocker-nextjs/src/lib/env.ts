@@ -152,7 +152,25 @@ export function getApiUrl(serverSide = false): string {
 
 // Get auth URL (removes port for production HTTPS)
 export function getAuthUrl(path: string = ''): string {
-  const authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
+  let authDomain: string
+
+  // Client-side: detect from current location
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    const protocol = window.location.protocol
+
+    // If on localhost, use localhost:3000
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      authDomain = 'http://localhost:3000'
+    } else {
+      // Production: construct auth domain from base domain
+      const baseDomain = env.NEXT_PUBLIC_BASE_DOMAIN || 'stoocker.app'
+      authDomain = `${protocol}//auth.${baseDomain}`
+    }
+  } else {
+    // Server-side: use env variable
+    authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
+  }
 
   // Remove port from HTTPS URLs
   const cleanDomain = authDomain.startsWith('https://')
