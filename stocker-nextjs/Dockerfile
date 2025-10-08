@@ -25,9 +25,8 @@ ARG NEXT_PUBLIC_AUTH_DOMAIN
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_BASE_DOMAIN=$NEXT_PUBLIC_BASE_DOMAIN
-ENV NEXT_PUBLIC_AUTH_DOMAIN=$NEXT_PUBLIC_AUTH_DOMAIN
+# Note: NEXT_PUBLIC_* variables are now dynamically determined at runtime
+# See src/lib/env.ts getAuthUrl() for runtime domain detection
 
 # Build Next.js app
 RUN npm run build
