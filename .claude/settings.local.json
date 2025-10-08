@@ -4,7 +4,8 @@
       "Bash(npx create-next-app:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(npm install:*)",
-      "Read(//c/Users/PC/source/repos/**)"
+      "Read(//c/Users/PC/source/repos/**)",
+      "Bash(ssh:*)"
     ],
     "deny": [],
     "ask": []

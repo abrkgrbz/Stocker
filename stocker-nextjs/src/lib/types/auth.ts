@@ -41,7 +41,7 @@ export const CheckEmailResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     exists: z.boolean(),
-    tenant: TenantSchema.nullable(),
+    tenant: TenantSchema.nullable().optional(),
   }).optional(),
   message: z.string().optional(),
 })
