@@ -50,39 +50,32 @@ export function useSignalRValidation() {
   }, [])
 
   useEffect(() => {
-    // Skip SignalR connection in production - use REST fallback
-    const isDevelopment = process.env.NODE_ENV === 'development'
-
-    if (!isDevelopment) {
-      console.log('[SignalR] Production mode - skipping real-time validation, form will work without it')
-      setIsConnected(true) // Enable form by pretending we're connected
-      return
-    }
-
     if (connection) {
       connection.start()
         .then(() => {
-          console.log('SignalR Connected!')
+          console.log('[SignalR] Connected successfully!')
           setIsConnected(true)
         })
         .catch(err => {
-          console.error('SignalR Connection Error:', err)
-          // Fallback: still enable form even if SignalR fails
+          console.error('[SignalR] Connection Error:', err)
+          console.error('[SignalR] Error details:', err.message)
+          // Still mark as "connected" to allow form to work
+          // Validation functions will gracefully fail
           setIsConnected(true)
         })
 
-      connection.onclose(() => {
-        console.log('SignalR Disconnected')
+      connection.onclose((error) => {
+        console.log('[SignalR] Disconnected', error)
         setIsConnected(false)
       })
 
-      connection.onreconnecting(() => {
-        console.log('SignalR Reconnecting...')
+      connection.onreconnecting((error) => {
+        console.log('[SignalR] Reconnecting...', error)
         setIsConnected(false)
       })
 
-      connection.onreconnected(() => {
-        console.log('SignalR Reconnected!')
+      connection.onreconnected((connectionId) => {
+        console.log('[SignalR] Reconnected! ID:', connectionId)
         setIsConnected(true)
       })
 
@@ -103,7 +96,7 @@ export function useSignalRValidation() {
     email: string,
     onResult: (result: ValidationResult) => void
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) return
 
     debounce('email', () => {
       const handler = (result: ValidationResult) => {
@@ -113,7 +106,7 @@ export function useSignalRValidation() {
 
       connection.on('EmailValidated', handler)
       connection.invoke('ValidateEmail', email)
-        .catch(err => console.error('Email validation error:', err))
+        .catch(err => console.error('[SignalR] Email validation error:', err))
     })
   }, [connection, isConnected])
 
@@ -122,7 +115,7 @@ export function useSignalRValidation() {
     onResult: (result: ValidationResult) => void,
     countryCode: string = 'TR'
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) return
 
     debounce('phone', () => {
       const handler = (result: ValidationResult) => {
@@ -132,7 +125,7 @@ export function useSignalRValidation() {
 
       connection.on('PhoneValidated', handler)
       connection.invoke('ValidatePhone', phoneNumber, countryCode)
-        .catch(err => console.error('Phone validation error:', err))
+        .catch(err => console.error('[SignalR] Phone validation error:', err))
     })
   }, [connection, isConnected])
 
@@ -140,7 +133,7 @@ export function useSignalRValidation() {
     password: string,
     onResult: (result: PasswordStrength) => void
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) return
 
     debounce('password', () => {
       const handler = (result: PasswordStrength) => {
@@ -150,7 +143,7 @@ export function useSignalRValidation() {
 
       connection.on('PasswordStrengthChecked', handler)
       connection.invoke('CheckPasswordStrength', password)
-        .catch(err => console.error('Password strength check error:', err))
+        .catch(err => console.error('[SignalR] Password strength check error:', err))
     }, 300)
   }, [connection, isConnected])
 
@@ -158,7 +151,7 @@ export function useSignalRValidation() {
     code: string,
     onResult: (result: TenantCodeValidationResult) => void
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) return
 
     debounce('tenantCode', () => {
       const handler = (result: TenantCodeValidationResult) => {
@@ -168,7 +161,7 @@ export function useSignalRValidation() {
 
       connection.on('TenantCodeValidated', handler)
       connection.invoke('ValidateTenantCode', code)
-        .catch(err => console.error('Tenant code validation error:', err))
+        .catch(err => console.error('[SignalR] Tenant code validation error:', err))
     })
   }, [connection, isConnected])
 
@@ -176,7 +169,10 @@ export function useSignalRValidation() {
     companyName: string,
     onResult: (result: ValidationResult) => void
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) {
+      console.log('[SignalR] Skipping company name check - connection not ready')
+      return
+    }
 
     debounce('companyName', () => {
       const handler = (result: ValidationResult) => {
@@ -186,7 +182,7 @@ export function useSignalRValidation() {
 
       connection.on('CompanyNameChecked', handler)
       connection.invoke('CheckCompanyName', companyName)
-        .catch(err => console.error('Company name check error:', err))
+        .catch(err => console.error('[SignalR] Company name check error:', err))
     })
   }, [connection, isConnected])
 
@@ -194,7 +190,10 @@ export function useSignalRValidation() {
     identityNumber: string,
     onResult: (result: IdentityValidationResult) => void
   ) => {
-    if (!connection || !isConnected) return
+    if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) {
+      console.log('[SignalR] Skipping identity validation - connection not ready')
+      return
+    }
 
     debounce('identity', () => {
       const handler = (result: IdentityValidationResult) => {
@@ -204,7 +203,7 @@ export function useSignalRValidation() {
 
       connection.on('IdentityValidated', handler)
       connection.invoke('ValidateIdentity', identityNumber)
-        .catch(err => console.error('Identity validation error:', err))
+        .catch(err => console.error('[SignalR] Identity validation error:', err))
     })
   }, [connection, isConnected])
 
