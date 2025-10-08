@@ -62,11 +62,18 @@ public class AuthController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        _logger.LogWarning("API LOGIN REQUEST - Email: {Email}, Password: [{Password}], Length: {Length}", 
+        _logger.LogWarning("API LOGIN REQUEST - Email: {Email}, Password: [{Password}], Length: {Length}",
             command.Email, command.Password, command.Password?.Length ?? 0);
         _logger.LogInformation("Login attempt for email: {Email}", command.Email);
-        
-        var result = await _mediator.Send(command);
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
         
         if (result.IsSuccess)
         {

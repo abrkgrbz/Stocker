@@ -21,6 +21,13 @@ interface TenantCodeValidationResult {
   suggestedCodes: string[]
 }
 
+interface IdentityValidationResult {
+  isValid: boolean
+  message: string
+  numberType: string
+  details: Record<string, string>
+}
+
 export function useSignalRValidation() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -173,12 +180,31 @@ export function useSignalRValidation() {
     })
   }, [connection, isConnected])
 
+  const validateIdentity = useCallback((
+    identityNumber: string,
+    onResult: (result: IdentityValidationResult) => void
+  ) => {
+    if (!connection || !isConnected) return
+
+    debounce('identity', () => {
+      const handler = (result: IdentityValidationResult) => {
+        onResult(result)
+        connection.off('IdentityValidated', handler)
+      }
+
+      connection.on('IdentityValidated', handler)
+      connection.invoke('ValidateIdentity', identityNumber)
+        .catch(err => console.error('Identity validation error:', err))
+    })
+  }, [connection, isConnected])
+
   return {
     isConnected,
     validateEmail,
     validatePhone,
     checkPasswordStrength,
     validateTenantCode,
-    checkCompanyName
+    checkCompanyName,
+    validateIdentity
   }
 }

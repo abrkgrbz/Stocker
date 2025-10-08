@@ -1,19 +1,53 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Logo from '@/components/Logo'
+import { Tenant } from '@/lib/types/auth'
+import { calculateBackoff } from '@/lib/auth/rate-limit'
+import { getClientTenantUrl } from '@/lib/env'
 
 export default function PremiumLoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [step, setStep] = useState<'email' | 'password'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [tenant, setTenant] = useState<any>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [backoffUntil, setBackoffUntil] = useState<number | null>(null)
+
+  // Restore state from URL params or sessionStorage
+  useEffect(() => {
+    const emailParam = searchParams.get('email')
+    const tenantData = sessionStorage.getItem('login-tenant')
+
+    if (emailParam) {
+      setEmail(emailParam)
+    }
+
+    if (tenantData) {
+      try {
+        const parsed = JSON.parse(tenantData)
+        // Validate restored data has required fields
+        if (parsed.code && parsed.signature && parsed.timestamp) {
+          setTenant(parsed)
+          setStep('password')
+        } else {
+          // Invalid data, clear it
+          sessionStorage.removeItem('login-tenant')
+        }
+      } catch (err) {
+        console.error('Failed to restore tenant data:', err)
+        sessionStorage.removeItem('login-tenant')
+      }
+    }
+  }, [searchParams])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,7 +55,8 @@ export default function PremiumLoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/public/check-email', {
+      // Use Next.js API route proxy
+      const response = await fetch('/api/auth/check-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -29,17 +64,47 @@ export default function PremiumLoginPage() {
 
       const data = await response.json()
 
-      if (!data.success || !data.data.exists) {
-        setError('Bu e-posta adresi sistemde kayıtlı değil')
+      // Handle rate limiting
+      if (response.status === 429) {
+        setError(data.message || 'Çok fazla deneme. Lütfen daha sonra tekrar deneyin.')
         return
       }
 
-      if (!data.data.tenant) {
+      if (!data.success) {
+        setError(data.message || 'Bu e-posta adresi sistemde kayıtlı değil')
+        return
+      }
+
+      // Backend returns: { success, data: { exists, tenant } }
+      const tenant = data.data?.tenant
+
+      if (!tenant) {
         setError('Hesabınız bir firmaya bağlı değil')
         return
       }
 
-      setTenant(data.data.tenant)
+      // Validate tenant has signature (HMAC)
+      if (!tenant.signature || !tenant.timestamp) {
+        setError('Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin.')
+        return
+      }
+
+      // Store tenant in state and sessionStorage for recovery
+      setTenant(tenant)
+
+      // Only store essential data (code, signature, timestamp) - minimize XSS risk
+      // Don't store sensitive data like full tenant object with ID, name, etc.
+      sessionStorage.setItem('login-tenant', JSON.stringify({
+        code: tenant.code,
+        signature: tenant.signature,
+        timestamp: tenant.timestamp
+      }))
+
+      // Update URL with email for recovery
+      const url = new URL(window.location.href)
+      url.searchParams.set('email', email)
+      window.history.replaceState({}, '', url)
+
       setStep('password')
     } catch (err) {
       setError('Bir hata oluştu. Lütfen tekrar deneyin.')
@@ -50,24 +115,75 @@ export default function PremiumLoginPage() {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check exponential backoff
+    if (backoffUntil && Date.now() < backoffUntil) {
+      const remainingSeconds = Math.ceil((backoffUntil - Date.now()) / 1000)
+      setError(`Çok fazla başarısız deneme. ${remainingSeconds} saniye bekleyin.`)
+      return
+    }
+
     setLoading(true)
     setError('')
 
     try {
-      const response = await fetch(`https://${tenant.code}.localhost:3001/api/auth/login`, {
+      if (!tenant?.signature || !tenant?.timestamp) {
+        setError('Güvenlik doğrulaması başarısız. Lütfen baştan giriş yapın.')
+        return
+      }
+
+      // Use Next.js API route proxy
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password })
+        body: JSON.stringify({
+          email,
+          password,
+          tenantCode: tenant.code,
+          tenantSignature: tenant.signature,
+          tenantTimestamp: tenant.timestamp
+        })
       })
 
       const data = await response.json()
 
-      if (!data.success) {
-        setError(data.message || 'Şifre hatalı')
+      // Handle rate limiting
+      if (response.status === 429) {
+        setError(data.message || 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.')
         return
       }
 
-      window.location.href = `https://${tenant.code}.localhost:3001/dashboard`
+      if (!data.success) {
+        // Increment failed attempts and set exponential backoff
+        const newAttempts = failedAttempts + 1
+        setFailedAttempts(newAttempts)
+
+        if (newAttempts >= 3) {
+          const backoffDelay = calculateBackoff(newAttempts - 2)
+          setBackoffUntil(Date.now() + backoffDelay)
+          setError(
+            `${data.message || 'E-posta veya şifre hatalı'}. ${Math.ceil(backoffDelay / 1000)} saniye bekleyin.`
+          )
+        } else {
+          setError(data.message || 'E-posta veya şifre hatalı')
+        }
+        return
+      }
+
+      // Success - clear sessionStorage, reset counters, and redirect
+      sessionStorage.removeItem('login-tenant')
+      setFailedAttempts(0)
+      setBackoffUntil(null)
+
+      // Handle 2FA if required
+      if (data.requires2FA) {
+        router.push(`/verify-2fa?email=${encodeURIComponent(email)}`)
+        return
+      }
+
+      // Redirect to tenant dashboard
+      const tenantUrl = getClientTenantUrl(tenant.code)
+      window.location.href = `${tenantUrl}/dashboard`
     } catch (err) {
       setError('Giriş yapılırken bir hata oluştu')
     } finally {
@@ -176,7 +292,9 @@ export default function PremiumLoginPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">{tenant.name}</div>
-                    <div className="text-sm text-gray-600">{tenant.code}.stocker.com</div>
+                    <div className="text-sm text-gray-600">
+                      {tenant.code}.{process.env.NODE_ENV === 'development' ? 'localhost:3001' : 'stoocker.app'}
+                    </div>
                   </div>
                 </div>
                 <button
@@ -184,6 +302,9 @@ export default function PremiumLoginPage() {
                     setStep('email')
                     setTenant(null)
                     setPassword('')
+                    setFailedAttempts(0)
+                    setBackoffUntil(null)
+                    sessionStorage.removeItem('login-tenant')
                   }}
                   className="text-sm font-medium text-violet-600 hover:text-violet-700"
                 >
@@ -283,6 +404,9 @@ export default function PremiumLoginPage() {
                   setStep('email')
                   setTenant(null)
                   setPassword('')
+                  setFailedAttempts(0)
+                  setBackoffUntil(null)
+                  sessionStorage.removeItem('login-tenant')
                 }}
                 className="w-full text-gray-600 hover:text-gray-900 py-2 text-sm font-medium"
               >

@@ -22,7 +22,8 @@ public interface IMasterDbContext
     DbSet<TenantBackup> TenantBackups { get; }
     DbSet<TenantDomain> TenantDomains { get; }
     DbSet<TenantRegistration> TenantRegistrations { get; }
-    
+    DbSet<SecurityAuditLog> SecurityAuditLogs { get; }
+
     // All entities requiring tenant isolation have been moved to Tenant DB
     
     // REMOVED - Moved to Tenant DB (All phases completed):

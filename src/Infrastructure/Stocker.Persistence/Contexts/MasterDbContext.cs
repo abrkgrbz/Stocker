@@ -49,7 +49,10 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
     public DbSet<UserLoginHistory> UserLoginHistories => Set<UserLoginHistory>();
     // UserTenant has been moved to Tenant DB
-    
+
+    // Security & Audit
+    public DbSet<SecurityAuditLog> SecurityAuditLogs => Set<SecurityAuditLog>();
+
     // System Settings
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 

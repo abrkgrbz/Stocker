@@ -12,6 +12,7 @@ using Stocker.Persistence.Contexts;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
+using System.Diagnostics;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -25,17 +26,20 @@ public class PublicController : ControllerBase
     private readonly ILogger<PublicController> _logger;
     private readonly IEmailService _emailService;
     private readonly MasterDbContext _masterContext;
+    private readonly ISecurityAuditService _auditService;
 
     public PublicController(
         IMediator mediator,
         ILogger<PublicController> logger,
         IEmailService emailService,
-        MasterDbContext masterContext)
+        MasterDbContext masterContext,
+        ISecurityAuditService auditService)
     {
         _mediator = mediator;
         _logger = logger;
         _emailService = emailService;
         _masterContext = masterContext;
+        _auditService = auditService;
     }
 
     /// <summary>
@@ -208,6 +212,10 @@ public class PublicController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest request)
     {
+        var stopwatch = Stopwatch.StartNew();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = Request.Headers["User-Agent"].ToString();
+
         _logger.LogInformation("Checking email existence: {Email}", request.Email);
 
         try
@@ -222,6 +230,17 @@ public class PublicController : ControllerBase
 
             if (masterUser == null)
             {
+                // Log email check - not found
+                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+                {
+                    Event = "email_check_not_found",
+                    Email = normalizedEmail,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    DurationMs = (int)stopwatch.ElapsedMilliseconds,
+                    GdprCategory = "authentication"
+                });
+
                 return Ok(new
                 {
                     success = true,
@@ -253,6 +272,18 @@ public class PublicController : ControllerBase
             if (!tenantId.HasValue)
             {
                 _logger.LogWarning("User {Email} found but not associated with tenant", request.Email);
+
+                // Log email check - no tenant
+                await _auditService.LogSecurityEventAsync(new SecurityAuditEvent
+                {
+                    Event = "email_check_no_tenant",
+                    Email = normalizedEmail,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    RiskScore = 20,
+                    DurationMs = (int)stopwatch.ElapsedMilliseconds
+                });
+
                 return Ok(new
                 {
                     success = true,
@@ -279,6 +310,19 @@ public class PublicController : ControllerBase
 
             _logger.LogInformation("User {Email} found with tenant: {TenantName}", request.Email, tenant?.name ?? "None");
 
+            // Log successful email check
+            await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+            {
+                Event = "email_check_success",
+                Email = normalizedEmail,
+                TenantCode = tenant?.code,
+                UserId = masterUser.Id,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                DurationMs = (int)stopwatch.ElapsedMilliseconds,
+                GdprCategory = "authentication"
+            });
+
             return Ok(new
             {
                 success = true,
@@ -292,6 +336,18 @@ public class PublicController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking email: {Email}", request.Email);
+
+            // Log error
+            await _auditService.LogSecurityEventAsync(new SecurityAuditEvent
+            {
+                Event = "email_check_error",
+                Email = request.Email,
+                IpAddress = ipAddress,
+                RiskScore = 30,
+                DurationMs = (int)stopwatch.ElapsedMilliseconds,
+                Metadata = System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message })
+            });
+
             return BadRequest(new
             {
                 success = false,

@@ -55,7 +55,10 @@ public static class ServiceCollectionExtensions
         
         // Add Audit Service
         services.AddScoped<Services.IAuditService, Services.AuditService>();
-        
+
+        // Add Security Audit Service
+        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+
         // Add Email Service
         // Use DevelopmentEmailService in Development, EmailService in Production
         var isDevelopment = environment?.IsDevelopment() ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";

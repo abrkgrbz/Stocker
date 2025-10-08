@@ -14,7 +14,8 @@ export default function UltraPremiumRegisterPage() {
     validatePhone,
     checkPasswordStrength,
     validateTenantCode,
-    checkCompanyName
+    checkCompanyName,
+    validateIdentity
   } = useSignalRValidation()
 
   const [currentStep, setCurrentStep] = useState(1)
@@ -291,8 +292,8 @@ export default function UltraPremiumRegisterPage() {
 
     setFormData(prev => ({
       ...prev,
-      taxNumber: currentType === 'tax' ? sanitized : prev.taxNumber,
-      nationalId: currentType === 'tc' ? sanitized : prev.nationalId
+      taxNumber: currentType === 'corporate' ? sanitized : prev.taxNumber,
+      nationalId: currentType === 'individual' ? sanitized : prev.nationalId
     }))
 
     if (!sanitized) {
@@ -303,24 +304,44 @@ export default function UltraPremiumRegisterPage() {
       return
     }
 
-    if (currentType === 'tax') {
-      const valid = isValidTaxNumber(sanitized)
-      setValidations(prev => ({
-        ...prev,
-        identity: {
-          status: valid ? 'success' : 'error',
-          message: valid ? 'Vergi numarası doğrulandı' : 'Vergi numarası 10 haneli olmalıdır'
-        }
-      }))
+    // Client-side basic validation first
+    if (currentType === 'corporate') {
+      if (sanitized.length !== 10) {
+        setValidations(prev => ({
+          ...prev,
+          identity: {
+            status: 'error',
+            message: 'Vergi numarası 10 haneli olmalıdır'
+          }
+        }))
+        return
+      }
     } else {
-      const valid = isValidNationalId(sanitized)
-      setValidations(prev => ({
-        ...prev,
-        identity: {
-          status: valid ? 'success' : 'error',
-          message: valid ? 'TC kimlik numarası doğrulandı' : 'Geçerli bir TC kimlik numarası giriniz'
-        }
-      }))
+      if (sanitized.length !== 11) {
+        setValidations(prev => ({
+          ...prev,
+          identity: {
+            status: 'error',
+            message: 'TC kimlik numarası 11 haneli olmalıdır'
+          }
+        }))
+        return
+      }
+    }
+
+    // SignalR validation
+    if (isConnected && validateIdentity && sanitized.length >= 10) {
+      setValidations(prev => ({ ...prev, identity: { status: 'validating', message: '' } }))
+      
+      validateIdentity(sanitized, (result) => {
+        setValidations(prev => ({
+          ...prev,
+          identity: {
+            status: result.isValid ? 'success' : 'error',
+            message: result.message
+          }
+        }))
+      })
     }
   }
 
@@ -738,26 +759,47 @@ export default function UltraPremiumRegisterPage() {
                     {formData.identityType === 'individual' ? (
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">TC Kimlik No *</label>
-                        <input
-                          type="text"
-                          value={formData.nationalId}
-                          onChange={(e) => handleInputChange('nationalId', e.target.value)}
-                          className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                          placeholder="12345678901"
-                          maxLength={11}
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.nationalId}
+                            onChange={(e) => handleIdentityNumberChange(e.target.value)}
+                            className="w-full px-4 py-4 pr-12 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
+                            placeholder="12345678901"
+                            maxLength={11}
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            {getValidationIcon(validations.identity.status)}
+                          </div>
+                        </div>
+                        {validations.identity.message && (
+                          <p className={`mt-2 text-sm font-medium ${validations.identity.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                            {validations.identity.message}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <>
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-2">Vergi Numarası *</label>
-                          <input
-                            type="text"
-                            value={formData.taxNumber}
-                            onChange={(e) => handleInputChange('taxNumber', e.target.value)}
-                            className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
-                            placeholder="1234567890"
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={formData.taxNumber}
+                              onChange={(e) => handleIdentityNumberChange(e.target.value)}
+                              className="w-full px-4 py-4 pr-12 bg-white border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-gray-900 placeholder:text-gray-400"
+                              placeholder="1234567890"
+                              maxLength={10}
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                              {getValidationIcon(validations.identity.status)}
+                            </div>
+                          </div>
+                          {validations.identity.message && (
+                            <p className={`mt-2 text-sm font-medium ${validations.identity.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                              {validations.identity.message}
+                            </p>
+                          )}
                         </div>
 
                         <div>

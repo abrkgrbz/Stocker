@@ -89,8 +89,15 @@ public class SecureAuthController : ControllerBase
     public async Task<IActionResult> SecureLogin([FromBody] LoginCommand command)
     {
         _logger.LogInformation("Secure login attempt for email: {Email}", command.Email);
-        
-        var result = await _mediator.Send(command);
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
         
         if (result.IsSuccess)
         {

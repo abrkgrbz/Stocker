@@ -33,9 +33,16 @@ public class MasterAuthController : ApiController
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         _logger.LogInformation("Master admin login attempt for email: {Email}", command.Email);
-        
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
         // LoginCommandHandler already handles master admin detection
-        var result = await Mediator.Send(command);
+        var result = await Mediator.Send(enrichedCommand);
         
         if (result.IsSuccess)
         {

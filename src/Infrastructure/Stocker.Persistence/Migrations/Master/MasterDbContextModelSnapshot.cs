@@ -411,6 +411,106 @@ namespace Stocker.Persistence.Migrations.Master
                     b.ToTable("Payments", "master");
                 });
 
+            modelBuilder.Entity("Stocker.Domain.Master.Entities.SecurityAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Blocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GdprCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(365);
+
+                    b.Property<int?>("RiskScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TenantCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .HasDatabaseName("IX_SecurityAuditLogs_Email");
+
+                    b.HasIndex("Event")
+                        .HasDatabaseName("IX_SecurityAuditLogs_Event");
+
+                    b.HasIndex("IpAddress")
+                        .HasDatabaseName("IX_SecurityAuditLogs_IpAddress");
+
+                    b.HasIndex("RiskScore")
+                        .HasDatabaseName("IX_SecurityAuditLogs_RiskScore")
+                        .HasFilter("[RiskScore] > 50");
+
+                    b.HasIndex("TenantCode")
+                        .HasDatabaseName("IX_SecurityAuditLogs_TenantCode");
+
+                    b.HasIndex("Timestamp")
+                        .IsDescending()
+                        .HasDatabaseName("IX_SecurityAuditLogs_Timestamp");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_SecurityAuditLogs_UserId");
+
+                    b.HasIndex("Email", "Timestamp")
+                        .HasDatabaseName("IX_SecurityAuditLogs_Email_Timestamp");
+
+                    b.HasIndex("Event", "Timestamp")
+                        .HasDatabaseName("IX_SecurityAuditLogs_Event_Timestamp");
+
+                    b.HasIndex("IpAddress", "Timestamp")
+                        .HasDatabaseName("IX_SecurityAuditLogs_IpAddress_Timestamp");
+
+                    b.ToTable("SecurityAuditLogs", "master");
+                });
+
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1642,6 +1742,10 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("AdminLastName")
                         .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AdminPasswordHash")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
