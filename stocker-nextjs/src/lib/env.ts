@@ -32,7 +32,7 @@ const envSchema = z.object({
 // Validate environment variables (lazy - only when accessed)
 let _env: z.infer<typeof envSchema> | null = null
 
-function getEnv() {
+function getEnv(): z.infer<typeof envSchema> {
   if (_env) return _env
 
   try {
@@ -40,11 +40,32 @@ function getEnv() {
     return _env
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors.map(e => e.path.join('.')).join(', ')
-      console.error('Environment validation failed:', missingVars)
-      // Return defaults for build time
-      _env = envSchema.parse({})
-      return _env
+      const missingVars = error.issues?.map(e => e.path.join('.')).join(', ') || 'unknown'
+
+      // In production, throw the error - all required vars must be set
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(`Missing required environment variables: ${missingVars}`)
+      }
+
+      // In development/build time, use defaults
+      console.warn('Environment validation failed, using defaults:', missingVars)
+
+      // Use defaults by parsing empty object (schema has defaults)
+      try {
+        _env = envSchema.parse({})
+        return _env
+      } catch {
+        // If even defaults fail, create minimal valid env
+        const fallbackEnv: z.infer<typeof envSchema> = {
+          NODE_ENV: (process.env.NODE_ENV as 'development' | 'test' | 'production') || 'development',
+          NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+          NEXT_PUBLIC_BASE_DOMAIN: process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001',
+          NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000',
+          API_INTERNAL_URL: process.env.API_INTERNAL_URL || 'http://localhost:5000',
+        }
+        _env = fallbackEnv
+        return fallbackEnv
+      }
     }
     throw error
   }
@@ -52,7 +73,8 @@ function getEnv() {
 
 export const env = new Proxy({} as z.infer<typeof envSchema>, {
   get: (_, prop) => {
-    return getEnv()[prop as keyof z.infer<typeof envSchema>]
+    const envData = getEnv()
+    return envData[prop as keyof z.infer<typeof envSchema>]
   }
 })
 
