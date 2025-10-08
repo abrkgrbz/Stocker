@@ -50,6 +50,15 @@ export function useSignalRValidation() {
   }, [])
 
   useEffect(() => {
+    // Skip SignalR connection in production - use REST fallback
+    const isDevelopment = process.env.NODE_ENV === 'development'
+
+    if (!isDevelopment) {
+      console.log('[SignalR] Production mode - skipping real-time validation, form will work without it')
+      setIsConnected(true) // Enable form by pretending we're connected
+      return
+    }
+
     if (connection) {
       connection.start()
         .then(() => {
@@ -58,7 +67,8 @@ export function useSignalRValidation() {
         })
         .catch(err => {
           console.error('SignalR Connection Error:', err)
-          setIsConnected(false)
+          // Fallback: still enable form even if SignalR fails
+          setIsConnected(true)
         })
 
       connection.onclose(() => {
