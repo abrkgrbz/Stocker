@@ -59,15 +59,23 @@ export const env = new Proxy({} as z.infer<typeof envSchema>, {
 // Type-safe environment variables
 export type Env = z.infer<typeof envSchema>
 
-// Helper functions
-export const isDevelopment = env.NODE_ENV === 'development'
-export const isProduction = env.NODE_ENV === 'production'
-export const isTest = env.NODE_ENV === 'test'
+// Helper functions (lazy evaluation to avoid build-time env access)
+export function isDevelopment(): boolean {
+  return env.NODE_ENV === 'development'
+}
+
+export function isProduction(): boolean {
+  return env.NODE_ENV === 'production'
+}
+
+export function isTest(): boolean {
+  return env.NODE_ENV === 'test'
+}
 
 // Get tenant URL (server-side or client-side safe)
 export function getTenantUrl(tenantCode: string): string {
-  const protocol = isDevelopment ? 'http' : 'https'
-  const baseDomain = isDevelopment ? 'localhost:3001' : env.NEXT_PUBLIC_BASE_DOMAIN
+  const protocol = isDevelopment() ? 'http' : 'https'
+  const baseDomain = isDevelopment() ? 'localhost:3001' : env.NEXT_PUBLIC_BASE_DOMAIN
   return `${protocol}://${tenantCode}.${baseDomain}`
 }
 
@@ -94,9 +102,7 @@ export function getClientTenantUrl(tenantCode: string): string {
 
 // Get cookie domain for cross-subdomain authentication
 export function getCookieDomain(): string | undefined {
-  const isDev = isDevelopment
-
-  if (isDev) {
+  if (isDevelopment()) {
     return undefined // localhost doesn't need domain
   }
 
