@@ -6,6 +6,7 @@ import { MenuOutlined, CloseOutlined, RocketOutlined, LoginOutlined } from '@ant
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAuthUrl } from '@/lib/env';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -79,7 +80,7 @@ export default function Navbar() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">
+            <Link href={getAuthUrl('/login')}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   icon={<LoginOutlined />}
@@ -93,7 +94,7 @@ export default function Navbar() {
                 </Button>
               </motion.div>
             </Link>
-            <Link href="/register">
+            <Link href={getAuthUrl('/register')}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="primary"
@@ -143,7 +144,7 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <div className="pt-4 space-y-3 border-t border-gray-200">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href={getAuthUrl('/login')} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     icon={<LoginOutlined />}
                     block
@@ -153,7 +154,7 @@ export default function Navbar() {
                     Giriş Yap
                   </Button>
                 </Link>
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href={getAuthUrl('/register')} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     type="primary"
                     icon={<RocketOutlined />}

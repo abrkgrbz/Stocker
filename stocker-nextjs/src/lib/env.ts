@@ -149,3 +149,18 @@ export function getCookieDomain(): string | undefined {
 export function getApiUrl(serverSide = false): string {
   return serverSide ? env.API_INTERNAL_URL : env.NEXT_PUBLIC_API_URL
 }
+
+// Get auth URL (removes port for production HTTPS)
+export function getAuthUrl(path: string = ''): string {
+  const authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
+
+  // Remove port from HTTPS URLs
+  const cleanDomain = authDomain.startsWith('https://')
+    ? authDomain.split(':').slice(0, 2).join(':')
+    : authDomain
+
+  // Ensure path starts with /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+
+  return `${cleanDomain}${cleanPath}`
+}
