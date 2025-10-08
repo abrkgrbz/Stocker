@@ -7,8 +7,8 @@ export function middleware(request: NextRequest) {
   const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
   const isDev = process.env.NODE_ENV === 'development'
 
-  // Extract just the domain without protocol
-  const authHostname = authDomain.replace(/^https?:\/\//, '')
+  // Extract just the domain without protocol and port
+  const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
 
   // Check if this is the root domain (not a subdomain)
   const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`

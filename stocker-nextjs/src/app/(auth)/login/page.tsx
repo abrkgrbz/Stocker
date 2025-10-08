@@ -9,6 +9,20 @@ import { Tenant } from '@/lib/types/auth'
 import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
 
+// Helper to normalize auth domain URL (remove port for production)
+function normalizeAuthDomain(domain: string): string {
+  // Remove trailing slash
+  domain = domain.replace(/\/$/, '')
+
+  // In production (https), remove port if present
+  if (domain.startsWith('https://')) {
+    return domain.split(':').slice(0, 2).join(':') // Keep https://domain, remove :port
+  }
+
+  // In development, keep as-is
+  return domain
+}
+
 // Disable static generation for this page
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +73,7 @@ function LoginForm() {
 
     try {
       // Use Next.js API route proxy on auth domain
-      const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
+      const authDomain = normalizeAuthDomain(process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000')
       const response = await fetch(`${authDomain}/api/auth/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,7 +152,7 @@ function LoginForm() {
       }
 
       // Use Next.js API route proxy on auth domain
-      const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
+      const authDomain = normalizeAuthDomain(process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000')
       const response = await fetch(`${authDomain}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
