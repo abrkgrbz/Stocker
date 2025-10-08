@@ -159,17 +159,22 @@ export function getAuthUrl(path: string = ''): string {
     const hostname = window.location.hostname
     const protocol = window.location.protocol
 
+    console.log('[getAuthUrl] hostname:', hostname, 'protocol:', protocol)
+
     // If on localhost, use localhost:3000
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       authDomain = 'http://localhost:3000'
+      console.log('[getAuthUrl] Using localhost')
     } else {
       // Production: construct auth domain from base domain
       const baseDomain = env.NEXT_PUBLIC_BASE_DOMAIN || 'stoocker.app'
       authDomain = `${protocol}//auth.${baseDomain}`
+      console.log('[getAuthUrl] Using production, baseDomain:', baseDomain, 'authDomain:', authDomain)
     }
   } else {
     // Server-side: use env variable
     authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
+    console.log('[getAuthUrl] Server-side, using env:', authDomain)
   }
 
   // Remove port from HTTPS URLs
