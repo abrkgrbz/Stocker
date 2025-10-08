@@ -6,19 +6,15 @@ import { MenuOutlined, CloseOutlined, RocketOutlined, LoginOutlined } from '@ant
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAuthUrl } from '@/lib/env';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [loginUrl, setLoginUrl] = useState('/login');
-  const [registerUrl, setRegisterUrl] = useState('/register');
-
-  useEffect(() => {
-    // Compute auth URLs only on client side after mount
-    setLoginUrl(getAuthUrl('/login'));
-    setRegisterUrl(getAuthUrl('/register'));
-  }, []);
+  
+  // Auth URLs are handled by middleware - no client-side computation needed
+  // Middleware redirects /login and /register to auth subdomain in production
+  const loginUrl = '/login';
+  const registerUrl = '/register';
 
   useEffect(() => {
     const handleScroll = () => {

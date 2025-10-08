@@ -1,0 +1,56 @@
+{
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "subtitle": "Hesabınıza giriş yapın",
+      "emailPlaceholder": "E-posta adresinizi girin",
+      "passwordPlaceholder": "Şifrenizi girin",
+      "rememberMe": "Beni hatırla",
+      "forgotPassword": "Şifremi unuttum",
+      "loginButton": "Giriş Yap",
+      "noAccount": "Hesabınız yok mu?",
+      "signUp": "Kayıt Ol",
+      "errors": {
+        "invalidEmail": "Geçersiz e-posta formatı",
+        "invalidCredentials": "E-posta veya şifre hatalı. Lütfen tekrar deneyin.",
+        "serverError": "Bir hata oluştu. Lütfen tekrar deneyin.",
+        "rateLimited": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin."
+      }
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "subtitle": "Ücretsiz hesap oluşturun",
+      "companyName": "Şirket Adı",
+      "companyNamePlaceholder": "Şirketinizin adını girin",
+      "firstName": "Ad",
+      "firstNamePlaceholder": "Adınızı girin",
+      "lastName": "Soyad",
+      "lastNamePlaceholder": "Soyadınızı girin",
+      "email": "E-posta",
+      "emailPlaceholder": "E-posta adresinizi girin",
+      "password": "Şifre",
+      "passwordPlaceholder": "Şifre oluşturun",
+      "confirmPassword": "Şifre Tekrar",
+      "confirmPasswordPlaceholder": "Şifrenizi tekrar girin",
+      "termsAgree": "Hizmet Şartları ve Gizlilik Politikası'nı kabul ediyorum",
+      "registerButton": "Kayıt Ol",
+      "hasAccount": "Zaten hesabınız var mı?",
+      "signIn": "Giriş Yap",
+      "validation": {
+        "checking": "Kontrol ediliyor...",
+        "available": "Kullanılabilir",
+        "taken": "Bu {{field}} zaten kullanılıyor",
+        "invalid": "Geçersiz {{field}}"
+      },
+      "errors": {
+        "passwordMismatch": "Şifreler eşleşmiyor",
+        "termsRequired": "Devam etmek için şartları kabul etmelisiniz",
+        "serverError": "Bir hata oluştu. Lütfen tekrar deneyin."
+      }
+    },
+    "common": {
+      "loading": "Yükleniyor...",
+      "pleaseWait": "Lütfen bekleyin..."
+    }
+  }
+}

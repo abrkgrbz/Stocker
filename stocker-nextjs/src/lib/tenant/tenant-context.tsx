@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { extractTenantSubdomain } from '@/lib/utils/auth';
 
 interface TenantInfo {
   id: string;
@@ -36,35 +37,14 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     if (typeof window === 'undefined') return null;
 
     const hostname = window.location.hostname;
-
-    // Skip tenant extraction for localhost
-    if (hostname.includes('localhost') || hostname === '127.0.0.1') {
-      return null;
-    }
-
-    // Skip tenant extraction for auth subdomain
-    if (hostname.startsWith('auth.')) {
-      return null;
-    }
-
-    // Extract base domain from hostname
-    const parts = hostname.split('.');
-    const baseDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname;
-
-    // Skip tenant extraction for root domain
-    if (hostname === baseDomain || hostname === `www.${baseDomain}`) {
-      return null;
-    }
+    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost';
 
     const mode = process.env.NEXT_PUBLIC_TENANT_MODE || 'subdomain';
 
     switch (mode) {
       case 'subdomain': {
-        // If hostname is like tenant.stocker.com, extract "tenant"
-        if (parts.length >= 3) {
-          return parts[0];
-        }
-        return null;
+        // Use consolidated utility function
+        return extractTenantSubdomain(hostname, baseDomain);
       }
 
       case 'path': {

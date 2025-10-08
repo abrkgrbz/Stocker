@@ -8,20 +8,8 @@ import Logo from '@/components/Logo'
 import { Tenant } from '@/lib/types/auth'
 import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
-
-// Helper to normalize auth domain URL (remove port for production)
-function normalizeAuthDomain(domain: string): string {
-  // Remove trailing slash
-  domain = domain.replace(/\/$/, '')
-
-  // In production (https), remove port if present
-  if (domain.startsWith('https://')) {
-    return domain.split(':').slice(0, 2).join(':') // Keep https://domain, remove :port
-  }
-
-  // In development, keep as-is
-  return domain
-}
+import { normalizeAuthDomain, isRootDomain } from '@/lib/utils/auth'
+import { trackAuth } from '@/lib/analytics'
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic'
@@ -39,9 +27,9 @@ function LoginForm() {
       const authDomain = normalizeAuthDomain(process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000')
 
       // If on root domain (e.g., stoocker.app or www.stoocker.app), redirect to auth domain
-      const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`
+      const rootDomain = isRootDomain(hostname, baseDomain)
 
-      if (isRootDomain && !hostname.includes('localhost')) {
+      if (rootDomain && !hostname.includes('localhost')) {
         const currentPath = window.location.pathname + window.location.search + window.location.hash
         window.location.href = `${authDomain}${currentPath}`
       }
@@ -86,6 +74,10 @@ function LoginForm() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Track login attempt
+    trackAuth({ event: 'login_attempt', metadata: { step: 'email' } })
+    
     setLoading(true)
     setError('')
 
@@ -108,6 +100,7 @@ function LoginForm() {
       }
 
       if (!data.success) {
+        trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'email_not_found' } })
         setError(data.message || 'Bu e-posta adresi sistemde kayıtlı değil')
         return
       }
@@ -144,6 +137,7 @@ function LoginForm() {
 
       setStep('password')
     } catch (err) {
+      trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'network_error' } })
       setError('Bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
@@ -152,6 +146,11 @@ function LoginForm() {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const startTime = Date.now()
+    
+    // Track password step attempt
+    trackAuth({ event: 'login_attempt', metadata: { step: 'password' } })
 
     // Check exponential backoff
     if (backoffUntil && Date.now() < backoffUntil) {
@@ -197,6 +196,15 @@ function LoginForm() {
         const newAttempts = failedAttempts + 1
         setFailedAttempts(newAttempts)
 
+        trackAuth({ 
+          event: 'login_failure', 
+          metadata: { 
+            step: 'password', 
+            errorType: 'invalid_credentials',
+            attempt: newAttempts 
+          } 
+        })
+
         if (newAttempts >= 3) {
           const backoffDelay = calculateBackoff(newAttempts - 2)
           setBackoffUntil(Date.now() + backoffDelay)
@@ -210,6 +218,17 @@ function LoginForm() {
       }
 
       // Success - clear sessionStorage, reset counters, and redirect
+      const loginDuration = Date.now() - startTime
+      
+      trackAuth({ 
+        event: 'login_success', 
+        metadata: { 
+          tenantCode: tenant.code,
+          duration: loginDuration,
+          requires2FA: data.requires2FA 
+        } 
+      })
+      
       sessionStorage.removeItem('login-tenant')
       setFailedAttempts(0)
       setBackoffUntil(null)
@@ -224,6 +243,7 @@ function LoginForm() {
       const tenantUrl = getClientTenantUrl(tenant.code)
       window.location.href = `${tenantUrl}/dashboard`
     } catch (err) {
+      trackAuth({ event: 'login_failure', metadata: { step: 'password', errorType: 'exception' } })
       setError('Giriş yapılırken bir hata oluştu')
     } finally {
       setLoading(false)
@@ -353,10 +373,15 @@ function LoginForm() {
             </div>
           )}
 
-          {/* Error */}
+          {/* Error - Accessible error message with aria-live */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
-              <svg className="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <div 
+              id="email-error"
+              role="alert"
+              aria-live="polite"
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3"
+            >
+              <svg className="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
               <p className="text-sm text-red-600 flex-1">{error}</p>
@@ -367,8 +392,11 @@ function LoginForm() {
           {step === 'email' ? (
             <form onSubmit={handleEmailSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">E-posta</label>
+                <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  E-posta
+                </label>
                 <input
+                  id="email-input"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -376,6 +404,10 @@ function LoginForm() {
                   placeholder="ahmet@firma.com"
                   required
                   autoFocus
+                  autoComplete="email"
+                  aria-label="E-posta adresi"
+                  aria-describedby={error ? "email-error" : undefined}
+                  aria-invalid={!!error}
                 />
               </div>
 
@@ -383,9 +415,11 @@ function LoginForm() {
                 type="submit"
                 disabled={loading || !email}
                 className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-violet-700 hover:to-fuchsia-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 flex items-center justify-center space-x-2 group"
+                aria-label={loading ? 'E-posta kontrol ediliyor' : 'E-posta ile devam et'}
+                aria-busy={loading}
               >
                 <span>{loading ? 'Kontrol ediliyor...' : 'Devam Et'}</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </button>
@@ -407,15 +441,22 @@ function LoginForm() {
               </Link>
             </form>
           ) : (
-            <form onSubmit={handlePasswordSubmit} className="space-y-5">
+            <form onSubmit={handlePasswordSubmit} className="space-y-5" aria-label="Şifre girişi formu">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Şifre</label>
-                  <Link href="/forgot-password" className="text-sm font-medium text-violet-600 hover:text-violet-700">
+                  <label htmlFor="password-input" className="block text-sm font-medium text-gray-700">
+                    Şifre
+                  </label>
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-sm font-medium text-violet-600 hover:text-violet-700"
+                    aria-label="Şifremi unuttum"
+                  >
                     Unuttum
                   </Link>
                 </div>
                 <input
+                  id="password-input"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -423,6 +464,10 @@ function LoginForm() {
                   placeholder="••••••••"
                   required
                   autoFocus
+                  autoComplete="current-password"
+                  aria-label="Şifre"
+                  aria-describedby={error ? "email-error" : undefined}
+                  aria-invalid={!!error}
                 />
               </div>
 
@@ -430,9 +475,11 @@ function LoginForm() {
                 type="submit"
                 disabled={loading || !password}
                 className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-violet-700 hover:to-fuchsia-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 flex items-center justify-center space-x-2 group"
+                aria-label={loading ? 'Giriş yapılıyor' : 'Hesaba giriş yap'}
+                aria-busy={loading}
               >
                 <span>{loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </button>

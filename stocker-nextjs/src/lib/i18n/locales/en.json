@@ -1,0 +1,56 @@
+{
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Sign in to your account",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password",
+      "loginButton": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up",
+      "errors": {
+        "invalidEmail": "Invalid email format",
+        "invalidCredentials": "Invalid email or password. Please try again.",
+        "serverError": "An error occurred. Please try again.",
+        "rateLimited": "Too many attempts. Please try again later."
+      }
+    },
+    "register": {
+      "title": "Sign Up",
+      "subtitle": "Create your free account",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "Enter your company name",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "termsAgree": "I agree to the Terms of Service and Privacy Policy",
+      "registerButton": "Sign Up",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign In",
+      "validation": {
+        "checking": "Checking...",
+        "available": "Available",
+        "taken": "This {{field}} is already taken",
+        "invalid": "Invalid {{field}}"
+      },
+      "errors": {
+        "passwordMismatch": "Passwords do not match",
+        "termsRequired": "You must accept the terms to continue",
+        "serverError": "An error occurred. Please try again."
+      }
+    },
+    "common": {
+      "loading": "Loading...",
+      "pleaseWait": "Please wait..."
+    }
+  }
+}

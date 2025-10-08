@@ -1,33 +1,39 @@
 import { z } from 'zod'
 
-const envSchema = z.object({
-  // Node Environment
+// Development schema (permissive with defaults)
+const devEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-
-  // Public URLs (accessible from browser)
   NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:5000'),
-  NEXT_PUBLIC_BASE_DOMAIN: z
-    .string()
-    .min(1, 'NEXT_PUBLIC_BASE_DOMAIN is required in production')
-    .default('localhost:3001'),
+  NEXT_PUBLIC_BASE_DOMAIN: z.string().default('localhost:3001'),
   NEXT_PUBLIC_AUTH_DOMAIN: z.string().default('http://localhost:3000'),
-
-  // Server-side only URLs (internal network)
   API_INTERNAL_URL: z.string().url().optional().default('http://localhost:5000'),
-
-  // Security
   HMAC_SECRET: z.string().min(32).optional(),
-
-  // Cookie domain for cross-subdomain auth (optional, falls back to NEXT_PUBLIC_BASE_DOMAIN)
   COOKIE_BASE_DOMAIN: z.string().optional(),
-
-  // Redis (for rate limiting)
   REDIS_URL: z.string().url().optional(),
-
-  // NextAuth
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(32).optional(),
 })
+
+// Production schema (strict, no defaults for critical vars)
+const prodEnvSchema = z.object({
+  NODE_ENV: z.literal('production'),
+  // Public URLs - REQUIRED in production
+  NEXT_PUBLIC_API_URL: z.string().url('NEXT_PUBLIC_API_URL must be a valid URL in production'),
+  NEXT_PUBLIC_BASE_DOMAIN: z.string().min(1, 'NEXT_PUBLIC_BASE_DOMAIN is required in production'),
+  NEXT_PUBLIC_AUTH_DOMAIN: z.string().url('NEXT_PUBLIC_AUTH_DOMAIN must be a valid URL in production'),
+  // Server-side URLs - REQUIRED in production
+  API_INTERNAL_URL: z.string().url('API_INTERNAL_URL must be a valid URL in production'),
+  // Security - REQUIRED in production
+  HMAC_SECRET: z.string().min(32, 'HMAC_SECRET must be at least 32 characters in production'),
+  // Optional
+  COOKIE_BASE_DOMAIN: z.string().optional(),
+  REDIS_URL: z.string().url().optional(),
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
+})
+
+// Select schema based on NODE_ENV
+const envSchema = process.env.NODE_ENV === 'production' ? prodEnvSchema : devEnvSchema
 
 // Validate environment variables (lazy - only when accessed)
 let _env: z.infer<typeof envSchema> | null = null
@@ -35,8 +41,7 @@ let _env: z.infer<typeof envSchema> | null = null
 function getEnv(): z.infer<typeof envSchema> {
   if (_env) return _env
 
-  // During build time, skip validation and use defaults
-  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
+  const isProduction = process.env.NODE_ENV === 'production'
 
   try {
     _env = envSchema.parse(process.env)
@@ -45,22 +50,14 @@ function getEnv(): z.infer<typeof envSchema> {
     if (error instanceof z.ZodError) {
       const missingVars = error.issues?.map(e => e.path.join('.')).join(', ') || 'unknown'
 
-      // During build time, always use defaults
-      if (isBuildTime) {
-        console.warn('[BUILD] Environment validation failed, using defaults:', missingVars)
-        _env = envSchema.parse({})
-        return _env
+      if (isProduction) {
+        // FAIL FAST in production - no defaults, no fallbacks
+        throw new Error(`❌ Production build failed - Missing required environment variables: ${missingVars}`)
       }
 
-      // In production runtime, throw the error - all required vars must be set
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(`Missing required environment variables: ${missingVars}`)
-      }
-
-      // In development, use defaults
-      console.warn('Environment validation failed, using defaults:', missingVars)
-
-      // Use defaults by parsing empty object (schema has defaults)
+      // Development: warn and use defaults
+      console.warn('[ENV] Using development defaults for:', missingVars)
+      
       try {
         _env = envSchema.parse({})
         return _env

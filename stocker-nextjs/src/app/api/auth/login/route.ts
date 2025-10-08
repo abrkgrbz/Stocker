@@ -157,6 +157,16 @@ export async function POST(request: NextRequest) {
       auditData.duration = Date.now() - startTime
       await logAudit(auditData)
 
+      // Timing attack protection: add constant-time delay to prevent email enumeration
+      // Make all failed login attempts take approximately the same time
+      const minResponseTime = 300 // milliseconds
+      const elapsed = Date.now() - startTime
+      const delay = Math.max(0, minResponseTime - elapsed)
+      
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+
       // Return standardized error message to prevent information leakage
       // Don't reveal if email exists, password wrong, account locked, etc.
       return NextResponse.json(
