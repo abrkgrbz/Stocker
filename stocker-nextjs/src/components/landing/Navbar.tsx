@@ -11,6 +11,14 @@ import { getAuthUrl } from '@/lib/env';
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loginUrl, setLoginUrl] = useState('/login');
+  const [registerUrl, setRegisterUrl] = useState('/register');
+
+  useEffect(() => {
+    // Compute auth URLs only on client side after mount
+    setLoginUrl(getAuthUrl('/login'));
+    setRegisterUrl(getAuthUrl('/register'));
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,7 +88,7 @@ export default function Navbar() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href={getAuthUrl('/login')}>
+            <Link href={loginUrl}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   icon={<LoginOutlined />}
@@ -94,7 +102,7 @@ export default function Navbar() {
                 </Button>
               </motion.div>
             </Link>
-            <Link href={getAuthUrl('/register')}>
+            <Link href={registerUrl}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="primary"
@@ -144,7 +152,7 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <div className="pt-4 space-y-3 border-t border-gray-200">
-                <Link href={getAuthUrl('/login')} onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href={loginUrl} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     icon={<LoginOutlined />}
                     block
@@ -154,7 +162,7 @@ export default function Navbar() {
                     Giriş Yap
                   </Button>
                 </Link>
-                <Link href={getAuthUrl('/register')} onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href={registerUrl} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     type="primary"
                     icon={<RocketOutlined />}
