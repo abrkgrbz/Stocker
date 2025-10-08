@@ -58,11 +58,13 @@ function LoginForm() {
     setError('')
 
     try {
-      // Use Next.js API route proxy
-      const response = await fetch('/api/auth/check-email', {
+      // Use Next.js API route proxy on auth domain
+      const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
+      const response = await fetch(`${authDomain}/api/auth/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
+        credentials: 'include' // Important for CORS cookies
       })
 
       const data = await response.json()
@@ -135,8 +137,9 @@ function LoginForm() {
         return
       }
 
-      // Use Next.js API route proxy
-      const response = await fetch('/api/auth/login', {
+      // Use Next.js API route proxy on auth domain
+      const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
+      const response = await fetch(`${authDomain}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,7 +148,8 @@ function LoginForm() {
           tenantCode: tenant.code,
           tenantSignature: tenant.signature,
           tenantTimestamp: tenant.timestamp
-        })
+        }),
+        credentials: 'include' // Important for CORS cookies
       })
 
       const data = await response.json()
