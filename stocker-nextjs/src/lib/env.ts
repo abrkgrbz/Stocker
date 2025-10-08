@@ -35,6 +35,9 @@ let _env: z.infer<typeof envSchema> | null = null
 function getEnv(): z.infer<typeof envSchema> {
   if (_env) return _env
 
+  // During build time, skip validation and use defaults
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
+
   try {
     _env = envSchema.parse(process.env)
     return _env
@@ -42,12 +45,19 @@ function getEnv(): z.infer<typeof envSchema> {
     if (error instanceof z.ZodError) {
       const missingVars = error.issues?.map(e => e.path.join('.')).join(', ') || 'unknown'
 
-      // In production, throw the error - all required vars must be set
+      // During build time, always use defaults
+      if (isBuildTime) {
+        console.warn('[BUILD] Environment validation failed, using defaults:', missingVars)
+        _env = envSchema.parse({})
+        return _env
+      }
+
+      // In production runtime, throw the error - all required vars must be set
       if (process.env.NODE_ENV === 'production') {
         throw new Error(`Missing required environment variables: ${missingVars}`)
       }
 
-      // In development/build time, use defaults
+      // In development, use defaults
       console.warn('Environment validation failed, using defaults:', missingVars)
 
       // Use defaults by parsing empty object (schema has defaults)
