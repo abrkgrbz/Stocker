@@ -30,6 +30,24 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Redirect to auth domain if on root domain
+  useEffect(() => {
+    // Check if we're on the root domain (not auth subdomain)
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname
+      const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost'
+      const authDomain = normalizeAuthDomain(process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000')
+
+      // If on root domain (e.g., stoocker.app or www.stoocker.app), redirect to auth domain
+      const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`
+
+      if (isRootDomain && !hostname.includes('localhost')) {
+        const currentPath = window.location.pathname + window.location.search + window.location.hash
+        window.location.href = `${authDomain}${currentPath}`
+      }
+    }
+  }, [])
+
   const [step, setStep] = useState<'email' | 'password'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

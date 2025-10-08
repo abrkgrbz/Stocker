@@ -24,6 +24,27 @@ export default function UltraPremiumRegisterPage() {
   const [packages, setPackages] = useState<any[]>([])
   const [error, setError] = useState('')
 
+  // Redirect to auth domain if on root domain
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname
+      const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost'
+      const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
+
+      // Remove port from auth domain for production
+      const normalizedAuthDomain = authDomain.startsWith('https://')
+        ? authDomain.split(':').slice(0, 2).join(':')
+        : authDomain
+
+      const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`
+
+      if (isRootDomain && !hostname.includes('localhost')) {
+        const currentPath = window.location.pathname + window.location.search + window.location.hash
+        window.location.href = `${normalizedAuthDomain}${currentPath}`
+      }
+    }
+  }, [])
+
   // Fetch packages on mount
   useEffect(() => {
     const fetchPackages = async () => {
