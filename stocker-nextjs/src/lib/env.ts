@@ -29,20 +29,32 @@ const envSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(32).optional(),
 })
 
-// Validate environment variables
-function validateEnv() {
+// Validate environment variables (lazy - only when accessed)
+let _env: z.infer<typeof envSchema> | null = null
+
+function getEnv() {
+  if (_env) return _env
+
   try {
-    return envSchema.parse(process.env)
+    _env = envSchema.parse(process.env)
+    return _env
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map(e => e.path.join('.')).join(', ')
-      throw new Error(`Missing or invalid environment variables: ${missingVars}`)
+      console.error('Environment validation failed:', missingVars)
+      // Return defaults for build time
+      _env = envSchema.parse({})
+      return _env
     }
     throw error
   }
 }
 
-export const env = validateEnv()
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get: (_, prop) => {
+    return getEnv()[prop as keyof z.infer<typeof envSchema>]
+  }
+})
 
 // Type-safe environment variables
 export type Env = z.infer<typeof envSchema>

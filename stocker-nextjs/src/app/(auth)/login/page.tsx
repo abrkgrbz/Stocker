@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Logo from '@/components/Logo'
 import { Tenant } from '@/lib/types/auth'
-import { calculateBackoff } from '@/lib/auth/rate-limit'
+import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
 
-export default function PremiumLoginPage() {
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -424,5 +427,13 @@ export default function PremiumLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PremiumLoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
