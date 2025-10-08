@@ -166,10 +166,15 @@ export function getAuthUrl(path: string = ''): string {
       authDomain = 'http://localhost:3000'
       console.log('[getAuthUrl] Using localhost')
     } else {
-      // Production: construct auth domain from base domain
-      const baseDomain = env.NEXT_PUBLIC_BASE_DOMAIN || 'stoocker.app'
+      // Production: extract base domain from current hostname
+      // stoocker.app → stoocker.app
+      // auth.stoocker.app → stoocker.app
+      // demo.stoocker.app → stoocker.app
+      const parts = hostname.split('.')
+      const baseDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname
+
       authDomain = `${protocol}//auth.${baseDomain}`
-      console.log('[getAuthUrl] Using production, baseDomain:', baseDomain, 'authDomain:', authDomain)
+      console.log('[getAuthUrl] Using production, hostname:', hostname, 'baseDomain:', baseDomain, 'authDomain:', authDomain)
     }
   } else {
     // Server-side: use env variable
