@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+# Install all dependencies including devDependencies (needed for build)
+RUN npm ci --legacy-peer-deps --include=dev
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -18,15 +19,15 @@ COPY . .
 
 # Build arguments for Next.js public environment variables
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_APP_URL
-ARG NEXT_PUBLIC_MAIN_APP_URL
+ARG NEXT_PUBLIC_BASE_DOMAIN
+ARG NEXT_PUBLIC_AUTH_DOMAIN
 
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
-ENV NEXT_PUBLIC_MAIN_APP_URL=$NEXT_PUBLIC_MAIN_APP_URL
+ENV NEXT_PUBLIC_BASE_DOMAIN=$NEXT_PUBLIC_BASE_DOMAIN
+ENV NEXT_PUBLIC_AUTH_DOMAIN=$NEXT_PUBLIC_AUTH_DOMAIN
 
 # Build Next.js app
 RUN npm run build
