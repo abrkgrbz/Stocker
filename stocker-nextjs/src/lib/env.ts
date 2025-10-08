@@ -177,6 +177,7 @@ export function getAuthUrl(path: string = ''): string {
       console.log('[getAuthUrl] Using production, hostname:', hostname, 'baseDomain:', baseDomain, 'authDomain:', authDomain)
     }
   } else {
+    // Force rebuild timestamp: 2025-10-08T12:00:00
     // Server-side: use env variable
     authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
     console.log('[getAuthUrl] Server-side, using env:', authDomain)
