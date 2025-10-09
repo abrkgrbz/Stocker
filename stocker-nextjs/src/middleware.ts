@@ -29,6 +29,7 @@ export function middleware(request: NextRequest) {
       const url = request.nextUrl.clone()
       url.protocol = 'https:'
       url.host = authHostname
+      url.port = '' // Remove port for production (default HTTPS 443)
       return NextResponse.redirect(url, 307) // Temporary redirect (preserves method)
     }
   }
