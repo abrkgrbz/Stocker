@@ -27,10 +27,10 @@ export default function Navbar() {
 
   const menuItems = [
     { name: 'Özellikler', href: '#features' },
+    { name: 'Sektörler', href: '#industries' },
+    { name: 'Entegrasyonlar', href: '#integrations' },
     { name: 'Fiyatlandırma', href: '#pricing' },
-    { name: 'Yorumlar', href: '#testimonials' },
     { name: 'SSS', href: '#faq' },
-    { name: 'İletişim', href: '#contact' },
   ];
 
   return (
