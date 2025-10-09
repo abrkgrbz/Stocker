@@ -45,12 +45,21 @@ public static class MiddlewareExtensions
         app.Logger.LogInformation($"CORS policy '{corsPolicy}' has been applied for {environment.EnvironmentName} environment");
 
         // 3. WebSockets for SignalR
-        app.UseWebSockets(new Microsoft.AspNetCore.Builder.WebSocketOptions
+        var allowedOrigins = configuration.GetSection("WebSocketOptions:AllowedOrigins").Get<string[]>()
+            ?? new[] { "https://stoocker.app", "https://www.stoocker.app", "https://master.stoocker.app" };
+
+        var webSocketOptions = new Microsoft.AspNetCore.Builder.WebSocketOptions
         {
             KeepAliveInterval = TimeSpan.FromSeconds(30),
-            ReceiveBufferSize = 4 * 1024, // 4KB
-            AllowedOrigins = { "https://stoocker.app", "https://www.stoocker.app", "https://master.stoocker.app" }
-        });
+            ReceiveBufferSize = 4 * 1024 // 4KB
+        };
+
+        foreach (var origin in allowedOrigins)
+        {
+            webSocketOptions.AllowedOrigins.Add(origin);
+        }
+
+        app.UseWebSockets(webSocketOptions);
 
         // 4. Global Exception Handling
         app.UseMiddleware<Stocker.Infrastructure.Middleware.GlobalExceptionHandlingMiddleware>();
