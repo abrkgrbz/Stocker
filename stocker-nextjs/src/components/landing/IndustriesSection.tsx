@@ -11,55 +11,45 @@ import {
   HomeOutlined,
   CarOutlined,
 } from '@ant-design/icons';
-
-const industries = [
-  {
-    icon: <ShopOutlined />,
-    title: 'Perakende',
-    description: 'Mağaza stok yönetimi, raf takibi, hızlı satış noktası entegrasyonu',
-    benefits: ['Barkod okuma', 'Hızlı sayım', 'Raf optimizasyonu'],
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    icon: <ShoppingOutlined />,
-    title: 'E-ticaret',
-    description: 'Multi-kanal stok senkronizasyonu, otomatik sipariş takibi, kargo entegrasyonu',
-    benefits: ['N11, Trendyol, Hepsiburada', 'Otomatik stok güncelleme', 'Kargo takibi'],
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    icon: <DeploymentUnitOutlined />,
-    title: 'Üretim',
-    description: 'Hammadde takibi, üretim planlama, fire yönetimi, seri takip',
-    benefits: ['Reçete yönetimi', 'Parti/seri no', 'Fire analizi'],
-    color: 'from-orange-500 to-red-500',
-  },
-  {
-    icon: <MedicineBoxOutlined />,
-    title: 'Sağlık',
-    description: 'İlaç ve medikal malzeme yönetimi, son kullanma tarihi takibi, lot yönetimi',
-    benefits: ['SKT takibi', 'Lot yönetimi', 'Reçete kontrol'],
-    color: 'from-green-500 to-emerald-500',
-  },
-  {
-    icon: <HomeOutlined />,
-    title: 'Toptan',
-    description: 'Büyük hacimli stok yönetimi, depo optimizasyonu, müşteri bazlı fiyatlandırma',
-    benefits: ['Depo yönetimi', 'Toplu fiyatlama', 'Bayi takibi'],
-    color: 'from-indigo-500 to-blue-500',
-  },
-  {
-    icon: <CarOutlined />,
-    title: 'Otomotiv',
-    description: 'Yedek parça yönetimi, OEM kodları, araç bazlı stok organizasyonu',
-    benefits: ['OEM eşleştirme', 'Parça katalogu', 'Araç bazlı stok'],
-    color: 'from-gray-600 to-gray-800',
-  },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function IndustriesSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const { t } = useTranslations();
+
+  const industries = [
+    {
+      icon: <ShopOutlined />,
+      titleKey: 'retail',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      icon: <ShoppingOutlined />,
+      titleKey: 'ecommerce',
+      color: 'from-purple-500 to-pink-500',
+    },
+    {
+      icon: <DeploymentUnitOutlined />,
+      titleKey: 'manufacturing',
+      color: 'from-orange-500 to-red-500',
+    },
+    {
+      icon: <MedicineBoxOutlined />,
+      titleKey: 'healthcare',
+      color: 'from-green-500 to-emerald-500',
+    },
+    {
+      icon: <HomeOutlined />,
+      titleKey: 'wholesale',
+      color: 'from-indigo-500 to-blue-500',
+    },
+    {
+      icon: <CarOutlined />,
+      titleKey: 'automotive',
+      color: 'from-gray-600 to-gray-800',
+    },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -101,7 +91,7 @@ export default function IndustriesSection() {
             transition={{ duration: 0.6 }}
             className="inline-block mb-4 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold"
           >
-            Sektörel Çözümler
+            {t('landing.industries.badge')}
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -110,7 +100,7 @@ export default function IndustriesSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
           >
-            Her Sektöre Özel Çözüm
+            {t('landing.industries.title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -119,7 +109,7 @@ export default function IndustriesSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            İster perakende, ister e-ticaret, ister üretim olsun - sektörünüze özel stok yönetimi çözümleri
+            {t('landing.industries.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -152,15 +142,15 @@ export default function IndustriesSection() {
 
               {/* Content */}
               <h3 className="relative text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600 group-hover:bg-clip-text transition-all duration-300">
-                {industry.title}
+                {t(`landing.industries.${industry.titleKey}.title`)}
               </h3>
               <p className="relative text-gray-600 leading-relaxed mb-6">
-                {industry.description}
+                {t(`landing.industries.${industry.titleKey}.description`)}
               </p>
 
               {/* Benefits List */}
               <div className="relative space-y-2">
-                {industry.benefits.map((benefit, idx) => (
+                {[1, 2, 3].map((idx) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, x: -20 }}
@@ -172,7 +162,7 @@ export default function IndustriesSection() {
                     <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>{benefit}</span>
+                    <span>{t(`landing.industries.${industry.titleKey}.benefit${idx}`)}</span>
                   </motion.div>
                 ))}
               </div>
@@ -199,7 +189,7 @@ export default function IndustriesSection() {
           className="text-center mt-16"
         >
           <p className="text-lg text-gray-600 mb-6">
-            Sektörünüze özel çözümümüzü keşfetmek ister misiniz?
+            {t('landing.industries.ctaQuestion')}
           </p>
           <motion.a
             href="#contact"
@@ -207,7 +197,7 @@ export default function IndustriesSection() {
             whileTap={{ scale: 0.95 }}
             className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            Demo Talep Et
+            {t('landing.industries.cta')}
           </motion.a>
         </motion.div>
       </div>

@@ -11,55 +11,51 @@ import {
   DollarOutlined,
   DatabaseOutlined,
 } from '@ant-design/icons';
-
-const integrations = [
-  {
-    category: 'ERP Sistemleri',
-    icon: <DatabaseOutlined />,
-    description: 'Kurumsal kaynak planlama sistemleriyle tam entegrasyon',
-    systems: ['SAP', 'Oracle ERP', 'Microsoft Dynamics', 'Logo', 'Netsis'],
-    color: 'from-blue-600 to-blue-800',
-  },
-  {
-    category: 'E-ticaret Platformları',
-    icon: <ShoppingCartOutlined />,
-    description: 'Önde gelen e-ticaret platformlarıyla otomatik senkronizasyon',
-    systems: ['Trendyol', 'Hepsiburada', 'N11', 'Gittigidiyor', 'Amazon TR'],
-    color: 'from-purple-600 to-pink-600',
-  },
-  {
-    category: 'Muhasebe',
-    icon: <FileTextOutlined />,
-    description: 'Muhasebe yazılımlarıyla kesintisiz veri akışı',
-    systems: ['Logo', 'Mikro', 'Eta', 'Nebim', 'Zirve'],
-    color: 'from-green-600 to-emerald-600',
-  },
-  {
-    category: 'Ödeme Sistemleri',
-    icon: <DollarOutlined />,
-    description: 'Tüm ödeme yöntemleriyle entegre çalışma',
-    systems: ['iyzico', 'PayTR', 'Payu', 'Stripe', 'PayPal'],
-    color: 'from-orange-600 to-red-600',
-  },
-  {
-    category: 'Kargo & Lojistik',
-    icon: <CloudServerOutlined />,
-    description: 'Kargo firmaları ile otomatik entegrasyon ve takip',
-    systems: ['Aras Kargo', 'Yurtiçi', 'MNG', 'PTT', 'UPS'],
-    color: 'from-indigo-600 to-purple-600',
-  },
-  {
-    category: 'API & Webhook',
-    icon: <ApiOutlined />,
-    description: 'RESTful API ile kendi sistemlerinizi entegre edin',
-    systems: ['REST API', 'Webhooks', 'GraphQL', 'Custom Integration', 'Zapier'],
-    color: 'from-gray-700 to-gray-900',
-  },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function IntegrationsSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const { t } = useTranslations();
+
+  const integrations = [
+    {
+      categoryKey: 'erp',
+      icon: <DatabaseOutlined />,
+      systems: ['SAP', 'Oracle ERP', 'Microsoft Dynamics', 'Logo', 'Netsis'],
+      color: 'from-blue-600 to-blue-800',
+    },
+    {
+      categoryKey: 'ecommerce',
+      icon: <ShoppingCartOutlined />,
+      systems: ['Trendyol', 'Hepsiburada', 'N11', 'Gittigidiyor', 'Amazon TR'],
+      color: 'from-purple-600 to-pink-600',
+    },
+    {
+      categoryKey: 'accounting',
+      icon: <FileTextOutlined />,
+      systems: ['Logo', 'Mikro', 'Eta', 'Nebim', 'Zirve'],
+      color: 'from-green-600 to-emerald-600',
+    },
+    {
+      categoryKey: 'payment',
+      icon: <DollarOutlined />,
+      systems: ['iyzico', 'PayTR', 'Payu', 'Stripe', 'PayPal'],
+      color: 'from-orange-600 to-red-600',
+    },
+    {
+      categoryKey: 'cargo',
+      icon: <CloudServerOutlined />,
+      systems: ['Aras Kargo', 'Yurtiçi', 'MNG', 'PTT', 'UPS'],
+      color: 'from-indigo-600 to-purple-600',
+    },
+    {
+      categoryKey: 'api',
+      icon: <ApiOutlined />,
+      systems: ['REST API', 'Webhooks', 'GraphQL', 'Custom Integration', 'Zapier'],
+      color: 'from-gray-700 to-gray-900',
+    },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -108,7 +104,7 @@ export default function IntegrationsSection() {
             transition={{ duration: 0.6 }}
             className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-semibold"
           >
-            Entegrasyonlar
+            {t('landing.integrations.badge')}
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -117,7 +113,7 @@ export default function IntegrationsSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
           >
-            Tüm Sistemlerinizle Uyumlu
+            {t('landing.integrations.title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -126,7 +122,7 @@ export default function IntegrationsSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            Mevcut altyapınızla sorunsuz entegrasyon. ERP'den e-ticarete, muhasebeden kargoya her sistem tek platformda
+            {t('landing.integrations.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -159,12 +155,12 @@ export default function IntegrationsSection() {
 
               {/* Category */}
               <h3 className="relative text-2xl font-bold text-gray-900 mb-3">
-                {integration.category}
+                {t(`landing.integrations.${integration.categoryKey}.title`)}
               </h3>
 
               {/* Description */}
               <p className="relative text-gray-600 text-sm leading-relaxed mb-6">
-                {integration.description}
+                {t(`landing.integrations.${integration.categoryKey}.description`)}
               </p>
 
               {/* Systems Tags */}
@@ -216,10 +212,10 @@ export default function IntegrationsSection() {
             <ApiOutlined className="text-5xl" />
           </motion.div>
           <h3 className="text-3xl font-bold mb-4">
-            Kendi Entegrasyonunuzu Oluşturun
+            {t('landing.integrations.apiTitle')}
           </h3>
           <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-            RESTful API dokümantasyonumuzu inceleyin ve özel entegrasyonlarınızı kolayca geliştirin
+            {t('landing.integrations.apiSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.a
@@ -228,7 +224,7 @@ export default function IntegrationsSection() {
               whileTap={{ scale: 0.95 }}
               className="inline-block px-8 py-4 bg-white text-purple-600 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              API Dokümantasyonu
+              {t('landing.integrations.apiDocs')}
             </motion.a>
             <motion.a
               href="#contact"
@@ -236,7 +232,7 @@ export default function IntegrationsSection() {
               whileTap={{ scale: 0.95 }}
               className="inline-block px-8 py-4 bg-purple-800/50 backdrop-blur-sm border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-purple-800/70 transition-all duration-300"
             >
-              Entegrasyon Desteği
+              {t('landing.integrations.apiSupport')}
             </motion.a>
           </div>
         </motion.div>

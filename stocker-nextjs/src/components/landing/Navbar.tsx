@@ -7,11 +7,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslations } from '@/lib/i18n';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+  const { t } = useTranslations();
+
   // Auth URLs are handled by middleware - no client-side computation needed
   // Middleware redirects /login and /register to auth subdomain in production
   const loginUrl = '/login';
@@ -27,11 +29,11 @@ export default function Navbar() {
   }, []);
 
   const menuItems = [
-    { name: 'Özellikler', href: '#features' },
-    { name: 'Sektörler', href: '#industries' },
-    { name: 'Entegrasyonlar', href: '#integrations' },
-    { name: 'Fiyatlandırma', href: '#pricing' },
-    { name: 'SSS', href: '#faq' },
+    { name: t('landing.navbar.features'), href: '#features' },
+    { name: t('landing.navbar.industries'), href: '#industries' },
+    { name: t('landing.navbar.integrations'), href: '#integrations' },
+    { name: t('landing.navbar.pricing'), href: '#pricing' },
+    { name: t('landing.navbar.faq'), href: '#faq' },
   ];
 
   return (
@@ -96,7 +98,7 @@ export default function Navbar() {
                       : 'border-white text-white hover:bg-white/10'
                   }`}
                 >
-                  Giriş Yap
+                  {t('landing.navbar.signIn')}
                 </Button>
               </motion.div>
             </Link>
@@ -107,7 +109,7 @@ export default function Navbar() {
                   icon={<RocketOutlined />}
                   className="h-10 px-6 bg-purple-600 hover:bg-purple-700 border-0 font-medium shadow-md"
                 >
-                  Ücretsiz Başla
+                  {t('landing.navbar.getStarted')}
                 </Button>
               </motion.div>
             </Link>
@@ -160,7 +162,7 @@ export default function Navbar() {
                     size="large"
                     className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
                   >
-                    Giriş Yap
+                    {t('landing.navbar.signIn')}
                   </Button>
                 </Link>
                 <Link href={registerUrl} onClick={() => setIsMobileMenuOpen(false)}>
@@ -171,7 +173,7 @@ export default function Navbar() {
                     size="large"
                     className="bg-purple-600 hover:bg-purple-700 border-0"
                   >
-                    Ücretsiz Başla
+                    {t('landing.navbar.getStarted')}
                   </Button>
                 </Link>
               </div>
