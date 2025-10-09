@@ -10,10 +10,16 @@
       "getStarted": "Get Started Free"
     },
     "hero": {
-      "title": "Smart Inventory Management",
-      "subtitle": "Simplify your business, boost efficiency",
-      "cta": "Get Started Now",
-      "learnMore": "Learn More"
+      "badge": "New Features Added",
+      "title1": "The New Era of",
+      "title2": "Inventory Management",
+      "subtitle": "Simplify inventory tracking with smart technology. Real-time reporting, automatic alerts, and easy integration.",
+      "cta": "Try for Free",
+      "watchDemo": "Watch Demo"
+    },
+    "features": {
+      "title": "Powerful Features",
+      "subtitle": "All the features you need to simplify your business and boost efficiency in one platform"
     },
     "industries": {
       "badge": "Industry Solutions",

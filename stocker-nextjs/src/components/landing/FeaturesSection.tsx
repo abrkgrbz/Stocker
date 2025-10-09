@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { useTranslations } from '@/lib/i18n';
 import {
   RocketOutlined,
   ThunderboltOutlined,
@@ -75,6 +76,7 @@ const features = [
 export default function FeaturesSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const { t } = useTranslations();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -116,7 +118,7 @@ export default function FeaturesSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
           >
-            Güçlü Özellikler
+            {t('landing.features.title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -125,7 +127,7 @@ export default function FeaturesSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            İşinizi kolaylaştıracak ve verimliliğinizi artıracak özelliklerin tamamı tek bir platformda
+            {t('landing.features.subtitle')}
           </motion.p>
         </motion.div>
 

@@ -10,10 +10,16 @@
       "getStarted": "Ücretsiz Başla"
     },
     "hero": {
-      "title": "Akıllı Stok Yönetimi",
-      "subtitle": "İşinizi kolaylaştırın, verimliliğinizi artırın",
-      "cta": "Hemen Başla",
-      "learnMore": "Daha Fazla Bilgi"
+      "badge": "Yeni Özellikler Eklendi",
+      "title1": "Stok Yönetiminde",
+      "title2": "Yeni Dönem",
+      "subtitle": "Akıllı teknoloji ile envanter takibini kolaylaştırın. Gerçek zamanlı raporlama, otomatik uyarılar ve kolay entegrasyon.",
+      "cta": "Ücretsiz Deneyin",
+      "watchDemo": "Demo İzle"
+    },
+    "features": {
+      "title": "Güçlü Özellikler",
+      "subtitle": "İşinizi kolaylaştıracak ve verimliliğinizi artıracak özelliklerin tamamı tek bir platformda"
     },
     "industries": {
       "badge": "Sektörel Çözümler",

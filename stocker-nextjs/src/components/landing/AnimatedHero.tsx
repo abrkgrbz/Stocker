@@ -5,6 +5,7 @@ import { Button } from 'antd';
 import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useTranslations } from '@/lib/i18n';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,6 +37,8 @@ const floatingAnimation = {
 };
 
 export default function AnimatedHero() {
+  const { t } = useTranslations();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 pt-20">
       {/* Animated Background Elements */}
@@ -114,7 +117,7 @@ export default function AnimatedHero() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
               </span>
-              Yeni Özellikler Eklendi
+              {t('landing.hero.badge')}
             </motion.div>
           </motion.div>
 
@@ -123,7 +126,7 @@ export default function AnimatedHero() {
             variants={itemVariants}
             className="text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-tight"
           >
-            Stok Yönetiminde
+            {t('landing.hero.title1')}
             <br />
             <motion.span
               className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent inline-block"
@@ -136,7 +139,7 @@ export default function AnimatedHero() {
                 ease: 'linear',
               }}
             >
-              Devrim Yaratın
+              {t('landing.hero.title2')}
             </motion.span>
           </motion.h1>
 
@@ -145,8 +148,7 @@ export default function AnimatedHero() {
             variants={itemVariants}
             className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed"
           >
-            Karmaşık Excel tablolarına elveda! Stocker ile stok kontrolünüzü otomatikleştirin,
-            verimliliğinizi %80 artırın ve işletmenizin büyümesine odaklanın.
+            {t('landing.hero.subtitle')}
           </motion.p>
 
           {/* Trust Indicators */}
@@ -190,7 +192,7 @@ export default function AnimatedHero() {
                   icon={<RocketOutlined />}
                   className="h-14 px-8 text-lg font-semibold bg-purple-600 hover:bg-purple-700 border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
                 >
-                  Ücretsiz Başla
+                  {t('landing.hero.cta')}
                 </Button>
               </motion.div>
             </Link>
@@ -203,7 +205,7 @@ export default function AnimatedHero() {
                 icon={<PlayCircleOutlined />}
                 className="h-14 px-8 text-lg font-semibold border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300"
               >
-                Demo İzle
+                {t('landing.hero.watchDemo')}
               </Button>
             </motion.div>
           </motion.div>
