@@ -5,6 +5,8 @@ import Navbar from '@/components/landing/Navbar';
 import AnimatedHero from '@/components/landing/AnimatedHero';
 import SocialProof from '@/components/landing/SocialProof';
 import FeaturesSection from '@/components/landing/FeaturesSection';
+import IndustriesSection from '@/components/landing/IndustriesSection';
+import IntegrationsSection from '@/components/landing/IntegrationsSection';
 import ProductDemo from '@/components/landing/ProductDemo';
 import AnimatedStats from '@/components/landing/AnimatedStats';
 import ParallaxSection from '@/components/landing/ParallaxSection';
@@ -26,6 +28,8 @@ export default function Home() {
         <AnimatedHero />
         <SocialProof />
         <FeaturesSection />
+        <IndustriesSection />
+        <IntegrationsSection />
         <ProductDemo />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedStats />
