@@ -1,4 +1,103 @@
 {
+  "landing": {
+    "navbar": {
+      "features": "Features",
+      "industries": "Industries",
+      "integrations": "Integrations",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "signIn": "Sign In",
+      "getStarted": "Get Started Free"
+    },
+    "hero": {
+      "title": "Smart Inventory Management",
+      "subtitle": "Simplify your business, boost efficiency",
+      "cta": "Get Started Now",
+      "learnMore": "Learn More"
+    },
+    "industries": {
+      "badge": "Industry Solutions",
+      "title": "Tailored Solutions for Every Industry",
+      "subtitle": "Whether retail, e-commerce, or manufacturing - industry-specific inventory management solutions",
+      "cta": "Request a Demo",
+      "ctaQuestion": "Want to discover our industry-specific solution?",
+      "retail": {
+        "title": "Retail",
+        "description": "Store inventory management, shelf tracking, rapid POS integration",
+        "benefit1": "Barcode scanning",
+        "benefit2": "Quick counting",
+        "benefit3": "Shelf optimization"
+      },
+      "ecommerce": {
+        "title": "E-commerce",
+        "description": "Multi-channel stock sync, automated order tracking, shipping integration",
+        "benefit1": "N11, Trendyol, Hepsiburada",
+        "benefit2": "Auto stock updates",
+        "benefit3": "Cargo tracking"
+      },
+      "manufacturing": {
+        "title": "Manufacturing",
+        "description": "Raw material tracking, production planning, waste management, serial tracking",
+        "benefit1": "Recipe management",
+        "benefit2": "Batch/serial no",
+        "benefit3": "Waste analysis"
+      },
+      "healthcare": {
+        "title": "Healthcare",
+        "description": "Drug and medical supplies management, expiry date tracking, lot management",
+        "benefit1": "Expiry tracking",
+        "benefit2": "Lot management",
+        "benefit3": "Prescription control"
+      },
+      "wholesale": {
+        "title": "Wholesale",
+        "description": "High-volume inventory management, warehouse optimization, customer-based pricing",
+        "benefit1": "Warehouse management",
+        "benefit2": "Bulk pricing",
+        "benefit3": "Dealer tracking"
+      },
+      "automotive": {
+        "title": "Automotive",
+        "description": "Spare parts management, OEM codes, vehicle-based inventory organization",
+        "benefit1": "OEM matching",
+        "benefit2": "Parts catalog",
+        "benefit3": "Vehicle-based stock"
+      }
+    },
+    "integrations": {
+      "badge": "Integrations",
+      "title": "Compatible With All Your Systems",
+      "subtitle": "Seamless integration with your existing infrastructure. From ERP to e-commerce, accounting to shipping - all systems in one platform",
+      "apiTitle": "Build Your Own Integration",
+      "apiSubtitle": "Review our RESTful API documentation and easily develop your custom integrations",
+      "apiDocs": "API Documentation",
+      "apiSupport": "Integration Support",
+      "erp": {
+        "title": "ERP Systems",
+        "description": "Full integration with enterprise resource planning systems"
+      },
+      "ecommerce": {
+        "title": "E-commerce Platforms",
+        "description": "Automatic sync with leading e-commerce platforms"
+      },
+      "accounting": {
+        "title": "Accounting",
+        "description": "Seamless data flow with accounting software"
+      },
+      "payment": {
+        "title": "Payment Systems",
+        "description": "Integrated operation with all payment methods"
+      },
+      "cargo": {
+        "title": "Cargo & Logistics",
+        "description": "Automatic integration and tracking with cargo companies"
+      },
+      "api": {
+        "title": "API & Webhook",
+        "description": "Integrate your own systems with RESTful API"
+      }
+    }
+  },
   "auth": {
     "login": {
       "title": "Sign In",

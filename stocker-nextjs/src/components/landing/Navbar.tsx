@@ -6,6 +6,7 @@ import { MenuOutlined, CloseOutlined, RocketOutlined, LoginOutlined } from '@ant
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -84,6 +85,7 @@ export default function Navbar() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher isScrolled={isScrolled} />
             <Link href={loginUrl}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
@@ -148,6 +150,9 @@ export default function Navbar() {
                 </motion.a>
               ))}
               <div className="pt-4 space-y-3 border-t border-gray-200">
+                <div className="flex justify-center pb-3">
+                  <LanguageSwitcher isScrolled={true} />
+                </div>
                 <Link href={loginUrl} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     icon={<LoginOutlined />}

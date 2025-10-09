@@ -1,4 +1,103 @@
 {
+  "landing": {
+    "navbar": {
+      "features": "Özellikler",
+      "industries": "Sektörler",
+      "integrations": "Entegrasyonlar",
+      "pricing": "Fiyatlandırma",
+      "faq": "SSS",
+      "signIn": "Giriş Yap",
+      "getStarted": "Ücretsiz Başla"
+    },
+    "hero": {
+      "title": "Akıllı Stok Yönetimi",
+      "subtitle": "İşinizi kolaylaştırın, verimliliğinizi artırın",
+      "cta": "Hemen Başla",
+      "learnMore": "Daha Fazla Bilgi"
+    },
+    "industries": {
+      "badge": "Sektörel Çözümler",
+      "title": "Her Sektöre Özel Çözüm",
+      "subtitle": "İster perakende, ister e-ticaret, ister üretim olsun - sektörünüze özel stok yönetimi çözümleri",
+      "cta": "Demo Talep Et",
+      "ctaQuestion": "Sektörünüze özel çözümümüzü keşfetmek ister misiniz?",
+      "retail": {
+        "title": "Perakende",
+        "description": "Mağaza stok yönetimi, raf takibi, hızlı satış noktası entegrasyonu",
+        "benefit1": "Barkod okuma",
+        "benefit2": "Hızlı sayım",
+        "benefit3": "Raf optimizasyonu"
+      },
+      "ecommerce": {
+        "title": "E-ticaret",
+        "description": "Multi-kanal stok senkronizasyonu, otomatik sipariş takibi, kargo entegrasyonu",
+        "benefit1": "N11, Trendyol, Hepsiburada",
+        "benefit2": "Otomatik stok güncelleme",
+        "benefit3": "Kargo takibi"
+      },
+      "manufacturing": {
+        "title": "Üretim",
+        "description": "Hammadde takibi, üretim planlama, fire yönetimi, seri takip",
+        "benefit1": "Reçete yönetimi",
+        "benefit2": "Parti/seri no",
+        "benefit3": "Fire analizi"
+      },
+      "healthcare": {
+        "title": "Sağlık",
+        "description": "İlaç ve medikal malzeme yönetimi, son kullanma tarihi takibi, lot yönetimi",
+        "benefit1": "SKT takibi",
+        "benefit2": "Lot yönetimi",
+        "benefit3": "Reçete kontrol"
+      },
+      "wholesale": {
+        "title": "Toptan",
+        "description": "Büyük hacimli stok yönetimi, depo optimizasyonu, müşteri bazlı fiyatlandırma",
+        "benefit1": "Depo yönetimi",
+        "benefit2": "Toplu fiyatlama",
+        "benefit3": "Bayi takibi"
+      },
+      "automotive": {
+        "title": "Otomotiv",
+        "description": "Yedek parça yönetimi, OEM kodları, araç bazlı stok organizasyonu",
+        "benefit1": "OEM eşleştirme",
+        "benefit2": "Parça katalogu",
+        "benefit3": "Araç bazlı stok"
+      }
+    },
+    "integrations": {
+      "badge": "Entegrasyonlar",
+      "title": "Tüm Sistemlerinizle Uyumlu",
+      "subtitle": "Mevcut altyapınızla sorunsuz entegrasyon. ERP'den e-ticarete, muhasebeden kargoya her sistem tek platformda",
+      "apiTitle": "Kendi Entegrasyonunuzu Oluşturun",
+      "apiSubtitle": "RESTful API dokümantasyonumuzu inceleyin ve özel entegrasyonlarınızı kolayca geliştirin",
+      "apiDocs": "API Dokümantasyonu",
+      "apiSupport": "Entegrasyon Desteği",
+      "erp": {
+        "title": "ERP Sistemleri",
+        "description": "Kurumsal kaynak planlama sistemleriyle tam entegrasyon"
+      },
+      "ecommerce": {
+        "title": "E-ticaret Platformları",
+        "description": "Önde gelen e-ticaret platformlarıyla otomatik senkronizasyon"
+      },
+      "accounting": {
+        "title": "Muhasebe",
+        "description": "Muhasebe yazılımlarıyla kesintisiz veri akışı"
+      },
+      "payment": {
+        "title": "Ödeme Sistemleri",
+        "description": "Tüm ödeme yöntemleriyle entegre çalışma"
+      },
+      "cargo": {
+        "title": "Kargo & Lojistik",
+        "description": "Kargo firmaları ile otomatik entegrasyon ve takip"
+      },
+      "api": {
+        "title": "API & Webhook",
+        "description": "RESTful API ile kendi sistemlerinizi entegre edin"
+      }
+    }
+  },
   "auth": {
     "login": {
       "title": "Giriş Yap",
