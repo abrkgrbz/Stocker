@@ -14,7 +14,9 @@
       "Bash(npm run dev)",
       "Bash(start http://localhost:3001/dashboard)",
       "Bash(start http://localhost:3002/dashboard)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add Interactive Charts to Dashboard (Phase 2.1.3)\n\n📊 Interactive Chart Components:\n- SalesChart: Revenue/Orders/Average with Daily/Weekly/Monthly filters\n- InventoryChart: Stock levels, Category distribution, Low stock alerts  \n- CustomerChart: Growth trend, Customer segments, Geographic distribution\n- FinancialChart: Revenue vs Expenses, Profit margin, Cash flow\n\n✨ Features:\n- Dynamic time range selectors (Daily/Weekly/Monthly/Quarterly)\n- Multiple chart types per component (Line/Bar/Pie/Area)\n- Real-time data visualization with formatted values\n- Turkish locale number formatting (₺, adet, %)\n- Color-coded trends and status indicators\n- Warning badges for stock alerts\n- Statistical summaries with Ant Design Statistic\n\n🔧 Technical Improvements:\n- Fixed SignalR hook export issue  \n- Default imports for chart components\n- Clean .next cache for fresh builds\n- Dashboard integration with 4 new interactive charts\n\n🎨 UI/UX:\n- Filter dropdowns for data type selection\n- Radio button groups for time ranges\n- Progress bars and comparison cards\n- Live badges and last updated timestamps\n- Responsive grid layout (2 columns on large screens)\n\n📦 Components Structure:\n- /components/charts/SalesChart.tsx\n- /components/charts/InventoryChart.tsx  \n- /components/charts/CustomerChart.tsx\n- /components/charts/FinancialChart.tsx\n- Updated index.ts exports\n\n🚀 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

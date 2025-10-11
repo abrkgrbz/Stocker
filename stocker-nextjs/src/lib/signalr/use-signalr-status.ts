@@ -30,33 +30,23 @@ export function useSignalRStatus(hubName: 'notifications' | 'inventory' | 'order
     const updateState = () => {
       const state = connection.state;
 
-      switch (state) {
-        case 'Connected':
-          setConnectionState('connected');
-          break;
-        case 'Disconnected':
-          setConnectionState('disconnected');
-          break;
-        case 'Connecting':
-          setConnectionState('connecting');
-          break;
-        case 'Reconnecting':
-          setConnectionState('reconnecting');
-          break;
-        default:
-          setConnectionState('error');
+      if (state === 'Connected') {
+        setConnectionState('connected');
+      } else if (state === 'Disconnected') {
+        setConnectionState('disconnected');
+      } else if (state === 'Connecting') {
+        setConnectionState('connecting');
+      } else if (state === 'Reconnecting') {
+        setConnectionState('reconnecting');
+      } else {
+        setConnectionState('error');
       }
     };
 
     // Initial state
     updateState();
 
-    // Listen to state changes
-    connection.onreconnecting(() => setConnectionState('reconnecting'));
-    connection.onreconnected(() => setConnectionState('connected'));
-    connection.onclose(() => setConnectionState('disconnected'));
-
-    // Poll for state changes as backup
+    // Poll for state changes
     const interval = setInterval(updateState, 1000);
 
     return () => clearInterval(interval);
