@@ -7,6 +7,7 @@ using Stocker.Application.Features.Identity.Commands.Logout;
 using Stocker.Application.Features.Identity.Commands.Register;
 using Stocker.Application.Features.Identity.Commands.VerifyEmail;
 using Stocker.Application.Features.Identity.Commands.ResendVerificationEmail;
+using Stocker.Application.Features.Identity.Queries.CheckEmail;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -203,17 +204,46 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailCommand command)
     {
         _logger.LogInformation("Resend verification email request for: {Email}", command.Email);
-        
+
         var result = await _mediator.Send(command);
-        
+
         if (result.IsSuccess)
         {
             _logger.LogInformation("Verification email resent for: {Email}", command.Email);
             return Ok(result.Value);
         }
-        
-        _logger.LogWarning("Failed to resend verification email for: {Email}, error: {Error}", 
+
+        _logger.LogWarning("Failed to resend verification email for: {Email}, error: {Error}",
             command.Email, result.Error.Description);
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Check if email exists and get tenant information
+    /// </summary>
+    [HttpPost("check-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(CheckEmailResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> CheckEmail([FromBody] CheckEmailQuery query)
+    {
+        _logger.LogInformation("Checking email: {Email}", query.Email);
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
+            });
+        }
+
         return BadRequest(new
         {
             success = false,
