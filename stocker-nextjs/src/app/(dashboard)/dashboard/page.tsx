@@ -5,12 +5,14 @@ import { Typography, Card, Row, Col, Statistic, Table } from 'antd';
 import { ShoppingCartOutlined, DollarOutlined, UserOutlined, RiseOutlined } from '@ant-design/icons';
 import { LiveBadge, LastUpdated } from '@/components/status';
 import { LineChart, BarChart, PieChart, AreaChart, generateTimeSeriesData, SalesChart, InventoryChart, CustomerChart, FinancialChart } from '@/components/charts';
-import { KPICard, ComparisonCard } from '@/components/dashboard';
+import { KPICard, ComparisonCard, DashboardGrid, ChartWidget } from '@/components/dashboard';
+import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 
 const { Title } = Typography;
 
 export default function DashboardPage() {
   const [lastUpdate] = useState(new Date());
+  const { layouts, setLayouts } = useDashboardLayout();
 
   // Mock chart data
   const salesData = generateTimeSeriesData(7, ['Satışlar', 'Hedef'], [50000, 120000]);
@@ -221,24 +223,34 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
-      {/* Interactive Charts Section */}
-      <Row gutter={16} style={{ marginTop: 24 }}>
-        <Col xs={24} lg={12}>
-          <SalesChart />
-        </Col>
-        <Col xs={24} lg={12}>
-          <InventoryChart />
-        </Col>
-      </Row>
-
-      <Row gutter={16} style={{ marginTop: 24 }}>
-        <Col xs={24} lg={12}>
-          <CustomerChart />
-        </Col>
-        <Col xs={24} lg={12}>
-          <FinancialChart />
-        </Col>
-      </Row>
+      {/* Interactive Charts Section with Drag & Drop */}
+      <div style={{ marginTop: 24 }}>
+        <DashboardGrid
+          layouts={layouts}
+          onLayoutChange={(layout, allLayouts) => setLayouts(allLayouts)}
+        >
+          <div key="sales-chart">
+            <ChartWidget id="sales-chart" title="Satış Analizi">
+              <SalesChart />
+            </ChartWidget>
+          </div>
+          <div key="inventory-chart">
+            <ChartWidget id="inventory-chart" title="Stok Yönetimi">
+              <InventoryChart />
+            </ChartWidget>
+          </div>
+          <div key="customer-chart">
+            <ChartWidget id="customer-chart" title="Müşteri Analizi">
+              <CustomerChart />
+            </ChartWidget>
+          </div>
+          <div key="financial-chart">
+            <ChartWidget id="financial-chart" title="Finansal Analiz">
+              <FinancialChart />
+            </ChartWidget>
+          </div>
+        </DashboardGrid>
+      </div>
 
       {/* Recent Orders Table */}
       <Card
