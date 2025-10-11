@@ -177,6 +177,20 @@ export class AuthService {
   async getProfile(): Promise<ApiResponse<LoginResponse['user']>> {
     return apiClient.get('/auth/profile');
   }
+
+  /**
+   * Verify email with code
+   */
+  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean }>> {
+    return apiClient.post('/auth/verify-email', { email, code });
+  }
+
+  /**
+   * Resend verification email
+   */
+  async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
+    return apiClient.post('/auth/resend-verification-email', { email });
+  }
 }
 
 /**

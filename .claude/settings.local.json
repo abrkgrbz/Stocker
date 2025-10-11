@@ -23,7 +23,8 @@
       "Bash(start http://localhost:3003/forms-demo)",
       "Bash(test:*)",
       "Bash(cat:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
