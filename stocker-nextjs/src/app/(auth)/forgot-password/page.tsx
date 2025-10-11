@@ -29,20 +29,19 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      // TODO: API call to send password reset email
-      // const response = await fetch('/api/auth/forgot-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email: values.email }),
-      // });
+      // API call to send password reset email
+      const { authService } = await import('@/lib/api/services');
+      const response = await authService.forgotPassword(values.email);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setEmail(values.email);
-      setEmailSent(true);
+      if (response.success) {
+        setEmail(values.email);
+        setEmailSent(true);
+      } else {
+        setError('E-posta gönderilemedi. Lütfen tekrar deneyin.');
+      }
     } catch (err) {
       setError('Bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error('Forgot password error:', err);
     } finally {
       setLoading(false);
     }

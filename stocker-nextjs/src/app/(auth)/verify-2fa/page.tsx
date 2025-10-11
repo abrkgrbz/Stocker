@@ -24,13 +24,38 @@ export default function Verify2FAPage() {
     setError('');
 
     try {
-      // TODO: API call to verify 2FA code
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Get email from sessionStorage (set during login)
+      const email = sessionStorage.getItem('2fa_email');
+      if (!email) {
+        setError('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+        router.push('/login');
+        return;
+      }
 
-      // Success - redirect to dashboard
-      router.push('/dashboard');
+      // API call to verify 2FA code
+      const { authService } = await import('@/lib/api/services');
+      const response = await authService.verify2FA({
+        email,
+        code,
+        backupCode: useBackupCode,
+      });
+
+      if (response.success && response.data) {
+        // Store tokens
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+
+        // Clear 2FA session
+        sessionStorage.removeItem('2fa_email');
+
+        // Success - redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        setError('Geçersiz kod. Lütfen tekrar deneyin.');
+      }
     } catch (err) {
-      setError('Geçersiz kod. Lütfen tekrar deneyin.');
+      setError('Kod doğrulanamadı. Lütfen tekrar deneyin.');
+      console.error('2FA verification error:', err);
     } finally {
       setLoading(false);
     }

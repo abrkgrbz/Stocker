@@ -235,8 +235,10 @@ function LoginForm() {
 
       // Handle 2FA if required
       if (data.requires2FA) {
-        router.push(`/verify-2fa?email=${encodeURIComponent(email)}`)
-        return
+        // Store email in sessionStorage for 2FA verification
+        sessionStorage.setItem('2fa_email', email);
+        router.push('/verify-2fa');
+        return;
       }
 
       // Redirect to tenant dashboard

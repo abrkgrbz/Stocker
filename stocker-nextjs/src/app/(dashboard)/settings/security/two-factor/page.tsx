@@ -17,30 +17,56 @@ export default function TwoFactorSetupPage() {
   const [verificationCode, setVerificationCode] = useState('');
   const [isEnabled, setIsEnabled] = useState(false);
 
-  // Generate TOTP secret on mount
+  // Setup 2FA on mount (call backend API)
   useEffect(() => {
-    const userEmail = 'user@example.com'; // TODO: Get from auth context
-    const { secret, qrCodeUrl, manualEntryKey } = generateTOTPSecret(userEmail);
+    const setup2FA = async () => {
+      try {
+        const { authService } = await import('@/lib/api/services');
+        const response = await authService.setup2FA();
 
-    setSecret(secret);
-    setManualKey(manualEntryKey);
+        if (response.success && response.data) {
+          setSecret(response.data.secret);
+          setQrCodeUrl(response.data.qrCodeUrl);
+          setManualKey(response.data.secret.match(/.{1,4}/g)?.join(' ') || response.data.secret);
 
-    // Generate QR code
-    generateQRCode(qrCodeUrl).then(setQrCodeUrl);
+          // Convert backend backup codes to BackupCode format
+          const codes: BackupCode[] = response.data.backupCodes.map((code) => ({
+            code,
+            used: false,
+          }));
+          setBackupCodes(codes);
+        } else {
+          message.error('2FA kurulumu başlatılamadı');
+        }
+      } catch (error) {
+        message.error('Bir hata oluştu. Lütfen tekrar deneyin.');
+        console.error('2FA setup error:', error);
+      }
+    };
 
-    // Generate backup codes
-    const codes = generateBackupCodes(10);
-    setBackupCodes(codes);
+    setup2FA();
   }, []);
 
-  const handleVerify = () => {
-    // TODO: Call API to verify and enable 2FA
-    if (verificationCode.length === 6) {
-      message.success('2FA başarıyla etkinleştirildi!');
-      setIsEnabled(true);
-      setCurrentStep(2);
-    } else {
+  const handleVerify = async () => {
+    if (verificationCode.length !== 6) {
       message.error('Lütfen 6 haneli kodu girin');
+      return;
+    }
+
+    try {
+      const { authService } = await import('@/lib/api/services');
+      const response = await authService.enable2FA(verificationCode);
+
+      if (response.success) {
+        message.success('2FA başarıyla etkinleştirildi!');
+        setIsEnabled(true);
+        setCurrentStep(2);
+      } else {
+        message.error('Doğrulama başarısız. Lütfen kodu kontrol edin.');
+      }
+    } catch (error) {
+      message.error('Kod doğrulanamadı. Lütfen tekrar deneyin.');
+      console.error('2FA enable error:', error);
     }
   };
 
@@ -202,7 +228,21 @@ export default function TwoFactorSetupPage() {
               <Text type="secondary">
                 Son etkinleştirme: {new Date().toLocaleString('tr-TR')}
               </Text>
-              <Button danger>2FA'yı Devre Dışı Bırak</Button>
+              <Button danger onClick={async () => {
+                try {
+                  const { authService } = await import('@/lib/api/services');
+                  const code = prompt('2FA\'yı devre dışı bırakmak için authenticator kodunu girin:');
+                  if (code) {
+                    const response = await authService.disable2FA(code);
+                    if (response.success) {
+                      message.success('2FA devre dışı bırakıldı');
+                      setIsEnabled(false);
+                    }
+                  }
+                } catch (error) {
+                  message.error('İşlem başarısız. Kodu kontrol edin.');
+                }
+              }}>2FA'yı Devre Dışı Bırak</Button>
             </Space>
           </Card>
         )}

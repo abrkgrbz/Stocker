@@ -45,26 +45,26 @@ function ResetPasswordContent() {
       }
 
       try {
-        // TODO: API call to validate token
-        // const response = await fetch(`/api/auth/validate-reset-token?token=${token}`);
-        // const data = await response.json();
+        // API call to validate token
+        const { authService } = await import('@/lib/api/services');
+        const response = await authService.validateResetToken(token);
 
-        // Simulate API call - in production, validate with backend
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (response.success && response.data) {
+          const expiryDate = new Date(response.data.expiresAt);
+          const valid = isTokenValid(expiryDate);
+          setTokenValid(valid);
 
-        // Mock token expiry check (in production, backend returns expiry)
-        const mockExpiryDate = new Date();
-        mockExpiryDate.setHours(mockExpiryDate.getHours() + 1); // 1 hour from now
-
-        const valid = isTokenValid(mockExpiryDate);
-        setTokenValid(valid);
-
-        if (!valid) {
-          setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.');
+          if (!valid) {
+            setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.');
+          }
+        } else {
+          setTokenValid(false);
+          setError('Geçersiz şifre sıfırlama bağlantısı.');
         }
       } catch (err) {
         setError('Token doğrulama hatası. Lütfen tekrar deneyin.');
         setTokenValid(false);
+        console.error('Token validation error:', err);
       } finally {
         setValidatingToken(false);
       }
@@ -86,24 +86,26 @@ function ResetPasswordContent() {
     }
 
     try {
-      // TODO: API call to reset password
-      // const response = await fetch('/api/auth/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, password: values.password }),
-      // });
+      // API call to reset password
+      const { authService } = await import('@/lib/api/services');
+      const response = await authService.resetPassword({
+        token: token!,
+        password: values.password,
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (response.success) {
+        setResetSuccess(true);
 
-      setResetSuccess(true);
-
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 3000);
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
+      } else {
+        setError('Şifre sıfırlama başarısız. Lütfen tekrar deneyin.');
+      }
     } catch (err) {
       setError('Şifre sıfırlama başarısız. Lütfen tekrar deneyin.');
+      console.error('Reset password error:', err);
     } finally {
       setLoading(false);
     }
