@@ -8,6 +8,13 @@ using Stocker.Application.Features.Identity.Commands.Register;
 using Stocker.Application.Features.Identity.Commands.VerifyEmail;
 using Stocker.Application.Features.Identity.Commands.ResendVerificationEmail;
 using Stocker.Application.Features.Identity.Queries.CheckEmail;
+using Stocker.Application.Features.Identity.Commands.ForgotPassword;
+using Stocker.Application.Features.Identity.Queries.ValidateResetToken;
+using Stocker.Application.Features.Identity.Commands.ResetPassword;
+using Stocker.Application.Features.Identity.Commands.Setup2FA;
+using Stocker.Application.Features.Identity.Commands.Enable2FA;
+using Stocker.Application.Features.Identity.Commands.Verify2FA;
+using Stocker.Application.Features.Identity.Commands.Disable2FA;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -241,6 +248,233 @@ public class AuthController : ControllerBase
             {
                 success = true,
                 data = result.Value
+            });
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Request password reset email
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ForgotPasswordResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
+    {
+        _logger.LogInformation("Password reset request for email: {Email}", command.Email);
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Validate password reset token
+    /// </summary>
+    [HttpGet("validate-reset-token")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ValidateResetTokenResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> ValidateResetToken([FromQuery] string token)
+    {
+        _logger.LogInformation("Validating password reset token");
+
+        var query = new ValidateResetTokenQuery { Token = token };
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Reset password with token
+    /// </summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ResetPasswordResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
+    {
+        _logger.LogInformation("Password reset attempt with token");
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Setup 2FA for user account
+    /// </summary>
+    [HttpPost("setup-2fa")]
+    [Authorize]
+    [ProducesResponseType(typeof(Setup2FAResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Setup2FA()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
+
+        var command = new Setup2FACommand { UserId = Guid.Parse(userId) };
+
+        _logger.LogInformation("2FA setup request for user: {UserId}", userId);
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Enable 2FA with verification code
+    /// </summary>
+    [HttpPost("enable-2fa")]
+    [Authorize]
+    [ProducesResponseType(typeof(Enable2FAResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Enable2FA([FromBody] Enable2FACommand command)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
+
+        var enrichedCommand = command with { UserId = Guid.Parse(userId) };
+
+        _logger.LogInformation("2FA enable request for user: {UserId}", userId);
+
+        var result = await _mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Verify 2FA code during login
+    /// </summary>
+    [HttpPost("verify-2fa")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> Verify2FA([FromBody] Verify2FACommand command)
+    {
+        _logger.LogInformation("2FA verification attempt for email: {Email}", command.Email);
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("2FA verification successful for email: {Email}", command.Email);
+            return Ok(result.Value);
+        }
+
+        _logger.LogWarning("Failed 2FA verification for email: {Email}", command.Email);
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Disable 2FA for user account
+    /// </summary>
+    [HttpPost("disable-2fa")]
+    [Authorize]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Disable2FA([FromBody] Disable2FACommand command)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
+
+        var enrichedCommand = command with { UserId = Guid.Parse(userId) };
+
+        _logger.LogInformation("2FA disable request for user: {UserId}", userId);
+
+        var result = await _mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new
+            {
+                success = true,
+                message = "2FA disabled successfully"
             });
         }
 
