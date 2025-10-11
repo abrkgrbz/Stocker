@@ -914,7 +914,7 @@ export default function UltraPremiumRegisterPage() {
                             <div className="space-y-2">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dahil Modüller</p>
                               <div className="flex flex-wrap gap-2">
-                                {pkg.modules.filter((m: any) => m.isIncluded).map((module: any) => {
+                                {(pkg.modules || []).filter((m: any) => m.isIncluded).map((module: any) => {
                                   const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
                                   return (
                                     <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs">
@@ -1217,7 +1217,7 @@ export default function UltraPremiumRegisterPage() {
                             <div>
                               <span className="text-gray-600 text-sm">Dahil Modüller:</span>
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {selectedPackage.modules.filter((m: any) => m.isIncluded).map((module: any) => {
+                                {(selectedPackage.modules || []).filter((m: any) => m.isIncluded).map((module: any) => {
                                   const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
                                   return (
                                     <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
