@@ -8,6 +8,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import trTR from 'antd/locale/tr_TR';
 import { AuthProvider } from '@/lib/auth';
 import { TenantProvider } from '@/lib/tenant';
+import { ToastProvider } from '@/lib/notifications/toast-provider';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -35,7 +36,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           }}
         >
           <TenantProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ToastProvider />
+              {children}
+            </AuthProvider>
           </TenantProvider>
         </ConfigProvider>
       </AntdRegistry>

@@ -12,17 +12,24 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
+import { SignalRProvider } from '@/lib/signalr/signalr-context';
+import { NotificationCenter } from '@/features/notifications/components';
+import { useNotificationHub } from '@/lib/signalr/notification-hub';
+import { ConnectionStatus } from '@/components/status';
+import { useSignalRStatus } from '@/lib/signalr/use-signalr-status';
 
 const { Header, Sider, Content } = Layout;
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
+
+  // Initialize SignalR notification hub
+  useNotificationHub();
+
+  // Get SignalR connection status
+  const connectionState = useSignalRStatus('notifications');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -47,37 +54,44 @@ export default function DashboardLayout({
       key: '/dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
-      onClick: () => router.push('/dashboard'),
     },
     {
       key: '/modules',
       icon: <AppstoreOutlined />,
       label: 'Modüller',
-      onClick: () => router.push('/modules'),
     },
     {
       key: '/settings',
       icon: <SettingOutlined />,
       label: 'Ayarlar',
-      onClick: () => router.push('/settings'),
     },
   ];
+
+  const handleMenuClick = (key: string) => {
+    router.push(key);
+  };
 
   const userMenuItems = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profil',
-      onClick: () => router.push('/profile'),
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Çıkış Yap',
-      onClick: logout,
       danger: true,
     },
   ];
+
+  const handleUserMenuClick = (key: string) => {
+    if (key === 'logout') {
+      logout();
+    } else if (key === 'profile') {
+      router.push('/profile');
+    }
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -111,6 +125,7 @@ export default function DashboardLayout({
           mode="inline"
           defaultSelectedKeys={['/dashboard']}
           items={menuItems}
+          onClick={({ key }) => handleMenuClick(key)}
         />
       </Sider>
 
@@ -122,9 +137,16 @@ export default function DashboardLayout({
             display: 'flex',
             justifyContent: 'flex-end',
             alignItems: 'center',
+            gap: '16px',
           }}
         >
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+          <ConnectionStatus state={connectionState} size="small" />
+          <NotificationCenter />
+
+          <Dropdown
+            menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
+            placement="bottomRight"
+          >
             <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} />
               <span style={{ marginLeft: 8 }}>
@@ -141,5 +163,17 @@ export default function DashboardLayout({
         </Content>
       </Layout>
     </Layout>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <SignalRProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </SignalRProvider>
   );
 }
