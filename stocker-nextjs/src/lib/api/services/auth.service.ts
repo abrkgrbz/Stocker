@@ -191,6 +191,13 @@ export class AuthService {
   async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
     return apiClient.post('/auth/resend-verification-email', { email });
   }
+
+  /**
+   * Register new tenant and admin user
+   */
+  async register(data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return apiClient.post('/auth/register', data);
+  }
 }
 
 /**

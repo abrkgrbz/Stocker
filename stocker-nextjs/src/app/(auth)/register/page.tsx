@@ -496,21 +496,17 @@ export default function UltraPremiumRegisterPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/public/tenant-registration/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+      const { authService } = await import('@/lib/api/services')
+      const response = await authService.register(formData)
 
-      const data = await response.json()
-      if (!data.success) {
-        setError(data.message || 'Kayıt sırasında bir hata oluştu')
-        return
+      if (response.success) {
+        router.push(`/register/verify-email?email=${encodeURIComponent(formData.contactEmail)}`)
+      } else {
+        setError(response.message || 'Kayıt sırasında bir hata oluştu')
       }
-
-      router.push(`/register/verify-email?email=${encodeURIComponent(formData.contactEmail)}`)
-    } catch (err) {
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.')
+    } catch (err: any) {
+      setError(err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.')
+      console.error('Registration error:', err)
     } finally {
       setLoading(false)
     }
@@ -900,7 +896,7 @@ export default function UltraPremiumRegisterPage() {
                             {/* Price */}
                             <div className="flex items-baseline space-x-2">
                               <span className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                                ₺{pkg.basePrice.amount.toLocaleString('tr-TR')}
+                                ₺{(pkg.basePrice?.amount || 0).toLocaleString('tr-TR')}
                               </span>
                               <span className="text-gray-600 text-sm">/ay</span>
                             </div>
@@ -1216,7 +1212,7 @@ export default function UltraPremiumRegisterPage() {
                             </div>
                             <div>
                               <span className="text-gray-600">Fiyat:</span>
-                              <p className="font-semibold text-gray-900 mt-1">₺{selectedPackage.basePrice.amount.toLocaleString('tr-TR')}/ay</p>
+                              <p className="font-semibold text-gray-900 mt-1">₺{(selectedPackage.basePrice?.amount || 0).toLocaleString('tr-TR')}/ay</p>
                             </div>
                             <div>
                               <span className="text-gray-600 text-sm">Dahil Modüller:</span>
