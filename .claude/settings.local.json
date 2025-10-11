@@ -5,7 +5,16 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npm install:*)",
       "Read(//c/Users/PC/source/repos/**)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(git clean:*)",
+      "Bash(git restore:*)",
+      "Bash(ls:*)",
+      "Bash(timeout:*)",
+      "Bash(start http://localhost:3000/dashboard)",
+      "Bash(npm run dev)",
+      "Bash(start http://localhost:3001/dashboard)",
+      "Bash(start http://localhost:3002/dashboard)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

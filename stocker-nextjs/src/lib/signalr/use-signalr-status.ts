@@ -1,12 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSignalR } from './use-signalr';
+import { useSignalR } from './signalr-context';
 import type { ConnectionState } from '@/components/status/ConnectionStatus';
 
 export function useSignalRStatus(hubName: 'notifications' | 'inventory' | 'orders' = 'notifications') {
-  const { connection } = useSignalR(hubName);
+  const context = useSignalR();
   const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
+
+  // Select the right hub based on hubName
+  const connection = hubName === 'notifications'
+    ? context.notificationHub
+    : hubName === 'inventory'
+    ? context.inventoryHub
+    : context.orderHub;
+
+  const isConnected = hubName === 'notifications'
+    ? context.isNotificationConnected
+    : hubName === 'inventory'
+    ? context.isInventoryConnected
+    : context.isOrderConnected;
 
   useEffect(() => {
     if (!connection) {

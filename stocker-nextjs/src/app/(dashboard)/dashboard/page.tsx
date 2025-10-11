@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Typography, Card, Row, Col, Statistic, Table } from 'antd';
 import { ShoppingCartOutlined, DollarOutlined, UserOutlined, RiseOutlined } from '@ant-design/icons';
 import { LiveBadge, LastUpdated } from '@/components/status';
-import { LineChart, BarChart, PieChart, AreaChart, generateTimeSeriesData } from '@/components/charts';
+import { LineChart, BarChart, PieChart, AreaChart, generateTimeSeriesData, SalesChart, InventoryChart, CustomerChart, FinancialChart } from '@/components/charts';
 import { KPICard, ComparisonCard } from '@/components/dashboard';
 
 const { Title } = Typography;
@@ -218,6 +218,25 @@ export default function DashboardPage() {
             ]}
             valueFormatter={(value) => `₺${value.toLocaleString('tr-TR')}`}
           />
+        </Col>
+      </Row>
+
+      {/* Interactive Charts Section */}
+      <Row gutter={16} style={{ marginTop: 24 }}>
+        <Col xs={24} lg={12}>
+          <SalesChart />
+        </Col>
+        <Col xs={24} lg={12}>
+          <InventoryChart />
+        </Col>
+      </Row>
+
+      <Row gutter={16} style={{ marginTop: 24 }}>
+        <Col xs={24} lg={12}>
+          <CustomerChart />
+        </Col>
+        <Col xs={24} lg={12}>
+          <FinancialChart />
         </Col>
       </Row>
 

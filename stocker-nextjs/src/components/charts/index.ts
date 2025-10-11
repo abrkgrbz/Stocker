@@ -10,4 +10,10 @@ export type { PieChartProps, PieChartDataPoint } from './PieChart';
 export { default as AreaChart } from './AreaChart';
 export type { AreaChartProps, AreaChartDataPoint } from './AreaChart';
 
+// Interactive Charts
+export { SalesChart } from './SalesChart';
+export { InventoryChart } from './InventoryChart';
+export { CustomerChart } from './CustomerChart';
+export { FinancialChart } from './FinancialChart';
+
 export * from './chart-utils';

@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSignalR } from './signalr-context';
+import { useSignalR as useSignalRContext } from './signalr-context';
 import { SignalRClient } from './signalr-client';
+
+// Re-export useSignalR from context
+export { useSignalR } from './signalr-context';
 
 interface UseSignalRHubOptions {
   hub: 'notification' | 'inventory' | 'order';
@@ -13,7 +16,7 @@ interface UseSignalRHubOptions {
 }
 
 export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOptions) {
-  const context = useSignalR();
+  const context = useSignalRContext();
 
   const hubInstance: SignalRClient =
     hub === 'notification'
