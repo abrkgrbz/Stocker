@@ -26,7 +26,7 @@ public class Disable2FACommandHandler : IRequestHandler<Disable2FACommand, Resul
 
         try
         {
-            var user = await _masterContext.Users
+            var user = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
@@ -50,10 +50,8 @@ public class Disable2FACommandHandler : IRequestHandler<Disable2FACommand, Resul
                 return Result.Failure(Error.Validation("2FA.InvalidCode", "Invalid verification code"));
             }
 
-            // Disable 2FA and clear secrets
-            user.TwoFactorEnabled = false;
-            user.TwoFactorSecret = null;
-            user.BackupCodes = null;
+            // Disable 2FA using entity method
+            user.DisableTwoFactor();
 
             await _masterContext.SaveChangesAsync(cancellationToken);
 

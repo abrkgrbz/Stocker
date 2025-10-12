@@ -24,7 +24,11 @@
       "Bash(test:*)",
       "Bash(cat:*)",
       "Bash(npm run build)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(dotnet --version)",
+      "Bash(curl:*)",
+      "Bash(dotnet run)",
+      "Bash(dotnet add package:*)"
     ],
     "deny": [],
     "ask": []

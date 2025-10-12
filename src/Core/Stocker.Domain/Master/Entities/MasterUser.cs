@@ -24,6 +24,7 @@ public sealed class MasterUser : AggregateRoot
     public bool IsEmailVerified { get; private set; }
     public bool TwoFactorEnabled { get; private set; }
     public string? TwoFactorSecret { get; private set; }
+    public string? BackupCodes { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
     public DateTime? EmailVerifiedAt { get; private set; }
@@ -256,6 +257,22 @@ public sealed class MasterUser : AggregateRoot
         RaiseDomainEvent(new MasterUserPasswordResetDomainEvent(Id));
     }
 
+    public void SetupTwoFactor(string secret, string backupCodes)
+    {
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new ArgumentException("Secret cannot be empty.", nameof(secret));
+        }
+
+        if (string.IsNullOrWhiteSpace(backupCodes))
+        {
+            throw new ArgumentException("Backup codes cannot be empty.", nameof(backupCodes));
+        }
+
+        TwoFactorSecret = secret;
+        BackupCodes = backupCodes;
+    }
+
     public void EnableTwoFactor(string secret)
     {
         if (TwoFactorEnabled)
@@ -276,6 +293,31 @@ public sealed class MasterUser : AggregateRoot
 
         TwoFactorEnabled = false;
         TwoFactorSecret = null;
+        BackupCodes = null;
+    }
+
+    public bool UseBackupCode(string code)
+    {
+        if (string.IsNullOrEmpty(BackupCodes))
+            return false;
+
+        var codes = BackupCodes.Split(',')
+            .Select(c => c.Split(':'))
+            .Where(parts => parts.Length == 2)
+            .Select(parts => new { Code = parts[0], Used = bool.Parse(parts[1]) })
+            .ToList();
+
+        var matchingCode = codes.FirstOrDefault(c => c.Code == code && !c.Used);
+        if (matchingCode == null)
+            return false;
+
+        // Mark backup code as used
+        var updatedCodes = codes.Select(c =>
+            c.Code == code ? $"{c.Code}:true" : $"{c.Code}:{c.Used}"
+        ).ToList();
+
+        BackupCodes = string.Join(",", updatedCodes);
+        return true;
     }
 
     public ValueObjects.RefreshToken GenerateRefreshToken(string? deviceInfo = null, string? ipAddress = null)

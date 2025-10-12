@@ -26,7 +26,7 @@ public class Enable2FACommandHandler : IRequestHandler<Enable2FACommand, Result<
 
         try
         {
-            var user = await _masterContext.Users
+            var user = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
@@ -54,7 +54,7 @@ public class Enable2FACommandHandler : IRequestHandler<Enable2FACommand, Result<
             }
 
             // Enable 2FA
-            user.TwoFactorEnabled = true;
+            user.EnableTwoFactor(user.TwoFactorSecret);
             await _masterContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("2FA enabled successfully for user: {UserId}", request.UserId);

@@ -40,7 +40,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             }
 
             // Find user by reset token
-            var user = await _masterContext.Users
+            var user = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token, cancellationToken);
 
             if (user == null)
@@ -52,7 +52,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
             // Use existing ResetPasswordAsync method
             var resetResult = await _authenticationService.ResetPasswordAsync(
-                user.Email,
+                user.Email.Value,
                 request.Token,
                 request.NewPassword,
                 cancellationToken);
@@ -65,7 +65,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
                     Event = "password_reset_success",
-                    Email = user.Email,
+                    Email = user.Email.Value,
                     UserId = user.Id,
                     IpAddress = request.IpAddress,
                     UserAgent = request.UserAgent,
@@ -86,7 +86,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             await _auditService.LogAuthEventAsync(new SecurityAuditEvent
             {
                 Event = "password_reset_failed",
-                Email = user.Email,
+                Email = user.Email.Value,
                 UserId = user.Id,
                 IpAddress = request.IpAddress,
                 UserAgent = request.UserAgent,

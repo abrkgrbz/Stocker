@@ -34,9 +34,8 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
 
         try
         {
-            var user = await _masterContext.Users
-                .Include(u => u.Tenant)
-                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            var user = await _masterContext.MasterUsers
+                .FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
 
             if (user == null || !user.TwoFactorEnabled)
             {
@@ -83,12 +82,14 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
 
             if (authResult.IsSuccess)
             {
+                // Note: Tenant information is managed separately in Tenant database
+                // For audit logging, we can fetch it if needed or leave null
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
                     Event = "2fa_verification_success",
                     Email = request.Email,
                     UserId = user.Id,
-                    TenantCode = user.Tenant?.Code,
+                    TenantCode = null, // Tenant relationship managed separately
                     IpAddress = request.IpAddress,
                     UserAgent = request.UserAgent,
                     RiskScore = 10,
@@ -106,29 +107,15 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
         }
     }
 
-    private async Task<bool> VerifyBackupCode(dynamic user, string code, CancellationToken cancellationToken)
+    private async Task<bool> VerifyBackupCode(Domain.Master.Entities.MasterUser user, string code, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(user.BackupCodes))
-            return false;
+        var isValid = user.UseBackupCode(code);
 
-        var codes = user.BackupCodes.Split(',')
-            .Select(c => c.Split(':'))
-            .Where(parts => parts.Length == 2)
-            .Select(parts => new { Code = parts[0], Used = bool.Parse(parts[1]) })
-            .ToList();
+        if (isValid)
+        {
+            await _masterContext.SaveChangesAsync(cancellationToken);
+        }
 
-        var matchingCode = codes.FirstOrDefault(c => c.Code == code && !c.Used);
-        if (matchingCode == null)
-            return false;
-
-        // Mark backup code as used
-        var updatedCodes = codes.Select(c =>
-            c.Code == code ? $"{c.Code}:true" : $"{c.Code}:{c.Used}"
-        ).ToList();
-
-        user.BackupCodes = string.Join(",", updatedCodes);
-        await _masterContext.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return isValid;
     }
 }

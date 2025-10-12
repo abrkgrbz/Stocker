@@ -31,9 +31,8 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
         try
         {
             // Find user by email in master database
-            var user = await _masterContext.Users
-                .Include(u => u.Tenant)
-                .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            var user = await _masterContext.MasterUsers
+                .FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
 
             if (user == null)
             {
@@ -45,29 +44,15 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 });
             }
 
-            if (user.Tenant == null)
-            {
-                _logger.LogWarning("User {Email} exists but has no tenant", request.Email);
-                return Result.Failure<CheckEmailResponse>(
-                    Error.NotFound("Tenant.NotFound", "User account is not associated with any tenant"));
-            }
-
-            // Generate HMAC signature for tenant verification
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var signature = GenerateHmacSignature(user.Tenant.Code, timestamp);
-
-            _logger.LogInformation("Email found: {Email}, Tenant: {TenantCode}", request.Email, user.Tenant.Code);
+            // Note: Tenant relationship is managed separately in Tenant database
+            // For registration flow, we can return user exists without tenant info
+            // Tenant assignment happens during registration completion
+            _logger.LogInformation("Email found: {Email}", request.Email);
 
             return Result.Success(new CheckEmailResponse
             {
                 Exists = true,
-                Tenant = new TenantInfo
-                {
-                    Code = user.Tenant.Code,
-                    Name = user.Tenant.Name,
-                    Signature = signature,
-                    Timestamp = timestamp
-                }
+                Tenant = null // Tenant info managed separately
             });
         }
         catch (Exception ex)

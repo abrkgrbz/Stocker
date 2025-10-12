@@ -29,7 +29,7 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
         try
         {
             // Find user
-            var user = await _masterContext.Users
+            var user = await _masterContext.MasterUsers
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
@@ -44,7 +44,7 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
 
             // Create OtpAuth URL for QR code
             var issuer = "Stocker ERP";
-            var qrCodeUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(user.Email)}?" +
+            var qrCodeUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(user.Email.Value)}?" +
                            $"secret={secret}&issuer={Uri.EscapeDataString(issuer)}&algorithm=SHA1&digits=6&period=30";
 
             // Format manual entry key (easier to type)
@@ -55,8 +55,8 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
 
             // Store secret in user record (will be activated after verification)
             // NOTE: In production, encrypt the secret before storing
-            user.TwoFactorSecret = secret;
-            user.BackupCodes = string.Join(",", backupCodes.Select(c => $"{c}:false")); // code:used format
+            var backupCodesFormatted = string.Join(",", backupCodes.Select(c => $"{c}:false")); // code:used format
+            user.SetupTwoFactor(secret, backupCodesFormatted);
 
             await _masterContext.SaveChangesAsync(cancellationToken);
 

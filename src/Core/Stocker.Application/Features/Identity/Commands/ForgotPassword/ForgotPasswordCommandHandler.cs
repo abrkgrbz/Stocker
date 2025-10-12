@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Services;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Identity.Commands.ForgotPassword;
