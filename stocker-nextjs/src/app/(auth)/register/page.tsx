@@ -849,13 +849,13 @@ export default function UltraPremiumRegisterPage() {
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {packages.map((pkg, index) => {
-                      const isSelected = formData.packageId === pkg.id
+                      const isSelected = formData.packageId === pkg.Id
                       const isPopular = index === 1 // Middle package is popular
                       return (
                         <button
-                          key={pkg.id}
+                          key={pkg.Id}
                           type="button"
-                          onClick={() => handleInputChange('packageId', pkg.id)}
+                          onClick={() => handleInputChange('packageId', pkg.Id)}
                           className={`relative p-6 rounded-3xl border-2 transition-all text-left ${
                             isSelected
                               ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-fuchsia-50 shadow-2xl shadow-violet-500/30 scale-105'
@@ -887,25 +887,25 @@ export default function UltraPremiumRegisterPage() {
                           {/* Package Info */}
                           <div className="space-y-4">
                             <div>
-                              <h4 className="text-2xl font-bold text-gray-900">{pkg.name}</h4>
-                              {pkg.description && (
-                                <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>
+                              <h4 className="text-2xl font-bold text-gray-900">{pkg.Name}</h4>
+                              {pkg.Description && (
+                                <p className="text-sm text-gray-600 mt-1">{pkg.Description}</p>
                               )}
                             </div>
 
                             {/* Price */}
                             <div className="flex items-baseline space-x-2">
                               <span className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                                ₺{(pkg.basePrice?.amount || 0).toLocaleString('tr-TR')}
+                                ₺{(pkg.BasePrice?.Amount || 0).toLocaleString('tr-TR')}
                               </span>
                               <span className="text-gray-600 text-sm">/ay</span>
                             </div>
 
                             {/* Trial Days */}
-                            {pkg.trialDays > 0 && (
+                            {pkg.TrialDays > 0 && (
                               <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
                                 <span className="text-xs font-bold text-green-700">
-                                  🎁 {pkg.trialDays} gün ücretsiz deneme
+                                  🎁 {pkg.TrialDays} gün ücretsiz deneme
                                 </span>
                               </div>
                             )}
@@ -914,12 +914,12 @@ export default function UltraPremiumRegisterPage() {
                             <div className="space-y-2">
                               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dahil Modüller</p>
                               <div className="flex flex-wrap gap-2">
-                                {(pkg.modules || []).filter((m: any) => m.isIncluded).map((module: any) => {
-                                  const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
+                                {(pkg.Modules || []).filter((m: any) => m.IsIncluded).map((module: any) => {
+                                  const moduleInfo = availableModules.find(am => am.code === module.ModuleCode)
                                   return (
-                                    <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs">
+                                    <div key={module.ModuleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs">
                                       <span>{moduleInfo?.icon || '📦'}</span>
-                                      <span className="font-medium text-gray-700">{module.moduleName}</span>
+                                      <span className="font-medium text-gray-700">{module.ModuleName}</span>
                                     </div>
                                   )
                                 })}
@@ -930,11 +930,11 @@ export default function UltraPremiumRegisterPage() {
                             <div className="pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
                               <div className="flex items-center justify-between">
                                 <span>👥 Max Kullanıcı:</span>
-                                <span className="font-semibold text-gray-900">{pkg.maxUsers}</span>
+                                <span className="font-semibold text-gray-900">{pkg.MaxUsers || 0}</span>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span>💾 Depolama:</span>
-                                <span className="font-semibold text-gray-900">{pkg.maxStorage} GB</span>
+                                <span className="font-semibold text-gray-900">{pkg.MaxStorage || 0} GB</span>
                               </div>
                             </div>
                           </div>
@@ -1203,26 +1203,26 @@ export default function UltraPremiumRegisterPage() {
                     </div>
                     <div className="space-y-3">
                       {(() => {
-                        const selectedPackage = packages.find(p => p.id === formData.packageId)
+                        const selectedPackage = packages.find(p => p.Id === formData.packageId)
                         return selectedPackage ? (
                           <>
                             <div>
                               <span className="text-gray-600">Paket:</span>
-                              <p className="font-semibold text-gray-900 mt-1">{selectedPackage.name}</p>
+                              <p className="font-semibold text-gray-900 mt-1">{selectedPackage.Name}</p>
                             </div>
                             <div>
                               <span className="text-gray-600">Fiyat:</span>
-                              <p className="font-semibold text-gray-900 mt-1">₺{(selectedPackage.basePrice?.amount || 0).toLocaleString('tr-TR')}/ay</p>
+                              <p className="font-semibold text-gray-900 mt-1">₺{(selectedPackage.BasePrice?.Amount || 0).toLocaleString('tr-TR')}/ay</p>
                             </div>
                             <div>
                               <span className="text-gray-600 text-sm">Dahil Modüller:</span>
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {(selectedPackage.modules || []).filter((m: any) => m.isIncluded).map((module: any) => {
-                                  const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
+                                {(selectedPackage.Modules || []).filter((m: any) => m.IsIncluded).map((module: any) => {
+                                  const moduleInfo = availableModules.find(am => am.code === module.ModuleCode)
                                   return (
-                                    <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
+                                    <div key={module.ModuleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
                                       <span>{moduleInfo?.icon || '📦'}</span>
-                                      <span className="font-medium text-gray-700">{module.moduleName}</span>
+                                      <span className="font-medium text-gray-700">{module.ModuleName}</span>
                                     </div>
                                   )
                                 })}
