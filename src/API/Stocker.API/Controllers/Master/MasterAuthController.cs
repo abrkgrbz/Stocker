@@ -6,6 +6,7 @@ using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
 using Stocker.Application.Features.Identity.Commands.VerifyEmail;
+using Stocker.Application.Features.Identity.Commands.Verify2FA;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
@@ -99,6 +100,83 @@ public class MasterAuthController : ApiController
     }
 
     /// <summary>
+    /// Verify 2FA code during master admin login
+    /// </summary>
+    [HttpPost("verify-2fa")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Verify2FA([FromBody] Verify2FACommand command)
+    {
+        _logger.LogInformation("Master admin 2FA verification attempt for email: {Email}", command.Email);
+
+        // Add IP address and User-Agent for audit logging
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await Mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            // Verify this is actually a master admin
+            if (result.Value.User.Roles.Contains("SistemYoneticisi") || result.Value.User.Roles.Contains("SystemAdmin"))
+            {
+                _logger.LogInformation("Master admin 2FA verified successfully for: {Email}", command.Email);
+                return HandleResult(result);
+            }
+
+            _logger.LogWarning("Non-master admin tried 2FA verification through master endpoint: {Email}", command.Email);
+            return Unauthorized(CreateErrorResponse("Access denied. This endpoint is for system administrators only."));
+        }
+
+        _logger.LogWarning("Failed master admin 2FA verification for email: {Email}", command.Email);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Verify backup code during master admin login
+    /// </summary>
+    [HttpPost("verify-backup-code")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> VerifyBackupCode([FromBody] Verify2FACommand command)
+    {
+        _logger.LogInformation("Master admin backup code verification attempt for email: {Email}", command.Email);
+
+        // Add IP address and User-Agent for audit logging and mark as backup code
+        var enrichedCommand = command with
+        {
+            IsBackupCode = true,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await Mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            // Verify this is actually a master admin
+            if (result.Value.User.Roles.Contains("SistemYoneticisi") || result.Value.User.Roles.Contains("SystemAdmin"))
+            {
+                _logger.LogInformation("Master admin backup code verified successfully for: {Email}", command.Email);
+                return HandleResult(result);
+            }
+
+            _logger.LogWarning("Non-master admin tried backup code verification through master endpoint: {Email}", command.Email);
+            return Unauthorized(CreateErrorResponse("Access denied. This endpoint is for system administrators only."));
+        }
+
+        _logger.LogWarning("Failed master admin backup code verification for email: {Email}", command.Email);
+        return HandleResult(result);
+    }
+
+    /// <summary>
     /// Verify email address
     /// </summary>
     [HttpPost("verify-email")]
@@ -108,19 +186,19 @@ public class MasterAuthController : ApiController
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
     {
         _logger.LogInformation("Email verification attempt for: {Email}", command.Email);
-        
+
         var result = await Mediator.Send(command);
-        
+
         if (result.IsSuccess)
         {
             _logger.LogInformation("Email verified successfully for: {Email}", command.Email);
         }
         else
         {
-            _logger.LogWarning("Email verification failed for: {Email} - {Error}", 
+            _logger.LogWarning("Email verification failed for: {Email} - {Error}",
                 command.Email, result.Error?.Description);
         }
-        
+
         return HandleResult(result);
     }
     

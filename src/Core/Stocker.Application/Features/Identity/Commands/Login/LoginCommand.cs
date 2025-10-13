@@ -19,6 +19,8 @@ public class AuthResponse
     public DateTime ExpiresAt { get; set; }
     public string TokenType { get; set; } = "Bearer";
     public UserInfo User { get; set; } = new();
+    public bool Requires2FA { get; set; }
+    public string? TempToken { get; set; }
 }
 
 public class UserInfo

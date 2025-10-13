@@ -34,8 +34,20 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
 
         try
         {
+            // Extract email from tempToken if provided (format: "guid:email")
+            string emailToVerify = request.Email;
+            if (!string.IsNullOrEmpty(request.TempToken) && request.TempToken.Contains(':'))
+            {
+                var parts = request.TempToken.Split(':');
+                if (parts.Length == 2)
+                {
+                    emailToVerify = parts[1];
+                    _logger.LogDebug("Extracted email from tempToken: {Email}", emailToVerify);
+                }
+            }
+
             var user = await _masterContext.MasterUsers
-                .FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email.Value == emailToVerify, cancellationToken);
 
             if (user == null || !user.TwoFactorEnabled)
             {
@@ -60,12 +72,12 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
 
             if (!isValid)
             {
-                _logger.LogWarning("Invalid 2FA code for email: {Email}", request.Email);
+                _logger.LogWarning("Invalid 2FA code for email: {Email}", emailToVerify);
 
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
                     Event = "2fa_verification_failed",
-                    Email = request.Email,
+                    Email = emailToVerify,
                     UserId = user.Id,
                     IpAddress = request.IpAddress,
                     UserAgent = request.UserAgent,
@@ -78,7 +90,8 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
             }
 
             // Generate JWT tokens after successful 2FA
-            var authResult = await _authenticationService.AuthenticateAsync(request.Email, string.Empty, cancellationToken);
+            // Note: We use a special marker password to indicate 2FA is already verified
+            var authResult = await _authenticationService.AuthenticateAsync(emailToVerify, "__2FA_VERIFIED__", cancellationToken);
 
             if (authResult.IsSuccess)
             {
@@ -87,7 +100,7 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
                     Event = "2fa_verification_success",
-                    Email = request.Email,
+                    Email = emailToVerify,
                     UserId = user.Id,
                     TenantCode = null, // Tenant relationship managed separately
                     IpAddress = request.IpAddress,

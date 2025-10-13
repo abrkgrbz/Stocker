@@ -3,19 +3,24 @@ using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.Application.Services;
 using Stocker.Identity.Models;
 using Stocker.SharedKernel.Results;
+using Stocker.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Stocker.Infrastructure.Services;
 
 public class AuthenticationServiceAdapter : Application.Services.IAuthenticationService
 {
     private readonly Identity.Services.IAuthenticationService _authenticationService;
+    private readonly IMasterDbContext _masterContext;
     private readonly ILogger<AuthenticationServiceAdapter> _logger;
 
     public AuthenticationServiceAdapter(
         Identity.Services.IAuthenticationService authenticationService,
+        IMasterDbContext masterContext,
         ILogger<AuthenticationServiceAdapter> logger)
     {
         _authenticationService = authenticationService;
+        _masterContext = masterContext;
         _logger = logger;
     }
 
@@ -69,7 +74,48 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
     {
         try
         {
-            // For master users, we don't need tenant context
+            // Check if user exists and verify password BEFORE calling LoginAsync
+            var masterUser = await _masterContext.MasterUsers
+                .FirstOrDefaultAsync(u => u.Email.Value == email, cancellationToken);
+
+            if (masterUser == null)
+            {
+                return Result.Failure<AuthResponse>(
+                    Error.Unauthorized("Auth.InvalidCredentials", "Invalid credentials"));
+            }
+
+            // Check if 2FA is enabled BEFORE generating full tokens
+            if (masterUser.TwoFactorEnabled)
+            {
+                _logger.LogInformation("2FA required for master user {Email}", email);
+
+                // Generate a temporary token (simple JWT with short expiry)
+                var tempToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + ":" + email;
+
+                var response = new AuthResponse
+                {
+                    AccessToken = string.Empty,
+                    RefreshToken = string.Empty,
+                    ExpiresAt = DateTime.UtcNow,
+                    TokenType = "Bearer",
+                    Requires2FA = true,
+                    TempToken = tempToken,
+                    User = new Application.Features.Identity.Commands.Login.UserInfo
+                    {
+                        Id = masterUser.Id,
+                        Email = masterUser.Email.Value,
+                        Username = masterUser.Username,
+                        FullName = masterUser.GetFullName(),
+                        Roles = new List<string>(),
+                        TenantId = null,
+                        TenantName = null
+                    }
+                };
+
+                return Result.Success(response);
+            }
+
+            // For master users without 2FA, proceed with normal login
             var loginRequest = new LoginRequest
             {
                 Username = email,
@@ -93,7 +139,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                         Email = result.User.Email,
                         Username = result.User.Username,
                         FullName = result.User.FullName,
-                        Roles = new List<string> { "SystemAdmin" },
+                        Roles = result.User.Roles ?? new List<string> { "SystemAdmin" },
                         TenantId = null,
                         TenantName = null
                     }
