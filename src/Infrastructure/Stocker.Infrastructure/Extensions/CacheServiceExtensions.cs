@@ -40,6 +40,7 @@ public static class CacheServiceExtensions
         else
         {
             // In-memory cache as fallback
+            services.AddDistributedMemoryCache(); // Required for IDistributedCache
             services.AddMemoryCache();
             services.AddSingleton<ICacheService, InMemoryCacheService>();
             services.AddSingleton<ITenantSettingsCacheService, InMemoryCacheService>();
