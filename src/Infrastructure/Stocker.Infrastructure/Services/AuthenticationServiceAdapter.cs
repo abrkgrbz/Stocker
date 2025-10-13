@@ -12,15 +12,18 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 {
     private readonly Identity.Services.IAuthenticationService _authenticationService;
     private readonly IMasterDbContext _masterContext;
+    private readonly IPasswordService _passwordService;
     private readonly ILogger<AuthenticationServiceAdapter> _logger;
 
     public AuthenticationServiceAdapter(
         Identity.Services.IAuthenticationService authenticationService,
         IMasterDbContext masterContext,
+        IPasswordService passwordService,
         ILogger<AuthenticationServiceAdapter> logger)
     {
         _authenticationService = authenticationService;
         _masterContext = masterContext;
+        _passwordService = passwordService;
         _logger = logger;
     }
 
@@ -80,6 +83,14 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 
             if (masterUser == null)
             {
+                return Result.Failure<AuthResponse>(
+                    Error.Unauthorized("Auth.InvalidCredentials", "Invalid credentials"));
+            }
+
+            // Verify password BEFORE checking 2FA
+            if (!_passwordService.VerifyPassword(masterUser.Password, password))
+            {
+                _logger.LogWarning("Invalid password for master user {Email}", email);
                 return Result.Failure<AuthResponse>(
                     Error.Unauthorized("Auth.InvalidCredentials", "Invalid credentials"));
             }
