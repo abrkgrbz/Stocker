@@ -53,9 +53,9 @@ public class RateLimitingMiddleware
         // Add rate limit headers to response
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers.Add("X-RateLimit-Limit", limit.ToString());
-            context.Response.Headers.Add("X-RateLimit-Remaining", Math.Max(0, limit - (rateLimitCounter?.Count ?? 0) - 1).ToString());
-            context.Response.Headers.Add("X-RateLimit-Reset", DateTimeOffset.UtcNow.AddSeconds(period).ToUnixTimeSeconds().ToString());
+            context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
+            context.Response.Headers["X-RateLimit-Remaining"] = Math.Max(0, limit - (rateLimitCounter?.Count ?? 0) - 1).ToString();
+            context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddSeconds(period).ToUnixTimeSeconds().ToString();
             
             return Task.CompletedTask;
         });
@@ -117,10 +117,10 @@ public class RateLimitingMiddleware
     private async Task HandleRateLimitExceeded(HttpContext context, RateLimitCounter counter, int limit, int period)
     {
         context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-        context.Response.Headers.Add("X-RateLimit-Limit", limit.ToString());
-        context.Response.Headers.Add("X-RateLimit-Remaining", "0");
-        context.Response.Headers.Add("X-RateLimit-Reset", DateTimeOffset.UtcNow.AddSeconds(period).ToUnixTimeSeconds().ToString());
-        context.Response.Headers.Add("Retry-After", period.ToString());
+        context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
+        context.Response.Headers["X-RateLimit-Remaining"] = "0";
+        context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.AddSeconds(period).ToUnixTimeSeconds().ToString();
+        context.Response.Headers["Retry-After"] = period.ToString();
 
         var response = new
         {
