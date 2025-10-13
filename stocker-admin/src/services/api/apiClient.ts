@@ -26,6 +26,8 @@ export interface AuthResponse {
   expiresAt: string;
   tokenType: string;
   user: UserInfo;
+  requires2FA?: boolean;
+  tempToken?: string;
 }
 
 export interface UserInfo {
@@ -267,12 +269,21 @@ class ApiClient {
     try {
       // Use master auth endpoint for admin login
       const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/login', credentials);
-      
+
+      // Check if 2FA is required
+      if (response.data.data?.requires2FA) {
+        return {
+          ...response.data.data,
+          requires2FA: true,
+          tempToken: response.data.data.tempToken
+        };
+      }
+
       // Check if the response is successful
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      
+
       // Handle error response
       throw new AppError(response.data.message || 'Login failed', ERROR_CODES.INVALID_CREDENTIALS);
     } catch (error: any) {
@@ -281,6 +292,40 @@ class ApiClient {
         throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
       }
       throw new AppError('Login failed', ERROR_CODES.INVALID_CREDENTIALS);
+    }
+  }
+
+  async verify2FA(params: { tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
+    try {
+      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-2fa', params);
+
+      if (response.data.success && response.data.data) {
+        return response.data;
+      }
+
+      throw new AppError(response.data.message || '2FA verification failed', ERROR_CODES.INVALID_CREDENTIALS);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
+      }
+      throw new AppError('2FA verification failed', ERROR_CODES.INVALID_CREDENTIALS);
+    }
+  }
+
+  async verifyBackupCode(params: { tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
+    try {
+      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-backup-code', params);
+
+      if (response.data.success && response.data.data) {
+        return response.data;
+      }
+
+      throw new AppError(response.data.message || 'Backup code verification failed', ERROR_CODES.INVALID_CREDENTIALS);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
+      }
+      throw new AppError('Backup code verification failed', ERROR_CODES.INVALID_CREDENTIALS);
     }
   }
 

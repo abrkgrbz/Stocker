@@ -23,12 +23,17 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+  requires2FA: boolean;
+  tempLoginToken: string | null;
+
   // Actions
   login: (email: string, password: string) => Promise<void>;
+  verify2FA: (code: string) => Promise<boolean>;
+  verifyBackupCode: (code: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => void;
   setLoading: (loading: boolean) => void;
+  clearTempToken: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,34 +44,58 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
+      requires2FA: false,
+      tempLoginToken: null,
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
       },
 
+      clearTempToken: () => {
+        set({ tempLoginToken: null, requires2FA: false });
+      },
+
       login: async (email: string, password: string) => {
         set({ isLoading: true });
-        
+
         try {
           // Use real API client
           const response = await apiClient.login({ email, password });
-          
+
+          // Check if 2FA is required
+          if (response.requires2FA) {
+            set({
+              isLoading: false,
+              requires2FA: true,
+              tempLoginToken: response.tempToken,
+              user: {
+                id: '',
+                email: email,
+                name: '',
+                role: 'user'
+              }
+            });
+
+            // Don't show success message yet, wait for 2FA
+            return;
+          }
+
           // Map the API user format to our admin user format
           const adminUser: AdminUser = {
             id: response.user.id,
             email: response.user.email,
             name: response.user.fullName || response.user.username || 'Admin User',
-            role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' : 
+            role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
                   response.user.roles.includes('Admin') ? 'admin' : 'user',
             roles: response.user.roles,  // Keep original roles array
             tenantId: response.user.tenantId,
             tenantName: response.user.tenantName,
           };
-          
+
           // Store tokens securely
           tokenStorage.setToken(response.accessToken);
           tokenStorage.setRefreshToken(response.refreshToken);
-          
+
           // Update state
           set({
             user: adminUser,
@@ -74,11 +103,13 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: response.refreshToken,
             isAuthenticated: true,
             isLoading: false,
+            requires2FA: false,
+            tempLoginToken: null
           });
-          
+
           // Log successful login
           auditLogger.logLogin(adminUser.email, true);
-          
+
           // Show success message
           await Swal.fire({
             icon: 'success',
@@ -102,14 +133,14 @@ export const useAuthStore = create<AuthState>()(
             }
           });
         } catch (error: any) {
-          set({ isLoading: false });
-          
+          set({ isLoading: false, requires2FA: false, tempLoginToken: null });
+
           // Log failed login attempt
           auditLogger.logLogin(email, false, error.message);
-          
+
           // Show error message
           const errorMessage = error.message || 'Giriş başarısız oldu';
-          
+
           await Swal.fire({
             icon: 'error',
             title: 'Giriş Hatası',
@@ -127,8 +158,114 @@ export const useAuthStore = create<AuthState>()(
               popup.style.boxShadow = '0 10px 40px rgba(239, 68, 68, 0.3)';
             }
           });
-          
+
           throw error;
+        }
+      },
+
+      verify2FA: async (code: string) => {
+        const tempToken = get().tempLoginToken;
+        if (!tempToken) return false;
+
+        set({ isLoading: true });
+
+        try {
+          const response = await apiClient.verify2FA({
+            tempToken,
+            code
+          });
+
+          if (response.success) {
+            // Map the API user format to our admin user format
+            const adminUser: AdminUser = {
+              id: response.user.id,
+              email: response.user.email,
+              name: response.user.fullName || response.user.username || 'Admin User',
+              role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
+                    response.user.roles.includes('Admin') ? 'admin' : 'user',
+              roles: response.user.roles,
+              tenantId: response.user.tenantId,
+              tenantName: response.user.tenantName,
+            };
+
+            // Store tokens securely
+            tokenStorage.setToken(response.accessToken);
+            tokenStorage.setRefreshToken(response.refreshToken);
+
+            // Update state
+            set({
+              user: adminUser,
+              accessToken: response.accessToken,
+              refreshToken: response.refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+              requires2FA: false,
+              tempLoginToken: null
+            });
+
+            // Log successful 2FA verification
+            auditLogger.logLogin(adminUser.email, true, '2FA verified');
+
+            return true;
+          }
+          return false;
+        } catch (error: any) {
+          set({ isLoading: false });
+          console.error('2FA verification failed:', error);
+          return false;
+        }
+      },
+
+      verifyBackupCode: async (code: string) => {
+        const tempToken = get().tempLoginToken;
+        if (!tempToken) return false;
+
+        set({ isLoading: true });
+
+        try {
+          const response = await apiClient.verifyBackupCode({
+            tempToken,
+            code
+          });
+
+          if (response.success) {
+            // Map the API user format to our admin user format
+            const adminUser: AdminUser = {
+              id: response.user.id,
+              email: response.user.email,
+              name: response.user.fullName || response.user.username || 'Admin User',
+              role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
+                    response.user.roles.includes('Admin') ? 'admin' : 'user',
+              roles: response.user.roles,
+              tenantId: response.user.tenantId,
+              tenantName: response.user.tenantName,
+            };
+
+            // Store tokens securely
+            tokenStorage.setToken(response.accessToken);
+            tokenStorage.setRefreshToken(response.refreshToken);
+
+            // Update state
+            set({
+              user: adminUser,
+              accessToken: response.accessToken,
+              refreshToken: response.refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+              requires2FA: false,
+              tempLoginToken: null
+            });
+
+            // Log successful backup code usage
+            auditLogger.logLogin(adminUser.email, true, 'Backup code used');
+
+            return true;
+          }
+          return false;
+        } catch (error: any) {
+          set({ isLoading: false });
+          console.error('Backup code verification failed:', error);
+          return false;
         }
       },
 

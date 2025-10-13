@@ -8,6 +8,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import { loginSchema, type LoginFormData } from '../../schemas/authSchemas';
 import { loginRateLimiter } from '../../utils/security';
 import { z } from 'zod';
+import { TwoFactorLogin } from '../../components/TwoFactor/TwoFactorLogin';
+import { BackupCodeVerification } from '../../components/TwoFactor/BackupCodeVerification';
 import './LoginPage.css';
 import './LoginPage.global.css';
 
@@ -15,20 +17,30 @@ const { Title, Text } = Typography;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, requires2FA, verify2FA, verifyBackupCode, clearTempToken, user } = useAuthStore();
   const [form] = Form.useForm();
-  
+
   const [isLoading, setIsLoading] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [showBackupCodeModal, setShowBackupCodeModal] = useState(false);
 
   // Add login-page class to body to prevent scrolling
   useEffect(() => {
     document.body.classList.add('login-page');
-    
+
     // Cleanup function to remove the class when component unmounts
     return () => {
       document.body.classList.remove('login-page');
     };
   }, []);
+
+  // Check if 2FA is required after login
+  useEffect(() => {
+    if (requires2FA) {
+      setShow2FAModal(true);
+      setIsLoading(false);
+    }
+  }, [requires2FA]);
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     try {
@@ -53,8 +65,14 @@ const LoginPage: React.FC = () => {
       
       // Use validated and sanitized data
       await login(formData.email, formData.password);
-      
-      // Success notification
+
+      // Check if 2FA is required
+      if (requires2FA) {
+        // 2FA modal will be shown via useEffect
+        return;
+      }
+
+      // Success notification (only if 2FA is not required)
       await Swal.fire({
         icon: 'success',
         title: 'Giriş Başarılı!',
@@ -76,7 +94,7 @@ const LoginPage: React.FC = () => {
           toast.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3)';
         }
       });
-      
+
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
@@ -117,6 +135,100 @@ const LoginPage: React.FC = () => {
       });
       setIsLoading(false);
     }
+  };
+
+  const handle2FAVerification = async (code: string): Promise<boolean> => {
+    try {
+      const success = await verify2FA(code);
+
+      if (success) {
+        setShow2FAModal(false);
+
+        // Success notification
+        await Swal.fire({
+          icon: 'success',
+          title: '2FA Doğrulandı!',
+          text: 'Yönetim paneline yönlendiriliyorsunuz...',
+          timer: 1500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top',
+          background: '#1a1f36',
+          color: '#fff',
+          customClass: {
+            popup: 'colored-toast',
+            title: 'swal-title',
+            timerProgressBar: 'swal-progress-bar'
+          },
+          didOpen: (toast) => {
+            toast.style.border = '2px solid #10b981';
+            toast.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
+          }
+        });
+
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('2FA verification failed:', error);
+      return false;
+    }
+  };
+
+  const handleBackupCodeVerification = async (code: string): Promise<boolean> => {
+    try {
+      const success = await verifyBackupCode(code);
+
+      if (success) {
+        setShowBackupCodeModal(false);
+        setShow2FAModal(false);
+
+        // Success notification
+        await Swal.fire({
+          icon: 'success',
+          title: 'Yedek Kod Doğrulandı!',
+          text: 'Yönetim paneline yönlendiriliyorsunuz...',
+          timer: 1500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top',
+          background: '#1a1f36',
+          color: '#fff',
+          customClass: {
+            popup: 'colored-toast',
+            title: 'swal-title',
+            timerProgressBar: 'swal-progress-bar'
+          },
+          didOpen: (toast) => {
+            toast.style.border = '2px solid #10b981';
+            toast.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
+          }
+        });
+
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Backup code verification failed:', error);
+      return false;
+    }
+  };
+
+  const handleCancel2FA = () => {
+    setShow2FAModal(false);
+    setShowBackupCodeModal(false);
+    clearTempToken();
+    setIsLoading(false);
   };
 
   return (
@@ -270,6 +382,30 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 2FA Verification Modal */}
+      <TwoFactorLogin
+        visible={show2FAModal && !showBackupCodeModal}
+        onVerify={handle2FAVerification}
+        onCancel={handleCancel2FA}
+        onUseBackupCode={() => {
+          setShow2FAModal(false);
+          setShowBackupCodeModal(true);
+        }}
+        userEmail={user?.email}
+      />
+
+      {/* Backup Code Verification Modal */}
+      <BackupCodeVerification
+        visible={showBackupCodeModal}
+        onVerify={handleBackupCodeVerification}
+        onBack={() => {
+          setShowBackupCodeModal(false);
+          setShow2FAModal(true);
+        }}
+        onCancel={handleCancel2FA}
+        userEmail={user?.email}
+      />
     </div>
   );
 };
