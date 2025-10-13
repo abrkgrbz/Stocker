@@ -41,6 +41,12 @@ public class CacheControlMiddleware
         var request = context.Request;
         var response = context.Response;
 
+        // Skip if response has already started
+        if (response.HasStarted)
+        {
+            return;
+        }
+
         // Skip if already has Cache-Control header
         if (response.Headers.ContainsKey(HeaderNames.CacheControl))
         {

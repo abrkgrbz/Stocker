@@ -72,9 +72,14 @@ public class ETagMiddleware
                     if (ifNoneMatch.Contains(etag))
                     {
                         _logger.LogDebug("ETag match found. Returning 304 Not Modified");
-                        response.StatusCode = StatusCodes.Status304NotModified;
-                        response.ContentLength = 0;
-                        response.Headers[HeaderNames.ETag] = etag;
+
+                        // Skip if response has already started
+                        if (!response.HasStarted)
+                        {
+                            response.StatusCode = StatusCodes.Status304NotModified;
+                            response.ContentLength = 0;
+                            response.Headers[HeaderNames.ETag] = etag;
+                        }
                         return;
                     }
                 }
@@ -85,18 +90,26 @@ public class ETagMiddleware
                     if (!ifMatch.Contains(etag) && !ifMatch.Contains("*"))
                     {
                         _logger.LogDebug("ETag mismatch. Returning 412 Precondition Failed");
-                        response.StatusCode = StatusCodes.Status412PreconditionFailed;
+
+                        // Skip if response has already started
+                        if (!response.HasStarted)
+                        {
+                            response.StatusCode = StatusCodes.Status412PreconditionFailed;
+                        }
                         return;
                     }
                 }
 
-                // Add ETag header
-                response.Headers[HeaderNames.ETag] = etag;
-
-                // Add Cache-Control if not already set
-                if (!response.Headers.ContainsKey(HeaderNames.CacheControl))
+                // Add ETag header (only if response hasn't started)
+                if (!response.HasStarted)
                 {
-                    response.Headers[HeaderNames.CacheControl] = _options.DefaultCacheControl;
+                    response.Headers[HeaderNames.ETag] = etag;
+
+                    // Add Cache-Control if not already set
+                    if (!response.Headers.ContainsKey(HeaderNames.CacheControl))
+                    {
+                        response.Headers[HeaderNames.CacheControl] = _options.DefaultCacheControl;
+                    }
                 }
             }
 
