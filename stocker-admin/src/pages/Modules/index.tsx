@@ -30,7 +30,7 @@ import {
   NodeIndexOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { moduleService, featureService, type Module, type CreateModuleDto, type UpdateModuleDto } from '../../services/api';
+import { moduleService, featureService, type Module, type CreateModuleDto, type UpdateModuleDto } from '../../services/api/index';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
