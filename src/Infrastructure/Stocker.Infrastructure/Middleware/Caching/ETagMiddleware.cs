@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System.IO;
@@ -22,11 +23,11 @@ public class ETagMiddleware
     public ETagMiddleware(
         RequestDelegate next,
         ILogger<ETagMiddleware> logger,
-        ETagOptions options)
+        IOptions<ETagOptions> options)
     {
         _next = next;
         _logger = logger;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task InvokeAsync(HttpContext context)

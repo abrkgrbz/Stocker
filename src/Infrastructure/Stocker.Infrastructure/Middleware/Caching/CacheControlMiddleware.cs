@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,11 @@ public class CacheControlMiddleware
     public CacheControlMiddleware(
         RequestDelegate next,
         ILogger<CacheControlMiddleware> logger,
-        CacheControlOptions options)
+        IOptions<CacheControlOptions> options)
     {
         _next = next;
         _logger = logger;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task InvokeAsync(HttpContext context)
