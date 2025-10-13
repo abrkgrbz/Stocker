@@ -28,7 +28,20 @@
       "Bash(dotnet --version)",
       "Bash(curl:*)",
       "Bash(dotnet run)",
-      "Bash(dotnet add package:*)"
+      "Bash(dotnet add package:*)",
+      "Bash(dotnet build)",
+      "Bash(for:*)",
+      "Bash(do sed -i 's/_masterContext\\.Users/_masterContext.MasterUsers/g; s/_masterDbContext\\.Users/_masterDbContext.MasterUsers/g' \"$file\")",
+      "Bash(done)",
+      "Bash(dotnet build:*)",
+      "Bash(git log:*)",
+      "Bash(taskkill:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet ef database update:*)",
+      "Bash(dir:*)",
+      "Bash(tasklist)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
