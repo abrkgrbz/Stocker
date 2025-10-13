@@ -17,7 +17,7 @@ public static class ResultExtensions
     {
         if (result.IsSuccess)
         {
-            return new OkObjectResult(ApiResponse<T>.SuccessResponse(result.Value!));
+            return new OkObjectResult(ApiResponse<T>.CreateSuccess(result.Value!));
         }
 
         return CreateErrorResult(result.Error);
@@ -30,7 +30,7 @@ public static class ResultExtensions
     {
         if (result.IsSuccess)
         {
-            return new OkObjectResult(ApiResponse<T>.SuccessResponse(result.Value!, successMessage));
+            return new OkObjectResult(ApiResponse<T>.CreateSuccess(result.Value!, successMessage));
         }
 
         return CreateErrorResult(result.Error);
@@ -43,11 +43,7 @@ public static class ResultExtensions
     {
         if (result.IsSuccess)
         {
-            return new OkObjectResult(new ApiResponse 
-            { 
-                Success = true, 
-                Message = "Operation completed successfully" 
-            });
+            return new OkObjectResult(new { success = true, message = "Operation completed successfully" });
         }
 
         return CreateErrorResult(result.Error);

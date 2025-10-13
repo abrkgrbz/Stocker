@@ -5,8 +5,11 @@ namespace Stocker.Application.Common.Models;
 /// <summary>
 /// Standard error response model
 /// </summary>
-public class ErrorResponse : ApiResponse
+public class ErrorResponse
 {
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? TraceId { get; set; }
     public string ErrorCode { get; set; } = string.Empty;
     public ErrorType ErrorType { get; set; }
     public Dictionary<string, string[]>? Errors { get; set; }

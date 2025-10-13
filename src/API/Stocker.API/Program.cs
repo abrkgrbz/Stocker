@@ -46,8 +46,20 @@ builder.Services.AddCorsPolicies(builder.Configuration, builder.Environment);
 // Settings Configuration
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("DatabaseSettings"));
 
-// Controllers with Filters and JSON Options
-builder.Services.AddApiControllers();
+// Controllers with Filters, Versioning and JSON Options
+builder.Services.AddApiControllersWithVersioning();
+
+// Response Compression
+builder.Services.AddResponseCompressionServices();
+
+// Security Services (Headers, Correlation, Rate Limiting)
+builder.Services.AddSecurityServices(builder.Configuration);
+
+// Caching Services (ETag, Cache-Control, Response Caching, Output Caching)
+builder.Services.AddCachingServices(builder.Configuration);
+
+// Monitoring Services (Health Checks, Metrics)
+builder.Services.AddMonitoringServices(builder.Configuration);
 
 // Swagger Documentation
 builder.Services.AddSwaggerDocumentation();

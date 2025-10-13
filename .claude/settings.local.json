@@ -41,7 +41,10 @@
       "Bash(dir:*)",
       "Bash(tasklist)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(rm:*)",
+      "Bash(dotnet run:*)",
+      "Bash(sqllocaldb:*)"
     ],
     "deny": [],
     "ask": []

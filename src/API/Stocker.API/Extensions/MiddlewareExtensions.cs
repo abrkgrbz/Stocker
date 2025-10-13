@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Stocker.SignalR.Hubs;
 using Stocker.Infrastructure.Middleware;
+using Stocker.Infrastructure.Middleware.ErrorHandling;
+using Stocker.Infrastructure.Middleware.RateLimiting;
+
+using Stocker.Infrastructure.Middleware.Correlation;
 using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.RateLimiting;
 
@@ -17,6 +22,9 @@ public static class MiddlewareExtensions
     public static WebApplication UseApiPipeline(this WebApplication app, IConfiguration configuration)
     {
         var environment = app.Environment;
+        
+        // Get API Version Description Provider for Swagger
+        var apiVersionProvider = app.Services.GetService<IApiVersionDescriptionProvider>();
 
         // 1. Swagger (Development only)
         if (environment.IsDevelopment())
@@ -24,11 +32,25 @@ public static class MiddlewareExtensions
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
-                c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
-                c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
-                c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
-                c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+                // Add versioned API documentation
+                if (apiVersionProvider != null)
+                {
+                    foreach (var description in apiVersionProvider.ApiVersionDescriptions)
+                    {
+                        c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", 
+                            $"Stocker API {description.GroupName.ToUpperInvariant()}");
+                    }
+                }
+                else
+                {
+                    // Fallback to existing endpoints
+                    c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
+                    c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
+                    c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
+                    c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
+                    c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+                }
+                
                 c.RoutePrefix = string.Empty; // Swagger UI at root
                 c.DocumentTitle = "Stocker API Documentation";
             });
@@ -61,37 +83,57 @@ public static class MiddlewareExtensions
 
         app.UseWebSockets(webSocketOptions);
 
-        // 4. Global Exception Handling
-        app.UseMiddleware<Stocker.Infrastructure.Middleware.GlobalExceptionHandlingMiddleware>();
+        // 4. Correlation ID (Must be early in pipeline)
+        app.UseCorrelationId();
+        
+        // 5. Response Compression
+        app.UseResponseCompression();
+        
+        // 6. Global Exception Handling
+        app.UseGlobalErrorHandling();
 
-        // 5. Request Logging (Serilog)
+        // 7. Request Logging (Serilog)
         Configuration.SerilogConfiguration.ConfigureRequestLogging(app);
 
-        // 6. Request Localization
+        // 8. Request Localization
         app.UseRequestLocalization();
 
-        // 7. HTTPS Redirect (Production only)
+        // 9. HTTPS Redirect (Production only)
         if (!environment.IsDevelopment())
         {
             app.UseHttpsRedirection();
         }
 
-        // 8. Security Headers (Skip for SignalR hubs)
+        // 10. Security Headers (Skip for SignalR hubs and Swagger)
         app.UseWhen(
-            context => !context.Request.Path.StartsWithSegments("/hubs"),
-            appBuilder => SecurityHeadersExtensions.UseSecurityHeaders(appBuilder));
+            context => !context.Request.Path.StartsWithSegments("/hubs") && 
+                      !context.Request.Path.StartsWithSegments("/swagger"),
+            appBuilder => Stocker.Infrastructure.Middleware.SecurityHeadersExtensions.UseSecurityHeaders(appBuilder));
 
-        // 9. Tenant Resolution (Before authentication)
+        // 11. Tenant Resolution (Before authentication)
         app.UseMiddleware<TenantResolutionMiddleware>();
 
-        // 10. Authentication & Authorization
+        // 12. Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // 11. Tenant-based Rate Limiting
+        // 13. Caching Middleware (Phase 2)
+        // Response caching before rate limiting for better performance
+        app.UseMiddleware<Stocker.Infrastructure.Middleware.Caching.ResponseCachingMiddleware>();
+
+        // ETag support for conditional requests
+        app.UseMiddleware<Stocker.Infrastructure.Middleware.Caching.ETagMiddleware>();
+
+        // Cache-Control headers
+        app.UseMiddleware<Stocker.Infrastructure.Middleware.Caching.CacheControlMiddleware>();
+
+        // 14. Rate Limiting (After auth for user-based limits)
+        app.UseRateLimiting();
+
+        // 15. Tenant-based Rate Limiting (Additional layer)
         app.UseTenantRateLimiting();
 
-        // 12. Static Files with MIME types
+        // 16. Static Files with MIME types
         app.UseStaticFiles(new StaticFileOptions
         {
             ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider
@@ -127,7 +169,7 @@ public static class MiddlewareExtensions
             }
         });
 
-        // 13. Hangfire (Skip in Testing environment)
+        // 17. Hangfire (Skip in Testing environment)
         if (!environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
         {
             var jwtSecret = configuration["JwtSettings:Secret"];
@@ -138,10 +180,10 @@ public static class MiddlewareExtensions
             app.UseHangfireDashboard(configuration);
         }
 
-        // 14. Map Controllers
+        // 18. Map Controllers
         app.MapControllers();
 
-        // 15. SignalR Hubs
+        // 19. SignalR Hubs
         app.MapHub<ValidationHub>("/hubs/validation", options =>
         {
             options.Transports = HttpTransportType.WebSockets |
@@ -163,7 +205,7 @@ public static class MiddlewareExtensions
                                  HttpTransportType.LongPolling;
         }).RequireCors(corsPolicy);
 
-        // 16. Health Check Endpoints
+        // 20. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")
            .WithTags("Health");

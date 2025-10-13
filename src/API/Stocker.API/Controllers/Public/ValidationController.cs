@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Stocker.API.Controllers.Base;
-using Stocker.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Common.Models;
-using Stocker.Application.Common.Exceptions;
-using Stocker.SharedKernel.Exceptions;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Infrastructure.Services;
+using Base = Stocker.API.Controllers.Base;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -14,7 +13,7 @@ namespace Stocker.API.Controllers.Public;
 [AllowAnonymous]
 [Route("api/public/validate")]
 [ApiExplorerSettings(GroupName = "public")]
-public class ValidationController : ApiController
+public class ValidationController : Base.ApiController
 {
     private readonly IValidationService _validationService;
     private readonly ILogger<ValidationController> _logger;
@@ -34,7 +33,7 @@ public class ValidationController : ApiController
     /// <returns>Email validation result</returns>
     [HttpPost("email")]
     [ProducesResponseType(typeof(Base.ApiResponse<EmailValidationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateEmail([FromBody] EmailValidationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
@@ -63,7 +62,7 @@ public class ValidationController : ApiController
     /// <returns>Phone validation result</returns>
     [HttpPost("phone")]
     [ProducesResponseType(typeof(Base.ApiResponse<PhoneValidationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidatePhone([FromBody] PhoneValidationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PhoneNumber))
@@ -95,7 +94,7 @@ public class ValidationController : ApiController
     /// <returns>Password strength result</returns>
     [HttpPost("password-strength")]
     [ProducesResponseType(typeof(Base.ApiResponse<PasswordStrengthResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CheckPasswordStrength([FromBody] PasswordStrengthRequest request)
     {
         var result = await _validationService.CheckPasswordStrengthAsync(request.Password);
@@ -125,7 +124,7 @@ public class ValidationController : ApiController
     /// <returns>Domain availability result</returns>
     [HttpPost("domain")]
     [ProducesResponseType(typeof(Base.ApiResponse<DomainCheckResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CheckDomain([FromBody] DomainCheckRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Domain))
@@ -153,7 +152,7 @@ public class ValidationController : ApiController
     /// <returns>Company name validation result</returns>
     [HttpPost("company-name")]
     [ProducesResponseType(typeof(Base.ApiResponse<CompanyNameValidationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateCompanyName([FromBody] CompanyNameValidationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.CompanyName))
@@ -181,7 +180,7 @@ public class ValidationController : ApiController
     /// <returns>Identity validation result</returns>
     [HttpPost("identity")]
     [ProducesResponseType(typeof(Base.ApiResponse<IdentityValidationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateIdentity([FromBody] IdentityValidationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.IdentityNumber))
