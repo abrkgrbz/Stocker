@@ -117,7 +117,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                         Email = masterUser.Email.Value,
                         Username = masterUser.Username,
                         FullName = masterUser.GetFullName(),
-                        Roles = new List<string>(),
+                        Roles = new List<string> { masterUser.UserType.ToString() },
                         TenantId = null,
                         TenantName = null
                     }
