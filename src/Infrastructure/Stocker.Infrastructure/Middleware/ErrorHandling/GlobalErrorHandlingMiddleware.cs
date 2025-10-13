@@ -46,12 +46,19 @@ public class GlobalErrorHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
-        
+
         // Log the exception
         _logger.LogError(exception, "An unhandled exception occurred. TraceId: {TraceId}", traceId);
 
+        // Check if response has already started
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning("Response has already started. Cannot set status code or write error response. TraceId: {TraceId}", traceId);
+            return;
+        }
+
         var (statusCode, errorResponse) = CreateErrorResponse(exception, traceId);
-        
+
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/problem+json";
 
