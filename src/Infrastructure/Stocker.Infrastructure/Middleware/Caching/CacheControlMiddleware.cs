@@ -58,30 +58,45 @@ public class CacheControlMiddleware
 
         if (cachePolicy != null)
         {
-            // Set Cache-Control header
-            response.Headers[HeaderNames.CacheControl] = cachePolicy.CacheControl;
-
-            // Set Vary header if needed
-            if (!string.IsNullOrEmpty(cachePolicy.Vary))
+            try
             {
-                response.Headers[HeaderNames.Vary] = cachePolicy.Vary;
-            }
+                // Double-check before setting headers (race condition protection)
+                if (response.HasStarted)
+                {
+                    _logger.LogDebug("Response already started. Skipping cache headers for {Path}", request.Path);
+                    return;
+                }
 
-            // Set Expires header if max-age is specified
-            if (cachePolicy.MaxAge.HasValue)
+                // Set Cache-Control header
+                response.Headers[HeaderNames.CacheControl] = cachePolicy.CacheControl;
+
+                // Set Vary header if needed
+                if (!string.IsNullOrEmpty(cachePolicy.Vary))
+                {
+                    response.Headers[HeaderNames.Vary] = cachePolicy.Vary;
+                }
+
+                // Set Expires header if max-age is specified
+                if (cachePolicy.MaxAge.HasValue)
+                {
+                    var expires = DateTimeOffset.UtcNow.AddSeconds(cachePolicy.MaxAge.Value);
+                    response.Headers[HeaderNames.Expires] = expires.ToString("R");
+                }
+
+                // Add Last-Modified header
+                if (cachePolicy.AddLastModified)
+                {
+                    response.Headers[HeaderNames.LastModified] = DateTimeOffset.UtcNow.ToString("R");
+                }
+
+                _logger.LogDebug("Applied cache policy: {CacheControl} to {Path}",
+                    cachePolicy.CacheControl, request.Path);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("read-only") || ex.Message.Contains("already started"))
             {
-                var expires = DateTimeOffset.UtcNow.AddSeconds(cachePolicy.MaxAge.Value);
-                response.Headers[HeaderNames.Expires] = expires.ToString("R");
+                // Response started between check and header setting - log and continue
+                _logger.LogDebug(ex, "Could not set cache headers for {Path} - response already started", request.Path);
             }
-
-            // Add Last-Modified header
-            if (cachePolicy.AddLastModified)
-            {
-                response.Headers[HeaderNames.LastModified] = DateTimeOffset.UtcNow.ToString("R");
-            }
-
-            _logger.LogDebug("Applied cache policy: {CacheControl} to {Path}",
-                cachePolicy.CacheControl, request.Path);
         }
     }
 
