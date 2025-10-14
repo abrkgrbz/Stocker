@@ -22,7 +22,14 @@
       "Bash(ssh root@95.217.219.4 \"docker inspect 7ecad5a0ee96 | grep -A 5 ''COMMIT_SHA\\|GIT_COMMIT''\")",
       "Bash(do echo \"\")",
       "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart\")",
-      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.ID}} | {{.CreatedAt}}''\")"
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.ID}} | {{.CreatedAt}}''\")",
+      "Bash(do sleep:*)",
+      "Bash(ssh root@95.217.219.4 \"echo ''Admin:'' && docker ps --filter name=admin- --format ''{{.ID}} | {{.CreatedAt}}'' && echo ''API:'' && docker ps --filter name=api- --format ''{{.ID}} | {{.CreatedAt}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker restart 4827cc1601ad && echo ''API container restarting...''\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=api- --format ''{{.Status}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker restart 909cbcbea9cd && echo ''Admin container restarting...''\")",
+      "Bash(do echo \"[$i/6]\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.Status}}''\")"
     ],
     "deny": [],
     "ask": []

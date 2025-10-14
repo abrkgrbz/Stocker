@@ -295,9 +295,13 @@ class ApiClient {
     }
   }
 
-  async verify2FA(params: { tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
+  async verify2FA(params: { email: string; tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
     try {
-      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-2fa', params);
+      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-2fa', {
+        email: params.email,
+        code: params.code,
+        tempToken: params.tempToken
+      });
 
       if (response.data.success && response.data.data) {
         return response.data;
@@ -312,9 +316,14 @@ class ApiClient {
     }
   }
 
-  async verifyBackupCode(params: { tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
+  async verifyBackupCode(params: { email: string; tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
     try {
-      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-backup-code', params);
+      const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-backup-code', {
+        email: params.email,
+        code: params.code,
+        tempToken: params.tempToken,
+        isBackupCode: true
+      });
 
       if (response.data.success && response.data.data) {
         return response.data;

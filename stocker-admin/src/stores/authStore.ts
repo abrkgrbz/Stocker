@@ -164,13 +164,17 @@ export const useAuthStore = create<AuthState>()(
       },
 
       verify2FA: async (code: string) => {
-        const tempToken = get().tempLoginToken;
-        if (!tempToken) return false;
+        const state = get();
+        const tempToken = state.tempLoginToken;
+        const userEmail = state.user?.email;
+
+        if (!tempToken || !userEmail) return false;
 
         set({ isLoading: true });
 
         try {
           const response = await apiClient.verify2FA({
+            email: userEmail,
             tempToken,
             code
           });
@@ -217,13 +221,17 @@ export const useAuthStore = create<AuthState>()(
       },
 
       verifyBackupCode: async (code: string) => {
-        const tempToken = get().tempLoginToken;
-        if (!tempToken) return false;
+        const state = get();
+        const tempToken = state.tempLoginToken;
+        const userEmail = state.user?.email;
+
+        if (!tempToken || !userEmail) return false;
 
         set({ isLoading: true });
 
         try {
           const response = await apiClient.verifyBackupCode({
+            email: userEmail,
             tempToken,
             code
           });
