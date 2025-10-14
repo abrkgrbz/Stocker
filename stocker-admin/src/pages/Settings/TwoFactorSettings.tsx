@@ -13,7 +13,6 @@ import {
   Divider,
   Input,
   Modal,
-  QRCode,
   message,
   Spin,
   Badge,
@@ -406,7 +405,11 @@ export const TwoFactorSettings: React.FC = () => {
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div style={{ textAlign: 'center' }}>
             {setupData && (
-              <QRCode value={setupData.qrCodeUrl} size={200} />
+              <img
+                src={setupData.qrCodeUrl}
+                alt="2FA QR Code"
+                style={{ width: 200, height: 200 }}
+              />
             )}
           </div>
 
