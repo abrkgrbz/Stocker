@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/react';
 import LoginPage from './features/auth/LoginPage';
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
 import MasterLayout from './layouts/MasterLayout';
+import TwoFactorLogin from './components/TwoFactor/TwoFactorLogin';
 
 // Lazy loaded pages (loaded on demand)
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -88,6 +89,7 @@ function App() {
         <SentryRoutes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-2fa" element={<TwoFactorLogin />} />
         <Route
           path="/"
           element={

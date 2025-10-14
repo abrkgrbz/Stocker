@@ -8,7 +8,7 @@ import './LoginPage.css';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuthStore();
+  const { login, isAuthenticated, requires2FA } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form] = Form.useForm();
@@ -18,6 +18,13 @@ const LoginPage: React.FC = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  // Redirect to 2FA page if 2FA is required
+  useEffect(() => {
+    if (requires2FA) {
+      navigate('/verify-2fa');
+    }
+  }, [requires2FA, navigate]);
 
   const handleSubmit = async (values: any) => {
     const { email, password } = values;
@@ -46,9 +53,15 @@ const LoginPage: React.FC = () => {
     
     try {
       await login(email, password);
-      message.success('Giriş başarılı!');
-      form.resetFields();
-      navigate('/dashboard');
+      
+      // Check if 2FA is required (will be handled by useEffect above)
+      // If not, the success message and navigation will happen
+      if (!requires2FA) {
+        message.success('Giriş başarılı!');
+        form.resetFields();
+        navigate('/dashboard');
+      }
+      // If 2FA is required, don't navigate yet - useEffect will handle it
     } catch (err: any) {
       const errorMessage = err.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
       setError(errorMessage);
