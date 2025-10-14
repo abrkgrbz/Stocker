@@ -7,6 +7,10 @@ using Stocker.Application.Features.Identity.Commands.RefreshToken;
 using Stocker.Application.Features.Identity.Commands.Logout;
 using Stocker.Application.Features.Identity.Commands.VerifyEmail;
 using Stocker.Application.Features.Identity.Commands.Verify2FA;
+using Stocker.Application.Features.Identity.Commands.Setup2FA;
+using Stocker.Application.Features.Identity.Commands.Enable2FA;
+using Stocker.Application.Features.Identity.Commands.Disable2FA;
+using Stocker.Application.Features.Identity.Queries.Get2FAStatus;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
@@ -212,6 +216,132 @@ public class MasterAuthController : ApiController
     /// <summary>
     /// Validate master admin token
     /// </summary>
+    /// <summary>
+    /// Setup 2FA for master admin
+    /// </summary>
+    [HttpPost("setup-2fa")]
+    [Authorize(Policy = "RequireMasterAccess")]
+    [ProducesResponseType(typeof(ApiResponse<Setup2FAResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Setup2FA()
+    {
+        var userId = GetUserId();
+        
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return BadRequest(CreateErrorResponse("Invalid user ID"));
+        }
+
+        _logger.LogInformation("Master admin 2FA setup request for user: {UserId}", userId);
+
+        var command = new Setup2FACommand { UserId = userGuid };
+        var result = await Mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Master admin 2FA setup completed for user: {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogWarning("Master admin 2FA setup failed for user: {UserId}", userId);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Enable 2FA for master admin
+    /// </summary>
+    [HttpPost("enable-2fa")]
+    [Authorize(Policy = "RequireMasterAccess")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Enable2FA([FromBody] Enable2FACommand command)
+    {
+        var userId = GetUserId();
+        
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return BadRequest(CreateErrorResponse("Invalid user ID"));
+        }
+
+        _logger.LogInformation("Master admin enable 2FA request for user: {UserId}", userId);
+
+        var enrichedCommand = command with { UserId = userGuid };
+        var result = await Mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Master admin 2FA enabled successfully for user: {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogWarning("Master admin 2FA enable failed for user: {UserId}", userId);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Disable 2FA for master admin
+    /// </summary>
+    [HttpPost("disable-2fa")]
+    [Authorize(Policy = "RequireMasterAccess")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Disable2FA([FromBody] Disable2FACommand command)
+    {
+        var userId = GetUserId();
+        
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return BadRequest(CreateErrorResponse("Invalid user ID"));
+        }
+
+        _logger.LogInformation("Master admin disable 2FA request for user: {UserId}", userId);
+
+        var enrichedCommand = command with { UserId = userGuid };
+        var result = await Mediator.Send(enrichedCommand);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Master admin 2FA disabled successfully for user: {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogWarning("Master admin 2FA disable failed for user: {UserId}", userId);
+        }
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get 2FA status for master admin
+    /// </summary>
+    [HttpGet("2fa-status")]
+    [Authorize(Policy = "RequireMasterAccess")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Get2FAStatus()
+    {
+        var userId = GetUserId();
+        
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return BadRequest(CreateErrorResponse("Invalid user ID"));
+        }
+
+        _logger.LogInformation("Master admin 2FA status request for user: {UserId}", userId);
+
+        var command = new Get2FAStatusQuery { UserId = userGuid };
+        var result = await Mediator.Send(command);
+
+        return HandleResult(result);
+    }
+
     [HttpGet("validate-token")]
     [Authorize(Policy = "RequireMasterAccess")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
