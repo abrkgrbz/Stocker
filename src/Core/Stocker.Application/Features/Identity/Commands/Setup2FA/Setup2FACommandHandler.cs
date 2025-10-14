@@ -42,10 +42,10 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
             var secretBytes = RandomNumberGenerator.GetBytes(20); // 160 bits
             var secret = Base32Encoding.ToString(secretBytes);
 
-            // Create OtpAuth URL for QR code
-            var issuer = "Stocker ERP";
+            // Create OtpAuth URL for QR code (keep short for QR code compatibility)
+            var issuer = "Stocker";
             var qrCodeUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(user.Email.Value)}?" +
-                           $"secret={secret}&issuer={Uri.EscapeDataString(issuer)}&algorithm=SHA1&digits=6&period=30";
+                           $"secret={secret}&issuer={Uri.EscapeDataString(issuer)}";
 
             // Format manual entry key (easier to type)
             var manualEntryKey = FormatManualEntryKey(secret);
