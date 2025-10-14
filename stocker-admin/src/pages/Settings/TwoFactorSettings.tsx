@@ -54,8 +54,20 @@ export const TwoFactorSettings: React.FC = () => {
   const [remainingBackupCodes, setRemainingBackupCodes] = useState(0);
 
   useEffect(() => {
-    check2FAStatus();
-  }, []);
+    let isMounted = true;
+
+    const fetchStatus = async () => {
+      if (isMounted) {
+        await check2FAStatus();
+      }
+    };
+
+    fetchStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - run only once on mount
 
   const check2FAStatus = async () => {
     setLoading(true);
