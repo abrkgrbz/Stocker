@@ -4,7 +4,6 @@
  */
 
 import * as OTPAuth from 'otpauth';
-import QRCode from 'qrcode';
 import { apiClient } from '../infrastructure/api/ApiClient';
 import { API_ENDPOINTS } from '../constants';
 
@@ -42,22 +41,20 @@ export class TwoFactorService {
    */
   async setupTwoFactor(userEmail: string): Promise<ITwoFactorSetup> {
     try {
-      // Call backend API to generate secret and QR code
+      // Call backend API to generate secret and QR code (backend now generates QR as base64 PNG)
       const response = await apiClient.post<{
         secret: string;
-        qrCodeUrl: string;
+        qrCodeUrl: string; // Now contains base64 PNG image data URL
         manualEntryKey: string;
         backupCodes: string[];
       }>('/api/master/auth/setup-2fa', {});
 
-      const { secret, qrCodeUrl: otpauthUrl, manualEntryKey, backupCodes } = response.data;
+      const { secret, qrCodeUrl, manualEntryKey, backupCodes } = response.data;
 
-      // Convert otpauth URL to QR code image
-      const qrCodeDataUrl = await this.generateQRCode(otpauthUrl);
-
+      // Backend now returns ready-to-use base64 PNG image, no client-side generation needed
       return {
         secret,
-        qrCodeUrl: qrCodeDataUrl,
+        qrCodeUrl, // Already a data:image/png;base64,... string
         backupCodes,
         manualEntryKey
       };
@@ -84,34 +81,6 @@ export class TwoFactorService {
     return secret;
   }
 
-  /**
-   * Generate QR code as data URL
-   */
-  private async generateQRCode(otpauthUrl: string): Promise<string> {
-    try {
-      // Validate URL length to prevent QR code errors
-      if (otpauthUrl.length > 200) {
-        console.warn('OTPAuth URL is very long, may cause QR code generation issues');
-      }
-
-      const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl, {
-        errorCorrectionLevel: 'L', // Lower error correction for less dense QR code
-        type: 'image/png',
-        quality: 0.85,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        width: 200 // Smaller width for less dense QR code
-      });
-
-      return qrCodeDataUrl;
-    } catch (error) {
-      console.error('Failed to generate QR code:', error, 'URL length:', otpauthUrl.length);
-      throw new Error('Failed to generate QR code');
-    }
-  }
 
   /**
    * Generate backup codes

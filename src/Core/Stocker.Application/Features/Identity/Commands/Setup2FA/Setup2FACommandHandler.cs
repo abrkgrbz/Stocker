@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OtpNet;
+using QRCoder;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 using System.Security.Cryptography;
@@ -42,10 +43,13 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
             var secretBytes = RandomNumberGenerator.GetBytes(20); // 160 bits
             var secret = Base32Encoding.ToString(secretBytes);
 
-            // Create OtpAuth URL for QR code (keep short for QR code compatibility)
+            // Create OtpAuth URL for QR code
             var issuer = "Stocker";
-            var qrCodeUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(user.Email.Value)}?" +
+            var otpauthUrl = $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(user.Email.Value)}?" +
                            $"secret={secret}&issuer={Uri.EscapeDataString(issuer)}";
+
+            // Generate QR code on server-side as base64 PNG
+            var qrCodeBase64 = GenerateQRCodeBase64(otpauthUrl);
 
             // Format manual entry key (easier to type)
             var manualEntryKey = FormatManualEntryKey(secret);
@@ -65,7 +69,7 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
             return Result.Success(new Setup2FAResponse
             {
                 Secret = secret,
-                QrCodeUrl = qrCodeUrl,
+                QrCodeUrl = qrCodeBase64, // Now contains base64 PNG image
                 ManualEntryKey = manualEntryKey,
                 BackupCodes = backupCodes
             });
@@ -112,5 +116,17 @@ public class Setup2FACommandHandler : IRequestHandler<Setup2FACommand, Result<Se
         }
 
         return codes;
+    }
+
+    private static string GenerateQRCodeBase64(string otpauthUrl)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        var qrCodeData = qrGenerator.CreateQrCode(otpauthUrl, QRCodeGenerator.ECCLevel.L);
+        using var qrCode = new PngByteQRCode(qrCodeData);
+        var qrCodeImage = qrCode.GetGraphic(20); // 20 pixels per module
+        
+        // Convert to base64 data URL
+        var base64String = Convert.ToBase64String(qrCodeImage);
+        return $"data:image/png;base64,{base64String}";
     }
 }
