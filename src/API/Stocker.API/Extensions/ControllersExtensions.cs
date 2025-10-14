@@ -1,4 +1,5 @@
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Stocker.API.Filters;
 
@@ -41,8 +42,8 @@ public static class ControllersExtensions
             // Default null handling
             options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
-            // Property naming policy
-            options.JsonSerializerOptions.PropertyNamingPolicy = null; // Use property names as-is
+            // Property naming policy - use camelCase for frontend compatibility
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 
             // Handle reference loops
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
