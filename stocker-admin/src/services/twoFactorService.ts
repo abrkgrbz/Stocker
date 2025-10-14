@@ -206,12 +206,11 @@ export class TwoFactorService {
    */
   async enable2FA(secret: string, token: string, backupCodes: string[]): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/auth/2fa/enable', {
-        secret,
-        token,
-        backupCodes
+      const response = await apiClient.post('/api/master/auth/enable-2fa', {
+        code: token,
+        secret
       });
-      
+
       return response.success;
     } catch (error) {
       console.error('Failed to enable 2FA:', error);
@@ -224,10 +223,10 @@ export class TwoFactorService {
    */
   async disable2FA(password: string): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/auth/2fa/disable', {
-        password
+      const response = await apiClient.post('/api/master/auth/disable-2fa', {
+        code: password
       });
-      
+
       return response.success;
     } catch (error) {
       console.error('Failed to disable 2FA:', error);
@@ -240,11 +239,12 @@ export class TwoFactorService {
    */
   async get2FAStatus(): Promise<ITwoFactorStatus> {
     try {
-      const response = await apiClient.get<ITwoFactorStatus>('/api/auth/2fa/status');
-      
-      return response.data || {
-        enabled: false,
-        method: null
+      const response = await apiClient.get<{ enabled: boolean; backupCodesRemaining: number }>('/api/master/auth/2fa-status');
+
+      return {
+        enabled: response.data?.enabled || false,
+        method: response.data?.enabled ? '2fa' : null,
+        backupCodesRemaining: response.data?.backupCodesRemaining
       };
     } catch (error) {
       console.error('Failed to get 2FA status:', error);
