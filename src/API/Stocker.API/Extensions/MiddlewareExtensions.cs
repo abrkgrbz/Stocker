@@ -61,12 +61,15 @@ public static class MiddlewareExtensions
             app.Logger.LogInformation("Swagger UI is disabled in Production for security");
         }
 
-        // 2. CORS - Environment based policy
+        // 2. Routing (Must be before CORS for endpoint-based CORS)
+        app.UseRouting();
+
+        // 3. CORS - Environment based policy (Must be after UseRouting, before UseEndpoints)
         var corsPolicy = environment.IsDevelopment() ? "Development" : "Production";
         app.UseCors(corsPolicy);
         app.Logger.LogInformation($"CORS policy '{corsPolicy}' has been applied for {environment.EnvironmentName} environment");
 
-        // 3. WebSockets for SignalR
+        // 4. WebSockets for SignalR
         var allowedOrigins = configuration.GetSection("WebSocketOptions:AllowedOrigins").Get<string[]>()
             ?? new[] { "https://stoocker.app", "https://www.stoocker.app", "https://master.stoocker.app" };
 
@@ -83,41 +86,41 @@ public static class MiddlewareExtensions
 
         app.UseWebSockets(webSocketOptions);
 
-        // 4. Correlation ID (Must be early in pipeline)
+        // 5. Correlation ID (Must be early in pipeline)
         app.UseCorrelationId();
-        
-        // 5. Response Compression
+
+        // 6. Response Compression
         app.UseResponseCompression();
-        
-        // 6. Global Exception Handling
+
+        // 7. Global Exception Handling
         app.UseGlobalErrorHandling();
 
-        // 7. Request Logging (Serilog)
+        // 8. Request Logging (Serilog)
         Configuration.SerilogConfiguration.ConfigureRequestLogging(app);
 
-        // 8. Request Localization
+        // 9. Request Localization
         app.UseRequestLocalization();
 
-        // 9. HTTPS Redirect (Production only)
+        // 10. HTTPS Redirect (Production only)
         if (!environment.IsDevelopment())
         {
             app.UseHttpsRedirection();
         }
 
-        // 10. Security Headers (Skip for SignalR hubs and Swagger)
+        // 11. Security Headers (Skip for SignalR hubs and Swagger)
         app.UseWhen(
-            context => !context.Request.Path.StartsWithSegments("/hubs") && 
+            context => !context.Request.Path.StartsWithSegments("/hubs") &&
                       !context.Request.Path.StartsWithSegments("/swagger"),
             appBuilder => Stocker.Infrastructure.Middleware.SecurityHeadersExtensions.UseSecurityHeaders(appBuilder));
 
-        // 11. Tenant Resolution (Before authentication)
+        // 12. Tenant Resolution (Before authentication)
         app.UseMiddleware<TenantResolutionMiddleware>();
 
-        // 12. Authentication & Authorization
+        // 13. Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // 13. Caching Middleware (Phase 2)
+        // 14. Caching Middleware (Phase 2)
         // Response caching before rate limiting for better performance
         app.UseMiddleware<Stocker.Infrastructure.Middleware.Caching.ResponseCachingMiddleware>();
 
@@ -127,13 +130,13 @@ public static class MiddlewareExtensions
         // Cache-Control headers
         app.UseMiddleware<Stocker.Infrastructure.Middleware.Caching.CacheControlMiddleware>();
 
-        // 14. Rate Limiting (After auth for user-based limits)
+        // 15. Rate Limiting (After auth for user-based limits)
         app.UseRateLimiting();
 
-        // 15. Tenant-based Rate Limiting (Additional layer)
+        // 16. Tenant-based Rate Limiting (Additional layer)
         app.UseTenantRateLimiting();
 
-        // 16. Static Files with MIME types
+        // 17. Static Files with MIME types
         app.UseStaticFiles(new StaticFileOptions
         {
             ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider
@@ -169,7 +172,7 @@ public static class MiddlewareExtensions
             }
         });
 
-        // 17. Hangfire (Skip in Testing environment)
+        // 18. Hangfire (Skip in Testing environment)
         if (!environment.EnvironmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase))
         {
             var jwtSecret = configuration["JwtSettings:Secret"];
@@ -180,10 +183,10 @@ public static class MiddlewareExtensions
             app.UseHangfireDashboard(configuration);
         }
 
-        // 18. Map Controllers
+        // 19. Map Controllers and Endpoints
         app.MapControllers();
 
-        // 19. SignalR Hubs
+        // 20. SignalR Hubs
         app.MapHub<ValidationHub>("/hubs/validation", options =>
         {
             options.Transports = HttpTransportType.WebSockets |
@@ -205,7 +208,7 @@ public static class MiddlewareExtensions
                                  HttpTransportType.LongPolling;
         }).RequireCors(corsPolicy);
 
-        // 20. Health Check Endpoints
+        // 21. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")
            .WithTags("Health");
