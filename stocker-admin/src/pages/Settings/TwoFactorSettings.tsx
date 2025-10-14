@@ -92,16 +92,7 @@ export const TwoFactorSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Verify the code with the secret
-      const isValid = twoFactorService.verifyTOTP(verificationCode, setupData.secret);
-
-      if (!isValid) {
-        message.error('Geçersiz doğrulama kodu');
-        setLoading(false);
-        return;
-      }
-
-      // Enable 2FA on the server
+      // Enable 2FA on the server - backend will verify the code
       const success = await twoFactorService.enable2FA(
         setupData.secret,
         verificationCode,
@@ -123,7 +114,7 @@ export const TwoFactorSettings: React.FC = () => {
         // Show backup codes
         showBackupCodesModal();
       } else {
-        message.error('2FA etkinleştirilemedi');
+        message.error('Geçersiz doğrulama kodu veya 2FA etkinleştirilemedi');
       }
     } catch (error) {
       message.error('2FA etkinleştirme başarısız');
