@@ -41,8 +41,8 @@ export class TwoFactorService {
    * Generate a new TOTP secret and QR code
    */
   async setupTwoFactor(userEmail: string): Promise<ITwoFactorSetup> {
-    // Generate a random secret
-    const secret = this.generateSecret();
+    // Generate a random secret (20 chars for optimal QR code size)
+    const secret = this.generateSecret(20);
 
     // Create TOTP instance
     const totp = new OTPAuth.TOTP({
@@ -94,21 +94,26 @@ export class TwoFactorService {
    */
   private async generateQRCode(otpauthUrl: string): Promise<string> {
     try {
+      // Validate URL length to prevent QR code errors
+      if (otpauthUrl.length > 200) {
+        console.warn('OTPAuth URL is very long, may cause QR code generation issues');
+      }
+
       const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl, {
-        errorCorrectionLevel: 'M',
+        errorCorrectionLevel: 'L', // Lower error correction for less dense QR code
         type: 'image/png',
-        quality: 0.92,
-        margin: 1,
+        quality: 0.85,
+        margin: 2,
         color: {
           dark: '#000000',
           light: '#FFFFFF'
         },
-        width: 256
+        width: 200 // Smaller width for less dense QR code
       });
-      
+
       return qrCodeDataUrl;
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
+      console.error('Failed to generate QR code:', error, 'URL length:', otpauthUrl.length);
       throw new Error('Failed to generate QR code');
     }
   }
