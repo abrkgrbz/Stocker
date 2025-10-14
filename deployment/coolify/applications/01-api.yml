@@ -159,7 +159,7 @@ services:
       
       # CORS headers for wildcard subdomains using regex
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization,x-bypass-rate-limit,x-requested-with,x-signalr-user-agent,x-tenant-id,x-tenant-code,x-tenant-subdomain"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,Accept,X-Request-ID,X-Tenant-Code,X-Correlation-ID,Cache-Control,Pragma"
       # Use regex pattern to match all *.stoocker.app subdomains
       - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlistregex=^https://([a-zA-Z0-9-]+\\.)?stoocker\\.app$$"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
