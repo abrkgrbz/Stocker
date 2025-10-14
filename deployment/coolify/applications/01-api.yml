@@ -183,4 +183,4 @@ services:
 
 networks:
   coolify:
-    external: true
+    external: true# Force rebuild - 14 Eki 2025 Sal 16:05:47
