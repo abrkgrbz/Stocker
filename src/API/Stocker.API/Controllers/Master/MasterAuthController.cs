@@ -47,7 +47,14 @@ public class MasterAuthController : ApiController
         
         if (result.IsSuccess)
         {
-            // Verify this is actually a master admin
+            // If 2FA is required, return the response without role check
+            if (result.Value.Requires2FA)
+            {
+                _logger.LogInformation("2FA required for master admin {Email}", command.Email);
+                return HandleResult(result);
+            }
+
+            // Verify this is actually a master admin (only for non-2FA flow)
             if (result.Value.User.Roles.Contains("SistemYoneticisi") || result.Value.User.Roles.Contains("SystemAdmin"))
             {
                 _logger.LogInformation("Master admin {Email} logged in successfully", command.Email);
