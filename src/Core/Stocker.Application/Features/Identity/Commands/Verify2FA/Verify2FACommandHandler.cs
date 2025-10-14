@@ -89,9 +89,8 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
                     Error.Validation("2FA.InvalidCode", "Invalid 2FA code"));
             }
 
-            // Generate JWT tokens after successful 2FA
-            // Note: We use a special marker password to indicate 2FA is already verified
-            var authResult = await _authenticationService.AuthenticateAsync(emailToVerify, "__2FA_VERIFIED__", cancellationToken);
+            // Generate JWT tokens after successful 2FA verification
+            var authResult = await _authenticationService.GenerateAuthResponseForMasterUserAsync(user.Id, cancellationToken);
 
             if (authResult.IsSuccess)
             {

@@ -415,6 +415,41 @@ public class AuthenticationService : IAuthenticationService
         return true;
     }
 
+    public async Task<Result<AuthResponse>> GenerateAuthResponseForMasterUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var user = await _masterContext.MasterUsers.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return Result.Failure<AuthResponse>(
+                    Error.NotFound("User.NotFound", "User not found"));
+            }
+
+            var authResult = await GenerateAuthenticationResultForMasterUser(user, null);
+
+            var authResponse = new AuthResponse
+            {
+                AccessToken = authResult.AccessToken,
+                RefreshToken = authResult.RefreshToken,
+                ExpiresIn = (int)authResult.AccessTokenExpiration.TotalSeconds,
+                TokenType = "Bearer",
+                User = authResult.User,
+                Requires2FA = false,
+                TempToken = null
+            };
+
+            return Result.Success(authResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating auth response for master user: {UserId}", userId);
+            return Result.Failure<AuthResponse>(
+                Error.Failure("Auth.GenerationError", "Failed to generate authentication response"));
+        }
+    }
+
     private async Task<AuthenticationResult> GenerateAuthenticationResultForMasterUser(MasterUser user, Guid? tenantId)
     {
         var claims = new List<Claim>

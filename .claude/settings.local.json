@@ -29,7 +29,9 @@
       "Bash(ssh root@95.217.219.4 \"docker ps --filter name=api- --format ''{{.Status}}''\")",
       "Bash(ssh root@95.217.219.4 \"docker restart 909cbcbea9cd && echo ''Admin container restarting...''\")",
       "Bash(do echo \"[$i/6]\")",
-      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.Status}}''\")"
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.Status}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Coolify queue restarted''\")",
+      "Bash(for i in {1..10})"
     ],
     "deny": [],
     "ask": []
