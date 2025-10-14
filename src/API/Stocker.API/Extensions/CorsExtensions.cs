@@ -23,7 +23,11 @@ public static class CorsExtensions
                         "http://127.0.0.1:5173"
                       )
                       .AllowAnyMethod()
-                      .AllowAnyHeader()
+                      .WithHeaders(
+                          "Content-Type", "Authorization", "Accept",
+                          "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
+                          "Cache-Control", "Pragma"
+                      )
                       .AllowCredentials()
                       .WithExposedHeaders(
                           "Content-Disposition",
@@ -57,7 +61,11 @@ public static class CorsExtensions
                     }
                 })
                 .AllowAnyMethod()
-                .AllowAnyHeader()
+                .WithHeaders(
+                    "Content-Type", "Authorization", "Accept",
+                    "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
+                    "Cache-Control", "Pragma"
+                )
                 .AllowCredentials()
                 .WithExposedHeaders(
                     "Content-Disposition",
