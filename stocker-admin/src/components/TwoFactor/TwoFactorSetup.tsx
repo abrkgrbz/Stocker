@@ -1,5 +1,5 @@
 /**
- * Two-Factor Authentication Setup Component
+ * Two-Factor Authentication Kurulum Component
  * Guides user through 2FA setup process
  */
 
@@ -27,24 +27,24 @@ import {
   SafetyOutlined,
   CheckCircleOutlined,
   CopyOutlined,
-  DownloadOutlined,
+  İndirOutlined,
   LockOutlined,
   MobileOutlined,
   WarningOutlined
 } from '@ant-design/icons';
-import { twoFactorService, ITwoFactorSetup } from '../../services/twoFactorService';
+import { twoFactorService, ITwoFactorKurulum } from '../../services/twoFactorService';
 
 const { Step } = Steps;
 const { Text, Title, Paragraph } = Typography;
 
-interface TwoFactorSetupProps {
+interface TwoFactorKurulumProps {
   visible: boolean;
   userEmail: string;
   onClose: () => void;
   onComplete: () => void;
 }
 
-export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
+export const TwoFactorKurulum: React.FC<TwoFactorKurulumProps> = ({
   visible,
   userEmail,
   onClose,
@@ -52,16 +52,16 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [setupData, setSetupData] = useState<ITwoFactorSetup | null>(null);
+  const [setupData, setKurulumData] = useState<ITwoFactorKurulum | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
-  const [backupCodesConfirmed, setBackupCodesConfirmed] = useState(false);
+  const [backupCodesConfirmed, setYedekCodesConfirmed] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(30);
 
   // Generate setup data when modal opens
   useEffect(() => {
     if (visible && !setupData) {
-      generateSetup();
+      generateKurulum();
     }
   }, [visible]);
 
@@ -77,25 +77,25 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
     }
   }, [visible, currentStep]);
 
-  const generateSetup = async () => {
+  const generateKurulum = async () => {
     setLoading(true);
     try {
       const data = await twoFactorService.setupTwoFactor(userEmail);
-      setSetupData(data);
+      setKurulumData(data);
     } catch (error) {
-      message.error('Failed to generate 2FA setup');
+      message.error('2FA kurulumu oluşturulamadı');
       onClose();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNext = () => {
+  const handleSonraki = () => {
     if (currentStep === 2) {
-      // Verify code before proceeding
+      // Doğrula code before proceeding
       verifyAndEnable();
     } else if (currentStep === 3 && !backupCodesConfirmed) {
-      message.warning('Please confirm that you have saved your backup codes');
+      message.warning('Lütfen yedek kodlarınızı kaydettiğinizi onaylayın');
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -107,17 +107,17 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
 
   const verifyAndEnable = async () => {
     if (!setupData || !verificationCode) {
-      message.error('Please enter the verification code');
+      message.error('Lütfen doğrulama kodunu girin');
       return;
     }
 
     setLoading(true);
     try {
-      // Verify the code locally first
+      // Doğrula the code locally first
       const isValid = twoFactorService.verifyTOTP(verificationCode, setupData.secret);
       
       if (!isValid) {
-        message.error('Invalid verification code. Please try again.');
+        message.error('Geçersiz doğrulama kodu. Lütfen tekrar deneyin.');
         setVerificationCode('');
         return;
       }
@@ -132,7 +132,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
       if (success) {
         setCurrentStep(3);
       } else {
-        message.error('Failed to enable 2FA. Please try again.');
+        message.error('2FA etkinleştirilemedi. Lütfen tekrar deneyin.');
       }
     } finally {
       setLoading(false);
@@ -141,32 +141,32 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
 
   const handleComplete = () => {
     if (!backupCodesConfirmed) {
-      message.warning('Please confirm that you have saved your backup codes');
+      message.warning('Lütfen yedek kodlarınızı kaydettiğinizi onaylayın');
       return;
     }
 
-    message.success('Two-factor authentication enabled successfully!');
+    message.success('İki faktörlü kimlik doğrulama başarıyla etkinleştirildi!');
     onComplete();
     resetState();
   };
 
   const resetState = () => {
     setCurrentStep(0);
-    setSetupData(null);
+    setKurulumData(null);
     setVerificationCode('');
     setPassword('');
-    setBackupCodesConfirmed(false);
+    setYedekCodesConfirmed(false);
   };
 
   const copyToClipboard = (text: string, name: string) => {
     navigator.clipboard.writeText(text);
-    message.success(`${name} copied to clipboard`);
+    message.success(`${name} panoya kopyalandı`);
   };
 
-  const downloadBackupCodes = () => {
+  const downloadYedekCodes = () => {
     if (!setupData) return;
 
-    const content = `Stocker Admin - Backup Codes
+    const content = `Stocker Admin - Yedek Kodlar
 Generated: ${new Date().toISOString()}
 Email: ${userEmail}
 
@@ -184,7 +184,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
     link.click();
     URL.revokeObjectURL(url);
     
-    message.success('Backup codes downloaded');
+    message.success('Yedek kodlar indirildi');
   };
 
   const renderStepContent = () => {
@@ -193,22 +193,22 @@ If you lose access to your authenticator app, you can use one of these codes to 
         return (
           <div>
             <Alert
-              message="Enhance Your Security"
-              description="Two-factor authentication adds an extra layer of security to your account by requiring a verification code in addition to your password."
+              message="Güvenliğinizi Artırın"
+              description="İki faktörlü kimlik doğrulama, şifrenize ek olarak bir doğrulama kodu gerektirerek hesabınıza ekstra bir güvenlik katmanı ekler."
               type="info"
               showIcon
               icon={<SafetyOutlined />}
               style={{ marginBottom: 24 }}
             />
             
-            <Title level={4}>How it works:</Title>
+            <Title level={4}>Nasıl çalışır:</Title>
             <List
               dataSource={[
-                'Install an authenticator app on your phone (Google Authenticator, Authy, etc.)',
-                'Scan the QR code or enter the setup key',
-                'Enter the 6-digit code from your app to verify',
-                'Save your backup codes in a safe place',
-                'Use the app to generate codes when signing in'
+                'Telefonunuza bir authenticator uygulaması yükleyin (Google Authenticator, Authy, vb.)',
+                'QR kodunu taratın veya kurulum anahtarını girin',
+                'Doğrulamak için uygulamanızdaki 6 haneli kodu girin',
+                'Yedek kodlarınızı güvenli bir yerde saklayın',
+                'Giriş yaparken kod oluşturmak için uygulamayı kullanın'
               ]}
               renderItem={(item, index) => (
                 <List.Item>
@@ -221,7 +221,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
             />
 
             <Alert
-              message="Recommended Apps"
+              message="Önerilen Uygulamalar"
               description={
                 <Space direction="vertical">
                   <Text>• Google Authenticator (iOS/Android)</Text>
@@ -249,10 +249,10 @@ If you lose access to your authenticator app, you can use one of these codes to 
             ) : setupData ? (
               <>
                 <Title level={4}>
-                  <QrcodeOutlined /> Scan QR Code
+                  <QrcodeOutlined /> QR Kodu Tarayın
                 </Title>
                 <Paragraph>
-                  Open your authenticator app and scan this QR code:
+                  Authenticator uygulamanızı açın ve bu QR kodunu taratın:
                 </Paragraph>
                 
                 <Card style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -266,7 +266,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
                 <Divider>OR</Divider>
 
                 <Title level={4}>
-                  <KeyOutlined /> Manual Entry
+                  <KeyOutlined /> Manuel Giriş
                 </Title>
                 <Paragraph>
                   Can't scan? Enter this key manually in your app:
@@ -274,10 +274,10 @@ If you lose access to your authenticator app, you can use one of these codes to 
                 
                 <Card>
                   <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text strong>Account: </Text>
+                    <Text strong>Hesap: </Text>
                     <Input value={userEmail} readOnly />
                     
-                    <Text strong>Key: </Text>
+                    <Text strong>Anahtar: </Text>
                     <Input.Group compact>
                       <Input
                         value={setupData.manualEntryKey}
@@ -293,7 +293,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
                     </Input.Group>
                     
                     <Text type="secondary">
-                      Type: Time-based (TOTP) | Period: 30 seconds
+                      Tip: Zaman tabanlı (TOTP) | Periyot: 30 saniye
                     </Text>
                   </Space>
                 </Card>
@@ -306,10 +306,10 @@ If you lose access to your authenticator app, you can use one of these codes to 
         return (
           <div>
             <Title level={4}>
-              <MobileOutlined /> Verify Setup
+              <MobileOutlined /> Kurulumu Doğrula
             </Title>
             <Paragraph>
-              Enter the 6-digit code from your authenticator app to verify the setup:
+              Kurulumu doğrulamak için authenticator uygulamanızdaki 6 haneli kodu girin:
             </Paragraph>
 
             <Card>
@@ -331,14 +331,14 @@ If you lose access to your authenticator app, you can use one of these codes to 
                 
                 <div style={{ textAlign: 'center' }}>
                   <Text type="secondary">
-                    Time remaining: {timeRemaining}s
+                    Kalan süre: {timeRemaining}s
                   </Text>
                 </div>
 
                 {verificationCode.length === 6 && (
                   <Alert
-                    message="Code entered"
-                    description="Click 'Verify & Enable' to complete setup"
+                    message="Kod girildi"
+                    description="Kurulumu tamamlamak için 'Doğrula ve Etkinleştir'e tıklayın"
                     type="info"
                     showIcon
                   />
@@ -347,12 +347,12 @@ If you lose access to your authenticator app, you can use one of these codes to 
             </Card>
 
             <Alert
-              message="Troubleshooting"
+              message="Sorun Giderme"
               description={
                 <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
-                  <li>Make sure your device time is synchronized</li>
-                  <li>Check that you scanned the correct QR code</li>
-                  <li>Try entering the code when the timer resets</li>
+                  <li>Cihazınızın saatinin senkronize olduğundan emin olun</li>
+                  <li>Doğru QR kodunu taradığınızı kontrol edin</li>
+                  <li>Zamanlayıcı sıfırlandığında kodu girmeyi deneyin</li>
                 </ul>
               }
               type="warning"
@@ -365,8 +365,8 @@ If you lose access to your authenticator app, you can use one of these codes to 
         return (
           <div>
             <Alert
-              message="Save Your Backup Codes!"
-              description="These codes can be used to access your account if you lose your phone. Each code can only be used once."
+              message="Yedek Kodlarınızı Kaydedin!"
+              description="Bu kodlar telefonunuzu kaybederseniz hesabınıza erişmek için kullanılabilir. Her kod yalnızca bir kez kullanılabilir."
               type="warning"
               showIcon
               icon={<WarningOutlined />}
@@ -374,7 +374,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
             />
 
             <Title level={4}>
-              <SafetyOutlined /> Backup Codes
+              <SafetyOutlined /> Yedek Kodlar
             </Title>
             
             <Card>
@@ -403,16 +403,16 @@ If you lose access to your authenticator app, you can use one of these codes to 
                     icon={<CopyOutlined />}
                     onClick={() => copyToClipboard(
                       setupData?.backupCodes.join('\n') || '',
-                      'Backup codes'
+                      'Yedek codes'
                     )}
                   >
-                    Copy All
+                    Tümünü Kopyala
                   </Button>
                   <Button
-                    icon={<DownloadOutlined />}
-                    onClick={downloadBackupCodes}
+                    icon={<İndirOutlined />}
+                    onClick={downloadYedekCodes}
                   >
-                    Download
+                    İndir
                   </Button>
                 </Space>
               </Space>
@@ -420,18 +420,18 @@ If you lose access to your authenticator app, you can use one of these codes to 
 
             <Checkbox
               checked={backupCodesConfirmed}
-              onChange={(e) => setBackupCodesConfirmed(e.target.checked)}
+              onChange={(e) => setYedekCodesConfirmed(e.target.checked)}
               style={{ marginTop: 24 }}
             >
               <Text strong>
-                I have saved my backup codes in a secure location
+                Yedek kodlarımı güvenli bir yerde kaydettim
               </Text>
             </Checkbox>
 
             {backupCodesConfirmed && (
               <Alert
-                message="Setup Complete!"
-                description="Two-factor authentication is now enabled for your account."
+                message="Kurulum Tamamlandı!"
+                description="İki faktörlü kimlik doğrulama artık hesabınız için etkinleştirildi."
                 type="success"
                 showIcon
                 icon={<CheckCircleOutlined />}
@@ -448,7 +448,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
 
   return (
     <Modal
-      title="Set Up Two-Factor Authentication"
+      title="İki Faktörlü Kimlik Doğrulamayı Kur"
       visible={visible}
       onCancel={onClose}
       width={600}
@@ -456,10 +456,10 @@ If you lose access to your authenticator app, you can use one of these codes to 
       maskClosable={false}
     >
       <Steps current={currentStep} style={{ marginBottom: 32 }}>
-        <Step title="Introduction" icon={<SafetyOutlined />} />
-        <Step title="Setup" icon={<QrcodeOutlined />} />
-        <Step title="Verify" icon={<MobileOutlined />} />
-        <Step title="Backup" icon={<KeyOutlined />} />
+        <Step title="Giriş" icon={<SafetyOutlined />} />
+        <Step title="Kurulum" icon={<QrcodeOutlined />} />
+        <Step title="Doğrula" icon={<MobileOutlined />} />
+        <Step title="Yedek" icon={<KeyOutlined />} />
       </Steps>
 
       <div style={{ minHeight: 400 }}>
@@ -470,24 +470,24 @@ If you lose access to your authenticator app, you can use one of these codes to 
         <Space>
           {currentStep > 0 && currentStep < 3 && (
             <Button onClick={handlePrev}>
-              Previous
+              Önceki
             </Button>
           )}
           
           {currentStep < 2 && (
-            <Button type="primary" onClick={handleNext}>
-              Next
+            <Button type="primary" onClick={handleSonraki}>
+              Sonraki
             </Button>
           )}
           
           {currentStep === 2 && (
             <Button 
               type="primary" 
-              onClick={handleNext}
+              onClick={handleSonraki}
               loading={loading}
               disabled={verificationCode.length !== 6}
             >
-              Verify & Enable
+              Doğrula & Enable
             </Button>
           )}
           
@@ -497,7 +497,7 @@ If you lose access to your authenticator app, you can use one of these codes to 
               onClick={handleComplete}
               disabled={!backupCodesConfirmed}
             >
-              Complete Setup
+              Complete Kurulum
             </Button>
           )}
         </Space>
