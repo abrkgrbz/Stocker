@@ -38,38 +38,33 @@ export class TwoFactorService {
   private readonly period = 30;
 
   /**
-   * Generate a new TOTP secret and QR code
+   * Setup 2FA - Call backend to generate secret and QR code
    */
   async setupTwoFactor(userEmail: string): Promise<ITwoFactorSetup> {
-    // Generate a random secret (20 chars for optimal QR code size)
-    const secret = this.generateSecret(20);
+    try {
+      // Call backend API to generate secret and QR code
+      const response = await apiClient.post<{
+        secret: string;
+        qrCodeUrl: string;
+        manualEntryKey: string;
+        backupCodes: string[];
+      }>('/api/master/auth/setup-2fa', {});
 
-    // Create TOTP instance
-    const totp = new OTPAuth.TOTP({
-      issuer: this.issuer,
-      label: userEmail,
-      algorithm: this.algorithm,
-      digits: this.digits,
-      period: this.period,
-      secret: secret
-    });
+      const { secret, qrCodeUrl: otpauthUrl, manualEntryKey, backupCodes } = response.data;
 
-    // Generate QR code
-    const otpauth = totp.toString();
-    const qrCodeUrl = await this.generateQRCode(otpauth);
+      // Convert otpauth URL to QR code image
+      const qrCodeDataUrl = await this.generateQRCode(otpauthUrl);
 
-    // Generate backup codes
-    const backupCodes = this.generateBackupCodes();
-
-    // Format manual entry key for display
-    const manualEntryKey = this.formatSecretForManualEntry(secret);
-
-    return {
-      secret,
-      qrCodeUrl,
-      backupCodes,
-      manualEntryKey
-    };
+      return {
+        secret,
+        qrCodeUrl: qrCodeDataUrl,
+        backupCodes,
+        manualEntryKey
+      };
+    } catch (error) {
+      console.error('Failed to setup 2FA:', error);
+      throw new Error('Failed to setup 2FA');
+    }
   }
 
   /**
