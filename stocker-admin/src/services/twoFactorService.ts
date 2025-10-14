@@ -176,8 +176,7 @@ export class TwoFactorService {
   async enable2FA(secret: string, token: string, backupCodes: string[]): Promise<boolean> {
     try {
       const response = await apiClient.post('/api/master/auth/enable-2fa', {
-        code: token,
-        secret
+        verificationCode: token
       });
 
       return response.success;

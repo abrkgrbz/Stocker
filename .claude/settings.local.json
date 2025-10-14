@@ -16,7 +16,10 @@
       "Bash(ssh root@95.217.219.4 \"docker ps --filter name=api- --format ''{{.ID}} | Created: {{.CreatedAt}} | {{.Status}}''\")",
       "Bash(ssh root@95.217.219.4 \"docker inspect 646073b27847\")",
       "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.ID}} | Created: {{.CreatedAt}} | {{.Status}}''\")",
-      "Bash(for i in {1..12})"
+      "Bash(for i in {1..12})",
+      "Bash(for i in {1..8})",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.ID}} | Created: {{.CreatedAt}} | Status: {{.Status}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker inspect 7ecad5a0ee96 | grep -A 5 ''COMMIT_SHA\\|GIT_COMMIT''\")"
     ],
     "deny": [],
     "ask": []
