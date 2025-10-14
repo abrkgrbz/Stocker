@@ -1,5 +1,5 @@
 /**
- * Two-Factor Authentication Login Component
+ * İki Faktörlü Kimlik Doğrulama Login Component
  * Handles 2FA verification during login
  */
 
@@ -76,7 +76,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
   const handleVerify = async () => {
     if (verificationCode.length !== 6) {
-      setError('Please enter a 6-digit code');
+      setError('Lütfen 6 haneli bir kod girin');
       return;
     }
 
@@ -87,22 +87,22 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       const success = await onVerify(verificationCode);
       
       if (success) {
-        message.success('Verification successful!');
+        message.success('Doğrulama başarılı!');
         setVerificationCode('');
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
         
         if (newAttempts >= maxAttempts) {
-          setError('Too many failed attempts. Please try again later or use a backup code.');
+          setError('Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin veya yedek kod kullanın.');
         } else {
-          setError(`Invalid code. ${maxAttempts - newAttempts} attempts remaining.`);
+          setError(`Geçersiz kod. ${maxAttempts - newAttempts} deneme hakkı kaldı.`);
         }
         
         setVerificationCode('');
       }
     } catch (error) {
-      setError('Verification failed. Please try again.');
+      setError('Doğrulama başarısız. Lütfen tekrar deneyin.');
       setVerificationCode('');
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       title={
         <Space>
           <SafetyOutlined style={{ color: '#1890ff' }} />
-          <span>Two-Factor Authentication</span>
+          <span>İki Faktörlü Kimlik Doğrulama</span>
         </Space>
       }
       visible={visible}
@@ -141,15 +141,15 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <MobileOutlined style={{ fontSize: 48, color: '#1890ff' }} />
           <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
-            Enter Verification Code
+            Doğrulama Kodunu Girin
           </Title>
           <Text type="secondary">
-            Open your authenticator app and enter the 6-digit code
+            Authenticator uygulamanızı açın ve 6 haneli kodu girin
           </Text>
           {userEmail && (
             <div style={{ marginTop: 8 }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Account: {userEmail}
+                Hesap: {userEmail}
               </Text>
             </div>
           )}
@@ -190,11 +190,11 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
             }
           />
 
-          {/* Time remaining indicator */}
+          {/* Kalan süre indicator */}
           <div style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                <ClockCircleOutlined /> Time remaining
+                <ClockCircleOutlined /> Kalan süre
               </Text>
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {timeRemaining}s
@@ -229,12 +229,12 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
             loading={loading}
             disabled={verificationCode.length !== 6 || attempts >= maxAttempts}
           >
-            Verify Code
+            Kodu Doğrula
           </Button>
 
           <Divider style={{ margin: '16px 0' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Having trouble?
+              Sorun mu yaşıyorsunuz??
             </Text>
           </Divider>
 
@@ -245,7 +245,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
             onClick={onUseBackupCode}
             disabled={loading}
           >
-            Use Backup Code
+            Yedek Kod Kullan
           </Button>
 
           <Button
@@ -254,18 +254,18 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
             onClick={onCancel}
             disabled={loading}
           >
-            Cancel Login
+            Girişi İptal Et
           </Button>
         </Space>
 
         {/* Help text */}
         <Alert
-          message="Tips"
+          message="İpuçları"
           description={
             <ul style={{ marginBottom: 0, paddingLeft: 20, fontSize: 12 }}>
-              <li>Make sure your device time is synchronized</li>
-              <li>Wait for a new code if the current one doesn't work</li>
-              <li>Use a backup code if you can't access your app</li>
+              <li>Cihazınızın saatinin senkronize olduğundan emin olun</li>
+              <li>Mevcut kod çalışmazsa yeni bir kod bekleyin</li>
+              <li>Uygulamanıza erişemiyorsanız yedek kod kullanın</li>
             </ul>
           }
           type="info"
