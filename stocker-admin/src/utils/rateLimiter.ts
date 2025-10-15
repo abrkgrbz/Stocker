@@ -28,7 +28,7 @@ class RateLimiter {
     this.configs.set('/api/master/dashboard', { maxRequests: 5, windowMs: 1000, retryAfter: 2000 });
     this.configs.set('/api/master/tenants', { maxRequests: 10, windowMs: 1000, retryAfter: 1000 });
     this.configs.set('/api/master/users', { maxRequests: 10, windowMs: 1000, retryAfter: 1000 });
-    this.configs.set('/api/master/auth', { maxRequests: 3, windowMs: 60000, retryAfter: 5000 }); // 3 per minute for auth
+    this.configs.set('/api/master/auth', { maxRequests: 20, windowMs: 60000, retryAfter: 2000 }); // 20 per minute for auth (more reasonable for login + 2FA flow)
   }
 
   private getConfig(endpoint: string): RateLimitConfig {
