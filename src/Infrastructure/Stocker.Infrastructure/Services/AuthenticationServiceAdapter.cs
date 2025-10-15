@@ -307,6 +307,13 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         }
     }
 
+
+    public Task<Result<AuthResponse>> GenerateAuthResponseForMasterUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        // Delegate to the Identity service's implementation
+        return _authenticationService.GenerateAuthResponseForMasterUserAsync(userId, cancellationToken);
+    }
+
     public Task<Result<bool>> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         try

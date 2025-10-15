@@ -381,7 +381,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
 
             masterUser.RevokeRefreshToken();
             await _masterContext.SaveChangesAsync();
-            
+
             _logger.LogInformation("Refresh token revoked for user {UserId}", userId);
             return true;
         }
@@ -389,6 +389,51 @@ public class RefactoredAuthenticationService : IAuthenticationService
         {
             _logger.LogError(ex, "Error revoking refresh token for user {UserId}", userId);
             return false;
+        }
+    }
+
+    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> GenerateAuthResponseForMasterUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var masterUser = await _masterContext.MasterUsers.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (masterUser == null)
+            {
+                return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                    Stocker.SharedKernel.Results.Error.NotFound("User.NotFound", "User not found"));
+            }
+
+            // Generate authentication result using token generation service
+            var authResult = await _tokenGenerationService.GenerateForMasterUserAsync(masterUser, null);
+
+            var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
+            {
+                AccessToken = authResult.AccessToken ?? string.Empty,
+                RefreshToken = authResult.RefreshToken ?? string.Empty,
+                ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
+                TokenType = "Bearer",
+                User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
+                {
+                    Id = authResult.User.Id,
+                    Username = authResult.User.Username,
+                    Email = authResult.User.Email,
+                    FullName = authResult.User.FullName,
+                    TenantId = authResult.User.TenantId,
+                    TenantName = authResult.User.TenantName,
+                    Roles = authResult.User.Roles ?? new List<string>()
+                },
+                Requires2FA = false,
+                TempToken = null
+            };
+
+            return Stocker.SharedKernel.Results.Result.Success(authResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating auth response for master user: {UserId}", userId);
+            return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                Stocker.SharedKernel.Results.Error.Failure("Auth.GenerationError", "Failed to generate authentication response"));
         }
     }
 }

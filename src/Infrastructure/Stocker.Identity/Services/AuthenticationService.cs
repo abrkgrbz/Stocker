@@ -9,6 +9,10 @@ using Stocker.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Master.ValueObjects;
+using Stocker.Application.Features.Identity.Commands.Login;
+using Stocker.SharedKernel.Results;
+using AppUserInfo = Stocker.Application.Features.Identity.Commands.Login.UserInfo;
+using IdentityUserInfo = Stocker.Identity.Models.UserInfo;
 
 namespace Stocker.Identity.Services;
 
@@ -433,9 +437,18 @@ public class AuthenticationService : IAuthenticationService
             {
                 AccessToken = authResult.AccessToken,
                 RefreshToken = authResult.RefreshToken,
-                ExpiresIn = (int)authResult.AccessTokenExpiration.TotalSeconds,
+                ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
                 TokenType = "Bearer",
-                User = authResult.User,
+                User = new AppUserInfo
+                {
+                    Id = authResult.User.Id,
+                    Username = authResult.User.Username,
+                    Email = authResult.User.Email,
+                    FullName = authResult.User.FullName,
+                    TenantId = authResult.User.TenantId,
+                    TenantName = authResult.User.TenantName,
+                    Roles = authResult.User.Roles
+                },
                 Requires2FA = false,
                 TempToken = null
             };
@@ -502,7 +515,7 @@ public class AuthenticationService : IAuthenticationService
             RefreshToken = refreshToken,
             AccessTokenExpiration = _jwtTokenService.GetAccessTokenExpiration(),
             RefreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration(),
-            User = new UserInfo
+            User = new IdentityUserInfo
             {
                 Id = user.Id,
                 Username = user.Username,
@@ -566,7 +579,7 @@ public class AuthenticationService : IAuthenticationService
             RefreshToken = refreshToken,
             AccessTokenExpiration = _jwtTokenService.GetAccessTokenExpiration(),
             RefreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration(),
-            User = new UserInfo
+            User = new IdentityUserInfo
             {
                 Id = masterUser.Id,
                 Username = tenantUser.Username,
