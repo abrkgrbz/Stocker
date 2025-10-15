@@ -71,7 +71,12 @@ public static class MiddlewareExtensions
 
         // 4. WebSockets for SignalR
         var allowedOrigins = configuration.GetSection("WebSocketOptions:AllowedOrigins").Get<string[]>()
-            ?? new[] { "https://stoocker.app", "https://www.stoocker.app", "https://master.stoocker.app" };
+            ?? new[] {
+                "https://stoocker.app",
+                "https://www.stoocker.app",
+                "https://auth.stoocker.app",  // Auth subdomain for 2FA
+                "https://master.stoocker.app"
+            };
 
         var webSocketOptions = new Microsoft.AspNetCore.Builder.WebSocketOptions
         {

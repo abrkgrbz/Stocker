@@ -167,7 +167,11 @@ services:
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
       
       # Apply CORS to HTTPS router
+      # Note: Traefik automatically upgrades WebSocket connections, no special config needed
       - "traefik.http.routers.api-secure.middlewares=api-cors"
+
+      # Service configuration for proper WebSocket handling
+      - "traefik.http.services.api.loadbalancer.passhostheader=true"
       
       # Coolify labels
       - "coolify.managed=true"
