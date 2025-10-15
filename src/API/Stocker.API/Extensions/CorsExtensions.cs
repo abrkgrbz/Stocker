@@ -61,7 +61,12 @@ public static class CorsExtensions
                     }
                 })
                 .AllowAnyMethod()
-                .AllowAnyHeader() // Allow all headers for preflight requests
+                .WithHeaders(
+                    "Content-Type", "Authorization", "Accept",
+                    "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
+                    "Cache-Control", "Pragma",
+                    "X-Requested-With", "X-SignalR-User-Agent" // SignalR headers
+                )
                 .AllowCredentials()
                 .WithExposedHeaders(
                     "Content-Disposition",
