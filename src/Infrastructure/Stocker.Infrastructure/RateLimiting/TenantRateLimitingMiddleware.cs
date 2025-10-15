@@ -217,12 +217,13 @@ public class TenantRateLimitingMiddleware
         var endpoint = context.Request.Path.Value?.ToLower() ?? "";
         
         // Special limits for auth endpoints
+        // Increased to 30 to support 2FA flow (login + check lockout + verify 2FA + retries)
         if (endpoint.Contains("/auth") || endpoint.Contains("/login"))
         {
             return new TenantRateLimitingOptions
             {
                 Algorithm = RateLimitAlgorithm.FixedWindow,
-                PermitLimit = 5,
+                PermitLimit = 30,
                 WindowSeconds = 60,
                 QueueLimit = 0
             };
