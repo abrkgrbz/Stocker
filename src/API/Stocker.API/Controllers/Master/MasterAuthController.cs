@@ -11,6 +11,7 @@ using Stocker.Application.Features.Identity.Commands.Setup2FA;
 using Stocker.Application.Features.Identity.Commands.Enable2FA;
 using Stocker.Application.Features.Identity.Commands.Disable2FA;
 using Stocker.Application.Features.Identity.Queries.Get2FAStatus;
+using Stocker.Application.Features.Identity.Queries.Check2FALockout;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
@@ -107,6 +108,23 @@ public class MasterAuthController : ApiController
         
         _logger.LogInformation("Master admin {UserId} logged out", userId);
         
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Check 2FA lockout status for master admin
+    /// </summary>
+    [HttpGet("check-2fa-lockout")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<LockoutStatusResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Check2FALockout([FromQuery] string email)
+    {
+        _logger.LogInformation("Checking master admin 2FA lockout status for email: {Email}", email);
+
+        var query = new Check2FALockoutQuery(email);
+        var result = await Mediator.Send(query);
+
         return HandleResult(result);
     }
 

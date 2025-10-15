@@ -15,6 +15,7 @@ using Stocker.Application.Features.Identity.Commands.Setup2FA;
 using Stocker.Application.Features.Identity.Commands.Enable2FA;
 using Stocker.Application.Features.Identity.Commands.Verify2FA;
 using Stocker.Application.Features.Identity.Commands.Disable2FA;
+using Stocker.Application.Features.Identity.Queries.Check2FALockout;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -405,6 +406,36 @@ public class AuthController : ControllerBase
         if (result.IsSuccess)
         {
             return Ok(result.Value);
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Check 2FA lockout status for user
+    /// </summary>
+    [HttpGet("check-2fa-lockout")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LockoutStatusResponse), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> Check2FALockout([FromQuery] string email)
+    {
+        _logger.LogInformation("Checking 2FA lockout status for email: {Email}", email);
+
+        var query = new Check2FALockoutQuery(email);
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
+            });
         }
 
         return BadRequest(new

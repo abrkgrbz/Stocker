@@ -295,6 +295,23 @@ class ApiClient {
     }
   }
 
+  async check2FALockout(email: string): Promise<{ isLockedOut: boolean; minutesRemaining?: number; secondsRemaining?: number; message?: string }> {
+    try {
+      const response = await this.client.get<ApiResponse<any>>('/api/master/auth/check-2fa-lockout', {
+        params: { email }
+      });
+
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+
+      return { isLockedOut: false };
+    } catch (error: any) {
+      console.error('Failed to check 2FA lockout status:', error);
+      return { isLockedOut: false };
+    }
+  }
+
   async verify2FA(params: { email: string; tempToken: string; code: string }): Promise<ApiResponse<AuthResponse>> {
     try {
       const response = await this.client.post<ApiResponse<AuthResponse>>('/api/master/auth/verify-2fa', {
@@ -309,6 +326,10 @@ class ApiClient {
 
       throw new AppError(response.data.message || '2FA verification failed', ERROR_CODES.INVALID_CREDENTIALS);
     } catch (error: any) {
+      // RFC 7231 Problem Details format uses 'detail' field for error messages
+      if (error.response?.data?.detail) {
+        throw new AppError(error.response.data.detail, ERROR_CODES.INVALID_CREDENTIALS);
+      }
       if (error.response?.data?.message) {
         throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
       }
@@ -331,6 +352,10 @@ class ApiClient {
 
       throw new AppError(response.data.message || 'Backup code verification failed', ERROR_CODES.INVALID_CREDENTIALS);
     } catch (error: any) {
+      // RFC 7231 Problem Details format uses 'detail' field for error messages
+      if (error.response?.data?.detail) {
+        throw new AppError(error.response.data.detail, ERROR_CODES.INVALID_CREDENTIALS);
+      }
       if (error.response?.data?.message) {
         throw new AppError(error.response.data.message, ERROR_CODES.INVALID_CREDENTIALS);
       }

@@ -23,6 +23,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons';
 import { twoFactorService } from '../../services/twoFactorService';
+import { apiClient } from '../../services/api/apiClient';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -48,14 +49,32 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
   const [attempts, setAttempts] = useState(0);
   const maxAttempts = 3;
 
-  // Reset state when modal opens/closes
+  // Check lockout status and reset state when modal opens
   useEffect(() => {
     if (visible) {
       setVerificationCode('');
       setError('');
       setAttempts(0);
+
+      // Check backend lockout status when modal opens
+      const checkLockoutStatus = async () => {
+        if (userEmail) {
+          try {
+            const lockoutStatus = await apiClient.check2FALockout(userEmail);
+
+            if (lockoutStatus.isLockedOut) {
+              setError(lockoutStatus.message || 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.');
+              setAttempts(maxAttempts); // Disable input
+            }
+          } catch (error) {
+            console.error('Failed to check lockout status:', error);
+          }
+        }
+      };
+
+      checkLockoutStatus();
     }
-  }, [visible]);
+  }, [visible, userEmail]);
 
   // Update time remaining for TOTP
   useEffect(() => {
