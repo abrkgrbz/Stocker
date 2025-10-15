@@ -55,6 +55,32 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
                     Error.NotFound("2FA.NotEnabled", "2FA is not enabled for this user"));
             }
 
+            // Check if user is locked out from 2FA attempts
+            if (user.IsTwoFactorLockedOut())
+            {
+                var timeRemaining = user.GetTwoFactorLockoutTimeRemaining();
+                var minutes = timeRemaining?.Minutes ?? 0;
+                var seconds = timeRemaining?.Seconds ?? 0;
+
+                _logger.LogWarning("2FA locked out for email: {Email}. Time remaining: {Minutes}m {Seconds}s",
+                    emailToVerify, minutes, seconds);
+
+                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+                {
+                    Event = "2fa_lockout_attempt",
+                    Email = emailToVerify,
+                    UserId = user.Id,
+                    IpAddress = request.IpAddress,
+                    UserAgent = request.UserAgent,
+                    RiskScore = 80,
+                    GdprCategory = "authentication"
+                }, cancellationToken);
+
+                return Result.Failure<AuthResponse>(
+                    Error.Validation("2FA.LockedOut",
+                        $"Çok fazla başarısız deneme. {minutes} dakika {seconds} saniye sonra tekrar deneyin veya yedek kod kullanın."));
+            }
+
             bool isValid = false;
 
             if (request.IsBackupCode)
@@ -72,7 +98,12 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
 
             if (!isValid)
             {
-                _logger.LogWarning("Invalid 2FA code for email: {Email}", emailToVerify);
+                // Record failed attempt
+                user.RecordFailedTwoFactorAttempt();
+                await _masterContext.SaveChangesAsync(cancellationToken);
+
+                _logger.LogWarning("Invalid 2FA code for email: {Email}. Failed attempts: {Attempts}",
+                    emailToVerify, user.TwoFactorFailedAttempts);
 
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
                 {
@@ -85,9 +116,26 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
                     GdprCategory = "authentication"
                 }, cancellationToken);
 
+                // Check if user is now locked out after this attempt
+                if (user.IsTwoFactorLockedOut())
+                {
+                    var timeRemaining = user.GetTwoFactorLockoutTimeRemaining();
+                    var minutes = timeRemaining?.Minutes ?? 0;
+                    var seconds = timeRemaining?.Seconds ?? 0;
+
+                    return Result.Failure<AuthResponse>(
+                        Error.Validation("2FA.LockedOut",
+                            $"Çok fazla başarısız deneme. {minutes} dakika {seconds} saniye sonra tekrar deneyin veya yedek kod kullanın."));
+                }
+
                 return Result.Failure<AuthResponse>(
-                    Error.Validation("2FA.InvalidCode", "Invalid 2FA code"));
+                    Error.Validation("2FA.InvalidCode",
+                        $"Geçersiz kod. {3 - (user.TwoFactorFailedAttempts % 3)} deneme sonra {GetNextLockoutDuration(user.TwoFactorFailedAttempts)} dakika beklemeniz gerekecek."));
             }
+
+            // Record successful verification and clear failed attempts
+            user.RecordSuccessfulTwoFactorVerification();
+            await _masterContext.SaveChangesAsync(cancellationToken);
 
             // Generate JWT tokens after successful 2FA verification
             var authResult = await _authenticationService.GenerateAuthResponseForMasterUserAsync(user.Id, cancellationToken);
@@ -129,5 +177,13 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Result<
         }
 
         return isValid;
+    }
+
+    private int GetNextLockoutDuration(int currentFailedAttempts)
+    {
+        // Calculate next lockout duration based on current attempts
+        if (currentFailedAttempts >= 6) return 15; // Next lockout will be 15 minutes
+        if (currentFailedAttempts >= 3) return 5;  // Next lockout will be 5 minutes
+        return 1; // Next lockout will be 1 minute
     }
 }

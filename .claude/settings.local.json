@@ -31,7 +31,19 @@
       "Bash(do echo \"[$i/6]\")",
       "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.Status}}''\")",
       "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Coolify queue restarted''\")",
-      "Bash(for i in {1..10})"
+      "Bash(for i in {1..10})",
+      "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Queue restarted''\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=api- --format ''{{.ID}} | {{.CreatedAt}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=api- --format ''{{.ID}} | Created: {{.CreatedAt}}''\")",
+      "Bash(dotnet build:*)",
+      "Bash(do echo \"[$i/12] Checking deployment status...\")",
+      "Bash(npm run build)",
+      "Bash(do echo \"[$i/10] Checking deployment...\")",
+      "Bash(do echo \"[$i/8] Checking for new container...\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''{{.ID}} | Created: {{.CreatedAt}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker restart c1d57b01ba89 && echo ''✅ Admin container restarting...''\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps --filter name=admin- --format ''ID: {{.ID}} | Status: {{.Status}}''\")",
+      "Bash(dotnet ef migrations add:*)"
     ],
     "deny": [],
     "ask": []

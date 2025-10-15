@@ -31,6 +31,8 @@ public sealed class MasterUser : AggregateRoot
     public DateTime? PasswordChangedAt { get; private set; }
     public int FailedLoginAttempts { get; private set; }
     public DateTime? LockoutEndAt { get; private set; }
+    public int TwoFactorFailedAttempts { get; private set; }
+    public DateTime? TwoFactorLockoutEndAt { get; private set; }
     public string? ProfilePictureUrl { get; private set; }
     public string? Timezone { get; private set; }
     public string? PreferredLanguage { get; private set; }
@@ -401,6 +403,44 @@ public sealed class MasterUser : AggregateRoot
     public bool IsLockedOut()
     {
         return LockoutEndAt.HasValue && LockoutEndAt.Value > DateTime.UtcNow;
+    }
+
+    public void RecordFailedTwoFactorAttempt()
+    {
+        TwoFactorFailedAttempts++;
+
+        // Exponential backoff: 3 attempts = 1 min, 6 attempts = 5 min, 9+ attempts = 15 min
+        if (TwoFactorFailedAttempts >= 9)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(15);
+        }
+        else if (TwoFactorFailedAttempts >= 6)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(5);
+        }
+        else if (TwoFactorFailedAttempts >= 3)
+        {
+            TwoFactorLockoutEndAt = DateTime.UtcNow.AddMinutes(1);
+        }
+    }
+
+    public void RecordSuccessfulTwoFactorVerification()
+    {
+        TwoFactorFailedAttempts = 0;
+        TwoFactorLockoutEndAt = null;
+    }
+
+    public bool IsTwoFactorLockedOut()
+    {
+        return TwoFactorLockoutEndAt.HasValue && TwoFactorLockoutEndAt.Value > DateTime.UtcNow;
+    }
+
+    public TimeSpan? GetTwoFactorLockoutTimeRemaining()
+    {
+        if (!IsTwoFactorLockedOut())
+            return null;
+
+        return TwoFactorLockoutEndAt!.Value - DateTime.UtcNow;
     }
 
     public void AssignToTenant(Guid tenantId, UserType userType)
