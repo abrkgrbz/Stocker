@@ -179,28 +179,28 @@ export const useAuthStore = create<AuthState>()(
             code
           });
 
-          if (response.success) {
+          if (response.success && response.data) {
             // Map the API user format to our admin user format
             const adminUser: AdminUser = {
-              id: response.user.id,
-              email: response.user.email,
-              name: response.user.fullName || response.user.username || 'Admin User',
-              role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
-                    response.user.roles.includes('Admin') ? 'admin' : 'user',
-              roles: response.user.roles,
-              tenantId: response.user.tenantId,
-              tenantName: response.user.tenantName,
+              id: response.data.user.id,
+              email: response.data.user.email,
+              name: response.data.user.fullName || response.data.user.username || 'Admin User',
+              role: response.data.user.roles.includes('SistemYoneticisi') || response.data.user.roles.includes('SystemAdmin') ? 'super_admin' :
+                    response.data.user.roles.includes('Admin') ? 'admin' : 'user',
+              roles: response.data.user.roles,
+              tenantId: response.data.user.tenantId,
+              tenantName: response.data.user.tenantName,
             };
 
             // Store tokens securely
-            tokenStorage.setToken(response.accessToken);
-            tokenStorage.setRefreshToken(response.refreshToken);
+            tokenStorage.setToken(response.data.accessToken);
+            tokenStorage.setRefreshToken(response.data.refreshToken);
 
             // Update state
             set({
               user: adminUser,
-              accessToken: response.accessToken,
-              refreshToken: response.refreshToken,
+              accessToken: response.data.accessToken,
+              refreshToken: response.data.refreshToken,
               isAuthenticated: true,
               isLoading: false,
               requires2FA: false,
@@ -236,28 +236,28 @@ export const useAuthStore = create<AuthState>()(
             code
           });
 
-          if (response.success) {
+          if (response.success && response.data) {
             // Map the API user format to our admin user format
             const adminUser: AdminUser = {
-              id: response.user.id,
-              email: response.user.email,
-              name: response.user.fullName || response.user.username || 'Admin User',
-              role: response.user.roles.includes('SistemYoneticisi') || response.user.roles.includes('SystemAdmin') ? 'super_admin' :
-                    response.user.roles.includes('Admin') ? 'admin' : 'user',
-              roles: response.user.roles,
-              tenantId: response.user.tenantId,
-              tenantName: response.user.tenantName,
+              id: response.data.user.id,
+              email: response.data.user.email,
+              name: response.data.user.fullName || response.data.user.username || 'Admin User',
+              role: response.data.user.roles.includes('SistemYoneticisi') || response.data.user.roles.includes('SystemAdmin') ? 'super_admin' :
+                    response.data.user.roles.includes('Admin') ? 'admin' : 'user',
+              roles: response.data.user.roles,
+              tenantId: response.data.user.tenantId,
+              tenantName: response.data.user.tenantName,
             };
 
             // Store tokens securely
-            tokenStorage.setToken(response.accessToken);
-            tokenStorage.setRefreshToken(response.refreshToken);
+            tokenStorage.setToken(response.data.accessToken);
+            tokenStorage.setRefreshToken(response.data.refreshToken);
 
             // Update state
             set({
               user: adminUser,
-              accessToken: response.accessToken,
-              refreshToken: response.refreshToken,
+              accessToken: response.data.accessToken,
+              refreshToken: response.data.refreshToken,
               isAuthenticated: true,
               isLoading: false,
               requires2FA: false,
