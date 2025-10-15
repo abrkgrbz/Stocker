@@ -110,28 +110,8 @@ export const useAuthStore = create<AuthState>()(
           // Log successful login
           auditLogger.logLogin(adminUser.email, true);
 
-          // Show success message
-          await Swal.fire({
-            icon: 'success',
-            title: 'Giriş Başarılı',
-            text: `Hoş geldiniz, ${adminUser.name}!`,
-            timer: 2000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top',
-            background: '#1a1f36',
-            color: '#fff',
-            customClass: {
-              popup: 'colored-toast',
-              title: 'swal-title',
-              timerProgressBar: 'swal-progress-bar'
-            },
-            didOpen: (toast) => {
-              toast.style.border = '2px solid #10b981';
-              toast.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
-            }
-          });
+          // Success message will be shown by LoginPage.tsx
+          // No need to show here as it might interfere with 2FA flow
         } catch (error: any) {
           set({ isLoading: false, requires2FA: false, tempLoginToken: null });
 
