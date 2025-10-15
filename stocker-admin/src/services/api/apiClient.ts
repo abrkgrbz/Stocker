@@ -188,8 +188,9 @@ class ApiClient {
   private handleApiError(error: AxiosError<ApiResponse>): AppError {
     if (error.response) {
       const { status, data } = error.response;
-      const message = data?.message || this.getDefaultErrorMessage(status);
-      
+      // RFC 7231 Problem Details format uses 'detail' field, fallback to 'message' or default
+      const message = (data as any)?.detail || data?.message || this.getDefaultErrorMessage(status);
+
       let errorCode = ERROR_CODES.API_ERROR;
       switch (status) {
         case 400:
@@ -214,12 +215,12 @@ class ApiClient {
           errorCode = ERROR_CODES.SERVER_ERROR;
           break;
       }
-      
+
       return new AppError(message, errorCode, status);
     } else if (error.request) {
       return new AppError('Network error. Please check your connection.', ERROR_CODES.NETWORK_ERROR);
     }
-    
+
     return new AppError('An unexpected error occurred', ERROR_CODES.UNKNOWN);
   }
 

@@ -61,11 +61,7 @@ public static class CorsExtensions
                     }
                 })
                 .AllowAnyMethod()
-                .WithHeaders(
-                    "Content-Type", "Authorization", "Accept",
-                    "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
-                    "Cache-Control", "Pragma"
-                )
+                .AllowAnyHeader() // Allow all headers for preflight requests
                 .AllowCredentials()
                 .WithExposedHeaders(
                     "Content-Disposition",
