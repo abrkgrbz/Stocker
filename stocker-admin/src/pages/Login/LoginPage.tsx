@@ -54,16 +54,12 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
 
-      // Check if 2FA is required after login completes
-      // The state will be updated by the login function
-      const currentState = useAuthStore.getState();
+      // Don't show any success message here
+      // If 2FA required: useEffect will navigate to /verify-2fa
+      // If 2FA not required: useEffect will navigate to /dashboard
+      // Success messages handled by destination pages
 
-      if (!currentState.requires2FA && currentState.isAuthenticated) {
-        message.success('Giriş başarılı!');
-        form.resetFields();
-        navigate('/dashboard');
-      }
-      // If 2FA is required, navigation will be handled by useEffect
+      form.resetFields();
     } catch (err: any) {
       const errorMessage = err.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
       setError(errorMessage);
