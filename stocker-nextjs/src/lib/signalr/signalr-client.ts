@@ -118,6 +118,6 @@ export class SignalRClient {
 }
 
 // Singleton instances for different hubs
-export const notificationHub = new SignalRClient('/hubs/notifications');
+export const notificationHub = new SignalRClient('/hubs/notification');
 export const inventoryHub = new SignalRClient('/hubs/inventory');
 export const orderHub = new SignalRClient('/hubs/orders');
