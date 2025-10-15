@@ -196,7 +196,9 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           set({ isLoading: false });
           console.error('2FA verification failed:', error);
-          return false;
+
+          // Throw error so component can display backend error messages (like lockout)
+          throw error;
         }
       },
 

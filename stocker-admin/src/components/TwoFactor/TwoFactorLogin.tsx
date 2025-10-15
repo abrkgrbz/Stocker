@@ -85,25 +85,32 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
     try {
       const success = await onVerify(verificationCode);
-      
+
       if (success) {
         message.success('Doğrulama başarılı!');
         setVerificationCode('');
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
-        
+
         if (newAttempts >= maxAttempts) {
           setError('Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin veya yedek kod kullanın.');
         } else {
           setError(`Geçersiz kod. ${maxAttempts - newAttempts} deneme hakkı kaldı.`);
         }
-        
+
         setVerificationCode('');
       }
-    } catch (error) {
-      setError('Doğrulama başarısız. Lütfen tekrar deneyin.');
+    } catch (error: any) {
+      // Display backend error message (e.g., rate limiting lockout)
+      const errorMessage = error?.message || error?.response?.data?.message || 'Doğrulama başarısız. Lütfen tekrar deneyin.';
+      setError(errorMessage);
       setVerificationCode('');
+
+      // If backend says locked out, disable input
+      if (errorMessage.includes('fazla') || errorMessage.includes('bekle')) {
+        setAttempts(maxAttempts); // Disable input
+      }
     } finally {
       setLoading(false);
     }
