@@ -59,41 +59,27 @@ const TenantRegistrationsPage: React.FC = () => {
   }, [statusFilter]);
 
   const handleApprove = async (registration: TenantRegistrationDto) => {
-    console.log('🔵 handleApprove called', { id: registration.id, company: registration.companyName });
-
-    try {
-      Modal.confirm({
-        title: 'Kaydı Onayla',
-        icon: <ExclamationCircleOutlined />,
-        content: `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz? Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`,
-        okText: 'Onayla',
-        okType: 'primary',
-        cancelText: 'İptal',
-        onOk: async () => {
-          console.log('✅ Modal confirmed, calling API...');
-          try {
-            const success = await tenantRegistrationService.approveRegistration(registration.id);
-            if (success) {
-              message.success('Kayıt onaylandı ve tenant oluşturuldu!');
-              fetchRegistrations(); // Refresh list
-            } else {
-              message.error('Kayıt onaylanamadı');
-            }
-          } catch (error: any) {
-            console.error('❌ API error:', error);
-            message.error(error.message || 'Onaylama işlemi başarısız oldu');
+    Modal.confirm({
+      title: 'Kaydı Onayla',
+      icon: <ExclamationCircleOutlined />,
+      content: `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz? Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`,
+      okText: 'Onayla',
+      okType: 'primary',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          const success = await tenantRegistrationService.approveRegistration(registration.id);
+          if (success) {
+            message.success('Kayıt onaylandı ve tenant oluşturuldu!');
+            fetchRegistrations(); // Refresh list
+          } else {
+            message.error('Kayıt onaylanamadı');
           }
-        },
-        onCancel: () => {
-          console.log('❌ Modal cancelled');
-        },
-      });
-
-      console.log('🟢 Modal.confirm called successfully');
-    } catch (error) {
-      console.error('🔴 Error in handleApprove:', error);
-      message.error('Modal açılırken hata oluştu: ' + (error as Error).message);
-    }
+        } catch (error: any) {
+          message.error(error.message || 'Onaylama işlemi başarısız oldu');
+        }
+      },
+    });
   };
 
   const handleReject = async (registration: TenantRegistrationDto) => {
