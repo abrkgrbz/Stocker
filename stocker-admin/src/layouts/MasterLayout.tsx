@@ -27,6 +27,7 @@ import {
   ReconciliationOutlined,
   ApiOutlined,
   SecurityScanOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { 
   Dropdown, 
