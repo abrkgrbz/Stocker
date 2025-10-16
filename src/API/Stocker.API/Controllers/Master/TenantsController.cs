@@ -39,9 +39,42 @@ public class TenantsController : MasterControllerBase
     public async Task<IActionResult> GetAll([FromQuery] GetTenantsListQuery query)
     {
         _logger.LogInformation("Getting all tenants with query: {@Query}", query);
-        
+
         var result = await _mediator.Send(query);
         return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get overall tenants statistics
+    /// </summary>
+    [HttpGet("statistics")]
+    [ProducesResponseType(typeof(ApiResponse<TenantsStatisticsDto>), 200)]
+    public async Task<IActionResult> GetOverallStatistics([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+    {
+        _logger.LogInformation("Getting overall tenant statistics");
+
+        var query = new GetTenantsStatisticsQuery
+        {
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get all pending tenant registrations
+    /// </summary>
+    [HttpGet("registrations")]
+    [ProducesResponseType(typeof(ApiResponse<List<TenantRegistrationDto>>), 200)]
+    public async Task<IActionResult> GetPendingRegistrations([FromQuery] string? status = null)
+    {
+        _logger.LogInformation("Getting tenant registrations with status: {Status}", status ?? "All");
+
+        // Query MasterDbContext for TenantRegistrations
+        var registrations = await _mediator.Send(new GetTenantRegistrationsQuery { Status = status });
+        return HandleResult(registrations);
     }
 
     /// <summary>
@@ -53,7 +86,7 @@ public class TenantsController : MasterControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         _logger.LogInformation("Getting tenant details for ID: {TenantId}", id);
-        
+
         var query = new GetTenantByIdQuery(id);
         var result = await _mediator.Send(query);
         return HandleResult(result);
@@ -228,40 +261,7 @@ public class TenantsController : MasterControllerBase
         return HandleResult(result);
     }
 
-    /// <summary>
-    /// Get overall tenants statistics
-    /// </summary>
-    [HttpGet("statistics")]
-    [ProducesResponseType(typeof(ApiResponse<TenantsStatisticsDto>), 200)]
-    public async Task<IActionResult> GetOverallStatistics([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
-    {
-        _logger.LogInformation("Getting overall tenant statistics");
-        
-        var query = new GetTenantsStatisticsQuery
-        {
-            FromDate = fromDate,
-            ToDate = toDate
-        };
-        
-        var result = await _mediator.Send(query);
-        return HandleResult(result);
-    }
-
     // Tenant code validation is now handled via SignalR ValidationHub.ValidateTenantCode
-
-    /// <summary>
-    /// Get all pending tenant registrations
-    /// </summary>
-    [HttpGet("registrations")]
-    [ProducesResponseType(typeof(ApiResponse<List<TenantRegistrationDto>>), 200)]
-    public async Task<IActionResult> GetPendingRegistrations([FromQuery] string? status = null)
-    {
-        _logger.LogInformation("Getting tenant registrations with status: {Status}", status ?? "All");
-
-        // Query MasterDbContext for TenantRegistrations
-        var registrations = await _mediator.Send(new GetTenantRegistrationsQuery { Status = status });
-        return HandleResult(registrations);
-    }
 
     /// <summary>
     /// Create tenant from registration (approve registration)

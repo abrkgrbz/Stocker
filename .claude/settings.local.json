@@ -12,7 +12,13 @@
       "Bash(dir:*)",
       "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Deployment triggered for Tenant Registration feature''\")",
       "Bash(do echo \"[$i/12] Monitoring deployments...\")",
-      "Bash(ssh root@95.217.219.4 \"echo ''=== API ==='' && docker ps --filter name=api- --format ''{{.ID}} | Created: {{.CreatedAt}} | Status: {{.Status}}'' && echo -e ''\\n=== Admin ==='' && docker ps --filter name=admin- --format ''{{.ID}} | Created: {{.CreatedAt}} | Status: {{.Status}}''\")"
+      "Bash(ssh root@95.217.219.4 \"echo ''=== API ==='' && docker ps --filter name=api- --format ''{{.ID}} | Created: {{.CreatedAt}} | Status: {{.Status}}'' && echo -e ''\\n=== Admin ==='' && docker ps --filter name=admin- --format ''{{.ID}} | Created: {{.CreatedAt}} | Status: {{.Status}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Queue restarted for CheckCircleOutlined fix''\")",
+      "Bash(do echo \"[$i/10] Monitoring admin redeployment...\")",
+      "Bash(ssh root@95.217.219.4 \"docker exec coolify php artisan queue:restart && echo ''✅ Coolify yeniden başlatıldı''\")",
+      "Bash(ssh root@95.217.219.4 \"echo ''=== Güncel Container Durumu ==='' && echo -e ''\\nAPI:'' && docker ps --filter name=api- --format ''{{.ID}} | {{.CreatedAt}} | {{.Status}}'' && echo -e ''\\nAdmin:'' && docker ps --filter name=admin- --format ''{{.ID}} | {{.CreatedAt}} | {{.Status}}''\")",
+      "Bash(ssh root@95.217.219.4 \"docker exec -i mssql-qks488sgc4co4cgkgo0o4844-002349234449 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ''YourStrongPassword!'' -d StockerMasterDb -C -Q \"\"SELECT Id, RegistrationCode, CompanyName, AdminEmail, EmailVerified, Status, RegistrationDate FROM TenantRegistrations WHERE AdminEmail LIKE ''%anilberk%'';\"\"\")",
+      "Bash(ssh root@95.217.219.4 \"docker restart d7ceb2dd14b4 && echo ''✅ API container restarting...''\")"
     ],
     "deny": [],
     "ask": []
