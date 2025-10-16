@@ -6,10 +6,12 @@ using Stocker.Application.Features.Tenants.Commands.ToggleTenantStatus;
 using Stocker.Application.Features.Tenants.Commands.DeleteTenant;
 using Stocker.Application.Features.Tenants.Commands.SuspendTenant;
 using Stocker.Application.Features.Tenants.Commands.ActivateTenant;
+using Stocker.Application.Features.Tenants.Commands.CreateTenantFromRegistration;
 using Stocker.Application.Features.Tenants.Queries.GetTenantById;
 using Stocker.Application.Features.Tenants.Queries.GetTenantsList;
 using Stocker.Application.Features.Tenants.Queries.GetTenantStatistics;
 using Stocker.Application.Features.Tenants.Queries.GetTenantsStatistics;
+using Stocker.Application.Features.Tenants.Queries.GetTenantRegistrations;
 using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
@@ -246,6 +248,48 @@ public class TenantsController : MasterControllerBase
     }
 
     // Tenant code validation is now handled via SignalR ValidationHub.ValidateTenantCode
+
+    /// <summary>
+    /// Get all pending tenant registrations
+    /// </summary>
+    [HttpGet("registrations")]
+    [ProducesResponseType(typeof(ApiResponse<List<TenantRegistrationDto>>), 200)]
+    public async Task<IActionResult> GetPendingRegistrations([FromQuery] string? status = null)
+    {
+        _logger.LogInformation("Getting tenant registrations with status: {Status}", status ?? "All");
+
+        // Query MasterDbContext for TenantRegistrations
+        var registrations = await _mediator.Send(new GetTenantRegistrationsQuery { Status = status });
+        return HandleResult(registrations);
+    }
+
+    /// <summary>
+    /// Create tenant from registration (approve registration)
+    /// </summary>
+    [HttpPost("from-registration")]
+    [ProducesResponseType(typeof(ApiResponse<TenantDto>), 201)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> CreateFromRegistration([FromBody] CreateTenantFromRegistrationCommand command)
+    {
+        _logger.LogInformation("Creating tenant from registration: {RegistrationId}", command.RegistrationId);
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation("Tenant created successfully from registration with ID: {TenantId}", result.Value.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Value.Id },
+                new ApiResponse<TenantDto>
+                {
+                    Success = true,
+                    Data = result.Value,
+                    Message = "Tenant created successfully from registration",
+                    Timestamp = DateTime.UtcNow
+                });
+        }
+
+        return HandleResult(result);
+    }
 
     /// <summary>
     /// Login to tenant (generate access token)

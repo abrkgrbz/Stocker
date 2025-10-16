@@ -31,6 +31,7 @@ const TenantWebhooks = lazy(() => import('./pages/Tenants/Webhooks'));
 const TenantHealth = lazy(() => import('./pages/Tenants/Health'));
 const TenantNotifications = lazy(() => import('./pages/Tenants/Notifications'));
 const TenantCompliance = lazy(() => import('./pages/Tenants/Compliance'));
+const TenantRegistrationsPage = lazy(() => import('./pages/TenantRegistrations'));
 const UsersPage = lazy(() => import('./pages/Users'));
 const UserRolesPage = lazy(() => import('./pages/Users/Roles'));
 const UserPermissionsPage = lazy(() => import('./pages/Users/Permissions'));
@@ -112,6 +113,11 @@ function App() {
           <Route path="tenants" element={
             <Suspense fallback={<PageLoader />}>
               <TenantsPage />
+            </Suspense>
+          } />
+          <Route path="tenant-registrations" element={
+            <Suspense fallback={<PageLoader />}>
+              <TenantRegistrationsPage />
             </Suspense>
           } />
           <Route path="tenants/create" element={

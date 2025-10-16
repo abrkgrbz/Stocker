@@ -327,6 +327,11 @@ const MasterLayout: React.FC = () => {
           icon: <TeamOutlined />,
         },
         {
+          path: '/tenant-registrations',
+          name: locale === 'tr' ? 'Kayıt Onayları' : 'Registration Approvals',
+          icon: <CheckCircleOutlined />,
+        },
+        {
           path: '/tenants/create',
           name: locale === 'tr' ? 'Yeni Tenant' : 'New Tenant',
           icon: <PlusOutlined />,

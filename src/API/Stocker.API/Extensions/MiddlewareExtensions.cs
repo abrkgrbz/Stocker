@@ -75,7 +75,8 @@ public static class MiddlewareExtensions
                 "https://stoocker.app",
                 "https://www.stoocker.app",
                 "https://auth.stoocker.app",  // Auth subdomain for 2FA
-                "https://master.stoocker.app"
+                "https://master.stoocker.app",
+                "https://admin.stoocker.app"
             };
 
         var webSocketOptions = new Microsoft.AspNetCore.Builder.WebSocketOptions

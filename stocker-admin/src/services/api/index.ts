@@ -2,6 +2,7 @@
 export { apiClient } from './apiClient';
 export { dashboardService } from './dashboardService';
 export { tenantService } from './tenantService';
+export { tenantRegistrationService } from './tenantRegistrationService';
 export { userService } from './userService';
 export { featureService } from './featureService';
 export { moduleService } from './moduleService';
@@ -32,6 +33,12 @@ export type {
   UpdateTenantCommand,
   SuspendTenantRequest,
 } from './tenantService';
+
+export type {
+  TenantRegistrationDto,
+  CreateTenantFromRegistrationCommand,
+  GetTenantRegistrationsQuery,
+} from './tenantRegistrationService';
 
 export type {
   UserDto,
