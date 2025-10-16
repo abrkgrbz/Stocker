@@ -14,6 +14,8 @@ public class TenantRegistrationDto
     public string ContactPhone { get; set; } = string.Empty;
     public string AdminEmail { get; set; } = string.Empty;
     public string AdminName { get; set; } = string.Empty;
+    public bool EmailVerified { get; set; }
+    public DateTime? EmailVerifiedAt { get; set; }
     public DateTime RequestedAt { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public Guid? PackageId { get; set; }

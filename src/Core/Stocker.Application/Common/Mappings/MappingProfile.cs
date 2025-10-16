@@ -116,6 +116,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ContactPhone, opt => opt.MapFrom(src => src.ContactPhone.Value))
             .ForMember(dest => dest.AdminEmail, opt => opt.MapFrom(src => src.AdminEmail.Value))
             .ForMember(dest => dest.AdminName, opt => opt.MapFrom(src => src.AdminFirstName + " " + src.AdminLastName))
+            .ForMember(dest => dest.EmailVerified, opt => opt.MapFrom(src => src.EmailVerified))
+            .ForMember(dest => dest.EmailVerifiedAt, opt => opt.MapFrom(src => src.EmailVerifiedAt))
             .ForMember(dest => dest.RequestedAt, opt => opt.MapFrom(src => src.RegistrationDate))
             .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovalDate))
             .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.PackageName));
