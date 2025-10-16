@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Spin } from 'antd';
+import { App as AntdApp, Spin } from 'antd';
 import { useAuthStore } from './stores/authStore';
 import { SentryErrorBoundary } from './components/ErrorBoundary/SentryErrorBoundary';
 import * as Sentry from '@sentry/react';
@@ -86,8 +86,9 @@ function App() {
   
   return (
     <SentryErrorBoundary>
-      <BrowserRouter>
-        <SentryRoutes>
+      <AntdApp>
+        <BrowserRouter>
+          <SentryRoutes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-2fa" element={<TwoFactorVerifyPage />} />
@@ -282,8 +283,9 @@ function App() {
           } />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </SentryRoutes>
-      </BrowserRouter>
+          </SentryRoutes>
+        </BrowserRouter>
+      </AntdApp>
     </SentryErrorBoundary>
   );
 }

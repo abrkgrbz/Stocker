@@ -59,24 +59,27 @@ const TenantRegistrationsPage: React.FC = () => {
   }, [statusFilter]);
 
   const handleApprove = async (registration: TenantRegistrationDto) => {
-    const confirmed = window.confirm(
-      `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz?\n\n` +
-      `Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const success = await tenantRegistrationService.approveRegistration(registration.id);
-      if (success) {
-        alert('✅ Kayıt onaylandı ve tenant oluşturuldu!');
-        fetchRegistrations(); // Refresh list
-      } else {
-        alert('❌ Kayıt onaylanamadı');
-      }
-    } catch (error: any) {
-      alert('❌ Hata: ' + (error.message || 'Onaylama işlemi başarısız oldu'));
-    }
+    Modal.confirm({
+      title: 'Kaydı Onayla',
+      icon: <ExclamationCircleOutlined />,
+      content: `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz? Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`,
+      okText: 'Onayla',
+      okType: 'primary',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          const success = await tenantRegistrationService.approveRegistration(registration.id);
+          if (success) {
+            message.success('Kayıt onaylandı ve tenant oluşturuldu!');
+            fetchRegistrations(); // Refresh list
+          } else {
+            message.error('Kayıt onaylanamadı');
+          }
+        } catch (error: any) {
+          message.error(error.message || 'Onaylama işlemi başarısız oldu');
+        }
+      },
+    });
   };
 
   const handleReject = async (registration: TenantRegistrationDto) => {
