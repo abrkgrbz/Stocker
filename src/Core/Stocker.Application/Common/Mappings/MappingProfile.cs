@@ -4,6 +4,7 @@ using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.Tenant.Settings;
 using Stocker.Application.DTOs.Subscription;
 using Stocker.Application.DTOs.TenantInvoice;
+using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Tenant.Entities;
@@ -106,5 +107,17 @@ public class MappingProfile : Profile
 
         // TenantSettings Mappings
         CreateMap<Domain.Tenant.Entities.TenantSettings, SettingDto>();
+
+        // TenantRegistration Mappings
+        CreateMap<TenantRegistration, TenantRegistrationDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.StatusCode, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.ContactEmail, opt => opt.MapFrom(src => src.ContactEmail.Value))
+            .ForMember(dest => dest.ContactPhone, opt => opt.MapFrom(src => src.ContactPhone.Value))
+            .ForMember(dest => dest.AdminEmail, opt => opt.MapFrom(src => src.AdminEmail.Value))
+            .ForMember(dest => dest.AdminName, opt => opt.MapFrom(src => src.AdminFirstName + " " + src.AdminLastName))
+            .ForMember(dest => dest.RequestedAt, opt => opt.MapFrom(src => src.RegistrationDate))
+            .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovalDate))
+            .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.PackageName));
     }
 }
