@@ -166,7 +166,7 @@ export const RegisterPage: React.FC = () => {
   const fetchPackages = async () => {
     try {
       // Fetch real packages from API
-      const response = await apiClient.get('/api/public/packages');
+      const response = await apiClient.get('/api/public/packages?OnlyActive=true');
       
       
       if (response.data?.success && response.data?.data && response.data.data.length > 0) {
