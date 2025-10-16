@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.TenantRegistration;
-using Stocker.Domain.Master.Enums;
+using Stocker.Domain.Master.Entities;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenants.Queries.GetTenantRegistrations;
