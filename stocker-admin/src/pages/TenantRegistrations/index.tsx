@@ -59,6 +59,9 @@ const TenantRegistrationsPage: React.FC = () => {
   }, [statusFilter]);
 
   const handleApprove = async (registration: TenantRegistrationDto) => {
+    // Test alert to confirm button is clickable
+    alert('Button clicked! ID: ' + registration.id);
+
     Modal.confirm({
       title: 'Kaydı Onayla',
       icon: <ExclamationCircleOutlined />,
