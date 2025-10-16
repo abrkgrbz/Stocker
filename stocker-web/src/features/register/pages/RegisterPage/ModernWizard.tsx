@@ -425,17 +425,26 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
 
   // Fetch packages when step 3 is reached
   useEffect(() => {
+    console.log('📦 useEffect triggered - currentStep:', currentStep, 'packages.length:', packages.length);
     if (currentStep === 3 && packages.length === 0) {
+      console.log('📦 Calling fetchPackages...');
       fetchPackages();
+    } else {
+      console.log('📦 Not fetching - currentStep:', currentStep, 'packages:', packages.length);
     }
   }, [currentStep]);
 
   const fetchPackages = async () => {
+    console.log('📦 fetchPackages called, currentStep:', currentStep);
     setLoadingPackages(true);
     try {
+      console.log('📦 Making API call to /api/public/packages');
       const response = await apiClient.get('/api/public/packages');
-      
+      console.log('📦 API Response received:', response);
+      console.log('📦 Response data:', response.data);
+
       if (response.data?.success && response.data?.data) {
+        console.log('📦 Response is valid, data length:', response.data.data.length);
         const packagesData = response.data.data.map((pkg: any) => ({
           id: pkg.id,
           name: pkg.name,
@@ -450,9 +459,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
           isPopular: pkg.type === 'Professional',
           trialDays: pkg.trialDays || 14
         }));
+        console.log('📦 Mapped packages data:', packagesData);
         setPackages(packagesData);
+        console.log('📦 setPackages called with', packagesData.length, 'packages');
+      } else {
+        console.log('⚠️ API response invalid or empty:', response.data);
       }
     } catch (error) {
+      console.error('❌ fetchPackages error:', error);
       // Fallback to mock data
       setPackages([
         {
@@ -1639,13 +1653,14 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
         );
         
       case 3:
+        console.log('📦 Rendering step 3, packages state:', packages, 'loadingPackages:', loadingPackages);
         return (
           <div className="form-fields package-selection-step">
             <div className="form-header">
               <h2 className="form-title">Paket Seçimi</h2>
               <p className="form-subtitle">İşletmenize en uygun paketi seçin</p>
             </div>
-            
+
             {/* Billing Period Toggle - Üstte */}
             <div className="billing-toggle-container">
               <div className="billing-toggle">
