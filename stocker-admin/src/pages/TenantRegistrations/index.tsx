@@ -59,10 +59,10 @@ const TenantRegistrationsPage: React.FC = () => {
   }, [statusFilter]);
 
   const handleApprove = async (registration: TenantRegistrationDto) => {
-    // Test alert to confirm button is clickable
-    alert('Button clicked! ID: ' + registration.id);
+    message.info('Test: Button çalışıyor, şimdi modal açılıyor...');
 
-    Modal.confirm({
+    setTimeout(() => {
+      Modal.confirm({
       title: 'Kaydı Onayla',
       icon: <ExclamationCircleOutlined />,
       content: `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz? Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`,
@@ -82,7 +82,8 @@ const TenantRegistrationsPage: React.FC = () => {
           message.error(error.message || 'Onaylama işlemi başarısız oldu');
         }
       },
-    });
+      });
+    }, 500);
   };
 
   const handleReject = async (registration: TenantRegistrationDto) => {
