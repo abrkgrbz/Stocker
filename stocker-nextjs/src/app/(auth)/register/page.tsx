@@ -1274,21 +1274,21 @@ export default function UltraPremiumRegisterPage() {
                           <>
                             <div>
                               <span className="text-gray-600">Paket:</span>
-                              <p className="font-semibold text-gray-900 mt-1">{selectedPackage.Name}</p>
+                              <p className="font-semibold text-gray-900 mt-1">{selectedPackage.name}</p>
                             </div>
                             <div>
                               <span className="text-gray-600">Fiyat:</span>
-                              <p className="font-semibold text-gray-900 mt-1">₺{(selectedPackage.BasePrice?.Amount || 0).toLocaleString('tr-TR')}/ay</p>
+                              <p className="font-semibold text-gray-900 mt-1">₺{(selectedPackage.basePrice?.amount || 0).toLocaleString('tr-TR')}/ay</p>
                             </div>
                             <div>
                               <span className="text-gray-600 text-sm">Dahil Modüller:</span>
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {(selectedPackage.Modules || []).filter((m: any) => m.IsIncluded).map((module: any) => {
-                                  const moduleInfo = availableModules.find(am => am.code === module.ModuleCode)
+                                {(selectedPackage.modules || []).filter((m: any) => m.isIncluded).map((module: any) => {
+                                  const moduleInfo = availableModules.find(am => am.code === module.moduleCode)
                                   return (
-                                    <div key={module.ModuleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
+                                    <div key={module.moduleCode} className="inline-flex items-center space-x-1 px-3 py-1 bg-white rounded-lg border border-purple-200 text-xs">
                                       <span>{moduleInfo?.icon || '📦'}</span>
-                                      <span className="font-medium text-gray-700">{module.ModuleName}</span>
+                                      <span className="font-medium text-gray-700">{module.moduleName}</span>
                                     </div>
                                   )
                                 })}
@@ -1324,7 +1324,7 @@ export default function UltraPremiumRegisterPage() {
                   <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border-2 border-green-100">
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white text-lg">
-                        ­şæñ
+                        👤
                       </div>
                       <h4 className="font-bold text-gray-900 text-lg">Yönetici</h4>
                     </div>
@@ -1350,7 +1350,7 @@ export default function UltraPremiumRegisterPage() {
                       className="mt-1 w-5 h-5 text-violet-600 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-violet-500/20"
                     />
                     <span className="text-sm text-gray-700 group-hover:text-gray-900 font-medium">
-                      <Link href="/terms" className="font-bold text-violet-600 hover:text-violet-700 underline">Kullan─▒m ┼Şartlar─▒</Link>&apos;n─▒ okudum ve kabul ediyorum
+                      <Link href="/terms" className="font-bold text-violet-600 hover:text-violet-700 underline">Kullanım Şartları&apos;nı okudum ve kabul ediyorum
                     </span>
                   </label>
 
