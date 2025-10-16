@@ -8,7 +8,7 @@ import {
   Input,
   Select,
   Typography,
-  message,
+  App,
   Modal,
   Descriptions,
   Badge,
@@ -32,6 +32,7 @@ const { Title, Text } = Typography;
 const { Search } = Input;
 
 const TenantRegistrationsPage: React.FC = () => {
+  const { modal, message } = App.useApp();
   const [registrations, setRegistrations] = useState<TenantRegistrationDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,7 +60,7 @@ const TenantRegistrationsPage: React.FC = () => {
   }, [statusFilter]);
 
   const handleApprove = async (registration: TenantRegistrationDto) => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Kaydı Onayla',
       icon: <ExclamationCircleOutlined />,
       content: `${registration.companyName} firmasının kaydını onaylamak istediğinize emin misiniz? Bu işlem tenant oluşturacak ve kullanıcıya e-posta gönderilecektir.`,
@@ -83,7 +84,7 @@ const TenantRegistrationsPage: React.FC = () => {
   };
 
   const handleReject = async (registration: TenantRegistrationDto) => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Kaydı Reddet',
       icon: <CloseCircleOutlined />,
       content: (
