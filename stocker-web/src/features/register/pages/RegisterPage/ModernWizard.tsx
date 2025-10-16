@@ -438,8 +438,8 @@ export const ModernWizard: React.FC<ModernWizardProps> = ({ onComplete, selected
     console.log('📦 fetchPackages called, currentStep:', currentStep);
     setLoadingPackages(true);
     try {
-      console.log('📦 Making API call to /api/public/packages');
-      const response = await apiClient.get('/api/public/packages');
+      console.log('📦 Making API call to /api/public/packages?OnlyActive=true');
+      const response = await apiClient.get('/api/public/packages?OnlyActive=true');
       console.log('📦 API Response received:', response);
       console.log('📦 Response data:', response.data);
 
