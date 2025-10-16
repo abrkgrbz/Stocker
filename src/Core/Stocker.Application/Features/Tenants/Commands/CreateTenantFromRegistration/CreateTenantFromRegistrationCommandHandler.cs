@@ -155,7 +155,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             await _unitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant);
             await _unitOfWork.Repository<Subscription>().AddAsync(subscription);
 
-            // Registration already has tenant ID from auto-approval
+            // Approve registration and link to tenant
+            registration.Approve(approvedBy: "System", tenantId: tenant.Id);
             _context.TenantRegistrations.Update(registration);
 
             // Save to database
