@@ -38,11 +38,14 @@ const nextConfig: NextConfig = {
 
   // Redirects and rewrites
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app/api';
+    // Remove trailing /api from URL since we add it in the source pattern
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app';
+    const cleanApiUrl = apiBaseUrl.replace(/\/api$/, '');
+
     return [
       {
         source: '/api/:path*',
-        destination: `${apiUrl}/:path*`,
+        destination: `${cleanApiUrl}/api/:path*`,
       },
     ];
   },
