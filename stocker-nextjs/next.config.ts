@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app';
     return [
       {
-        source: '/api/proxy/:path*',
+        source: '/api/:path*',
         destination: `${apiUrl}/:path*`,
       },
     ];
