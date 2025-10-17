@@ -221,11 +221,16 @@ public class SecureAuthController : ControllerBase
 
     private void SetAuthCookies(string accessToken, string refreshToken)
     {
+        // Get base domain from configuration (e.g., ".stoocker.app")
+        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
+        var isProduction = !_configuration.GetValue<bool>("Development:UseHttp");
+
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = !_configuration.GetValue<bool>("Development:UseHttp"), // HTTPS in production
-            SameSite = SameSiteMode.Strict,
+            Secure = isProduction, // HTTPS in production
+            SameSite = SameSiteMode.None, // Allow cross-subdomain (auth → tenant)
+            Domain = isProduction ? baseDomain : null, // Only set domain in production
             Expires = DateTime.UtcNow.AddDays(7)
         };
 
@@ -235,6 +240,7 @@ public class SecureAuthController : ControllerBase
             HttpOnly = true,
             Secure = cookieOptions.Secure,
             SameSite = cookieOptions.SameSite,
+            Domain = cookieOptions.Domain,
             Expires = DateTime.UtcNow.AddHours(1) // Short-lived
         });
 
@@ -244,11 +250,16 @@ public class SecureAuthController : ControllerBase
 
     private void ClearAuthCookies()
     {
+        // Get base domain from configuration
+        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
+        var isProduction = !_configuration.GetValue<bool>("Development:UseHttp");
+
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = !_configuration.GetValue<bool>("Development:UseHttp"),
-            SameSite = SameSiteMode.Strict,
+            Secure = isProduction,
+            SameSite = SameSiteMode.None, // Match set behavior
+            Domain = isProduction ? baseDomain : null,
             Expires = DateTime.UtcNow.AddDays(-1)
         };
 
