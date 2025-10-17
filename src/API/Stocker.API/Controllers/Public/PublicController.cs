@@ -274,10 +274,10 @@ public class PublicController : ControllerBase
                     .Select(t => new { t.Id, ContactEmail = t.ContactEmail.Value })
                     .ToListAsync();
 
-                var tenant = tenants
+                var matchedTenant = tenants
                     .FirstOrDefault(t => t.ContactEmail.ToLowerInvariant() == normalizedEmail);
 
-                tenantId = tenant?.Id;
+                tenantId = matchedTenant?.Id;
             }
 
             if (!tenantId.HasValue)
