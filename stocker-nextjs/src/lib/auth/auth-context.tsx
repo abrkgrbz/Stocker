@@ -68,23 +68,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await ApiService.post<{
-        accessToken: string;
-        refreshToken: string;
-        user: User;
+        success: boolean;
+        data: {
+          accessToken: string;
+          refreshToken: string;
+          user: User;
+        };
       }>('/auth/login', credentials);
 
       // Store tokens in cookies (works across subdomains)
-      cookieStorage.setItem('accessToken', response.accessToken);
-      cookieStorage.setItem('refreshToken', response.refreshToken);
+      cookieStorage.setItem('accessToken', response.data.accessToken);
+      cookieStorage.setItem('refreshToken', response.data.refreshToken);
 
       // Set user
-      setUser(response.user);
+      setUser(response.data.user);
 
       // Redirect to tenant subdomain dashboard if tenantCode exists
-      if (response.user.tenantCode) {
+      if (response.data.user.tenantCode) {
         const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
         if (isProduction) {
-          window.location.href = `https://${response.user.tenantCode}.stoocker.app/dashboard`;
+          window.location.href = `https://${response.data.user.tenantCode}.stoocker.app/dashboard`;
         } else {
           // For development, redirect to /dashboard on auth subdomain
           router.push('/dashboard');
