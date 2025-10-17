@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.stocker-auth.priority=15"
 
       # Tenant wildcard subdomain router (*.stoocker.app excluding auth and www)
-      - "traefik.http.routers.stocker-tenant.rule=HostRegexp(`^(?!auth\\.|www\\.).+\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-tenant.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
       - "traefik.http.routers.stocker-tenant.entrypoints=https"
       - "traefik.http.routers.stocker-tenant.tls=true"
       - "traefik.http.routers.stocker-tenant.tls.certresolver=cloudflare"
@@ -70,7 +70,7 @@ services:
       - "traefik.http.routers.stocker-auth-http.middlewares=redirect-https"
 
       # HTTP -> HTTPS redirect for tenant wildcard
-      - "traefik.http.routers.stocker-tenant-http.rule=HostRegexp(`^(?!auth\\.|www\\.).+\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-tenant-http.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
       - "traefik.http.routers.stocker-tenant-http.entrypoints=http"
       - "traefik.http.routers.stocker-tenant-http.middlewares=redirect-https"
 
