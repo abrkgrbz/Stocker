@@ -441,3 +441,7 @@ yarn.lock
 # Claude-specific
 claudedocs/
 .claude/
+
+# Debug scripts output
+scripts/debug-output/
+scripts/.env
