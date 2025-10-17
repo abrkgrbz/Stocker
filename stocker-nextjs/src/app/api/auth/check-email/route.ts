@@ -82,16 +82,9 @@ export async function POST(request: NextRequest) {
 
     const backendData = await backendResponse.json()
 
-    // If tenant found, add HMAC signature
-    // Backend returns: { success, data: { exists, tenant } }
-    if (backendData.data?.tenant) {
-      const { signature, timestamp } = generateTenantSignature(
-        backendData.data.tenant.code
-      )
-
-      backendData.data.tenant.signature = signature
-      backendData.data.tenant.timestamp = timestamp
-    }
+    // Backend already provides HMAC signature with timestamp (in seconds)
+    // We don't need to regenerate - just pass through the backend signature
+    // Backend returns: { success, data: { exists, tenant: { ..., signature, timestamp } } }
 
     // Validate response schema
     const responseValidation = CheckEmailResponseSchema.safeParse(backendData)

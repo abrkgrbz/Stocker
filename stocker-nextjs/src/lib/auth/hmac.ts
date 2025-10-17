@@ -56,7 +56,10 @@ export function validateSignedTenant(signed: SignedTenant): ValidationResult {
   const { tenantCode, signature, timestamp } = signed
 
   // Check timestamp validity (prevent replay attacks)
-  const age = Date.now() - timestamp
+  // Backend sends timestamp in SECONDS, we need to convert to milliseconds
+  const timestampMs = timestamp < 10000000000 ? timestamp * 1000 : timestamp
+  const age = Date.now() - timestampMs
+
   if (age > SIGNATURE_VALIDITY_MS) {
     return {
       valid: false,
