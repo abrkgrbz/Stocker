@@ -47,7 +47,8 @@
       "Bash(awk:*)",
       "Bash(xargs:*)",
       "Bash(do echo \"[$i/15] Monitoring cross-subdomain auth deployment...\")",
-      "Bash(do echo \"[$i/15] Monitoring TenantCode redirect deployment...\")"
+      "Bash(do echo \"[$i/15] Monitoring TenantCode redirect deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring API client fix deployment...\")"
     ],
     "deny": [],
     "ask": []

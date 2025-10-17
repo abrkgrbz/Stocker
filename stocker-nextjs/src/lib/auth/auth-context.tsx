@@ -145,8 +145,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       cookieStorage.removeItem('refreshToken');
       setUser(null);
 
-      // Redirect to login
-      router.push('/login');
+      // Redirect to auth subdomain for login
+      const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
+      if (isProduction) {
+        window.location.href = 'https://auth.stoocker.app/login';
+      } else {
+        router.push('/login');
+      }
     }
   };
 
