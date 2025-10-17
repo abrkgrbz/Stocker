@@ -13,11 +13,30 @@ export function middleware(request: NextRequest) {
   // Check if this is the root domain (not a subdomain)
   const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`
 
+  // Check if this is auth subdomain
+  const isAuthDomain = hostname === authHostname || hostname === `auth.${baseDomain}`
+
+  // Extract subdomain (tenant code)
+  const subdomain = hostname.split('.')[0]
+  const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
+
   // Redirect www to non-www on root domain
   if (hostname === `www.${baseDomain}`) {
     const url = request.nextUrl.clone()
     url.host = baseDomain
     return NextResponse.redirect(url, 301)
+  }
+
+  // Tenant subdomain: rewrite to dashboard routes
+  if (isTenantDomain && !isDev) {
+    const pathname = request.nextUrl.pathname
+
+    // Store tenant code in header for app to read
+    const url = request.nextUrl.clone()
+    const response = NextResponse.rewrite(url)
+    response.headers.set('x-tenant-code', subdomain)
+
+    return response
   }
 
   // Root domain: redirect auth routes to auth subdomain

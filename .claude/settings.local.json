@@ -35,7 +35,11 @@
       "Bash(do echo \"[$i/15] Checking for new admin deployment...\")",
       "Bash(tee:*)",
       "Bash(do echo \"[$i/15] Monitoring login fix deployment...\")",
-      "Bash(do echo \"[$i/15] Monitoring backward compatibility deployment...\")"
+      "Bash(do echo \"[$i/15] Monitoring backward compatibility deployment...\")",
+      "Bash(do echo \"[$i/10] Monitoring timestamp fix deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring timestamp fix deployment...\")",
+      "Bash(dir:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
