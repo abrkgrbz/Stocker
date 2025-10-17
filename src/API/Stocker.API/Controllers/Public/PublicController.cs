@@ -405,6 +405,60 @@ public class PublicController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Check if tenant exists and is active by tenant code
+    /// </summary>
+    [HttpGet("tenant-check/{tenantCode}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> CheckTenant(string tenantCode)
+    {
+        _logger.LogInformation("Checking tenant existence: {TenantCode}", tenantCode);
+
+        try
+        {
+            var normalizedCode = tenantCode.ToLowerInvariant().Trim();
+
+            var tenant = await _masterContext.Tenants
+                .Where(t => t.Code.ToLower() == normalizedCode && t.IsActive)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    name = t.Name,
+                    code = t.Code,
+                    isActive = t.IsActive
+                })
+                .FirstOrDefaultAsync();
+
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant not found or inactive: {TenantCode}", tenantCode);
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Tenant not found"
+                });
+            }
+
+            _logger.LogInformation("Tenant {TenantCode} found and active", tenantCode);
+
+            return Ok(new
+            {
+                success = true,
+                data = tenant
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking tenant: {TenantCode}", tenantCode);
+            return BadRequest(new
+            {
+                success = false,
+                message = "An error occurred while checking tenant"
+            });
+        }
+    }
 }
 
 public class CheckEmailRequest
