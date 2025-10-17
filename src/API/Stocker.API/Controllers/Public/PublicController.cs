@@ -13,6 +13,8 @@ using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Stocker.API.Controllers.Public;
 
@@ -27,19 +29,22 @@ public class PublicController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly MasterDbContext _masterContext;
     private readonly ISecurityAuditService _auditService;
+    private readonly IConfiguration _configuration;
 
     public PublicController(
         IMediator mediator,
         ILogger<PublicController> logger,
         IEmailService emailService,
         MasterDbContext masterContext,
-        ISecurityAuditService auditService)
+        ISecurityAuditService auditService,
+        IConfiguration configuration)
     {
         _mediator = mediator;
         _logger = logger;
         _emailService = emailService;
         _masterContext = masterContext;
         _auditService = auditService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -307,7 +312,7 @@ public class PublicController : ControllerBase
             }
 
             // Get tenant info
-            var tenant = await _masterContext.Tenants
+            var tenantData = await _masterContext.Tenants
                 .Where(t => t.Id == tenantId.Value)
                 .Select(t => new
                 {
@@ -319,14 +324,48 @@ public class PublicController : ControllerBase
                 })
                 .FirstOrDefaultAsync();
 
-            _logger.LogInformation("User {Email} found with tenant: {TenantName}", request.Email, tenant?.name ?? "None");
+            if (tenantData == null)
+            {
+                _logger.LogWarning("Tenant not found for ID: {TenantId}", tenantId.Value);
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        exists = true,
+                        tenant = (object?)null
+                    }
+                });
+            }
+
+            // Generate HMAC signature for tenant verification
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var jwtSecret = _configuration["JwtSettings:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+            var message = $"{tenantData.code}:{timestamp}";
+
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(jwtSecret));
+            var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+            var signature = Convert.ToBase64String(hashBytes);
+
+            var tenant = new
+            {
+                id = tenantData.id,
+                name = tenantData.name,
+                code = tenantData.code,
+                logoUrl = tenantData.logoUrl,
+                isActive = tenantData.isActive,
+                signature = signature,
+                timestamp = timestamp
+            };
+
+            _logger.LogInformation("User {Email} found with tenant: {TenantName}", request.Email, tenant.name);
 
             // Log successful email check
             await _auditService.LogAuthEventAsync(new SecurityAuditEvent
             {
                 Event = "email_check_success",
                 Email = normalizedEmail,
-                TenantCode = tenant?.code,
+                TenantCode = tenant.code,
                 UserId = masterUser.Id,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
