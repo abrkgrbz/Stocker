@@ -19,6 +19,7 @@ public class UserInfo
     public string FullName { get; set; } = string.Empty;
     public Guid? TenantId { get; set; }
     public string? TenantName { get; set; }
+    public string? TenantCode { get; set; }
     public List<string> Roles { get; set; } = new();
     public bool IsMasterUser { get; set; }
 }

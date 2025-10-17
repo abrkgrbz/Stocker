@@ -447,6 +447,7 @@ public class AuthenticationService : IAuthenticationService
                     FullName = authResult.User.FullName,
                     TenantId = authResult.User.TenantId,
                     TenantName = authResult.User.TenantName,
+                    TenantCode = authResult.User.TenantCode,
                     Roles = authResult.User.Roles
                 },
                 Requires2FA = false,
@@ -522,11 +523,13 @@ public class AuthenticationService : IAuthenticationService
                 Email = user.Email.Value,
                 FullName = user.GetFullName(),
                 TenantId = tenantId,
-                TenantName = tenantId.HasValue ? 
+                TenantName = tenantId.HasValue ?
                     (await _masterContext.Tenants.FindAsync(tenantId.Value))?.Name : null,
+                TenantCode = tenantId.HasValue ?
+                    (await _masterContext.Tenants.FindAsync(tenantId.Value))?.Code : null,
                 IsMasterUser = true,
-                Roles = user.UserType == Domain.Master.Enums.UserType.SistemYoneticisi ? new List<string> { "SistemYoneticisi" } : 
-                        user.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi ? new List<string> { "FirmaYoneticisi" } : 
+                Roles = user.UserType == Domain.Master.Enums.UserType.SistemYoneticisi ? new List<string> { "SistemYoneticisi" } :
+                        user.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi ? new List<string> { "FirmaYoneticisi" } :
                         new List<string>()
             }
         };
@@ -587,6 +590,7 @@ public class AuthenticationService : IAuthenticationService
                 FullName = tenantUser.GetFullName(),
                 TenantId = tenantUser.TenantId,
                 TenantName = tenant?.Name,
+                TenantCode = tenant?.Code,
                 IsMasterUser = false,
                 Roles = tenantUser.UserRoles.Select(r => r.RoleId.ToString()).ToList()
             }

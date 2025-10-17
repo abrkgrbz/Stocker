@@ -12,6 +12,7 @@ interface User {
   lastName: string;
   role: string;
   tenantId: string;
+  tenantCode?: string;
 }
 
 interface LoginCredentials {
@@ -79,8 +80,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Set user
       setUser(response.user);
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to tenant subdomain dashboard if tenantCode exists
+      if (response.user.tenantCode) {
+        const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
+        if (isProduction) {
+          window.location.href = `https://${response.user.tenantCode}.stoocker.app/dashboard`;
+        } else {
+          // For development, redirect to /dashboard on auth subdomain
+          router.push('/dashboard');
+        }
+      } else {
+        // No tenant, redirect to regular dashboard
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -102,8 +114,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Set user
       setUser(response.user);
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to tenant subdomain dashboard if tenantCode exists
+      if (response.user.tenantCode) {
+        const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
+        if (isProduction) {
+          window.location.href = `https://${response.user.tenantCode}.stoocker.app/dashboard`;
+        } else {
+          // For development, redirect to /dashboard on auth subdomain
+          router.push('/dashboard');
+        }
+      } else {
+        // No tenant, redirect to regular dashboard
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;

@@ -32,4 +32,5 @@ public class UserInfo
     public List<string> Roles { get; set; } = new();
     public Guid? TenantId { get; set; }
     public string? TenantName { get; set; }
+    public string? TenantCode { get; set; }
 }
