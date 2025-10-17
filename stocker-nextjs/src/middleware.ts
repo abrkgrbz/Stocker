@@ -27,13 +27,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  // Tenant subdomain: rewrite to dashboard routes
+  // Tenant subdomain: redirect to dashboard and set tenant header
   if (isTenantDomain && !isDev) {
     const pathname = request.nextUrl.pathname
 
-    // Store tenant code in header for app to read
+    // Redirect root path to dashboard
+    if (pathname === '/') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url, 307)
+    }
+
+    // For all other tenant subdomain requests, set tenant code header
     const url = request.nextUrl.clone()
-    const response = NextResponse.rewrite(url)
+    const response = NextResponse.next()
     response.headers.set('x-tenant-code', subdomain)
 
     return response
