@@ -550,8 +550,28 @@ export default function UltraPremiumRegisterPage() {
     setError('')
 
     try {
+      // Format phone number to E.164 (remove spaces, parentheses, dashes)
+      let formattedPhone = formData.contactPhone
+        .replace(/[\s\-\(\)]/g, '') // Remove spaces, dashes, parentheses
+        .replace(/^00/, '+') // Convert 00 prefix to +
+
+      // If starts with 0, assume Turkey and add +90
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+90' + formattedPhone.substring(1);
+      }
+
+      // Ensure it starts with +
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+' + formattedPhone;
+      }
+
+      const submissionData = {
+        ...formData,
+        contactPhone: formattedPhone
+      };
+
       const { authService } = await import('@/lib/api/services')
-      const response = await authService.register(formData)
+      const response = await authService.register(submissionData)
 
       if (response.success) {
         router.push(`/register/verify-email?email=${encodeURIComponent(formData.contactEmail)}`)
