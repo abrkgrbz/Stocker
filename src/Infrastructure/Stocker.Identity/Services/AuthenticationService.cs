@@ -485,8 +485,23 @@ public class AuthenticationService : IAuthenticationService
         {
             claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
             _logger.LogInformation("Adding FirmaYoneticisi role to token for user {Username}", user.Username);
+
+            // If no specific tenant, find user's primary tenant (first tenant owned by this user)
+            if (!tenantId.HasValue)
+            {
+                var userTenant = await _masterContext.Tenants
+                    .Where(t => t.OwnerId == user.Id)
+                    .OrderBy(t => t.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (userTenant != null)
+                {
+                    tenantId = userTenant.Id;
+                    _logger.LogInformation("Auto-selected primary tenant {TenantId} for FirmaYoneticisi {Username}", tenantId, user.Username);
+                }
+            }
         }
-        
+
         _logger.LogInformation("User {Username} has UserType: {UserType}", user.Username, user.UserType);
 
         // EÄŸer specific bir tenant iÃ§in login yapÄ±lÄ±yorsa
