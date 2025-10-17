@@ -74,7 +74,7 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     setIsValidating(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/tenant-check/${identifier}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/tenant-check/${identifier}`);
 
       if (!response.ok) {
         throw new Error('Tenant not found');
