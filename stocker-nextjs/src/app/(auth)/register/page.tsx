@@ -194,27 +194,36 @@ export default function UltraPremiumRegisterPage() {
     // Remove all non-digit characters
     const digits = value.replace(/\D/g, '')
 
+    // Handle empty input
+    if (digits.length === 0) {
+      return ''
+    }
+
     // If starts with 90, assume it's Turkish number with country code
     if (digits.startsWith('90') && digits.length > 2) {
-      const withoutCountryCode = digits.substring(2)
-      const formatted = withoutCountryCode.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
-      return '+90 ' + formatted
+      const localPart = digits.substring(2)
+      if (localPart.length === 0) return '+90 '
+      if (localPart.length <= 3) return `+90 (${localPart}`
+      if (localPart.length <= 6) return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3)}`
+      if (localPart.length <= 8) return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3, 6)} ${localPart.slice(6)}`
+      return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3, 6)} ${localPart.slice(6, 8)} ${localPart.slice(8, 10)}`
     }
 
     // If starts with 0, format as Turkish local number
     if (digits.startsWith('0') && digits.length > 1) {
-      const withoutZero = digits.substring(1)
-      const formatted = withoutZero.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
-      return '+90 ' + formatted
+      const localPart = digits.substring(1)
+      if (localPart.length === 0) return '+90 '
+      if (localPart.length <= 3) return `+90 (${localPart}`
+      if (localPart.length <= 6) return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3)}`
+      if (localPart.length <= 8) return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3, 6)} ${localPart.slice(6)}`
+      return `+90 (${localPart.slice(0, 3)}) ${localPart.slice(3, 6)} ${localPart.slice(6, 8)} ${localPart.slice(8, 10)}`
     }
 
-    // Otherwise just format the digits
-    if (digits.length > 0) {
-      const formatted = digits.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
-      return '+90 ' + formatted
-    }
-
-    return value
+    // Otherwise format assuming Turkish local number (no leading 0 or 90)
+    if (digits.length <= 3) return `+90 (${digits}`
+    if (digits.length <= 6) return `+90 (${digits.slice(0, 3)}) ${digits.slice(3)}`
+    if (digits.length <= 8) return `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`
+    return `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`
   }
 
   const availableModules = [
