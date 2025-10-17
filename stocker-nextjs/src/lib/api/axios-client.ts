@@ -1,18 +1,13 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { cookieStorage } from '../auth/cookie-storage';
 
-// Function to get API URL dynamically (works in SSR and client-side)
-const getApiUrl = (): string => {
-  // In production, always use auth.stoocker.app
-  if (typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')) {
-    return 'https://auth.stoocker.app';
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5104';
-};
+// Use relative path /api which Next.js rewrites to backend API
+// This works for both same-origin (auth.stoocker.app) and cross-subdomain (tenant.stoocker.app)
+const API_URL = '/api';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -22,11 +17,6 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Dynamically set baseURL in production to ensure it always points to auth.stoocker.app
-    if (typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')) {
-      config.baseURL = 'https://auth.stoocker.app';
-    }
-
     // Get token from cookies (works across subdomains)
     if (typeof window !== 'undefined') {
       const token = cookieStorage.getItem('accessToken');
@@ -67,8 +57,7 @@ apiClient.interceptors.response.use(
           : null;
 
         if (refreshToken) {
-          const apiUrl = getApiUrl();
-          const response = await axios.post(`${apiUrl}/auth/refresh`, {
+          const response = await axios.post(`${API_URL}/auth/refresh`, {
             refreshToken,
           });
 
