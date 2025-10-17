@@ -83,13 +83,17 @@ public class AuthController : ControllerBase
         };
 
         var result = await _mediator.Send(enrichedCommand);
-        
+
         if (result.IsSuccess)
         {
             _logger.LogInformation("User {Email} logged in successfully", command.Email);
-            return Ok(result.Value);
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
+            });
         }
-        
+
         _logger.LogWarning("Failed login attempt for email: {Email}", command.Email);
         return BadRequest(new
         {

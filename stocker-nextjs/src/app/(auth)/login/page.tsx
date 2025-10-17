@@ -219,22 +219,23 @@ function LoginForm() {
 
       // Success - clear sessionStorage, reset counters, and redirect
       const loginDuration = Date.now() - startTime
-      
-      trackAuth({ 
-        event: 'login_success', 
-        metadata: { 
+      const authData = data.data // Access nested data object
+
+      trackAuth({
+        event: 'login_success',
+        metadata: {
           tenantCode: tenant.code,
           duration: loginDuration,
-          requires2FA: data.requires2FA 
-        } 
+          requires2FA: authData.requires2FA
+        }
       })
-      
+
       sessionStorage.removeItem('login-tenant')
       setFailedAttempts(0)
       setBackoffUntil(null)
 
       // Handle 2FA if required
-      if (data.requires2FA) {
+      if (authData.requires2FA) {
         // Store email in sessionStorage for 2FA verification
         sessionStorage.setItem('2fa_email', email);
         router.push('/verify-2fa');
