@@ -1362,7 +1362,7 @@ export default function UltraPremiumRegisterPage() {
                       className="mt-1 w-5 h-5 text-violet-600 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-violet-500/20"
                     />
                     <span className="text-sm text-gray-700 group-hover:text-gray-900 font-medium">
-                      <Link href="/privacy" className="font-bold text-violet-600 hover:text-violet-700 underline">Gizlilik Politikas─▒</Link>&apos;n─▒ okudum ve kabul ediyorum
+                      <Link href="/privacy" className="font-bold text-violet-600 hover:text-violet-700 underline">Gizlilik Politikası</Link>&apos;nı okudum ve kabul ediyorum
                     </span>
                   </label>
 
