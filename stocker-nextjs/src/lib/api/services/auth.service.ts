@@ -179,17 +179,18 @@ export class AuthService {
   }
 
   /**
-   * Verify email with code
+   * Verify email with code (for tenant registration)
    */
   async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/verify-email', { email, code });
+    return apiClient.post('/api/public/tenant-registration/verify-email', { email, code });
   }
 
   /**
-   * Resend verification email
+   * Resend verification email (for tenant registration)
+   * Note: Backend endpoint doesn't exist yet - needs to be implemented
    */
   async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/resend-verification-email', { email });
+    return apiClient.post('/api/public/tenant-registration/resend-verification-email', { email });
   }
 
   /**
