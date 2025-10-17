@@ -219,7 +219,8 @@ function LoginForm() {
 
       // Success - clear sessionStorage, reset counters, and redirect
       const loginDuration = Date.now() - startTime
-      const authData = data.data // Access nested data object
+      // Support both old and new API response formats for backward compatibility
+      const authData = data.data || data
 
       trackAuth({
         event: 'login_success',

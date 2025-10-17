@@ -33,7 +33,8 @@
       "Bash(do echo \"[$i/15] Monitoring phone format deployment...\")",
       "Bash(do echo \"[$i/15] Monitoring admin deployment...\")",
       "Bash(do echo \"[$i/15] Checking for new admin deployment...\")",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(do echo \"[$i/15] Monitoring login fix deployment...\")"
     ],
     "deny": [],
     "ask": []
