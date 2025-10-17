@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService } from '@/lib/api';
+import { cookieStorage } from './cookie-storage';
 
 interface User {
   id: string;
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Load user from storage on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('accessToken');
+      const token = cookieStorage.getItem('accessToken');
       if (token) {
         await refreshUser();
       }
@@ -71,9 +72,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user: User;
       }>('/auth/login', credentials);
 
-      // Store tokens
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // Store tokens in cookies (works across subdomains)
+      cookieStorage.setItem('accessToken', response.accessToken);
+      cookieStorage.setItem('refreshToken', response.refreshToken);
 
       // Set user
       setUser(response.user);
@@ -94,9 +95,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user: User;
       }>('/api/public/tenant-registration/register', data);
 
-      // Store tokens
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // Store tokens in cookies (works across subdomains)
+      cookieStorage.setItem('accessToken', response.accessToken);
+      cookieStorage.setItem('refreshToken', response.refreshToken);
 
       // Set user
       setUser(response.user);
@@ -116,9 +117,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear local state
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // Clear cookies
+      cookieStorage.removeItem('accessToken');
+      cookieStorage.removeItem('refreshToken');
       setUser(null);
 
       // Redirect to login
@@ -133,8 +134,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // Clear invalid session
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      cookieStorage.removeItem('accessToken');
+      cookieStorage.removeItem('refreshToken');
       setUser(null);
     }
   };
