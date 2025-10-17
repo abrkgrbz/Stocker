@@ -420,8 +420,9 @@ public class PublicController : ControllerBase
         {
             var normalizedCode = tenantCode.ToLowerInvariant().Trim();
 
-            var tenant = await _masterContext.Tenants
-                .Where(t => t.Code.ToLower() == normalizedCode && t.IsActive)
+            // Fetch all active tenants and filter in memory (SQL Server doesn't support ToLower in LINQ)
+            var tenants = await _masterContext.Tenants
+                .Where(t => t.IsActive)
                 .Select(t => new
                 {
                     id = t.Id,
@@ -429,7 +430,10 @@ public class PublicController : ControllerBase
                     code = t.Code,
                     isActive = t.IsActive
                 })
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            var tenant = tenants
+                .FirstOrDefault(t => t.code.ToLowerInvariant() == normalizedCode);
 
             if (tenant == null)
             {
