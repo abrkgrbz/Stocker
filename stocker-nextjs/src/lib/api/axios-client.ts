@@ -1,14 +1,18 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { cookieStorage } from '../auth/cookie-storage';
 
-// In production, always use auth.stoocker.app; in dev, use localhost
-const API_URL = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')
-  ? 'https://auth.stoocker.app'
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5104');
+// Function to get API URL dynamically (works in SSR and client-side)
+const getApiUrl = (): string => {
+  // In production, always use auth.stoocker.app
+  if (typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')) {
+    return 'https://auth.stoocker.app';
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5104';
+};
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: getApiUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -18,6 +22,11 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Dynamically set baseURL in production to ensure it always points to auth.stoocker.app
+    if (typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')) {
+      config.baseURL = 'https://auth.stoocker.app';
+    }
+
     // Get token from cookies (works across subdomains)
     if (typeof window !== 'undefined') {
       const token = cookieStorage.getItem('accessToken');
@@ -58,7 +67,8 @@ apiClient.interceptors.response.use(
           : null;
 
         if (refreshToken) {
-          const response = await axios.post(`${API_URL}/auth/refresh`, {
+          const apiUrl = getApiUrl();
+          const response = await axios.post(`${apiUrl}/auth/refresh`, {
             refreshToken,
           });
 
