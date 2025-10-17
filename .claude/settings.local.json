@@ -52,7 +52,9 @@
       "Bash(do echo \"[$i/15] Monitoring FINAL FIX deployment...\")",
       "Bash(do echo \"[$i/15] Monitoring SSR fix deployment...\")",
       "Bash(do echo \"[$i/15] Monitoring response parsing fix deployment...\")",
-      "Bash(do echo \"[$i/15] Monitoring Next.js rewrite fix deployment...\")"
+      "Bash(do echo \"[$i/15] Monitoring Next.js rewrite fix deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring relative path fix deployment...\")",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

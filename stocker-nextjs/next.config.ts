@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
 
   // Redirects and rewrites
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.stoocker.app/api';
     return [
       {
         source: '/api/:path*',
