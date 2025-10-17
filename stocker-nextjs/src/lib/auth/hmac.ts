@@ -71,12 +71,12 @@ export function validateSignedTenant(signed: SignedTenant): ValidationResult {
     }
   }
 
-  // Regenerate expected signature
+  // Regenerate expected signature (must match backend base64 format)
   const message = `${tenantCode}:${timestamp}`
   const expectedSignature = crypto
     .createHmac('sha256', HMAC_SECRET)
     .update(message)
-    .digest('hex')
+    .digest('base64')
 
   // Constant-time comparison to prevent timing attacks
   const isValid = crypto.timingSafeEqual(
