@@ -223,10 +223,13 @@ public class PublicController : ControllerBase
             var normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
             // Find MasterUser by email
-            var masterUser = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
-                .Where(u => u.Email.Value.ToLower() == normalizedEmail)
+            // Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
+            var masterUsers = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
                 .Select(u => new { u.Id, Email = u.Email.Value, u.IsActive })
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            var masterUser = masterUsers
+                .FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
 
             if (masterUser == null)
             {
@@ -253,20 +256,28 @@ public class PublicController : ControllerBase
             }
 
             // Find tenant through TenantRegistration
-            var registration = await _masterContext.TenantRegistrations
-                .Where(r => r.AdminEmail.Value.ToLower() == normalizedEmail && r.TenantId != null)
-                .Select(r => new { r.TenantId })
-                .FirstOrDefaultAsync();
+            // Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
+            var registrations = await _masterContext.TenantRegistrations
+                .Where(r => r.TenantId != null)
+                .Select(r => new { r.TenantId, AdminEmail = r.AdminEmail.Value })
+                .ToListAsync();
+
+            var registration = registrations
+                .FirstOrDefault(r => r.AdminEmail.ToLowerInvariant() == normalizedEmail);
 
             Guid? tenantId = registration?.TenantId;
 
             // Fallback: try Tenant.ContactEmail
             if (!tenantId.HasValue)
             {
-                tenantId = await _masterContext.Tenants
-                    .Where(t => t.ContactEmail.Value.ToLower() == normalizedEmail)
-                    .Select(t => (Guid?)t.Id)
-                    .FirstOrDefaultAsync();
+                var tenants = await _masterContext.Tenants
+                    .Select(t => new { t.Id, ContactEmail = t.ContactEmail.Value })
+                    .ToListAsync();
+
+                var tenant = tenants
+                    .FirstOrDefault(t => t.ContactEmail.ToLowerInvariant() == normalizedEmail);
+
+                tenantId = tenant?.Id;
             }
 
             if (!tenantId.HasValue)
