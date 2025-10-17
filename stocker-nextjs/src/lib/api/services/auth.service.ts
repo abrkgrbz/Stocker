@@ -196,7 +196,7 @@ export class AuthService {
    * Register new tenant and admin user
    */
   async register(data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
-    return apiClient.post('/auth/register', data);
+    return apiClient.post('/api/public/tenant-registration/register', data);
   }
 }
 

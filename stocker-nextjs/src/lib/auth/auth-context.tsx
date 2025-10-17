@@ -92,7 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         accessToken: string;
         refreshToken: string;
         user: User;
-      }>('/auth/register', data);
+      }>('/api/public/tenant-registration/register', data);
 
       // Store tokens
       localStorage.setItem('accessToken', response.accessToken);
