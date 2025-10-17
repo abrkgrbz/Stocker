@@ -58,7 +58,7 @@ function LoginForm() {
       try {
         const parsed = JSON.parse(tenantData)
         // Validate restored data has required fields
-        if (parsed.code && parsed.signature && parsed.timestamp) {
+        if (parsed.code && parsed.signature && parsed.timestamp && parsed.name) {
           setTenant(parsed)
           setStep('password')
         } else {
@@ -122,10 +122,10 @@ function LoginForm() {
       // Store tenant in state and sessionStorage for recovery
       setTenant(tenant)
 
-      // Only store essential data (code, signature, timestamp) - minimize XSS risk
-      // Don't store sensitive data like full tenant object with ID, name, etc.
+      // Store essential data including name for UI display
       sessionStorage.setItem('login-tenant', JSON.stringify({
         code: tenant.code,
+        name: tenant.name,
         signature: tenant.signature,
         timestamp: tenant.timestamp
       }))
@@ -348,11 +348,11 @@ function LoginForm() {
             <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-fuchsia-50 border border-violet-200 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white font-bold">
-                    {tenant.name[0]}
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                    {tenant.name?.[0]?.toUpperCase() || tenant.code?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{tenant.name}</div>
+                    <div className="font-semibold text-gray-900">{tenant.name || tenant.code || 'Hesabınız'}</div>
                     <div className="text-sm text-gray-600">
                       {tenant.code}.{process.env.NODE_ENV === 'development' ? 'localhost:3001' : 'stoocker.app'}
                     </div>
