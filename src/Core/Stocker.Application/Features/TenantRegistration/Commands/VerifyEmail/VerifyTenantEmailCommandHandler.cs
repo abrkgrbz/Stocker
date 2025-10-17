@@ -33,12 +33,15 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
     {
         try
         {
-            // Find registration by email and token
+            // Find registration by email and token/code
+            // Support both token (URL) and code (6-digit) verification
             // Fetch candidates first, then filter by Value Object in memory
+            var tokenOrCode = !string.IsNullOrEmpty(request.Code) ? request.Code : request.Token;
+
             var candidates = await _context.TenantRegistrations
-                .Where(r => r.EmailVerificationToken == request.Token || r.EmailVerificationCode == request.Token)
+                .Where(r => r.EmailVerificationToken == tokenOrCode || r.EmailVerificationCode == tokenOrCode)
                 .ToListAsync(cancellationToken);
-            
+
             var matchingRegistration = candidates
                 .FirstOrDefault(r => r.ContactEmail.Value == request.Email);
             
@@ -60,8 +63,8 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 return Result<bool>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
             }
 
-            // Verify email
-            matchingRegistration.VerifyEmail(request.Token);
+            // Verify email (use token or code)
+            matchingRegistration.VerifyEmail(tokenOrCode);
             
             _logger.LogInformation("Email verified successfully for: {Email}, Company: {CompanyCode}", 
                 matchingRegistration.ContactEmail.Value, 
