@@ -189,6 +189,34 @@ export default function UltraPremiumRegisterPage() {
   const getActiveIdentityNumber = () =>
     formData.identityType === 'corporate' ? formData.taxNumber : formData.nationalId
 
+  // Format phone number as user types: +90 (555) 123 45 67
+  const formatPhoneDisplay = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '')
+
+    // If starts with 90, assume it's Turkish number with country code
+    if (digits.startsWith('90') && digits.length > 2) {
+      const withoutCountryCode = digits.substring(2)
+      const formatted = withoutCountryCode.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
+      return '+90 ' + formatted
+    }
+
+    // If starts with 0, format as Turkish local number
+    if (digits.startsWith('0') && digits.length > 1) {
+      const withoutZero = digits.substring(1)
+      const formatted = withoutZero.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
+      return '+90 ' + formatted
+    }
+
+    // Otherwise just format the digits
+    if (digits.length > 0) {
+      const formatted = digits.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '($1) $2 $3 $4')
+      return '+90 ' + formatted
+    }
+
+    return value
+  }
+
   const availableModules = [
     { code: 'CRM', name: 'Müşteri İlişkileri', icon: '👥', description: 'Müşteri yönetimi ve takibi', color: 'from-blue-500 to-cyan-500' },
     { code: 'FINANCE', name: 'Finans', icon: '💰', description: 'Muhasebe ve finans yönetimi', color: 'from-green-500 to-emerald-500' },
@@ -318,17 +346,26 @@ export default function UltraPremiumRegisterPage() {
       })
     }
 
-    if (field === 'contactPhone' && value.length >= 10) {
-      setValidations(prev => ({ ...prev, contactPhone: { ...prev.contactPhone, status: 'validating' } }))
-      validatePhone(value, (result) => {
-        setValidations(prev => ({
-          ...prev,
-          contactPhone: {
-            status: result.isValid ? 'success' : 'error',
-            message: result.message
-          }
-        }))
-      })
+    if (field === 'contactPhone') {
+      // Format the phone number for display
+      const formatted = formatPhoneDisplay(value)
+      setFormData(prev => ({ ...prev, contactPhone: formatted }))
+
+      // Validate if we have enough digits
+      const digits = value.replace(/\D/g, '')
+      if (digits.length >= 10) {
+        setValidations(prev => ({ ...prev, contactPhone: { ...prev.contactPhone, status: 'validating' } }))
+        validatePhone(formatted, (result) => {
+          setValidations(prev => ({
+            ...prev,
+            contactPhone: {
+              status: result.isValid ? 'success' : 'error',
+              message: result.message
+            }
+          }))
+        })
+      }
+      return // Early return to prevent double state update
     }
 
     if (field === 'adminEmail' && value.includes('@')) {
