@@ -39,7 +39,15 @@
       "Bash(do echo \"[$i/10] Monitoring timestamp fix deployment...\")",
       "Bash(do echo \"[$i/15] Monitoring timestamp fix deployment...\")",
       "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(do echo \"[$i/10] Monitoring subdomain routing deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring redeploy for wildcard routing...\")",
+      "Bash(do echo \"[$i/15] Monitoring wildcard fix deployment...\")",
+      "Bash(pkill:*)",
+      "Bash(awk:*)",
+      "Bash(xargs:*)",
+      "Bash(do echo \"[$i/15] Monitoring cross-subdomain auth deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring TenantCode redirect deployment...\")"
     ],
     "deny": [],
     "ask": []

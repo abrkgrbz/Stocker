@@ -1,0 +1,35 @@
+http:
+  routers:
+    stocker-tenant-wildcard:
+      rule: "HostRegexp(`{subdomain:[a-z0-9][a-z0-9-]*}.stoocker.app`)"
+      entryPoints:
+        - https
+      service: stocker-auth-service
+      priority: 5
+      tls:
+        certResolver: cloudflare
+        domains:
+          - main: "*.stoocker.app"
+            sans:
+              - "stoocker.app"
+
+    stocker-tenant-wildcard-http:
+      rule: "HostRegexp(`{subdomain:[a-z0-9][a-z0-9-]*}.stoocker.app`)"
+      entryPoints:
+        - http
+      middlewares:
+        - redirect-https
+      service: stocker-auth-service
+      priority: 5
+
+  services:
+    stocker-auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://c825eb8296df:3000"
+
+  middlewares:
+    redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true

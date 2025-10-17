@@ -1,6 +1,10 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { cookieStorage } from '../auth/cookie-storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5104';
+// In production, always use auth.stoocker.app; in dev, use localhost
+const API_URL = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app')
+  ? 'https://auth.stoocker.app'
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5104');
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -14,15 +18,15 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage (client-side) or cookies (server-side)
+    // Get token from cookies (works across subdomains)
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
+      const token = cookieStorage.getItem('accessToken');
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
       // Add tenant identifier to headers
-      const tenantId = localStorage.getItem('tenantId');
+      const tenantId = cookieStorage.getItem('tenantId');
       if (tenantId && config.headers) {
         config.headers['X-Tenant-Id'] = tenantId;
       }
@@ -50,7 +54,7 @@ apiClient.interceptors.response.use(
       try {
         // Try to refresh token
         const refreshToken = typeof window !== 'undefined'
-          ? localStorage.getItem('refreshToken')
+          ? cookieStorage.getItem('refreshToken')
           : null;
 
         if (refreshToken) {
@@ -61,7 +65,7 @@ apiClient.interceptors.response.use(
           const { accessToken } = response.data;
 
           if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
+            cookieStorage.setItem('accessToken', accessToken);
           }
 
           // Retry original request with new token
@@ -73,8 +77,8 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          cookieStorage.removeItem('accessToken');
+          cookieStorage.removeItem('refreshToken');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
