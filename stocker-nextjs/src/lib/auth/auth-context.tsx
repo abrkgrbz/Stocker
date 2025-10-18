@@ -145,9 +145,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      // ✅ Call /auth/me - axios will automatically send HttpOnly cookie
-      const userData = await ApiService.get<User>('/auth/me');
-      setUser(userData);
+      // Check if auth-token cookie exists
+      const authTokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth-token='));
+
+      if (!authTokenCookie) {
+        console.log('No auth-token cookie found');
+        setUser(null);
+        return;
+      }
+
+      // Extract JWT token value
+      const token = authTokenCookie.split('=')[1];
+
+      if (!token) {
+        console.log('Auth token cookie exists but is empty');
+        setUser(null);
+        return;
+      }
+
+      console.log('Auth token exists, decoding JWT...');
+
+      // Decode JWT to get user info (temporary until /auth/me endpoint is ready)
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+
+        // Map JWT claims to User interface
+        const userData: User = {
+          id: payload.nameid || '',
+          email: payload.email || '',
+          firstName: payload.given_name || 'User',
+          lastName: payload.family_name || '',
+          role: payload.role || '',
+          tenantId: payload.tenantid || '',
+          tenantCode: payload.tenantcode || '',
+        };
+
+        console.log('✅ User loaded from JWT:', userData);
+        setUser(userData);
+      } catch (parseError) {
+        console.error('Failed to parse JWT:', parseError);
+        // Fallback: try /auth/me endpoint
+        const userData = await ApiService.get<User>('/auth/me');
+        setUser(userData);
+      }
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // ✅ NO COOKIE CLEARING - Just clear user state
