@@ -60,9 +60,20 @@ export const CheckEmailResponseSchema = z.object({
 
 export const LoginResponseSchema = z.object({
   success: z.boolean(),
-  token: z.string().optional(),
-  user: UserSchema.optional(),
-  requires2FA: z.boolean().optional(),
+  data: z.object({
+    accessToken: z.string().optional(),
+    refreshToken: z.string().optional(),
+    expiresAt: z.string().optional(),
+    tokenType: z.string().optional(),
+    user: z.object({
+      id: z.string().uuid(),
+      email: z.string().email(),
+      username: z.string().optional(),
+      fullName: z.string().optional(),
+      roles: z.array(z.string()).optional(),
+    }).optional(),
+    requires2FA: z.boolean().optional(),
+  }).optional(),
   message: z.string().optional(),
 })
 

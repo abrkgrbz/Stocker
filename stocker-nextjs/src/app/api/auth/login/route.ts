@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     const loginResult = responseValidation.data
+    const loginData = loginResult.data
 
     // Handle failed login
     if (!loginResult.success) {
@@ -187,14 +188,14 @@ export async function POST(request: NextRequest) {
     await resetRateLimit(`login:email:${email}`)
 
     auditData.event = 'login_success'
-    auditData.userId = loginResult.user?.id
-    auditData.requires2FA = loginResult.requires2FA
+    auditData.userId = loginData?.user?.id
+    auditData.requires2FA = loginData?.requires2FA
     auditData.duration = Date.now() - startTime
     await logAudit(auditData)
 
     // Create response with secure cookies
-    console.log('✅ Login successful! Token:', loginResult.token ? 'EXISTS' : 'MISSING')
-    console.log('👤 User:', loginResult.user?.id)
+    console.log('✅ Login successful! Token:', loginData?.accessToken ? 'EXISTS' : 'MISSING')
+    console.log('👤 User:', loginData?.user?.id)
 
     const response = NextResponse.json(loginResult, {
       status: 200
@@ -208,9 +209,9 @@ export async function POST(request: NextRequest) {
     console.log('🔒 Is development:', isDevelopment)
 
     // Set auth token cookie (httpOnly, secure, sameSite, domain)
-    if (loginResult.token) {
+    if (loginData?.accessToken) {
       console.log('🍪 Setting auth-token cookie...')
-      response.cookies.set('auth-token', loginResult.token, {
+      response.cookies.set('auth-token', loginData.accessToken, {
         httpOnly: true,
         secure: !isDevelopment, // HTTPS in production
         sameSite: 'lax',
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
         path: '/'
       })
     } else {
-      console.error('❌ No token in loginResult!')
+      console.error('❌ No accessToken in loginData!')
     }
 
     // Set tenant cookie for SSR
