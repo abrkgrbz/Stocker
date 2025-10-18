@@ -26,7 +26,7 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
 
     public async Task<Result<CheckEmailResponse>> Handle(CheckEmailQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Checking email existence: {Email}", request.Email);
+        _logger.LogInformation("Checking email existence and fetching tenants: {Email}", request.Email);
 
         try
         {
@@ -40,19 +40,30 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 return Result.Success(new CheckEmailResponse
                 {
                     Exists = false,
-                    Tenant = null
+                    Tenants = new List<TenantInfo>()
                 });
             }
 
-            // Note: Tenant relationship is managed separately in Tenant database
-            // For registration flow, we can return user exists without tenant info
-            // Tenant assignment happens during registration completion
-            _logger.LogInformation("Email found: {Email}", request.Email);
+            // For now, return all active tenants
+            // The actual access validation will happen during login on the tenant subdomain
+            // In the future, we can optimize this by maintaining a UserTenant mapping table in master DB
+            var tenants = await _masterContext.Tenants
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .Select(t => new TenantInfo
+                {
+                    Code = t.Code,
+                    Name = t.Name,
+                    Domain = $"{t.Code}.stoocker.app"
+                })
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation("Email found: {Email} with {TenantCount} tenants", request.Email, tenants.Count);
 
             return Result.Success(new CheckEmailResponse
             {
                 Exists = true,
-                Tenant = null // Tenant info managed separately
+                Tenants = tenants
             });
         }
         catch (Exception ex)

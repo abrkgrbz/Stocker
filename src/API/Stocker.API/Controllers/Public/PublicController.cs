@@ -210,7 +210,7 @@ public class PublicController : ControllerBase
     }
 
     /// <summary>
-    /// Check if email exists and return tenant information
+    /// Check if email exists and return list of accessible tenants
     /// </summary>
     [HttpPost("check-email")]
     [ProducesResponseType(200)]
@@ -255,117 +255,33 @@ public class PublicController : ControllerBase
                     data = new
                     {
                         exists = false,
-                        tenant = (object?)null
+                        tenants = new List<object>()
                     }
                 });
             }
 
-            // Find tenant through TenantRegistration
-            // Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
-            var registrations = await _masterContext.TenantRegistrations
-                .Where(r => r.TenantId != null)
-                .Select(r => new { r.TenantId, AdminEmail = r.AdminEmail.Value })
-                .ToListAsync();
-
-            var registration = registrations
-                .FirstOrDefault(r => r.AdminEmail.ToLowerInvariant() == normalizedEmail);
-
-            Guid? tenantId = registration?.TenantId;
-
-            // Fallback: try Tenant.ContactEmail
-            if (!tenantId.HasValue)
-            {
-                var tenants = await _masterContext.Tenants
-                    .Select(t => new { t.Id, ContactEmail = t.ContactEmail.Value })
-                    .ToListAsync();
-
-                var matchedTenant = tenants
-                    .FirstOrDefault(t => t.ContactEmail.ToLowerInvariant() == normalizedEmail);
-
-                tenantId = matchedTenant?.Id;
-            }
-
-            if (!tenantId.HasValue)
-            {
-                _logger.LogWarning("User {Email} found but not associated with tenant", request.Email);
-
-                // Log email check - no tenant
-                await _auditService.LogSecurityEventAsync(new SecurityAuditEvent
-                {
-                    Event = "email_check_no_tenant",
-                    Email = normalizedEmail,
-                    IpAddress = ipAddress,
-                    UserAgent = userAgent,
-                    RiskScore = 20,
-                    DurationMs = (int)stopwatch.ElapsedMilliseconds
-                });
-
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        exists = true,
-                        tenant = (object?)null
-                    }
-                });
-            }
-
-            // Get tenant info
-            var tenantData = await _masterContext.Tenants
-                .Where(t => t.Id == tenantId.Value)
+            // Get all active tenants
+            // In the future, this can be optimized by maintaining user-tenant mappings in master DB
+            var tenantsData = await _masterContext.Tenants
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
                 .Select(t => new
                 {
                     id = t.Id,
                     name = t.Name,
                     code = t.Code,
                     logoUrl = t.LogoUrl,
-                    isActive = t.IsActive
+                    domain = $"{t.Code}.stoocker.app"
                 })
-                .FirstOrDefaultAsync();
+                .ToListAsync();
 
-            if (tenantData == null)
-            {
-                _logger.LogWarning("Tenant not found for ID: {TenantId}", tenantId.Value);
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        exists = true,
-                        tenant = (object?)null
-                    }
-                });
-            }
-
-            // Generate HMAC signature for tenant verification
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var jwtSecret = _configuration["JwtSettings:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
-            var message = $"{tenantData.code}:{timestamp}";
-
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(jwtSecret));
-            var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-            var signature = Convert.ToBase64String(hashBytes);
-
-            var tenant = new
-            {
-                id = tenantData.id,
-                name = tenantData.name,
-                code = tenantData.code,
-                logoUrl = tenantData.logoUrl,
-                isActive = tenantData.isActive,
-                signature = signature,
-                timestamp = timestamp
-            };
-
-            _logger.LogInformation("User {Email} found with tenant: {TenantName}", request.Email, tenant.name);
+            _logger.LogInformation("User {Email} found with {TenantCount} available tenants", request.Email, tenantsData.Count);
 
             // Log successful email check
             await _auditService.LogAuthEventAsync(new SecurityAuditEvent
             {
                 Event = "email_check_success",
                 Email = normalizedEmail,
-                TenantCode = tenant.code,
                 UserId = masterUser.Id,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
@@ -379,7 +295,7 @@ public class PublicController : ControllerBase
                 data = new
                 {
                     exists = true,
-                    tenant
+                    tenants = tenantsData
                 }
             });
         }
