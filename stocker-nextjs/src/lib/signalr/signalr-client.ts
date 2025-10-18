@@ -18,7 +18,9 @@ export class SignalRClient {
 
     const connectionBuilder = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}${this.hubUrl}`, {
-        accessTokenFactory: () => accessToken || '',
+        // Use cookies for authentication instead of access token
+        // SignalR will automatically send cookies with requests
+        withCredentials: true,
         skipNegotiation: false,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
       })
