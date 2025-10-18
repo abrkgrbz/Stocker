@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService } from '@/lib/api';
-import { cookieStorage } from './cookie-storage';
 
 interface User {
   id: string;
@@ -52,13 +51,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isAuthenticated = !!user;
 
-  // Load user from storage on mount
+  // Load user from HttpOnly cookie on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = cookieStorage.getItem('accessToken');
-      if (token) {
-        await refreshUser();
-      }
+      // ✅ Try to load user from HttpOnly cookie
+      // If cookie exists, /auth/me will succeed
+      await refreshUser();
       setIsLoading(false);
     };
 
@@ -70,18 +68,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await ApiService.post<{
         success: boolean;
         data: {
-          accessToken: string;
-          refreshToken: string;
           user: User;
         };
       }>('/auth/login', credentials);
 
-      // Store tokens in cookies (works across subdomains)
-      cookieStorage.setItem('accessToken', response.data.accessToken);
-      cookieStorage.setItem('refreshToken', response.data.refreshToken);
-
-      // Set user
-      setUser(response.data.user);
+      // ✅ NO TOKEN STORAGE - Backend sets HttpOnly cookies automatically
+      // Just load user data
+      await refreshUser(); // Load fresh user data with cookie
 
       // Redirect to tenant subdomain dashboard if tenantCode exists
       if (response.data.user.tenantCode) {
@@ -105,17 +98,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (data: RegisterData) => {
     try {
       const response = await ApiService.post<{
-        accessToken: string;
-        refreshToken: string;
         user: User;
       }>('/api/public/tenant-registration/register', data);
 
-      // Store tokens in cookies (works across subdomains)
-      cookieStorage.setItem('accessToken', response.accessToken);
-      cookieStorage.setItem('refreshToken', response.refreshToken);
-
-      // Set user
-      setUser(response.user);
+      // ✅ NO TOKEN STORAGE - Backend sets HttpOnly cookies automatically
+      await refreshUser(); // Load fresh user data with cookie
 
       // Redirect to tenant subdomain dashboard if tenantCode exists
       if (response.user.tenantCode) {
@@ -138,14 +125,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      // Call logout endpoint
+      // Call logout endpoint - backend will clear HttpOnly cookies
       await ApiService.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear cookies
-      cookieStorage.removeItem('accessToken');
-      cookieStorage.removeItem('refreshToken');
+      // ✅ NO COOKIE CLEARING - Backend handles HttpOnly cookies
       setUser(null);
 
       // Redirect to auth subdomain for login
@@ -160,13 +145,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
+      // ✅ Call /auth/me - axios will automatically send HttpOnly cookie
       const userData = await ApiService.get<User>('/auth/me');
       setUser(userData);
     } catch (error) {
       console.error('Failed to refresh user:', error);
-      // Clear invalid session
-      cookieStorage.removeItem('accessToken');
-      cookieStorage.removeItem('refreshToken');
+      // ✅ NO COOKIE CLEARING - Just clear user state
       setUser(null);
     }
   };
