@@ -281,7 +281,12 @@ function LoginForm() {
       }
 
       // Redirect to tenant dashboard
+      console.log('🎯 Login success! Redirecting to tenant dashboard...')
+      console.log('📋 Tenant code:', tenant.code)
       const tenantUrl = getClientTenantUrl(tenant.code)
+      console.log('🌐 Tenant URL:', tenantUrl)
+      console.log('🚀 Full redirect URL:', `${tenantUrl}/dashboard`)
+
       window.location.href = `${tenantUrl}/dashboard`
     } catch (err) {
       trackAuth({ event: 'login_failure', metadata: { step: 'password', errorType: 'exception' } })
