@@ -133,11 +133,14 @@ export async function POST(request: NextRequest) {
 
     const backendData = await backendResponse.json()
 
+    console.log('🔍 Backend response:', JSON.stringify(backendData, null, 2))
+
     // Validate backend response
     const responseValidation = LoginResponseSchema.safeParse(backendData)
 
     if (!responseValidation.success) {
-      console.error('Invalid login response:', responseValidation.error)
+      console.error('❌ Invalid login response:', responseValidation.error)
+      console.error('📋 Backend data:', backendData)
       auditData.event = 'login_invalid_backend_response'
       await logAudit(auditData)
 
@@ -190,6 +193,9 @@ export async function POST(request: NextRequest) {
     await logAudit(auditData)
 
     // Create response with secure cookies
+    console.log('✅ Login successful! Token:', loginResult.token ? 'EXISTS' : 'MISSING')
+    console.log('👤 User:', loginResult.user?.id)
+
     const response = NextResponse.json(loginResult, {
       status: 200
     })
@@ -198,8 +204,12 @@ export async function POST(request: NextRequest) {
     const isDevelopment = process.env.NODE_ENV === 'development'
     const cookieDomain = getCookieDomain()
 
+    console.log('🍪 Cookie domain:', cookieDomain)
+    console.log('🔒 Is development:', isDevelopment)
+
     // Set auth token cookie (httpOnly, secure, sameSite, domain)
     if (loginResult.token) {
+      console.log('🍪 Setting auth-token cookie...')
       response.cookies.set('auth-token', loginResult.token, {
         httpOnly: true,
         secure: !isDevelopment, // HTTPS in production
@@ -208,6 +218,8 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/'
       })
+    } else {
+      console.error('❌ No token in loginResult!')
     }
 
     // Set tenant cookie for SSR
