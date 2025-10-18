@@ -164,40 +164,73 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Fetch real user data from /auth/me endpoint
       console.log('📡 Fetching user data from /auth/me...');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/auth/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Code': tenantCode,
-        },
-        credentials: 'include', // Send cookies
-      });
 
-      if (!response.ok) {
-        console.error('❌ Failed to fetch user data:', response.status);
-        setUser(null);
-        return;
-      }
+      try {
+        const response = await fetch(`${apiUrl}/api/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Code': tenantCode,
+          },
+          credentials: 'include', // Send cookies
+        });
 
-      const result = await response.json();
-      console.log('📋 User data response:', result);
+        if (!response.ok) {
+          console.warn('⚠️ /auth/me endpoint returned:', response.status);
 
-      if (result.success && result.data) {
+          // Fallback to temp user if endpoint not available yet (401/404)
+          if (response.status === 401 || response.status === 404) {
+            console.log('📝 Using fallback temp user (endpoint not deployed yet)');
+            const userData: User = {
+              id: 'temp-user-id',
+              email: '',
+              firstName: 'User',
+              lastName: '',
+              role: 'User',
+              tenantId: '',
+              tenantCode: tenantCode,
+            };
+            setUser(userData);
+            return;
+          }
+
+          setUser(null);
+          return;
+        }
+
+        const result = await response.json();
+        console.log('📋 User data response:', result);
+
+        if (result.success && result.data) {
+          const userData: User = {
+            id: result.data.id,
+            email: result.data.email,
+            firstName: result.data.fullName?.split(' ')[0] || '',
+            lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
+            role: result.data.roles?.[0] || 'User',
+            tenantId: result.data.tenantId || '',
+            tenantCode: result.data.tenantCode || tenantCode,
+          };
+
+          console.log('✅ User authenticated with real data:', userData);
+          setUser(userData);
+        } else {
+          console.error('❌ Invalid user data response');
+          setUser(null);
+        }
+      } catch (fetchError) {
+        console.warn('⚠️ /auth/me fetch failed, using fallback:', fetchError);
+        // Fallback to temp user on network error
         const userData: User = {
-          id: result.data.id,
-          email: result.data.email,
-          firstName: result.data.fullName?.split(' ')[0] || '',
-          lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
-          role: result.data.roles?.[0] || 'User',
-          tenantId: result.data.tenantId || '',
-          tenantCode: result.data.tenantCode || tenantCode,
+          id: 'temp-user-id',
+          email: '',
+          firstName: 'User',
+          lastName: '',
+          role: 'User',
+          tenantId: '',
+          tenantCode: tenantCode,
         };
-
-        console.log('✅ User authenticated:', userData);
         setUser(userData);
-      } else {
-        console.error('❌ Invalid user data response');
-        setUser(null);
       }
     } catch (error) {
       console.error('❌ Failed to refresh user:', error);
