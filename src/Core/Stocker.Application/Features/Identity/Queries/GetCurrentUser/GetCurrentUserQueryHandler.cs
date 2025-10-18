@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Features.Identity.Commands.Login;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Application.Features.Identity.Queries.GetCurrentUser;
 
