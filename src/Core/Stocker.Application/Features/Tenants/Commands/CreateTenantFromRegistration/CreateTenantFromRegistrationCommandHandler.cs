@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant;
@@ -21,6 +23,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly IEmailService _emailService;
     private readonly ILogger<CreateTenantFromRegistrationCommandHandler> _logger;
     private readonly IPublisher _publisher;
+    private readonly IConfiguration _configuration;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -28,7 +31,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         IMigrationService migrationService,
         IEmailService emailService,
         ILogger<CreateTenantFromRegistrationCommandHandler> logger,
-        IPublisher publisher)
+        IPublisher publisher,
+        IConfiguration configuration)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -36,6 +40,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         _emailService = emailService;
         _logger = logger;
         _publisher = publisher;
+        _configuration = configuration;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -299,9 +304,25 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
     private string GenerateConnectionString(string databaseName)
     {
-        // Get base connection string from configuration
-        // For now, use the same server as master database
-        return $"Server=coolify.stoocker.app;Database={databaseName};User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true";
+        // Get master connection string to extract server details
+        var masterConnectionString = _configuration.GetConnectionString("MasterConnection");
+
+        if (string.IsNullOrEmpty(masterConnectionString))
+        {
+            _logger.LogError("Master connection string not found in configuration");
+            throw new InvalidOperationException("Master connection string not configured");
+        }
+
+        // Parse master connection string to get server, user, and password
+        var builder = new SqlConnectionStringBuilder(masterConnectionString);
+
+        // Build tenant connection string with same server but different database
+        builder.InitialCatalog = databaseName;
+
+        _logger.LogInformation("Generated connection string for database: {DatabaseName}, Server: {Server}",
+            databaseName, builder.DataSource);
+
+        return builder.ConnectionString;
     }
 
     private async Task<Guid> GetDefaultPackageId(CancellationToken cancellationToken)
