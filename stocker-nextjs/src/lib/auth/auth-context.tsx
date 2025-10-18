@@ -145,55 +145,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      // Check if auth-token cookie exists
-      const authTokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth-token='));
+      console.log('🔍 Checking authentication...');
+      console.log('📋 Readable cookies:', document.cookie);
 
-      if (!authTokenCookie) {
-        console.log('No auth-token cookie found');
+      // Note: auth-token is httpOnly so we can't read it with document.cookie
+      // But tenant-code is NOT httpOnly, so we can use it as an auth indicator
+      const tenantCodeCookie = document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='));
+
+      if (!tenantCodeCookie) {
+        console.log('❌ No tenant-code cookie - user not authenticated');
         setUser(null);
         return;
       }
 
-      // Extract JWT token value
-      const token = authTokenCookie.split('=')[1];
+      const tenantCode = tenantCodeCookie.split('=')[1];
+      console.log('✅ Found tenant-code cookie:', tenantCode);
 
-      if (!token) {
-        console.log('Auth token cookie exists but is empty');
-        setUser(null);
-        return;
-      }
+      // If tenant-code cookie exists, user is authenticated
+      // (it's set alongside auth-token during login)
+      // Create minimal user object - TODO: call /auth/me endpoint when available
+      const userData: User = {
+        id: 'temp-user-id',
+        email: '',
+        firstName: 'User',
+        lastName: '',
+        role: 'User',
+        tenantId: '',
+        tenantCode: tenantCode,
+      };
 
-      console.log('Auth token exists, decoding JWT...');
-
-      // Decode JWT to get user info (temporary until /auth/me endpoint is ready)
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-
-        const payload = JSON.parse(jsonPayload);
-
-        // Map JWT claims to User interface
-        const userData: User = {
-          id: payload.nameid || '',
-          email: payload.email || '',
-          firstName: payload.given_name || 'User',
-          lastName: payload.family_name || '',
-          role: payload.role || '',
-          tenantId: payload.tenantid || '',
-          tenantCode: payload.tenantcode || '',
-        };
-
-        console.log('✅ User loaded from JWT:', userData);
-        setUser(userData);
-      } catch (parseError) {
-        console.error('Failed to parse JWT:', parseError);
-        // Fallback: try /auth/me endpoint
-        const userData = await ApiService.get<User>('/auth/me');
-        setUser(userData);
-      }
+      console.log('✅ User authenticated (inferred from tenant-code)');
+      setUser(userData);
     } catch (error) {
       console.error('Failed to refresh user:', error);
       // ✅ NO COOKIE CLEARING - Just clear user state
