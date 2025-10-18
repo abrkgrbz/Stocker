@@ -47,19 +47,26 @@ public static class HangfireConfiguration
             {
                 CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
                 SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-                QueuePollInterval = TimeSpan.Zero,
+                QueuePollInterval = TimeSpan.FromSeconds(15), // Changed from Zero for better reliability
                 UseRecommendedIsolationLevel = true,
                 DisableGlobalLocks = true,
                 SchemaName = "Hangfire",
-                PrepareSchemaIfNecessary = true // Tabloları otomatik oluştur
+                PrepareSchemaIfNecessary = true,
+                // Add connection resilience
+                CommandTimeout = TimeSpan.FromMinutes(5),
+                InvisibilityTimeout = TimeSpan.FromMinutes(30)
             }));
 
-        // Hangfire server
+        // Hangfire server with retry configuration
         services.AddHangfireServer(options =>
         {
             options.ServerName = $"Stocker-{Environment.MachineName}";
             options.WorkerCount = Environment.ProcessorCount * 2;
             options.Queues = new[] { "critical", "default", "low" };
+            options.ServerCheckInterval = TimeSpan.FromSeconds(30);
+            options.ServerTimeout = TimeSpan.FromMinutes(5);
+            options.SchedulePollingInterval = TimeSpan.FromSeconds(15);
+            options.HeartbeatInterval = TimeSpan.FromSeconds(30);
         });
 
         return services;
