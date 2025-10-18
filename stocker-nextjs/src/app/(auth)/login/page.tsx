@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Logo from '@/components/Logo'
-import { Tenant } from '@/lib/types/auth'
+import { Tenant, TenantInfo } from '@/lib/types/auth'
 import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
 import { normalizeAuthDomain, isRootDomain } from '@/lib/utils/auth'
@@ -40,7 +40,7 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [tenant, setTenant] = useState<Tenant | null>(null)
-  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [tenants, setTenants] = useState<TenantInfo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [failedAttempts, setFailedAttempts] = useState(0)
@@ -136,7 +136,7 @@ function LoginForm() {
     }
   }
 
-  const handleTenantSelect = (selectedTenant: Tenant) => {
+  const handleTenantSelect = (selectedTenant: TenantInfo) => {
     // Redirect to selected tenant's login page with email pre-filled
     const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
     const tenantDomain = isProduction

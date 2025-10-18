@@ -20,10 +20,22 @@ export const LoginRequestSchema = z.object({
 // Response Schemas
 // ============================================================================
 
+// Tenant info from check-email endpoint (no signature yet)
+export const TenantInfoSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string().regex(/^[a-z0-9-]{3,20}$/),
+  name: z.string().min(1).max(100),
+  domain: z.string().optional(),
+  logoUrl: z.string().optional(),
+})
+
+// Tenant with security signature (after selection)
 export const TenantSchema = z.object({
   id: z.string().uuid(),
   code: z.string().regex(/^[a-z0-9-]{3,20}$/),
   name: z.string().min(1).max(100),
+  domain: z.string().optional(),
+  logoUrl: z.string().optional(),
   signature: z.string(),
   timestamp: z.number().int().positive(),
   createdAt: z.string().datetime().optional(),
@@ -41,7 +53,7 @@ export const CheckEmailResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     exists: z.boolean(),
-    tenant: TenantSchema.nullable().optional(),
+    tenants: z.array(TenantInfoSchema).optional(),
   }).optional(),
   message: z.string().optional(),
 })
@@ -67,6 +79,7 @@ export const ApiErrorResponseSchema = z.object({
 
 export type CheckEmailRequest = z.infer<typeof CheckEmailRequestSchema>
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
+export type TenantInfo = z.infer<typeof TenantInfoSchema>
 export type Tenant = z.infer<typeof TenantSchema>
 export type User = z.infer<typeof UserSchema>
 export type CheckEmailResponse = z.infer<typeof CheckEmailResponseSchema>
