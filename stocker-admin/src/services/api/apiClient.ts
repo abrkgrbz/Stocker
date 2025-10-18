@@ -374,7 +374,8 @@ class ApiClient {
   }
 
   async verifyEmail(email: string, token: string): Promise<ApiResponse> {
-    const response = await this.client.post<ApiResponse>('/api/auth/verify-email', { email, token });
+    // Use tenant registration endpoint for email verification (not normal user auth)
+    const response = await this.client.post<ApiResponse>('/api/public/tenant-registration/verify-email', { email, token });
     return response.data;
   }
 
