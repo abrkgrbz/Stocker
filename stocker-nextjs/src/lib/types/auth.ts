@@ -12,8 +12,8 @@ export const LoginRequestSchema = z.object({
   email: z.string().email('Geçerli bir e-posta adresi girin'),
   password: z.string().min(1, 'Şifre zorunludur'),
   tenantCode: z.string().regex(/^[a-z0-9-]{3,20}$/, 'Geçersiz tenant kodu'),
-  tenantSignature: z.string().min(1, 'Tenant imzası gereklidir'),
-  tenantTimestamp: z.number().int().positive('Geçersiz timestamp'),
+  tenantSignature: z.string().optional(), // Optional for direct tenant subdomain login
+  tenantTimestamp: z.number().int().positive().optional(), // Optional for direct tenant subdomain login
 })
 
 // ============================================================================

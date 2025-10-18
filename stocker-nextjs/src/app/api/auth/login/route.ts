@@ -45,25 +45,27 @@ export async function POST(request: NextRequest) {
     auditData.email = email
     auditData.tenantCode = tenantCode
 
-    // Validate HMAC signature
-    const signatureValidation = validateSignedTenant({
-      tenantCode,
-      signature: tenantSignature,
-      timestamp: tenantTimestamp
-    })
+    // Validate HMAC signature if provided (optional for direct tenant subdomain access)
+    if (tenantSignature && tenantTimestamp) {
+      const signatureValidation = validateSignedTenant({
+        tenantCode,
+        signature: tenantSignature,
+        timestamp: tenantTimestamp
+      })
 
-    if (!signatureValidation.valid) {
-      auditData.event = 'login_invalid_signature'
-      auditData.signatureError = signatureValidation.error
-      await logAudit(auditData)
+      if (!signatureValidation.valid) {
+        auditData.event = 'login_invalid_signature'
+        auditData.signatureError = signatureValidation.error
+        await logAudit(auditData)
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Güvenlik doğrulaması başarısız. Lütfen tekrar giriş yapın.'
-        },
-        { status: 403 }
-      )
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Güvenlik doğrulaması başarısız. Lütfen tekrar giriş yapın.'
+          },
+          { status: 403 }
+        )
+      }
     }
 
     // Rate limiting by email
