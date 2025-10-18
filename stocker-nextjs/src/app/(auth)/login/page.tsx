@@ -46,13 +46,43 @@ function LoginForm() {
   const [failedAttempts, setFailedAttempts] = useState(0)
   const [backoffUntil, setBackoffUntil] = useState<number | null>(null)
 
+  // Detect if we're on tenant subdomain (not auth domain)
+  const isOnTenantSubdomain = () => {
+    if (typeof window === 'undefined') return false
+    const hostname = window.location.hostname
+    const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'localhost:3000'
+
+    // Extract auth hostname (remove protocol)
+    const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
+
+    // If we're NOT on auth subdomain and NOT on root domain, we're on tenant subdomain
+    return !hostname.includes(authHostname) && !hostname.includes('www.') && hostname.includes('.')
+  }
+
   // Restore state from URL params or sessionStorage
   useEffect(() => {
     const emailParam = searchParams.get('email')
+    const tenantCodeParam = searchParams.get('tenant')
     const tenantData = sessionStorage.getItem('login-tenant')
 
     if (emailParam) {
       setEmail(emailParam)
+    }
+
+    // If on tenant subdomain with email+tenant params, skip to password
+    if (isOnTenantSubdomain() && emailParam && tenantCodeParam) {
+      // Create minimal tenant object for password step
+      // Signature will be fetched from backend when needed
+      setTenant({
+        code: tenantCodeParam,
+        name: tenantCodeParam,
+        id: '', // Will be populated by backend
+        signature: '', // Will be fetched on login
+        timestamp: Date.now(),
+        domain: window.location.hostname
+      })
+      setStep('password')
+      return
     }
 
     if (tenantData) {
@@ -170,8 +200,8 @@ function LoginForm() {
     setError('')
 
     try {
-      if (!tenant?.signature || !tenant?.timestamp) {
-        setError('Güvenlik doğrulaması başarısız. Lütfen baştan giriş yapın.')
+      if (!tenant?.code) {
+        setError('Tenant bilgisi eksik. Lütfen baştan giriş yapın.')
         return
       }
 
@@ -184,8 +214,8 @@ function LoginForm() {
           email,
           password,
           tenantCode: tenant.code,
-          tenantSignature: tenant.signature,
-          tenantTimestamp: tenant.timestamp
+          tenantSignature: tenant.signature || '',
+          tenantTimestamp: tenant.timestamp || Date.now()
         }),
         credentials: 'include' // Important for CORS cookies
       })
