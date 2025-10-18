@@ -36,10 +36,11 @@ function LoginForm() {
     }
   }, [])
 
-  const [step, setStep] = useState<'email' | 'password'>('email')
+  const [step, setStep] = useState<'email' | 'tenant-selection' | 'password'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [failedAttempts, setFailedAttempts] = useState(0)
@@ -105,43 +106,44 @@ function LoginForm() {
         return
       }
 
-      // Backend returns: { success, data: { exists, tenant } }
-      const tenant = data.data?.tenant
+      // Backend returns: { success, data: { exists, tenants } }
+      const tenantsList = data.data?.tenants || []
 
-      if (!tenant) {
-        setError('Hesabınız bir firmaya bağlı değil')
+      if (!tenantsList || tenantsList.length === 0) {
+        setError('Bu e-posta adresi için erişilebilir çalışma alanı bulunamadı')
         return
       }
 
-      // Validate tenant has signature (HMAC)
-      if (!tenant.signature || !tenant.timestamp) {
-        setError('Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin.')
-        return
-      }
-
-      // Store tenant in state and sessionStorage for recovery
-      setTenant(tenant)
-
-      // Store essential data including name for UI display
-      sessionStorage.setItem('login-tenant', JSON.stringify({
-        code: tenant.code,
-        name: tenant.name,
-        signature: tenant.signature,
-        timestamp: tenant.timestamp
-      }))
+      // Store tenants list and email
+      setTenants(tenantsList)
 
       // Update URL with email for recovery
       const url = new URL(window.location.href)
       url.searchParams.set('email', email)
       window.history.replaceState({}, '', url)
 
-      setStep('password')
+      setStep('tenant-selection')
     } catch (err) {
       trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'network_error' } })
       setError('Bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleTenantSelect = (selectedTenant: Tenant) => {
+    // Redirect to selected tenant's login page with email pre-filled
+    const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
+    const tenantDomain = isProduction
+      ? `https://${selectedTenant.code}.stoocker.app`
+      : `http://localhost:3001` // Development tenant domain
+
+    // Store email and tenant for the next page
+    sessionStorage.setItem('login-email', email)
+    sessionStorage.setItem('login-tenant-code', selectedTenant.code)
+
+    // Redirect to tenant's login page
+    window.location.href = `${tenantDomain}/login?email=${encodeURIComponent(email)}&tenant=${selectedTenant.code}`
   }
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -335,13 +337,14 @@ function LoginForm() {
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              {step === 'email' ? 'Hoş geldiniz' : 'Devam edin'}
+              {step === 'email' && 'Hoş geldiniz'}
+              {step === 'tenant-selection' && 'Çalışma Alanı Seçin'}
+              {step === 'password' && 'Devam edin'}
             </h2>
             <p className="text-gray-600">
-              {step === 'email'
-                ? 'E-posta adresinizle başlayın'
-                : `${tenant?.name || 'Hesabınız'} için şifrenizi girin`
-              }
+              {step === 'email' && 'E-posta adresinizle başlayın'}
+              {step === 'tenant-selection' && `${email} için erişilebilir çalışma alanları`}
+              {step === 'password' && `${tenant?.name || 'Hesabınız'} için şifrenizi girin`}
             </p>
           </div>
 
@@ -452,6 +455,53 @@ function LoginForm() {
                 Yeni Hesap Oluştur
               </Link>
             </form>
+          ) : step === 'tenant-selection' ? (
+            <div className="space-y-4">
+              {/* Tenant List */}
+              <div className="space-y-3">
+                {tenants.map((t) => (
+                  <button
+                    key={t.code}
+                    onClick={() => handleTenantSelect(t)}
+                    className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-violet-500 hover:bg-violet-50 transition-all group text-left"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                        {t.name?.[0]?.toUpperCase() || t.code?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                          {t.name || t.code}
+                        </div>
+                        <div className="text-sm text-gray-600 truncate">
+                          {t.domain || `${t.code}.stoocker.app`}
+                        </div>
+                      </div>
+                      <svg
+                        className="w-5 h-5 text-gray-400 group-hover:text-violet-600 group-hover:translate-x-1 transition-all flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Back button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('email')
+                  setTenants([])
+                }}
+                className="w-full text-gray-600 hover:text-gray-900 py-3 text-sm font-medium"
+              >
+                ← Farklı e-posta kullan
+              </button>
+            </div>
           ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-5" aria-label="Şifre girişi formu">
               <div>
