@@ -161,23 +161,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const tenantCode = tenantCodeCookie.split('=')[1];
       console.log('✅ Found tenant-code cookie:', tenantCode);
 
-      // If tenant-code cookie exists, user is authenticated
-      // (it's set alongside auth-token during login)
-      // Create minimal user object - TODO: call /auth/me endpoint when available
-      const userData: User = {
-        id: 'temp-user-id',
-        email: '',
-        firstName: 'User',
-        lastName: '',
-        role: 'User',
-        tenantId: '',
-        tenantCode: tenantCode,
-      };
+      // Fetch real user data from /auth/me endpoint
+      console.log('📡 Fetching user data from /auth/me...');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Code': tenantCode,
+        },
+        credentials: 'include', // Send cookies
+      });
 
-      console.log('✅ User authenticated (inferred from tenant-code)');
-      setUser(userData);
+      if (!response.ok) {
+        console.error('❌ Failed to fetch user data:', response.status);
+        setUser(null);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('📋 User data response:', result);
+
+      if (result.success && result.data) {
+        const userData: User = {
+          id: result.data.id,
+          email: result.data.email,
+          firstName: result.data.fullName?.split(' ')[0] || '',
+          lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
+          role: result.data.roles?.[0] || 'User',
+          tenantId: result.data.tenantId || '',
+          tenantCode: result.data.tenantCode || tenantCode,
+        };
+
+        console.log('✅ User authenticated:', userData);
+        setUser(userData);
+      } else {
+        console.error('❌ Invalid user data response');
+        setUser(null);
+      }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.error('❌ Failed to refresh user:', error);
       // ✅ NO COOKIE CLEARING - Just clear user state
       setUser(null);
     }

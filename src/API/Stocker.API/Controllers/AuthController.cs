@@ -16,6 +16,7 @@ using Stocker.Application.Features.Identity.Commands.Enable2FA;
 using Stocker.Application.Features.Identity.Commands.Verify2FA;
 using Stocker.Application.Features.Identity.Commands.Disable2FA;
 using Stocker.Application.Features.Identity.Queries.Check2FALockout;
+using Stocker.Application.Features.Identity.Queries.GetCurrentUser;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers;
@@ -245,6 +246,45 @@ public class AuthController : ControllerBase
     {
         _logger.LogInformation("Checking email: {Email}", query.Email);
 
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
+            });
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Get current authenticated user information
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserInfo), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogWarning("Invalid or missing user ID claim");
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
+        }
+
+        _logger.LogInformation("Getting current user information for userId: {UserId}", userId);
+
+        var query = new GetCurrentUserQuery { UserId = userId };
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
