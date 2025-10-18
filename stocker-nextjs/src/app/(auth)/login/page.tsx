@@ -94,6 +94,11 @@ function LoginForm() {
 
       const data = await response.json()
 
+      // DEBUG: Log the full response
+      console.log('🔍 CheckEmail Response:', JSON.stringify(data, null, 2))
+      console.log('🏢 Tenants data:', data.data)
+      console.log('📋 Tenants array:', data.data?.tenants)
+
       // Handle rate limiting
       if (response.status === 429) {
         setError(data.message || 'Çok fazla deneme. Lütfen daha sonra tekrar deneyin.')
