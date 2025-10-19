@@ -33,6 +33,7 @@ public class CustomerSegmentMemberDto
 public class CustomerTagDto
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid CustomerId { get; set; }
     public string Tag { get; set; } = string.Empty;
     public string? Color { get; set; }

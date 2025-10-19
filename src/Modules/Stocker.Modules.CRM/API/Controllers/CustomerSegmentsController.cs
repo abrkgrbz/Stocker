@@ -277,4 +277,28 @@ public class CustomerSegmentsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Recalculate members for a dynamic segment based on its criteria
+    /// </summary>
+    [HttpPost("{id}/recalculate")]
+    [ProducesResponseType(typeof(CustomerSegmentDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<CustomerSegmentDto>> RecalculateSegmentMembers(Guid id)
+    {
+        var command = new RecalculateSegmentMembersCommand { SegmentId = id };
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
 }

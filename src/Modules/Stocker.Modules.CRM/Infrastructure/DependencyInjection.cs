@@ -40,12 +40,17 @@ public static class DependencyInjection
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IDealRepository, DealRepository>();
+        services.AddScoped<ICustomerSegmentRepository, CustomerSegmentRepository>();
+        services.AddScoped<ICustomerTagRepository, CustomerTagRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();
 
         // Register Tenant CRM Database Service
         services.AddScoped<ITenantCRMDatabaseService, TenantCRMDatabaseService>();
+
+        // Register Segmentation Services
+        services.AddScoped<Stocker.Modules.CRM.Application.Segmentation.SegmentCriteriaEngine>();
 
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>

@@ -9,6 +9,8 @@ namespace Stocker.Modules.CRM.Domain.Entities;
 public class Customer : TenantAggregateRoot
 {
     private readonly List<Contact> _contacts = new();
+    private readonly List<CustomerSegmentMember> _segmentMemberships = new();
+    private readonly List<CustomerTag> _tags = new();
 
     /// <summary>
     /// Gets the customer's company name
@@ -94,6 +96,16 @@ public class Customer : TenantAggregateRoot
     /// Gets the customer's contacts
     /// </summary>
     public IReadOnlyList<Contact> Contacts => _contacts.AsReadOnly();
+
+    /// <summary>
+    /// Gets the customer's segment memberships
+    /// </summary>
+    public IReadOnlyList<CustomerSegmentMember> SegmentMemberships => _segmentMemberships.AsReadOnly();
+
+    /// <summary>
+    /// Gets the customer's tags
+    /// </summary>
+    public IReadOnlyList<CustomerTag> Tags => _tags.AsReadOnly();
 
     /// <summary>
     /// Private constructor for EF Core
