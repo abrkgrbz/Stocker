@@ -15,10 +15,6 @@ public class Activity : TenantEntity
     public TimeSpan? Duration { get; private set; }
     public string? Location { get; private set; }
     
-    // Polymorphic relationships
-    public string? RelatedEntityType { get; private set; }
-    public int? RelatedEntityId { get; private set; }
-    
     // Specific relationships
     public Guid? CustomerId { get; private set; }
     public Guid? ContactId { get; private set; }
@@ -124,40 +120,54 @@ public class Activity : TenantEntity
         DueDate = newDueDate;
     }
     
-    public void RelateToEntity(string entityType, int entityId)
-    {
-        RelatedEntityType = entityType;
-        RelatedEntityId = entityId;
-    }
-    
     public void RelateToCustomer(Guid customerId)
     {
         CustomerId = customerId;
-        RelateToEntity("Customer", (int)customerId.GetHashCode());
+        // Clear other relationships
+        ContactId = null;
+        LeadId = null;
+        OpportunityId = null;
+        DealId = null;
     }
-    
+
     public void RelateToContact(Guid contactId)
     {
         ContactId = contactId;
-        RelateToEntity("Contact", (int)contactId.GetHashCode());
+        // Clear other relationships
+        CustomerId = null;
+        LeadId = null;
+        OpportunityId = null;
+        DealId = null;
     }
-    
+
     public void RelateToLead(Guid leadId)
     {
         LeadId = leadId;
-        RelateToEntity("Lead", (int)leadId.GetHashCode());
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        OpportunityId = null;
+        DealId = null;
     }
-    
+
     public void RelateToOpportunity(Guid opportunityId)
     {
         OpportunityId = opportunityId;
-        RelateToEntity("Opportunity", (int)opportunityId.GetHashCode());
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        LeadId = null;
+        DealId = null;
     }
-    
+
     public void RelateToDeal(Guid dealId)
     {
         DealId = dealId;
-        RelateToEntity("Deal", (int)dealId.GetHashCode());
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        LeadId = null;
+        OpportunityId = null;
     }
     
     // Call activity specific methods

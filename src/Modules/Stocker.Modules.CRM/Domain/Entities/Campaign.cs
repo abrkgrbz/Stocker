@@ -30,7 +30,7 @@ public class Campaign : TenantAggregateRoot
     public int NumberBounced { get; private set; }
     public string? TargetAudience { get; private set; }
     public string? Objective { get; private set; }
-    public int? ParentCampaignId { get; private set; }
+    public Guid? ParentCampaignId { get; private set; }
     public int OwnerId { get; private set; }
     
     // Email Campaign specific

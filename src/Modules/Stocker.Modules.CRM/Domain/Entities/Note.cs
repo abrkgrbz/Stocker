@@ -10,11 +10,7 @@ public class Note : TenantEntity
     public NoteType Type { get; private set; }
     public bool IsPinned { get; private set; }
     public bool IsPrivate { get; private set; }
-    
-    // Polymorphic relationships
-    public string? RelatedEntityType { get; private set; }
-    public int? RelatedEntityId { get; private set; }
-    
+
     // Specific relationships
     public Guid? CustomerId { get; private set; }
     public Guid? ContactId { get; private set; }
@@ -85,45 +81,73 @@ public class Note : TenantEntity
     {
         IsPrivate = false;
     }
-    
-    public void RelateToEntity(string entityType, int entityId)
+
+    public void RelateToCustomer(Guid customerId)
     {
-        RelatedEntityType = entityType;
-        RelatedEntityId = entityId;
-        
-        // Clear specific relationships
-        CustomerId = null;
+        CustomerId = customerId;
+        // Clear other relationships
         ContactId = null;
         LeadId = null;
         OpportunityId = null;
         DealId = null;
         ActivityId = null;
-        
-        // Set specific relationship based on entity type
-        // Note: This is a temporary hack until we remove polymorphic relationships
-        switch (entityType.ToLower())
-        {
-            case "customer":
-                CustomerId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-            case "contact":
-                ContactId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-            case "lead":
-                LeadId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-            case "opportunity":
-                OpportunityId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-            case "deal":
-                DealId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-            case "activity":
-                ActivityId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                break;
-        }
     }
-    
+
+    public void RelateToContact(Guid contactId)
+    {
+        ContactId = contactId;
+        // Clear other relationships
+        CustomerId = null;
+        LeadId = null;
+        OpportunityId = null;
+        DealId = null;
+        ActivityId = null;
+    }
+
+    public void RelateToLead(Guid leadId)
+    {
+        LeadId = leadId;
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        OpportunityId = null;
+        DealId = null;
+        ActivityId = null;
+    }
+
+    public void RelateToOpportunity(Guid opportunityId)
+    {
+        OpportunityId = opportunityId;
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        LeadId = null;
+        DealId = null;
+        ActivityId = null;
+    }
+
+    public void RelateToDeal(Guid dealId)
+    {
+        DealId = dealId;
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        LeadId = null;
+        OpportunityId = null;
+        ActivityId = null;
+    }
+
+    public void RelateToActivity(Guid activityId)
+    {
+        ActivityId = activityId;
+        // Clear other relationships
+        CustomerId = null;
+        ContactId = null;
+        LeadId = null;
+        OpportunityId = null;
+        DealId = null;
+    }
+
     public void AddAttachment(string attachmentUrl)
     {
         if (string.IsNullOrEmpty(AttachmentUrls))
