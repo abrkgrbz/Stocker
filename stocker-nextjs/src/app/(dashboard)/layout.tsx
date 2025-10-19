@@ -60,7 +60,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     {
       key: '/dashboard',
       icon: <DashboardOutlined />,
-      label: 'Dashboard',
+      label: 'Ana Sayfa',
     },
     {
       key: 'crm',
@@ -69,19 +69,19 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       children: [
         {
           key: '/crm/customers',
-          label: 'Customers',
+          label: 'Müşteriler',
         },
         {
           key: '/crm/leads',
-          label: 'Leads',
+          label: 'Potansiyel Müşteriler',
         },
         {
           key: '/crm/deals',
-          label: 'Deals',
+          label: 'Fırsatlar',
         },
         {
           key: '/crm/activities',
-          label: 'Activities',
+          label: 'Aktiviteler',
         },
       ],
     },

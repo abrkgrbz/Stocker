@@ -59,10 +59,10 @@ export default function CustomersPage() {
 
   const columns: ColumnsType<Customer> = [
     {
-      title: 'Company Name',
+      title: 'Firma Adı',
       dataIndex: 'companyName',
       key: 'companyName',
-      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
+      sorter: (a, b) => a.companyName.localeCompare(b.companyName, 'tr'),
       render: (text, record) => (
         <div>
           <div className="font-medium">{text}</div>
@@ -73,7 +73,7 @@ export default function CustomersPage() {
       ),
     },
     {
-      title: 'Contact',
+      title: 'İletişim',
       key: 'contact',
       render: (_, record) => (
         <div>
@@ -85,7 +85,7 @@ export default function CustomersPage() {
       ),
     },
     {
-      title: 'Location',
+      title: 'Konum',
       key: 'location',
       render: (_, record) => (
         <div>
@@ -97,26 +97,28 @@ export default function CustomersPage() {
       ),
     },
     {
-      title: 'Type',
+      title: 'Tip',
       dataIndex: 'customerType',
       key: 'customerType',
       filters: [
-        { text: 'Corporate', value: 'Corporate' },
-        { text: 'Individual', value: 'Individual' },
+        { text: 'Kurumsal', value: 'Corporate' },
+        { text: 'Bireysel', value: 'Individual' },
       ],
       onFilter: (value, record) => record.customerType === value,
       render: (type) => (
-        <Tag color={type === 'Corporate' ? 'blue' : 'green'}>{type}</Tag>
+        <Tag color={type === 'Corporate' ? 'blue' : 'green'}>
+          {type === 'Corporate' ? 'Kurumsal' : 'Bireysel'}
+        </Tag>
       ),
     },
     {
-      title: 'Status',
+      title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       filters: [
-        { text: 'Active', value: 'Active' },
-        { text: 'Inactive', value: 'Inactive' },
-        { text: 'Potential', value: 'Potential' },
+        { text: 'Aktif', value: 'Active' },
+        { text: 'Pasif', value: 'Inactive' },
+        { text: 'Potansiyel', value: 'Potential' },
       ],
       onFilter: (value, record) => record.status === value,
       render: (status) => {
@@ -126,18 +128,20 @@ export default function CustomersPage() {
             : status === 'Potential'
             ? 'warning'
             : 'default';
-        return <Tag color={color}>{status}</Tag>;
+        const text =
+          status === 'Active' ? 'Aktif' : status === 'Potential' ? 'Potansiyel' : 'Pasif';
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
-      title: 'Total Purchases',
+      title: 'Toplam Alışveriş',
       dataIndex: 'totalPurchases',
       key: 'totalPurchases',
       sorter: (a, b) => a.totalPurchases - b.totalPurchases,
       render: (value) => `₺${value.toLocaleString('tr-TR')}`,
     },
     {
-      title: 'Actions',
+      title: 'İşlemler',
       key: 'actions',
       render: (_, record) => (
         <Dropdown
@@ -145,18 +149,18 @@ export default function CustomersPage() {
             items: [
               {
                 key: 'view',
-                label: 'View Details',
+                label: 'Detayları Gör',
               },
               {
                 key: 'edit',
-                label: 'Edit',
+                label: 'Düzenle',
               },
               {
                 type: 'divider',
               },
               {
                 key: 'delete',
-                label: 'Delete',
+                label: 'Sil',
                 danger: true,
               },
             ],
@@ -173,7 +177,7 @@ export default function CustomersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          Customers
+          Müşteriler
         </Title>
         <Space>
           <Button
@@ -181,10 +185,10 @@ export default function CustomersPage() {
             onClick={() => refetch()}
             loading={isLoading}
           >
-            Refresh
+            Yenile
           </Button>
           <Button type="primary" icon={<PlusOutlined />} size="large">
-            Add Customer
+            Müşteri Ekle
           </Button>
         </Space>
       </div>
@@ -192,18 +196,18 @@ export default function CustomersPage() {
       {/* Error Alert */}
       {error && (
         <Alert
-          message="Failed to load customers"
+          message="Müşteriler yüklenemedi"
           description={
             error instanceof Error
               ? error.message
-              : 'An error occurred while fetching customers. Please try again.'
+              : 'Müşteriler getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
           }
           type="error"
           showIcon
           closable
           action={
             <Button size="small" danger onClick={() => refetch()}>
-              Retry
+              Tekrar Dene
             </Button>
           }
           className="mb-6"
@@ -218,7 +222,7 @@ export default function CustomersPage() {
               <Skeleton active paragraph={{ rows: 1 }} />
             ) : (
               <Statistic
-                title="Total Customers"
+                title="Toplam Müşteri"
                 value={totalCount}
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#1890ff' }}
@@ -232,7 +236,7 @@ export default function CustomersPage() {
               <Skeleton active paragraph={{ rows: 1 }} />
             ) : (
               <Statistic
-                title="Active Customers"
+                title="Aktif Müşteri"
                 value={customers.filter((c) => c.status === 'Active').length}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#52c41a' }}
@@ -246,7 +250,7 @@ export default function CustomersPage() {
               <Skeleton active paragraph={{ rows: 1 }} />
             ) : (
               <Statistic
-                title="Total Revenue"
+                title="Toplam Ciro"
                 value={customers.reduce((sum, c) => sum + c.totalPurchases, 0)}
                 prefix="₺"
                 suffix={<RiseOutlined />}
@@ -262,7 +266,7 @@ export default function CustomersPage() {
         <Space style={{ width: '100%' }} direction="vertical" size="middle">
           <div className="flex gap-4">
             <Input
-              placeholder="Search customers by name, email, or phone..."
+              placeholder="İsim, e-posta veya telefona göre ara..."
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -271,7 +275,7 @@ export default function CustomersPage() {
               allowClear
             />
             <Button icon={<FilterOutlined />} size="large">
-              Filters
+              Filtreler
             </Button>
           </div>
         </Space>
@@ -288,13 +292,19 @@ export default function CustomersPage() {
             pageSize: pageSize,
             total: totalCount,
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} customers`,
+            showTotal: (total) => `Toplam ${total} müşteri`,
             onChange: (page, size) => {
               setCurrentPage(page);
               setPageSize(size);
             },
           }}
           loading={isLoading}
+          locale={{
+            emptyText: 'Müşteri bulunamadı',
+            filterConfirm: 'Tamam',
+            filterReset: 'Sıfırla',
+            filterTitle: 'Filtrele',
+          }}
         />
       </Card>
     </div>
