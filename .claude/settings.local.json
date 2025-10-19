@@ -89,7 +89,8 @@
       "Bash(dotnet ef migrations remove:*)",
       "Bash(dotnet ef migrations script:*)",
       "Bash(do echo \"[$i/15] Monitoring CRM migration deployment...\")",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED\")"
     ],
     "deny": [],
     "ask": []

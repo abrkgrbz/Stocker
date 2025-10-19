@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<ILeadRepository, LeadRepository>();
+        services.AddScoped<IDealRepository, DealRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();
@@ -52,6 +53,7 @@ public static class DependencyInjection
             // Register event consumers
             x.AddConsumer<CustomerCreatedEventConsumer>();
             x.AddConsumer<CustomerUpdatedEventConsumer>();
+            x.AddConsumer<DealWonEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
