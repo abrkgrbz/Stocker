@@ -12,11 +12,11 @@ public class Opportunity : TenantAggregateRoot
     
     public string Name { get; private set; }
     public string? Description { get; private set; }
-    public int? CustomerId { get; private set; }
-    public int? ContactId { get; private set; }
-    public int? LeadId { get; private set; }
-    public int PipelineId { get; private set; }
-    public int StageId { get; private set; }
+    public Guid? CustomerId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid? LeadId { get; private set; }
+    public Guid PipelineId { get; private set; }
+    public Guid StageId { get; private set; }
     public Money Amount { get; private set; }
     public decimal Probability { get; private set; }
     public DateTime ExpectedCloseDate { get; private set; }
@@ -24,11 +24,11 @@ public class Opportunity : TenantAggregateRoot
     public OpportunityStatus Status { get; private set; }
     public string? LostReason { get; private set; }
     public string? CompetitorName { get; private set; }
-    public int? CampaignId { get; private set; }
+    public Guid? CampaignId { get; private set; }
     public int OwnerId { get; private set; }
     public OpportunitySource Source { get; private set; }
     public OpportunityType Type { get; private set; }
-    public int? ParentOpportunityId { get; private set; }
+    public Guid? ParentOpportunityId { get; private set; }
     public string? NextStep { get; private set; }
     public OpportunityPriority Priority { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -50,8 +50,8 @@ public class Opportunity : TenantAggregateRoot
     public Opportunity(
         Guid tenantId,
         string name,
-        int pipelineId,
-        int stageId,
+        Guid pipelineId,
+        Guid stageId,
         Money amount,
         DateTime expectedCloseDate,
         int ownerId) : base(Guid.NewGuid(), tenantId)
@@ -79,7 +79,7 @@ public class Opportunity : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void AssignToCustomer(int customerId, int? contactId = null)
+    public void AssignToCustomer(Guid customerId, Guid? contactId = null)
     {
         CustomerId = customerId;
         ContactId = contactId;
@@ -87,7 +87,7 @@ public class Opportunity : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void AssignToLead(int leadId)
+    public void AssignToLead(Guid leadId)
     {
         LeadId = leadId;
         CustomerId = null;
@@ -95,7 +95,7 @@ public class Opportunity : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void MoveToStage(int stageId, decimal probability)
+    public void MoveToStage(Guid stageId, decimal probability)
     {
         StageId = stageId;
         Probability = probability;
@@ -153,7 +153,7 @@ public class Opportunity : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void LinkToCampaign(int campaignId)
+    public void LinkToCampaign(Guid campaignId)
     {
         CampaignId = campaignId;
         UpdatedAt = DateTime.UtcNow;

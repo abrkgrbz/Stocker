@@ -33,9 +33,8 @@ public class DeletePipelineCommandHandler : IRequestHandler<DeletePipelineComman
         }
 
         // Check if pipeline has any deals or opportunities
-        var pipelineIdHash = request.Id.GetHashCode();
-        var hasDeals = await _context.Deals.AnyAsync(d => d.PipelineId == pipelineIdHash, cancellationToken);
-        var hasOpportunities = await _context.Opportunities.AnyAsync(o => o.PipelineId == pipelineIdHash, cancellationToken);
+        var hasDeals = await _context.Deals.AnyAsync(d => d.PipelineId == request.Id, cancellationToken);
+        var hasOpportunities = await _context.Opportunities.AnyAsync(o => o.PipelineId == request.Id, cancellationToken);
 
         if (hasDeals || hasOpportunities)
         {

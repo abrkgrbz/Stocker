@@ -5,8 +5,8 @@ namespace Stocker.Modules.CRM.Domain.Entities;
 
 public class DealProduct : TenantEntity
 {
-    public int DealId { get; private set; }
-    public int ProductId { get; private set; }
+    public Guid DealId { get; private set; }
+    public int ProductId { get; private set; }  // Keep int for now, will fix in Phase 4
     public string ProductName { get; private set; }
     public string? ProductCode { get; private set; }
     public string? Description { get; private set; }
@@ -28,7 +28,7 @@ public class DealProduct : TenantEntity
     
     public DealProduct(
         Guid tenantId,
-        int dealId,
+        Guid dealId,
         int productId,
         string productName,
         decimal quantity,

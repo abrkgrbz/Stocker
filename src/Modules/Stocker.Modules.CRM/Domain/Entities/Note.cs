@@ -16,12 +16,12 @@ public class Note : TenantEntity
     public int? RelatedEntityId { get; private set; }
     
     // Specific relationships
-    public int? CustomerId { get; private set; }
-    public int? ContactId { get; private set; }
-    public int? LeadId { get; private set; }
-    public int? OpportunityId { get; private set; }
-    public int? DealId { get; private set; }
-    public int? ActivityId { get; private set; }
+    public Guid? CustomerId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid? LeadId { get; private set; }
+    public Guid? OpportunityId { get; private set; }
+    public Guid? DealId { get; private set; }
+    public Guid? ActivityId { get; private set; }
     
     // User tracking
     public int CreatedById { get; private set; }
@@ -100,25 +100,26 @@ public class Note : TenantEntity
         ActivityId = null;
         
         // Set specific relationship based on entity type
+        // Note: This is a temporary hack until we remove polymorphic relationships
         switch (entityType.ToLower())
         {
             case "customer":
-                CustomerId = entityId;
+                CustomerId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
             case "contact":
-                ContactId = entityId;
+                ContactId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
             case "lead":
-                LeadId = entityId;
+                LeadId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
             case "opportunity":
-                OpportunityId = entityId;
+                OpportunityId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
             case "deal":
-                DealId = entityId;
+                DealId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
             case "activity":
-                ActivityId = entityId;
+                ActivityId = new Guid(entityId, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                 break;
         }
     }

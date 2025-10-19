@@ -4,7 +4,7 @@ namespace Stocker.Modules.CRM.Domain.Entities;
 
 public class PipelineStage : TenantEntity
 {
-    public int PipelineId { get; private set; }
+    public Guid PipelineId { get; private set; }
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public decimal Probability { get; private set; }
@@ -21,7 +21,7 @@ public class PipelineStage : TenantEntity
     
     public PipelineStage(
         Guid tenantId,
-        int pipelineId,
+        Guid pipelineId,
         string name,
         decimal probability,
         int displayOrder,

@@ -75,7 +75,7 @@ public class Pipeline : TenantAggregateRoot
         if (_stages.Any(s => s.DisplayOrder == order))
             throw new InvalidOperationException($"Stage with order {order} already exists in this pipeline");
             
-        var stage = new PipelineStage(TenantId, Id.GetHashCode(), name, probability, order, isWon, isLost);
+        var stage = new PipelineStage(TenantId, Id, name, probability, order, isWon, isLost);
         _stages.Add(stage);
         
         return stage;

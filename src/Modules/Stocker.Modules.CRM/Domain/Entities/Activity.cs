@@ -20,11 +20,11 @@ public class Activity : TenantEntity
     public int? RelatedEntityId { get; private set; }
     
     // Specific relationships
-    public int? CustomerId { get; private set; }
-    public int? ContactId { get; private set; }
-    public int? LeadId { get; private set; }
-    public int? OpportunityId { get; private set; }
-    public int? DealId { get; private set; }
+    public Guid? CustomerId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid? LeadId { get; private set; }
+    public Guid? OpportunityId { get; private set; }
+    public Guid? DealId { get; private set; }
     
     // Assignment
     public int OwnerId { get; private set; }
@@ -130,34 +130,34 @@ public class Activity : TenantEntity
         RelatedEntityId = entityId;
     }
     
-    public void RelateToCustomer(int customerId)
+    public void RelateToCustomer(Guid customerId)
     {
         CustomerId = customerId;
-        RelateToEntity("Customer", customerId);
+        RelateToEntity("Customer", (int)customerId.GetHashCode());
     }
     
-    public void RelateToContact(int contactId)
+    public void RelateToContact(Guid contactId)
     {
         ContactId = contactId;
-        RelateToEntity("Contact", contactId);
+        RelateToEntity("Contact", (int)contactId.GetHashCode());
     }
     
-    public void RelateToLead(int leadId)
+    public void RelateToLead(Guid leadId)
     {
         LeadId = leadId;
-        RelateToEntity("Lead", leadId);
+        RelateToEntity("Lead", (int)leadId.GetHashCode());
     }
     
-    public void RelateToOpportunity(int opportunityId)
+    public void RelateToOpportunity(Guid opportunityId)
     {
         OpportunityId = opportunityId;
-        RelateToEntity("Opportunity", opportunityId);
+        RelateToEntity("Opportunity", (int)opportunityId.GetHashCode());
     }
     
-    public void RelateToDeal(int dealId)
+    public void RelateToDeal(Guid dealId)
     {
         DealId = dealId;
-        RelateToEntity("Deal", dealId);
+        RelateToEntity("Deal", (int)dealId.GetHashCode());
     }
     
     // Call activity specific methods

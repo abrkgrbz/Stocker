@@ -5,7 +5,7 @@ namespace Stocker.Modules.CRM.Domain.Entities;
 
 public class OpportunityProduct : TenantEntity
 {
-    public int OpportunityId { get; private set; }
+    public Guid OpportunityId { get; private set; }
     public int ProductId { get; private set; }
     public string ProductName { get; private set; }
     public string? ProductCode { get; private set; }
@@ -23,7 +23,7 @@ public class OpportunityProduct : TenantEntity
     
     public OpportunityProduct(
         Guid tenantId,
-        int opportunityId,
+        Guid opportunityId,
         int productId,
         string productName,
         decimal quantity,

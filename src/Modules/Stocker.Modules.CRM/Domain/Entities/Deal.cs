@@ -12,10 +12,10 @@ public class Deal : TenantAggregateRoot
     
     public string Name { get; private set; }
     public string? Description { get; private set; }
-    public int? CustomerId { get; private set; }
-    public int? ContactId { get; private set; }
-    public int PipelineId { get; private set; }
-    public int StageId { get; private set; }
+    public Guid? CustomerId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid PipelineId { get; private set; }
+    public Guid StageId { get; private set; }
     public Money Value { get; private set; }
     public Money? RecurringValue { get; private set; }
     public RecurringPeriod? RecurringPeriod { get; private set; }
@@ -50,8 +50,8 @@ public class Deal : TenantAggregateRoot
     public Deal(
         Guid tenantId,
         string name,
-        int pipelineId,
-        int stageId,
+        Guid pipelineId,
+        Guid stageId,
         Money value,
         int ownerId) : base(Guid.NewGuid(), tenantId)
     {
@@ -85,14 +85,14 @@ public class Deal : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void AssignToCustomer(int customerId, int? contactId = null)
+    public void AssignToCustomer(Guid customerId, Guid? contactId = null)
     {
         CustomerId = customerId;
         ContactId = contactId;
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void MoveToStage(int stageId, decimal probability)
+    public void MoveToStage(Guid stageId, decimal probability)
     {
         StageId = stageId;
         Probability = probability;
