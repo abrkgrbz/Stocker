@@ -7,6 +7,8 @@ using Stocker.Modules.CRM.Infrastructure.EventConsumers;
 using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.Modules.CRM.Infrastructure.Persistence.Repositories;
 using Stocker.Modules.CRM.Infrastructure.Services;
+using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Application.Contracts;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CRM.Infrastructure;
@@ -42,6 +44,9 @@ public static class DependencyInjection
         services.AddScoped<IDealRepository, DealRepository>();
         services.AddScoped<ICustomerSegmentRepository, CustomerSegmentRepository>();
         services.AddScoped<ICustomerTagRepository, CustomerTagRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IWorkflowRepository, WorkflowRepository>();
+        services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();
@@ -50,7 +55,15 @@ public static class DependencyInjection
         services.AddScoped<ITenantCRMDatabaseService, TenantCRMDatabaseService>();
 
         // Register Segmentation Services
-        services.AddScoped<Stocker.Modules.CRM.Application.Segmentation.SegmentCriteriaEngine>();
+        services.AddScoped<Application.Segmentation.SegmentCriteriaEngine>();
+
+        // Register Document Storage Service
+        services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
+
+        // Register Cross-Module Services (Contract Implementations)
+        services.AddScoped<Shared.Contracts.CRM.ICrmCustomerService, Application.Services.CrmCustomerService>();
+        services.AddScoped<Shared.Contracts.CRM.ICrmDealService, Application.Services.CrmDealService>();
+        services.AddScoped<Shared.Contracts.CRM.ICrmLeadService, Application.Services.CrmLeadService>();
 
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>

@@ -46,6 +46,15 @@ public class CRMDbContext : DbContext
     public DbSet<CustomerSegmentMember> CustomerSegmentMembers { get; set; } = null!;
     public DbSet<CustomerTag> CustomerTags { get; set; } = null!;
 
+    // Document Management
+    public DbSet<Document> Documents { get; set; } = null!;
+
+    // Workflow Automation
+    public DbSet<Workflow> Workflows { get; set; } = null!;
+    public DbSet<WorkflowStep> WorkflowSteps { get; set; } = null!;
+    public DbSet<WorkflowExecution> WorkflowExecutions { get; set; } = null!;
+    public DbSet<WorkflowStepExecution> WorkflowStepExecutions { get; set; } = null!;
+
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
         ITenantService tenantService)
@@ -101,6 +110,13 @@ public class CRMDbContext : DbContext
             modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<CustomerSegmentMember>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<CustomerTag>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Document management entities
+            modelBuilder.Entity<Document>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Workflow automation entities
+            modelBuilder.Entity<Workflow>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<WorkflowExecution>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

@@ -125,6 +125,9 @@ public static class MiddlewareExtensions
         // 13. Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
+        
+        // 13.5 Module Authorization (Check tenant subscriptions)
+        app.UseMiddleware<Stocker.API.Middleware.ModuleAuthorizationMiddleware>();
 
         // 14. Caching Middleware (Phase 2)
         // Response caching before rate limiting for better performance

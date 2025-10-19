@@ -137,6 +137,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantContextFactory, TenantContextFactory>();
         services.AddScoped<ITenantResolver, TenantResolver>();
 
+        // Add Tenant Module Service (for module authorization - Phase 4.5)
+        services.AddScoped<ITenantModuleService, Services.TenantModuleService>();
+
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>
         {

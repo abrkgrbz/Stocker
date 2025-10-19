@@ -5,8 +5,8 @@ using Stocker.Shared.Events.CRM;
 namespace Stocker.Modules.Finance.Infrastructure.EventConsumers;
 
 /// <summary>
-/// Finance module consumer for DealWonEvent
-/// Handles financial processing when a CRM deal is won
+/// Finance module consumer for DealWonEvent from CRM
+/// Automatically creates invoices and revenue recognition entries for won deals
 /// </summary>
 public class DealWonEventConsumer : IConsumer<DealWonEvent>
 {
@@ -22,39 +22,30 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
         var @event = context.Message;
 
         _logger.LogInformation(
-            "[FINANCE MODULE] Processing DealWonEvent: DealId={DealId}, CustomerId={CustomerId}, Amount={Amount} {Currency}, TenantId={TenantId}",
+            "Finance module processing DealWonEvent: DealId={DealId}, CustomerId={CustomerId}, Amount={Amount}, Currency={Currency}, TenantId={TenantId}",
             @event.DealId,
             @event.CustomerId,
             @event.Amount,
             @event.Currency,
             @event.TenantId);
 
-        // Calculate total deal value
-        var totalProductValue = @event.Products.Sum(p => p.Quantity * p.UnitPrice - p.DiscountAmount);
-        _logger.LogInformation(
-            "[FINANCE MODULE] Total product value: {TotalValue} {Currency}",
-            totalProductValue,
-            @event.Currency);
-
-        // TODO: Implement actual finance module business logic
+        // TODO: Implement automatic invoice creation from won deal
         // Examples:
-        // - Generate invoice for the won deal
-        // - Create accounts receivable entry
-        // - Update revenue forecast
-        // - Create payment schedule
-        // - Generate proforma invoice
-        // - Update financial dashboards
-        // - Calculate tax obligations
-        // - Create accounting journal entries
-        // - Update cash flow projections
-        // - Trigger payment collection workflow
-        // - Generate financial reports
-        // - Update credit limit calculations
-        // - Create revenue recognition schedule
+        // - Create draft invoice using IFinanceInvoiceService.CreateInvoiceFromDealAsync
+        // - Add invoice line items from deal products
+        // - Set invoice due date based on customer payment terms
+        // - Create revenue recognition schedule (for recurring deals)
+        // - Update accounts receivable
+        // - Create journal entry for booking
+        // - Send invoice notification to customer
+        // - Publish InvoiceCreatedEvent for other modules
 
         _logger.LogInformation(
-            "[FINANCE MODULE] DealWonEvent processed successfully. EventId={EventId}",
-            @event.EventId);
+            "Invoice should be created for won deal: DealId={DealId}, Amount={Amount} {Currency}, Products={ProductCount}",
+            @event.DealId,
+            @event.Amount,
+            @event.Currency,
+            @event.Products.Count);
 
         await Task.CompletedTask;
     }

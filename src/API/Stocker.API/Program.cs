@@ -74,17 +74,39 @@ builder.Services.AddInfrastructureServices(builder.Configuration, builder.Enviro
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddMultiTenancy();
 
+// ========================================
+// MODULAR ARCHITECTURE - CONDITIONAL LOADING
+// ========================================
+// Load modules based on configuration (tenant subscriptions)
+var enabledModules = builder.Configuration.GetSection("EnabledModules");
+
 // CRM Module
-builder.Services.AddCRMModule(builder.Configuration);
+if (enabledModules.GetValue<bool>("CRM"))
+{
+    Log.Information("Loading CRM Module...");
+    builder.Services.AddCRMModule(builder.Configuration);
+}
 
 // Sales Module
-builder.Services.AddSalesInfrastructure(builder.Configuration);
+if (enabledModules.GetValue<bool>("Sales"))
+{
+    Log.Information("Loading Sales Module...");
+    builder.Services.AddSalesInfrastructure(builder.Configuration);
+}
 
 // Finance Module
-builder.Services.AddFinanceInfrastructure(builder.Configuration);
+if (enabledModules.GetValue<bool>("Finance"))
+{
+    Log.Information("Loading Finance Module...");
+    builder.Services.AddFinanceInfrastructure(builder.Configuration);
+}
 
 // Inventory Module
-builder.Services.AddInventoryInfrastructure(builder.Configuration);
+if (enabledModules.GetValue<bool>("Inventory"))
+{
+    Log.Information("Loading Inventory Module...");
+    builder.Services.AddInventoryInfrastructure(builder.Configuration);
+}
 
 // SignalR Services
 builder.Services.AddSignalRServices();

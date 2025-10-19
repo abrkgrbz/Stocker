@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
+using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
 
 namespace Stocker.Modules.Sales.Infrastructure;
 
@@ -14,8 +15,10 @@ public static class DependencyInjection
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>
         {
-            // Register event consumers
+            // Register CRM event consumers for Sales module integration
+            x.AddConsumer<CustomerCreatedEventConsumer>();
             x.AddConsumer<DealWonEventConsumer>();
+            x.AddConsumer<LeadConvertedEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

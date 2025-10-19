@@ -11,6 +11,10 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Register Cross-Module Services (Contract Implementations)
+        services.AddScoped<Shared.Contracts.Inventory.IInventoryService, Application.Services.InventoryService>();
+
+
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>
         {

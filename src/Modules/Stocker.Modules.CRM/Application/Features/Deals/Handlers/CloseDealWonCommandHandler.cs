@@ -4,7 +4,9 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Deals.Commands;
 using Stocker.Modules.CRM.Domain.Repositories;
 using Stocker.Shared.Events.CRM;
+using EventDtos = Stocker.Shared.Events.CRM;
 using Stocker.SharedKernel.Results;
+using Stocker.Domain.Common.ValueObjects;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Handlers;
 
@@ -40,7 +42,7 @@ public class CloseDealWonCommandHandler : IRequestHandler<CloseDealWonCommand, R
         // Update final amount if provided
         if (request.FinalAmount.HasValue)
         {
-            var finalMoney = Stocker.Domain.Common.ValueObjects.Money.Create(
+            var finalMoney = Money.Create(
                 request.FinalAmount.Value,
                 deal.Value.Currency);
             deal.UpdateDetails(deal.Name, deal.Description, finalMoney);
@@ -51,7 +53,7 @@ public class CloseDealWonCommandHandler : IRequestHandler<CloseDealWonCommand, R
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish DealWonEvent
-        var products = deal.Products.Select(p => new Stocker.Shared.Events.CRM.DealProductDto(
+        var products = deal.Products.Select(p => new EventDtos.DealProductDto(
             ProductId: Guid.Empty, // TODO: Convert to Guid in Phase 4
             ProductName: p.ProductName,
             Quantity: p.Quantity,

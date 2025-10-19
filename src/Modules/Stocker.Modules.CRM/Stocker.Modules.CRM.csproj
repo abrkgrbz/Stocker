@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\Core\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\..\Shared\Stocker.Shared.Events\Stocker.Shared.Events.csproj" />
+    <ProjectReference Include="..\..\Shared\Stocker.Shared.Contracts\Stocker.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,3 +1,4 @@
+using Stocker.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
@@ -10,8 +11,9 @@ using MediatR;
 namespace Stocker.Modules.CRM.API.Controllers;
 
 [ApiController]
-[Route("api/crm/[controller]")]
 [Authorize]
+[Route("api/crm/[controller]")]
+[RequireModule("CRM")]
 [ApiExplorerSettings(GroupName = "crm")]
 public class LeadsController : ControllerBase
 {

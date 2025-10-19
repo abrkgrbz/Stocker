@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
 
         // Add Tenant Resolution Service
         services.AddScoped<ITenantResolverService, TenantResolverService>();
-        
+
         // Add Authentication Service Adapter
         services.AddScoped<IAuthenticationService, AuthenticationServiceAdapter>();
         

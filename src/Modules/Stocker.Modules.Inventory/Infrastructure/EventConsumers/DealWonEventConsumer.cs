@@ -5,8 +5,8 @@ using Stocker.Shared.Events.CRM;
 namespace Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 
 /// <summary>
-/// Inventory module consumer for DealWonEvent
-/// Handles inventory-related processing when a CRM deal is won
+/// Inventory module consumer for DealWonEvent from CRM
+/// Reserves inventory for won deals and updates product availability forecasts
 /// </summary>
 public class DealWonEventConsumer : IConsumer<DealWonEvent>
 {
@@ -22,41 +22,29 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
         var @event = context.Message;
 
         _logger.LogInformation(
-            "[INVENTORY MODULE] Processing DealWonEvent: DealId={DealId}, CustomerId={CustomerId}, ProductCount={ProductCount}, TenantId={TenantId}",
+            "Inventory module processing DealWonEvent: DealId={DealId}, CustomerId={CustomerId}, Products={ProductCount}, TenantId={TenantId}",
             @event.DealId,
             @event.CustomerId,
             @event.Products.Count,
             @event.TenantId);
 
-        // Log product details for inventory planning
+        // TODO: Implement inventory reservation for won deals
+        // Examples:
+        // - Check product availability for all deal products
+        // - Reserve stock for deal products (soft reservation)
+        // - Update demand forecasting data
+        // - Alert warehouse if stock is low
+        // - Create pick list for fulfillment
+        // - Update product availability in catalog
+        // - Publish StockReservedEvent
+
         foreach (var product in @event.Products)
         {
             _logger.LogInformation(
-                "[INVENTORY MODULE] Product to reserve: {ProductName} (ID: {ProductId}), Quantity: {Quantity}",
-                product.ProductName,
+                "Should reserve inventory: ProductId={ProductId}, Quantity={Quantity}",
                 product.ProductId,
                 product.Quantity);
         }
-
-        // TODO: Implement actual inventory module business logic
-        // Examples:
-        // - Reserve inventory for won deal products
-        // - Create stock reservation entries
-        // - Update available inventory quantities
-        // - Generate picking list for warehouse
-        // - Create shipment preparation order
-        // - Check stock availability and trigger reorder if needed
-        // - Update inventory forecasting
-        // - Create warehouse fulfillment tasks
-        // - Generate packing slip
-        // - Update inventory KPIs and metrics
-        // - Trigger procurement for out-of-stock items
-        // - Create inventory movement records
-        // - Update safety stock levels
-
-        _logger.LogInformation(
-            "[INVENTORY MODULE] DealWonEvent processed successfully. EventId={EventId}",
-            @event.EventId);
 
         await Task.CompletedTask;
     }

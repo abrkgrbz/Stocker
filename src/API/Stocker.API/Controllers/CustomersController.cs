@@ -6,6 +6,7 @@ using Stocker.Application.Common.Exceptions;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Pagination;
+using Stocker.SharedKernel.Authorization;
 using Stocker.API.DTOs.Tenant;
 
 namespace Stocker.API.Controllers.Tenant;
@@ -13,6 +14,7 @@ namespace Stocker.API.Controllers.Tenant;
 [ApiController]
 [Authorize]
 [Route("api/tenants/{tenantId}/customers")]
+[RequireModule("CRM")]
 public class CustomersController : ControllerBase
 {
     private readonly ITenantDbContextFactory _contextFactory;

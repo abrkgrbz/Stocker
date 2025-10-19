@@ -11,10 +11,15 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Register Cross-Module Services (Contract Implementations)
+        services.AddScoped<Shared.Contracts.Finance.IFinanceInvoiceService, Application.Services.FinanceInvoiceService>();
+
+
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>
         {
-            // Register event consumers
+            // Register CRM event consumers for Finance module integration
+            x.AddConsumer<CustomerCreatedEventConsumer>();
             x.AddConsumer<DealWonEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>

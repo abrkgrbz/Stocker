@@ -1,3 +1,4 @@
+using Stocker.SharedKernel.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,9 @@ using Stocker.SharedKernel.Pagination;
 namespace Stocker.Modules.CRM.API.Controllers;
 
 [ApiController]
-[Route("api/crm/[controller]")]
 [Authorize]
+[Route("api/crm/[controller]")]
+[RequireModule("CRM")]
 [ApiExplorerSettings(GroupName = "crm")]
 public class CustomersController : ControllerBase
 {

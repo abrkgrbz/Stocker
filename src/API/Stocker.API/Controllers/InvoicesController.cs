@@ -7,6 +7,7 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Tenant.Enums;
 using Stocker.SharedKernel.Pagination;
+using Stocker.SharedKernel.Authorization;
 using Stocker.API.DTOs.Tenant;
 
 namespace Stocker.API.Controllers.Tenant;
@@ -14,6 +15,7 @@ namespace Stocker.API.Controllers.Tenant;
 [ApiController]
 [Authorize]
 [Route("api/tenants/{tenantId}/invoices")]
+[RequireModule("Finance")]
 public class InvoicesController : ControllerBase
 {
     private readonly ITenantDbContextFactory _contextFactory;

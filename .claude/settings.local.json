@@ -91,7 +91,21 @@
       "Bash(do echo \"[$i/15] Monitoring CRM migration deployment...\")",
       "Bash(git reset:*)",
       "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED\")",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(find:*)",
+      "Bash(Select-String -Pattern \"error|warning|succeeded|failed\")",
+      "Bash(Select-String \"error\")",
+      "Bash(timeout 30 dotnet build:*)",
+      "Bash(Select-Object -First 25)",
+      "Bash(Select-String \"error\" -Context 0,2)",
+      "Bash(dotnet ef migrations:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(Select-String \"error|Build succeeded|Build FAILED\")",
+      "Bash(for file in ActivitiesController.cs CampaignsController.cs CustomersController.cs CustomerSegmentsController.cs CustomerTagsController.cs DealsController.cs DocumentsController.cs LeadsController.cs OpportunitiesController.cs PipelinesController.cs WorkflowsController.cs)",
+      "Bash(do sed -i 's/using Stocker\\.API\\.Middleware;/using Stocker.SharedKernel.Authorization;/g' \"$file\")",
+      "Bash(echo:*)",
+      "Bash(timeout 120 dotnet build:*)",
+      "Bash(timeout 180 dotnet build:*)"
     ],
     "deny": [],
     "ask": []

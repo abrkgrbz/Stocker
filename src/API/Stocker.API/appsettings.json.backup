@@ -1,0 +1,104 @@
+{
+  "ConnectionStrings": {
+    "MasterConnection": "Server=localhost;Database=StockerMasterDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true",
+    "TenantConnection": "Server=localhost;Database=StockerTenantDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true",
+    "DefaultConnection": "Server=localhost;Database=StockerTenantDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true",
+    "HangfireConnection": "Server=localhost;Database=StockerHangfireDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    },
+    "Seq": {
+      "ServerUrl": "http://localhost:5341",
+      "ApiKey": "",
+      "MinimumLevel": "Information"
+    }
+  },
+  "AllowedHosts": "*",
+  "DATA_PROTECTION_KEY": "ThisIsASecureDataProtectionKeyForStockerApplication2024!MustBeAtLeast32Chars",
+  "JwtSettings": {
+    "Secret": "ThisIsAVerySecureSecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm2024!",
+    "Issuer": "Stocker",
+    "Audience": "Stocker",
+    "AccessTokenExpirationMinutes": 60,
+    "RefreshTokenExpirationDays": 7
+  },
+  "PasswordPolicy": {
+    "MinimumLength": 8,
+    "MaximumLength": 128,
+    "RequireUppercase": true,
+    "RequireLowercase": true,
+    "RequireDigit": true,
+    "RequireNonAlphanumeric": true,
+    "RequiredUniqueChars": 4,
+    "PreventCommonPasswords": true,
+    "PreventUserInfoInPassword": true,
+    "PasswordHistoryCount": 5,
+    "PasswordExpirationDays": 90,
+    "MaxFailedAccessAttempts": 5,
+    "LockoutDurationMinutes": 15,
+    "MinimumStrengthScore": 3,
+    "SpecialCharacters": "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  },
+  "EmailSettings": {
+    "SmtpHost": "mail.privateemail.com",
+    "SmtpPort": 465,
+    "SmtpUsername": "info@stoocker.app",
+    "SmtpPassword": "A.bg010203",
+    "EnableSsl": true,
+    "FromEmail": "info@stoocker.app",
+    "FromName": "Stoocker",
+    "UseStartTls": false,
+    "EnableEmail": true,
+    "BaseUrl": "http://localhost:3000",
+    "TemplatesPath": "EmailTemplates"
+  },
+  "Hangfire": {
+    "DashboardPath": "/hangfire",
+    "ServerName": "Stocker-Server",
+    "WorkerCount": 4,
+    "Queues": ["critical", "default", "low"],
+    "RetryAttempts": 3,
+    "JobExpirationCheckInterval": "01:00:00",
+    "CountersAggregateInterval": "00:05:00"
+  },
+  "SecurityHeaders": {
+    "AddXContentTypeOptions": true,
+    "AddXFrameOptions": true,
+    "XFrameOptionsValue": "DENY",
+    "AddXXssProtection": true,
+    "AddReferrerPolicy": true,
+    "ReferrerPolicyValue": "strict-origin-when-cross-origin",
+    "AddContentSecurityPolicy": true,
+    "AddStrictTransportSecurity": true,
+    "HstsMaxAge": 31536000,
+    "HstsIncludeSubDomains": true,
+    "HstsPreload": false,
+    "AddXPermittedCrossDomainPolicies": true,
+    "AddPermissionsPolicy": true
+  },
+  "TenantRateLimiting": {
+    "Algorithm": "SlidingWindow",
+    "PermitLimit": 100,
+    "WindowSeconds": 60,
+    "QueueLimit": 5,
+    "SegmentsPerWindow": 4,
+    "TokensPerPeriod": 10,
+    "ReplenishmentPeriodSeconds": 1
+  },
+  "RabbitMQ": {
+    "Host": "localhost",
+    "VirtualHost": "/",
+    "Username": "guest",
+    "Password": "guest",
+    "Port": 5672,
+    "UseSsl": false,
+    "Heartbeat": 60,
+    "RequestedConnectionTimeout": 30000,
+    "PrefetchCount": 16,
+    "RetryCount": 3,
+    "RetryInterval": 5
+  }
+}
