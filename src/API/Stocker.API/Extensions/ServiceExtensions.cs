@@ -202,7 +202,7 @@ public static class ServiceExtensions
     /// </summary>
     public static IServiceCollection AddMonitoringServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Health Checks
+        // Health Checks (including RabbitMQ from MassTransit)
         services.AddHealthChecks();
 
         // Add metrics (Prometheus format)
