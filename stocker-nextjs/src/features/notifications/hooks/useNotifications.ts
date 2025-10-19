@@ -116,7 +116,8 @@ export const useNotifications = create<NotificationState>((set, get) => ({
       const count = await notificationsApi.getUnreadCount();
       set({ unreadCount: count });
     } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+      // Silently fail - notifications are optional feature
+      console.warn('⚠️ Notification service unavailable:', error);
     }
   },
 }));

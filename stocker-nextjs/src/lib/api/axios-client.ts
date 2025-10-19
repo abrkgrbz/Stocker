@@ -20,15 +20,35 @@ apiClient.interceptors.request.use(
     // ✅ NO TOKEN READING - Browser automatically sends HttpOnly cookies
     // Backend will read access_token from cookie
 
-    // Add tenant code from cookie (readable, not HttpOnly)
+    // Add tenant code from cookie or subdomain
     if (typeof window !== 'undefined' && config.headers) {
-      // Try to get tenant-code from cookie
+      let tenantCode: string | null = null;
+
+      // 1. Try to get tenant-code from cookie (primary source)
       const cookies = document.cookie.split(';');
       const tenantCodeCookie = cookies.find(c => c.trim().startsWith('tenant-code='));
 
       if (tenantCodeCookie) {
-        const tenantCode = tenantCodeCookie.split('=')[1];
+        tenantCode = tenantCodeCookie.split('=')[1];
+      }
+
+      // 2. Fallback: Extract tenant code from subdomain
+      if (!tenantCode) {
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+
+        // If subdomain exists (e.g., abg-tech.stoocker.app)
+        if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'auth') {
+          tenantCode = parts[0]; // Extract subdomain as tenant code
+        }
+      }
+
+      // Set tenant code header
+      if (tenantCode) {
         config.headers['X-Tenant-Code'] = tenantCode;
+        console.log('🏢 Tenant Code:', tenantCode, 'for', config.url);
+      } else {
+        console.warn('⚠️ No tenant code found for request:', config.url);
       }
 
       // Fallback to localStorage for backward compatibility
