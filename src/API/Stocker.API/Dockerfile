@@ -18,6 +18,7 @@ COPY src/Modules/Stocker.Modules.Sales/*.csproj ./src/Modules/Stocker.Modules.Sa
 COPY src/Modules/Stocker.Modules.Purchase/*.csproj ./src/Modules/Stocker.Modules.Purchase/
 COPY src/Modules/Stocker.Modules.Finance/*.csproj ./src/Modules/Stocker.Modules.Finance/
 COPY src/Modules/Stocker.Modules.HR/*.csproj ./src/Modules/Stocker.Modules.HR/
+COPY src/Shared/Stocker.Shared.Contracts/*.csproj ./src/Shared/Stocker.Shared.Contracts/
 
 # Restore dependencies
 RUN dotnet restore
