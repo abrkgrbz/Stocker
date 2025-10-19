@@ -41,6 +41,11 @@ public class CRMDbContext : DbContext
     public DbSet<LeadScoringRule> LeadScoringRules { get; set; } = null!;
     public DbSet<LeadScoringHistory> LeadScoringHistories { get; set; } = null!;
 
+    // Customer Segmentation
+    public DbSet<CustomerSegment> CustomerSegments { get; set; } = null!;
+    public DbSet<CustomerSegmentMember> CustomerSegmentMembers { get; set; } = null!;
+    public DbSet<CustomerTag> CustomerTags { get; set; } = null!;
+
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
         ITenantService tenantService)
@@ -91,6 +96,11 @@ public class CRMDbContext : DbContext
             // Lead scoring entities
             modelBuilder.Entity<LeadScoringRule>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<LeadScoringHistory>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Customer segmentation entities
+            modelBuilder.Entity<CustomerSegment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CustomerSegmentMember>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CustomerTag>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

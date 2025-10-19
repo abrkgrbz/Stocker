@@ -244,3 +244,29 @@ public enum NoteType
     Financial = 7,
     Other = 8
 }
+
+public enum SegmentType
+{
+    Static = 1,
+    Dynamic = 2
+}
+
+public enum SegmentMembershipReason
+{
+    Manual = 1,
+    AutoCriteria = 2,
+    Import = 3,
+    Workflow = 4
+}
+
+public enum SegmentColor
+{
+    Red = 1,
+    Orange = 2,
+    Yellow = 3,
+    Green = 4,
+    Blue = 5,
+    Purple = 6,
+    Pink = 7,
+    Gray = 8
+}
