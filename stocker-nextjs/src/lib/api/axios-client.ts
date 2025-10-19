@@ -20,10 +20,20 @@ apiClient.interceptors.request.use(
     // ✅ NO TOKEN READING - Browser automatically sends HttpOnly cookies
     // Backend will read access_token from cookie
 
-    // Add tenant identifier from localStorage (not sensitive)
-    if (typeof window !== 'undefined') {
+    // Add tenant code from cookie (readable, not HttpOnly)
+    if (typeof window !== 'undefined' && config.headers) {
+      // Try to get tenant-code from cookie
+      const cookies = document.cookie.split(';');
+      const tenantCodeCookie = cookies.find(c => c.trim().startsWith('tenant-code='));
+
+      if (tenantCodeCookie) {
+        const tenantCode = tenantCodeCookie.split('=')[1];
+        config.headers['X-Tenant-Code'] = tenantCode;
+      }
+
+      // Fallback to localStorage for backward compatibility
       const tenantId = localStorage.getItem('tenantId');
-      if (tenantId && config.headers) {
+      if (tenantId) {
         config.headers['X-Tenant-Id'] = tenantId;
       }
     }
