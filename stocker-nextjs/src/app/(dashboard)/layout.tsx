@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -60,6 +61,29 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       key: '/dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
+    },
+    {
+      key: 'crm',
+      icon: <TeamOutlined />,
+      label: 'CRM',
+      children: [
+        {
+          key: '/crm/customers',
+          label: 'Customers',
+        },
+        {
+          key: '/crm/leads',
+          label: 'Leads',
+        },
+        {
+          key: '/crm/deals',
+          label: 'Deals',
+        },
+        {
+          key: '/crm/activities',
+          label: 'Activities',
+        },
+      ],
     },
     {
       key: '/modules',
