@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Infrastructure.EventConsumers;
 using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.Modules.CRM.Infrastructure.Persistence.Repositories;
 using Stocker.Modules.CRM.Infrastructure.Services;
@@ -48,8 +49,9 @@ public static class DependencyInjection
         // Add MassTransit with RabbitMQ
         services.AddMassTransit(x =>
         {
-            // Register consumers here (will add later)
-            // x.AddConsumer<SampleEventConsumer>();
+            // Register event consumers
+            x.AddConsumer<CustomerCreatedEventConsumer>();
+            x.AddConsumer<CustomerUpdatedEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
