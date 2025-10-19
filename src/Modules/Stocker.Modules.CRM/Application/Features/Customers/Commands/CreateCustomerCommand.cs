@@ -1,8 +1,10 @@
 using FluentValidation;
+using MassTransit;
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Shared.Events.CRM;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -68,13 +70,16 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public CreateCustomerCommandHandler(
         ICustomerRepository customerRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+        SharedKernel.Interfaces.IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
@@ -135,6 +140,23 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
         // Save to repository
         await _customerRepository.AddAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish integration event
+        var integrationEvent = new CustomerCreatedEvent(
+            CustomerId: customer.Id,
+            TenantId: customer.TenantId,
+            CompanyName: customer.CompanyName,
+            Email: customer.Email,
+            Phone: customer.Phone,
+            Website: customer.Website,
+            Industry: customer.Industry,
+            AnnualRevenue: customer.AnnualRevenue,
+            NumberOfEmployees: customer.NumberOfEmployees,
+            CreatedAt: customer.CreatedAt,
+            CreatedBy: Guid.Empty // TODO: Get from current user context
+        );
+
+        await _publishEndpoint.Publish(integrationEvent, cancellationToken);
 
         // Map to DTO
         var customerDto = MapToDto(customer);

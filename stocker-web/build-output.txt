@@ -1,7 +1,0 @@
-
-> stocker-web@0.0.0 build
-> chcp 65001 && vite build 2
-
-Active code page: 65001
-[36mvite v7.1.4 [32mbuilding for production...[36m[39m
-[32m✓[39m 0 modules transformed.

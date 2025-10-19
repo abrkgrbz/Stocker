@@ -1,1 +1,0 @@
-export { ForgotPasswordModal } from './ForgotPasswordModal';

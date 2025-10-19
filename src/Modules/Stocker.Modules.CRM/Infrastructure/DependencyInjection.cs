@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,30 @@ public static class DependencyInjection
 
         // Register Tenant CRM Database Service
         services.AddScoped<ITenantCRMDatabaseService, TenantCRMDatabaseService>();
+
+        // Add MassTransit with RabbitMQ
+        services.AddMassTransit(x =>
+        {
+            // Register consumers here (will add later)
+            // x.AddConsumer<SampleEventConsumer>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var rabbitMqHost = configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost";
+                var rabbitMqVirtualHost = configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/";
+                var rabbitMqUsername = configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
+                var rabbitMqPassword = configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
+
+                cfg.Host(rabbitMqHost, rabbitMqVirtualHost, h =>
+                {
+                    h.Username(rabbitMqUsername);
+                    h.Password(rabbitMqPassword);
+                });
+
+                // Configure endpoints
+                cfg.ConfigureEndpoints(context);
+            });
+        });
 
         return services;
     }
