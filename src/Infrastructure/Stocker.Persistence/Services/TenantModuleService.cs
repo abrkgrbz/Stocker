@@ -44,11 +44,11 @@ public class TenantModuleService : ITenantModuleService
         // Get tenant registration with selected package and its modules
         var tenantRegistration = await _masterDbContext.TenantRegistrations
             .Include(tr => tr.SelectedPackage)
-            .FirstOrDefaultAsync(tr => tr.Id == tenantId, cancellationToken);
+            .FirstOrDefaultAsync(tr => tr.TenantId == tenantId, cancellationToken);
 
         if (tenantRegistration == null)
         {
-            _logger.LogWarning("Tenant {TenantId} not found in database", tenantId);
+            _logger.LogWarning("Tenant registration not found for TenantId {TenantId}", tenantId);
             return new List<string>();
         }
 

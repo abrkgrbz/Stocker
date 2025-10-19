@@ -114,7 +114,8 @@
       "Bash(do echo \"[$i/15] Monitoring Docker Compose fix deployment (commit a2716d61)...\")",
       "Bash(jobs:*)",
       "Bash(do)",
-      "Bash(Select-Object -First 15)"
+      "Bash(Select-Object -First 15)",
+      "Bash(do echo \"[$i/15] Monitoring ModuleAuth fix deployment...\")"
     ],
     "deny": [],
     "ask": []
