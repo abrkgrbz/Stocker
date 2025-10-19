@@ -8,6 +8,9 @@ using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.RateLimiting;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
+using Stocker.Modules.Sales.Infrastructure;
+using Stocker.Modules.Finance.Infrastructure;
+using Stocker.Modules.Inventory.Infrastructure;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 
@@ -73,6 +76,15 @@ builder.Services.AddMultiTenancy();
 
 // CRM Module
 builder.Services.AddCRMModule(builder.Configuration);
+
+// Sales Module
+builder.Services.AddSalesInfrastructure(builder.Configuration);
+
+// Finance Module
+builder.Services.AddFinanceInfrastructure(builder.Configuration);
+
+// Inventory Module
+builder.Services.AddInventoryInfrastructure(builder.Configuration);
 
 // SignalR Services
 builder.Services.AddSignalRServices();

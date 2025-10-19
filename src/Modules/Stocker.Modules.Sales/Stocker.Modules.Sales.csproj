@@ -7,10 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.4.0" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\Stocker.Modules.Inventory\Stocker.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\..\Shared\Stocker.Shared.Events\Stocker.Shared.Events.csproj" />
   </ItemGroup>
 
 </Project>

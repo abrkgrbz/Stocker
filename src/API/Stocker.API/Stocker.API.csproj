@@ -52,6 +52,9 @@
     <ProjectReference Include="..\..\Infrastructure\Stocker.Persistence\Stocker.Persistence.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Stocker.SignalR\Stocker.SignalR.csproj" />
     <ProjectReference Include="..\..\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.Sales\Stocker.Modules.Sales.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.Finance\Stocker.Modules.Finance.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.Inventory\Stocker.Modules.Inventory.csproj" />
   </ItemGroup>
 
 </Project>
