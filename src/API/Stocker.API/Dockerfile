@@ -23,8 +23,9 @@ COPY src/Shared/Stocker.Shared.Contracts/*.csproj ./src/Shared/Stocker.Shared.Co
 # Restore dependencies
 RUN dotnet restore
 
-# Copy all source code
-COPY . .
+# Copy solution file and all source code
+COPY Stocker.sln ./
+COPY src/ ./src/
 
 # Install EF Core tools for migration
 RUN dotnet tool install --global dotnet-ef
