@@ -105,7 +105,15 @@
       "Bash(do sed -i 's/using Stocker\\.API\\.Middleware;/using Stocker.SharedKernel.Authorization;/g' \"$file\")",
       "Bash(echo:*)",
       "Bash(timeout 120 dotnet build:*)",
-      "Bash(timeout 180 dotnet build:*)"
+      "Bash(timeout 180 dotnet build:*)",
+      "Bash(do echo \"[$i/15] Monitoring Phase 4.5 deployment...\")",
+      "Bash(do echo \"[$i/15] Monitoring Dockerfile fix deployment...\")",
+      "Bash(for i in {1..20})",
+      "Bash(do echo \"[$i/20] Monitoring ROOT Dockerfile deployment (commit 877c1d92)...\")",
+      "Bash(timeout 120 dotnet publish:*)",
+      "Bash(do echo \"[$i/15] Monitoring Docker Compose fix deployment (commit a2716d61)...\")",
+      "Bash(jobs:*)",
+      "Bash(do)"
     ],
     "deny": [],
     "ask": []
