@@ -111,6 +111,42 @@ public class TenantModuleService : ITenantModuleService
         return hasAccess;
     }
 
+    public async Task<TenantModuleInfo?> GetTenantByCodeAsync(string tenantCode, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantCode))
+        {
+            _logger.LogWarning("Tenant code is empty");
+            return null;
+        }
+
+        _logger.LogDebug("Looking up tenant by code: {TenantCode}", tenantCode);
+
+        // Query tenant from master database by code (case-insensitive)
+        var tenant = await _masterDbContext.Tenants
+            .Where(t => t.Code.ToLower() == tenantCode.ToLower())
+            .Select(t => new TenantModuleInfo
+            {
+                Id = t.Id,
+                Code = t.Code,
+                Name = t.Name
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (tenant == null)
+        {
+            _logger.LogWarning("Tenant not found for code: {TenantCode}", tenantCode);
+            return null;
+        }
+
+        _logger.LogInformation(
+            "Found tenant {TenantId} ({TenantName}) for code {TenantCode}",
+            tenant.Id,
+            tenant.Name,
+            tenantCode);
+
+        return tenant;
+    }
+
     /// <summary>
     /// Invalidates the cache for a specific tenant's modules
     /// Call this when tenant's module subscription changes

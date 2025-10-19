@@ -42,19 +42,44 @@ public class ModuleAuthorizationMiddleware
             return;
         }
 
-        // Get tenant ID from claims
+        // Get tenant ID from claims OR fallback to header
         var tenantIdClaim = context.User.FindFirst("TenantId")?.Value;
-        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out var tenantId))
+        Guid tenantId;
+
+        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out tenantId))
         {
-            _logger.LogWarning("TenantId claim not found or invalid for user {UserId}",
-                context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsJsonAsync(new
+            // Fallback: Try to get tenant from X-Tenant-Code header
+            var tenantCode = context.Request.Headers["X-Tenant-Code"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(tenantCode))
             {
-                error = "Tenant information not found",
-                message = "Unable to verify tenant subscription"
-            });
-            return;
+                _logger.LogWarning("TenantId claim and X-Tenant-Code header both missing for user {UserId}",
+                    context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = "Tenant information not found",
+                    message = "Unable to verify tenant subscription"
+                });
+                return;
+            }
+
+            // Resolve tenant ID from tenant code
+            var tenant = await tenantModuleService.GetTenantByCodeAsync(tenantCode);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant not found for code {TenantCode}", tenantCode);
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = "Tenant not found",
+                    message = $"No tenant found with code: {tenantCode}"
+                });
+                return;
+            }
+
+            tenantId = tenant.Id;
+            _logger.LogInformation("Resolved tenant ID {TenantId} from code {TenantCode}", tenantId, tenantCode);
         }
 
         // Phase 4.5: Get tenant-specific subscribed modules from database
