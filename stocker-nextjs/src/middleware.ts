@@ -6,6 +6,7 @@ export function middleware(request: NextRequest) {
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001'
   const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
   const isDev = process.env.NODE_ENV === 'development'
+  const pathname = request.nextUrl.pathname
 
   // Extract just the domain without protocol and port
   const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
@@ -20,6 +21,34 @@ export function middleware(request: NextRequest) {
   const subdomain = hostname.split('.')[0]
   const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
 
+  // Protected routes that require authentication
+  const protectedRoutes = ['/dashboard', '/crm', '/sales', '/inventory', '/finance', '/settings']
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+  // Public routes that don't require auth
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing']
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || pathname === '/'
+
+  // Check authentication (tenant-code cookie exists)
+  const tenantCodeCookie = request.cookies.get('tenant-code')
+  const isAuthenticated = !!tenantCodeCookie
+
+  // Redirect unauthenticated users from protected routes to login
+  if (isProtectedRoute && !isAuthenticated) {
+    const url = request.nextUrl.clone()
+    if (isDev) {
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+    } else {
+      // Production: redirect to auth subdomain
+      url.protocol = 'https:'
+      url.host = authHostname
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+    }
+    return NextResponse.redirect(url, 307)
+  }
+
   // Redirect www to non-www on root domain
   if (hostname === `www.${baseDomain}`) {
     const url = request.nextUrl.clone()
@@ -29,8 +58,6 @@ export function middleware(request: NextRequest) {
 
   // Tenant subdomain: redirect to dashboard and set tenant header
   if (isTenantDomain && !isDev) {
-    const pathname = request.nextUrl.pathname
-
     // Redirect root path to dashboard
     if (pathname === '/') {
       const url = request.nextUrl.clone()
@@ -39,7 +66,6 @@ export function middleware(request: NextRequest) {
     }
 
     // For all other tenant subdomain requests, set tenant code header
-    const url = request.nextUrl.clone()
     const response = NextResponse.next()
     response.headers.set('x-tenant-code', subdomain)
 
@@ -48,8 +74,6 @@ export function middleware(request: NextRequest) {
 
   // Root domain: redirect auth routes to auth subdomain
   if (isRootDomain && !isDev) {
-    const pathname = request.nextUrl.pathname
-
     // Redirect /login, /register to auth subdomain
     if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/login/') || pathname.startsWith('/register/')) {
       const url = request.nextUrl.clone()
