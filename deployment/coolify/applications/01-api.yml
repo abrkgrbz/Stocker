@@ -7,7 +7,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./src/API/Stocker.API/Dockerfile
     container_name: stocker-api
     restart: unless-stopped
     environment:

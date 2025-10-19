@@ -2,8 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY *.sln ./
+# Copy solution and project files from repository root
+# Context is repository root, so paths are relative to root
+COPY Stocker.sln ./
 COPY src/API/Stocker.API/*.csproj ./src/API/Stocker.API/
 COPY src/Core/Stocker.Application/*.csproj ./src/Core/Stocker.Application/
 COPY src/Core/Stocker.Domain/*.csproj ./src/Core/Stocker.Domain/
@@ -24,8 +25,7 @@ COPY src/Shared/Stocker.Shared.Events/*.csproj ./src/Shared/Stocker.Shared.Event
 # Restore dependencies
 RUN dotnet restore
 
-# Copy solution file and all source code
-COPY Stocker.sln ./
+# Copy all source code - IMPORTANT: Prevents /src/src/ duplication
 COPY src/ ./src/
 
 # Install EF Core tools for migration
