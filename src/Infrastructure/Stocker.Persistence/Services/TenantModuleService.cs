@@ -100,15 +100,45 @@ public class TenantModuleService : ITenantModuleService
         }
 
         var subscribedModules = await GetSubscribedModulesAsync(tenantId, cancellationToken);
-        var hasAccess = subscribedModules.Contains(moduleName, StringComparer.OrdinalIgnoreCase);
+
+        // Normalize module names for comparison (remove common suffixes like "Modülü", "Module", etc.)
+        var normalizedRequestedModule = NormalizeModuleName(moduleName);
+        var hasAccess = subscribedModules.Any(m =>
+            NormalizeModuleName(m).Equals(normalizedRequestedModule, StringComparison.OrdinalIgnoreCase));
 
         _logger.LogDebug(
-            "Tenant {TenantId} module access check for {Module}: {HasAccess}",
+            "Tenant {TenantId} module access check for {Module} (normalized: {NormalizedModule}): {HasAccess}. Subscribed modules: {SubscribedModules}",
             tenantId,
             moduleName,
-            hasAccess);
+            normalizedRequestedModule,
+            hasAccess,
+            string.Join(", ", subscribedModules));
 
         return hasAccess;
+    }
+
+    /// <summary>
+    /// Normalizes module names by removing common suffixes and trimming whitespace
+    /// Handles Turkish/English variations like "CRM Modülü" → "CRM", "Sales Module" → "Sales"
+    /// </summary>
+    private static string NormalizeModuleName(string moduleName)
+    {
+        if (string.IsNullOrWhiteSpace(moduleName))
+            return string.Empty;
+
+        var normalized = moduleName.Trim();
+
+        // Remove common Turkish/English suffixes
+        var suffixesToRemove = new[] { " Modülü", " Module", " Modulu" };
+        foreach (var suffix in suffixesToRemove)
+        {
+            if (normalized.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                normalized = normalized.Substring(0, normalized.Length - suffix.Length).Trim();
+            }
+        }
+
+        return normalized;
     }
 
     public async Task<TenantModuleInfo?> GetTenantByCodeAsync(string tenantCode, CancellationToken cancellationToken = default)
