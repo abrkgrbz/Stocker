@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -13,6 +13,8 @@ import {
   Row,
   Col,
   Statistic,
+  Alert,
+  Skeleton,
 } from 'antd';
 import {
   PlusOutlined,
@@ -22,90 +24,38 @@ import {
   UserOutlined,
   TeamOutlined,
   RiseOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
+import { useCustomers } from '@/hooks/useCRM';
+import type { Customer } from '@/lib/api/services/crm.service';
 
 const { Title } = Typography;
 
-// Customer type based on backend API
-interface Customer {
-  id: number;
-  companyName: string;
-  contactPerson: string | null;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  city: string | null;
-  country: string | null;
-  customerType: 'Individual' | 'Corporate';
-  status: 'Active' | 'Inactive' | 'Potential';
-  creditLimit: number;
-  totalPurchases: number;
-  createdAt: string;
-}
-
 export default function CustomersPage() {
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // TODO: Connect to real API
-  // const { data, isLoading } = useQuery({
-  //   queryKey: ['customers', currentPage, pageSize, searchText],
-  //   queryFn: () => apiService.get('/crm/customers', {
-  //     params: { pageNumber: currentPage, pageSize, search: searchText }
-  //   })
-  // });
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-  // Mock data for now
-  const mockCustomers: Customer[] = [
-    {
-      id: 1,
-      companyName: 'Acme Corporation',
-      contactPerson: 'John Doe',
-      email: 'john@acme.com',
-      phone: '+90 555 123 4567',
-      address: '123 Main St',
-      city: 'Istanbul',
-      country: 'Turkey',
-      customerType: 'Corporate',
-      status: 'Active',
-      creditLimit: 50000,
-      totalPurchases: 125000,
-      createdAt: '2024-01-15T10:30:00Z',
-    },
-    {
-      id: 2,
-      companyName: 'Tech Solutions Ltd',
-      contactPerson: 'Jane Smith',
-      email: 'jane@techsol.com',
-      phone: '+90 555 987 6543',
-      address: '456 Tech Ave',
-      city: 'Ankara',
-      country: 'Turkey',
-      customerType: 'Corporate',
-      status: 'Active',
-      creditLimit: 75000,
-      totalPurchases: 230000,
-      createdAt: '2024-02-20T14:45:00Z',
-    },
-    {
-      id: 3,
-      companyName: 'Global Trade Inc',
-      contactPerson: 'Ahmed Hassan',
-      email: 'ahmed@globaltrade.com',
-      phone: '+90 555 456 7890',
-      address: '789 Commerce Blvd',
-      city: 'Izmir',
-      country: 'Turkey',
-      customerType: 'Corporate',
-      status: 'Potential',
-      creditLimit: 100000,
-      totalPurchases: 0,
-      createdAt: '2024-03-10T09:15:00Z',
-    },
-  ];
+  // Fetch customers from API
+  const { data, isLoading, error, refetch } = useCustomers({
+    pageNumber: currentPage,
+    pageSize,
+    search: debouncedSearch || undefined,
+  });
+
+  const customers = data?.items || [];
+  const totalCount = data?.totalCount || 0;
 
   const columns: ColumnsType<Customer> = [
     {
@@ -225,44 +175,84 @@ export default function CustomersPage() {
         <Title level={2} style={{ margin: 0 }}>
           Customers
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} size="large">
-          Add Customer
-        </Button>
+        <Space>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            loading={isLoading}
+          >
+            Refresh
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} size="large">
+            Add Customer
+          </Button>
+        </Space>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          message="Failed to load customers"
+          description={
+            error instanceof Error
+              ? error.message
+              : 'An error occurred while fetching customers. Please try again.'
+          }
+          type="error"
+          showIcon
+          closable
+          action={
+            <Button size="small" danger onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+          className="mb-6"
+        />
+      )}
 
       {/* Stats Cards */}
       <Row gutter={16} className="mb-6">
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic
-              title="Total Customers"
-              value={mockCustomers.length}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
+            {isLoading ? (
+              <Skeleton active paragraph={{ rows: 1 }} />
+            ) : (
+              <Statistic
+                title="Total Customers"
+                value={totalCount}
+                prefix={<TeamOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            )}
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic
-              title="Active Customers"
-              value={
-                mockCustomers.filter((c) => c.status === 'Active').length
-              }
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
+            {isLoading ? (
+              <Skeleton active paragraph={{ rows: 1 }} />
+            ) : (
+              <Statistic
+                title="Active Customers"
+                value={customers.filter((c) => c.status === 'Active').length}
+                prefix={<UserOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            )}
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic
-              title="Total Revenue"
-              value={mockCustomers.reduce((sum, c) => sum + c.totalPurchases, 0)}
-              prefix="₺"
-              suffix={<RiseOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
+            {isLoading ? (
+              <Skeleton active paragraph={{ rows: 1 }} />
+            ) : (
+              <Statistic
+                title="Total Revenue"
+                value={customers.reduce((sum, c) => sum + c.totalPurchases, 0)}
+                prefix="₺"
+                suffix={<RiseOutlined />}
+                valueStyle={{ color: '#722ed1' }}
+              />
+            )}
           </Card>
         </Col>
       </Row>
@@ -291,12 +281,12 @@ export default function CustomersPage() {
       <Card>
         <Table
           columns={columns}
-          dataSource={mockCustomers}
+          dataSource={customers}
           rowKey="id"
           pagination={{
             current: currentPage,
             pageSize: pageSize,
-            total: mockCustomers.length,
+            total: totalCount,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} customers`,
             onChange: (page, size) => {
@@ -304,7 +294,7 @@ export default function CustomersPage() {
               setPageSize(size);
             },
           }}
-          loading={false} // TODO: Connect to isLoading from API
+          loading={isLoading}
         />
       </Card>
     </div>
