@@ -214,46 +214,6 @@ const TenantMigrations: React.FC = () => {
       setLoading(false);
     }
 
-    /* ORIGINAL Modal.confirm CODE - NOT RENDERING
-    Modal.confirm({
-      title: 'Migration Çalıştır',
-      content: 'Bu migration\'ı çalıştırmak istediğinizden emin misiniz?',
-      okText: 'Çalıştır',
-      cancelText: 'İptal',
-      okType: 'primary',
-      icon: <DatabaseOutlined />,
-      getContainer: () => document.body,
-      centered: true,
-      zIndex: 10000,
-      onOk: async () => {
-        console.log('✅ [CONFIRM OK] User confirmed migration');
-        setLoading(true);
-        try {
-          // Call real API
-          const migration = migrations.find(m => m.id === migrationId);
-          console.log('🚀 [API CALL] Starting migration for tenant:', migrationId);
-          console.log('🚀 [API CALL] Migration object:', migration);
-          const result = await tenantService.migrateTenantDatabase(migrationId);
-          console.log('✅ [API SUCCESS] Migration result:', result);
-          message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
-          fetchMigrations();
-        } catch (error: any) {
-          console.error('❌ [API ERROR] Migration error:', error);
-          console.error('❌ [API ERROR] Error details:', {
-            response: error?.response,
-            message: error?.message,
-            stack: error?.stack
-          });
-          const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
-          message.error(errorMsg);
-        } finally {
-          setLoading(false);
-        }
-      },
-      onCancel: () => {
-        console.log('❌ [CONFIRM CANCEL] User cancelled migration');
-      }
-    });
   };
 
   const handleRollback = async (migrationId: string) => {
