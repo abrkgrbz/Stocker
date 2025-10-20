@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.Domain\Stocker.Domain.csproj" />
     <ProjectReference Include="..\..\Core\Stocker.SharedKernel\Stocker.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj" />
   </ItemGroup>
 
 </Project>

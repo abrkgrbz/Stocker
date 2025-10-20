@@ -116,7 +116,12 @@
       "Bash(do)",
       "Bash(Select-Object -First 15)",
       "Bash(do echo \"[$i/15] Monitoring ModuleAuth fix deployment...\")",
-      "Bash(do echo \"[$i/15] Monitoring TenantId fix deployment...\")"
+      "Bash(do echo \"[$i/15] Monitoring TenantId fix deployment...\")",
+      "Bash(do echo \"[$i/20] Monitoring module normalization deployment (commit 6bf60232)...\")",
+      "Bash(do echo \"[$i/15] Monitoring SQL Server resilience deployment (commit 7e9028a1)...\")",
+      "Bash(do echo \"[$i/15] Monitoring CRM tenant database fix deployment (commit 18edd241)...\")",
+      "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED\")",
+      "Bash(Select-Object -First 30)"
     ],
     "deny": [],
     "ask": []
