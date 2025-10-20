@@ -27,7 +27,7 @@ export default function NotificationList({ onNotificationClick }: NotificationLi
     );
   }
 
-  if (notifications.length === 0) {
+  if (!notifications || notifications.length === 0) {
     return (
       <div className="p-8">
         <Empty
