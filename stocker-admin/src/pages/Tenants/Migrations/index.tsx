@@ -167,36 +167,11 @@ const TenantMigrations: React.FC = () => {
   };
 
   const fetchHistory = async () => {
-    // Simulated data
-    setHistory([
-      {
-        id: '1',
-        migrationId: '1',
-        action: 'apply',
-        timestamp: '2024-01-15T10:30:00',
-        user: 'System',
-        status: 'success',
-        details: 'Migration applied successfully'
-      },
-      {
-        id: '2',
-        migrationId: '2',
-        action: 'apply',
-        timestamp: '2024-01-14T15:20:00',
-        user: 'admin@example.com',
-        status: 'success',
-        details: 'Data migration completed'
-      },
-      {
-        id: '3',
-        migrationId: '5',
-        action: 'apply',
-        timestamp: '2024-01-13T14:30:00',
-        user: 'admin@example.com',
-        status: 'failed',
-        details: 'Foreign key constraint violation'
-      }
-    ]);
+    // TODO: Real API integration for migration history
+    // For now, showing no history to avoid confusion with mock data
+    console.log('[Migration UI] Fetching migration history...');
+    setHistory([]);
+    console.log('[Migration UI] History cleared (no real API yet)');
   };
 
   const handleRunMigration = async (migrationId: string) => {
