@@ -10,23 +10,43 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Drop the duplicate foreign key (DealId1) first to avoid circular cascade paths
-            migrationBuilder.DropForeignKey(
-                name: "FK_DealProducts_Deals_DealId1",
-                schema: "crm",
-                table: "DealProducts");
+            // Use raw SQL for idempotent migration (safe to run on databases that already have or don't have the duplicate FK)
 
-            // Drop the duplicate DealId1 column
-            migrationBuilder.DropColumn(
-                name: "DealId1",
-                schema: "crm",
-                table: "DealProducts");
+            // Drop the duplicate foreign key (DealId1) if it exists
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM sys.foreign_keys
+                    WHERE name = 'FK_DealProducts_Deals_DealId1'
+                    AND parent_object_id = OBJECT_ID('crm.DealProducts')
+                )
+                BEGIN
+                    ALTER TABLE [crm].[DealProducts] DROP CONSTRAINT [FK_DealProducts_Deals_DealId1]
+                END
+            ");
 
-            // Now fix the main DealId foreign key to use NO ACTION instead of CASCADE
-            migrationBuilder.DropForeignKey(
-                name: "FK_DealProducts_Deals_DealId",
-                schema: "crm",
-                table: "DealProducts");
+            // Drop the duplicate DealId1 column if it exists
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID('crm.DealProducts')
+                    AND name = 'DealId1'
+                )
+                BEGIN
+                    ALTER TABLE [crm].[DealProducts] DROP COLUMN [DealId1]
+                END
+            ");
+
+            // Drop and recreate the main DealId foreign key with NO ACTION instead of CASCADE
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM sys.foreign_keys
+                    WHERE name = 'FK_DealProducts_Deals_DealId'
+                    AND parent_object_id = OBJECT_ID('crm.DealProducts')
+                )
+                BEGIN
+                    ALTER TABLE [crm].[DealProducts] DROP CONSTRAINT [FK_DealProducts_Deals_DealId]
+                END
+            ");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_DealProducts_Deals_DealId",
@@ -35,7 +55,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 column: "DealId",
                 principalSchema: "crm",
                 principalTable: "Deals",
-                principalColumn: "Id");
+                principalColumn: "Id",
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />
