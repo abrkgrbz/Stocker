@@ -262,10 +262,16 @@ public class PublicController : ControllerBase
 
             // Get tenant registrations where this email is the admin
             // This ensures users only see tenants they created or have access to
-            var tenantRegistrations = await _masterContext.TenantRegistrations
-                .Where(r => r.AdminEmail.Value.ToLower() == normalizedEmail && r.TenantId.HasValue)
-                .Select(r => r.TenantId!.Value)
+            // Note: Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
+            var allRegistrations = await _masterContext.TenantRegistrations
+                .Where(r => r.TenantId.HasValue)
+                .Select(r => new { Email = r.AdminEmail.Value, TenantId = r.TenantId!.Value })
                 .ToListAsync();
+
+            var tenantRegistrations = allRegistrations
+                .Where(r => r.Email.ToLowerInvariant() == normalizedEmail)
+                .Select(r => r.TenantId)
+                .ToList();
 
             // Get tenant details for these registrations
             var tenantsData = await _masterContext.Tenants
