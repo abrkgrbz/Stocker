@@ -325,7 +325,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     Tag = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -350,7 +350,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Reason = table.Column<int>(type: "int", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -490,7 +490,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     ScoreChange = table.Column<int>(type: "int", nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ScoredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -597,7 +597,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     Priority = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -725,7 +725,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     IsRecurring = table.Column<bool>(type: "bit", nullable: false),
                     RecurringPeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecurringCycles = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -779,7 +779,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     MeetingLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TaskProgress = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     TaskOutcome = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                                                                                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -845,7 +845,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     HasConverted = table.Column<bool>(type: "bit", nullable: false),
                     ConvertedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ConvertedOpportunityId = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                                                                                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -876,7 +876,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalPriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -911,7 +911,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     CreatedById = table.Column<int>(type: "int", nullable: false),
                     LastModifiedById = table.Column<int>(type: "int", nullable: true),
                     AttachmentUrls = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                                                                                                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
