@@ -208,11 +208,15 @@ const TenantMigrations: React.FC = () => {
         try {
           // Call real API
           const migration = migrations.find(m => m.id === migrationId);
+          console.log('Starting migration for tenant:', migrationId);
           const result = await tenantService.migrateTenantDatabase(migrationId);
+          console.log('Migration result:', result);
           message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
           fetchMigrations();
-        } catch (error) {
-          message.error('Migration başarısız');
+        } catch (error: any) {
+          console.error('Migration error:', error);
+          const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
+          message.error(errorMsg);
         } finally {
           setLoading(false);
         }
@@ -508,10 +512,15 @@ const TenantMigrations: React.FC = () => {
                     onOk: async () => {
                       setLoading(true);
                       try {
+                        console.log('Starting migration for all tenants');
                         const result = await tenantService.migrateAllTenants();
+                        console.log('Migrate all result:', result);
                         message.success(result.message || 'Tüm tenant\'lar başarıyla güncellendi!');
+                        fetchMigrations();
                       } catch (error: any) {
-                        message.error(error.message || 'Toplu migration başarısız oldu');
+                        console.error('Migrate all error:', error);
+                        const errorMsg = error?.response?.data?.message || error?.message || 'Toplu migration başarısız oldu';
+                        message.error(errorMsg);
                       } finally {
                         setLoading(false);
                       }
