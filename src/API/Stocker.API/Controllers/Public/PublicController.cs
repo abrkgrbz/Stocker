@@ -260,10 +260,16 @@ public class PublicController : ControllerBase
                 });
             }
 
-            // Get all active tenants
-            // In the future, this can be optimized by maintaining user-tenant mappings in master DB
+            // Get tenant registrations where this email is the admin
+            // This ensures users only see tenants they created or have access to
+            var tenantRegistrations = await _masterContext.TenantRegistrations
+                .Where(r => r.AdminEmail.Value.ToLower() == normalizedEmail && r.TenantId.HasValue)
+                .Select(r => r.TenantId!.Value)
+                .ToListAsync();
+
+            // Get tenant details for these registrations
             var tenantsData = await _masterContext.Tenants
-                .Where(t => t.IsActive)
+                .Where(t => tenantRegistrations.Contains(t.Id) && t.IsActive)
                 .OrderBy(t => t.Name)
                 .Select(t => new
                 {
