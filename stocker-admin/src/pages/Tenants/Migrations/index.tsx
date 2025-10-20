@@ -177,6 +177,9 @@ const TenantMigrations: React.FC = () => {
   };
 
   const handleRunMigration = async (migrationId: string) => {
+    console.log('🔵 [BUTTON CLICKED] handleRunMigration called with migrationId:', migrationId);
+    console.log('🔵 [BUTTON CLICKED] Current migrations state:', migrations);
+
     Modal.confirm({
       title: 'Migration Çalıştır',
       content: 'Bu migration\'ı çalıştırmak istediğinizden emin misiniz?',
@@ -185,22 +188,32 @@ const TenantMigrations: React.FC = () => {
       okType: 'primary',
       icon: <DatabaseOutlined />,
       onOk: async () => {
+        console.log('✅ [CONFIRM OK] User confirmed migration');
         setLoading(true);
         try {
           // Call real API
           const migration = migrations.find(m => m.id === migrationId);
-          console.log('Starting migration for tenant:', migrationId);
+          console.log('🚀 [API CALL] Starting migration for tenant:', migrationId);
+          console.log('🚀 [API CALL] Migration object:', migration);
           const result = await tenantService.migrateTenantDatabase(migrationId);
-          console.log('Migration result:', result);
+          console.log('✅ [API SUCCESS] Migration result:', result);
           message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
           fetchMigrations();
         } catch (error: any) {
-          console.error('Migration error:', error);
+          console.error('❌ [API ERROR] Migration error:', error);
+          console.error('❌ [API ERROR] Error details:', {
+            response: error?.response,
+            message: error?.message,
+            stack: error?.stack
+          });
           const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
           message.error(errorMsg);
         } finally {
           setLoading(false);
         }
+      },
+      onCancel: () => {
+        console.log('❌ [CONFIRM CANCEL] User cancelled migration');
       }
     });
   };
