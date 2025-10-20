@@ -180,6 +180,8 @@ const TenantMigrations: React.FC = () => {
   const handleRunMigration = async (migrationId: string) => {
     console.log('🔵 [BUTTON CLICKED] handleRunMigration called with migrationId:', migrationId);
     console.log('🔵 [BUTTON CLICKED] Current migrations state:', migrations);
+    console.log('🔵 [MODAL CHECK] Modal object:', Modal);
+    console.log('🔵 [MODAL CHECK] Modal.confirm:', Modal.confirm);
 
     Modal.confirm({
       title: 'Migration Çalıştır',
