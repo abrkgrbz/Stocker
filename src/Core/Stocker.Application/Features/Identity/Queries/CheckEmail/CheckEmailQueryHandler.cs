@@ -44,11 +44,16 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 });
             }
 
-            // For now, return all active tenants
-            // The actual access validation will happen during login on the tenant subdomain
-            // In the future, we can optimize this by maintaining a UserTenant mapping table in master DB
+            // Find tenant registrations where this email is the admin
+            // This ensures users only see tenants they created or have access to
+            var tenantRegistrations = await _masterContext.TenantRegistrations
+                .Where(r => r.AdminEmail.Value == request.Email && r.TenantId.HasValue)
+                .Select(r => r.TenantId!.Value)
+                .ToListAsync(cancellationToken);
+
+            // Get tenant details for these registrations
             var tenants = await _masterContext.Tenants
-                .Where(t => t.IsActive)
+                .Where(t => tenantRegistrations.Contains(t.Id) && t.IsActive)
                 .OrderBy(t => t.Name)
                 .Select(t => new TenantInfo
                 {
