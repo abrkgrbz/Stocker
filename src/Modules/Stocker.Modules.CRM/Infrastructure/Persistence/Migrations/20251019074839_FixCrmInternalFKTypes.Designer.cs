@@ -49,20 +49,14 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DealId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("DealId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -97,8 +91,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Location")
@@ -160,19 +152,11 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ContactId");
 
-                    b.HasIndex("ContactId1");
-
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("DealId");
 
-                    b.HasIndex("DealId1");
-
                     b.HasIndex("LeadId");
-
-                    b.HasIndex("LeadId1");
 
                     b.HasIndex("OpportunityId");
 
@@ -249,8 +233,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("ParentCampaignId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("ParentCampaignId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartDate")
@@ -284,8 +266,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ParentCampaignId1");
 
                     b.HasIndex("TenantId");
 
@@ -321,8 +301,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("ContactId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ConvertedDate")
@@ -330,8 +308,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("ConvertedOpportunityId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("ConvertedOpportunityId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("FirstClickDate")
@@ -351,8 +327,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("LeadId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("OpenCount")
@@ -371,14 +345,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CampaignId1");
-
-                    b.HasIndex("ContactId1");
-
-                    b.HasIndex("ConvertedOpportunityId1");
-
-                    b.HasIndex("LeadId1");
 
                     b.ToTable("CampaignMembers", "crm");
                 });
@@ -709,8 +675,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("DealId");
 
-                    b.HasIndex("DealId1");
-
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "DealId");
@@ -892,8 +856,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LeadId1");
-
                     b.ToTable("LeadScoringHistories", "crm");
                 });
 
@@ -950,8 +912,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ActivityId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ActivityId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AttachmentUrls")
@@ -959,8 +919,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
@@ -972,14 +930,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DealId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("DealId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsPinned")
@@ -993,8 +947,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("OpportunityId")
@@ -1020,23 +972,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ActivityId");
 
-                    b.HasIndex("ActivityId1");
-
                     b.HasIndex("ContactId");
-
-                    b.HasIndex("ContactId1");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("CustomerId1");
-
                     b.HasIndex("DealId");
 
-                    b.HasIndex("DealId1");
-
                     b.HasIndex("LeadId");
-
-                    b.HasIndex("LeadId1");
 
                     b.HasIndex("OpportunityId");
 
@@ -1053,8 +995,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CampaignId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CampaignId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CompetitorName")
@@ -1127,8 +1067,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CampaignId");
 
-                    b.HasIndex("CampaignId1");
-
                     b.HasIndex("ContactId");
 
                     b.HasIndex("CustomerId");
@@ -1200,8 +1138,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OpportunityId");
-
-                    b.HasIndex("OpportunityId1");
 
                     b.HasIndex("TenantId");
 

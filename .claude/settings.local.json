@@ -1,7 +1,29 @@
 {
   "permissions": {
     "allow": [
-      "Bash(do echo \"[$i/15] Monitoring unique username fix deployment (commit bcd19ee5)...\")"
+      "Bash(do echo \"[$i/15] Monitoring unique username fix deployment (commit bcd19ee5)...\")",
+      "Bash(do echo \"[$i/15] Monitoring package module activation deployment (commit 585c5d69)...\")",
+      "Bash(git log -1 --format='%H | %s | %cd' --date=iso)",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450)",
+      "Bash(do echo \"[$i/15] Monitoring migration error logging deployment (commit 125076e3)...\")",
+      "Bash(do echo \"[$i/15] Monitoring verbose logging deployment...\")",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450 0861f1)",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450 0861f1 b53265 f1127a)",
+      "Bash(do echo \"[$i/15] Monitoring mock data removal deployment (commit 02492fe8)...\")",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450 0861f1 b53265 f1127a bddff4)",
+      "Bash(killall -9 ssh)",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450 0861f1 b53265 f1127a bddff4 b8af81)",
+      "Bash(do pkill -f \"$id\")",
+      "Bash(do pkill -9 -f \"$id\")",
+      "Bash(do echo \"[$i/15] Monitoring modern modal deployment (commit 4e88755e)...\")",
+      "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED|migration\")",
+      "Bash(do echo \"[$i/15] Monitoring FK cascade fix deployment (commit 03f1d497)...\")",
+      "Bash(do echo \"[$i/15] Monitoring idempotent FK migration deployment (commit 982c21b0)...\")",
+      "Bash(do echo \"[$i/15] Monitoring idempotent migration deployment...\")",
+      "Bash(do echo \"[$i/12] Monitoring source fix deployment...\")",
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251019074839_FixCrmInternalFKTypes.cs\")",
+      "Bash(do echo \"[$i/12] Monitoring COMPLETE FIX deployment (commit 5f561f74)...\")",
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251019074839_FixCrmInternalFKTypes.Designer.cs\")"
     ],
     "deny": [],
     "ask": []
