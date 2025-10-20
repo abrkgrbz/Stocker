@@ -5,9 +5,9 @@ namespace Stocker.Modules.CRM.Domain.Entities;
 
 public class CampaignMember : TenantEntity
 {
-    public int CampaignId { get; private set; }
-    public int? ContactId { get; private set; }
-    public int? LeadId { get; private set; }
+    public Guid CampaignId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid? LeadId { get; private set; }
     public CampaignMemberStatus Status { get; private set; }
     public DateTime? RespondedDate { get; private set; }
     public DateTime? FirstOpenDate { get; private set; }
@@ -21,7 +21,7 @@ public class CampaignMember : TenantEntity
     public string? BounceReason { get; private set; }
     public bool HasConverted { get; private set; }
     public DateTime? ConvertedDate { get; private set; }
-    public int? ConvertedOpportunityId { get; private set; }
+    public Guid? ConvertedOpportunityId { get; private set; }
     
     public virtual Campaign Campaign { get; private set; }
     public virtual Contact? Contact { get; private set; }
@@ -32,9 +32,9 @@ public class CampaignMember : TenantEntity
     
     public CampaignMember(
         Guid tenantId,
-        int campaignId,
-        int? contactId = null,
-        int? leadId = null) : base(Guid.NewGuid(), tenantId)
+        Guid campaignId,
+        Guid? contactId = null,
+        Guid? leadId = null) : base(Guid.NewGuid(), tenantId)
     {
         if (contactId == null && leadId == null)
             throw new ArgumentException("Either ContactId or LeadId must be provided");
@@ -91,7 +91,7 @@ public class CampaignMember : TenantEntity
         Status = CampaignMemberStatus.Responded;
     }
     
-    public void MarkAsConverted(int opportunityId)
+    public void MarkAsConverted(Guid opportunityId)
     {
         HasConverted = true;
         ConvertedDate = DateTime.UtcNow;

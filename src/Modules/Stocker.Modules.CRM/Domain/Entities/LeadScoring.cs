@@ -236,7 +236,7 @@ public class LeadScoringRule : TenantEntity
 
 public class LeadScoringHistory : TenantEntity
 {
-    public int LeadId { get; private set; }
+    public Guid LeadId { get; private set; }
     public int PreviousScore { get; private set; }
     public int NewScore { get; private set; }
     public string? RuleApplied { get; private set; }
@@ -250,7 +250,7 @@ public class LeadScoringHistory : TenantEntity
     
     public LeadScoringHistory(
         Guid tenantId,
-        int leadId,
+        Guid leadId,
         int previousScore,
         int newScore,
         string? ruleApplied,
