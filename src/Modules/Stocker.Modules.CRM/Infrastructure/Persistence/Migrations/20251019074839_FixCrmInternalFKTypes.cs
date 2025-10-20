@@ -367,7 +367,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     IsRecurring = table.Column<bool>(type: "bit", nullable: false),
                     RecurringPeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecurringCycles = table.Column<int>(type: "int", nullable: true),
-                    DealId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -379,14 +378,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Deals",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DealProducts_Deals_DealId1",
-                        column: x => x.DealId1,
-                        principalSchema: "crm",
-                        principalTable: "Deals",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
