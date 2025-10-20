@@ -11,32 +11,32 @@ public class NoteConfiguration : IEntityTypeConfiguration<Note>
         builder.ToTable("Notes", "crm");
 
         // Explicitly configure relationships to prevent shadow properties
-        builder.HasOne<Customer>()
+        builder.HasOne(n => n.Customer)
             .WithMany()
             .HasForeignKey(n => n.CustomerId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne<Contact>()
+        builder.HasOne(n => n.Contact)
             .WithMany()
             .HasForeignKey(n => n.ContactId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne<Lead>()
+        builder.HasOne(n => n.Lead)
             .WithMany()
             .HasForeignKey(n => n.LeadId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne<Opportunity>()
+        builder.HasOne(n => n.Opportunity)
             .WithMany()
             .HasForeignKey(n => n.OpportunityId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<Deal>()
+        builder.HasOne(n => n.Deal)
             .WithMany()
             .HasForeignKey(n => n.DealId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<Activity>()
+        builder.HasOne(n => n.Activity)
             .WithMany()
             .HasForeignKey(n => n.ActivityId)
             .OnDelete(DeleteBehavior.NoAction);
