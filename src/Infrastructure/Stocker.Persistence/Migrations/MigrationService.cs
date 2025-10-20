@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.SeedData;
@@ -195,18 +196,31 @@ public class MigrationService : IMigrationService
                     {
                         _logger.LogInformation("Tenant {TenantId} has CRM module access. Applying CRM migrations...", tenantId);
                         
-                        // Get CRMDbContext and apply migrations
-                        var crmDbContext = scope.ServiceProvider.GetService<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                        // Get tenant connection string
+                        var connectionString = tenantDbContext.Database.GetConnectionString();
                         
-                        if (crmDbContext != null)
+                        // Create CRMDbContext manually with tenant connection string
+                        // Cannot use scoped ITenantService here as tenant context is not set during migration
+                        var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                        crmOptionsBuilder.UseSqlServer(connectionString, sqlOptions =>
                         {
-                            await crmDbContext.Database.MigrateAsync();
-                            _logger.LogInformation("CRM module migrations completed successfully for tenant {TenantId}.", tenantId);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("CRMDbContext not available for tenant {TenantId}. CRM migrations skipped.", tenantId);
-                        }
+                            sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
+                            sqlOptions.CommandTimeout(30);
+                            sqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(30),
+                                errorNumbersToAdd: null);
+                        });
+                        
+                        // Create a simple ITenantService implementation for CRMDbContext constructor
+                        var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenantId, connectionString);
+                        
+                        using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                            crmOptionsBuilder.Options, 
+                            mockTenantService);
+                        
+                        await crmDbContext.Database.MigrateAsync();
+                        _logger.LogInformation("CRM module migrations completed successfully for tenant {TenantId}.", tenantId);
                     }
                     else
                     {
@@ -453,4 +467,30 @@ public class DatabaseMigrationHostedService : IHostedService
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+/// <summary>
+/// Mock implementation of ITenantService for use during database migrations
+/// where tenant context is not available from HTTP request.
+/// </summary>
+internal class MockTenantService : ITenantService
+{
+    private readonly Guid _tenantId;
+    private readonly string _connectionString;
+
+    public MockTenantService(Guid tenantId, string connectionString)
+    {
+        _tenantId = tenantId;
+        _connectionString = connectionString;
+    }
+
+    public Guid? GetCurrentTenantId() => _tenantId;
+    
+    public string? GetCurrentTenantName() => null;
+    
+    public string? GetConnectionString() => _connectionString;
+    
+    public Task<bool> SetCurrentTenant(Guid tenantId) => Task.FromResult(true);
+    
+    public Task<bool> SetCurrentTenant(string tenantIdentifier) => Task.FromResult(true);
 }

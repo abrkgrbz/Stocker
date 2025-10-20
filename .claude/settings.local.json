@@ -121,7 +121,8 @@
       "Bash(do echo \"[$i/15] Monitoring SQL Server resilience deployment (commit 7e9028a1)...\")",
       "Bash(do echo \"[$i/15] Monitoring CRM tenant database fix deployment (commit 18edd241)...\")",
       "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED\")",
-      "Bash(Select-Object -First 30)"
+      "Bash(Select-Object -First 30)",
+      "Bash(do echo \"[$i/15] Monitoring automatic CRM migration deployment (commit e26ca57f)...\")"
     ],
     "deny": [],
     "ask": []
