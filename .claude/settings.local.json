@@ -23,7 +23,14 @@
       "Bash(do echo \"[$i/12] Monitoring source fix deployment...\")",
       "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251019074839_FixCrmInternalFKTypes.cs\")",
       "Bash(do echo \"[$i/12] Monitoring COMPLETE FIX deployment (commit 5f561f74)...\")",
-      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251019074839_FixCrmInternalFKTypes.Designer.cs\")"
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251019074839_FixCrmInternalFKTypes.Designer.cs\")",
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267 5b3b97 dd0450 0861f1 b53265 f1127a bddff4 b8af81 df0ed0)",
+      "Bash(do echo \"[$i/15] Monitoring complete Id1 fix deployment (commit 0a63e641)...\")",
+      "Bash(timeout 180 dotnet ef migrations add InitialCRM --context CRMDbContext --output-dir Persistence/Migrations)",
+      "Bash(timeout 180 dotnet ef migrations add InitialCRM --context CRMDbContext --output-dir Infrastructure/Persistence/Migrations)",
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020205947_InitialCRM.cs\")",
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020205947_InitialCRM.Designer.cs\")",
+      "Bash(python scripts/fix_migration.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")"
     ],
     "deny": [],
     "ask": []

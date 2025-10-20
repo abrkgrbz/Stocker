@@ -12,8 +12,8 @@ using Stocker.Modules.CRM.Infrastructure.Persistence;
 namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20251019143913_AddDocumentManagement")]
-    partial class AddDocumentManagement
+    [Migration("20251020205947_InitialCRM")]
+    partial class InitialCRM
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,20 +49,14 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DealId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("DealId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -97,8 +91,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Location")
@@ -154,19 +146,11 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ContactId");
 
-                    b.HasIndex("ContactId1");
-
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("DealId");
 
-                    b.HasIndex("DealId1");
-
                     b.HasIndex("LeadId");
-
-                    b.HasIndex("LeadId1");
 
                     b.HasIndex("OpportunityId");
 
@@ -312,8 +296,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("ContactId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ConvertedDate")
@@ -321,8 +303,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("ConvertedOpportunityId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("ConvertedOpportunityId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("FirstClickDate")
@@ -342,8 +322,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("LeadId")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("OpenCount")
@@ -362,14 +340,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CampaignId1");
-
-                    b.HasIndex("ContactId1");
-
-                    b.HasIndex("ConvertedOpportunityId1");
-
-                    b.HasIndex("LeadId1");
 
                     b.ToTable("CampaignMembers", "crm");
                 });
@@ -592,8 +562,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Reason")
@@ -608,8 +576,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("TenantId");
 
@@ -637,8 +603,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Tag")
@@ -650,8 +614,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("TenantId");
 
@@ -831,8 +793,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DealId");
-
-                    b.HasIndex("DealId1");
 
                     b.HasIndex("TenantId");
 
@@ -1151,8 +1111,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LeadId1");
-
                     b.ToTable("LeadScoringHistories", "crm");
                 });
 
@@ -1209,8 +1167,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ActivityId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ActivityId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AttachmentUrls")
@@ -1218,8 +1174,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ContactId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
@@ -1231,14 +1185,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CustomerId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DealId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("DealId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsPinned")
@@ -1252,8 +1202,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("LeadId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("OpportunityId")
@@ -1273,23 +1221,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ActivityId");
 
-                    b.HasIndex("ActivityId1");
-
                     b.HasIndex("ContactId");
-
-                    b.HasIndex("ContactId1");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("CustomerId1");
-
                     b.HasIndex("DealId");
 
-                    b.HasIndex("DealId1");
-
                     b.HasIndex("LeadId");
-
-                    b.HasIndex("LeadId1");
 
                     b.HasIndex("OpportunityId");
 
@@ -1306,8 +1244,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CampaignId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CampaignId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CompetitorName")
@@ -1380,8 +1316,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CampaignId");
 
-                    b.HasIndex("CampaignId1");
-
                     b.HasIndex("ContactId");
 
                     b.HasIndex("CustomerId");
@@ -1453,8 +1387,6 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OpportunityId");
-
-                    b.HasIndex("OpportunityId1");
 
                     b.HasIndex("TenantId");
 
@@ -1546,6 +1478,333 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasIndex("PipelineId");
 
                     b.ToTable("PipelineStages", "crm");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.Workflow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ExecutionCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExecutionOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastExecutedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TriggerConditions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TriggerType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Workflows_IsActive");
+
+                    b.HasIndex("EntityType", "TriggerType")
+                        .HasDatabaseName("IX_Workflows_EntityType_TriggerType");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("IX_Workflows_Tenant_Active");
+
+                    b.ToTable("Workflows", "crm");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CompletedSteps")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentStepOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("FailedSteps")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalSteps")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TriggerData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("TriggeredBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkflowId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_WorkflowExecutions_Status");
+
+                    b.HasIndex("EntityId", "EntityType")
+                        .HasDatabaseName("IX_WorkflowExecutions_Entity");
+
+                    b.HasIndex("TenantId", "StartedAt")
+                        .HasDatabaseName("IX_WorkflowExecutions_Tenant_StartedAt");
+
+                    b.HasIndex("WorkflowId", "Status")
+                        .HasDatabaseName("IX_WorkflowExecutions_Workflow_Status");
+
+                    b.ToTable("WorkflowExecutions", "crm");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowStep", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionConfiguration")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Conditions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ContinueOnError")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DelayMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkflowId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsEnabled")
+                        .HasDatabaseName("IX_WorkflowSteps_IsEnabled");
+
+                    b.HasIndex("WorkflowId", "StepOrder")
+                        .HasDatabaseName("IX_WorkflowSteps_Workflow_Order");
+
+                    b.ToTable("WorkflowSteps", "crm");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowStepExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("InputData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OutputData")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StepName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkflowExecutionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorkflowStepId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_WorkflowStepExecutions_Status");
+
+                    b.HasIndex("WorkflowStepId");
+
+                    b.HasIndex("WorkflowExecutionId", "StepOrder")
+                        .HasDatabaseName("IX_WorkflowStepExecutions_Execution_Order");
+
+                    b.ToTable("WorkflowStepExecutions", "crm");
                 });
 
             modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.Activity", b =>
@@ -1888,7 +2147,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", null)
                         .WithMany()
                         .HasForeignKey("DealId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", "Deal")
@@ -2285,6 +2544,47 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Pipeline");
                 });
 
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowExecution", b =>
+                {
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Workflow", "Workflow")
+                        .WithMany("Executions")
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Workflow");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowStep", b =>
+                {
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Workflow", "Workflow")
+                        .WithMany("Steps")
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Workflow");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowStepExecution", b =>
+                {
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.WorkflowExecution", "WorkflowExecution")
+                        .WithMany("StepExecutions")
+                        .HasForeignKey("WorkflowExecutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.WorkflowStep", "WorkflowStep")
+                        .WithMany()
+                        .HasForeignKey("WorkflowStepId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("WorkflowExecution");
+
+                    b.Navigation("WorkflowStep");
+                });
+
             modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.Campaign", b =>
                 {
                     b.Navigation("ChildCampaigns");
@@ -2331,6 +2631,18 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.Pipeline", b =>
                 {
                     b.Navigation("Stages");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.Workflow", b =>
+                {
+                    b.Navigation("Executions");
+
+                    b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.WorkflowExecution", b =>
+                {
+                    b.Navigation("StepExecutions");
                 });
 #pragma warning restore 612, 618
         }
