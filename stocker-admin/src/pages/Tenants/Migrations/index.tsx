@@ -63,6 +63,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
 import dayjs from 'dayjs';
+import Swal from 'sweetalert2';
 import { tenantService } from '../../../services/tenantService';
 
 const { Title, Text, Paragraph } = Typography;
@@ -181,11 +182,47 @@ const TenantMigrations: React.FC = () => {
     console.log('🔵 [BUTTON CLICKED] handleRunMigration called with migrationId:', migrationId);
     console.log('🔵 [BUTTON CLICKED] Current migrations state:', migrations);
 
-    // TEMPORARY FIX: Use native confirm instead of Modal.confirm
-    // TODO: Fix Ant Design Modal rendering issue later
-    const confirmed = window.confirm('Bu migration\'ı çalıştırmak istediğinizden emin misiniz?');
+    const migration = migrations.find(m => m.id === migrationId);
 
-    if (!confirmed) {
+    // Modern SweetAlert2 modal for confirmation
+    const result = await Swal.fire({
+      title: 'Migration Çalıştır',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="margin-bottom: 12px;">
+            <strong>${migration?.name || 'Bu tenant'}</strong> için migration çalıştırılacak.
+          </p>
+          <div style="background: #f0f2f5; padding: 12px; border-radius: 6px; font-size: 13px;">
+            <div style="margin-bottom: 6px;">
+              <span style="color: #8c8c8c;">Tenant ID:</span>
+              <span style="margin-left: 8px; font-family: monospace;">${migrationId}</span>
+            </div>
+            <div>
+              <span style="color: #8c8c8c;">İşlem:</span>
+              <span style="margin-left: 8px;">Tüm bekleyen migration'lar çalıştırılacak</span>
+            </div>
+          </div>
+          <p style="margin-top: 12px; color: #faad14; font-size: 13px;">
+            ⚠️ Bu işlem veritabanında değişiklikler yapacaktır.
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<span style="padding: 0 8px;">✓ Çalıştır</span>',
+      cancelButtonText: '<span style="padding: 0 8px;">✕ İptal</span>',
+      confirmButtonColor: '#1890ff',
+      cancelButtonColor: '#d9d9d9',
+      customClass: {
+        popup: 'swal2-modern',
+        confirmButton: 'swal2-confirm-modern',
+        cancelButton: 'swal2-cancel-modern'
+      },
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (!result.isConfirmed) {
       console.log('❌ [CONFIRM CANCEL] User cancelled migration');
       return;
     }
@@ -193,13 +230,22 @@ const TenantMigrations: React.FC = () => {
     console.log('✅ [CONFIRM OK] User confirmed migration');
     setLoading(true);
     try {
-      // Call real API
-      const migration = migrations.find(m => m.id === migrationId);
       console.log('🚀 [API CALL] Starting migration for tenant:', migrationId);
       console.log('🚀 [API CALL] Migration object:', migration);
-      const result = await tenantService.migrateTenantDatabase(migrationId);
-      console.log('✅ [API SUCCESS] Migration result:', result);
-      message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
+      const apiResult = await tenantService.migrateTenantDatabase(migrationId);
+      console.log('✅ [API SUCCESS] Migration result:', apiResult);
+
+      // Show success with modern modal
+      await Swal.fire({
+        title: 'Başarılı!',
+        text: apiResult.message || `${migration?.name} migration başarıyla tamamlandı!`,
+        icon: 'success',
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: '#52c41a',
+        timer: 3000,
+        timerProgressBar: true
+      });
+
       fetchMigrations();
     } catch (error: any) {
       console.error('❌ [API ERROR] Migration error:', error);
@@ -209,7 +255,15 @@ const TenantMigrations: React.FC = () => {
         stack: error?.stack
       });
       const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
-      message.error(errorMsg);
+
+      // Show error with modern modal
+      await Swal.fire({
+        title: 'Hata!',
+        text: errorMsg,
+        icon: 'error',
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: '#ff4d4f'
+      });
     } finally {
       setLoading(false);
     }
