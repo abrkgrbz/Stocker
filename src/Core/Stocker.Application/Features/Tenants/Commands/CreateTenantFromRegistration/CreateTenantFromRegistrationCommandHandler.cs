@@ -210,9 +210,26 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                     adminPassword = defaultHashedPassword.Value;
                 }
 
+                // Generate unique username by appending tenant code to avoid conflicts
+                // Example: "admin" + "abc-tech" => "admin-abc-tech"
+                var uniqueUsername = $"{registration.AdminUsername}-{tenant.Code}";
+
+                // Check if username already exists and make it unique if needed
+                var existingUser = await _context.MasterUsers
+                    .FirstOrDefaultAsync(u => u.Username == uniqueUsername, cancellationToken);
+
+                if (existingUser != null)
+                {
+                    // Append first 8 chars of tenant ID to ensure absolute uniqueness
+                    uniqueUsername = $"{registration.AdminUsername}-{tenant.Code}-{tenant.Id.ToString()[..8]}";
+                    _logger.LogWarning("Username conflict detected, using extended unique username: {Username}", uniqueUsername);
+                }
+
+                _logger.LogInformation("Creating MasterUser with username: {Username}", uniqueUsername);
+
                 // Create MasterUser with credentials (using pre-hashed password)
                 var masterUser = MasterUser.CreateFromHash(
-                    username: registration.AdminUsername,
+                    username: uniqueUsername,
                     email: adminEmail.Value,
                     passwordHash: adminPassword, // Use hashed password from registration
                     firstName: registration.AdminFirstName,

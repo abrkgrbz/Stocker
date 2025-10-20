@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(do echo \"[$i/15] Monitoring FK cascade fix deployment (commit e4691f18)...\")",
-      "Bash(not be translated.\"\n\nSolution:\n- Fetch all registrations with TenantId into memory first\n- Apply email filtering in-memory using ToLowerInvariant()\n- Same pattern used in MasterUser email check (line 232-237)\n\nTechnical Details:\n- EF Core cannot translate Value.ToLower() on Value Objects to SQL\n- Client-side evaluation after ToListAsync() resolves translation issue\n- Performance: Acceptable for registration table (low row count)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267)",
+      "Bash(do pkill -f \"ssh.*$id\")"
     ],
     "deny": [],
     "ask": []
