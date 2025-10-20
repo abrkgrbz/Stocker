@@ -138,8 +138,11 @@ const TenantMigrations: React.FC = () => {
     setLoading(true);
     try {
       // Fetch real tenant list
+      console.log('[Migration UI] Fetching tenants from API...');
       const response = await tenantService.getTenants({ pageSize: 100 });
-      
+      console.log('[Migration UI] Tenants fetched:', response.data.length, 'tenants');
+      console.log('[Migration UI] Tenant names:', response.data.map(t => t.name));
+
       // Map tenants to migration items (each tenant can be migrated)
       const tenantMigrations: Migration[] = response.data.map((tenant, index) => ({
         id: tenant.id,
@@ -153,9 +156,10 @@ const TenantMigrations: React.FC = () => {
         canRollback: false,
       }));
 
+      console.log('[Migration UI] Setting migrations state with', tenantMigrations.length, 'items');
       setMigrations(tenantMigrations);
     } catch (error) {
-      console.error('Error fetching tenants for migration:', error);
+      console.error('[Migration UI] Error fetching tenants for migration:', error);
       message.error('Tenant listesi yüklenemedi');
     } finally {
       setLoading(false);
