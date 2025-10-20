@@ -34,7 +34,8 @@
       "Bash(do echo \"[$i/15] Monitoring clean CRM migrations deployment (commit 2bb2ce1f)...\")",
       "Bash(for file in \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020213114_InitialCRM.Designer.cs\" \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020213114_InitialCRM.cs\" \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")",
       "Bash(do echo \"=== Processing: $file ===\")",
-      "Bash(python scripts/fix_migration_v2.py \"$file\")"
+      "Bash(python scripts/fix_migration_v2.py \"$file\")",
+      "Bash(python scripts/fix_migration_v2.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")"
     ],
     "deny": [],
     "ask": []

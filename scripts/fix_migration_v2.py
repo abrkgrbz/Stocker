@@ -14,13 +14,22 @@ def fix_migration_file(filepath):
     original_content = content
 
     # Remove duplicate Id1 property definitions (multi-line, including all method chains)
-    # Pattern matches: b.Property<Guid?>("...Id1") through all chained methods until semicolon
-    pattern_designer_prop = r'b\.Property<Guid\?>\("\w+Id1"\)(?:(?!\bHas(?:Index|Key|One|Many|Foreign|Annotation|Data)\b)[^;])*;'
-    content, count1 = re.subn(pattern_designer_prop, '', content, flags=re.DOTALL)
+    # Pattern matches both: b.Property<Guid?>("...Id1") and b.Property<Guid>("...Id1")
+    pattern_designer_prop1 = r'b\.Property<Guid\?>\("\w+Id1"\)(?:(?!\bHas(?:Index|Key|One|Many|Foreign|Annotation|Data)\b)[^;])*;'
+    content, count1a = re.subn(pattern_designer_prop1, '', content, flags=re.DOTALL)
+
+    pattern_designer_prop2 = r'b\.Property<Guid>\("\w+Id1"\)(?:(?!\bHas(?:Index|Key|One|Many|Foreign|Annotation|Data)\b)[^;])*;'
+    content, count1b = re.subn(pattern_designer_prop2, '', content, flags=re.DOTALL)
+
+    count1 = count1a + count1b
 
     # Remove HasIndex for Id1 columns in Designer.cs files
     pattern_designer_index = r'b\.HasIndex\("\w+Id1"\);'
     content, count2 = re.subn(pattern_designer_index, '', content)
+
+    # Remove .HasForeignKey("...Id1") lines
+    pattern_has_fk = r'\.HasForeignKey\("\w+Id1"\);'
+    content, count_fk = re.subn(pattern_has_fk, ';', content)
 
     # Remove Id1 column definitions in migration Up() method
     pattern_column = r'\w+Id1 = table\.Column<Guid>\([^)]*\),?\n'
@@ -43,6 +52,7 @@ def fix_migration_file(filepath):
         print("[OK] Fixed migration file")
         print(f"   - Removed {count1} duplicate Id1 property definitions (Designer)")
         print(f"   - Removed {count2} duplicate Id1 HasIndex entries (Designer)")
+        print(f"   - Removed {count_fk} duplicate Id1 HasForeignKey entries")
         print(f"   - Removed {count3} duplicate Id1 column definitions")
         print(f"   - Removed {count4} duplicate Id1 FK constraints")
         print(f"   - Removed {count5} duplicate Id1 index creations")
