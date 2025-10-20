@@ -25,16 +25,31 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Add DbContext
-        services.AddDbContext<CRMDbContext>(options =>
+        // CRMDbContext is registered dynamically per request based on tenant
+        // using ITenantService to get the current tenant's connection string
+        services.AddScoped<CRMDbContext>(serviceProvider =>
         {
-            var connectionString = configuration.GetConnectionString("TenantConnection") 
-                ?? configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlServer(connectionString, sqlOptions =>
+            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
+            var connectionString = tenantService.GetConnectionString();
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<CRMDbContext>();
+            optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(CRMDbContext).Assembly.FullName);
                 sqlOptions.CommandTimeout(30);
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
             });
+
+            return new CRMDbContext(optionsBuilder.Options, tenantService);
         });
 
         // Register repositories
