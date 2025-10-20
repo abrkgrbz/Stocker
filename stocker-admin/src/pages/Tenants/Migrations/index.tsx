@@ -190,6 +190,9 @@ const TenantMigrations: React.FC = () => {
       cancelText: 'İptal',
       okType: 'primary',
       icon: <DatabaseOutlined />,
+      getContainer: () => document.body,
+      centered: true,
+      zIndex: 10000,
       onOk: async () => {
         console.log('✅ [CONFIRM OK] User confirmed migration');
         setLoading(true);
