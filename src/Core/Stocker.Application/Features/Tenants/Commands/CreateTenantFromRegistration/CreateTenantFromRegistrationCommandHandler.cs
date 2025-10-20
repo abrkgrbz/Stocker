@@ -171,6 +171,52 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             _logger.LogInformation("Tenant '{TenantName}' created successfully with ID: {TenantId} from registration: {RegistrationId}",
                 tenant.Name, tenant.Id, registration.Id);
 
+            // Activate package modules for tenant
+            try
+            {
+                _logger.LogInformation("Activating package modules for tenant {TenantId}...", tenant.Id);
+                
+                // Get package with modules
+                var packageWithModules = await _context.Packages
+                    .Include(p => p.Modules)
+                    .FirstOrDefaultAsync(p => p.Id == package.Id, cancellationToken);
+
+                if (packageWithModules != null && packageWithModules.Modules.Any())
+                {
+                    var tenantModulesRepository = _unitOfWork.Repository<Domain.Tenant.Entities.TenantModules>();
+                    
+                    foreach (var packageModule in packageWithModules.Modules.Where(m => m.IsIncluded))
+                    {
+                        var tenantModule = Domain.Tenant.Entities.TenantModules.Create(
+                            tenantId: tenant.Id,
+                            moduleName: packageModule.ModuleName,
+                            moduleCode: packageModule.ModuleCode,
+                            description: $"Module from {package.Name} package",
+                            isEnabled: true,
+                            recordLimit: packageModule.MaxEntities,
+                            isTrial: package.TrialDays > 0
+                        );
+
+                        await tenantModulesRepository.AddAsync(tenantModule);
+                        _logger.LogInformation("Activated module {ModuleCode} ({ModuleName}) for tenant {TenantId}", 
+                            packageModule.ModuleCode, packageModule.ModuleName, tenant.Id);
+                    }
+
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("✅ Successfully activated {Count} modules for tenant {TenantId}", 
+                        packageWithModules.Modules.Count(m => m.IsIncluded), tenant.Id);
+                }
+                else
+                {
+                    _logger.LogInformation("No modules to activate for tenant {TenantId} - package has no modules", tenant.Id);
+                }
+            }
+            catch (Exception moduleEx)
+            {
+                _logger.LogError(moduleEx, "Failed to activate modules for tenant {TenantId}. Modules may need manual activation.", tenant.Id);
+                // Don't fail tenant creation if module activation fails
+            }
+
             // Create MasterUser for admin (required for login)
             try
             {

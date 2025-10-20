@@ -1,8 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(for id in 26ba53 77f485 40181b b18d47 47208c 2d1475 af48f0 ac2267)",
-      "Bash(do pkill -f \"ssh.*$id\")"
+      "Bash(do echo \"[$i/15] Monitoring unique username fix deployment (commit bcd19ee5)...\")"
     ],
     "deny": [],
     "ask": []
