@@ -55,7 +55,8 @@ import {
   SettingOutlined,
   DownloadOutlined,
   UploadOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
