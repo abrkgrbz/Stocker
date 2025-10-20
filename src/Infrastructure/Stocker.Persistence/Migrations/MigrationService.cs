@@ -326,7 +326,13 @@ public class MigrationService : IMigrationService
 
             // Create DbContext with the background tenant service
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+            });
 
             using var context = new TenantDbContext(optionsBuilder.Options, backgroundTenantService);
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<TenantDataSeeder>>();

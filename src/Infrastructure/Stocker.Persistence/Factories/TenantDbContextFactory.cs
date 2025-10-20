@@ -30,7 +30,13 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         var connectionString = await GetTenantConnectionStringAsync(tenantId);
         
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        });
         
         if (_configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))
         {
@@ -43,9 +49,23 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         }
 
         var context = new TenantDbContext(optionsBuilder.Options, tenantId);
-        
+
+        try
+        {
+            // Ensure database exists and is migrated
+            _logger.LogDebug("Ensuring database exists for tenant {TenantId}", tenantId);
+            await context.Database.MigrateAsync();
+            _logger.LogInformation("Tenant database ready for tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to ensure database exists for tenant {TenantId}. Database may need manual migration.", tenantId);
+            // Don't throw - let the application continue and fail on actual database operations
+            // This allows for better error messages and retry logic
+        }
+
         _logger.LogDebug("Created TenantDbContext for tenant {TenantId}", tenantId);
-        
+
         return context;
     }
 
