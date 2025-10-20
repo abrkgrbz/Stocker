@@ -102,6 +102,19 @@ export const notificationsApi = {
     }
 
     const data = await response.json();
-    return data.data || 0;
+
+    // Handle different response formats from API
+    // Backend may return: { data: 5 } or { unreadCount: 5 } or { data: { unreadCount: 5 } }
+    if (typeof data.data === 'number') {
+      return data.data;
+    }
+    if (typeof data.data?.unreadCount === 'number') {
+      return data.data.unreadCount;
+    }
+    if (typeof data.unreadCount === 'number') {
+      return data.unreadCount;
+    }
+
+    return 0;
   },
 };
