@@ -17,7 +17,7 @@ public class OpportunityProduct : TenantEntity
     public Money TotalPrice { get; private set; }
     public int SortOrder { get; private set; }
     
-    public virtual Opportunity Opportunity { get; private set; }
+    public Opportunity Opportunity { get; private set; }
     
     protected OpportunityProduct() : base() { }
     

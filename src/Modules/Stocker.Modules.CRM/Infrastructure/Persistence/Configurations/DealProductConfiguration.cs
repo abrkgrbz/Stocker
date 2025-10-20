@@ -89,7 +89,7 @@ public class DealProductConfiguration : IEntityTypeConfiguration<DealProduct>
 
         // Relationships
         // Using NoAction to prevent multiple cascade paths in SQL Server
-        builder.HasOne<Deal>()
+        builder.HasOne(dp => dp.Deal)
             .WithMany()
             .HasForeignKey(dp => dp.DealId)
             .OnDelete(DeleteBehavior.NoAction);

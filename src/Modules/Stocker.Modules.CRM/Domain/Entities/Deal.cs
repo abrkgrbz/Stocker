@@ -37,10 +37,10 @@ public class Deal : TenantAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     
-    public virtual Customer? Customer { get; private set; }
-    public virtual Contact? Contact { get; private set; }
-    public virtual Pipeline Pipeline { get; private set; }
-    public virtual PipelineStage Stage { get; private set; }
+    public Customer? Customer { get; private set; }
+    public Contact? Contact { get; private set; }
+    public Pipeline Pipeline { get; private set; }
+    public PipelineStage Stage { get; private set; }
     public virtual IReadOnlyCollection<Activity> Activities => _activities.AsReadOnly();
     public virtual IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
     public virtual IReadOnlyCollection<DealProduct> Products => _products.AsReadOnly();

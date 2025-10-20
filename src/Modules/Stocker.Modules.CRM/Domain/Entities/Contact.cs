@@ -81,7 +81,7 @@ public class Contact : TenantEntity
     /// <summary>
     /// Navigation property for the customer
     /// </summary>
-    public virtual Customer? Customer { get; private set; }
+    public Customer? Customer { get; private set; }
 
     /// <summary>
     /// Private constructor for EF Core

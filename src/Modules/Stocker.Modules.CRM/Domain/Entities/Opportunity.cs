@@ -34,13 +34,13 @@ public class Opportunity : TenantAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     
-    public virtual Customer? Customer { get; private set; }
-    public virtual Contact? Contact { get; private set; }
-    public virtual Lead? Lead { get; private set; }
-    public virtual Pipeline Pipeline { get; private set; }
-    public virtual PipelineStage Stage { get; private set; }
-    public virtual Campaign? Campaign { get; private set; }
-    public virtual Opportunity? ParentOpportunity { get; private set; }
+    public Customer? Customer { get; private set; }
+    public Contact? Contact { get; private set; }
+    public Lead? Lead { get; private set; }
+    public Pipeline Pipeline { get; private set; }
+    public PipelineStage Stage { get; private set; }
+    public Campaign? Campaign { get; private set; }
+    public Opportunity? ParentOpportunity { get; private set; }
     public virtual IReadOnlyCollection<Activity> Activities => _activities.AsReadOnly();
     public virtual IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
     public virtual IReadOnlyCollection<OpportunityProduct> Products => _products.AsReadOnly();

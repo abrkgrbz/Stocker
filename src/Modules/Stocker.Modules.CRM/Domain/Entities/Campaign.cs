@@ -49,7 +49,7 @@ public class Campaign : TenantAggregateRoot
     public string? UtmTerm { get; private set; }
     public string? UtmContent { get; private set; }
     
-    public virtual Campaign? ParentCampaign { get; private set; }
+    public Campaign? ParentCampaign { get; private set; }
     public virtual IReadOnlyCollection<Campaign> ChildCampaigns { get; private set; }
     public virtual IReadOnlyCollection<CampaignMember> Members => _members.AsReadOnly();
     public virtual IReadOnlyCollection<Lead> GeneratedLeads => _generatedLeads.AsReadOnly();

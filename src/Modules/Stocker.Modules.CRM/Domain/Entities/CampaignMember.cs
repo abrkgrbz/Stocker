@@ -23,10 +23,10 @@ public class CampaignMember : TenantEntity
     public DateTime? ConvertedDate { get; private set; }
     public Guid? ConvertedOpportunityId { get; private set; }
     
-    public virtual Campaign Campaign { get; private set; }
-    public virtual Contact? Contact { get; private set; }
-    public virtual Lead? Lead { get; private set; }
-    public virtual Opportunity? ConvertedOpportunity { get; private set; }
+    public Campaign Campaign { get; private set; }
+    public Contact? Contact { get; private set; }
+    public Lead? Lead { get; private set; }
+    public Opportunity? ConvertedOpportunity { get; private set; }
     
     protected CampaignMember() : base() { }
     

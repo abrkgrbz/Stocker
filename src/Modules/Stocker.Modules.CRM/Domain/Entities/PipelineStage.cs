@@ -15,7 +15,7 @@ public class PipelineStage : TenantEntity
     public string? Color { get; private set; }
     public int? RottenDays { get; private set; }
     
-    public virtual Pipeline Pipeline { get; private set; }
+    public Pipeline Pipeline { get; private set; }
     
     protected PipelineStage() : base() { }
     

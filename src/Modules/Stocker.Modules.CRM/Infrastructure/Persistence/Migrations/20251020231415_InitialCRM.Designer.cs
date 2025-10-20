@@ -12,7 +12,7 @@ using Stocker.Modules.CRM.Infrastructure.Persistence;
 namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CRMDbContext))]
-    [Migration("20251020225629_InitialCRM")]
+    [Migration("20251020231415_InitialCRM")]
     partial class InitialCRM
     {
         /// <inheritdoc />
@@ -758,7 +758,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("DealId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("DealId1")
+                    b.Property<Guid?>("DealId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -1376,7 +1376,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OpportunityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("OpportunityId1")
+                    b.Property<Guid?>("OpportunityId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProductCode")
@@ -2150,17 +2150,15 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.DealProduct", b =>
                 {
-                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", null)
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", "Deal")
                         .WithMany()
                         .HasForeignKey("DealId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", "Deal")
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Deal", null)
                         .WithMany("Products")
-                        .HasForeignKey("DealId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DealId1");
 
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "DiscountAmount", b1 =>
                         {
@@ -2427,17 +2425,15 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Stocker.Modules.CRM.Domain.Entities.OpportunityProduct", b =>
                 {
-                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Opportunity", null)
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Opportunity", "Opportunity")
                         .WithMany()
                         .HasForeignKey("OpportunityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Opportunity", "Opportunity")
+                    b.HasOne("Stocker.Modules.CRM.Domain.Entities.Opportunity", null)
                         .WithMany("Products")
-                        .HasForeignKey("OpportunityId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OpportunityId1");
 
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Money", "DiscountAmount", b1 =>
                         {

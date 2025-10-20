@@ -749,7 +749,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     IsRecurring = table.Column<bool>(type: "bit", nullable: false),
                     RecurringPeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecurringCycles = table.Column<int>(type: "int", nullable: true),
-                    DealId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DealId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -766,8 +766,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         column: x => x.DealId1,
                         principalSchema: "crm",
                         principalTable: "Deals",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -931,7 +930,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalPriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                    OpportunityId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OpportunityId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -949,8 +948,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         column: x => x.OpportunityId1,
                         principalSchema: "crm",
                         principalTable: "Opportunities",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

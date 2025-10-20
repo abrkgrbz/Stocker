@@ -54,6 +54,12 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         // Computed property - not mapped to database
         builder.Ignore(c => c.FullName);
 
+        // Relationships
+        builder.HasOne(c => c.Customer)
+            .WithMany()
+            .HasForeignKey(c => c.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Indexes
         builder.HasIndex(c => c.TenantId);
         builder.HasIndex(c => new { c.TenantId, c.CustomerId });

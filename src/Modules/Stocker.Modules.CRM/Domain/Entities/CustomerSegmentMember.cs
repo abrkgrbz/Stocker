@@ -10,8 +10,8 @@ public class CustomerSegmentMember : TenantEntity
     public DateTime AddedAt { get; private set; }
     public SegmentMembershipReason Reason { get; private set; }
 
-    public virtual CustomerSegment? Segment { get; private set; }
-    public virtual Customer? Customer { get; private set; }
+    public CustomerSegment? Segment { get; private set; }
+    public Customer? Customer { get; private set; }
 
     protected CustomerSegmentMember() : base() { }
 

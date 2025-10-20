@@ -26,12 +26,12 @@ public class Note : TenantEntity
     // Attachments
     public string? AttachmentUrls { get; private set; }
     
-    public virtual Customer? Customer { get; private set; }
-    public virtual Contact? Contact { get; private set; }
-    public virtual Lead? Lead { get; private set; }
-    public virtual Opportunity? Opportunity { get; private set; }
-    public virtual Deal? Deal { get; private set; }
-    public virtual Activity? Activity { get; private set; }
+    public Customer? Customer { get; private set; }
+    public Contact? Contact { get; private set; }
+    public Lead? Lead { get; private set; }
+    public Opportunity? Opportunity { get; private set; }
+    public Deal? Deal { get; private set; }
+    public Activity? Activity { get; private set; }
     
     protected Note() : base() { }
     

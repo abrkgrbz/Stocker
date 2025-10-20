@@ -75,7 +75,7 @@ public class OpportunityProductConfiguration : IEntityTypeConfiguration<Opportun
         });
 
         // Relationships
-        builder.HasOne<Opportunity>()
+        builder.HasOne(op => op.Opportunity)
             .WithMany()
             .HasForeignKey(op => op.OpportunityId)
             .OnDelete(DeleteBehavior.Cascade);

@@ -244,7 +244,7 @@ public class LeadScoringHistory : TenantEntity
     public string? Reason { get; private set; }
     public DateTime ScoredAt { get; private set; }
     
-    public virtual Lead Lead { get; private set; }
+    public Lead Lead { get; private set; }
     
     protected LeadScoringHistory() : base() { }
     

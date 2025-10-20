@@ -9,7 +9,7 @@ public class CustomerTag : TenantEntity
     public string? Color { get; private set; }
     public Guid CreatedBy { get; private set; }
 
-    public virtual Customer? Customer { get; private set; }
+    public Customer? Customer { get; private set; }
 
     protected CustomerTag() : base() { }
 

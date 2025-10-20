@@ -22,7 +22,7 @@ public class DealProduct : TenantEntity
     public string? RecurringPeriod { get; private set; }
     public int? RecurringCycles { get; private set; }
     
-    public virtual Deal Deal { get; private set; }
+    public Deal Deal { get; private set; }
     
     protected DealProduct() : base() { }
     
