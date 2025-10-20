@@ -136,81 +136,30 @@ const TenantMigrations: React.FC = () => {
 
   const fetchMigrations = async () => {
     setLoading(true);
-    // Simulated data
-    setTimeout(() => {
-      setMigrations([
-        {
-          id: '1',
-          name: 'AddUserRolesTable',
-          version: '2024.01.15.001',
-          type: 'schema',
-          status: 'completed',
-          source: 'automatic',
-          executedAt: '2024-01-15T10:30:00',
-          executedBy: 'System',
-          duration: 1250,
-          affectedTables: ['users', 'roles', 'user_roles'],
-          affectedRows: 0,
-          canRollback: true,
-          rollbackVersion: '2024.01.14.003'
-        },
-        {
-          id: '2',
-          name: 'MigrateUserPermissions',
-          version: '2024.01.14.003',
-          type: 'data',
-          status: 'completed',
-          source: 'manual',
-          executedAt: '2024-01-14T15:20:00',
-          executedBy: 'admin@example.com',
-          duration: 3450,
-          affectedTables: ['permissions', 'user_permissions'],
-          affectedRows: 245,
-          canRollback: true
-        },
-        {
-          id: '3',
-          name: 'CreateAuditLogTable',
-          version: '2024.01.14.002',
-          type: 'schema',
-          status: 'completed',
-          source: 'automatic',
-          executedAt: '2024-01-14T09:00:00',
-          executedBy: 'System',
-          duration: 890,
-          affectedTables: ['audit_logs'],
-          affectedRows: 0,
-          canRollback: true
-        },
-        {
-          id: '4',
-          name: 'SeedInitialData',
-          version: '2024.01.16.001',
-          type: 'seed',
-          status: 'pending',
-          source: 'scheduled',
-          affectedTables: ['settings', 'configurations'],
-          affectedRows: 0,
-          canRollback: false
-        },
-        {
-          id: '5',
-          name: 'UpdatePricingStructure',
-          version: '2024.01.13.001',
-          type: 'data',
-          status: 'failed',
-          source: 'manual',
-          executedAt: '2024-01-13T14:30:00',
-          executedBy: 'admin@example.com',
-          duration: 5670,
-          affectedTables: ['pricing', 'subscriptions'],
-          affectedRows: 125,
-          error: 'Foreign key constraint violation',
-          canRollback: false
-        }
-      ]);
+    try {
+      // Fetch real tenant list
+      const response = await tenantService.getTenants({ pageSize: 100 });
+      
+      // Map tenants to migration items (each tenant can be migrated)
+      const tenantMigrations: Migration[] = response.data.map((tenant, index) => ({
+        id: tenant.id,
+        name: `${tenant.name} (${tenant.code})`,
+        version: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+        type: 'schema' as const,
+        status: tenant.database?.status === 'migrating' ? 'running' as const : 'pending' as const,
+        source: 'manual' as const,
+        affectedTables: ['Tenant DB', 'CRM Tables (if active)'],
+        affectedRows: 0,
+        canRollback: false,
+      }));
+
+      setMigrations(tenantMigrations);
+    } catch (error) {
+      console.error('Error fetching tenants for migration:', error);
+      message.error('Tenant listesi yüklenemedi');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const fetchHistory = async () => {
@@ -257,8 +206,10 @@ const TenantMigrations: React.FC = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          // API call would go here
-          message.success('Migration başlatıldı');
+          // Call real API
+          const migration = migrations.find(m => m.id === migrationId);
+          const result = await tenantService.migrateTenantDatabase(migrationId);
+          message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
           fetchMigrations();
         } catch (error) {
           message.error('Migration başarısız');
