@@ -180,9 +180,41 @@ const TenantMigrations: React.FC = () => {
   const handleRunMigration = async (migrationId: string) => {
     console.log('🔵 [BUTTON CLICKED] handleRunMigration called with migrationId:', migrationId);
     console.log('🔵 [BUTTON CLICKED] Current migrations state:', migrations);
-    console.log('🔵 [MODAL CHECK] Modal object:', Modal);
-    console.log('🔵 [MODAL CHECK] Modal.confirm:', Modal.confirm);
 
+    // TEMPORARY FIX: Use native confirm instead of Modal.confirm
+    // TODO: Fix Ant Design Modal rendering issue later
+    const confirmed = window.confirm('Bu migration\'ı çalıştırmak istediğinizden emin misiniz?');
+
+    if (!confirmed) {
+      console.log('❌ [CONFIRM CANCEL] User cancelled migration');
+      return;
+    }
+
+    console.log('✅ [CONFIRM OK] User confirmed migration');
+    setLoading(true);
+    try {
+      // Call real API
+      const migration = migrations.find(m => m.id === migrationId);
+      console.log('🚀 [API CALL] Starting migration for tenant:', migrationId);
+      console.log('🚀 [API CALL] Migration object:', migration);
+      const result = await tenantService.migrateTenantDatabase(migrationId);
+      console.log('✅ [API SUCCESS] Migration result:', result);
+      message.success(result.message || `${migration?.name} migration başarıyla tamamlandı!`);
+      fetchMigrations();
+    } catch (error: any) {
+      console.error('❌ [API ERROR] Migration error:', error);
+      console.error('❌ [API ERROR] Error details:', {
+        response: error?.response,
+        message: error?.message,
+        stack: error?.stack
+      });
+      const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+
+    /* ORIGINAL Modal.confirm CODE - NOT RENDERING
     Modal.confirm({
       title: 'Migration Çalıştır',
       content: 'Bu migration\'ı çalıştırmak istediğinizden emin misiniz?',
