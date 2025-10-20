@@ -312,7 +312,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "CRM",
                         principalTable: "Customers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -325,7 +325,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     Tag = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -336,8 +336,12 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "CRM",
                         principalTable: "Customers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
-                    
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        column: x => x.CustomerId,
+                        principalSchema: "CRM",
+                        principalTable: "Customers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -350,7 +354,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Reason = table.Column<int>(type: "int", nullable: false),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -361,14 +365,18 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "CustomerSegments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_CustomerSegmentMembers_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalSchema: "CRM",
                         principalTable: "Customers",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.CustomerId,
+                        principalSchema: "CRM",
+                        principalTable: "Customers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -398,7 +406,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Pipelines",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -474,7 +482,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Workflows",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -483,19 +491,25 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LeadId = table.Column<int>(type: "int", nullable: false),
+                    LeadId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PreviousScore = table.Column<int>(type: "int", nullable: false),
                     NewScore = table.Column<int>(type: "int", nullable: false),
                     RuleApplied = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ScoreChange = table.Column<int>(type: "int", nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ScoredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LeadScoringHistories", x => x.Id);
-                    
+                    table.ForeignKey(
+                        name: "FK_LeadScoringHistories_Leads_LeadId",
+                        column: x => x.LeadId,
+                        principalSchema: "CRM",
+                        principalTable: "Leads",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -597,7 +611,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     Priority = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -609,7 +623,11 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalTable: "Campaigns",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    
+                    table.ForeignKey(
+                        column: x => x.CampaignId,
+                        principalSchema: "crm",
+                        principalTable: "Campaigns",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Opportunities_Contacts_ContactId",
                         column: x => x.ContactId,
@@ -689,7 +707,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "WorkflowExecutions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_WorkflowStepExecutions_WorkflowSteps_WorkflowStepId",
                         column: x => x.WorkflowStepId,
@@ -725,7 +743,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     IsRecurring = table.Column<bool>(type: "bit", nullable: false),
                     RecurringPeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecurringCycles = table.Column<int>(type: "int", nullable: true),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -736,7 +754,12 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Deals",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.DealId,
+                        principalSchema: "crm",
+                        principalTable: "Deals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -779,7 +802,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     MeetingLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TaskProgress = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     TaskOutcome = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                                                                                                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -790,36 +813,52 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "CRM",
                         principalTable: "Contacts",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.ContactId,
+                        principalSchema: "CRM",
+                        principalTable: "Contacts",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Activities_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalSchema: "CRM",
                         principalTable: "Customers",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.CustomerId,
+                        principalSchema: "CRM",
+                        principalTable: "Customers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Activities_Deals_DealId",
                         column: x => x.DealId,
                         principalSchema: "crm",
                         principalTable: "Deals",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
-                    
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        column: x => x.DealId,
+                        principalSchema: "crm",
+                        principalTable: "Deals",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Activities_Leads_LeadId",
                         column: x => x.LeadId,
                         principalSchema: "CRM",
                         principalTable: "Leads",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.LeadId,
+                        principalSchema: "CRM",
+                        principalTable: "Leads",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Activities_Opportunities_OpportunityId",
                         column: x => x.OpportunityId,
                         principalSchema: "crm",
                         principalTable: "Opportunities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -828,9 +867,9 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CampaignId = table.Column<int>(type: "int", nullable: false),
-                    ContactId = table.Column<int>(type: "int", nullable: true),
-                    LeadId = table.Column<int>(type: "int", nullable: true),
+                    CampaignId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ContactId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LeadId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     RespondedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     FirstOpenDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -844,16 +883,37 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     BounceReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HasConverted = table.Column<bool>(type: "bit", nullable: false),
                     ConvertedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ConvertedOpportunityId = table.Column<int>(type: "int", nullable: true),
-                                                                                                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ConvertedOpportunityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CampaignMembers", x => x.Id);
-                    
-                    
-                    
-                    
+                    table.ForeignKey(
+                        name: "FK_CampaignMembers_Campaigns_CampaignId",
+                        column: x => x.CampaignId,
+                        principalSchema: "crm",
+                        principalTable: "Campaigns",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CampaignMembers_Contacts_ContactId",
+                        column: x => x.ContactId,
+                        principalSchema: "CRM",
+                        principalTable: "Contacts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CampaignMembers_Leads_LeadId",
+                        column: x => x.LeadId,
+                        principalSchema: "CRM",
+                        principalTable: "Leads",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CampaignMembers_Opportunities_ConvertedOpportunityId",
+                        column: x => x.ConvertedOpportunityId,
+                        principalSchema: "crm",
+                        principalTable: "Opportunities",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -876,7 +936,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalPriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -887,8 +947,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Opportunities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
-                    
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        column: x => x.OpportunityId,
+                        principalSchema: "crm",
+                        principalTable: "Opportunities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -911,7 +976,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     CreatedById = table.Column<int>(type: "int", nullable: false),
                     LastModifiedById = table.Column<int>(type: "int", nullable: true),
                     AttachmentUrls = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                                                                                                                        TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -922,43 +987,63 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         principalSchema: "crm",
                         principalTable: "Activities",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.ActivityId,
+                        principalSchema: "crm",
+                        principalTable: "Activities",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notes_Contacts_ContactId",
                         column: x => x.ContactId,
                         principalSchema: "CRM",
                         principalTable: "Contacts",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.ContactId,
+                        principalSchema: "CRM",
+                        principalTable: "Contacts",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notes_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalSchema: "CRM",
                         principalTable: "Customers",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.CustomerId,
+                        principalSchema: "CRM",
+                        principalTable: "Customers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notes_Deals_DealId",
                         column: x => x.DealId,
                         principalSchema: "crm",
                         principalTable: "Deals",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
-                    
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        column: x => x.DealId,
+                        principalSchema: "crm",
+                        principalTable: "Deals",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notes_Leads_LeadId",
                         column: x => x.LeadId,
                         principalSchema: "CRM",
                         principalTable: "Leads",
                         principalColumn: "Id");
-                    
+                    table.ForeignKey(
+                        column: x => x.LeadId,
+                        principalSchema: "CRM",
+                        principalTable: "Leads",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notes_Opportunities_OpportunityId",
                         column: x => x.OpportunityId,
                         principalSchema: "crm",
                         principalTable: "Opportunities",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -967,7 +1052,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Activities",
                 column: "ContactId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Activities",
+                column: "ContactId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Activities_CustomerId",
@@ -975,7 +1063,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Activities",
                 column: "CustomerId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Activities",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Activities_DealId",
@@ -983,7 +1074,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Activities",
                 column: "DealId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Activities",
+                column: "DealId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Activities_LeadId",
@@ -991,7 +1085,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Activities",
                 column: "LeadId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Activities",
+                column: "LeadId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Activities_OpportunityId",
@@ -999,13 +1096,29 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Activities",
                 column: "OpportunityId");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignMembers_CampaignId",
+                schema: "crm",
+                table: "CampaignMembers",
+                column: "CampaignId");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignMembers_ContactId",
+                schema: "crm",
+                table: "CampaignMembers",
+                column: "ContactId");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignMembers_ConvertedOpportunityId",
+                schema: "crm",
+                table: "CampaignMembers",
+                column: "ConvertedOpportunityId");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_CampaignMembers_LeadId",
+                schema: "crm",
+                table: "CampaignMembers",
+                column: "LeadId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Campaigns_ParentCampaignId",
@@ -1104,7 +1217,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "CustomerSegmentMembers",
                 column: "CustomerId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "CustomerSegmentMembers",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerSegmentMembers_SegmentId_CustomerId",
@@ -1156,7 +1272,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 columns: new[] { "CustomerId", "Tag" },
                 unique: true);
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "CustomerTags",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerTags_TenantId",
@@ -1182,7 +1301,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "DealProducts",
                 column: "DealId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "DealProducts",
+                column: "DealId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DealProducts_TenantId",
@@ -1347,7 +1469,11 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Leads",
                 columns: new[] { "TenantId", "Status" });
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_LeadScoringHistories_LeadId",
+                schema: "crm",
+                table: "LeadScoringHistories",
+                column: "LeadId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_ActivityId",
@@ -1355,7 +1481,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Notes",
                 column: "ActivityId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Notes",
+                column: "ActivityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_ContactId",
@@ -1363,7 +1492,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Notes",
                 column: "ContactId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Notes",
+                column: "ContactId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_CustomerId",
@@ -1371,7 +1503,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Notes",
                 column: "CustomerId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Notes",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_DealId",
@@ -1379,7 +1514,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Notes",
                 column: "DealId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Notes",
+                column: "DealId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_LeadId",
@@ -1387,7 +1525,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Notes",
                 column: "LeadId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Notes",
+                column: "LeadId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_OpportunityId",
@@ -1401,7 +1542,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "Opportunities",
                 column: "CampaignId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "Opportunities",
+                column: "CampaignId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Opportunities_ContactId",
@@ -1487,7 +1631,10 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                 table: "OpportunityProducts",
                 column: "OpportunityId");
 
-            
+            migrationBuilder.CreateIndex(
+                schema: "crm",
+                table: "OpportunityProducts",
+                column: "OpportunityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OpportunityProducts_TenantId",
