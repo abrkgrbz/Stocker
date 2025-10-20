@@ -10,6 +10,19 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Drop the duplicate foreign key (DealId1) first to avoid circular cascade paths
+            migrationBuilder.DropForeignKey(
+                name: "FK_DealProducts_Deals_DealId1",
+                schema: "crm",
+                table: "DealProducts");
+
+            // Drop the duplicate DealId1 column
+            migrationBuilder.DropColumn(
+                name: "DealId1",
+                schema: "crm",
+                table: "DealProducts");
+
+            // Now fix the main DealId foreign key to use NO ACTION instead of CASCADE
             migrationBuilder.DropForeignKey(
                 name: "FK_DealProducts_Deals_DealId",
                 schema: "crm",
