@@ -178,6 +178,51 @@ public class MigrationService : IMigrationService
             await tenantDbContext.Database.MigrateAsync();
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);
+
+            // Apply CRM module migrations if tenant has CRM module access
+            try
+            {
+                _logger.LogInformation("Checking CRM module access for tenant {TenantId}...", tenantId);
+                
+                // Get tenant module service to check if tenant has CRM access
+                var tenantModuleService = scope.ServiceProvider.GetService<ITenantModuleService>();
+                
+                if (tenantModuleService != null)
+                {
+                    var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenantId, "CRM", CancellationToken.None);
+                    
+                    if (hasCrmAccess)
+                    {
+                        _logger.LogInformation("Tenant {TenantId} has CRM module access. Applying CRM migrations...", tenantId);
+                        
+                        // Get CRMDbContext and apply migrations
+                        var crmDbContext = scope.ServiceProvider.GetService<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                        
+                        if (crmDbContext != null)
+                        {
+                            await crmDbContext.Database.MigrateAsync();
+                            _logger.LogInformation("CRM module migrations completed successfully for tenant {TenantId}.", tenantId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("CRMDbContext not available for tenant {TenantId}. CRM migrations skipped.", tenantId);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Tenant {TenantId} does not have CRM module access. CRM migrations skipped.", tenantId);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("TenantModuleService not available. CRM module check skipped for tenant {TenantId}.", tenantId);
+                }
+            }
+            catch (Exception crmEx)
+            {
+                _logger.LogError(crmEx, "Error applying CRM migrations for tenant {TenantId}. CRM module may not be fully functional.", tenantId);
+                // Don't fail the overall migration if CRM migrations fail
+            }
         }
         catch (DbUpdateException ex)
         {
