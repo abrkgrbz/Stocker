@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout, ProLayoutProps, PageContainer } from '@ant-design/pro-components';
 import {
   DashboardOutlined,
+  DatabaseOutlined,
   TeamOutlined,
   AppstoreOutlined,
   CreditCardOutlined,
@@ -195,6 +196,14 @@ const MasterLayout: React.FC = () => {
     },
     {
       type: 'page',
+      title: locale === 'tr' ? 'Migration Yönetimi' : 'Migration Management',
+      description: locale === 'tr' ? 'Tenant veritabanı migration\'ları ve CRM tablo yönetimi' : 'Tenant database migrations and CRM table management',
+      path: '/tenants/migrations',
+      icon: <DatabaseOutlined />,
+      keywords: ['migration', 'database', 'veritabanı', 'crm', 'tables', 'tablolar', 'migrate', 'schema']
+    },
+    {
+      type: 'page',
       title: locale === 'tr' ? 'Ayarlar' : 'Settings',
       description: locale === 'tr' ? 'Sistem ayarları ve konfigürasyon' : 'System settings and configuration',
       path: '/settings',
@@ -336,6 +345,11 @@ const MasterLayout: React.FC = () => {
           path: '/tenants/create',
           name: locale === 'tr' ? 'Yeni Tenant' : 'New Tenant',
           icon: <PlusOutlined />,
+        },
+        {
+          path: '/tenants/migrations',
+          name: locale === 'tr' ? 'Migration Yönetimi' : 'Migration Management',
+          icon: <DatabaseOutlined />,
         },
       ],
     },

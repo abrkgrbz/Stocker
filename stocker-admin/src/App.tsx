@@ -126,6 +126,11 @@ function App() {
               <TenantCreate />
             </Suspense>
           } />
+          <Route path="tenants/migrations" element={
+            <Suspense fallback={<PageLoader />}>
+              <TenantMigrations />
+            </Suspense>
+          } />
           <Route path="tenants/:id" element={
             <Suspense fallback={<PageLoader />}>
               <TenantDetails />
