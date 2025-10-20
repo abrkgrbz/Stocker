@@ -122,7 +122,9 @@
       "Bash(do echo \"[$i/15] Monitoring CRM tenant database fix deployment (commit 18edd241)...\")",
       "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED\")",
       "Bash(Select-Object -First 30)",
-      "Bash(do echo \"[$i/15] Monitoring automatic CRM migration deployment (commit e26ca57f)...\")"
+      "Bash(do echo \"[$i/15] Monitoring automatic CRM migration deployment (commit e26ca57f)...\")",
+      "Bash(do echo \"[$i/15] Monitoring CRM migration scope fix deployment (commit 89ac8ffd)...\")",
+      "Bash(may cause cycles or multiple cascade paths\"\n\nChanges:\n- DealProductConfiguration: Change DeleteBehavior.Cascade to DeleteBehavior.NoAction\n- Add migration FixDealProductCascade to update FK constraint\n\nTechnical Details:\n- SQL Server prevents multiple cascade delete paths to same table\n- DealProduct had cascade delete from Deal\n- Likely another entity also cascades affecting same tables\n- NoAction prevents automatic deletion but maintains referential integrity\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
