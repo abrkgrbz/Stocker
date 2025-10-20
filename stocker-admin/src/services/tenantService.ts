@@ -308,6 +308,30 @@ export const tenantService = {
     return response.data;
   },
 
+  // Migrate single tenant database (run all pending migrations including CRM)
+  async migrateTenantDatabase(tenantId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.post<{ success: boolean; message: string }>(
+        `/admin/tenant-migration/${tenantId}/migrate`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Migration başarısız oldu');
+    }
+  },
+
+  // Migrate all tenants (run migrations for all active tenants)
+  async migrateAllTenants(): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.post<{ success: boolean; message: string }>(
+        '/admin/tenant-migration/migrate-all'
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Toplu migration başarısız oldu');
+    }
+  },
+
   // Create backup for tenant
   async createBackup(id: string): Promise<{ backupId: string; url: string }> {
     const response = await apiClient.post<{ backupId: string; url: string }>(`/tenants/${id}/backup`);

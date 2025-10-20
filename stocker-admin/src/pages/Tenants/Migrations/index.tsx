@@ -59,6 +59,8 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
+import dayjs from 'dayjs';
+import { tenantService } from '../../../services/tenantService';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -539,6 +541,34 @@ const TenantMigrations: React.FC = () => {
               </Button>
               <Button icon={<ThunderboltOutlined />} onClick={() => setPlanModalVisible(true)}>
                 Migration Planı
+              </Button>
+              <Button 
+                type="primary" 
+                danger
+                icon={<ThunderboltOutlined />} 
+                onClick={async () => {
+                  Modal.confirm({
+                    title: 'Tüm Tenant\'ları Güncelle',
+                    content: 'Tüm aktif tenant\'ların veritabanları migrate edilecek. CRM modülü aktif olan tenant\'larda CRM tabloları oluşturulacak. Devam etmek istiyor musunuz?',
+                    okText: 'Evet, Güncelle',
+                    cancelText: 'İptal',
+                    okType: 'danger',
+                    icon: <DatabaseOutlined />,
+                    onOk: async () => {
+                      setLoading(true);
+                      try {
+                        const result = await tenantService.migrateAllTenants();
+                        message.success(result.message || 'Tüm tenant\'lar başarıyla güncellendi!');
+                      } catch (error: any) {
+                        message.error(error.message || 'Toplu migration başarısız oldu');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  });
+                }}
+              >
+                Tüm Tenant'ları Güncelle
               </Button>
               <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => setMigrationModalVisible(true)}>
                 Yeni Migration
