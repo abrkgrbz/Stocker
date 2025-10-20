@@ -473,7 +473,7 @@ public class DatabaseMigrationHostedService : IHostedService
 /// Mock implementation of ITenantService for use during database migrations
 /// where tenant context is not available from HTTP request.
 /// </summary>
-internal class MockTenantService : ITenantService
+public class MockTenantService : ITenantService
 {
     private readonly Guid _tenantId;
     private readonly string _connectionString;

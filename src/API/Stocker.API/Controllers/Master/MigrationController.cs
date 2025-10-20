@@ -20,17 +20,20 @@ public class MigrationController : ApiController
     private readonly IServiceProvider _serviceProvider;
     private readonly ITenantService _tenantService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<MigrationController> _logger;
 
     public MigrationController(
         MasterDbContext masterDbContext,
         IServiceProvider serviceProvider,
         ITenantService tenantService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<MigrationController> logger)
     {
         _masterDbContext = masterDbContext;
         _serviceProvider = serviceProvider;
         _tenantService = tenantService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     /// <summary>
@@ -70,14 +73,75 @@ public class MigrationController : ApiController
                     var appliedMigrations = await tenantContext.Database
                         .GetAppliedMigrationsAsync();
 
+                    var pendingList = pendingMigrations.ToList();
+                    var appliedList = appliedMigrations.ToList();
+
+                    // Check CRM module migrations if tenant has CRM access
+                    List<string> crmPendingMigrations = new();
+                    List<string> crmAppliedMigrations = new();
+                    
+                    try
+                    {
+                        var tenantModuleService = _serviceProvider.GetService<Stocker.Application.Common.Interfaces.ITenantModuleService>();
+                        
+                        if (tenantModuleService != null)
+                        {
+                            var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "CRM", CancellationToken.None);
+                            
+                            if (hasCrmAccess)
+                            {
+                                var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                                crmOptionsBuilder.UseSqlServer(tenant.ConnectionString);
+                                crmOptionsBuilder.ConfigureWarnings(warnings =>
+                                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                                
+                                var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenant.Id, tenant.ConnectionString);
+                                
+                                using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                                    crmOptionsBuilder.Options, 
+                                    mockTenantService);
+                                
+                                var crmPending = await crmDbContext.Database.GetPendingMigrationsAsync();
+                                var crmApplied = await crmDbContext.Database.GetAppliedMigrationsAsync();
+                                
+                                crmPendingMigrations = crmPending.ToList();
+                                crmAppliedMigrations = crmApplied.ToList();
+                            }
+                        }
+                    }
+                    catch (Exception crmEx)
+                    {
+                        _logger.LogWarning(crmEx, "Failed to check CRM migrations for tenant {TenantId}", tenant.Id);
+                    }
+
+                    var allPendingMigrations = new List<object>();
+                    if (pendingList.Any())
+                    {
+                        allPendingMigrations.Add(new { Module = "Core", Migrations = pendingList });
+                    }
+                    if (crmPendingMigrations.Any())
+                    {
+                        allPendingMigrations.Add(new { Module = "CRM", Migrations = crmPendingMigrations });
+                    }
+
+                    var allAppliedMigrations = new List<object>();
+                    if (appliedList.Any())
+                    {
+                        allAppliedMigrations.Add(new { Module = "Core", Migrations = appliedList });
+                    }
+                    if (crmAppliedMigrations.Any())
+                    {
+                        allAppliedMigrations.Add(new { Module = "CRM", Migrations = crmAppliedMigrations });
+                    }
+
                     results.Add(new
                     {
                         TenantId = tenant.Id,
                         TenantName = tenant.Name,
                         TenantCode = tenant.Code,
-                        PendingMigrations = pendingMigrations.ToList(),
-                        AppliedMigrations = appliedMigrations.ToList(),
-                        HasPendingMigrations = pendingMigrations.Any()
+                        PendingMigrations = allPendingMigrations,
+                        AppliedMigrations = allAppliedMigrations,
+                        HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any()
                     });
                 }
                 catch (DatabaseException ex)
