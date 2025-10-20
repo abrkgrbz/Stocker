@@ -23,7 +23,7 @@ const TenantApiKeys = lazy(() => import('./pages/Tenants/ApiKeys'));
 const TenantBackupRestore = lazy(() => import('./pages/Tenants/BackupRestore'));
 const TenantUsers = lazy(() => import('./pages/Tenants/Users'));
 const TenantDomains = lazy(() => import('./pages/Tenants/Domains'));
-const TenantMigrations = lazy(() => import('./pages/Tenants/Migrations'));
+const TenantMigrations = lazy(() => import('./pages/Tenants/Migrations/index'));
 const TenantSecurity = lazy(() => import('./pages/Tenants/Security'));
 const TenantAnalytics = lazy(() => import('./pages/Tenants/Analytics'));
 const TenantIntegrations = lazy(() => import('./pages/Tenants/Integrations'));
