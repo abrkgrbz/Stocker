@@ -147,11 +147,19 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ContactId");
 
+                    
+
                     b.HasIndex("CustomerId");
+
+                    
 
                     b.HasIndex("DealId");
 
+                    
+
                     b.HasIndex("LeadId");
+
+                    
 
                     b.HasIndex("OpportunityId");
 
@@ -343,6 +351,14 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    
+
+                    
+
+                    
+
+                    
 
                     b.ToTable("CampaignMembers", "crm");
                 });
@@ -581,6 +597,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    
+
                     b.HasIndex("TenantId");
 
                     b.HasIndex("SegmentId", "CustomerId")
@@ -619,6 +637,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    
 
                     b.HasIndex("TenantId");
 
@@ -797,6 +817,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DealId");
+
+                    
 
                     b.HasIndex("TenantId");
 
@@ -1114,6 +1136,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    
+
                     b.ToTable("LeadScoringHistories", "crm");
                 });
 
@@ -1229,13 +1253,23 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ActivityId");
 
+                    
+
                     b.HasIndex("ContactId");
+
+                    
 
                     b.HasIndex("CustomerId");
 
+                    
+
                     b.HasIndex("DealId");
 
+                    
+
                     b.HasIndex("LeadId");
+
+                    
 
                     b.HasIndex("OpportunityId");
 
@@ -1325,6 +1359,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CampaignId");
 
+                    
+
                     b.HasIndex("ContactId");
 
                     b.HasIndex("CustomerId");
@@ -1395,6 +1431,8 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OpportunityId");
+
+                    
 
                     b.HasIndex("TenantId");
 

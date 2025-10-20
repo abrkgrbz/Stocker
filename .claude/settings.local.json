@@ -35,7 +35,11 @@
       "Bash(for file in \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020213114_InitialCRM.Designer.cs\" \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/20251020213114_InitialCRM.cs\" \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")",
       "Bash(do echo \"=== Processing: $file ===\")",
       "Bash(python scripts/fix_migration_v2.py \"$file\")",
-      "Bash(python scripts/fix_migration_v2.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")"
+      "Bash(python scripts/fix_migration_v2.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")",
+      "Bash(do echo \"[$i/15] Monitoring ModelSnapshot cleanup deployment (commit 37da26ea)...\")",
+      "Bash(timeout 180 dotnet ef migrations add TestPendingChanges --context CRMDbContext --output-dir Infrastructure/Persistence/Migrations)",
+      "Bash(Select-String -Pattern \"error|warning|Build succeeded|Build FAILED|Adding migration\")",
+      "Bash(python3 scripts/fix_migration_v2.py \"src/Modules/Stocker.Modules.CRM/Infrastructure/Persistence/Migrations/CRMDbContextModelSnapshot.cs\")"
     ],
     "deny": [],
     "ask": []
