@@ -16,6 +16,7 @@ using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Migrations;
 
+// Migration service implementation
 public class MigrationService : IMigrationService
 {
     private readonly IServiceProvider _serviceProvider;
