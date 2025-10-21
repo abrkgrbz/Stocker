@@ -103,28 +103,28 @@ class MigrationService {
    * Get pending migrations for all active tenants
    */
   async getPendingMigrations(): Promise<TenantMigrationStatusDto[]> {
-    return apiClient.get<TenantMigrationStatusDto[]>('/api/master/Migration/pending');
+    return apiClient.get<TenantMigrationStatusDto[]>('/api/master/migrations/pending');
   }
 
   /**
    * Apply migration to a specific tenant
    */
   async applyMigration(tenantId: string): Promise<ApplyMigrationResultDto> {
-    return apiClient.post<ApplyMigrationResultDto>(`/api/master/Migration/apply/${tenantId}`);
+    return apiClient.post<ApplyMigrationResultDto>(`/api/master/migrations/apply/${tenantId}`);
   }
 
   /**
    * Apply migrations to all tenants
    */
   async applyAllMigrations(): Promise<ApplyMigrationResultDto[]> {
-    return apiClient.post<ApplyMigrationResultDto[]>('/api/master/Migration/apply-all');
+    return apiClient.post<ApplyMigrationResultDto[]>('/api/master/migrations/apply-all');
   }
 
   /**
    * Get migration history for a specific tenant
    */
   async getMigrationHistory(tenantId: string): Promise<MigrationHistoryDto> {
-    return apiClient.get<MigrationHistoryDto>(`/api/master/Migration/history/${tenantId}`);
+    return apiClient.get<MigrationHistoryDto>(`/api/master/migrations/history/${tenantId}`);
   }
 
   /**
@@ -136,7 +136,7 @@ class MigrationService {
     migrationName: string
   ): Promise<MigrationScriptPreviewDto> {
     return apiClient.get<MigrationScriptPreviewDto>(
-      `/api/master/Migration/preview/${tenantId}/${moduleName}/${migrationName}`
+      `/api/master/migrations/preview/${tenantId}/${moduleName}/${migrationName}`
     );
   }
 
@@ -149,7 +149,7 @@ class MigrationService {
     migrationName: string
   ): Promise<RollbackMigrationResultDto> {
     return apiClient.post<RollbackMigrationResultDto>(
-      `/api/master/Migration/rollback/${tenantId}/${moduleName}/${migrationName}`
+      `/api/master/migrations/rollback/${tenantId}/${moduleName}/${migrationName}`
     );
   }
 
@@ -162,7 +162,7 @@ class MigrationService {
     migrationName?: string,
     moduleName?: string
   ): Promise<ScheduleMigrationResultDto> {
-    return apiClient.post<ScheduleMigrationResultDto>('/api/master/Migration/schedule', {
+    return apiClient.post<ScheduleMigrationResultDto>('/api/master/migrations/schedule', {
       tenantId,
       scheduledTime: scheduledTime.toISOString(),
       migrationName,
@@ -174,28 +174,28 @@ class MigrationService {
    * Get all scheduled migrations
    */
   async getScheduledMigrations(): Promise<ScheduledMigrationDto[]> {
-    return apiClient.get<ScheduledMigrationDto[]>('/api/master/Migration/scheduled');
+    return apiClient.get<ScheduledMigrationDto[]>('/api/master/migrations/scheduled');
   }
 
   /**
    * Cancel a scheduled migration
    */
   async cancelScheduledMigration(scheduleId: string): Promise<boolean> {
-    return apiClient.delete<boolean>(`/api/master/Migration/scheduled/${scheduleId}`);
+    return apiClient.delete<boolean>(`/api/master/migrations/scheduled/${scheduleId}`);
   }
 
   /**
    * Get migration settings
    */
   async getMigrationSettings(): Promise<MigrationSettingsDto> {
-    return apiClient.get<MigrationSettingsDto>('/api/master/Migration/settings');
+    return apiClient.get<MigrationSettingsDto>('/api/master/migrations/settings');
   }
 
   /**
    * Update migration settings
    */
   async updateMigrationSettings(settings: MigrationSettingsDto): Promise<MigrationSettingsDto> {
-    return apiClient.put<MigrationSettingsDto>('/api/master/Migration/settings', settings);
+    return apiClient.put<MigrationSettingsDto>('/api/master/migrations/settings', settings);
   }
 }
 
