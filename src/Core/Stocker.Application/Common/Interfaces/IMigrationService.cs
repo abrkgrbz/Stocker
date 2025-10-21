@@ -106,4 +106,9 @@ public interface IMigrationService
     Task<MigrationSettingsDto> UpdateMigrationSettingsAsync(
         MigrationSettingsDto settings,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a scheduled migration. This method is called by Hangfire.
+    /// </summary>
+    Task ExecuteScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default);
 }

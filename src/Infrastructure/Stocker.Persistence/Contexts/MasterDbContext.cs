@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;  
+using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
+using Stocker.Domain.Entities.Migration;
 using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
@@ -55,6 +56,9 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // System Settings
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
+
+    // Migration Management
+    public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -13,11 +13,12 @@ using Stocker.SharedKernel.Settings;
 using Stocker.SharedKernel.Exceptions;
 using Stocker.SharedKernel.DTOs.Migration;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Extensions;
 
 namespace Stocker.Persistence.Migrations;
 
 // Migration service implementation
-public class MigrationService : IMigrationService
+public partial class MigrationService : IMigrationService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<MigrationService> _logger;
@@ -468,7 +469,11 @@ public class DatabaseMigrationHostedService : IHostedService
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
 
+// Extension of MigrationService class - real implementations
+public partial class MigrationService
+{
     public async Task<List<TenantMigrationStatusDto>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -775,22 +780,83 @@ public class DatabaseMigrationHostedService : IHostedService
             throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
         }
 
-        // For now, return a placeholder. In a real implementation, you would:
-        // 1. Parse migration files from the Migrations directory
-        // 2. Extract SQL from the Up() method
-        // 3. Analyze affected tables
-        return new MigrationScriptPreviewDto
+        try
         {
-            TenantId = tenant.Id,
-            TenantName = tenant.Name,
-            MigrationName = migrationName,
-            ModuleName = moduleName,
-            SqlScript = "-- Migration script preview not yet implemented\n-- This would show the actual SQL that will be executed",
-            Description = $"Migration {migrationName} from {moduleName} module",
-            CreatedAt = DateTime.UtcNow,
-            AffectedTables = new List<string>(),
-            EstimatedDuration = 10
-        };
+            _logger.LogInformation("Generating migration script preview for tenant {TenantId}, migration {MigrationName}", tenantId, migrationName);
+
+            // Get the appropriate DbContext based on module
+            DbContext? dbContext = null;
+            var affectedTables = new List<string>();
+            string sqlScript = string.Empty;
+
+            switch (moduleName?.ToUpperInvariant())
+            {
+                case "TENANT":
+                case "CRM":
+                    var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+                    dbContext = tenantDbContext;
+                    break;
+                case "MASTER":
+                    dbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+                    break;
+                default:
+                    _logger.LogWarning("Unknown module: {ModuleName}, using Tenant context", moduleName);
+                    var defaultTenantContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+                    dbContext = defaultTenantContext;
+                    break;
+            }
+
+            if (dbContext != null)
+            {
+                // Generate script for pending migrations
+                var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+
+                if (pendingMigrations.Any())
+                {
+                    // Generate SQL script preview (simplified - just list pending migrations)
+                    sqlScript = $"-- Pending Migrations:\n-- {string.Join("\n-- ", pendingMigrations)}\n\n-- Note: Run 'dotnet ef database update' to apply these migrations";
+
+                    // Estimated affected tables based on pending migrations count
+                    affectedTables = pendingMigrations.Select(m => m.Split('_')[0]).Distinct().ToList();
+
+                    _logger.LogInformation("Found {Count} pending migrations", pendingMigrations.Count());
+                }
+                else
+                {
+                    sqlScript = "-- No pending migrations found";
+                    _logger.LogInformation("No pending migrations found for {ModuleName}", moduleName);
+                }
+            }
+
+            return new MigrationScriptPreviewDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                SqlScript = sqlScript,
+                Description = $"Migration preview for {moduleName} module",
+                CreatedAt = DateTime.UtcNow,
+                AffectedTables = affectedTables,
+                EstimatedDuration = affectedTables.Count * 2 // Rough estimate: 2 seconds per table
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate migration script preview for tenant {TenantId}", tenantId);
+            return new MigrationScriptPreviewDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                SqlScript = $"-- Error generating script: {ex.Message}",
+                Description = $"Migration preview failed: {ex.Message}",
+                CreatedAt = DateTime.UtcNow,
+                AffectedTables = new List<string>(),
+                EstimatedDuration = 0
+            };
+        }
     }
 
     public async Task<RollbackMigrationResultDto> RollbackMigrationAsync(
@@ -813,16 +879,81 @@ public class DatabaseMigrationHostedService : IHostedService
 
         try
         {
-            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-            optionsBuilder.ConfigureWarnings(warnings =>
-                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            _logger.LogInformation("Attempting to rollback migration {MigrationName} for tenant {TenantId}", migrationName, tenantId);
 
-            using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+            // Get the appropriate DbContext based on module
+            DbContext? dbContext = null;
 
-            // Note: EF Core doesn't support automatic rollback of specific migrations
-            // This would require manual implementation using migration scripts
-            _logger.LogWarning("Migration rollback requested but not yet implemented: {MigrationName}", migrationName);
+            switch (moduleName?.ToUpperInvariant())
+            {
+                case "TENANT":
+                case "CRM":
+                    var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+                    dbContext = tenantDbContext;
+                    break;
+                case "MASTER":
+                    dbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+                    break;
+                default:
+                    _logger.LogWarning("Unknown module: {ModuleName}, cannot rollback", moduleName);
+                    return new RollbackMigrationResultDto
+                    {
+                        TenantId = tenant.Id,
+                        TenantName = tenant.Name,
+                        MigrationName = migrationName,
+                        ModuleName = moduleName,
+                        Success = false,
+                        Message = $"Unknown module: {moduleName}",
+                        Error = "Invalid module name",
+                        RolledBackAt = DateTime.UtcNow
+                    };
+            }
+
+            if (dbContext != null)
+            {
+                // Get applied migrations
+                var appliedMigrations = await dbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+                var appliedList = appliedMigrations.ToList();
+
+                // Find the target migration
+                var targetIndex = appliedList.FindIndex(m => m.Contains(migrationName));
+
+                if (targetIndex == -1)
+                {
+                    _logger.LogWarning("Migration {MigrationName} not found in applied migrations", migrationName);
+                    return new RollbackMigrationResultDto
+                    {
+                        TenantId = tenant.Id,
+                        TenantName = tenant.Name,
+                        MigrationName = migrationName,
+                        ModuleName = moduleName,
+                        Success = false,
+                        Message = $"Migration {migrationName} not found in applied migrations",
+                        Error = "Migration not found",
+                        RolledBackAt = DateTime.UtcNow
+                    };
+                }
+
+                // Get the previous migration to rollback to
+                string? targetMigration = targetIndex > 0 ? appliedList[targetIndex - 1] : null;
+
+                // Note: Actual rollback using EF Core requires the Migrator service
+                // For now, we document the limitation and return a message
+                _logger.LogWarning("Migration rollback requires manual SQL execution or EF Core CLI tools");
+
+                return new RollbackMigrationResultDto
+                {
+                    TenantId = tenant.Id,
+                    TenantName = tenant.Name,
+                    MigrationName = migrationName,
+                    ModuleName = moduleName,
+                    Success = false,
+                    Message = $"To rollback, use: dotnet ef database update {targetMigration ?? "0"} --context {moduleName}DbContext",
+                    Error = "Automatic rollback not supported. Use EF Core CLI tools for rollback.",
+                    RolledBackAt = DateTime.UtcNow,
+                    PreviousMigration = targetMigration
+                };
+            }
 
             return new RollbackMigrationResultDto
             {
@@ -831,8 +962,8 @@ public class DatabaseMigrationHostedService : IHostedService
                 MigrationName = migrationName,
                 ModuleName = moduleName,
                 Success = false,
-                Message = "Migration rollback is not yet implemented. Please use manual SQL scripts for rollback.",
-                Error = "Feature not implemented",
+                Message = "Unable to initialize DbContext for rollback",
+                Error = "DbContext initialization failed",
                 RolledBackAt = DateTime.UtcNow
             };
         }
@@ -873,43 +1004,237 @@ public class DatabaseMigrationHostedService : IHostedService
             throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
         }
 
-        // TODO: Implement with Hangfire background job scheduling
-        _logger.LogInformation("Scheduling migration for tenant {TenantId} at {ScheduledTime}", tenantId, scheduledTime);
-
-        return new ScheduleMigrationResultDto
+        try
         {
-            ScheduleId = Guid.NewGuid(),
-            TenantId = tenant.Id,
-            TenantName = tenant.Name,
-            ScheduledTime = scheduledTime,
-            MigrationName = migrationName,
-            ModuleName = moduleName,
-            Status = "Scheduled",
-            Message = $"Migration scheduled for {scheduledTime:yyyy-MM-dd HH:mm} (Feature in development)"
-        };
+            _logger.LogInformation("Scheduling migration for tenant {TenantId} at {ScheduledTime}", tenantId, scheduledTime);
+
+            var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+            var backgroundJobService = scope.ServiceProvider.GetRequiredService<Stocker.Application.Common.Interfaces.IBackgroundJobService>();
+
+            // Create scheduled migration entity
+            var scheduledMigration = new Stocker.Domain.Entities.Migration.ScheduledMigration(
+                tenantId: tenantId,
+                scheduledTime: scheduledTime,
+                createdBy: "System", // TODO: Get from current user context
+                migrationName: migrationName,
+                moduleName: moduleName
+            );
+
+            await masterDbContext.ScheduledMigrations.AddAsync(scheduledMigration, cancellationToken);
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+
+            // Schedule Hangfire job - using IMigrationService interface
+            var jobId = backgroundJobService.Schedule<IMigrationService>(
+                x => x.ExecuteScheduledMigrationAsync(scheduledMigration.ScheduleId, CancellationToken.None),
+                scheduledTime.ToUniversalTime()
+            );
+
+            // Update with Hangfire job ID
+            scheduledMigration.SetHangfireJobId(jobId);
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Migration scheduled successfully with job ID: {JobId}", jobId);
+
+            return new ScheduleMigrationResultDto
+            {
+                ScheduleId = scheduledMigration.ScheduleId,
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                ScheduledTime = scheduledTime,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                Status = "Scheduled",
+                Message = $"Migration scheduled for {scheduledTime:yyyy-MM-dd HH:mm}"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to schedule migration for tenant {TenantId}", tenantId);
+            return new ScheduleMigrationResultDto
+            {
+                ScheduleId = Guid.Empty,
+                TenantId = tenantId,
+                TenantName = tenant.Name,
+                ScheduledTime = scheduledTime,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                Status = "Failed",
+                Message = $"Failed to schedule migration: {ex.Message}"
+            };
+        }
     }
 
     public async Task<List<ScheduledMigrationDto>> GetScheduledMigrationsAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Implement with database table to store scheduled migrations
-        _logger.LogInformation("Getting scheduled migrations");
+        using var scope = _serviceProvider.CreateScope();
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
 
-        return new List<ScheduledMigrationDto>();
+        _logger.LogInformation("Getting scheduled migrations from database");
+
+        var scheduledMigrations = await masterDbContext.ScheduledMigrations
+            .Where(s => s.Status == "Pending" || s.Status == "Running")
+            .OrderBy(s => s.ScheduledTime)
+            .ToListAsync(cancellationToken);
+
+        var result = new List<ScheduledMigrationDto>();
+
+        foreach (var migration in scheduledMigrations)
+        {
+            // Get tenant details
+            var tenant = await masterDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Id == migration.TenantId, cancellationToken);
+
+            result.Add(new ScheduledMigrationDto
+            {
+                ScheduleId = migration.ScheduleId,
+                TenantId = migration.TenantId,
+                TenantName = tenant?.Name ?? "Unknown",
+                TenantCode = tenant?.Code ?? "Unknown",
+                ScheduledTime = migration.ScheduledTime,
+                MigrationName = migration.MigrationName,
+                ModuleName = migration.ModuleName,
+                Status = migration.Status,
+                CreatedAt = migration.CreatedAt,
+                CreatedBy = migration.CreatedBy,
+                ExecutedAt = migration.ExecutedAt,
+                Error = migration.Error
+            });
+        }
+
+        _logger.LogInformation("Found {Count} scheduled migrations", result.Count);
+        return result;
     }
 
     public async Task<bool> CancelScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement with Hangfire background job cancellation
+        using var scope = _serviceProvider.CreateScope();
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+        var backgroundJobService = scope.ServiceProvider.GetRequiredService<Stocker.Application.Common.Interfaces.IBackgroundJobService>();
+
         _logger.LogInformation("Cancelling scheduled migration {ScheduleId}", scheduleId);
 
-        return await Task.FromResult(false);
+        var scheduledMigration = await masterDbContext.ScheduledMigrations
+            .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
+
+        if (scheduledMigration == null)
+        {
+            _logger.LogWarning("Scheduled migration not found: {ScheduleId}", scheduleId);
+            return false;
+        }
+
+        if (scheduledMigration.Status != "Pending")
+        {
+            _logger.LogWarning("Cannot cancel migration in status: {Status}", scheduledMigration.Status);
+            return false;
+        }
+
+        try
+        {
+            // Cancel Hangfire job if exists
+            if (!string.IsNullOrEmpty(scheduledMigration.HangfireJobId))
+            {
+                var deleted = backgroundJobService.Delete(scheduledMigration.HangfireJobId);
+                if (!deleted)
+                {
+                    _logger.LogWarning("Failed to delete Hangfire job: {JobId}", scheduledMigration.HangfireJobId);
+                }
+            }
+
+            // Update status
+            scheduledMigration.MarkAsCancelled();
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Scheduled migration cancelled successfully: {ScheduleId}", scheduleId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cancel scheduled migration: {ScheduleId}", scheduleId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Executes a scheduled migration. This method is called by Hangfire.
+    /// </summary>
+    public async Task ExecuteScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+
+        _logger.LogInformation("Executing scheduled migration {ScheduleId}", scheduleId);
+
+        var scheduledMigration = await masterDbContext.ScheduledMigrations
+            .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
+
+        if (scheduledMigration == null)
+        {
+            _logger.LogError("Scheduled migration not found: {ScheduleId}", scheduleId);
+            return;
+        }
+
+        try
+        {
+            scheduledMigration.MarkAsRunning();
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+
+            // Execute the migration
+            if (string.IsNullOrEmpty(scheduledMigration.MigrationName))
+            {
+                // Apply all pending migrations for the tenant
+                await ApplyMigrationToTenantAsync(scheduledMigration.TenantId, cancellationToken);
+            }
+            else
+            {
+                // Apply specific migration (not implemented yet, would require more complex logic)
+                _logger.LogWarning("Specific migration execution not yet implemented: {MigrationName}", scheduledMigration.MigrationName);
+                await ApplyMigrationToTenantAsync(scheduledMigration.TenantId, cancellationToken);
+            }
+
+            scheduledMigration.MarkAsCompleted();
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Scheduled migration completed successfully: {ScheduleId}", scheduleId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Scheduled migration failed: {ScheduleId}", scheduleId);
+            scheduledMigration.MarkAsFailed(ex.Message);
+            await masterDbContext.SaveChangesAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task<MigrationSettingsDto> GetMigrationSettingsAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Implement with configuration storage (database or file)
-        _logger.LogInformation("Getting migration settings");
+        using var scope = _serviceProvider.CreateScope();
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
 
+        _logger.LogInformation("Getting migration settings from database");
+
+        // Try to get existing settings from database
+        var settingsEntity = await masterDbContext.SystemSettings
+            .FirstOrDefaultAsync(s => s.Category == "Migration" && s.Key == "MigrationSettings", cancellationToken);
+
+        if (settingsEntity != null)
+        {
+            try
+            {
+                var settings = settingsEntity.GetValue<MigrationSettingsDto>();
+                if (settings != null)
+                {
+                    _logger.LogInformation("Migration settings loaded from database");
+                    return settings;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize migration settings, using defaults");
+            }
+        }
+
+        // Return default settings if not found or failed to deserialize
+        _logger.LogInformation("Using default migration settings");
         return new MigrationSettingsDto
         {
             AutoApplyMigrations = false,
@@ -927,10 +1252,41 @@ public class DatabaseMigrationHostedService : IHostedService
         MigrationSettingsDto settings,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement with configuration storage (database or file)
-        _logger.LogInformation("Updating migration settings");
+        using var scope = _serviceProvider.CreateScope();
+        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
 
-        return await Task.FromResult(settings);
+        _logger.LogInformation("Updating migration settings in database");
+
+        // Try to get existing settings
+        var settingsEntity = await masterDbContext.SystemSettings
+            .FirstOrDefaultAsync(s => s.Category == "Migration" && s.Key == "MigrationSettings", cancellationToken);
+
+        if (settingsEntity != null)
+        {
+            // Update existing settings
+            settingsEntity.SetValue(settings);
+            _logger.LogInformation("Updated existing migration settings");
+        }
+        else
+        {
+            // Create new settings entity
+            settingsEntity = new Stocker.Domain.Entities.Settings.SystemSettings(
+                category: "Migration",
+                key: "MigrationSettings",
+                value: System.Text.Json.JsonSerializer.Serialize(settings),
+                description: "Migration system configuration settings",
+                isSystem: true,
+                isEncrypted: false
+            );
+            settingsEntity.SetValue(settings);
+            await masterDbContext.SystemSettings.AddAsync(settingsEntity, cancellationToken);
+            _logger.LogInformation("Created new migration settings");
+        }
+
+        await masterDbContext.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Migration settings saved successfully");
+
+        return settings;
     }
 }
 

@@ -10,4 +10,5 @@ public class RollbackMigrationResultDto
     public string Message { get; set; } = string.Empty;
     public string? Error { get; set; }
     public DateTime RolledBackAt { get; set; }
+    public string? PreviousMigration { get; set; }
 }
