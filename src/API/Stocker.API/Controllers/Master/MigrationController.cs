@@ -1,12 +1,20 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Stocker.API.Controllers.Base;
-using Stocker.Persistence.Contexts;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.Features.Migrations.Commands.ApplyMigration;
+using Stocker.Application.Features.Migrations.Commands.ApplyMigrationsToAllTenants;
+using Stocker.Application.Features.Migrations.Commands.CancelScheduledMigration;
+using Stocker.Application.Features.Migrations.Commands.RollbackMigration;
+using Stocker.Application.Features.Migrations.Commands.ScheduleMigration;
+using Stocker.Application.Features.Migrations.Commands.UpdateMigrationSettings;
+using Stocker.Application.Features.Migrations.Queries.GetMigrationHistory;
+using Stocker.Application.Features.Migrations.Queries.GetMigrationScriptPreview;
+using Stocker.Application.Features.Migrations.Queries.GetMigrationSettings;
+using Stocker.Application.Features.Migrations.Queries.GetPendingMigrations;
+using Stocker.Application.Features.Migrations.Queries.GetScheduledMigrations;
+using Stocker.SharedKernel.DTOs.Migration;
 using Swashbuckle.AspNetCore.Annotations;
-using Stocker.Application.Common.Exceptions;
-using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
@@ -16,24 +24,11 @@ namespace Stocker.API.Controllers.Master;
 [SwaggerTag("Master - Database Migration Management")]
 public class MigrationController : ApiController
 {
-    private readonly MasterDbContext _masterDbContext;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ITenantService _tenantService;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<MigrationController> _logger;
+    private readonly ISender _sender;
 
-    public MigrationController(
-        MasterDbContext masterDbContext,
-        IServiceProvider serviceProvider,
-        ITenantService tenantService,
-        IConfiguration configuration,
-        ILogger<MigrationController> logger)
+    public MigrationController(ISender sender)
     {
-        _masterDbContext = masterDbContext;
-        _serviceProvider = serviceProvider;
-        _tenantService = tenantService;
-        _configuration = configuration;
-        _logger = logger;
+        _sender = sender;
     }
 
     /// <summary>
@@ -42,153 +37,26 @@ public class MigrationController : ApiController
     [HttpGet("pending")]
     public async Task<IActionResult> GetPendingMigrations()
     {
-        try
+        var result = await _sender.Send(new GetPendingMigrationsQuery());
+
+        if (!result.IsSuccess)
         {
-            var tenants = await _masterDbContext.Tenants
-                .AsNoTracking()
-                .Where(t => t.IsActive)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.Name,
-                    t.Code,
-                    ConnectionString = t.ConnectionString.Value
-                })
-                .ToListAsync();
-
-            var results = new List<object>();
-
-            foreach (var tenant in tenants)
+            return StatusCode(503, new
             {
-                try
-                {
-                    var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-                    optionsBuilder.UseSqlServer(tenant.ConnectionString);
-
-                    using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
-                    
-                    var pendingMigrations = await tenantContext.Database
-                        .GetPendingMigrationsAsync();
-
-                    var appliedMigrations = await tenantContext.Database
-                        .GetAppliedMigrationsAsync();
-
-                    var pendingList = pendingMigrations.ToList();
-                    var appliedList = appliedMigrations.ToList();
-
-                    // Check CRM module migrations if tenant has CRM access
-                    List<string> crmPendingMigrations = new();
-                    List<string> crmAppliedMigrations = new();
-                    
-                    try
-                    {
-                        var tenantModuleService = _serviceProvider.GetService<Stocker.Application.Common.Interfaces.ITenantModuleService>();
-                        
-                        if (tenantModuleService != null)
-                        {
-                            var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "CRM", CancellationToken.None);
-                            
-                            if (hasCrmAccess)
-                            {
-                                var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
-                                crmOptionsBuilder.UseSqlServer(tenant.ConnectionString);
-                                crmOptionsBuilder.ConfigureWarnings(warnings =>
-                                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-                                
-                                var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenant.Id, tenant.ConnectionString);
-                                
-                                using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
-                                    crmOptionsBuilder.Options, 
-                                    mockTenantService);
-                                
-                                var crmPending = await crmDbContext.Database.GetPendingMigrationsAsync();
-                                var crmApplied = await crmDbContext.Database.GetAppliedMigrationsAsync();
-                                
-                                crmPendingMigrations = crmPending.ToList();
-                                crmAppliedMigrations = crmApplied.ToList();
-                            }
-                        }
-                    }
-                    catch (Exception crmEx)
-                    {
-                        _logger.LogWarning(crmEx, "Failed to check CRM migrations for tenant {TenantId}", tenant.Id);
-                    }
-
-                    var allPendingMigrations = new List<object>();
-                    if (pendingList.Any())
-                    {
-                        allPendingMigrations.Add(new { Module = "Core", Migrations = pendingList });
-                    }
-                    if (crmPendingMigrations.Any())
-                    {
-                        allPendingMigrations.Add(new { Module = "CRM", Migrations = crmPendingMigrations });
-                    }
-
-                    var allAppliedMigrations = new List<object>();
-                    if (appliedList.Any())
-                    {
-                        allAppliedMigrations.Add(new { Module = "Core", Migrations = appliedList });
-                    }
-                    if (crmAppliedMigrations.Any())
-                    {
-                        allAppliedMigrations.Add(new { Module = "CRM", Migrations = crmAppliedMigrations });
-                    }
-
-                    results.Add(new
-                    {
-                        TenantId = tenant.Id,
-                        TenantName = tenant.Name,
-                        TenantCode = tenant.Code,
-                        PendingMigrations = allPendingMigrations,
-                        AppliedMigrations = allAppliedMigrations,
-                        HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any()
-                    });
-                }
-                catch (DatabaseException ex)
-                {
-                    Logger.LogError(ex, "Database error checking migrations for tenant {TenantId}", tenant.Id);
-                    results.Add(new
-                    {
-                        TenantId = tenant.Id,
-                        TenantName = tenant.Name,
-                        TenantCode = tenant.Code,
-                        Error = $"Database error: {ex.Message}",
-                        HasPendingMigrations = false
-                    });
-                }
-                catch (ConfigurationException ex)
-                {
-                    Logger.LogError(ex, "Configuration error checking migrations for tenant {TenantId}", tenant.Id);
-                    results.Add(new
-                    {
-                        TenantId = tenant.Id,
-                        TenantName = tenant.Name,
-                        TenantCode = tenant.Code,
-                        Error = $"Configuration error: {ex.Message}",
-                        HasPendingMigrations = false
-                    });
-                }
-            }
-
-            return Ok(new
-            {
-                Success = true,
-                Data = results,
-                TotalTenants = tenants.Count,
-                TenantsWithPendingMigrations = results.Count(r => 
-                    r.GetType().GetProperty("HasPendingMigrations")?.GetValue(r) as bool? == true)
+                message = "Veritabanı bağlantı hatası",
+                error = result.Error?.Description
             });
         }
-        catch (DatabaseException ex)
+
+        var tenants = result.Value!;
+
+        return Ok(new
         {
-            Logger.LogError(ex, "Database error getting pending migrations");
-            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
-        }
-        catch (InfrastructureException ex)
-        {
-            Logger.LogError(ex, "Infrastructure error getting pending migrations");
-            return StatusCode(503, new { message = "Altyapı hatası", error = ex.Message });
-        }
+            Success = true,
+            Data = tenants,
+            TotalTenants = tenants.Count,
+            TenantsWithPendingMigrations = tenants.Count(t => t.HasPendingMigrations)
+        });
     }
 
     /// <summary>
@@ -197,71 +65,31 @@ public class MigrationController : ApiController
     [HttpPost("apply/{tenantId}")]
     public async Task<IActionResult> ApplyMigrationToTenant(Guid tenantId)
     {
-        try
-        {
-            var tenant = await _masterDbContext.Tenants
-                .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
+        var result = await _sender.Send(new ApplyMigrationCommand { TenantId = tenantId });
 
-            if (tenant == null)
+        if (!result.IsSuccess)
+        {
+            if (result.Error?.Code == "Tenant.NotFound")
             {
                 return NotFound(new { message = "Tenant bulunamadı" });
             }
 
-            Logger.LogInformation("Applying migrations to tenant {TenantId} - {TenantName}", tenant.Id, tenant.Name);
-
-            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-            
-            // Suppress pending model changes warning for tenant migrations
-            optionsBuilder.ConfigureWarnings(warnings =>
-                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-
-            using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
-            
-            var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync();
-            var pendingList = pendingMigrations.ToList();
-
-            if (!pendingList.Any())
+            return StatusCode(503, new
             {
-                return Ok(new { 
-                    success = true, 
-                    message = "Uygulanacak migration yok",
-                    tenantName = tenant.Name
-                });
-            }
-
-            await tenantContext.Database.MigrateAsync();
-
-            Logger.LogInformation("Migrations applied successfully to tenant {TenantId}. Applied: {Migrations}", 
-                tenant.Id, string.Join(", ", pendingList));
-
-            return Ok(new
-            {
-                success = true,
-                message = $"{pendingList.Count} migration başarıyla uygulandı",
-                tenantName = tenant.Name,
-                appliedMigrations = pendingList
+                message = "Veritabanı migration hatası",
+                error = result.Error?.Description
             });
         }
-        catch (DatabaseException ex)
+
+        var migrationResult = result.Value!;
+
+        return Ok(new
         {
-            Logger.LogError(ex, "Database error applying migration to tenant {TenantId}", tenantId);
-            return StatusCode(503, new 
-            { 
-                message = "Veritabanı migration hatası", 
-                error = ex.Message,
-                details = ex.InnerException?.Message
-            });
-        }
-        catch (BusinessException ex)
-        {
-            Logger.LogError(ex, "Business error applying migration to tenant {TenantId}", tenantId);
-            return BadRequest(new 
-            { 
-                message = "Migration işlemi başarısız", 
-                error = ex.Message
-            });
-        }
+            success = true,
+            message = migrationResult.Message,
+            tenantName = migrationResult.TenantName,
+            appliedMigrations = migrationResult.AppliedMigrations
+        });
     }
 
     /// <summary>
@@ -270,92 +98,30 @@ public class MigrationController : ApiController
     [HttpPost("apply-all")]
     public async Task<IActionResult> ApplyMigrationsToAllTenants()
     {
-        try
+        var result = await _sender.Send(new ApplyMigrationsToAllTenantsCommand());
+
+        if (!result.IsSuccess)
         {
-            var tenants = await _masterDbContext.Tenants
-                .Where(t => t.IsActive)
-                .ToListAsync();
-
-            var results = new List<object>();
-            var successCount = 0;
-            var failureCount = 0;
-
-            foreach (var tenant in tenants)
+            return StatusCode(503, new
             {
-                try
-                {
-                    Logger.LogInformation("Applying migrations to tenant {TenantId} - {TenantName}", tenant.Id, tenant.Name);
-
-                    var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-                    optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-
-                    using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
-                    
-                    var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync();
-                    var pendingList = pendingMigrations.ToList();
-
-                    if (pendingList.Any())
-                    {
-                        await tenantContext.Database.MigrateAsync();
-                        successCount++;
-
-                        results.Add(new
-                        {
-                            TenantId = tenant.Id,
-                            TenantName = tenant.Name,
-                            Success = true,
-                            Message = $"{pendingList.Count} migration uygulandı",
-                            AppliedMigrations = pendingList
-                        });
-                    }
-                    else
-                    {
-                        results.Add(new
-                        {
-                            TenantId = tenant.Id,
-                            TenantName = tenant.Name,
-                            Success = true,
-                            Message = "Migration yok",
-                            AppliedMigrations = new List<string>()
-                        });
-                    }
-                }
-                catch (DatabaseException ex)
-                {
-                    failureCount++;
-                    Logger.LogError(ex, "Database error applying migrations to tenant {TenantId}", tenant.Id);
-                    
-                    results.Add(new
-                    {
-                        TenantId = tenant.Id,
-                        TenantName = tenant.Name,
-                        Success = false,
-                        Message = $"Database error: {ex.Message}",
-                        Error = ex.InnerException?.Message
-                    });
-                }
-            }
-
-            return Ok(new
-            {
-                success = true,
-                message = $"İşlem tamamlandı. Başarılı: {successCount}, Başarısız: {failureCount}",
-                totalTenants = tenants.Count,
-                successCount,
-                failureCount,
-                results
+                message = "Veritabanı bağlantı hatası",
+                error = result.Error?.Description
             });
         }
-        catch (DatabaseException ex)
+
+        var results = result.Value!;
+        var successCount = results.Count(r => r.Success);
+        var failureCount = results.Count(r => !r.Success);
+
+        return Ok(new
         {
-            Logger.LogError(ex, "Database error applying migrations to all tenants");
-            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
-        }
-        catch (InfrastructureException ex)
-        {
-            Logger.LogError(ex, "Infrastructure error applying migrations to all tenants");
-            return StatusCode(503, new { message = "Altyapı hatası", error = ex.Message });
-        }
+            success = true,
+            message = $"İşlem tamamlandı. Başarılı: {successCount}, Başarısız: {failureCount}",
+            totalTenants = results.Count,
+            successCount,
+            failureCount,
+            results
+        });
     }
 
     /// <summary>
@@ -364,46 +130,240 @@ public class MigrationController : ApiController
     [HttpGet("history/{tenantId}")]
     public async Task<IActionResult> GetMigrationHistory(Guid tenantId)
     {
-        try
-        {
-            var tenant = await _masterDbContext.Tenants
-                .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
+        var result = await _sender.Send(new GetMigrationHistoryQuery(tenantId));
 
-            if (tenant == null)
+        if (!result.IsSuccess)
+        {
+            if (result.Error?.Code == "Tenant.NotFound")
             {
                 return NotFound(new { message = "Tenant bulunamadı" });
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-            
-            // Suppress pending model changes warning for tenant migrations
-            optionsBuilder.ConfigureWarnings(warnings =>
-                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-
-            using var tenantContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
-            
-            var appliedMigrations = await tenantContext.Database
-                .GetAppliedMigrationsAsync();
-
-            return Ok(new
+            return StatusCode(503, new
             {
-                success = true,
-                tenantName = tenant.Name,
-                tenantCode = tenant.Code,
-                appliedMigrations = appliedMigrations.ToList(),
-                totalMigrations = appliedMigrations.Count()
+                message = "Veritabanı bağlantı hatası",
+                error = result.Error?.Description
             });
         }
-        catch (DatabaseException ex)
+
+        var history = result.Value!;
+
+        return Ok(new
         {
-            Logger.LogError(ex, "Database error getting migration history for tenant {TenantId}", tenantId);
-            return StatusCode(503, new { message = "Veritabanı bağlantı hatası", error = ex.Message });
-        }
-        catch (Application.Common.Exceptions.NotFoundException ex)
+            success = true,
+            tenantName = history.TenantName,
+            tenantCode = history.TenantCode,
+            appliedMigrations = history.AppliedMigrations,
+            totalMigrations = history.TotalMigrations
+        });
+    }
+
+    /// <summary>
+    /// Get SQL script preview for a specific migration
+    /// </summary>
+    [HttpGet("preview/{tenantId}/{moduleName}/{migrationName}")]
+    public async Task<IActionResult> GetMigrationScriptPreview(
+        Guid tenantId,
+        string moduleName,
+        string migrationName)
+    {
+        var result = await _sender.Send(new GetMigrationScriptPreviewQuery(
+            tenantId,
+            migrationName,
+            moduleName));
+
+        if (!result.IsSuccess)
         {
-            Logger.LogError(ex, "Tenant not found {TenantId}", tenantId);
-            return NotFound(new { message = "Tenant bulunamadı", error = ex.Message });
+            return StatusCode(503, new
+            {
+                message = "Migration preview alınamadı",
+                error = result.Error?.Description
+            });
         }
+
+        var preview = result.Value!;
+
+        return Ok(new
+        {
+            success = true,
+            data = preview
+        });
+    }
+
+    /// <summary>
+    /// Rollback a specific migration
+    /// </summary>
+    [HttpPost("rollback/{tenantId}/{moduleName}/{migrationName}")]
+    public async Task<IActionResult> RollbackMigration(
+        Guid tenantId,
+        string moduleName,
+        string migrationName)
+    {
+        var result = await _sender.Send(new RollbackMigrationCommand(
+            tenantId,
+            migrationName,
+            moduleName));
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Migration geri alınamadı",
+                error = result.Error?.Description
+            });
+        }
+
+        var rollbackResult = result.Value!;
+
+        return Ok(new
+        {
+            success = rollbackResult.Success,
+            message = rollbackResult.Message,
+            error = rollbackResult.Error,
+            data = rollbackResult
+        });
+    }
+
+    /// <summary>
+    /// Schedule a migration for a specific time
+    /// </summary>
+    [HttpPost("schedule")]
+    public async Task<IActionResult> ScheduleMigration([FromBody] ScheduleMigrationRequest request)
+    {
+        var result = await _sender.Send(new ScheduleMigrationCommand(
+            request.TenantId,
+            request.ScheduledTime,
+            request.MigrationName,
+            request.ModuleName));
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Migration zamanlanamadı",
+                error = result.Error?.Description
+            });
+        }
+
+        var scheduleResult = result.Value!;
+
+        return Ok(new
+        {
+            success = true,
+            data = scheduleResult
+        });
+    }
+
+    /// <summary>
+    /// Get all scheduled migrations
+    /// </summary>
+    [HttpGet("scheduled")]
+    public async Task<IActionResult> GetScheduledMigrations()
+    {
+        var result = await _sender.Send(new GetScheduledMigrationsQuery());
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Zamanlanmış migrationlar alınamadı",
+                error = result.Error?.Description
+            });
+        }
+
+        var scheduled = result.Value!;
+
+        return Ok(new
+        {
+            success = true,
+            data = scheduled,
+            total = scheduled.Count
+        });
+    }
+
+    /// <summary>
+    /// Cancel a scheduled migration
+    /// </summary>
+    [HttpDelete("scheduled/{scheduleId}")]
+    public async Task<IActionResult> CancelScheduledMigration(Guid scheduleId)
+    {
+        var result = await _sender.Send(new CancelScheduledMigrationCommand(scheduleId));
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Zamanlanmış migration iptal edilemedi",
+                error = result.Error?.Description
+            });
+        }
+
+        var cancelled = result.Value;
+
+        return Ok(new
+        {
+            success = cancelled,
+            message = cancelled ? "Zamanlanmış migration iptal edildi" : "Migration bulunamadı"
+        });
+    }
+
+    /// <summary>
+    /// Get migration settings
+    /// </summary>
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetMigrationSettings()
+    {
+        var result = await _sender.Send(new GetMigrationSettingsQuery());
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Migration ayarları alınamadı",
+                error = result.Error?.Description
+            });
+        }
+
+        var settings = result.Value!;
+
+        return Ok(new
+        {
+            success = true,
+            data = settings
+        });
+    }
+
+    /// <summary>
+    /// Update migration settings
+    /// </summary>
+    [HttpPut("settings")]
+    public async Task<IActionResult> UpdateMigrationSettings([FromBody] MigrationSettingsDto settings)
+    {
+        var result = await _sender.Send(new UpdateMigrationSettingsCommand(settings));
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(503, new
+            {
+                message = "Migration ayarları güncellenemedi",
+                error = result.Error?.Description
+            });
+        }
+
+        var updatedSettings = result.Value!;
+
+        return Ok(new
+        {
+            success = true,
+            data = updatedSettings,
+            message = "Ayarlar güncellendi"
+        });
     }
 }
+
+public record ScheduleMigrationRequest(
+    Guid TenantId,
+    DateTime ScheduledTime,
+    string? MigrationName = null,
+    string? ModuleName = null);
+

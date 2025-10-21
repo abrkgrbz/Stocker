@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.SeedData;
@@ -12,6 +11,7 @@ using Stocker.Persistence.Services;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 using Stocker.SharedKernel.Exceptions;
+using Stocker.SharedKernel.DTOs.Migration;
 using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Migrations;
@@ -467,6 +467,470 @@ public class DatabaseMigrationHostedService : IHostedService
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public async Task<List<TenantMigrationStatusDto>> GetPendingMigrationsAsync(CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+        var tenantModuleService = scope.ServiceProvider.GetRequiredService<ITenantModuleService>();
+
+        var tenants = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .AsNoTracking()
+            .Where(t => t.IsActive)
+            .Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.Code,
+                ConnectionString = t.ConnectionString.Value
+            })
+            .ToListAsync(cancellationToken);
+
+        var results = new List<TenantMigrationStatusDto>();
+
+        foreach (var tenant in tenants)
+        {
+            try
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                optionsBuilder.UseSqlServer(tenant.ConnectionString);
+
+                using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+                var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                var appliedMigrations = await tenantContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+                var pendingList = pendingMigrations.ToList();
+                var appliedList = appliedMigrations.ToList();
+
+                // Check CRM module migrations if tenant has CRM access
+                List<string> crmPendingMigrations = new();
+                List<string> crmAppliedMigrations = new();
+
+                try
+                {
+                    var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "CRM", cancellationToken);
+
+                    if (hasCrmAccess)
+                    {
+                        var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                        crmOptionsBuilder.UseSqlServer(tenant.ConnectionString);
+                        crmOptionsBuilder.ConfigureWarnings(warnings =>
+                            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                        var mockTenantService = new MockTenantService(tenant.Id, tenant.ConnectionString);
+
+                        using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                            crmOptionsBuilder.Options,
+                            mockTenantService);
+
+                        var crmPending = await crmDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                        var crmApplied = await crmDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+                        crmPendingMigrations = crmPending.ToList();
+                        crmAppliedMigrations = crmApplied.ToList();
+                    }
+                }
+                catch (Exception crmEx)
+                {
+                    _logger.LogWarning(crmEx, "Failed to check CRM migrations for tenant {TenantId}", tenant.Id);
+                }
+
+                var allPendingMigrations = new List<MigrationModuleDto>();
+                if (pendingList.Any())
+                {
+                    allPendingMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Core",
+                        Migrations = pendingList
+                    });
+                }
+                if (crmPendingMigrations.Any())
+                {
+                    allPendingMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "CRM",
+                        Migrations = crmPendingMigrations
+                    });
+                }
+
+                var allAppliedMigrations = new List<MigrationModuleDto>();
+                if (appliedList.Any())
+                {
+                    allAppliedMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Core",
+                        Migrations = appliedList
+                    });
+                }
+                if (crmAppliedMigrations.Any())
+                {
+                    allAppliedMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "CRM",
+                        Migrations = crmAppliedMigrations
+                    });
+                }
+
+                results.Add(new TenantMigrationStatusDto
+                {
+                    TenantId = tenant.Id,
+                    TenantName = tenant.Name,
+                    TenantCode = tenant.Code,
+                    PendingMigrations = allPendingMigrations,
+                    AppliedMigrations = allAppliedMigrations,
+                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking migrations for tenant {TenantId}", tenant.Id);
+                results.Add(new TenantMigrationStatusDto
+                {
+                    TenantId = tenant.Id,
+                    TenantName = tenant.Name,
+                    TenantCode = tenant.Code,
+                    Error = $"Error: {ex.Message}",
+                    HasPendingMigrations = false
+                });
+            }
+        }
+
+        return results;
+    }
+
+    public async Task<ApplyMigrationResultDto> ApplyMigrationToTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenant = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+        if (tenant == null)
+        {
+            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+        }
+
+        _logger.LogInformation("Applying migrations to tenant {TenantId} - {TenantName}", tenant.Id, tenant.Name);
+
+        var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+        optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+        using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+        var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
+        var pendingList = pendingMigrations.ToList();
+
+        if (!pendingList.Any())
+        {
+            return new ApplyMigrationResultDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                Success = true,
+                Message = "Uygulanacak migration yok",
+                AppliedMigrations = new List<string>()
+            };
+        }
+
+        await tenantContext.Database.MigrateAsync(cancellationToken);
+
+        _logger.LogInformation("Migrations applied successfully to tenant {TenantId}. Applied: {Migrations}",
+            tenant.Id, string.Join(", ", pendingList));
+
+        return new ApplyMigrationResultDto
+        {
+            TenantId = tenant.Id,
+            TenantName = tenant.Name,
+            Success = true,
+            Message = $"{pendingList.Count} migration başarıyla uygulandı",
+            AppliedMigrations = pendingList
+        };
+    }
+
+    public async Task<List<ApplyMigrationResultDto>> ApplyMigrationsToAllTenantsAsync(CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenants = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .Where(t => t.IsActive)
+            .ToListAsync(cancellationToken);
+
+        var results = new List<ApplyMigrationResultDto>();
+
+        foreach (var tenant in tenants)
+        {
+            try
+            {
+                _logger.LogInformation("Applying migrations to tenant {TenantId} - {TenantName}", tenant.Id, tenant.Name);
+
+                var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+
+                using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+                var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                var pendingList = pendingMigrations.ToList();
+
+                if (pendingList.Any())
+                {
+                    await tenantContext.Database.MigrateAsync(cancellationToken);
+
+                    results.Add(new ApplyMigrationResultDto
+                    {
+                        TenantId = tenant.Id,
+                        TenantName = tenant.Name,
+                        Success = true,
+                        Message = $"{pendingList.Count} migration uygulandı",
+                        AppliedMigrations = pendingList
+                    });
+                }
+                else
+                {
+                    results.Add(new ApplyMigrationResultDto
+                    {
+                        TenantId = tenant.Id,
+                        TenantName = tenant.Name,
+                        Success = true,
+                        Message = "Migration yok",
+                        AppliedMigrations = new List<string>()
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying migrations to tenant {TenantId}", tenant.Id);
+
+                results.Add(new ApplyMigrationResultDto
+                {
+                    TenantId = tenant.Id,
+                    TenantName = tenant.Name,
+                    Success = false,
+                    Message = $"Error: {ex.Message}",
+                    Error = ex.InnerException?.Message
+                });
+            }
+        }
+
+        return results;
+    }
+
+    public async Task<MigrationHistoryDto> GetMigrationHistoryAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenant = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+        if (tenant == null)
+        {
+            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+        }
+
+        var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+        optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+        using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+        var appliedMigrations = await tenantContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+        var appliedList = appliedMigrations.ToList();
+
+        return new MigrationHistoryDto
+        {
+            TenantId = tenant.Id,
+            TenantName = tenant.Name,
+            TenantCode = tenant.Code,
+            AppliedMigrations = appliedList,
+            TotalMigrations = appliedList.Count
+        };
+    }
+
+    public async Task<MigrationScriptPreviewDto> GetMigrationScriptPreviewAsync(
+        Guid tenantId,
+        string migrationName,
+        string moduleName,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenant = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+        if (tenant == null)
+        {
+            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+        }
+
+        // For now, return a placeholder. In a real implementation, you would:
+        // 1. Parse migration files from the Migrations directory
+        // 2. Extract SQL from the Up() method
+        // 3. Analyze affected tables
+        return new MigrationScriptPreviewDto
+        {
+            TenantId = tenant.Id,
+            TenantName = tenant.Name,
+            MigrationName = migrationName,
+            ModuleName = moduleName,
+            SqlScript = "-- Migration script preview not yet implemented\n-- This would show the actual SQL that will be executed",
+            Description = $"Migration {migrationName} from {moduleName} module",
+            CreatedAt = DateTime.UtcNow,
+            AffectedTables = new List<string>(),
+            EstimatedDuration = 10
+        };
+    }
+
+    public async Task<RollbackMigrationResultDto> RollbackMigrationAsync(
+        Guid tenantId,
+        string migrationName,
+        string moduleName,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenant = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+        if (tenant == null)
+        {
+            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+        }
+
+        try
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+            using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+            // Note: EF Core doesn't support automatic rollback of specific migrations
+            // This would require manual implementation using migration scripts
+            _logger.LogWarning("Migration rollback requested but not yet implemented: {MigrationName}", migrationName);
+
+            return new RollbackMigrationResultDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                Success = false,
+                Message = "Migration rollback is not yet implemented. Please use manual SQL scripts for rollback.",
+                Error = "Feature not implemented",
+                RolledBackAt = DateTime.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rolling back migration {MigrationName} for tenant {TenantId}", migrationName, tenantId);
+
+            return new RollbackMigrationResultDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                MigrationName = migrationName,
+                ModuleName = moduleName,
+                Success = false,
+                Message = "Rollback failed",
+                Error = ex.Message,
+                RolledBackAt = DateTime.UtcNow
+            };
+        }
+    }
+
+    public async Task<ScheduleMigrationResultDto> ScheduleMigrationAsync(
+        Guid tenantId,
+        DateTime scheduledTime,
+        string? migrationName = null,
+        string? moduleName = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+        var tenant = await masterUnitOfWork.Tenants()
+            .AsQueryable()
+            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+        if (tenant == null)
+        {
+            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+        }
+
+        // TODO: Implement with Hangfire background job scheduling
+        _logger.LogInformation("Scheduling migration for tenant {TenantId} at {ScheduledTime}", tenantId, scheduledTime);
+
+        return new ScheduleMigrationResultDto
+        {
+            ScheduleId = Guid.NewGuid(),
+            TenantId = tenant.Id,
+            TenantName = tenant.Name,
+            ScheduledTime = scheduledTime,
+            MigrationName = migrationName,
+            ModuleName = moduleName,
+            Status = "Scheduled",
+            Message = $"Migration scheduled for {scheduledTime:yyyy-MM-dd HH:mm} (Feature in development)"
+        };
+    }
+
+    public async Task<List<ScheduledMigrationDto>> GetScheduledMigrationsAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement with database table to store scheduled migrations
+        _logger.LogInformation("Getting scheduled migrations");
+
+        return new List<ScheduledMigrationDto>();
+    }
+
+    public async Task<bool> CancelScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement with Hangfire background job cancellation
+        _logger.LogInformation("Cancelling scheduled migration {ScheduleId}", scheduleId);
+
+        return await Task.FromResult(false);
+    }
+
+    public async Task<MigrationSettingsDto> GetMigrationSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement with configuration storage (database or file)
+        _logger.LogInformation("Getting migration settings");
+
+        return new MigrationSettingsDto
+        {
+            AutoApplyMigrations = false,
+            BackupBeforeMigration = true,
+            MigrationTimeout = 300,
+            EnableScheduledMigrations = false,
+            DefaultScheduleTime = "02:00",
+            NotifyOnMigrationComplete = true,
+            NotifyOnMigrationFailure = true,
+            NotificationEmails = new List<string>()
+        };
+    }
+
+    public async Task<MigrationSettingsDto> UpdateMigrationSettingsAsync(
+        MigrationSettingsDto settings,
+        CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement with configuration storage (database or file)
+        _logger.LogInformation("Updating migration settings");
+
+        return await Task.FromResult(settings);
+    }
 }
 
 /// <summary>

@@ -6,6 +6,7 @@ export { tenantRegistrationService } from './tenantRegistrationService';
 export { userService } from './userService';
 export { featureService } from './featureService';
 export { moduleService } from './moduleService';
+export { migrationService } from './migrationService';
 
 // Re-export types
 export type {
@@ -61,3 +62,15 @@ export type {
   CreateModuleDto,
   UpdateModuleDto,
 } from './moduleService';
+
+export type {
+  MigrationModuleDto,
+  TenantMigrationStatusDto,
+  ApplyMigrationResultDto,
+  MigrationHistoryDto,
+  MigrationScriptPreviewDto,
+  RollbackMigrationResultDto,
+  ScheduleMigrationResultDto,
+  ScheduledMigrationDto,
+  MigrationSettingsDto,
+} from './migrationService';
