@@ -7,7 +7,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: stocker-web/Dockerfile
+      dockerfile: stocker-nextjs/Dockerfile
     container_name: stocker-web
     restart: unless-stopped
     # ports:  # Traefik üzerinden erişim, port açmaya gerek yok
