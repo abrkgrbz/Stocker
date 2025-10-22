@@ -730,36 +730,59 @@ public partial class MigrationService
 
     public async Task<MigrationHistoryDto> GetMigrationHistoryAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
-
-        var tenant = await masterUnitOfWork.Tenants()
-            .AsQueryable()
-            .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
-
-        if (tenant == null)
+        try
         {
-            throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+            using var scope = _serviceProvider.CreateScope();
+            var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+
+            var tenant = await masterUnitOfWork.Tenants()
+                .AsQueryable()
+                .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive, cancellationToken);
+
+            if (tenant == null)
+            {
+                throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+            using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+
+            // Test database connection
+            var canConnect = await tenantContext.Database.CanConnectAsync(cancellationToken);
+            if (!canConnect)
+            {
+                _logger.LogWarning("Cannot connect to tenant database for tenant {TenantId}", tenantId);
+                return new MigrationHistoryDto
+                {
+                    TenantId = tenant.Id,
+                    TenantName = tenant.Name,
+                    TenantCode = tenant.Code,
+                    AppliedMigrations = new List<string>(),
+                    TotalMigrations = 0
+                };
+            }
+
+            var appliedMigrations = await tenantContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+            var appliedList = appliedMigrations.ToList();
+
+            return new MigrationHistoryDto
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                TenantCode = tenant.Code,
+                AppliedMigrations = appliedList,
+                TotalMigrations = appliedList.Count
+            };
         }
-
-        var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-        optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
-        optionsBuilder.ConfigureWarnings(warnings =>
-            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-
-        using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
-
-        var appliedMigrations = await tenantContext.Database.GetAppliedMigrationsAsync(cancellationToken);
-        var appliedList = appliedMigrations.ToList();
-
-        return new MigrationHistoryDto
+        catch (Exception ex)
         {
-            TenantId = tenant.Id,
-            TenantName = tenant.Name,
-            TenantCode = tenant.Code,
-            AppliedMigrations = appliedList,
-            TotalMigrations = appliedList.Count
-        };
+            _logger.LogError(ex, "Error getting migration history for tenant {TenantId}", tenantId);
+            throw;
+        }
     }
 
     public async Task<MigrationScriptPreviewDto> GetMigrationScriptPreviewAsync(
