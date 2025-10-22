@@ -126,9 +126,13 @@ const TenantMigrations: React.FC = () => {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [planModalVisible, setPlanModalVisible] = useState(false);
   const [importModalVisible, setImportModalVisible] = useState(false);
-  
+
   const [form] = Form.useForm();
   const [planForm] = Form.useForm();
+
+  // Scheduled migrations state
+  const [scheduledMigrations, setScheduledMigrations] = useState<any[]>([]);
+  const [loadingScheduled, setLoadingScheduled] = useState(false);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -138,6 +142,19 @@ const TenantMigrations: React.FC = () => {
     fetchMigrations();
     fetchHistory();
   }, [id]);
+
+  const fetchScheduledMigrations = async () => {
+    setLoadingScheduled(true);
+    try {
+      const scheduled = await migrationService.getScheduledMigrations();
+      setScheduledMigrations(scheduled);
+    } catch (error: any) {
+      console.error('[Migration UI] Error fetching scheduled migrations:', error);
+      message.error(error.message || 'Zamanlanmış migration listesi yüklenemedi');
+    } finally {
+      setLoadingScheduled(false);
+    }
+  };
 
   const fetchMigrations = async () => {
     setLoading(true);
@@ -597,10 +614,16 @@ const TenantMigrations: React.FC = () => {
               <Button icon={<ReloadOutlined />} onClick={fetchMigrations}>
                 Yenile
               </Button>
-              <Button icon={<UploadOutlined />} onClick={() => setImportModalVisible(true)}>
-                Migration Yükle
+              <Button icon={<InfoCircleOutlined />} onClick={() => setImportModalVisible(true)}>
+                Migration Bilgisi
               </Button>
-              <Button icon={<ThunderboltOutlined />} onClick={() => setPlanModalVisible(true)}>
+              <Button
+                icon={<ThunderboltOutlined />}
+                onClick={() => {
+                  setPlanModalVisible(true);
+                  fetchScheduledMigrations();
+                }}
+              >
                 Migration Planı
               </Button>
               <Button
@@ -659,8 +682,8 @@ const TenantMigrations: React.FC = () => {
               >
                 Tüm Tenant'ları Güncelle
               </Button>
-              <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => setMigrationModalVisible(true)}>
-                Yeni Migration
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setMigrationModalVisible(true)}>
+                Yeni Migration Nasıl Oluşturulur?
               </Button>
             </Space>
           </Col>
@@ -1047,87 +1070,209 @@ COMMIT;`}
 
       {/* New Migration Modal */}
       <Modal
-        title="Yeni Migration"
+        title="Yeni Migration Oluşturma"
         open={migrationModalVisible}
         onCancel={() => setMigrationModalVisible(false)}
-        onOk={() => form.submit()}
-        width={600}
-        confirmLoading={loading}
+        footer={[
+          <Button key="close" onClick={() => setMigrationModalVisible(false)}>
+            Kapat
+          </Button>,
+          <Button
+            key="docs"
+            type="primary"
+            icon={<FileTextOutlined />}
+            onClick={() => window.open('https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/', '_blank')}
+          >
+            EF Core Dokümantasyonu
+          </Button>
+        ]}
+        width={800}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={(values) => {
-            message.success('Migration oluşturuldu');
-            setMigrationModalVisible(false);
-            fetchMigrations();
-          }}
-        >
-          <Form.Item
-            name="name"
-            label="Migration Adı"
-            rules={[{ required: true, message: 'Migration adı gerekli' }]}
-          >
-            <Input placeholder="CreateUsersTable" />
-          </Form.Item>
+        <Alert
+          message="Entity Framework Core Migration"
+          description="Migration'lar kod tabanlı olup, backend projesinden EF Core CLI komutları ile oluşturulur. UI üzerinden doğrudan migration oluşturulamaz."
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
 
-          <Form.Item
-            name="type"
-            label="Tür"
-            rules={[{ required: true, message: 'Tür seçimi gerekli' }]}
-            initialValue="schema"
-          >
-            <Select>
-              <Option value="schema">Şema Değişikliği</Option>
-              <Option value="data">Veri Migration</Option>
-              <Option value="seed">Seed Data</Option>
-            </Select>
-          </Form.Item>
+        <Card title="Yeni Migration Oluşturma Adımları" style={{ marginBottom: 16 }}>
+          <Steps
+            direction="vertical"
+            current={-1}
+            items={[
+              {
+                title: '1. Domain Model Değişikliği Yap',
+                description: (
+                  <div>
+                    <Text>Stocker.Domain projesinde entity'lerde değişiklik yapın</Text>
+                    <pre style={{
+                      background: '#f5f5f5',
+                      padding: 12,
+                      borderRadius: 4,
+                      fontSize: 12,
+                      marginTop: 8
+                    }}>
+                      <code>{`// Örnek: Yeni property ekleme
+public class Tenant : AggregateRoot<Guid>
+{
+    public string Name { get; private set; }
+    public string Code { get; private set; }
+    // Yeni alan
+    public string Description { get; private set; }
+}`}</code>
+                    </pre>
+                  </div>
+                ),
+                icon: <EditOutlined />
+              },
+              {
+                title: '2. Migration Oluştur',
+                description: (
+                  <div>
+                    <Text>Terminal veya Package Manager Console'da komutu çalıştırın:</Text>
+                    <pre style={{
+                      background: '#1f1f1f',
+                      color: '#d4d4d4',
+                      padding: 12,
+                      borderRadius: 4,
+                      fontSize: 12,
+                      marginTop: 8
+                    }}>
+                      <code>{`# Visual Studio Package Manager Console
+Add-Migration AddTenantDescription -Project Stocker.Persistence
 
-          <Form.Item
-            name="sql"
-            label="SQL Script"
-            rules={[{ required: true, message: 'SQL script gerekli' }]}
-          >
-            <Input.TextArea 
-              rows={10} 
-              placeholder="CREATE TABLE users (...)"
-              style={{ fontFamily: 'monospace' }}
-            />
-          </Form.Item>
+# veya .NET CLI
+dotnet ef migrations add AddTenantDescription -p src/Infrastructure/Stocker.Persistence`}</code>
+                    </pre>
+                  </div>
+                ),
+                icon: <CodeOutlined />
+              },
+              {
+                title: '3. Migration Dosyasını İncele',
+                description: (
+                  <div>
+                    <Text>Migrations klasöründe oluşturulan dosyayı kontrol edin</Text>
+                    <pre style={{
+                      background: '#f5f5f5',
+                      padding: 12,
+                      borderRadius: 4,
+                      fontSize: 12,
+                      marginTop: 8
+                    }}>
+                      <code>{`// 20250122_AddTenantDescription.cs
+public partial class AddTenantDescription : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.AddColumn<string>(
+            name: "Description",
+            table: "Tenants",
+            nullable: true);
+    }
 
-          <Form.Item
-            name="rollbackSql"
-            label="Rollback SQL (Opsiyonel)"
-          >
-            <Input.TextArea 
-              rows={5} 
-              placeholder="DROP TABLE users;"
-              style={{ fontFamily: 'monospace' }}
-            />
-          </Form.Item>
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Description",
+            table: "Tenants");
+    }
+}`}</code>
+                    </pre>
+                  </div>
+                ),
+                icon: <FileTextOutlined />
+              },
+              {
+                title: '4. Backend\'i Çalıştır',
+                description: 'API projesini çalıştırın. Migration otomatik olarak algılanır',
+                icon: <SyncOutlined />
+              },
+              {
+                title: '5. Bu Sayfadan Tenant\'lara Uygula',
+                description: (
+                  <Space direction="vertical">
+                    <Text>Pending migrations listesinde yeni migration görünecektir</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      • Tekil tenant için "Çalıştır" butonunu kullanın
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      • Tüm tenant'lar için "Tüm Tenant'ları Güncelle" butonunu kullanın
+                    </Text>
+                  </Space>
+                ),
+                icon: <CheckCircleOutlined />
+              }
+            ]}
+          />
+        </Card>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="autoRun"
-                valuePropName="checked"
-                initialValue={false}
-              >
-                <Checkbox>Oluşturduktan sonra çalıştır</Checkbox>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="backup"
-                valuePropName="checked"
-                initialValue={true}
-              >
-                <Checkbox>Önce yedek al</Checkbox>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
+        <Card title="Hızlı Referans Komutlar">
+          <Collapse>
+            <Panel header="Visual Studio Package Manager Console" key="1">
+              <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12 }}>
+                <code>{`# Yeni migration oluştur
+Add-Migration MigrationName -Project Stocker.Persistence
+
+# Migration'ları listele
+Get-Migration -Project Stocker.Persistence
+
+# Migration'ı geri al
+Remove-Migration -Project Stocker.Persistence
+
+# SQL script önizle
+Script-Migration -Project Stocker.Persistence`}</code>
+              </pre>
+            </Panel>
+            <Panel header=".NET CLI" key="2">
+              <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12 }}>
+                <code>{`# Yeni migration oluştur
+dotnet ef migrations add MigrationName -p src/Infrastructure/Stocker.Persistence
+
+# Migration'ları listele
+dotnet ef migrations list -p src/Infrastructure/Stocker.Persistence
+
+# Migration'ı geri al
+dotnet ef migrations remove -p src/Infrastructure/Stocker.Persistence
+
+# SQL script önizle
+dotnet ef migrations script -p src/Infrastructure/Stocker.Persistence`}</code>
+              </pre>
+            </Panel>
+          </Collapse>
+        </Card>
+
+        <Divider />
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Card size="small" title="✅ Avantajlar">
+              <ul style={{ fontSize: 12, paddingLeft: 20 }}>
+                <li>Tip güvenliği ve IntelliSense</li>
+                <li>Versiyon kontrolü ve takip</li>
+                <li>Otomatik Up/Down migration</li>
+                <li>Team collaboration</li>
+                <li>Rollback desteği</li>
+              </ul>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card size="small" title="📚 Kaynaklar">
+              <Space direction="vertical" size={8}>
+                <a href="https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/" target="_blank">
+                  <FileTextOutlined /> EF Core Migrations Dokümantasyonu
+                </a>
+                <a href="https://learn.microsoft.com/en-us/ef/core/cli/dotnet" target="_blank">
+                  <CodeOutlined /> EF Core CLI Komutları
+                </a>
+                <a href="https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/teams" target="_blank">
+                  <DatabaseOutlined /> Team Ortamında Migration Yönetimi
+                </a>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
       </Modal>
 
       {/* Migration Plan Modal */}
@@ -1135,97 +1280,185 @@ COMMIT;`}
         title="Migration Planı"
         open={planModalVisible}
         onCancel={() => setPlanModalVisible(false)}
-        width={700}
+        width={800}
         footer={null}
       >
         <Alert
           message="Zamanlanmış Migration'lar"
-          description="Belirli zamanlarda otomatik çalışacak migration'ları planlayabilirsiniz."
+          description="Belirli zamanlarda otomatik çalışacak migration'ları görüntüleyebilir ve yönetebilirsiniz."
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
 
-        <List
-          dataSource={[
-            {
-              id: '1',
-              name: 'Haftalık Veri Temizleme',
-              schedule: 'Her Pazar 02:00',
-              migrations: ['CleanOldLogs', 'ArchiveData'],
-              lastRun: '2024-01-14T02:00:00',
-              nextRun: '2024-01-21T02:00:00'
-            },
-            {
-              id: '2',
-              name: 'Aylık İndeks Optimizasyonu',
-              schedule: 'Her ayın 1\'i 03:00',
-              migrations: ['OptimizeIndexes', 'UpdateStatistics'],
-              lastRun: '2024-01-01T03:00:00',
-              nextRun: '2024-02-01T03:00:00'
-            }
-          ]}
-          renderItem={plan => (
-            <List.Item
-              actions={[
-                <Button size="small" icon={<EditOutlined />}>Düzenle</Button>,
-                <Button size="small" icon={<PlayCircleOutlined />}>Şimdi Çalıştır</Button>
-              ]}
-            >
-              <List.Item.Meta
-                title={plan.name}
-                description={
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary">{plan.schedule}</Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Migration'lar: {plan.migrations.join(', ')}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Son: {dayjs(plan.lastRun).format('DD.MM.YYYY HH:mm')} | 
-                      Sonraki: {dayjs(plan.nextRun).format('DD.MM.YYYY HH:mm')}
-                    </Text>
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
-        />
-
-        <Divider />
-
-        <Button type="dashed" icon={<PlusOutlined />} block>
-          Yeni Plan Oluştur
-        </Button>
+        {loadingScheduled ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <LoadingOutlined style={{ fontSize: 32 }} />
+            <div style={{ marginTop: 16 }}>Yükleniyor...</div>
+          </div>
+        ) : scheduledMigrations.length === 0 ? (
+          <Result
+            icon={<ClockCircleOutlined />}
+            title="Zamanlanmış Migration Bulunamadı"
+            subTitle="Henüz zamanlanmış migration bulunmuyor."
+          />
+        ) : (
+          <List
+            dataSource={scheduledMigrations}
+            renderItem={scheduled => (
+              <List.Item
+                actions={[
+                  <Tooltip title="İptal Et">
+                    <Button
+                      size="small"
+                      danger
+                      icon={<CloseCircleOutlined />}
+                      onClick={async () => {
+                        Modal.confirm({
+                          title: 'Zamanlanmış Migration İptal Et',
+                          content: `${scheduled.tenantName} için zamanlanmış migration iptal edilecek. Devam etmek istiyor musunuz?`,
+                          okText: 'İptal Et',
+                          okType: 'danger',
+                          cancelText: 'Vazgeç',
+                          onOk: async () => {
+                            try {
+                              await migrationService.cancelScheduledMigration(scheduled.scheduleId);
+                              message.success('Zamanlanmış migration iptal edildi');
+                              fetchScheduledMigrations();
+                            } catch (error: any) {
+                              message.error(error.message || 'İptal işlemi başarısız');
+                            }
+                          }
+                        });
+                      }}
+                    >
+                      İptal
+                    </Button>
+                  </Tooltip>
+                ]}
+              >
+                <List.Item.Meta
+                  title={
+                    <Space>
+                      <Text strong>{scheduled.tenantName}</Text>
+                      <Tag color={scheduled.status === 'Pending' ? 'processing' : 'default'}>
+                        {scheduled.status}
+                      </Tag>
+                    </Space>
+                  }
+                  description={
+                    <Space direction="vertical" size={4}>
+                      <Text type="secondary">
+                        <strong>Tenant Code:</strong> {scheduled.tenantCode}
+                      </Text>
+                      {scheduled.migrationName && (
+                        <Text type="secondary">
+                          <strong>Migration:</strong> {scheduled.moduleName} - {scheduled.migrationName}
+                        </Text>
+                      )}
+                      <Text type="secondary">
+                        <strong>Zamanlanma:</strong> {dayjs(scheduled.scheduledTime).format('DD.MM.YYYY HH:mm')}
+                      </Text>
+                      <Text type="secondary">
+                        <strong>Oluşturan:</strong> {scheduled.createdBy} • {dayjs(scheduled.createdAt).format('DD.MM.YYYY HH:mm')}
+                      </Text>
+                      {scheduled.executedAt && (
+                        <Text type="secondary">
+                          <strong>Çalıştırıldı:</strong> {dayjs(scheduled.executedAt).format('DD.MM.YYYY HH:mm')}
+                        </Text>
+                      )}
+                      {scheduled.error && (
+                        <Alert
+                          message="Hata"
+                          description={scheduled.error}
+                          type="error"
+                          showIcon
+                          style={{ marginTop: 8 }}
+                        />
+                      )}
+                    </Space>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        )}
       </Modal>
 
       {/* Import Migration Modal */}
       <Modal
-        title="Migration Yükle"
+        title="Migration Yönetimi"
         open={importModalVisible}
         onCancel={() => setImportModalVisible(false)}
-        footer={null}
-        width={600}
+        footer={[
+          <Button key="close" onClick={() => setImportModalVisible(false)}>
+            Kapat
+          </Button>
+        ]}
+        width={700}
       >
-        <Upload.Dragger
-          accept=".sql"
-          beforeUpload={(file) => {
-            message.success(`${file.name} dosyası yüklendi`);
-            return false;
-          }}
-        >
-          <p className="ant-upload-drag-icon">
-            <CloudUploadOutlined style={{ fontSize: 48, color: '#667eea' }} />
-          </p>
-          <p className="ant-upload-text">SQL dosyası yüklemek için tıklayın veya sürükleyin</p>
-          <p className="ant-upload-hint">.sql uzantılı migration dosyaları</p>
-        </Upload.Dragger>
+        <Alert
+          message="Entity Framework Core Migration Sistemi"
+          description="Bu sistem Entity Framework Core migrations kullanır. Migration'lar kod tabanlıdır ve manuel SQL yükleme desteklenmez."
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+
+        <Card title="Migration Nasıl Eklenir?" style={{ marginBottom: 16 }}>
+          <Steps
+            direction="vertical"
+            current={-1}
+            items={[
+              {
+                title: 'Backend Projesinde Migration Oluştur',
+                description: (
+                  <pre style={{
+                    background: '#f5f5f5',
+                    padding: 12,
+                    borderRadius: 4,
+                    fontSize: 12,
+                    marginTop: 8
+                  }}>
+                    <code>dotnet ef migrations add MigrationName -p Stocker.Persistence</code>
+                  </pre>
+                ),
+                icon: <CodeOutlined />
+              },
+              {
+                title: 'Backend\'i Yeniden Derle ve Çalıştır',
+                description: 'Migration dosyaları otomatik olarak uygulamaya dahil edilir',
+                icon: <SyncOutlined />
+              },
+              {
+                title: 'Bu Sayfadan Tenant\'lara Uygula',
+                description: 'Pending migrations listesi otomatik güncellenir ve buradan uygulanabilir',
+                icon: <CheckCircleOutlined />
+              }
+            ]}
+          />
+        </Card>
+
+        <Card title="Mevcut Migration Durumu">
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Toplam Migration">
+              {migrations.length}
+            </Descriptions.Item>
+            <Descriptions.Item label="Bekleyen">
+              {migrations.filter(m => m.status === 'pending').length}
+            </Descriptions.Item>
+            <Descriptions.Item label="Uygulanan">
+              {migrations.filter(m => m.status === 'completed').length}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
 
         <Divider />
 
         <Alert
-          message="Desteklenen Format"
-          description="SQL Server T-SQL migration scriptleri desteklenmektedir. Entity Framework Core migrations otomatik olarak SQL Server'a uygulanır."
-          type="info"
+          message="Manuel SQL İşlemleri"
+          description="Eğer manuel SQL script çalıştırmanız gerekiyorsa, SQL Server Management Studio veya Azure Data Studio kullanabilirsiniz."
+          type="warning"
           showIcon
         />
       </Modal>
