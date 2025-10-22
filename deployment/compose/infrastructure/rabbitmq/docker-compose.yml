@@ -13,11 +13,6 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-admin}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
-      # Enable management plugin
-      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
-      # Memory and disk thresholds
-      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=512MB
-      - RABBITMQ_DISK_FREE_LIMIT=2GB
       # Logging
       - RABBITMQ_LOGS=-
       - RABBITMQ_LOG_LEVEL=info
