@@ -30,6 +30,10 @@ MINIO_ROOT_PASSWORD=StockerMinIOSecretKey2025!
 # Redis Cache
 REDIS_PASSWORD=StockerRedisPassword2025!
 
+# RabbitMQ Message Broker
+RABBITMQ_USERNAME=admin
+RABBITMQ_PASSWORD=StockerRabbitMQPassword2025!
+
 # Seq Logging (Generate from Seq dashboard: Settings -> API Keys)
 SEQ_API_KEY=GenerateYourSeqApiKeyFromSeqDashboard
 ```

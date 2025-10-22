@@ -76,7 +76,17 @@ services:
       - Redis__DefaultDatabase=0
       - Redis__ConnectTimeout=5000
       - Redis__SyncTimeout=5000
-      
+
+      # ==================================
+      # RABBITMQ MESSAGE BROKER
+      # ==================================
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=${RABBITMQ_USERNAME}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__RetryCount=3
+      - RabbitMQ__RetryInterval=5
+
       # ==================================
       # HANGFIRE BACKGROUND JOBS
       # ==================================

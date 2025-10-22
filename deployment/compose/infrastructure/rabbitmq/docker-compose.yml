@@ -1,0 +1,88 @@
+version: '3.8'
+
+# RabbitMQ Message Broker
+# For MassTransit event bus and messaging
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    hostname: rabbitmq-host
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
+      # Enable management plugin
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+      # Memory and disk thresholds
+      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=512MB
+      - RABBITMQ_DISK_FREE_LIMIT=2GB
+      # Logging
+      - RABBITMQ_LOGS=-
+      - RABBITMQ_LOG_LEVEL=info
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
+    networks:
+      - coolify
+    ports:
+      # AMQP port (for applications)
+      - "5672:5672"
+      # Management UI port (disabled for production, use Traefik)
+      # - "15672:15672"
+    labels:
+      # Traefik configuration
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+
+      # RabbitMQ Management UI - HTTPS
+      - "traefik.http.routers.rabbitmq-secure.rule=Host(`rabbitmq.stoocker.app`)"
+      - "traefik.http.routers.rabbitmq-secure.entrypoints=https"
+      - "traefik.http.routers.rabbitmq-secure.tls=true"
+      - "traefik.http.routers.rabbitmq-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.rabbitmq-secure.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.rabbitmq-secure.tls.domains[0].sans=*.stoocker.app"
+      - "traefik.http.routers.rabbitmq-secure.service=rabbitmq"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+
+      # RabbitMQ Management UI - HTTP redirect
+      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.stoocker.app`)"
+      - "traefik.http.routers.rabbitmq.entrypoints=http"
+      - "traefik.http.routers.rabbitmq.middlewares=redirect-to-https"
+
+      # Middleware
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+      # Coolify labels
+      - "coolify.managed=true"
+      - "coolify.type=service"
+      - "coolify.name=rabbitmq"
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  rabbitmq_logs:
+    driver: local
+
+networks:
+  coolify:
+    external: true
