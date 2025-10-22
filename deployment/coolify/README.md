@@ -17,9 +17,26 @@ coolify/
 
 ## 🚀 Deployment on Coolify
 
-### 1. Import Applications
+### Prerequisites
+
+1. **GitHub Repository**: Code must be pushed to GitHub
+2. **Coolify GitHub App**: Install Coolify GitHub app and authorize repository access
+3. **Domain DNS**: Point domains to Coolify server (DNS only, no proxy)
+
+### 1. Deploy from GitHub
 
 In Coolify dashboard:
+
+#### Option A: GitHub Integration (Recommended)
+1. Go to **Projects** → **New Resource** → **GitHub App**
+2. Select your repository: `your-org/Stocker`
+3. Choose deployment type: **Docker Compose**
+4. Set compose file path: `deployment/coolify/apps/01-api.yml` (for API)
+5. Set build context: `/` (repository root)
+6. Configure environment variables (see below)
+7. Click **Deploy**
+
+#### Option B: Manual Upload
 1. Go to **Projects** → **New Resource** → **Docker Compose**
 2. Upload YAML from `apps/` directory
 3. Configure environment variables from `env/` templates
