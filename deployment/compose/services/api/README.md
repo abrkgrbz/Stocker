@@ -213,6 +213,70 @@ docker-compose down
 6. Import from `.env` file or add manually
 7. Click **Deploy**
 
+## Remote SQL Server Access (SSH Tunnel)
+
+### Connect with SQL Server Management Studio
+
+1. **Open SSH Tunnel** (keep this terminal open):
+   ```bash
+   ssh -L 1433:localhost:1433 root@95.217.219.4
+   ```
+
+2. **Open SQL Server Management Studio (SSMS)**
+
+3. **Connection Settings:**
+   - Server name: `localhost,1433` or `127.0.0.1,1433`
+   - Authentication: **SQL Server Authentication**
+   - Login: `sa`
+   - Password: [Your SA_PASSWORD from .env]
+   - Encryption: **Optional** (or Trust server certificate)
+
+4. **Click Connect**
+
+### Connect with Azure Data Studio
+
+1. **Open SSH Tunnel** (same as above)
+
+2. **Azure Data Studio Connection:**
+   - Connection type: **Microsoft SQL Server**
+   - Server: `localhost,1433`
+   - Authentication type: **SQL Login**
+   - User name: `sa`
+   - Password: [Your SA_PASSWORD from .env]
+   - Trust server certificate: **Yes**
+
+### Using Different Local Port
+
+If port 1433 is already in use on your machine:
+
+```bash
+# Use port 1434 instead
+ssh -L 1434:localhost:1433 root@95.217.219.4
+
+# Then connect to: localhost,1434
+```
+
+### SSH Tunnel Notes
+
+- ✅ **Secure**: All traffic encrypted via SSH
+- ✅ **No firewall changes**: Uses existing SSH port
+- ✅ **No exposure**: SQL Server not publicly accessible
+- ⚠️ **Keep terminal open**: Tunnel closes when SSH session ends
+- 💡 **Tip**: Use SSH key authentication for easier connection
+
+### PowerShell SSH Tunnel (Windows)
+
+```powershell
+ssh -L 1433:localhost:1433 root@95.217.219.4
+```
+
+Or with PuTTY:
+1. Session → Host: `95.217.219.4`
+2. Connection → SSH → Tunnels
+3. Source port: `1433`
+4. Destination: `localhost:1433`
+5. Click **Add**, then **Open**
+
 ## Health Checks
 
 - API Health: https://api.stoocker.app/health
