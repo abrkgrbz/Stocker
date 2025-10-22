@@ -832,22 +832,27 @@ COMMIT;`}
               <Col span={12}>
                 <Card title="Bağlantı Bilgileri">
                   <Descriptions column={1}>
-                    <Descriptions.Item label="Host">
-                      localhost:5432
+                    <Descriptions.Item label="Server">
+                      localhost\SQLEXPRESS (veya konfigüre edilmiş SQL Server)
                     </Descriptions.Item>
-                    <Descriptions.Item label="Veritabanı">
-                      tenant_db
+                    <Descriptions.Item label="Database Engine">
+                      Microsoft SQL Server
                     </Descriptions.Item>
                     <Descriptions.Item label="Şema">
-                      public
+                      dbo (default schema)
                     </Descriptions.Item>
                     <Descriptions.Item label="Versiyon">
-                      PostgreSQL 14.5
+                      SQL Server 2019+ (desteklenen tüm versiyonlar)
                     </Descriptions.Item>
                     <Descriptions.Item label="Bağlantı Durumu">
                       <Tag color="success" icon={<CheckCircleOutlined />}>
                         Bağlı
                       </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Not">
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Her tenant'ın kendi SQL Server veritabanı vardır
+                      </Text>
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -1135,8 +1140,8 @@ COMMIT;`}
         <Divider />
 
         <Alert
-          message="Desteklenen Formatlar"
-          description="PostgreSQL, MySQL, SQL Server migration scriptleri desteklenmektedir."
+          message="Desteklenen Format"
+          description="SQL Server T-SQL migration scriptleri desteklenmektedir. Entity Framework Core migrations otomatik olarak SQL Server'a uygulanır."
           type="info"
           showIcon
         />
