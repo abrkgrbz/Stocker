@@ -8,14 +8,27 @@ services:
     build:
       context: stocker-nextjs
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://api.stoocker.app
+        - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
+        - NEXT_PUBLIC_AUTH_DOMAIN=https://auth.stoocker.app
     container_name: stocker-web
     restart: unless-stopped
     # ports:  # Traefik üzerinden erişim, port açmaya gerek yok
     #   - "3000:80"
     environment:
+      # Public environment variables (client-side)
       - NEXT_PUBLIC_API_URL=https://api.stoocker.app
       - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
-      - NEXT_PUBLIC_AUTH_DOMAIN=auth.stoocker.app
+      - NEXT_PUBLIC_AUTH_DOMAIN=https://auth.stoocker.app
+
+      # Server-side only environment variables
+      - API_INTERNAL_URL=http://api:5000
+      - HMAC_SECRET=${HMAC_SECRET:-ChangeThisToASecure32CharacterOrLongerSecretKeyForProductionUse123!}
+      - COOKIE_BASE_DOMAIN=stoocker.app
+
+      # Node environment
+      - NODE_ENV=production
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
