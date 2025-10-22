@@ -6,20 +6,18 @@ version: '3.8'
 services:
   web:
     build:
-      context: .
-      dockerfile: stocker-nextjs/Dockerfile
+      context: stocker-nextjs
+      dockerfile: Dockerfile
     container_name: stocker-web
     restart: unless-stopped
     # ports:  # Traefik üzerinden erişim, port açmaya gerek yok
     #   - "3000:80"
     environment:
-      - VITE_API_URL=https://api.stoocker.app
-      - VITE_APP_URL=https://stoocker.app
-      - VITE_MOCK_ENABLED=false
-      - VITE_SEQ_URL=https://seq.stoocker.app
-      - VITE_MINIO_URL=https://s3.stoocker.app
+      - NEXT_PUBLIC_API_URL=https://api.stoocker.app
+      - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
+      - NEXT_PUBLIC_AUTH_DOMAIN=auth.stoocker.app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,7 +63,7 @@ services:
       - "traefik.http.routers.web-wildcard.middlewares=redirect-https"
       
       # Service configuration
-      - "traefik.http.services.web-service.loadbalancer.server.port=80"
+      - "traefik.http.services.web-service.loadbalancer.server.port=3000"
       - "traefik.http.services.web-service.loadbalancer.passhostheader=true"
       
       # Middlewares
