@@ -237,7 +237,11 @@ const TenantMigrations: React.FC = () => {
             });
           });
         } catch (err) {
-          console.error(`Failed to fetch history for tenant ${tenant.tenantId}:`, err);
+          // Silently skip tenants with history fetch errors (e.g., database connection issues)
+          // This is optional data, don't break the UI
+          if (process.env.NODE_ENV === 'development') {
+            console.debug(`[Migration UI] Could not fetch history for tenant ${tenant.tenantId}`);
+          }
         }
       }
 
@@ -245,8 +249,10 @@ const TenantMigrations: React.FC = () => {
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       ));
     } catch (error: any) {
-      console.error('[Migration UI] Error fetching history:', error);
-      // Don't show error to user, just leave history empty
+      // History is optional, don't show error to user
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[Migration UI] Could not fetch migration history:', error?.message);
+      }
       setHistory([]);
     }
   };
