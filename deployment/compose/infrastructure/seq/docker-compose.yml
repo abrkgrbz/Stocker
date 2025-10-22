@@ -21,7 +21,9 @@ services:
       - "traefik.http.routers.seq-secure.rule=Host(`seq.stoocker.app`)"
       - "traefik.http.routers.seq-secure.entrypoints=https"
       - "traefik.http.routers.seq-secure.tls=true"
-      - "traefik.http.routers.seq-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.seq-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.seq-secure.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.seq-secure.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.seq-secure.service=seq"
       - "traefik.http.services.seq.loadbalancer.server.port=80"
       

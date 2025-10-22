@@ -37,6 +37,8 @@ services:
       - "traefik.http.routers.stocker-root.entrypoints=https"
       - "traefik.http.routers.stocker-root.tls=true"
       - "traefik.http.routers.stocker-root.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-root.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.stocker-root.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.stocker-root.service=stocker-auth-service"
       - "traefik.http.routers.stocker-root.priority=20"
       - "traefik.http.routers.stocker-root.middlewares=www-redirect"
@@ -46,6 +48,8 @@ services:
       - "traefik.http.routers.stocker-auth.entrypoints=https"
       - "traefik.http.routers.stocker-auth.tls=true"
       - "traefik.http.routers.stocker-auth.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-auth.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.stocker-auth.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.stocker-auth.service=stocker-auth-service"
       - "traefik.http.routers.stocker-auth.priority=15"
 

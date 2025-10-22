@@ -35,7 +35,9 @@ services:
       - "traefik.http.routers.admin-secure.rule=Host(`admin.stoocker.app`)"
       - "traefik.http.routers.admin-secure.entrypoints=https"
       - "traefik.http.routers.admin-secure.tls=true"
-      - "traefik.http.routers.admin-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.admin-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.admin-secure.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.admin-secure.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.admin-secure.service=admin"
       
       # HTTP Router (redirect to HTTPS)

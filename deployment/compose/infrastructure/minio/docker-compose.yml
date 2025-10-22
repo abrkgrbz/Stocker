@@ -33,7 +33,9 @@ services:
       - "traefik.http.routers.minio-api-secure.rule=Host(`minio.stoocker.app`) || Host(`s3.stoocker.app`)"
       - "traefik.http.routers.minio-api-secure.entrypoints=https"
       - "traefik.http.routers.minio-api-secure.tls=true"
-      - "traefik.http.routers.minio-api-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-api-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.minio-api-secure.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.minio-api-secure.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.minio-api-secure.service=minio-api"
       - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
       
@@ -46,7 +48,7 @@ services:
       - "traefik.http.routers.minio-console-secure.rule=Host(`console.minio.stoocker.app`)"
       - "traefik.http.routers.minio-console-secure.entrypoints=https"
       - "traefik.http.routers.minio-console-secure.tls=true"
-      - "traefik.http.routers.minio-console-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-console-secure.tls.certresolver=cloudflare"
       - "traefik.http.routers.minio-console-secure.service=minio-console"
       - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
       

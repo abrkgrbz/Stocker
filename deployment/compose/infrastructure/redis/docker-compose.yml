@@ -52,7 +52,9 @@ services:
       - "traefik.http.routers.redis-commander.rule=Host(`redis.stoocker.app`)"
       - "traefik.http.routers.redis-commander.entrypoints=https"
       - "traefik.http.routers.redis-commander.tls=true"
-      - "traefik.http.routers.redis-commander.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.redis-commander.tls.certresolver=cloudflare"
+      - "traefik.http.routers.redis-commander.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.redis-commander.tls.domains[0].sans=*.stoocker.app"
     
     # Kaynak limitleri
     deploy:
