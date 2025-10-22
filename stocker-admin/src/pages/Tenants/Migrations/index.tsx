@@ -609,14 +609,14 @@ const TenantMigrations: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Card bordered={false} style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col span={12}>
+        <Row gutter={16} align="middle" style={{ marginBottom: 16 }}>
+          <Col xs={24} md={12}>
             <Title level={4} style={{ margin: 0 }}>
               <DatabaseOutlined /> Veritabanı Migration Yönetimi
             </Title>
           </Col>
-          <Col span={12} style={{ textAlign: 'right' }}>
-            <Space>
+          <Col xs={24} md={12} style={{ textAlign: 'right' }}>
+            <Space wrap>
               <Button icon={<ReloadOutlined />} onClick={fetchMigrations}>
                 Yenile
               </Button>

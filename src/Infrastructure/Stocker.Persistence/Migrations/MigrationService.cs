@@ -1089,43 +1089,60 @@ public partial class MigrationService
 
     public async Task<List<ScheduledMigrationDto>> GetScheduledMigrationsAsync(CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
-
-        _logger.LogInformation("Getting scheduled migrations from database");
-
-        var scheduledMigrations = await masterDbContext.ScheduledMigrations
-            .Where(s => s.Status == "Pending" || s.Status == "Running")
-            .OrderBy(s => s.ScheduledTime)
-            .ToListAsync(cancellationToken);
-
-        var result = new List<ScheduledMigrationDto>();
-
-        foreach (var migration in scheduledMigrations)
+        try
         {
-            // Get tenant details
-            var tenant = await masterDbContext.Tenants
-                .FirstOrDefaultAsync(t => t.Id == migration.TenantId, cancellationToken);
+            using var scope = _serviceProvider.CreateScope();
+            var masterDbContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
 
-            result.Add(new ScheduledMigrationDto
+            _logger.LogInformation("Getting scheduled migrations from database");
+
+            // Check if ScheduledMigrations table exists
+            var canConnect = await masterDbContext.Database.CanConnectAsync(cancellationToken);
+            if (!canConnect)
             {
-                ScheduleId = migration.ScheduleId,
-                TenantId = migration.TenantId,
-                TenantName = tenant?.Name ?? "Unknown",
-                TenantCode = tenant?.Code ?? "Unknown",
-                ScheduledTime = migration.ScheduledTime,
-                MigrationName = migration.MigrationName,
-                ModuleName = migration.ModuleName,
-                Status = migration.Status,
-                CreatedAt = migration.CreatedAt,
-                CreatedBy = migration.CreatedBy,
-                ExecutedAt = migration.ExecutedAt,
-                Error = migration.Error
-            });
-        }
+                _logger.LogWarning("Cannot connect to master database for scheduled migrations");
+                return new List<ScheduledMigrationDto>();
+            }
 
-        _logger.LogInformation("Found {Count} scheduled migrations", result.Count);
-        return result;
+            var scheduledMigrations = await masterDbContext.ScheduledMigrations
+                .Where(s => s.Status == "Pending" || s.Status == "Running")
+                .OrderBy(s => s.ScheduledTime)
+                .ToListAsync(cancellationToken);
+
+            var result = new List<ScheduledMigrationDto>();
+
+            foreach (var migration in scheduledMigrations)
+            {
+                // Get tenant details
+                var tenant = await masterDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Id == migration.TenantId, cancellationToken);
+
+                result.Add(new ScheduledMigrationDto
+                {
+                    ScheduleId = migration.ScheduleId,
+                    TenantId = migration.TenantId,
+                    TenantName = tenant?.Name ?? "Unknown",
+                    TenantCode = tenant?.Code ?? "Unknown",
+                    ScheduledTime = migration.ScheduledTime,
+                    MigrationName = migration.MigrationName,
+                    ModuleName = migration.ModuleName,
+                    Status = migration.Status,
+                    CreatedAt = migration.CreatedAt,
+                    CreatedBy = migration.CreatedBy,
+                    ExecutedAt = migration.ExecutedAt,
+                    Error = migration.Error
+                });
+            }
+
+            _logger.LogInformation("Found {Count} scheduled migrations", result.Count);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            // Table might not exist yet (migration not applied)
+            _logger.LogWarning(ex, "Failed to get scheduled migrations, table might not exist yet");
+            return new List<ScheduledMigrationDto>();
+        }
     }
 
     public async Task<bool> CancelScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default)
