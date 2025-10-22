@@ -17,7 +17,6 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_BROWSER=on
-      - MINIO_DOMAIN=minio.stoocker.app
       - MINIO_SERVER_URL=https://minio.stoocker.app
       - MINIO_BROWSER_REDIRECT_URL=https://console.minio.stoocker.app
     volumes:
