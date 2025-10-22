@@ -65,6 +65,7 @@ import moment from 'moment';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { tenantService } from '../../../services/tenantService';
+import { migrationService } from '../../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -141,65 +142,119 @@ const TenantMigrations: React.FC = () => {
   const fetchMigrations = async () => {
     setLoading(true);
     try {
-      // Fetch real tenant list
-      console.log('[Migration UI] Fetching tenants from API...');
-      const response = await tenantService.getTenants({ pageSize: 100 });
-      console.log('[Migration UI] Tenants fetched:', response.data.length, 'tenants');
-      console.log('[Migration UI] Tenant names:', response.data.map(t => t.name));
+      // Fetch pending migrations from real API
+      const pendingMigrations = await migrationService.getPendingMigrations();
 
-      // Map tenants to migration items (each tenant can be migrated)
-      const tenantMigrations: Migration[] = response.data.map((tenant, index) => ({
-        id: tenant.id,
-        name: `${tenant.name} (${tenant.code})`,
-        version: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
-        type: 'schema' as const,
-        status: tenant.database?.status === 'migrating' ? 'running' as const : 'pending' as const,
-        source: 'manual' as const,
-        affectedTables: ['Tenant DB', 'CRM Tables (if active)'],
-        affectedRows: 0,
-        canRollback: false,
-      }));
+      // Transform API data to match Migration interface
+      const transformedMigrations: Migration[] = [];
 
-      console.log('[Migration UI] Setting migrations state with', tenantMigrations.length, 'items');
-      setMigrations(tenantMigrations);
-    } catch (error) {
-      console.error('[Migration UI] Error fetching tenants for migration:', error);
-      message.error('Tenant listesi yüklenemedi');
+      pendingMigrations.forEach(tenant => {
+        // For each tenant with pending migrations
+        tenant.pendingMigrations.forEach(module => {
+          module.migrations.forEach(migrationName => {
+            transformedMigrations.push({
+              id: `${tenant.tenantId}-${module.module}-${migrationName}`,
+              name: `${tenant.tenantName} - ${module.module} - ${migrationName}`,
+              version: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+              type: 'schema' as const,
+              status: 'pending' as const,
+              source: 'automatic' as const,
+              affectedTables: [module.module],
+              affectedRows: 0,
+              canRollback: false,
+            });
+          });
+        });
+
+        // Also add completed migrations
+        tenant.appliedMigrations.forEach(module => {
+          module.migrations.forEach(migrationName => {
+            transformedMigrations.push({
+              id: `${tenant.tenantId}-${module.module}-${migrationName}-completed`,
+              name: `${tenant.tenantName} - ${module.module} - ${migrationName}`,
+              version: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+              type: 'schema' as const,
+              status: 'completed' as const,
+              source: 'automatic' as const,
+              affectedTables: [module.module],
+              affectedRows: 0,
+              canRollback: true,
+              executedAt: new Date().toISOString(),
+              executedBy: 'System',
+              duration: 1000,
+            });
+          });
+        });
+      });
+
+      setMigrations(transformedMigrations);
+    } catch (error: any) {
+      console.error('[Migration UI] Error fetching migrations:', error);
+      message.error(error.message || 'Migration listesi yüklenemedi');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchHistory = async () => {
-    // TODO: Real API integration for migration history
-    // For now, showing no history to avoid confusion with mock data
-    console.log('[Migration UI] Fetching migration history...');
-    setHistory([]);
-    console.log('[Migration UI] History cleared (no real API yet)');
+    try {
+      // Get migration history from all tenants
+      const pendingMigrations = await migrationService.getPendingMigrations();
+      const historyItems: MigrationHistory[] = [];
+
+      // For each tenant, get their migration history
+      for (const tenant of pendingMigrations) {
+        try {
+          const tenantHistory = await migrationService.getMigrationHistory(tenant.tenantId);
+
+          // Transform to history format
+          tenantHistory.appliedMigrations.forEach((migration, index) => {
+            historyItems.push({
+              id: `${tenant.tenantId}-${migration}-${index}`,
+              migrationId: migration,
+              action: 'apply' as const,
+              timestamp: new Date().toISOString(),
+              user: 'System',
+              status: 'success' as const,
+              details: `Applied to ${tenant.tenantName} (${tenant.tenantCode})`,
+            });
+          });
+        } catch (err) {
+          console.error(`Failed to fetch history for tenant ${tenant.tenantId}:`, err);
+        }
+      }
+
+      setHistory(historyItems.sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ));
+    } catch (error: any) {
+      console.error('[Migration UI] Error fetching history:', error);
+      // Don't show error to user, just leave history empty
+      setHistory([]);
+    }
   };
 
   const handleRunMigration = async (migrationId: string) => {
-    console.log('🔵 [BUTTON CLICKED] handleRunMigration called with migrationId:', migrationId);
-    console.log('🔵 [BUTTON CLICKED] Current migrations state:', migrations);
-
     const migration = migrations.find(m => m.id === migrationId);
 
-    // Modern SweetAlert2 modal for confirmation
+    // Extract tenantId from migration ID (format: tenantId-module-migrationName)
+    const tenantId = migrationId.split('-')[0];
+
     const result = await Swal.fire({
       title: 'Migration Çalıştır',
       html: `
         <div style="text-align: left; padding: 10px;">
           <p style="margin-bottom: 12px;">
-            <strong>${migration?.name || 'Bu tenant'}</strong> için migration çalıştırılacak.
+            <strong>${migration?.name || 'Bu migration'}</strong> çalıştırılacak.
           </p>
           <div style="background: #f0f2f5; padding: 12px; border-radius: 6px; font-size: 13px;">
             <div style="margin-bottom: 6px;">
-              <span style="color: #8c8c8c;">Tenant ID:</span>
-              <span style="margin-left: 8px; font-family: monospace;">${migrationId}</span>
+              <span style="color: #8c8c8c;">Migration:</span>
+              <span style="margin-left: 8px; font-family: monospace;">${migration?.name}</span>
             </div>
             <div>
-              <span style="color: #8c8c8c;">İşlem:</span>
-              <span style="margin-left: 8px;">Tüm bekleyen migration'lar çalıştırılacak</span>
+              <span style="color: #8c8c8c;">Durum:</span>
+              <span style="margin-left: 8px;">${migration?.status === 'pending' ? 'Beklemede' : 'Tamamlandı'}</span>
             </div>
           </div>
           <p style="margin-top: 12px; color: #faad14; font-size: 13px;">
@@ -213,32 +268,22 @@ const TenantMigrations: React.FC = () => {
       cancelButtonText: '<span style="padding: 0 8px;">✕ İptal</span>',
       confirmButtonColor: '#1890ff',
       cancelButtonColor: '#d9d9d9',
-      customClass: {
-        popup: 'swal2-modern',
-        confirmButton: 'swal2-confirm-modern',
-        cancelButton: 'swal2-cancel-modern'
-      },
       reverseButtons: true,
       focusCancel: true
     });
 
     if (!result.isConfirmed) {
-      console.log('❌ [CONFIRM CANCEL] User cancelled migration');
       return;
     }
 
-    console.log('✅ [CONFIRM OK] User confirmed migration');
     setLoading(true);
     try {
-      console.log('🚀 [API CALL] Starting migration for tenant:', migrationId);
-      console.log('🚀 [API CALL] Migration object:', migration);
-      const apiResult = await tenantService.migrateTenantDatabase(migrationId);
-      console.log('✅ [API SUCCESS] Migration result:', apiResult);
+      // Use real migration API
+      const apiResult = await migrationService.applyMigration(tenantId);
 
-      // Show success with modern modal
       await Swal.fire({
         title: 'Başarılı!',
-        text: apiResult.message || `${migration?.name} migration başarıyla tamamlandı!`,
+        text: apiResult.message || 'Migration başarıyla tamamlandı!',
         icon: 'success',
         confirmButtonText: 'Tamam',
         confirmButtonColor: '#52c41a',
@@ -247,16 +292,10 @@ const TenantMigrations: React.FC = () => {
       });
 
       fetchMigrations();
+      fetchHistory();
     } catch (error: any) {
-      console.error('❌ [API ERROR] Migration error:', error);
-      console.error('❌ [API ERROR] Error details:', {
-        response: error?.response,
-        message: error?.message,
-        stack: error?.stack
-      });
-      const errorMsg = error?.response?.data?.message || error?.message || 'Migration başarısız';
+      const errorMsg = error?.message || 'Migration başarısız';
 
-      // Show error with modern modal
       await Swal.fire({
         title: 'Hata!',
         text: errorMsg,
@@ -267,10 +306,17 @@ const TenantMigrations: React.FC = () => {
     } finally {
       setLoading(false);
     }
-
   };
 
   const handleRollback = async (migrationId: string) => {
+    const migration = migrations.find(m => m.id === migrationId);
+
+    // Extract info from migration ID (format: tenantId-module-migrationName-completed)
+    const parts = migrationId.split('-');
+    const tenantId = parts[0];
+    const moduleName = parts[1];
+    const migrationName = parts.slice(2, -1).join('-'); // Remove 'completed' suffix
+
     Modal.confirm({
       title: 'Migration Geri Al',
       content: (
@@ -282,7 +328,9 @@ const TenantMigrations: React.FC = () => {
             showIcon
             style={{ marginBottom: 16 }}
           />
-          <Text>Migration'ı geri almak istediğinizden emin misiniz?</Text>
+          <Text>
+            <strong>{migration?.name}</strong> migration'ını geri almak istediğinizden emin misiniz?
+          </Text>
         </div>
       ),
       okText: 'Geri Al',
@@ -292,11 +340,23 @@ const TenantMigrations: React.FC = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          // API call would go here
-          message.success('Migration geri alındı');
+          const result = await migrationService.rollbackMigration(tenantId, moduleName, migrationName);
+
+          if (result.success) {
+            message.success(result.message || 'Migration geri alındı');
+          } else {
+            // Show instructions if automatic rollback not supported
+            Modal.info({
+              title: 'Rollback Bilgisi',
+              content: result.message,
+              width: 600,
+            });
+          }
+
           fetchMigrations();
-        } catch (error) {
-          message.error('Geri alma başarısız');
+          fetchHistory();
+        } catch (error: any) {
+          message.error(error?.message || 'Geri alma başarısız');
         } finally {
           setLoading(false);
         }
@@ -543,14 +603,14 @@ const TenantMigrations: React.FC = () => {
               <Button icon={<ThunderboltOutlined />} onClick={() => setPlanModalVisible(true)}>
                 Migration Planı
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 danger
-                icon={<ThunderboltOutlined />} 
+                icon={<ThunderboltOutlined />}
                 onClick={async () => {
                   Modal.confirm({
                     title: 'Tüm Tenant\'ları Güncelle',
-                    content: 'Tüm aktif tenant\'ların veritabanları migrate edilecek. CRM modülü aktif olan tenant\'larda CRM tabloları oluşturulacak. Devam etmek istiyor musunuz?',
+                    content: 'Tüm aktif tenant\'ların veritabanlarına bekleyen migration\'lar uygulanacak. Devam etmek istiyor musunuz?',
                     okText: 'Evet, Güncelle',
                     cancelText: 'İptal',
                     okType: 'danger',
@@ -558,14 +618,37 @@ const TenantMigrations: React.FC = () => {
                     onOk: async () => {
                       setLoading(true);
                       try {
-                        console.log('Starting migration for all tenants');
-                        const result = await tenantService.migrateAllTenants();
-                        console.log('Migrate all result:', result);
-                        message.success(result.message || 'Tüm tenant\'lar başarıyla güncellendi!');
+                        const results = await migrationService.applyAllMigrations();
+
+                        const successCount = results.filter(r => r.success).length;
+                        const failureCount = results.filter(r => !r.success).length;
+
+                        if (failureCount === 0) {
+                          message.success(`Tüm tenant'lar başarıyla güncellendi! (${successCount} tenant)`);
+                        } else {
+                          Modal.warning({
+                            title: 'Migration Sonuçları',
+                            content: (
+                              <div>
+                                <p>Başarılı: {successCount}</p>
+                                <p>Başarısız: {failureCount}</p>
+                                <Divider />
+                                <p><strong>Hatalı tenant'lar:</strong></p>
+                                <ul>
+                                  {results.filter(r => !r.success).map(r => (
+                                    <li key={r.tenantId}>{r.tenantName}: {r.error}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ),
+                            width: 600,
+                          });
+                        }
+
                         fetchMigrations();
+                        fetchHistory();
                       } catch (error: any) {
-                        console.error('Migrate all error:', error);
-                        const errorMsg = error?.response?.data?.message || error?.message || 'Toplu migration başarısız oldu';
+                        const errorMsg = error?.message || 'Toplu migration başarısız oldu';
                         message.error(errorMsg);
                       } finally {
                         setLoading(false);
