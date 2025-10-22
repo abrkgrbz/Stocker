@@ -1,0 +1,80 @@
+version: '3.8'
+
+# Redis Cache Service
+# Used for caching and SignalR backplane
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: >
+      redis-server 
+      --appendonly yes 
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory ${REDIS_MAX_MEMORY:-256mb}
+      --maxmemory-policy ${REDIS_EVICTION_POLICY:-allkeys-lru}
+      --tcp-backlog 511
+      --tcp-keepalive 60
+      --timeout 0
+      --databases 16
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --stop-writes-on-bgsave-error yes
+      --rdbcompression yes
+      --rdbchecksum yes
+      --dir /data
+      --dbfilename dump.rdb
+      --loglevel ${REDIS_LOG_LEVEL:-notice}
+    # ports:  # Güvenlik için sadece internal network'ten erişim önerilir
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+      # redis.conf dosyası varsa uncomment yapın
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - coolify
+    labels:
+      - "com.stocker.service=cache"
+      - "com.stocker.tier=infrastructure"
+      - "coolify.managed=true"
+      
+      # Monitoring için (isteğe bağlı)
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.redis-commander.rule=Host(`redis.stoocker.app`)"
+      - "traefik.http.routers.redis-commander.entrypoints=https"
+      - "traefik.http.routers.redis-commander.tls=true"
+      - "traefik.http.routers.redis-commander.tls.certresolver=letsencrypt"
+    
+    # Kaynak limitleri
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # Güvenlik ayarları
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  coolify:
+    external: true
