@@ -1,235 +1,146 @@
-# Stocker Coolify Deployment
+# Coolify Deployment
 
-Complete deployment configuration for Stocker application on Coolify platform.
+Coolify platform-specific configurations for Stocker application.
 
-## 📁 Directory Structure
+## 📁 Structure
 
 ```
-deployment/coolify/
-├── README.md                          # This file
-├── docker-compose.yml                 # Main orchestration file
-├── .env.example                       # Template for environment variables
-├── .env                              # Actual environment variables (gitignored)
-│
-├── services/                         # Individual service configurations
-│   ├── api/
-│   │   ├── docker-compose.yml       # API service
-│   │   ├── .env.example
-│   │   └── Dockerfile
-│   ├── web/
-│   │   ├── docker-compose.yml       # Web service
-│   │   ├── .env.example
-│   │   └── Dockerfile
-│   ├── admin/
-│   │   ├── docker-compose.yml       # Admin panel
-│   │   ├── .env.example
-│   │   └── Dockerfile
-│   └── auth/
-│       ├── docker-compose.yml       # Auth service (Next.js)
-│       ├── .env.example
-│       └── Dockerfile
-│
-├── infrastructure/                   # Infrastructure services
-│   ├── database/
-│   │   ├── docker-compose.yml       # SQL Server
-│   │   └── .env.example
-│   ├── redis/
-│   │   ├── docker-compose.yml       # Redis cache
-│   │   └── .env.example
-│   ├── seq/
-│   │   ├── docker-compose.yml       # Logging
-│   │   └── .env.example
-│   └── minio/
-│       ├── docker-compose.yml       # Object storage
-│       └── .env.example
-│
-├── monitoring/                       # Monitoring stack
-│   ├── prometheus/
-│   │   ├── docker-compose.yml
-│   │   ├── .env.example
-│   │   └── prometheus.yml
-│   └── grafana/
-│       ├── docker-compose.yml
-│       └── .env.example
-│
-└── traefik/                         # Reverse proxy
-    ├── docker-compose.yml
-    └── traefik.yml
+coolify/
+├── apps/       # Coolify application definitions
+│   ├── 01-api.yml
+│   ├── 02-web.yml
+│   ├── 03-auth-nextjs.yml
+│   ├── 04-admin.yml
+│   └── infrastructure/
+└── env/        # Environment variable templates
 ```
 
-## 🚀 Quick Start
+## 🚀 Deployment on Coolify
 
-### 1. Clone and Setup
-```bash
-cd deployment/coolify
-cp .env.example .env
-```
+### 1. Import Applications
 
-### 2. Configure Environment Variables
-Edit `.env` file with your actual values:
-```bash
-nano .env
-```
+In Coolify dashboard:
+1. Go to **Projects** → **New Resource** → **Docker Compose**
+2. Upload YAML from `apps/` directory
+3. Configure environment variables from `env/` templates
 
-### 3. Deploy Infrastructure First
-```bash
-# Database
-docker-compose -f infrastructure/database/docker-compose.yml up -d
+### 2. Infrastructure First
 
-# Redis
-docker-compose -f infrastructure/redis/docker-compose.yml up -d
+Deploy in this order:
+1. Database (`apps/infrastructure/01-database.yml`)
+2. Redis (`apps/infrastructure/02-redis.yml`)
+3. Seq (`apps/infrastructure/03-seq.yml`)
+4. MinIO (`apps/infrastructure/04-minio.yml`)
 
-# Logging
-docker-compose -f infrastructure/seq/docker-compose.yml up -d
+### 3. Application Services
 
-# Storage
-docker-compose -f infrastructure/minio/docker-compose.yml up -d
-```
+Then deploy:
+1. API (`apps/01-api.yml`)
+2. Web (`apps/02-web.yml`)
+3. Admin (`apps/04-admin.yml`)
+4. Auth (`apps/03-auth-nextjs.yml`)
 
-### 4. Deploy Application Services
-```bash
-# API
-docker-compose -f services/api/docker-compose.yml up -d
+## 🔧 Environment Variables
 
-# Web
-docker-compose -f services/web/docker-compose.yml up -d
+Coolify provides environment variable management per service.
 
-# Admin
-docker-compose -f services/admin/docker-compose.yml up -d
+### Required Secrets
 
-# Auth
-docker-compose -f services/auth/docker-compose.yml up -d
-```
+Create these in Coolify's secrets management:
 
-### 5. Deploy Monitoring (Optional)
-```bash
-docker-compose -f monitoring/prometheus/docker-compose.yml up -d
-docker-compose -f monitoring/grafana/docker-compose.yml up -d
-```
+- `SA_PASSWORD`: SQL Server password
+- `JWT_SECRET`: JWT signing key
+- `REDIS_PASSWORD`: Redis password
+- `SEQ_API_KEY`: Seq logging API key
+- `MINIO_ROOT_USER`: MinIO username
+- `MINIO_ROOT_PASSWORD`: MinIO password
+- `SMTP_USERNAME`: Email username
+- `SMTP_PASSWORD`: Email password
+- `NEXTAUTH_SECRET`: NextAuth secret
 
-### 6. Deploy Everything at Once
-```bash
-docker-compose up -d
-```
+### Connection Strings
 
-## 🔧 Configuration
+Coolify auto-injects these:
+- `ConnectionStrings__MasterConnection`
+- `ConnectionStrings__TenantConnection`
+- `ConnectionStrings__HangfireConnection`
 
-### Environment Variables
+## 🌐 Domain Configuration
 
-Each service has its own `.env.example` file. Copy and configure:
+Configure these domains in Coolify:
 
-```bash
-# For each service
-cd services/api
-cp .env.example .env
-nano .env
-```
+- api.stoocker.app → API service
+- stoocker.app → Web service
+- admin.stoocker.app → Admin service
+- auth.stoocker.app → Auth service
+- seq.stoocker.app → Seq service
+- s3.stoocker.app → MinIO service
 
-### Service URLs
-
-After deployment, services will be available at:
-
-- **API**: https://api.stoocker.app
-- **Web**: https://stoocker.app
-- **Admin**: https://admin.stoocker.app
-- **Auth**: https://auth.stoocker.app
-- **Seq Logs**: https://seq.stoocker.app
-- **MinIO**: https://minio.stoocker.app
-- **Grafana**: https://grafana.stoocker.app
+Coolify will automatically provision Let's Encrypt SSL certificates.
 
 ## 📊 Monitoring
 
-Access monitoring dashboards:
+### Coolify Built-in
 
-- **Grafana**: https://grafana.stoocker.app
-  - Username: admin
-  - Password: (set in .env)
+- Service logs in dashboard
+- Resource usage metrics
+- Health check status
 
-- **Seq Logs**: https://seq.stoocker.app
-  - API Key: (set in .env)
+### Application Monitoring
+
+- **Seq**: https://seq.stoocker.app
+- **API Health**: https://api.stoocker.app/health
+- **Hangfire**: https://api.stoocker.app/hangfire
+
+## 🔄 Updates & Rollbacks
+
+### Update Service
+
+In Coolify:
+1. Go to service
+2. Click **Redeploy**
+3. Wait for deployment
+
+### Rollback
+
+1. Go to **Deployments** history
+2. Select previous version
+3. Click **Redeploy**
 
 ## 🔐 Security
 
-### Secrets Management
-
-1. **Never commit `.env` files** to git
-2. **Use strong passwords** for all services
-3. **Rotate secrets regularly**
-4. **Use Coolify's secrets management** for production
-
-### SSL/TLS
-
-Coolify automatically provisions Let's Encrypt certificates for all domains.
-
-## 🛠️ Maintenance
-
-### View Logs
-```bash
-# Specific service
-docker-compose -f services/api/docker-compose.yml logs -f
-
-# All services
-docker-compose logs -f
-```
-
-### Restart Services
-```bash
-# Specific service
-docker-compose -f services/api/docker-compose.yml restart
-
-# All services
-docker-compose restart
-```
-
-### Update Services
-```bash
-# Pull latest images
-docker-compose pull
-
-# Restart with new images
-docker-compose up -d
-```
-
-### Backup Database
-```bash
-docker exec stocker-sqlserver /opt/mssql-tools/bin/sqlcmd \
-  -S localhost -U sa -P $SA_PASSWORD \
-  -Q "BACKUP DATABASE [Stocker_Master] TO DISK = N'/var/opt/mssql/backups/master.bak'"
-```
-
-## 🐛 Troubleshooting
-
-### Check Service Health
-```bash
-docker-compose ps
-```
-
-### View Service Logs
-```bash
-docker-compose logs [service-name]
-```
-
-### Restart Failed Service
-```bash
-docker-compose restart [service-name]
-```
-
-### Database Connection Issues
-```bash
-# Check SQL Server is running
-docker exec stocker-sqlserver /opt/mssql-tools/bin/sqlcmd \
-  -S localhost -U sa -P $SA_PASSWORD -Q "SELECT @@VERSION"
-```
+Coolify provides:
+- Automatic SSL/TLS
+- Secret management
+- Network isolation
+- Automatic backups (if configured)
 
 ## 📝 Notes
 
-- All services use named volumes for persistence
-- Networks are automatically created and managed
-- Health checks ensure service availability
-- Automatic restarts configured for all services
+- All services use Coolify's managed network
+- Traefik handles routing and SSL
+- Environment variables are encrypted
+- Logs are retained per Coolify settings
 
-## 🔗 Links
+## 🆘 Troubleshooting
 
-- [Coolify Documentation](https://coolify.io/docs)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Traefik Documentation](https://doc.traefik.io/traefik/)
+### Service Won't Start
+
+1. Check logs in Coolify dashboard
+2. Verify environment variables
+3. Check resource limits
+4. Verify network connectivity
+
+### Database Connection Issues
+
+1. Verify `ConnectionStrings__*` variables
+2. Check database service is running
+3. Check network connectivity
+4. Verify SA_PASSWORD is correct
+
+### SSL Certificate Issues
+
+1. Verify domain DNS points to Coolify server
+2. Check Cloudflare proxy is disabled (DNS only)
+3. Wait 2-3 minutes for certificate provisioning
+4. Check Traefik logs

@@ -1,0 +1,104 @@
+version: '3.8'
+
+# Stocker API - Standalone version for Coolify
+# No depends_on since services are deployed separately
+# Built from source by Coolify
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./src/API/Stocker.API/Dockerfile
+    container_name: stocker-api
+    restart: unless-stopped
+    # ports:  # Traefik üzerinden erişim sağlanacak, port açmaya gerek yok
+    #   - "5000:5000"
+    environment:
+      # ASP.NET Core
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      
+      # Database Connections
+      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__MasterConnection=Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__TenantConnection=Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      
+      # Redis
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD}
+      
+      # Seq Logging
+      - Logging__Seq__ServerUrl=http://seq:5341
+      - Logging__Seq__ApiKey=${SEQ_API_KEY}
+      
+      # JWT
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=https://api.stoocker.app
+      - JwtSettings__Audience=https://stoocker.app
+      
+      # Email (Namecheap Private Email)
+      - EmailSettings__SmtpHost=mail.privateemail.com
+      - EmailSettings__SmtpPort=465
+      - EmailSettings__SmtpUsername=info@stoocker.app
+      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
+      - EmailSettings__FromEmail=info@stoocker.app
+      - EmailSettings__FromName=Stoocker
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__UseStartTls=false
+      
+      # MinIO - Internal network üzerinden erişim
+      - Storage__Provider=MinIO
+      - Storage__MinIO__Endpoint=minio:9000
+      - Storage__MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
+      - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD:-MinioPassword123!}
+      - Storage__MinIO__BucketName=stocker-files
+      - Storage__MinIO__UseSSL=false
+      
+    networks:
+      - coolify
+    labels:
+      # Traefik configuration for api.stoocker.app
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      
+      # API routing - HTTPS
+      - "traefik.http.routers.api-secure.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api-secure.entrypoints=https"
+      - "traefik.http.routers.api-secure.tls=true"
+      - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api-secure.service=api"
+      - "traefik.http.services.api.loadbalancer.server.port=5000"
+      
+      # API routing - HTTP (redirect to HTTPS)
+      - "traefik.http.routers.api.rule=Host(`api.stoocker.app`)"
+      - "traefik.http.routers.api.entrypoints=http"
+      - "traefik.http.routers.api.middlewares=redirect-to-https"
+      
+      # Middlewares
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      
+      # CORS headers
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://stoocker.app,https://admin.stoocker.app,https://app.stoocker.app"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.api-cors.headers.addvaryheader=true"
+      
+      # Apply CORS to HTTPS router
+      - "traefik.http.routers.api-secure.middlewares=api-cors"
+      
+      # Coolify labels
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=stocker-api"
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  coolify:
+    external: true

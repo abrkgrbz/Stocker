@@ -1,0 +1,81 @@
+version: '3.8'
+
+# Stocker Web Application with Dynamic Subdomain Support
+# This configuration handles all tenant subdomains automatically
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./stocker-web/Dockerfile
+    container_name: stocker-web
+    restart: unless-stopped
+    # ports:  # Traefik üzerinden erişim sağlanacak, port açmaya gerek yok
+    #   - "80:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=https://api.stoocker.app
+      - VITE_APP_URL=https://stoocker.app
+      - VITE_MOCK_ENABLED=false
+      - VITE_SEQ_URL=https://seq.stoocker.app  # IP yerine domain kullanın
+      - VITE_MASTER_URL=https://master.stoocker.app
+    
+    networks:
+      - coolify
+    
+    labels:
+      # COOLIFY WILDCARD CONFIGURATION
+      # IMPORTANT: Leave FQDN empty in Coolify UI for this to work
+      
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      
+      # Ana domain için router
+      - "traefik.http.routers.stocker-web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-web-main.entrypoints=https"
+      - "traefik.http.routers.stocker-web-main.tls=true"
+      - "traefik.http.routers.stocker-web-main.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-web-main.service=stocker-web-service"
+      - "traefik.http.routers.stocker-web-main.priority=10"
+      - "traefik.http.routers.stocker-web-main.middlewares=www-redirect"
+      
+      # Wildcard subdomain router - Traefik v3 için doğru syntax
+      - "traefik.http.routers.stocker-web-wildcard.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-web-wildcard.entrypoints=https"
+      - "traefik.http.routers.stocker-web-wildcard.tls=true"
+      - "traefik.http.routers.stocker-web-wildcard.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-web-wildcard.tls.domains[0].main=*.stoocker.app"
+      - "traefik.http.routers.stocker-web-wildcard.tls.domains[0].sans=stoocker.app"
+      - "traefik.http.routers.stocker-web-wildcard.service=stocker-web-service"
+      - "traefik.http.routers.stocker-web-wildcard.priority=5"
+      
+      # HTTP -> HTTPS yönlendirmeleri
+      - "traefik.http.routers.stocker-web-main-http.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-web-main-http.entrypoints=http"
+      - "traefik.http.routers.stocker-web-main-http.middlewares=redirect-https"
+      
+      - "traefik.http.routers.stocker-web-wildcard-http.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-web-wildcard-http.entrypoints=http"
+      - "traefik.http.routers.stocker-web-wildcard-http.middlewares=redirect-https"
+      
+      # Service tanımı
+      - "traefik.http.services.stocker-web-service.loadbalancer.server.port=80"
+      
+      # Middleware tanımları
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+      
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)$"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  coolify:
+    external: true

@@ -1,0 +1,85 @@
+version: '3.8'
+
+# Stocker Web Application
+# Frontend React application - Built from source by Coolify
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: stocker-web/Dockerfile
+    container_name: stocker-web
+    restart: unless-stopped
+    # ports:  # Traefik üzerinden erişim, port açmaya gerek yok
+    #   - "3000:80"
+    environment:
+      - VITE_API_URL=https://api.stoocker.app
+      - VITE_APP_URL=https://stoocker.app
+      - VITE_MOCK_ENABLED=false
+      - VITE_SEQ_URL=https://seq.stoocker.app
+      - VITE_MINIO_URL=https://s3.stoocker.app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - coolify
+    labels:
+      # Standard labels
+      - "com.stocker.service=web"
+      - "com.stocker.tier=application"
+      
+      # Traefik configuration
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      
+      # Main domain HTTPS routing (stoocker.app and www)
+      - "traefik.http.routers.web-main-secure.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.web-main-secure.entrypoints=https"
+      - "traefik.http.routers.web-main-secure.tls=true"
+      - "traefik.http.routers.web-main-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.web-main-secure.service=web-service"
+      - "traefik.http.routers.web-main-secure.priority=10"
+      - "traefik.http.routers.web-main-secure.middlewares=www-redirect"
+      
+      # Main domain HTTP routing (redirect to HTTPS)
+      - "traefik.http.routers.web-main.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.web-main.entrypoints=http"
+      - "traefik.http.routers.web-main.middlewares=redirect-https"
+      
+      # Wildcard subdomain HTTPS routing for ALL tenants
+      - "traefik.http.routers.web-wildcard-secure.rule=HostRegexp(`^{subdomain:[a-z0-9-]+}\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.web-wildcard-secure.entrypoints=https"
+      - "traefik.http.routers.web-wildcard-secure.tls=true"
+      - "traefik.http.routers.web-wildcard-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.web-wildcard-secure.service=web-service"
+      - "traefik.http.routers.web-wildcard-secure.priority=5"
+      - "traefik.http.routers.web-wildcard-secure.middlewares=tenant-headers"
+      
+      # Wildcard subdomain HTTP routing (redirect to HTTPS)
+      - "traefik.http.routers.web-wildcard.rule=HostRegexp(`^{subdomain:[a-z0-9-]+}\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.web-wildcard.entrypoints=http"
+      - "traefik.http.routers.web-wildcard.middlewares=redirect-https"
+      
+      # Service configuration
+      - "traefik.http.services.web-service.loadbalancer.server.port=80"
+      - "traefik.http.services.web-service.loadbalancer.passhostheader=true"
+      
+      # Middlewares
+      # HTTPS redirect
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+      
+      # WWW to non-WWW redirect
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$$1"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+      
+      # Tenant detection middleware
+      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Tenant-Slug={subdomain}"
+      - "traefik.http.middlewares.tenant-headers.headers.customrequestheaders.X-Tenant-Host={subdomain}.stoocker.app"
+
+networks:
+  coolify:
+    external: true

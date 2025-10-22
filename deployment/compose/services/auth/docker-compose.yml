@@ -1,0 +1,98 @@
+version: '3.8'
+
+# Stocker Auth Application (Next.js)
+# Handles landing page, authentication and registration
+# Serves both root domain (stoocker.app) and auth subdomain (auth.stoocker.app)
+
+services:
+  auth:
+    build:
+      context: ./stocker-nextjs
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.stoocker.app
+        NEXT_PUBLIC_APP_URL: https://auth.stoocker.app
+        NEXT_PUBLIC_MAIN_APP_URL: https://stoocker.app
+    container_name: stocker-auth
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.stoocker.app
+      - NEXT_PUBLIC_APP_URL=https://auth.stoocker.app
+      - NEXT_PUBLIC_MAIN_APP_URL=https://stoocker.app
+      - NEXT_TELEMETRY_DISABLED=1
+
+    networks:
+      - coolify
+
+    labels:
+      # COOLIFY CONFIGURATION FOR AUTH SUBDOMAIN
+      # IMPORTANT: Leave FQDN empty in Coolify UI for this to work
+
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+
+      # Root domain router (stoocker.app and www.stoocker.app)
+      - "traefik.http.routers.stocker-root.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-root.entrypoints=https"
+      - "traefik.http.routers.stocker-root.tls=true"
+      - "traefik.http.routers.stocker-root.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-root.service=stocker-auth-service"
+      - "traefik.http.routers.stocker-root.priority=20"
+      - "traefik.http.routers.stocker-root.middlewares=www-redirect"
+
+      # Auth subdomain router (auth.stoocker.app)
+      - "traefik.http.routers.stocker-auth.rule=Host(`auth.stoocker.app`)"
+      - "traefik.http.routers.stocker-auth.entrypoints=https"
+      - "traefik.http.routers.stocker-auth.tls=true"
+      - "traefik.http.routers.stocker-auth.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-auth.service=stocker-auth-service"
+      - "traefik.http.routers.stocker-auth.priority=15"
+
+      # Tenant wildcard subdomain router (*.stoocker.app excluding auth and www)
+      - "traefik.http.routers.stocker-tenant.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-tenant.entrypoints=https"
+      - "traefik.http.routers.stocker-tenant.tls=true"
+      - "traefik.http.routers.stocker-tenant.tls.certresolver=cloudflare"
+      - "traefik.http.routers.stocker-tenant.tls.domains[0].main=*.stoocker.app"
+      - "traefik.http.routers.stocker-tenant.tls.domains[0].sans=stoocker.app"
+      - "traefik.http.routers.stocker-tenant.service=stocker-auth-service"
+      - "traefik.http.routers.stocker-tenant.priority=10"
+
+      # HTTP -> HTTPS redirect for root domain
+      - "traefik.http.routers.stocker-root-http.rule=Host(`stoocker.app`) || Host(`www.stoocker.app`)"
+      - "traefik.http.routers.stocker-root-http.entrypoints=http"
+      - "traefik.http.routers.stocker-root-http.middlewares=redirect-https"
+
+      # HTTP -> HTTPS redirect for auth subdomain
+      - "traefik.http.routers.stocker-auth-http.rule=Host(`auth.stoocker.app`)"
+      - "traefik.http.routers.stocker-auth-http.entrypoints=http"
+      - "traefik.http.routers.stocker-auth-http.middlewares=redirect-https"
+
+      # HTTP -> HTTPS redirect for tenant wildcard
+      - "traefik.http.routers.stocker-tenant-http.rule=HostRegexp(`^[a-z0-9][a-z0-9-]*\\.stoocker\\.app$$`)"
+      - "traefik.http.routers.stocker-tenant-http.entrypoints=http"
+      - "traefik.http.routers.stocker-tenant-http.middlewares=redirect-https"
+
+      # Service definition - Next.js runs on port 3000
+      - "traefik.http.services.stocker-auth-service.loadbalancer.server.port=3000"
+
+      # Middleware for HTTPS redirect
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+
+      # Middleware for WWW to non-WWW redirect
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$$1"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  coolify:
+    external: true
