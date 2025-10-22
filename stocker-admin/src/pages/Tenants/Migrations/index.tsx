@@ -65,7 +65,7 @@ import moment from 'moment';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { tenantService } from '../../../services/tenantService';
-import { migrationService } from '../../../services/api';
+import { migrationService } from '../../../services/api/migrationService';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
