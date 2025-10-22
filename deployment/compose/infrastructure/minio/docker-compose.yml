@@ -49,6 +49,8 @@ services:
       - "traefik.http.routers.minio-console-secure.entrypoints=https"
       - "traefik.http.routers.minio-console-secure.tls=true"
       - "traefik.http.routers.minio-console-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.minio-console-secure.tls.domains[0].main=stoocker.app"
+      - "traefik.http.routers.minio-console-secure.tls.domains[0].sans=*.stoocker.app"
       - "traefik.http.routers.minio-console-secure.service=minio-console"
       - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
       
