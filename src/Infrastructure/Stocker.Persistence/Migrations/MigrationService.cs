@@ -502,7 +502,7 @@ public partial class MigrationService
                 var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
                 optionsBuilder.UseSqlServer(tenant.ConnectionString);
 
-                using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+                using var tenantContext = new TenantDbContext(optionsBuilder.Options, tenant.Id);
 
                 var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
                 var appliedMigrations = await tenantContext.Database.GetAppliedMigrationsAsync(cancellationToken);
@@ -627,7 +627,7 @@ public partial class MigrationService
         optionsBuilder.ConfigureWarnings(warnings =>
             warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-        using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+        using var tenantContext = new TenantDbContext(optionsBuilder.Options, tenant.Id);
 
         var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
         var pendingList = pendingMigrations.ToList();
@@ -680,7 +680,7 @@ public partial class MigrationService
                 var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
                 optionsBuilder.UseSqlServer(tenant.ConnectionString.Value);
 
-                using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+                using var tenantContext = new TenantDbContext(optionsBuilder.Options, tenant.Id);
 
                 var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
                 var pendingList = pendingMigrations.ToList();
@@ -749,7 +749,7 @@ public partial class MigrationService
             optionsBuilder.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-            using var tenantContext = new TenantDbContext(optionsBuilder.Options, null!);
+            using var tenantContext = new TenantDbContext(optionsBuilder.Options, tenant.Id);
 
             // Test database connection
             var canConnect = await tenantContext.Database.CanConnectAsync(cancellationToken);
