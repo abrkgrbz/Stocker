@@ -25,7 +25,7 @@ public static class CorsExtensions
                       .AllowAnyMethod()
                       .WithHeaders(
                           "Content-Type", "Authorization", "Accept",
-                          "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
+                          "X-Request-ID", "X-Tenant-Code", "X-Tenant-Id", "X-Correlation-ID",
                           "Cache-Control", "Pragma"
                       )
                       .AllowCredentials()
@@ -63,7 +63,7 @@ public static class CorsExtensions
                 .AllowAnyMethod()
                 .WithHeaders(
                     "Content-Type", "Authorization", "Accept",
-                    "X-Request-ID", "X-Tenant-Code", "X-Correlation-ID",
+                    "X-Request-ID", "X-Tenant-Code", "X-Tenant-Id", "X-Correlation-ID",
                     "Cache-Control", "Pragma",
                     "X-Requested-With", "X-SignalR-User-Agent" // SignalR headers
                 )
