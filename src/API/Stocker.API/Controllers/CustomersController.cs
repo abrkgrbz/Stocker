@@ -167,10 +167,10 @@ public class CustomersController : ControllerBase
             customer.SetTaxInfo(dto.TaxNumber, dto.TaxOffice);
 
         using var context = await _contextFactory.CreateDbContextAsync(tenantId);
-        
-        // Check for duplicate email
+
+        // Check for duplicate email by email value string
         var existingCustomer = await context.Customers
-            .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Email == emailResult.Value);
+            .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Email.Value == emailResult.Value.Value);
         if (existingCustomer != null)
             throw new ConflictException("Customer", "email", dto.Email);
 
