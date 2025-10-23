@@ -29,6 +29,8 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useCustomers } from '@/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
+import CustomerModal from '@/features/customers/components/CustomerModal';
+import Link from 'next/link';
 
 const { Title } = Typography;
 
@@ -37,6 +39,8 @@ export default function CustomersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -150,10 +154,15 @@ export default function CustomersPage() {
               {
                 key: 'view',
                 label: 'Detayları Gör',
+                onClick: () => window.location.href = `/crm/customers/${record.id}`,
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
+                onClick: () => {
+                  setSelectedCustomer(record);
+                  setModalOpen(true);
+                },
               },
               {
                 type: 'divider',
@@ -172,6 +181,17 @@ export default function CustomersPage() {
     },
   ];
 
+  const handleModalSuccess = () => {
+    setModalOpen(false);
+    setSelectedCustomer(null);
+    refetch();
+  };
+
+  const handleModalCancel = () => {
+    setModalOpen(false);
+    setSelectedCustomer(null);
+  };
+
   return (
     <div>
       {/* Page Header */}
@@ -187,7 +207,15 @@ export default function CustomersPage() {
           >
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} size="large">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => {
+              setSelectedCustomer(null);
+              setModalOpen(true);
+            }}
+          >
             Müşteri Ekle
           </Button>
         </Space>
@@ -307,6 +335,14 @@ export default function CustomersPage() {
           }}
         />
       </Card>
+
+      {/* Customer Modal */}
+      <CustomerModal
+        open={modalOpen}
+        customer={selectedCustomer}
+        onCancel={handleModalCancel}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 }
