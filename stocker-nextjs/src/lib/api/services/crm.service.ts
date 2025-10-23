@@ -116,7 +116,32 @@ export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
 // =====================================
 
 export class CRMService {
-  private static readonly BASE_PATH = '/crm';
+  /**
+   * Get tenant ID from localStorage
+   * Backend expects URLs like: /api/tenants/{tenantId}/customers
+   */
+  private static getTenantId(): string {
+    if (typeof window === 'undefined') {
+      throw new Error('CRMService can only be used in browser context');
+    }
+
+    const tenantId = localStorage.getItem('tenantId');
+    if (!tenantId) {
+      throw new Error('Tenant ID not found in localStorage');
+    }
+
+    return tenantId;
+  }
+
+  /**
+   * Build tenant-aware API path
+   * @param resource - Resource path (e.g., 'customers', 'leads')
+   * @returns Full API path with tenant ID
+   */
+  private static getPath(resource: string): string {
+    const tenantId = this.getTenantId();
+    return `/api/tenants/${tenantId}/${resource}`;
+  }
 
   // =====================================
   // CUSTOMERS
@@ -129,7 +154,7 @@ export class CRMService {
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Customer>> {
     return ApiService.get<PaginatedResponse<Customer>>(
-      `${this.BASE_PATH}/customers`,
+      this.getPath('customers'),
       { params: filters }
     );
   }
@@ -138,14 +163,14 @@ export class CRMService {
    * Get single customer by ID
    */
   static async getCustomer(id: number): Promise<Customer> {
-    return ApiService.get<Customer>(`${this.BASE_PATH}/customers/${id}`);
+    return ApiService.get<Customer>(this.getPath(`customers/${id}`));
   }
 
   /**
    * Create new customer
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
-    return ApiService.post<Customer>(`${this.BASE_PATH}/customers`, data);
+    return ApiService.post<Customer>(this.getPath('customers'), data);
   }
 
   /**
@@ -156,7 +181,7 @@ export class CRMService {
     data: UpdateCustomerDto
   ): Promise<Customer> {
     return ApiService.put<Customer>(
-      `${this.BASE_PATH}/customers/${id}`,
+      this.getPath(`customers/${id}`),
       data
     );
   }
@@ -165,7 +190,7 @@ export class CRMService {
    * Delete customer
    */
   static async deleteCustomer(id: number): Promise<void> {
-    return ApiService.delete<void>(`${this.BASE_PATH}/customers/${id}`);
+    return ApiService.delete<void>(this.getPath(`customers/${id}`));
   }
 
   // =====================================
@@ -178,7 +203,7 @@ export class CRMService {
   static async getLeads(
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Lead>> {
-    return ApiService.get<PaginatedResponse<Lead>>(`${this.BASE_PATH}/leads`, {
+    return ApiService.get<PaginatedResponse<Lead>>(this.getPath('leads'), {
       params: filters,
     });
   }
@@ -187,7 +212,7 @@ export class CRMService {
    * Get single lead by ID
    */
   static async getLead(id: number): Promise<Lead> {
-    return ApiService.get<Lead>(`${this.BASE_PATH}/leads/${id}`);
+    return ApiService.get<Lead>(this.getPath(`leads/${id}`));
   }
 
   // =====================================
@@ -200,7 +225,7 @@ export class CRMService {
   static async getDeals(
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Deal>> {
-    return ApiService.get<PaginatedResponse<Deal>>(`${this.BASE_PATH}/deals`, {
+    return ApiService.get<PaginatedResponse<Deal>>(this.getPath('deals'), {
       params: filters,
     });
   }
@@ -209,7 +234,7 @@ export class CRMService {
    * Get single deal by ID
    */
   static async getDeal(id: number): Promise<Deal> {
-    return ApiService.get<Deal>(`${this.BASE_PATH}/deals/${id}`);
+    return ApiService.get<Deal>(this.getPath(`deals/${id}`));
   }
 
   // =====================================
@@ -223,7 +248,7 @@ export class CRMService {
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Activity>> {
     return ApiService.get<PaginatedResponse<Activity>>(
-      `${this.BASE_PATH}/activities`,
+      this.getPath('activities'),
       { params: filters }
     );
   }
@@ -232,7 +257,7 @@ export class CRMService {
    * Get single activity by ID
    */
   static async getActivity(id: number): Promise<Activity> {
-    return ApiService.get<Activity>(`${this.BASE_PATH}/activities/${id}`);
+    return ApiService.get<Activity>(this.getPath(`activities/${id}`));
   }
 }
 
