@@ -117,34 +117,16 @@ export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
 
 export class CRMService {
   /**
-   * Get tenant ID from localStorage
-   * Backend expects URLs like: /tenants/{tenantId}/customers
-   * Note: axios baseURL is already '/api', so we don't add it here
-   */
-  private static getTenantId(): string {
-    if (typeof window === 'undefined') {
-      throw new Error('CRMService can only be used in browser context');
-    }
-
-    const tenantId = localStorage.getItem('tenantId');
-    if (!tenantId) {
-      console.error('❌ Tenant ID not found in localStorage. Available keys:', Object.keys(localStorage));
-      throw new Error('Tenant ID not found in localStorage. Please login again.');
-    }
-
-    console.log('✅ Using tenant ID:', tenantId);
-    return tenantId;
-  }
-
-  /**
-   * Build tenant-aware API path
+   * Build CRM module API path
    * @param resource - Resource path (e.g., 'customers', 'leads')
-   * @returns API path with tenant ID (without /api prefix as it's in baseURL)
+   * @returns CRM API path (without /api prefix as it's in baseURL)
+   *
+   * CRM module uses: /api/crm/{resource}
+   * Tenant context is handled by backend middleware via X-Tenant-Code header (not in URL)
    */
   private static getPath(resource: string): string {
-    const tenantId = this.getTenantId();
-    // baseURL is '/api', so we only need 'tenants/{tenantId}/{resource}'
-    return `/tenants/${tenantId}/${resource}`;
+    // CRM module route pattern
+    return `/crm/${resource}`;
   }
 
   // =====================================
@@ -153,13 +135,24 @@ export class CRMService {
 
   /**
    * Get all customers with pagination and filters
+   * Uses CRM module's GetCustomersPagedQuery
    */
   static async getCustomers(
     filters?: CustomerFilters
   ): Promise<PaginatedResponse<Customer>> {
+    // CRM module uses /paged endpoint for pagination
+    const params = {
+      pageNumber: filters?.pageNumber || 1,
+      pageSize: filters?.pageSize || 10,
+      searchTerm: filters?.search,
+      sortBy: filters?.sortBy,
+      sortDescending: filters?.sortOrder === 'desc',
+      includeInactive: filters?.status === 'Inactive',
+    };
+
     return ApiService.get<PaginatedResponse<Customer>>(
-      this.getPath('customers'),
-      { params: filters }
+      this.getPath('customers/paged'),
+      { params }
     );
   }
 
@@ -194,45 +187,72 @@ export class CRMService {
   }
 
   /**
-   * Create new customer
+   * Create new customer using CRM module's CreateCustomerCommand
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
-    // Transform frontend DTO to backend DTO format
-    // Backend expects: { Name, Email, Phone, Street, City, State, Country, PostalCode, TaxNumber, TaxOffice }
-    const backendDto = {
-      Name: data.companyName,
-      Email: data.email,
-      Phone: this.formatPhoneNumber(data.phone),
-      Street: data.address || '',
-      City: data.city || '',
-      State: data.state || '',
-      Country: data.country || 'Türkiye',
-      PostalCode: data.postalCode || '',
-      TaxNumber: data.taxId || '',
-      TaxOffice: '', // Not collected in frontend yet
+    // CRM module expects: CreateCustomerCommand { CustomerData: CreateCustomerDto }
+    // CreateCustomerDto matches our frontend DTO structure
+    const command = {
+      CustomerData: {
+        CompanyName: data.companyName,
+        Email: data.email,
+        Phone: this.formatPhoneNumber(data.phone),
+        Website: data.website || null,
+        Industry: null, // Not collected in frontend yet
+        Address: data.address || null,
+        City: data.city || null,
+        State: data.state || null,
+        Country: data.country || null,
+        PostalCode: data.postalCode || null,
+        AnnualRevenue: null, // Not collected in frontend yet
+        NumberOfEmployees: null, // Not collected in frontend yet
+        Description: data.notes || null,
+      }
     };
 
-    console.log('📤 Sending customer data to backend:', backendDto);
-    return ApiService.post<Customer>(this.getPath('customers'), backendDto);
+    console.log('📤 Sending CreateCustomerCommand to CRM module:', command);
+    return ApiService.post<Customer>(this.getPath('customers'), command);
   }
 
   /**
-   * Update existing customer
+   * Update existing customer using CRM module's UpdateCustomerCommand
    */
   static async updateCustomer(
     id: number,
     data: UpdateCustomerDto
   ): Promise<Customer> {
+    // CRM module expects: UpdateCustomerCommand { CustomerId, CustomerData }
+    const command = {
+      CustomerId: id,
+      CustomerData: {
+        CompanyName: data.companyName,
+        Email: data.email,
+        Phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
+        Website: data.website,
+        Industry: null,
+        Address: data.address,
+        City: data.city,
+        State: data.state,
+        Country: data.country,
+        PostalCode: data.postalCode,
+        AnnualRevenue: null,
+        NumberOfEmployees: null,
+        Description: data.notes,
+      }
+    };
+
+    console.log('📤 Sending UpdateCustomerCommand to CRM module:', command);
     return ApiService.put<Customer>(
       this.getPath(`customers/${id}`),
-      data
+      command
     );
   }
 
   /**
-   * Delete customer
+   * Delete customer using CRM module's DeleteCustomerCommand
    */
   static async deleteCustomer(id: number): Promise<void> {
+    console.log('📤 Sending DeleteCustomerCommand to CRM module:', { customerId: id });
     return ApiService.delete<void>(this.getPath(`customers/${id}`));
   }
 
