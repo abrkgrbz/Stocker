@@ -118,7 +118,8 @@ export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
 export class CRMService {
   /**
    * Get tenant ID from localStorage
-   * Backend expects URLs like: /api/tenants/{tenantId}/customers
+   * Backend expects URLs like: /tenants/{tenantId}/customers
+   * Note: axios baseURL is already '/api', so we don't add it here
    */
   private static getTenantId(): string {
     if (typeof window === 'undefined') {
@@ -127,20 +128,23 @@ export class CRMService {
 
     const tenantId = localStorage.getItem('tenantId');
     if (!tenantId) {
-      throw new Error('Tenant ID not found in localStorage');
+      console.error('❌ Tenant ID not found in localStorage. Available keys:', Object.keys(localStorage));
+      throw new Error('Tenant ID not found in localStorage. Please login again.');
     }
 
+    console.log('✅ Using tenant ID:', tenantId);
     return tenantId;
   }
 
   /**
    * Build tenant-aware API path
    * @param resource - Resource path (e.g., 'customers', 'leads')
-   * @returns Full API path with tenant ID
+   * @returns API path with tenant ID (without /api prefix as it's in baseURL)
    */
   private static getPath(resource: string): string {
     const tenantId = this.getTenantId();
-    return `/api/tenants/${tenantId}/${resource}`;
+    // baseURL is '/api', so we only need 'tenants/{tenantId}/{resource}'
+    return `/tenants/${tenantId}/${resource}`;
   }
 
   // =====================================
