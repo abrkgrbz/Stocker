@@ -171,6 +171,29 @@ export class CRMService {
   }
 
   /**
+   * Format phone number to E.164 format expected by backend
+   * Converts: 05532078250 → +905532078250
+   */
+  private static formatPhoneNumber(phone: string | undefined): string {
+    if (!phone) return '';
+
+    // Remove all non-digit characters
+    const cleaned = phone.replace(/\D/g, '');
+
+    // If starts with 0, replace with +90 (Turkey)
+    if (cleaned.startsWith('0')) {
+      return '+90' + cleaned.substring(1);
+    }
+
+    // If doesn't start with +, add it
+    if (!cleaned.startsWith('+')) {
+      return '+' + cleaned;
+    }
+
+    return cleaned;
+  }
+
+  /**
    * Create new customer
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
@@ -179,7 +202,7 @@ export class CRMService {
     const backendDto = {
       Name: data.companyName,
       Email: data.email,
-      Phone: data.phone || '',
+      Phone: this.formatPhoneNumber(data.phone),
       Street: data.address || '',
       City: data.city || '',
       State: data.state || '',
