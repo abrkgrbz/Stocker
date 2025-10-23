@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
 using System.Security.Claims;
 
 namespace Stocker.Infrastructure.Services;
@@ -7,10 +8,12 @@ namespace Stocker.Infrastructure.Services;
 public class CurrentUserService : SharedKernel.Interfaces.ICurrentUserService, Application.Common.Interfaces.ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITenantService _tenantService;
 
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    public CurrentUserService(IHttpContextAccessor httpContextAccessor, ITenantService tenantService)
     {
         _httpContextAccessor = httpContextAccessor;
+        _tenantService = tenantService;
     }
 
     // For SharedKernel.Interfaces.ICurrentUserService
@@ -43,10 +46,16 @@ public class CurrentUserService : SharedKernel.Interfaces.ICurrentUserService, A
     {
         get
         {
+            // First try to get from TenantService (set by TenantResolutionMiddleware)
+            var tenantId = _tenantService.GetCurrentTenant();
+            if (tenantId.HasValue)
+                return tenantId;
+
+            // Fallback to claims (for backward compatibility)
             var tenantIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("TenantId")?.Value
                              ?? _httpContextAccessor.HttpContext?.User?.FindFirst("tenant_id")?.Value;
 
-            return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
+            return Guid.TryParse(tenantIdClaim, out var tid) ? tid : null;
         }
     }
 
