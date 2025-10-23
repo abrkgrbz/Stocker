@@ -174,7 +174,23 @@ export class CRMService {
    * Create new customer
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
-    return ApiService.post<Customer>(this.getPath('customers'), data);
+    // Transform frontend DTO to backend DTO format
+    // Backend expects: { Name, Email, Phone, Street, City, State, Country, PostalCode, TaxNumber, TaxOffice }
+    const backendDto = {
+      Name: data.companyName,
+      Email: data.email,
+      Phone: data.phone || '',
+      Street: data.address || '',
+      City: data.city || '',
+      State: data.state || '',
+      Country: data.country || 'Türkiye',
+      PostalCode: data.postalCode || '',
+      TaxNumber: data.taxId || '',
+      TaxOffice: '', // Not collected in frontend yet
+    };
+
+    console.log('📤 Sending customer data to backend:', backendDto);
+    return ApiService.post<Customer>(this.getPath('customers'), backendDto);
   }
 
   /**
