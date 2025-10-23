@@ -96,8 +96,16 @@ export default function CustomerModal({
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
-      console.log('📋 Form values from validateFields:', values);
+      // Validate current step fields first
+      const currentStepFields = getStepFields(currentStep);
+      if (currentStepFields.length > 0) {
+        await form.validateFields(currentStepFields);
+      }
+
+      // Get ALL form values (not just validated ones)
+      // This is crucial for multi-step forms where only current step is rendered
+      const values = form.getFieldsValue(true);
+      console.log('📋 All form values:', values);
 
       if (isEditMode && customer) {
         await updateCustomer.mutateAsync({
