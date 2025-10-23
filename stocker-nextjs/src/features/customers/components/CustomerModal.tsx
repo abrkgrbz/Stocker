@@ -96,11 +96,15 @@ export default function CustomerModal({
   }, [open, customer, form]);
 
   const handleSubmit = async () => {
+    console.log('🔵 handleSubmit called');
     try {
       // Validate current step fields first
       const currentStepFields = getStepFields(currentStep);
+      console.log('🔵 Fields to validate:', currentStepFields);
+
       if (currentStepFields.length > 0) {
         await form.validateFields(currentStepFields);
+        console.log('✅ Validation passed');
       }
 
       // Get ALL form values (not just validated ones)
@@ -109,10 +113,12 @@ export default function CustomerModal({
       console.log('📋 All form values:', values);
 
       if (isEditMode && customer) {
+        console.log('📤 Calling updateCustomer...');
         await updateCustomer.mutateAsync({
           id: customer.id,
           data: values,
         });
+        console.log('✅ Update successful');
 
         // Success alert
         Modal.success({
@@ -129,7 +135,8 @@ export default function CustomerModal({
         });
       } else {
         console.log('📤 Calling createCustomer with:', values);
-        await createCustomer.mutateAsync(values);
+        const result = await createCustomer.mutateAsync(values);
+        console.log('✅ Create successful, result:', result);
 
         // Success alert
         Modal.success({
@@ -151,6 +158,11 @@ export default function CustomerModal({
       onSuccess();
     } catch (error: any) {
       console.error('❌ Form validation/submission failed:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data,
+      });
 
       // Check if it's a validation error (form fields not filled correctly)
       if (error.errorFields) {
