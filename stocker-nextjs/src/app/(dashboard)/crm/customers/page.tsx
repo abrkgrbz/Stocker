@@ -141,8 +141,8 @@ export default function CustomersPage() {
       title: 'Toplam Alışveriş',
       dataIndex: 'totalPurchases',
       key: 'totalPurchases',
-      sorter: (a, b) => a.totalPurchases - b.totalPurchases,
-      render: (value) => `₺${value.toLocaleString('tr-TR')}`,
+      sorter: (a, b) => (a.totalPurchases || 0) - (b.totalPurchases || 0),
+      render: (value) => `₺${(value || 0).toLocaleString('tr-TR')}`,
     },
     {
       title: 'İşlemler',
@@ -279,7 +279,7 @@ export default function CustomersPage() {
             ) : (
               <Statistic
                 title="Toplam Ciro"
-                value={customers.reduce((sum, c) => sum + c.totalPurchases, 0)}
+                value={customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0)}
                 prefix="₺"
                 suffix={<RiseOutlined />}
                 valueStyle={{ color: '#722ed1' }}

@@ -22,7 +22,7 @@ export interface Customer {
   taxId: string | null;
   paymentTerms: string | null;
   notes: string | null;
-  totalPurchases: number;
+  totalPurchases: number | null;
   createdAt: string;
   updatedAt: string;
 }
