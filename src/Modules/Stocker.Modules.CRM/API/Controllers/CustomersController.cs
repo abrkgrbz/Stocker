@@ -13,7 +13,7 @@ namespace Stocker.Modules.CRM.API.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/crm/[controller]")]
+[Route("api/crm/customers")]
 [RequireModule("CRM")]
 [ApiExplorerSettings(GroupName = "crm")]
 public class CustomersController : ControllerBase
