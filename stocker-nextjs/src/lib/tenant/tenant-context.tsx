@@ -87,8 +87,11 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
         throw new Error('Tenant not found');
       }
 
-      const tenantData = await response.json();
-      console.log('✅ Tenant data received:', tenantData);
+      const responseData = await response.json();
+      console.log('✅ Tenant data received:', responseData);
+
+      // API returns: { success: true, data: { id, identifier, name, ... } }
+      const tenantData = responseData.data || responseData;
 
       const tenantInfo: TenantInfo = {
         id: tenantData.id,
