@@ -1,8 +1,27 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-// Use relative path /api which Next.js rewrites to backend API
-// This works for both same-origin (auth.stoocker.app) and cross-subdomain (tenant.stoocker.app)
-const API_URL = '/api';
+// Determine API URL based on environment and domain
+function getApiUrl(): string {
+  // Server-side: always use internal API URL
+  if (typeof window === 'undefined') {
+    return process.env.API_INTERNAL_URL || 'http://api:5000';
+  }
+
+  // Client-side: check if we're on a tenant subdomain
+  const hostname = window.location.hostname;
+  const isProduction = hostname.includes('stoocker.app');
+
+  if (isProduction) {
+    // Production: Always use api.stoocker.app for API requests
+    // This avoids CORS issues with tenant subdomains
+    return 'https://api.stoocker.app/api';
+  }
+
+  // Development: use relative path for Next.js rewrites
+  return '/api';
+}
+
+const API_URL = getApiUrl();
 
 // Create axios instance with cookie support
 export const apiClient: AxiosInstance = axios.create({
