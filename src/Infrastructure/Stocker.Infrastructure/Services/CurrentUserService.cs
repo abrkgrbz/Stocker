@@ -47,7 +47,7 @@ public class CurrentUserService : SharedKernel.Interfaces.ICurrentUserService, A
         get
         {
             // First try to get from TenantService (set by TenantResolutionMiddleware)
-            var tenantId = _tenantService.GetCurrentTenant();
+            var tenantId = _tenantService.GetCurrentTenantId();
             if (tenantId.HasValue)
                 return tenantId;
 
