@@ -167,8 +167,23 @@ export default function CustomerModal({
       if (error.response?.data) {
         const apiError = error.response.data;
 
+        // Conflict error (duplicate customer)
+        if (apiError.type === 'Conflict' || apiError.code?.includes('Customer.')) {
+          errorTitle = '⚠️ Müşteri Zaten Mevcut';
+
+          // Check which field caused the conflict
+          if (apiError.code === 'Customer.Email') {
+            errorMessage = 'Bu e-posta adresi ile kayıtlı bir müşteri zaten mevcut.';
+            errorDetails.push('E-posta: ' + form.getFieldValue('email'));
+          } else if (apiError.code === 'Customer.TaxId') {
+            errorMessage = 'Bu vergi numarası ile kayıtlı bir müşteri zaten mevcut.';
+            errorDetails.push('Vergi No: ' + form.getFieldValue('taxId'));
+          } else {
+            errorMessage = apiError.description || 'Bu bilgilerle kayıtlı bir müşteri zaten var.';
+          }
+        }
         // Backend validation error
-        if (apiError.code === 'ValidationError' || apiError.type === 'Validation') {
+        else if (apiError.type === 'Validation' || apiError.code === 'ValidationError') {
           errorTitle = '⚠️ Geçersiz Veri';
           errorMessage = apiError.description || apiError.message || 'Girilen veriler geçersiz.';
 
@@ -179,11 +194,6 @@ export default function CustomerModal({
                 `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
             );
           }
-        }
-        // Duplicate error
-        else if (apiError.code === 'Conflict' || apiError.message?.includes('already exists')) {
-          errorTitle = '⚠️ Müşteri Zaten Mevcut';
-          errorMessage = 'Bu e-posta veya vergi numarası ile kayıtlı bir müşteri zaten var.';
         }
         // RabbitMQ or infrastructure errors
         else if (error.message?.includes('RabbitMQ') || error.message?.includes('Broker unreachable')) {
