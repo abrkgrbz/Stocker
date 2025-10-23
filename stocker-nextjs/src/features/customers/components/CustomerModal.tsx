@@ -97,6 +97,7 @@ export default function CustomerModal({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log('📋 Form values from validateFields:', values);
 
       if (isEditMode && customer) {
         await updateCustomer.mutateAsync({
@@ -105,6 +106,7 @@ export default function CustomerModal({
         });
         message.success('Müşteri başarıyla güncellendi');
       } else {
+        console.log('📤 Calling createCustomer with:', values);
         await createCustomer.mutateAsync(values);
         message.success('Müşteri başarıyla oluşturuldu');
       }
@@ -113,7 +115,7 @@ export default function CustomerModal({
       setCurrentStep(0);
       onSuccess();
     } catch (error) {
-      console.error('Form validation failed:', error);
+      console.error('❌ Form validation/submission failed:', error);
     }
   };
 
