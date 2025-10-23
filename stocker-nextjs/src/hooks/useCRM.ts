@@ -63,11 +63,9 @@ export function useCreateCustomer() {
     onSuccess: () => {
       // Invalidate customers list to refetch
       queryClient.invalidateQueries({ queryKey: crmKeys.customers() });
-      message.success('Customer created successfully!');
+      // Don't show message here - let the component handle it
     },
-    onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Failed to create customer');
-    },
+    // Don't catch errors here - let them bubble up to the component
   });
 }
 
@@ -84,11 +82,9 @@ export function useUpdateCustomer() {
       // Invalidate both list and detail
       queryClient.invalidateQueries({ queryKey: crmKeys.customers() });
       queryClient.invalidateQueries({ queryKey: crmKeys.customer(variables.id) });
-      message.success('Customer updated successfully!');
+      // Don't show message here - let the component handle it
     },
-    onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Failed to update customer');
-    },
+    // Don't catch errors here - let them bubble up to the component
   });
 }
 
