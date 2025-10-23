@@ -3,11 +3,12 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Application.Features.Customers.Commands; 
+using Stocker.Modules.CRM.Application.Features.Customers.Commands;
 using Stocker.Modules.CRM.Application.Features.Customers.Queries;
 using Stocker.SharedKernel.Results;
 using Stocker.SharedKernel.Pagination;
- 
+using Stocker.SharedKernel.Interfaces;
+
 
 namespace Stocker.Modules.CRM.API.Controllers;
 
@@ -19,10 +20,12 @@ namespace Stocker.Modules.CRM.API.Controllers;
 public class CustomersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CustomersController(IMediator mediator)
+    public CustomersController(IMediator mediator, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -56,8 +59,15 @@ public class CustomersController : ControllerBase
         [FromQuery] string? city = null,
         [FromQuery] string? country = null)
     {
+        // Set TenantId from current user context
+        if (!_currentUserService.TenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
         var query = new GetCustomersPagedQuery
         {
+            TenantId = _currentUserService.TenantId.Value,
             PageNumber = pageNumber,
             PageSize = pageSize,
             SearchTerm = searchTerm,
@@ -70,7 +80,7 @@ public class CustomersController : ControllerBase
         };
 
         var result = await _mediator.Send(query);
-        
+
         if (result.IsFailure)
             return BadRequest(result.Error);
             
@@ -101,10 +111,18 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerCommand command)
     {
+        // Set TenantId from current user context
+        if (!_currentUserService.TenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
+        command.TenantId = _currentUserService.TenantId.Value;
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return CreatedAtAction(nameof(GetCustomer), new { id = result.Value.Id }, result.Value);
     }
 
