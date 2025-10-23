@@ -59,15 +59,16 @@ public class CustomersController : ControllerBase
         [FromQuery] string? city = null,
         [FromQuery] string? country = null)
     {
-        // Set TenantId from current user context
-        if (!_currentUserService.TenantId.HasValue)
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
         {
             return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
         }
 
         var query = new GetCustomersPagedQuery
         {
-            TenantId = _currentUserService.TenantId.Value,
+            TenantId = tenantId.Value,
             PageNumber = pageNumber,
             PageSize = pageSize,
             SearchTerm = searchTerm,
@@ -83,7 +84,7 @@ public class CustomersController : ControllerBase
 
         if (result.IsFailure)
             return BadRequest(result.Error);
-            
+
         return Ok(result.Value);
     }
 
@@ -111,13 +112,14 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerCommand command)
     {
-        // Set TenantId from current user context
-        if (!_currentUserService.TenantId.HasValue)
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
         {
             return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
         }
 
-        command.TenantId = _currentUserService.TenantId.Value;
+        command.TenantId = tenantId.Value;
 
         var result = await _mediator.Send(command);
         if (result.IsFailure)
