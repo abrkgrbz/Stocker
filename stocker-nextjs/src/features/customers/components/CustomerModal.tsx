@@ -17,6 +17,7 @@ import {
   Divider,
   Button,
   Tooltip,
+  Alert,
 } from 'antd';
 import {
   UserOutlined,
@@ -112,18 +113,126 @@ export default function CustomerModal({
           id: customer.id,
           data: values,
         });
-        message.success('Müşteri başarıyla güncellendi');
+
+        // Success alert
+        Modal.success({
+          title: '✅ Başarılı!',
+          content: (
+            <div>
+              <p><strong>{values.companyName}</strong> başarıyla güncellendi.</p>
+              <p style={{ marginTop: '8px', color: '#52c41a' }}>
+                Müşteri bilgileri sisteme kaydedildi.
+              </p>
+            </div>
+          ),
+          okText: 'Tamam',
+        });
       } else {
         console.log('📤 Calling createCustomer with:', values);
         await createCustomer.mutateAsync(values);
-        message.success('Müşteri başarıyla oluşturuldu');
+
+        // Success alert
+        Modal.success({
+          title: '✅ Müşteri Başarıyla Oluşturuldu!',
+          content: (
+            <div>
+              <p><strong>{values.companyName}</strong> sisteme eklendi.</p>
+              <p style={{ marginTop: '8px', color: '#52c41a' }}>
+                Müşteri listesinde görüntüleyebilirsiniz.
+              </p>
+            </div>
+          ),
+          okText: 'Tamam',
+        });
       }
 
       form.resetFields();
       setCurrentStep(0);
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Form validation/submission failed:', error);
+
+      // Check if it's a validation error (form fields not filled correctly)
+      if (error.errorFields) {
+        message.error('Lütfen tüm gerekli alanları doğru şekilde doldurun');
+        return;
+      }
+
+      // API error handling
+      let errorTitle = '❌ İşlem Başarısız';
+      let errorMessage = 'Müşteri kaydedilirken bir hata oluştu.';
+      let errorDetails: string[] = [];
+
+      // Extract error details from API response
+      if (error.response?.data) {
+        const apiError = error.response.data;
+
+        // Backend validation error
+        if (apiError.code === 'ValidationError' || apiError.type === 'Validation') {
+          errorTitle = '⚠️ Geçersiz Veri';
+          errorMessage = apiError.description || apiError.message || 'Girilen veriler geçersiz.';
+
+          // Extract field-specific errors if available
+          if (apiError.errors) {
+            errorDetails = Object.entries(apiError.errors).map(
+              ([field, messages]: [string, any]) =>
+                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+            );
+          }
+        }
+        // Duplicate error
+        else if (apiError.code === 'Conflict' || apiError.message?.includes('already exists')) {
+          errorTitle = '⚠️ Müşteri Zaten Mevcut';
+          errorMessage = 'Bu e-posta veya vergi numarası ile kayıtlı bir müşteri zaten var.';
+        }
+        // RabbitMQ or infrastructure errors
+        else if (error.message?.includes('RabbitMQ') || error.message?.includes('Broker unreachable')) {
+          errorTitle = '⚠️ Sistem Hatası';
+          errorMessage = 'Müşteri kaydedildi ancak bildirim gönderilemedi. Lütfen sistem yöneticisine bildirin.';
+        }
+        // Generic API error
+        else {
+          errorMessage = apiError.description || apiError.message || errorMessage;
+          if (apiError.code) {
+            errorDetails.push(`Hata Kodu: ${apiError.code}`);
+          }
+        }
+      }
+      // Network error
+      else if (error.message === 'Network Error') {
+        errorTitle = '🌐 Bağlantı Hatası';
+        errorMessage = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+      }
+
+      // Show error modal with details
+      Modal.error({
+        title: errorTitle,
+        content: (
+          <div>
+            <Alert
+              message={errorMessage}
+              type="error"
+              showIcon
+              style={{ marginBottom: errorDetails.length > 0 ? '16px' : '0' }}
+            />
+            {errorDetails.length > 0 && (
+              <div style={{ marginTop: '12px' }}>
+                <strong>Detaylar:</strong>
+                <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                  {errorDetails.map((detail, index) => (
+                    <li key={index} style={{ color: '#ff4d4f' }}>{detail}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div style={{ marginTop: '12px', fontSize: '12px', color: '#8c8c8c' }}>
+              Sorun devam ederse sistem yöneticisine başvurun.
+            </div>
+          </div>
+        ),
+        okText: 'Tamam',
+        width: 500,
+      });
     }
   };
 
