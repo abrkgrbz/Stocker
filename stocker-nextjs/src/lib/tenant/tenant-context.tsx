@@ -66,7 +66,11 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
   const validateTenant = async (): Promise<boolean> => {
     const identifier = extractTenantIdentifier();
 
+    console.log('🔍 Tenant Context - Extracted identifier:', identifier);
+    console.log('🌐 Current hostname:', typeof window !== 'undefined' ? window.location.hostname : 'SSR');
+
     if (!identifier) {
+      console.warn('⚠️ No tenant identifier found');
       setTenant(null);
       return false;
     }
@@ -74,13 +78,17 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     setIsValidating(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/tenant-check/${identifier}`);
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/public/tenant-check/${identifier}`;
+      console.log('📡 Fetching tenant info from:', apiUrl);
+
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error('Tenant not found');
       }
 
       const tenantData = await response.json();
+      console.log('✅ Tenant data received:', tenantData);
 
       const tenantInfo: TenantInfo = {
         id: tenantData.id,
@@ -96,9 +104,14 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
       localStorage.setItem('tenantId', tenantInfo.id);
       localStorage.setItem('tenantIdentifier', tenantInfo.identifier);
 
+      console.log('💾 Saved to localStorage:', {
+        tenantId: tenantInfo.id,
+        tenantIdentifier: tenantInfo.identifier,
+      });
+
       return true;
     } catch (error) {
-      console.error('Tenant validation failed:', error);
+      console.error('❌ Tenant validation failed:', error);
       setTenant(null);
       router.push('/invalid-tenant');
       return false;
