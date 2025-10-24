@@ -2,37 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Card,
-  Table,
   Button,
-  Input,
   Space,
-  Tag,
-  Dropdown,
   Typography,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Form,
+  Input,
   Select,
   InputNumber,
   message,
-  Skeleton,
+  Row,
+  Col,
 } from 'antd';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  MoreOutlined,
-  UserAddOutlined,
-  StarOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  ReloadOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import { PlusOutlined, ReloadOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import type { Lead } from '@/lib/api/services/crm.service';
 import {
   useLeads,
@@ -41,27 +23,11 @@ import {
   useDeleteLead,
   useConvertLead,
 } from '@/hooks/useCRM';
+import { LeadsStats, LeadsTable, LeadsFilters } from '@/components/crm/leads';
+import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 
 const { Title } = Typography;
 const { TextArea } = Input;
-
-// Status colors
-const statusColors: Record<Lead['status'], string> = {
-  New: 'blue',
-  Contacted: 'cyan',
-  Qualified: 'green',
-  Unqualified: 'red',
-  Converted: 'purple',
-};
-
-// Source colors
-const sourceColors: Record<Lead['source'], string> = {
-  Website: 'blue',
-  Referral: 'green',
-  SocialMedia: 'cyan',
-  Event: 'orange',
-  Other: 'default',
-};
 
 export default function LeadsPage() {
   const [searchText, setSearchText] = useState('');
@@ -96,14 +62,6 @@ export default function LeadsPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchText]);
-
-  // Calculate statistics
-  const stats = {
-    total: leads.length,
-    new: leads.filter((l) => l.status === 'New').length,
-    qualified: leads.filter((l) => l.status === 'Qualified').length,
-    avgScore: leads.length > 0 ? Math.round(leads.reduce((sum, l) => sum + l.score, 0) / leads.length) : 0,
-  };
 
   const handleCreate = () => {
     setSelectedLead(null);
@@ -178,203 +136,50 @@ export default function LeadsPage() {
     }
   };
 
-  const columns: ColumnsType<Lead> = [
-    {
-      title: 'İsim',
-      key: 'name',
-      sorter: (a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'tr'),
-      render: (_, record) => (
-        <div>
-          <div className="font-medium">{`${record.firstName} ${record.lastName}`}</div>
-          {record.company && <div className="text-xs text-gray-500">{record.company}</div>}
-        </div>
-      ),
-    },
-    {
-      title: 'İletişim',
-      key: 'contact',
-      render: (_, record) => (
-        <div>
-          <div className="text-sm flex items-center gap-1">
-            <MailOutlined className="text-gray-400" />
-            {record.email}
-          </div>
-          {record.phone && (
-            <div className="text-xs text-gray-500 flex items-center gap-1">
-              <PhoneOutlined className="text-gray-400" />
-              {record.phone}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: 'Kaynak',
-      dataIndex: 'source',
-      key: 'source',
-      filters: [
-        { text: 'Web Sitesi', value: 'Website' },
-        { text: 'Referans', value: 'Referral' },
-        { text: 'Sosyal Medya', value: 'SocialMedia' },
-        { text: 'Etkinlik', value: 'Event' },
-        { text: 'Diğer', value: 'Other' },
-      ],
-      onFilter: (value, record) => record.source === value,
-      render: (source: Lead['source']) => <Tag color={sourceColors[source]}>{source}</Tag>,
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
-      filters: [
-        { text: 'Yeni', value: 'New' },
-        { text: 'İletişime Geçildi', value: 'Contacted' },
-        { text: 'Nitelikli', value: 'Qualified' },
-        { text: 'Niteliksiz', value: 'Unqualified' },
-        { text: 'Dönüştürüldü', value: 'Converted' },
-      ],
-      onFilter: (value, record) => record.status === value,
-      render: (status: Lead['status']) => <Tag color={statusColors[status]}>{status}</Tag>,
-    },
-    {
-      title: 'Puan',
-      dataIndex: 'score',
-      key: 'score',
-      sorter: (a, b) => a.score - b.score,
-      render: (score: number) => (
-        <div className="flex items-center gap-1">
-          <StarOutlined className={score >= 70 ? 'text-yellow-500' : 'text-gray-400'} />
-          <span className={score >= 70 ? 'font-medium' : ''}>{score}</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (date: string) => new Date(date).toLocaleDateString('tr-TR'),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 100,
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'edit',
-                label: 'Düzenle',
-                onClick: () => handleEdit(record),
-              },
-              {
-                key: 'convert',
-                label: 'Müşteriye Dönüştür',
-                icon: <SwapOutlined />,
-                disabled: record.status === 'Converted',
-                onClick: () => handleConvert(record),
-              },
-              {
-                type: 'divider',
-              },
-              {
-                key: 'delete',
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record.id),
-              },
-            ],
-          }}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
-    },
-  ];
-
-  // Note: Filtering is now handled by the API via the search parameter
-  const filteredLeads = leads;
-
   return (
     <div className="p-6">
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col span={24}>
-          <div className="flex justify-between items-center">
-            <Title level={2} className="!mb-0">
-              Potansiyel Müşteriler
-            </Title>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-                Yenile
-              </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                Yeni Potansiyel Müşteri
-              </Button>
-            </Space>
-          </div>
-        </Col>
-      </Row>
+      {/* Page Header */}
+      <div className="flex justify-between items-center mb-6">
+        <Title level={2} className="!mb-0">
+          Potansiyel Müşteriler
+        </Title>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
+            Yenile
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            Yeni Potansiyel Müşteri
+          </Button>
+        </Space>
+      </div>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Toplam" value={stats.total} prefix={<UserAddOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Yeni" value={stats.new} valueStyle={{ color: '#1890ff' }} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Nitelikli" value={stats.qualified} valueStyle={{ color: '#52c41a' }} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Ort. Puan" value={stats.avgScore} prefix={<StarOutlined />} suffix="/ 100" />
-          </Card>
-        </Col>
-      </Row>
+      {/* Stats Cards */}
+      <div className="mb-6">
+        <LeadsStats leads={leads} loading={isLoading} />
+      </div>
 
-      <Card>
+      {/* Search and Table */}
+      <AnimatedCard>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Row gutter={[16, 16]}>
-            <Col flex="auto">
-              <Input
-                placeholder="Potansiyel müşteri ara..."
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                allowClear
-              />
-            </Col>
-            <Col>
-              <Button icon={<FilterOutlined />}>Filtrele</Button>
-            </Col>
-          </Row>
-
-          <Table
-            columns={columns}
-            dataSource={filteredLeads}
-            rowKey="id"
-            pagination={{
-              current: currentPage,
-              pageSize,
-              total: totalCount,
-              showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} potansiyel müşteri`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
+          <LeadsFilters searchText={searchText} onSearchChange={setSearchText} />
+          <LeadsTable
+            leads={leads}
+            loading={
+              isLoading || createLead.isPending || updateLead.isPending || deleteLead.isPending
+            }
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
             }}
-            loading={isLoading || createLead.isPending || updateLead.isPending || deleteLead.isPending}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onConvert={handleConvert}
           />
         </Space>
-      </Card>
+      </AnimatedCard>
 
       {/* Create/Edit Modal */}
       <Modal

@@ -58,7 +58,12 @@
       "Bash(git restore:*)",
       "Bash(rm:*)",
       "Bash(git log:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(xargs basename:*)",
+      "Bash(scp:*)",
+      "Bash(chmod:*)",
+      "Bash(bash scripts/enable-crm-module.sh:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

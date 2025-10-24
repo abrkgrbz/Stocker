@@ -1,21 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Typography, Space, Button, List, Tag, Progress, Table } from 'antd';
-import {
-  UserOutlined,
-  TeamOutlined,
-  RiseOutlined,
-  DollarOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  CalendarOutlined,
-  TrophyOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from '@ant-design/icons';
+import { Typography, Space, Button, Row, Col, Card, Table, List, Tag } from 'antd';
+import { TrophyOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useCustomers, useLeads, useDeals, useActivities } from '@/hooks/useCRM';
+import { MetricsOverview, SalesFunnel, TopCustomers } from '@/components/crm/dashboard';
+import { calculateDashboardMetrics } from '@/lib/crm';
+import { AnimatedCard } from '@/components/crm/shared';
+import { formatDate } from '@/lib/crm';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -32,16 +25,8 @@ export default function CRMDashboardPage() {
   const deals = dealsData?.items || [];
   const activities = activitiesData?.items || [];
 
-  // Calculate statistics
-  const totalCustomers = customersData?.totalCount || 0;
-  const activeCustomers = customers.filter(c => c.status === 'Active').length;
-  const totalRevenue = customers.reduce((sum, c) => sum + c.totalPurchases, 0);
-  const avgCustomerValue = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
-
-  // Top customers by revenue
-  const topCustomers = [...customers]
-    .sort((a, b) => b.totalPurchases - a.totalPurchases)
-    .slice(0, 5);
+  // Calculate all metrics using utility function
+  const metrics = calculateDashboardMetrics({ customers, leads, deals });
 
   // Recent activities columns
   const activityColumns: ColumnsType<any> = [
@@ -62,7 +47,7 @@ export default function CRMDashboardPage() {
       title: 'Tarih',
       dataIndex: 'startTime',
       key: 'startTime',
-      render: (date) => new Date(date).toLocaleDateString('tr-TR'),
+      render: (date) => formatDate(date),
     },
     {
       title: 'Durum',
@@ -77,7 +62,7 @@ export default function CRMDashboardPage() {
   ];
 
   return (
-    <div>
+    <div className="p-6">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <Title level={2} style={{ margin: 0 }}>
@@ -96,162 +81,45 @@ export default function CRMDashboardPage() {
         </Space>
       </div>
 
-      {/* Key Metrics */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Müşteri"
-              value={totalCustomers}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-              suffix={
-                <span className="text-sm text-green-500 ml-2">
-                  <ArrowUpOutlined /> 12%
-                </span>
-              }
-            />
-            <div className="mt-2 text-xs text-gray-500">Son aya göre artış</div>
-          </Card>
-        </Col>
+      {/* Metrics Overview - Modern Component */}
+      <div className="mb-6">
+        <MetricsOverview
+          totalCustomers={metrics.totalCustomers}
+          activeCustomers={metrics.activeCustomers}
+          totalRevenue={metrics.totalRevenue}
+          avgCustomerValue={metrics.avgCustomerValue}
+          loading={customersLoading}
+        />
+      </div>
 
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Aktif Müşteri"
-              value={activeCustomers}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-            <div className="mt-2 text-xs text-gray-500">
-              %{totalCustomers > 0 ? ((activeCustomers / totalCustomers) * 100).toFixed(1) : 0} aktivasyon oranı
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Ciro"
-              value={totalRevenue}
-              prefix="₺"
-              precision={2}
-              valueStyle={{ color: '#722ed1' }}
-              suffix={
-                <span className="text-sm text-green-500 ml-2">
-                  <ArrowUpOutlined /> 8%
-                </span>
-              }
-            />
-            <div className="mt-2 text-xs text-gray-500">Bu ayki toplam</div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Ort. Müşteri Değeri"
-              value={avgCustomerValue}
-              prefix="₺"
-              precision={2}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-            <div className="mt-2 text-xs text-gray-500">Müşteri başına ortalama</div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Sales Funnel */}
+      {/* Sales Funnel & Top Customers */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} lg={12}>
-          <Card title="Satış Hunisi" loading={leadsLoading}>
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <Text>Potansiyel Müşteriler</Text>
-                  <Text strong>{leadsData?.totalCount || 0}</Text>
-                </div>
-                <Progress percent={100} strokeColor="#1890ff" showInfo={false} />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <Text>Nitelikli Leads</Text>
-                  <Text strong>{leads.filter(l => l.status === 'Qualified').length}</Text>
-                </div>
-                <Progress
-                  percent={leadsData?.totalCount ? (leads.filter(l => l.status === 'Qualified').length / leadsData.totalCount) * 100 : 0}
-                  strokeColor="#52c41a"
-                  showInfo={false}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <Text>Açık Fırsatlar</Text>
-                  <Text strong>{deals.filter(d => d.status === 'Open').length}</Text>
-                </div>
-                <Progress
-                  percent={dealsData?.totalCount ? (deals.filter(d => d.status === 'Open').length / (leadsData?.totalCount || 1)) * 100 : 0}
-                  strokeColor="#fa8c16"
-                  showInfo={false}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <Text>Kazanılan Anlaşmalar</Text>
-                  <Text strong>{deals.filter(d => d.status === 'Won').length}</Text>
-                </div>
-                <Progress
-                  percent={dealsData?.totalCount ? (deals.filter(d => d.status === 'Won').length / (leadsData?.totalCount || 1)) * 100 : 0}
-                  strokeColor="#722ed1"
-                  showInfo={false}
-                />
-              </div>
-            </Space>
-          </Card>
+          <SalesFunnel
+            totalLeads={metrics.totalLeads}
+            qualifiedLeads={metrics.qualifiedLeads}
+            openDeals={metrics.openDeals}
+            wonDeals={metrics.wonDeals}
+            loading={leadsLoading}
+          />
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="En Değerli Müşteriler" loading={customersLoading}>
-            <List
-              dataSource={topCustomers}
-              renderItem={(customer, index) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Text strong className="text-blue-600">#{index + 1}</Text>
-                      </div>
-                    }
-                    title={
-                      <Link href={`/crm/customers/${customer.id}`}>
-                        {customer.companyName}
-                      </Link>
-                    }
-                    description={customer.contactPerson}
-                  />
-                  <div className="text-right">
-                    <div className="font-semibold text-lg">₺{customer.totalPurchases.toLocaleString('tr-TR')}</div>
-                    <Tag color={customer.status === 'Active' ? 'success' : 'default'}>
-                      {customer.status === 'Active' ? 'Aktif' : 'Pasif'}
-                    </Tag>
-                  </div>
-                </List.Item>
-              )}
-            />
-          </Card>
+          <TopCustomers customers={metrics.topCustomers} loading={customersLoading} />
         </Col>
       </Row>
 
       {/* Recent Activities & Upcoming Deals */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card
+          <AnimatedCard
             title="Son Aktiviteler"
             loading={activitiesLoading}
-            extra={<Link href="/crm/activities"><Button type="link">Tümünü Gör</Button></Link>}
+            extra={
+              <Link href="/crm/activities">
+                <Button type="link">Tümünü Gör</Button>
+              </Link>
+            }
           >
             <Table
               columns={activityColumns}
@@ -260,17 +128,21 @@ export default function CRMDashboardPage() {
               pagination={false}
               size="small"
             />
-          </Card>
+          </AnimatedCard>
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card
+          <AnimatedCard
             title="Yaklaşan Fırsatlar"
             loading={dealsLoading}
-            extra={<Link href="/crm/deals"><Button type="link">Tümünü Gör</Button></Link>}
+            extra={
+              <Link href="/crm/deals">
+                <Button type="link">Tümünü Gör</Button>
+              </Link>
+            }
           >
             <List
-              dataSource={deals.filter(d => d.status === 'Open').slice(0, 5)}
+              dataSource={metrics.upcomingDeals}
               renderItem={(deal) => (
                 <List.Item>
                   <List.Item.Meta
@@ -278,7 +150,7 @@ export default function CRMDashboardPage() {
                     title={<Link href={`/crm/deals/${deal.id}`}>{deal.title}</Link>}
                     description={
                       deal.expectedCloseDate
-                        ? `Beklenen kapanış: ${new Date(deal.expectedCloseDate).toLocaleDateString('tr-TR')}`
+                        ? `Beklenen kapanış: ${formatDate(deal.expectedCloseDate)}`
                         : 'Tarih belirlenmedi'
                     }
                   />
@@ -289,7 +161,7 @@ export default function CRMDashboardPage() {
                 </List.Item>
               )}
             />
-          </Card>
+          </AnimatedCard>
         </Col>
       </Row>
     </div>
