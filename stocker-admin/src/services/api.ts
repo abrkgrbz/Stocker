@@ -254,5 +254,8 @@ export const apiService = {
     api.get<ApiResponse>('/health'),
 };
 
+// Export system monitoring service
+export { systemMonitoringService } from './api/systemMonitoringService';
+
 // Export axios instance for custom requests
 export default api;

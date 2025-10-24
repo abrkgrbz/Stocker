@@ -77,7 +77,7 @@ import {
   SlackOutlined,
   VerifiedOutlined
 } from '@ant-design/icons';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { TwoFactorSettings } from './TwoFactorSettings';
 import { systemMonitoringService } from '../../services/api';
 
@@ -1041,7 +1041,7 @@ const SettingsPage: React.FC = () => {
                         </List.Item>
                         <List.Item>
                           <Text>Son Güncelleme:</Text>
-                          <Text type="secondary">{moment(systemMetrics.timestamp).format('DD.MM.YYYY HH:mm:ss')}</Text>
+                          <Text type="secondary">{dayjs(systemMetrics.timestamp).format('DD.MM.YYYY HH:mm:ss')}</Text>
                         </List.Item>
                       </List>
                     </Card>
