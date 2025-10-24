@@ -15,7 +15,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
-import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline } from '@/hooks/useCRM';
+import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline } from '@/hooks/useCRM';
+import { PipelineModal } from '@/components/crm/pipelines/PipelineModal';
 
 const { Title } = Typography;
 
@@ -28,12 +29,15 @@ const pipelineTypeLabels: Record<string, string> = {
 
 export default function PipelinesPage() {
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API Hooks
   const { data: pipelines = [], isLoading, refetch } = usePipelines();
   const deletePipeline = useDeletePipeline();
   const activatePipeline = useActivatePipeline();
   const deactivatePipeline = useDeactivatePipeline();
+  const createPipeline = useCreatePipeline();
+  const updatePipeline = useUpdatePipeline();
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -62,6 +66,30 @@ export default function PipelinesPage() {
     } catch (error) {
       message.error('İşlem başarısız');
     }
+  };
+
+  const handleCreateOrUpdate = async (values: any) => {
+    try {
+      if (selectedPipeline) {
+        await updatePipeline.mutateAsync({ id: selectedPipeline.id, ...values });
+      } else {
+        await createPipeline.mutateAsync(values);
+      }
+      setIsModalOpen(false);
+      setSelectedPipeline(null);
+    } catch (error) {
+      message.error('İşlem başarısız');
+    }
+  };
+
+  const handleEdit = (pipeline: Pipeline) => {
+    setSelectedPipeline(pipeline);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedPipeline(null);
+    setIsModalOpen(true);
   };
 
   const columns: ColumnsType<Pipeline> = [
@@ -137,7 +165,7 @@ export default function PipelinesPage() {
           >
             {record.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button type="link" size="small" icon={<EditOutlined />}>
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             Düzenle
           </Button>
           <Button
@@ -177,7 +205,7 @@ export default function PipelinesPage() {
               <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
-              <Button type="primary" icon={<PlusOutlined />}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
                 Yeni Pipeline
               </Button>
             </Space>
@@ -245,6 +273,18 @@ export default function PipelinesPage() {
           }}
         />
       </Card>
+
+      {/* Pipeline Modal */}
+      <PipelineModal
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setSelectedPipeline(null);
+        }}
+        onSubmit={handleCreateOrUpdate}
+        initialData={selectedPipeline}
+        loading={createPipeline.isPending || updatePipeline.isPending}
+      />
     </div>
   );
 }
