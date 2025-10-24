@@ -24,6 +24,13 @@ export const crmKeys = {
   activitiesList: (filters?: CustomerFilters) =>
     [...crmKeys.activities(), 'list', filters] as const,
   activity: (id: number) => [...crmKeys.activities(), id] as const,
+  pipelines: () => [...crmKeys.all, 'pipelines'] as const,
+  pipeline: (id: string) => [...crmKeys.pipelines(), id] as const,
+  pipelineStages: (pipelineId: string) => [...crmKeys.pipelines(), pipelineId, 'stages'] as const,
+  segments: () => [...crmKeys.all, 'segments'] as const,
+  segment: (id: string) => [...crmKeys.segments(), id] as const,
+  campaigns: () => [...crmKeys.all, 'campaigns'] as const,
+  campaign: (id: string) => [...crmKeys.campaigns(), id] as const,
 };
 
 // =====================================
@@ -343,6 +350,327 @@ export function useCompleteActivity() {
     mutationFn: CRMService.completeActivity,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
+    },
+  });
+}
+
+// =====================================
+// PIPELINES HOOKS
+// =====================================
+
+/**
+ * Hook to fetch pipelines list
+ */
+export function usePipelines() {
+  return useQuery({
+    queryKey: crmKeys.pipelines(),
+    queryFn: () => CRMService.getPipelines(),
+    staleTime: 60000, // 1 minute
+  });
+}
+
+/**
+ * Hook to fetch single pipeline
+ */
+export function usePipeline(id: string) {
+  return useQuery({
+    queryKey: crmKeys.pipeline(id),
+    queryFn: () => CRMService.getPipeline(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create pipeline
+ */
+export function useCreatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createPipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      message.success('Pipeline oluşturuldu');
+    },
+    onError: () => {
+      message.error('Pipeline oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update pipeline
+ */
+export function useUpdatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updatePipeline(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.id) });
+      message.success('Pipeline güncellendi');
+    },
+    onError: () => {
+      message.error('Pipeline güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete pipeline
+ */
+export function useDeletePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deletePipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      message.success('Pipeline silindi');
+    },
+    onError: () => {
+      message.error('Pipeline silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to activate pipeline
+ */
+export function useActivatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.activatePipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      message.success('Pipeline aktifleştirildi');
+    },
+  });
+}
+
+/**
+ * Hook to deactivate pipeline
+ */
+export function useDeactivatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deactivatePipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      message.success('Pipeline devre dışı bırakıldı');
+    },
+  });
+}
+
+// =====================================
+// CUSTOMER SEGMENTS HOOKS
+// =====================================
+
+/**
+ * Hook to fetch customer segments list
+ */
+export function useCustomerSegments() {
+  return useQuery({
+    queryKey: crmKeys.segments(),
+    queryFn: () => CRMService.getCustomerSegments(),
+    staleTime: 60000, // 1 minute
+  });
+}
+
+/**
+ * Hook to fetch single customer segment
+ */
+export function useCustomerSegment(id: string) {
+  return useQuery({
+    queryKey: crmKeys.segment(id),
+    queryFn: () => CRMService.getCustomerSegment(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create customer segment
+ */
+export function useCreateCustomerSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createCustomerSegment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments() });
+      message.success('Segment oluşturuldu');
+    },
+    onError: () => {
+      message.error('Segment oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update customer segment
+ */
+export function useUpdateCustomerSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateCustomerSegment(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.id) });
+      message.success('Segment güncellendi');
+    },
+    onError: () => {
+      message.error('Segment güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete customer segment
+ */
+export function useDeleteCustomerSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteCustomerSegment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments() });
+      message.success('Segment silindi');
+    },
+    onError: () => {
+      message.error('Segment silinemedi');
+    },
+  });
+}
+
+// =====================================
+// CAMPAIGNS HOOKS
+// =====================================
+
+/**
+ * Hook to fetch campaigns list
+ */
+export function useCampaigns() {
+  return useQuery({
+    queryKey: crmKeys.campaigns(),
+    queryFn: () => CRMService.getCampaigns(),
+    staleTime: 60000, // 1 minute
+  });
+}
+
+/**
+ * Hook to fetch single campaign
+ */
+export function useCampaign(id: string) {
+  return useQuery({
+    queryKey: crmKeys.campaign(id),
+    queryFn: () => CRMService.getCampaign(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create campaign
+ */
+export function useCreateCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      message.success('Kampanya oluşturuldu');
+    },
+    onError: () => {
+      message.error('Kampanya oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update campaign
+ */
+export function useUpdateCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateCampaign(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(variables.id) });
+      message.success('Kampanya güncellendi');
+    },
+    onError: () => {
+      message.error('Kampanya güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete campaign
+ */
+export function useDeleteCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      message.success('Kampanya silindi');
+    },
+    onError: () => {
+      message.error('Kampanya silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to start campaign
+ */
+export function useStartCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.startCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      message.success('Kampanya başlatıldı');
+    },
+  });
+}
+
+/**
+ * Hook to complete campaign
+ */
+export function useCompleteCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.completeCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      message.success('Kampanya tamamlandı');
+    },
+  });
+}
+
+/**
+ * Hook to abort campaign
+ */
+export function useAbortCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.abortCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
+      message.success('Kampanya iptal edildi');
     },
   });
 }

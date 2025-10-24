@@ -83,6 +83,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           key: '/crm/activities',
           label: 'Aktiviteler',
         },
+        {
+          key: '/crm/pipelines',
+          label: 'Satış Süreçleri',
+        },
+        {
+          key: '/crm/segments',
+          label: 'Müşteri Segmentleri',
+        },
+        {
+          key: '/crm/campaigns',
+          label: 'Kampanyalar',
+        },
       ],
     },
     {

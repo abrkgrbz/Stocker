@@ -73,6 +73,76 @@ export interface Activity {
   createdAt: string;
 }
 
+export interface Pipeline {
+  id: string;
+  name: string;
+  description: string | null;
+  type: 'Sales' | 'Lead' | 'Deal' | 'Custom';
+  isActive: boolean;
+  isDefault: boolean;
+  stages: PipelineStage[];
+  opportunityCount: number;
+  dealCount: number;
+  totalValue: number;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface PipelineStage {
+  id: string;
+  pipelineId: string;
+  name: string;
+  description: string | null;
+  order: number;
+  probability: number;
+  color: string;
+  isWon: boolean;
+  isLost: boolean;
+  itemCount: number;
+  totalValue: number;
+}
+
+export interface CustomerSegment {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  type: 'Static' | 'Dynamic';
+  criteria: string | null;
+  color: string;
+  isActive: boolean;
+  memberCount: number;
+  createdBy: string;
+  lastModifiedBy: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string | null;
+  type: 'Email' | 'SocialMedia' | 'Webinar' | 'Event' | 'Conference' | 'Advertisement' | 'Banner' | 'Telemarketing' | 'PublicRelations';
+  status: 'Planned' | 'InProgress' | 'Completed' | 'Aborted' | 'OnHold';
+  startDate: string;
+  endDate: string;
+  budgetedCost: number;
+  actualCost: number;
+  expectedRevenue: number;
+  actualRevenue: number;
+  targetAudience: string | null;
+  targetLeads: number;
+  actualLeads: number;
+  convertedLeads: number;
+  ownerId: string | null;
+  ownerName: string | null;
+  conversionRate: number;
+  roi: number;
+  memberCount: number;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pageNumber: number;
@@ -398,6 +468,200 @@ export class CRMService {
    */
   static async completeActivity(id: number): Promise<Activity> {
     return ApiService.patch<Activity>(this.getPath(`activities/${id}/complete`), {});
+  }
+
+  // =====================================
+  // PIPELINES
+  // =====================================
+
+  /**
+   * Get all pipelines
+   */
+  static async getPipelines(): Promise<Pipeline[]> {
+    return ApiService.get<Pipeline[]>(this.getPath('pipelines'));
+  }
+
+  /**
+   * Get single pipeline by ID
+   */
+  static async getPipeline(id: string): Promise<Pipeline> {
+    return ApiService.get<Pipeline>(this.getPath(`pipelines/${id}`));
+  }
+
+  /**
+   * Create new pipeline
+   */
+  static async createPipeline(data: Omit<Pipeline, 'id' | 'stages' | 'opportunityCount' | 'dealCount' | 'totalValue' | 'createdAt' | 'updatedAt'>): Promise<Pipeline> {
+    return ApiService.post<Pipeline>(this.getPath('pipelines'), data);
+  }
+
+  /**
+   * Update existing pipeline
+   */
+  static async updatePipeline(id: string, data: Partial<Pipeline>): Promise<Pipeline> {
+    return ApiService.put<Pipeline>(this.getPath(`pipelines/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete pipeline
+   */
+  static async deletePipeline(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`pipelines/${id}`));
+  }
+
+  /**
+   * Get pipeline stages
+   */
+  static async getPipelineStages(pipelineId: string): Promise<PipelineStage[]> {
+    return ApiService.get<PipelineStage[]>(this.getPath(`pipelines/${pipelineId}/stages`));
+  }
+
+  /**
+   * Add stage to pipeline
+   */
+  static async addPipelineStage(pipelineId: string, data: Omit<PipelineStage, 'id' | 'itemCount' | 'totalValue'>): Promise<PipelineStage> {
+    return ApiService.post<PipelineStage>(this.getPath(`pipelines/${pipelineId}/stages`), { pipelineId, ...data });
+  }
+
+  /**
+   * Update pipeline stage
+   */
+  static async updatePipelineStage(pipelineId: string, stageId: string, data: Partial<PipelineStage>): Promise<PipelineStage> {
+    return ApiService.put<PipelineStage>(this.getPath(`pipelines/${pipelineId}/stages/${stageId}`), { pipelineId, stageId, ...data });
+  }
+
+  /**
+   * Remove stage from pipeline
+   */
+  static async removePipelineStage(pipelineId: string, stageId: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`pipelines/${pipelineId}/stages/${stageId}`));
+  }
+
+  /**
+   * Activate pipeline
+   */
+  static async activatePipeline(id: string): Promise<Pipeline> {
+    return ApiService.post<Pipeline>(this.getPath(`pipelines/${id}/activate`), {});
+  }
+
+  /**
+   * Deactivate pipeline
+   */
+  static async deactivatePipeline(id: string): Promise<Pipeline> {
+    return ApiService.post<Pipeline>(this.getPath(`pipelines/${id}/deactivate`), {});
+  }
+
+  // =====================================
+  // CUSTOMER SEGMENTS
+  // =====================================
+
+  /**
+   * Get all customer segments
+   */
+  static async getCustomerSegments(): Promise<CustomerSegment[]> {
+    return ApiService.get<CustomerSegment[]>(this.getPath('customersegments'));
+  }
+
+  /**
+   * Get single customer segment by ID
+   */
+  static async getCustomerSegment(id: string): Promise<CustomerSegment> {
+    return ApiService.get<CustomerSegment>(this.getPath(`customersegments/${id}`));
+  }
+
+  /**
+   * Create new customer segment
+   */
+  static async createCustomerSegment(data: Omit<CustomerSegment, 'id' | 'tenantId' | 'memberCount' | 'createdBy' | 'lastModifiedBy' | 'createdAt' | 'updatedAt'>): Promise<CustomerSegment> {
+    return ApiService.post<CustomerSegment>(this.getPath('customersegments'), data);
+  }
+
+  /**
+   * Update existing customer segment
+   */
+  static async updateCustomerSegment(id: string, data: Partial<CustomerSegment>): Promise<CustomerSegment> {
+    return ApiService.put<CustomerSegment>(this.getPath(`customersegments/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete customer segment
+   */
+  static async deleteCustomerSegment(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`customersegments/${id}`));
+  }
+
+  /**
+   * Activate customer segment
+   */
+  static async activateCustomerSegment(id: string): Promise<CustomerSegment> {
+    return ApiService.post<CustomerSegment>(this.getPath(`customersegments/${id}/activate`), {});
+  }
+
+  /**
+   * Deactivate customer segment
+   */
+  static async deactivateCustomerSegment(id: string): Promise<CustomerSegment> {
+    return ApiService.post<CustomerSegment>(this.getPath(`customersegments/${id}/deactivate`), {});
+  }
+
+  // =====================================
+  // CAMPAIGNS
+  // =====================================
+
+  /**
+   * Get all campaigns
+   */
+  static async getCampaigns(): Promise<Campaign[]> {
+    return ApiService.get<Campaign[]>(this.getPath('campaigns'));
+  }
+
+  /**
+   * Get single campaign by ID
+   */
+  static async getCampaign(id: string): Promise<Campaign> {
+    return ApiService.get<Campaign>(this.getPath(`campaigns/${id}`));
+  }
+
+  /**
+   * Create new campaign
+   */
+  static async createCampaign(data: Omit<Campaign, 'id' | 'actualCost' | 'actualRevenue' | 'actualLeads' | 'convertedLeads' | 'conversionRate' | 'roi' | 'memberCount' | 'createdAt' | 'updatedAt'>): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath('campaigns'), data);
+  }
+
+  /**
+   * Update existing campaign
+   */
+  static async updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign> {
+    return ApiService.put<Campaign>(this.getPath(`campaigns/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete campaign
+   */
+  static async deleteCampaign(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`campaigns/${id}`));
+  }
+
+  /**
+   * Start campaign
+   */
+  static async startCampaign(id: string): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/start`), {});
+  }
+
+  /**
+   * Complete campaign
+   */
+  static async completeCampaign(id: string): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/complete`), {});
+  }
+
+  /**
+   * Abort campaign
+   */
+  static async abortCampaign(id: string): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/abort`), {});
   }
 }
 
