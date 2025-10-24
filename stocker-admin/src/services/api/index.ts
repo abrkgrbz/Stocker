@@ -7,6 +7,7 @@ export { userService } from './userService';
 export { featureService } from './featureService';
 export { moduleService } from './moduleService';
 export { migrationService } from './migrationService';
+export { systemMonitoringService } from './systemMonitoringService';
 
 // Re-export types
 export type {
@@ -74,3 +75,14 @@ export type {
   ScheduledMigrationDto,
   MigrationSettingsDto,
 } from './migrationService';
+
+export type {
+  SystemMetrics,
+  CpuMetrics,
+  MemoryMetrics,
+  DiskMetrics,
+  NetworkMetrics,
+  SystemHealth,
+  ServiceHealth,
+  ServiceStatus,
+} from './systemMonitoringService';

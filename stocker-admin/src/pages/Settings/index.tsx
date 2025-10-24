@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   Row, 
@@ -79,6 +79,7 @@ import {
 } from '@ant-design/icons';
 import moment from 'moment';
 import { TwoFactorSettings } from './TwoFactorSettings';
+import { systemMonitoringService } from '../../services/api';
 
 const { Title, Text, Paragraph, Link } = Typography;
 const { TabPane } = Tabs;
@@ -134,6 +135,8 @@ const SettingsPage: React.FC = () => {
   const [emailTemplateModalVisible, setEmailTemplateModalVisible] = useState(false);
   const [apiForm] = Form.useForm();
   const [templateForm] = Form.useForm();
+  const [systemMetrics, setSystemMetrics] = useState<any>(null);
+  const [systemMetricsLoading, setSystemMetricsLoading] = useState(false);
 
   const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([
     {
@@ -276,6 +279,26 @@ const SettingsPage: React.FC = () => {
       lastSync: '2024-01-15 15:30'
     }
   ]);
+
+  // Fetch system metrics when System tab is active
+  useEffect(() => {
+    if (activeTab === 'system') {
+      fetchSystemMetrics();
+    }
+  }, [activeTab]);
+
+  const fetchSystemMetrics = async () => {
+    setSystemMetricsLoading(true);
+    try {
+      const metrics = await systemMonitoringService.getSystemMetrics();
+      setSystemMetrics(metrics);
+    } catch (error) {
+      console.error('Failed to fetch system metrics:', error);
+      message.error('Sistem bilgileri alınamadı');
+    } finally {
+      setSystemMetricsLoading(false);
+    }
+  };
 
   const handleSaveGeneral = () => {
     generalForm.validateFields().then(values => {
@@ -913,74 +936,131 @@ const SettingsPage: React.FC = () => {
           </TabPane>
 
           <TabPane tab="Sistem Bilgisi" key="system">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card title="Sistem Durumu" size="small">
-                  <List size="small">
-                    <List.Item>
-                      <Text>PHP Versiyon:</Text>
-                      <Tag color="green">8.2.0</Tag>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Laravel Versiyon:</Text>
-                      <Tag color="green">10.0</Tag>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Database:</Text>
-                      <Tag color="blue">PostgreSQL 15.1</Tag>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Cache Sürücü:</Text>
-                      <Tag color="orange">Redis</Tag>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Queue Sürücü:</Text>
-                      <Tag color="purple">RabbitMQ</Tag>
-                    </List.Item>
-                  </List>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="Sunucu Bilgileri" size="small">
-                  <List size="small">
-                    <List.Item>
-                      <Text>İşletim Sistemi:</Text>
-                      <Text strong>Ubuntu 22.04 LTS</Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Sunucu:</Text>
-                      <Text strong>nginx/1.22.0</Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text>CPU:</Text>
-                      <Text strong>8 Core</Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text>RAM:</Text>
-                      <Text strong>16 GB</Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text>Disk:</Text>
-                      <Progress percent={45} size="small" />
-                    </List.Item>
-                  </List>
-                </Card>
-              </Col>
-            </Row>
+            {systemMetricsLoading ? (
+              <Card loading={true}>Yükleniyor...</Card>
+            ) : systemMetrics ? (
+              <>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Card
+                      title="CPU Bilgileri"
+                      size="small"
+                      extra={<Button size="small" icon={<SyncOutlined />} onClick={fetchSystemMetrics}>Yenile</Button>}
+                    >
+                      <List size="small">
+                        <List.Item>
+                          <Text>Kullanım:</Text>
+                          <Progress
+                            percent={Math.round(systemMetrics.cpu.usage)}
+                            size="small"
+                            status={systemMetrics.cpu.usage > 80 ? 'exception' : 'normal'}
+                          />
+                        </List.Item>
+                        <List.Item>
+                          <Text>Çekirdek Sayısı:</Text>
+                          <Tag color="blue">{systemMetrics.cpu.cores} Core</Tag>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Frekans:</Text>
+                          <Text strong>{systemMetrics.cpu.frequency.toFixed(2)} MHz</Text>
+                        </List.Item>
+                      </List>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card title="Bellek Bilgileri" size="small">
+                      <List size="small">
+                        <List.Item>
+                          <Text>Kullanım:</Text>
+                          <Progress
+                            percent={Math.round(systemMetrics.memory.usagePercentage)}
+                            size="small"
+                            status={systemMetrics.memory.usagePercentage > 80 ? 'exception' : 'normal'}
+                          />
+                        </List.Item>
+                        <List.Item>
+                          <Text>Kullanılan:</Text>
+                          <Text strong>{(systemMetrics.memory.used / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Toplam:</Text>
+                          <Text strong>{(systemMetrics.memory.total / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Kullanılabilir:</Text>
+                          <Text strong>{(systemMetrics.memory.available / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                      </List>
+                    </Card>
+                  </Col>
+                </Row>
 
-            <Divider />
+                <Divider />
 
-            <Card title="PHP Extensions" size="small">
-              <Space wrap>
-                {['bcmath', 'ctype', 'curl', 'dom', 'fileinfo', 'gd', 'iconv', 'intl', 
-                  'json', 'mbstring', 'openssl', 'pcre', 'pdo', 'pdo_pgsql', 'redis', 
-                  'tokenizer', 'xml', 'zip'].map(ext => (
-                  <Tag key={ext} color="green" icon={<CheckCircleOutlined />}>
-                    {ext}
-                  </Tag>
-                ))}
-              </Space>
-            </Card>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Card title="Disk Bilgileri" size="small">
+                      <List size="small">
+                        <List.Item>
+                          <Text>Kullanım:</Text>
+                          <Progress
+                            percent={Math.round(systemMetrics.disk.usagePercentage)}
+                            size="small"
+                            status={systemMetrics.disk.usagePercentage > 80 ? 'exception' : 'normal'}
+                          />
+                        </List.Item>
+                        <List.Item>
+                          <Text>Kullanılan:</Text>
+                          <Text strong>{(systemMetrics.disk.used / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Toplam:</Text>
+                          <Text strong>{(systemMetrics.disk.total / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Boş:</Text>
+                          <Text strong>{(systemMetrics.disk.free / 1024 / 1024 / 1024).toFixed(2)} GB</Text>
+                        </List.Item>
+                      </List>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card title="Ağ Bilgileri" size="small">
+                      <List size="small">
+                        <List.Item>
+                          <Text>Gönderilen:</Text>
+                          <Text strong>{(systemMetrics.network.bytesSent / 1024 / 1024).toFixed(2)} MB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Alınan:</Text>
+                          <Text strong>{(systemMetrics.network.bytesReceived / 1024 / 1024).toFixed(2)} MB</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Hız:</Text>
+                          <Text strong>{systemMetrics.network.speed} Mbps</Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text>Son Güncelleme:</Text>
+                          <Text type="secondary">{moment(systemMetrics.timestamp).format('DD.MM.YYYY HH:mm:ss')}</Text>
+                        </List.Item>
+                      </List>
+                    </Card>
+                  </Col>
+                </Row>
+              </>
+            ) : (
+              <Alert
+                message="Sistem Bilgileri Yüklenemedi"
+                description="Sistem bilgilerini yüklerken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+                type="warning"
+                showIcon
+                action={
+                  <Button size="small" type="primary" onClick={fetchSystemMetrics}>
+                    Tekrar Dene
+                  </Button>
+                }
+              />
+            )}
           </TabPane>
         </Tabs>
       </Card>
