@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Table, Tag, Dropdown, Button } from 'antd';
+import { Table, Tag, Dropdown, Button, Avatar } from 'antd';
 import {
   MoreOutlined,
   MailOutlined,
   PhoneOutlined,
   StarOutlined,
   SwapOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Lead } from '@/lib/api/services/crm.service';
@@ -53,9 +56,22 @@ export function LeadsTable({
       sorter: (a, b) =>
         `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'tr'),
       render: (_, record) => (
-        <div>
-          <div className="font-medium">{`${record.firstName} ${record.lastName}`}</div>
-          {record.company && <div className="text-xs text-gray-500">{record.company}</div>}
+        <div className="flex items-center gap-3">
+          <Avatar
+            size={40}
+            className="bg-gradient-to-br from-purple-500 to-purple-600 flex-shrink-0"
+            icon={<UserOutlined />}
+          >
+            {record.firstName.charAt(0)}{record.lastName.charAt(0)}
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-900 truncate">
+              {`${record.firstName} ${record.lastName}`}
+            </div>
+            {record.company && (
+              <div className="text-xs text-gray-500 truncate">{record.company}</div>
+            )}
+          </div>
         </div>
       ),
     },
@@ -63,15 +79,15 @@ export function LeadsTable({
       title: 'İletişim',
       key: 'contact',
       render: (_, record) => (
-        <div>
-          <div className="text-sm flex items-center gap-1">
-            <MailOutlined className="text-gray-400" />
-            {record.email}
+        <div className="space-y-1">
+          <div className="text-sm flex items-center gap-2 text-gray-700">
+            <MailOutlined className="text-blue-500" />
+            <span className="truncate">{record.email}</span>
           </div>
           {record.phone && (
-            <div className="text-xs text-gray-500 flex items-center gap-1">
-              <PhoneOutlined className="text-gray-400" />
-              {record.phone}
+            <div className="text-xs flex items-center gap-2 text-gray-500">
+              <PhoneOutlined className="text-green-500" />
+              <span>{record.phone}</span>
             </div>
           )}
         </div>
@@ -89,7 +105,11 @@ export function LeadsTable({
         { text: 'Diğer', value: 'Other' },
       ],
       onFilter: (value, record) => record.source === value,
-      render: (source: Lead['source']) => <Tag color={sourceColors[source]}>{source}</Tag>,
+      render: (source: Lead['source']) => (
+        <Tag className="rounded-full px-3 py-1 font-medium border-0" color={sourceColors[source]}>
+          {source}
+        </Tag>
+      ),
     },
     {
       title: 'Durum',
@@ -140,6 +160,7 @@ export function LeadsTable({
               {
                 key: 'edit',
                 label: 'Düzenle',
+                icon: <EditOutlined />,
                 onClick: () => onEdit(record),
               },
               {
@@ -155,15 +176,18 @@ export function LeadsTable({
               {
                 key: 'delete',
                 label: 'Sil',
+                icon: <DeleteOutlined />,
                 danger: true,
                 onClick: () => onDelete(record.id),
               },
             ],
+            trigger: ['click'] as const,
           }}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreOutlined />} className="hover:bg-gray-100" />
         </Dropdown>
       ),
+      width: 60,
     },
   ];
 
@@ -187,6 +211,8 @@ export function LeadsTable({
         filterReset: 'Sıfırla',
         filterTitle: 'Filtrele',
       }}
+      className="rounded-lg overflow-hidden"
+      rowClassName="hover:bg-purple-50 transition-colors cursor-pointer"
     />
   );
 }
