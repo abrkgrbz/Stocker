@@ -35,6 +35,13 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
+import {
+  useActivities,
+  useCreateActivity,
+  useUpdateActivity,
+  useDeleteActivity,
+  useCompleteActivity,
+} from '@/hooks/useCRM';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
@@ -61,18 +68,22 @@ const statusColors: Record<Activity['status'], string> = {
   Cancelled: 'red',
 };
 
-// Mock data
-const mockActivities: Activity[] = [];
-
 export default function ActivitiesPage() {
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [activities, setActivities] = useState<Activity[]>(mockActivities);
   const [form] = Form.useForm();
+
+  // API Hooks
+  const { data, isLoading, refetch } = useActivities({});
+  const createActivity = useCreateActivity();
+  const updateActivity = useUpdateActivity();
+  const deleteActivity = useDeleteActivity();
+  const completeActivity = useCompleteActivity();
+
+  const activities = data?.items || [];
 
   // Calculate statistics
   const today = dayjs().format('YYYY-MM-DD');
@@ -116,8 +127,7 @@ export default function ActivitiesPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: API call to delete activity
-          setActivities(activities.filter((a) => a.id !== id));
+          await deleteActivity.mutateAsync(id);
           message.success('Aktivite silindi');
         } catch (error) {
           message.error('Silme işlemi başarısız');
@@ -128,12 +138,7 @@ export default function ActivitiesPage() {
 
   const handleComplete = async (id: number) => {
     try {
-      // TODO: API call to complete activity
-      setActivities(
-        activities.map((a) =>
-          a.id === id ? { ...a, status: 'Completed' as const } : a
-        )
-      );
+      await completeActivity.mutateAsync(id);
       message.success('Aktivite tamamlandı');
     } catch (error) {
       message.error('İşlem başarısız');
@@ -141,7 +146,6 @@ export default function ActivitiesPage() {
   };
 
   const handleSubmit = async (values: any) => {
-    setLoading(true);
     try {
       const activityData = {
         ...values,
@@ -150,29 +154,16 @@ export default function ActivitiesPage() {
       };
 
       if (selectedActivity) {
-        // TODO: API call to update activity
-        setActivities(
-          activities.map((a) =>
-            a.id === selectedActivity.id ? { ...a, ...activityData } : a
-          )
-        );
+        await updateActivity.mutateAsync({ id: selectedActivity.id, data: activityData });
         message.success('Aktivite güncellendi');
       } else {
-        // TODO: API call to create activity
-        const newActivity: Activity = {
-          id: Date.now(),
-          ...activityData,
-          createdAt: new Date().toISOString(),
-        };
-        setActivities([...activities, newActivity]);
+        await createActivity.mutateAsync(activityData);
         message.success('Aktivite oluşturuldu');
       }
       setModalOpen(false);
       form.resetFields();
-    } catch (error) {
-      message.error('İşlem başarısız');
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      message.error(error?.message || 'İşlem başarısız');
     }
   };
 
@@ -357,7 +348,7 @@ export default function ActivitiesPage() {
               Aktiviteler
             </Title>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => message.info('Yenileniyor...')}>
+              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
               <Button.Group>
@@ -448,7 +439,7 @@ export default function ActivitiesPage() {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        confirmLoading={loading}
+        confirmLoading={createActivity.isPending || updateActivity.isPending}
         width={600}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
