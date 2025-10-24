@@ -278,6 +278,34 @@ export class CRMService {
     return ApiService.get<Lead>(this.getPath(`leads/${id}`));
   }
 
+  /**
+   * Create new lead
+   */
+  static async createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Promise<Lead> {
+    return ApiService.post<Lead>(this.getPath('leads'), data);
+  }
+
+  /**
+   * Update existing lead
+   */
+  static async updateLead(id: number, data: Partial<Lead>): Promise<Lead> {
+    return ApiService.put<Lead>(this.getPath(`leads/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete lead
+   */
+  static async deleteLead(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`leads/${id}`));
+  }
+
+  /**
+   * Convert lead to customer
+   */
+  static async convertLeadToCustomer(leadId: number, customerData: CreateCustomerDto): Promise<Customer> {
+    return ApiService.post<Customer>(this.getPath(`leads/${leadId}/convert`), customerData);
+  }
+
   // =====================================
   // DEALS
   // =====================================
@@ -298,6 +326,27 @@ export class CRMService {
    */
   static async getDeal(id: number): Promise<Deal> {
     return ApiService.get<Deal>(this.getPath(`deals/${id}`));
+  }
+
+  /**
+   * Create new deal
+   */
+  static async createDeal(data: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Promise<Deal> {
+    return ApiService.post<Deal>(this.getPath('deals'), data);
+  }
+
+  /**
+   * Update existing deal
+   */
+  static async updateDeal(id: number, data: Partial<Deal>): Promise<Deal> {
+    return ApiService.put<Deal>(this.getPath(`deals/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete deal
+   */
+  static async deleteDeal(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`deals/${id}`));
   }
 
   // =====================================
@@ -321,6 +370,34 @@ export class CRMService {
    */
   static async getActivity(id: number): Promise<Activity> {
     return ApiService.get<Activity>(this.getPath(`activities/${id}`));
+  }
+
+  /**
+   * Create new activity
+   */
+  static async createActivity(data: Omit<Activity, 'id' | 'createdAt'>): Promise<Activity> {
+    return ApiService.post<Activity>(this.getPath('activities'), data);
+  }
+
+  /**
+   * Update existing activity
+   */
+  static async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
+    return ApiService.put<Activity>(this.getPath(`activities/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete activity
+   */
+  static async deleteActivity(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`activities/${id}`));
+  }
+
+  /**
+   * Mark activity as completed
+   */
+  static async completeActivity(id: number): Promise<Activity> {
+    return ApiService.patch<Activity>(this.getPath(`activities/${id}/complete`), {});
   }
 }
 

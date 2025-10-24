@@ -133,6 +133,66 @@ export function useLead(id: number) {
   });
 }
 
+/**
+ * Hook to create lead
+ */
+export function useCreateLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createLead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
+    },
+  });
+}
+
+/**
+ * Hook to update lead
+ */
+export function useUpdateLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      CRMService.updateLead(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.lead(variables.id) });
+    },
+  });
+}
+
+/**
+ * Hook to delete lead
+ */
+export function useDeleteLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteLead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
+    },
+  });
+}
+
+/**
+ * Hook to convert lead to customer
+ */
+export function useConvertLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadId, customerData }: { leadId: number; customerData: any }) =>
+      CRMService.convertLeadToCustomer(leadId, customerData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers() });
+    },
+  });
+}
+
 // =====================================
 // DEALS HOOKS
 // =====================================
@@ -159,6 +219,50 @@ export function useDeal(id: number) {
   });
 }
 
+/**
+ * Hook to create deal
+ */
+export function useCreateDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createDeal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
+    },
+  });
+}
+
+/**
+ * Hook to update deal
+ */
+export function useUpdateDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      CRMService.updateDeal(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.id) });
+    },
+  });
+}
+
+/**
+ * Hook to delete deal
+ */
+export function useDeleteDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteDeal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
+    },
+  });
+}
+
 // =====================================
 // ACTIVITIES HOOKS
 // =====================================
@@ -182,5 +286,63 @@ export function useActivity(id: number) {
     queryKey: crmKeys.activity(id),
     queryFn: () => CRMService.getActivity(id),
     enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create activity
+ */
+export function useCreateActivity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
+    },
+  });
+}
+
+/**
+ * Hook to update activity
+ */
+export function useUpdateActivity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      CRMService.updateActivity(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
+      queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id) });
+    },
+  });
+}
+
+/**
+ * Hook to delete activity
+ */
+export function useDeleteActivity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
+    },
+  });
+}
+
+/**
+ * Hook to complete activity
+ */
+export function useCompleteActivity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.completeActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
+    },
   });
 }
