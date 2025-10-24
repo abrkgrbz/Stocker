@@ -10,12 +10,7 @@ import {
   Typography,
   Row,
   Col,
-  Statistic,
   Modal,
-  Form,
-  Select,
-  InputNumber,
-  DatePicker,
   message,
   Avatar,
   Tooltip,
@@ -33,10 +28,10 @@ import {
 import type { Deal } from '@/lib/api/services/crm.service';
 import { useDeals, useCreateDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
+import { DealModal } from '@/features/deals/components';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 // Pipeline stages
 const stages = [
@@ -59,7 +54,6 @@ export default function DealsPage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
   const { data, isLoading, refetch } = useDeals({});
@@ -79,16 +73,11 @@ export default function DealsPage() {
 
   const handleCreate = () => {
     setSelectedDeal(null);
-    form.resetFields();
     setModalOpen(true);
   };
 
   const handleEdit = (deal: Deal) => {
     setSelectedDeal(deal);
-    form.setFieldsValue({
-      ...deal,
-      expectedCloseDate: deal.expectedCloseDate ? dayjs(deal.expectedCloseDate) : null,
-    });
     setModalOpen(true);
   };
 
@@ -125,7 +114,6 @@ export default function DealsPage() {
         message.success('Fırsat oluşturuldu');
       }
       setModalOpen(false);
-      form.resetFields();
     } catch (error: any) {
       message.error(error?.message || 'İşlem başarısız');
     }
@@ -329,119 +317,15 @@ export default function DealsPage() {
       {viewMode === 'kanban' ? <KanbanView /> : <ListView />}
 
       {/* Create/Edit Modal */}
-      <Modal
-        title={selectedDeal ? 'Fırsatı Düzenle' : 'Yeni Fırsat'}
+      <DealModal
         open={modalOpen}
-        onCancel={() => {
-          setModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        confirmLoading={createDeal.isPending || updateDeal.isPending}
-        width={700}
-        footer={[
-          <Button key="cancel" onClick={() => setModalOpen(false)}>
-            İptal
-          </Button>,
-          selectedDeal && (
-            <Button key="delete" danger onClick={() => handleDelete(selectedDeal.id)}>
-              Sil
-            </Button>
-          ),
-          <Button key="submit" type="primary" loading={createDeal.isPending || updateDeal.isPending} onClick={() => form.submit()}>
-            {selectedDeal ? 'Güncelle' : 'Oluştur'}
-          </Button>,
-        ]}
-      >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item
-            label="Başlık"
-            name="title"
-            rules={[{ required: true, message: 'Başlık gerekli' }]}
-          >
-            <Input placeholder="Fırsat başlığı" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="Tutar (₺)"
-                name="amount"
-                rules={[{ required: true, message: 'Tutar gerekli' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Olasılık (%)"
-                name="probability"
-                rules={[{ required: true, message: 'Olasılık gerekli' }]}
-                initialValue={50}
-              >
-                <InputNumber min={0} max={100} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Tahmini Kapanış" name="expectedCloseDate">
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Aşama"
-                name="stageId"
-                rules={[{ required: true, message: 'Aşama gerekli' }]}
-                initialValue={1}
-              >
-                <Select>
-                  {stages.map((stage) => (
-                    <Select.Option key={stage.id} value={stage.id}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: stage.color }}
-                        />
-                        {stage.name}
-                      </div>
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Durum"
-                name="status"
-                rules={[{ required: true, message: 'Durum gerekli' }]}
-                initialValue="Open"
-              >
-                <Select>
-                  <Select.Option value="Open">Açık</Select.Option>
-                  <Select.Option value="Won">Kazanıldı</Select.Option>
-                  <Select.Option value="Lost">Kaybedildi</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item label="Müşteri ID" name="customerId">
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="Müşteri seçin (opsiyonel)" />
-          </Form.Item>
-
-          <Form.Item label="Açıklama" name="description">
-            <TextArea rows={4} placeholder="Fırsat detayları..." />
-          </Form.Item>
-        </Form>
-      </Modal>
+        deal={selectedDeal}
+        loading={createDeal.isPending || updateDeal.isPending}
+        stages={stages}
+        onCancel={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

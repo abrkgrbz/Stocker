@@ -10,12 +10,7 @@ import {
   Typography,
   Row,
   Col,
-  Statistic,
   Modal,
-  Form,
-  Select,
-  DatePicker,
-  TimePicker,
   message,
   Badge,
   Calendar,
@@ -43,12 +38,11 @@ import {
   useCompleteActivity,
 } from '@/hooks/useCRM';
 import { ActivitiesStats } from '@/components/crm/activities/ActivitiesStats';
+import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
 
 // Activity type icons and colors
 const activityConfig: Record<
@@ -75,7 +69,6 @@ export default function ActivitiesPage() {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [form] = Form.useForm();
 
   // API Hooks
   const { data, isLoading, refetch } = useActivities({});
@@ -100,22 +93,11 @@ export default function ActivitiesPage() {
 
   const handleCreate = (date?: Dayjs) => {
     setSelectedActivity(null);
-    form.resetFields();
-    if (date) {
-      form.setFieldsValue({
-        startTime: date,
-      });
-    }
     setModalOpen(true);
   };
 
   const handleEdit = (activity: Activity) => {
     setSelectedActivity(activity);
-    form.setFieldsValue({
-      ...activity,
-      startTime: dayjs(activity.startTime),
-      endTime: activity.endTime ? dayjs(activity.endTime) : null,
-    });
     setModalOpen(true);
   };
 
@@ -162,7 +144,6 @@ export default function ActivitiesPage() {
         message.success('Aktivite oluşturuldu');
       }
       setModalOpen(false);
-      form.resetFields();
     } catch (error: any) {
       message.error(error?.message || 'İşlem başarısız');
     }
@@ -404,93 +385,13 @@ export default function ActivitiesPage() {
       {viewMode === 'calendar' ? <CalendarView /> : <ListView />}
 
       {/* Create/Edit Modal */}
-      <Modal
-        title={selectedActivity ? 'Aktiviteyi Düzenle' : 'Yeni Aktivite'}
+      <ActivityModal
         open={modalOpen}
-        onCancel={() => {
-          setModalOpen(false);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        confirmLoading={createActivity.isPending || updateActivity.isPending}
-        width={600}
-      >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item label="Başlık" name="title" rules={[{ required: true, message: 'Başlık gerekli' }]}>
-            <Input placeholder="Aktivite başlığı" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="Tip" name="type" rules={[{ required: true, message: 'Tip gerekli' }]}>
-                <Select>
-                  {Object.entries(activityConfig).map(([key, config]) => (
-                    <Select.Option key={key} value={key}>
-                      <Space>
-                        {config.icon}
-                        {config.label}
-                      </Space>
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Durum"
-                name="status"
-                rules={[{ required: true, message: 'Durum gerekli' }]}
-                initialValue="Scheduled"
-              >
-                <Select>
-                  <Select.Option value="Scheduled">Zamanlanmış</Select.Option>
-                  <Select.Option value="Completed">Tamamlandı</Select.Option>
-                  <Select.Option value="Cancelled">İptal Edildi</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Başlangıç"
-                name="startTime"
-                rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
-              >
-                <DatePicker showTime format="DD/MM/YYYY HH:mm" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Bitiş" name="endTime">
-                <DatePicker showTime format="DD/MM/YYYY HH:mm" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="Müşteri ID" name="customerId">
-                <Input type="number" placeholder="Müşteri" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Lead ID" name="leadId">
-                <Input type="number" placeholder="Lead" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Fırsat ID" name="dealId">
-                <Input type="number" placeholder="Fırsat" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item label="Açıklama" name="description">
-            <TextArea rows={4} placeholder="Aktivite detayları..." />
-          </Form.Item>
-        </Form>
-      </Modal>
+        activity={selectedActivity}
+        loading={createActivity.isPending || updateActivity.isPending}
+        onCancel={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
