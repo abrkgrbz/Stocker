@@ -65,24 +65,24 @@ export const systemMonitoringService = {
    * Get current system metrics (CPU, Memory, Disk, Network)
    */
   getSystemMetrics: async (): Promise<SystemMetrics> => {
-    const response = await apiClient.get<SystemMetrics>('/api/master/system-monitoring/metrics');
-    return response.data;
+    const response = await apiClient.get<{ data: SystemMetrics }>('/api/master/system-monitoring/metrics');
+    return response.data.data;
   },
 
   /**
    * Get overall system health status
    */
   getSystemHealth: async (): Promise<SystemHealth> => {
-    const response = await apiClient.get<SystemHealth>('/api/master/system-monitoring/health');
-    return response.data;
+    const response = await apiClient.get<{ data: SystemHealth }>('/api/master/system-monitoring/health');
+    return response.data.data;
   },
 
   /**
    * Get status of all monitored services
    */
   getServiceStatus: async (): Promise<ServiceStatus[]> => {
-    const response = await apiClient.get<ServiceStatus[]>('/api/master/system-monitoring/services');
-    return response.data;
+    const response = await apiClient.get<{ data: ServiceStatus[] }>('/api/master/system-monitoring/services');
+    return response.data.data;
   },
 };
 
