@@ -12,8 +12,6 @@ import {
   Col,
   Modal,
   message,
-  Badge,
-  Calendar,
   List,
 } from 'antd';
 import {
@@ -38,6 +36,7 @@ import {
   useCompleteActivity,
 } from '@/hooks/useCRM';
 import { ActivitiesStats } from '@/components/crm/activities/ActivitiesStats';
+import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -149,92 +148,19 @@ export default function ActivitiesPage() {
     }
   };
 
-  // Get activities for a specific date
-  const getActivitiesForDate = (date: Dayjs) => {
-    return activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === date.format('YYYY-MM-DD'));
-  };
 
-  // Calendar cell renderer
-  const dateCellRender = (value: Dayjs) => {
-    const dayActivities = getActivitiesForDate(value);
-    if (dayActivities.length === 0) return null;
-
-    return (
-      <ul className="events">
-        {dayActivities.slice(0, 2).map((activity) => (
-          <li key={activity.id}>
-            <Badge
-              status={activity.status === 'Completed' ? 'success' : 'processing'}
-              text={
-                <span className="text-xs">
-                  {activityConfig[activity.type].icon} {activity.title}
-                </span>
-              }
-            />
-          </li>
-        ))}
-        {dayActivities.length > 2 && <li className="text-xs text-gray-500">+{dayActivities.length - 2} daha</li>}
-      </ul>
-    );
-  };
-
-  // Calendar View
+  // Calendar View with modern FullCalendar
   const CalendarView = () => (
-    <Card>
-      <Calendar
-        cellRender={dateCellRender}
-        onSelect={(date) => {
-          setSelectedDate(date);
-          const dayActivities = getActivitiesForDate(date);
-          if (dayActivities.length > 0) {
-            Modal.info({
-              title: `${date.format('DD MMMM YYYY')} - Aktiviteler`,
-              width: 600,
-              content: (
-                <List
-                  dataSource={dayActivities}
-                  renderItem={(activity) => (
-                    <List.Item
-                      actions={[
-                        <Button key="edit" type="link" onClick={() => handleEdit(activity)}>
-                          Düzenle
-                        </Button>,
-                        activity.status === 'Scheduled' && (
-                          <Button key="complete" type="link" onClick={() => handleComplete(activity.id)}>
-                            Tamamla
-                          </Button>
-                        ),
-                      ]}
-                    >
-                      <List.Item.Meta
-                        avatar={activityConfig[activity.type].icon}
-                        title={
-                          <Space>
-                            {activity.title}
-                            <Tag color={statusColors[activity.status]}>{activity.status}</Tag>
-                          </Space>
-                        }
-                        description={
-                          <>
-                            <div>
-                              {dayjs(activity.startTime).format('HH:mm')}
-                              {activity.endTime && ` - ${dayjs(activity.endTime).format('HH:mm')}`}
-                            </div>
-                            {activity.description && <div>{activity.description}</div>}
-                          </>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              ),
-            });
-          } else {
-            handleCreate(date);
-          }
-        }}
-      />
-    </Card>
+    <ActivityCalendar
+      activities={activities}
+      loading={isLoading}
+      onEventClick={(activity) => handleEdit(activity)}
+      onDateSelect={(start, end) => {
+        // When user selects a date range, create new activity
+        setSelectedActivity(null);
+        setModalOpen(true);
+      }}
+    />
   );
 
   // List View
