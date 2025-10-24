@@ -13,7 +13,6 @@ import {
   Space,
   message,
   Steps,
-  Card,
   Divider,
   Button,
   Tooltip,
@@ -33,7 +32,9 @@ import {
   CheckOutlined,
   BankOutlined,
   IdcardOutlined,
+  ShopOutlined,
 } from '@ant-design/icons';
+import { motion } from 'framer-motion';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
 
@@ -313,14 +314,23 @@ export default function CustomerModal({
   return (
     <Modal
       title={
-        <Space direction="vertical" size={0} style={{ width: '100%' }}>
-          <span style={{ fontSize: '20px', fontWeight: 600 }}>
-            {isEditMode ? '✏️ Müşteri Düzenle' : '➕ Yeni Müşteri Ekle'}
-          </span>
-          <span style={{ fontSize: '13px', fontWeight: 400, color: '#8c8c8c' }}>
-            {isEditMode ? 'Müşteri bilgilerini güncelleyin' : 'Adım adım yeni müşteri kaydı oluşturun'}
-          </span>
-        </Space>
+        <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+          <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+            {isEditMode ? (
+              <IdcardOutlined className="text-2xl text-white" />
+            ) : (
+              <ShopOutlined className="text-2xl text-white" />
+            )}
+          </div>
+          <div>
+            <div className="text-xl font-bold text-gray-900">
+              {isEditMode ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle'}
+            </div>
+            <div className="text-sm text-gray-500 font-normal">
+              {isEditMode ? 'Müşteri bilgilerini güncelleyin' : 'Adım adım yeni müşteri kaydı oluşturun'}
+            </div>
+          </div>
+        </div>
       }
       open={open}
       onCancel={handleCancel}
@@ -329,12 +339,13 @@ export default function CustomerModal({
       footer={null}
       styles={{ body: { paddingTop: 24 } }}
     >
-      {/* Progress Steps */}
-      <div style={{ marginBottom: 32 }}>
+      {/* Progress Steps with Gradient */}
+      <div className="mb-8">
         <Steps
           current={currentStep}
           items={steps}
           size="small"
+          className="custom-steps"
         />
       </div>
 
@@ -350,24 +361,28 @@ export default function CustomerModal({
       >
         {/* Step 0: Basic Information */}
         {currentStep === 0 && (
-          <div style={{ minHeight: '400px' }}>
-            <Card
-              bordered={false}
-              style={{ backgroundColor: '#fafafa' }}
-            >
-              <Divider orientation="left">
-                <Space>
-                  <UserOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>Müşteri Tipi</span>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ minHeight: '400px' }}
+          >
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+              <Divider orientation="left" className="!mt-0">
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+                    <UserOutlined className="text-white" />
+                  </div>
+                  <span>Müşteri Tipi</span>
                 </Space>
               </Divider>
 
               <Form.Item
                 label={
                   <Space>
-                    <span>Müşteri Kategorisi</span>
+                    <span className="font-medium">Müşteri Kategorisi</span>
                     <Tooltip title="Kurumsal müşteriler için firma bilgileri, bireysel müşteriler için kişisel bilgiler kullanılır">
-                      <InfoCircleOutlined style={{ color: '#8c8c8c' }} />
+                      <InfoCircleOutlined className="text-gray-400" />
                     </Tooltip>
                   </Space>
                 }
@@ -377,34 +392,44 @@ export default function CustomerModal({
                 <Radio.Group
                   size="large"
                   buttonStyle="solid"
-                  style={{ width: '100%' }}
+                  className="w-full grid grid-cols-2 gap-3"
                 >
-                  <Radio.Button value="Corporate" style={{ width: '50%', textAlign: 'center', height: '60px', lineHeight: '48px' }}>
-                    <Space direction="vertical" size={0}>
-                      <BankOutlined style={{ fontSize: '20px' }} />
-                      <span style={{ fontWeight: 500 }}>Kurumsal Müşteri</span>
-                    </Space>
+                  <Radio.Button value="Corporate" className="!h-auto border-2 hover:border-blue-400">
+                    <div className="py-4 text-center">
+                      <div className="inline-flex p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mb-2">
+                        <BankOutlined className="text-2xl text-white" />
+                      </div>
+                      <div className="font-semibold text-gray-700">🏢 Kurumsal Müşteri</div>
+                    </div>
                   </Radio.Button>
-                  <Radio.Button value="Individual" style={{ width: '50%', textAlign: 'center', height: '60px', lineHeight: '48px' }}>
-                    <Space direction="vertical" size={0}>
-                      <UserOutlined style={{ fontSize: '20px' }} />
-                      <span style={{ fontWeight: 500 }}>Bireysel Müşteri</span>
-                    </Space>
+                  <Radio.Button value="Individual" className="!h-auto border-2 hover:border-purple-400">
+                    <div className="py-4 text-center">
+                      <div className="inline-flex p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 mb-2">
+                        <UserOutlined className="text-2xl text-white" />
+                      </div>
+                      <div className="font-semibold text-gray-700">👤 Bireysel Müşteri</div>
+                    </div>
                   </Radio.Button>
                 </Radio.Group>
               </Form.Item>
 
               <Divider orientation="left">
-                <Space>
-                  <IdcardOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>Kimlik Bilgileri</span>
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                    <IdcardOutlined className="text-white" />
+                  </div>
+                  <span>Kimlik Bilgileri</span>
                 </Space>
               </Divider>
 
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    label={customerType === 'Corporate' ? '🏢 Firma Adı' : '👤 Ad Soyad'}
+                    label={
+                      <span className="font-medium">
+                        {customerType === 'Corporate' ? '🏢 Firma Adı' : '👤 Ad Soyad'}
+                      </span>
+                    }
                     name="companyName"
                     rules={[
                       { required: true, message: `${customerType === 'Corporate' ? 'Firma adı' : 'Ad soyad'} gereklidir` },
@@ -414,14 +439,15 @@ export default function CustomerModal({
                     <Input
                       size="large"
                       placeholder={customerType === 'Corporate' ? 'Örn: ABC Teknoloji A.Ş.' : 'Örn: Ahmet Yılmaz'}
-                      prefix={<BankOutlined style={{ color: '#8c8c8c' }} />}
+                      prefix={<BankOutlined className="text-blue-500" />}
+                      className="rounded-lg"
                     />
                   </Form.Item>
                 </Col>
 
                 <Col span={12}>
                   <Form.Item
-                    label="👔 İrtibat Kişisi"
+                    label={<span className="font-medium">👔 İrtibat Kişisi</span>}
                     name="contactPerson"
                     rules={[
                       { max: 100, message: 'En fazla 100 karakter olabilir' },
@@ -430,45 +456,65 @@ export default function CustomerModal({
                     <Input
                       size="large"
                       placeholder="Örn: Mehmet Demir"
-                      prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
+                      prefix={<UserOutlined className="text-purple-500" />}
+                      className="rounded-lg"
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                label="📊 Müşteri Durumu"
+                label={<span className="font-medium">📊 Müşteri Durumu</span>}
                 name="status"
                 rules={[{ required: true, message: 'Durum seçiniz' }]}
               >
-                <Select size="large">
-                  <Option value="Active">✅ Aktif Müşteri</Option>
-                  <Option value="Inactive">⏸️ Pasif Müşteri</Option>
-                  <Option value="Potential">🎯 Potansiyel Müşteri</Option>
+                <Select size="large" className="rounded-lg">
+                  <Option value="Active">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-green-500">●</span>
+                      <span>Aktif Müşteri</span>
+                    </span>
+                  </Option>
+                  <Option value="Inactive">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-gray-500">●</span>
+                      <span>Pasif Müşteri</span>
+                    </span>
+                  </Option>
+                  <Option value="Potential">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-yellow-500">●</span>
+                      <span>Potansiyel Müşteri</span>
+                    </span>
+                  </Option>
                 </Select>
               </Form.Item>
-            </Card>
-          </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Step 1: Contact & Address */}
         {currentStep === 1 && (
-          <div style={{ minHeight: '400px' }}>
-            <Card
-              bordered={false}
-              style={{ backgroundColor: '#fafafa' }}
-            >
-              <Divider orientation="left">
-                <Space>
-                  <MailOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>İletişim Bilgileri</span>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ minHeight: '400px' }}
+          >
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+              <Divider orientation="left" className="!mt-0">
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                    <MailOutlined className="text-white" />
+                  </div>
+                  <span>İletişim Bilgileri</span>
                 </Space>
               </Divider>
 
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    label="📧 E-posta Adresi"
+                    label={<span className="font-medium">📧 E-posta Adresi</span>}
                     name="email"
                     rules={[
                       { required: true, message: 'E-posta gereklidir' },
@@ -478,14 +524,15 @@ export default function CustomerModal({
                     <Input
                       size="large"
                       placeholder="ornek@firma.com"
-                      prefix={<MailOutlined style={{ color: '#8c8c8c' }} />}
+                      prefix={<MailOutlined className="text-blue-500" />}
+                      className="rounded-lg"
                     />
                   </Form.Item>
                 </Col>
 
                 <Col span={12}>
                   <Form.Item
-                    label="📱 Telefon Numarası"
+                    label={<span className="font-medium">📱 Telefon Numarası</span>}
                     name="phone"
                     rules={[
                       { pattern: /^[0-9+\s()-]+$/, message: 'Geçerli bir telefon numarası girin' },
@@ -494,14 +541,15 @@ export default function CustomerModal({
                     <Input
                       size="large"
                       placeholder="+90 (555) 123-4567"
-                      prefix={<PhoneOutlined style={{ color: '#8c8c8c' }} />}
+                      prefix={<PhoneOutlined className="text-green-500" />}
+                      className="rounded-lg"
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                label="🌐 Website"
+                label={<span className="font-medium">🌐 Website</span>}
                 name="website"
                 rules={[
                   { type: 'url', message: 'Geçerli bir website adresi girin (http:// veya https:// ile başlamalı)' },
@@ -510,19 +558,22 @@ export default function CustomerModal({
                 <Input
                   size="large"
                   placeholder="https://www.firma.com"
-                  prefix={<GlobalOutlined style={{ color: '#8c8c8c' }} />}
+                  prefix={<GlobalOutlined className="text-cyan-500" />}
+                  className="rounded-lg"
                 />
               </Form.Item>
 
               <Divider orientation="left">
-                <Space>
-                  <EnvironmentOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>Adres Bilgileri</span>
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
+                    <EnvironmentOutlined className="text-white" />
+                  </div>
+                  <span>Adres Bilgileri</span>
                 </Space>
               </Divider>
 
               <Form.Item
-                label="📍 Adres"
+                label={<span className="font-medium">📍 Adres</span>}
                 name="address"
               >
                 <TextArea
@@ -531,46 +582,47 @@ export default function CustomerModal({
                   placeholder="Sokak, Mahalle, Bina No, vb."
                   maxLength={200}
                   showCount
+                  className="rounded-lg"
                 />
               </Form.Item>
 
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item
-                    label="🏙️ Şehir"
+                    label={<span className="font-medium">🏙️ Şehir</span>}
                     name="city"
                   >
-                    <Input size="large" placeholder="İstanbul" />
+                    <Input size="large" placeholder="İstanbul" className="rounded-lg" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    label="🗺️ İlçe/Bölge"
+                    label={<span className="font-medium">🗺️ İlçe/Bölge</span>}
                     name="state"
                   >
-                    <Input size="large" placeholder="Kadıköy" />
+                    <Input size="large" placeholder="Kadıköy" className="rounded-lg" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    label="📮 Posta Kodu"
+                    label={<span className="font-medium">📮 Posta Kodu</span>}
                     name="postalCode"
                     rules={[
                       { pattern: /^[0-9]{5}$/, message: '5 haneli posta kodu girin' },
                     ]}
                   >
-                    <Input size="large" placeholder="34000" />
+                    <Input size="large" placeholder="34000" className="rounded-lg" />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                label="🌍 Ülke"
+                label={<span className="font-medium">🌍 Ülke</span>}
                 name="country"
               >
-                <Select size="large">
+                <Select size="large" className="rounded-lg">
                   <Option value="Türkiye">🇹🇷 Türkiye</Option>
                   <Option value="Almanya">🇩🇪 Almanya</Option>
                   <Option value="İngiltere">🇬🇧 İngiltere</Option>
@@ -578,21 +630,25 @@ export default function CustomerModal({
                   <Option value="Fransa">🇫🇷 Fransa</Option>
                 </Select>
               </Form.Item>
-            </Card>
-          </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Step 2: Financial Information */}
         {currentStep === 2 && (
-          <div style={{ minHeight: '400px' }}>
-            <Card
-              bordered={false}
-              style={{ backgroundColor: '#fafafa' }}
-            >
-              <Divider orientation="left">
-                <Space>
-                  <DollarOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>Mali Bilgiler</span>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ minHeight: '400px' }}
+          >
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+              <Divider orientation="left" className="!mt-0">
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+                    <DollarOutlined className="text-white" />
+                  </div>
+                  <span>Mali Bilgiler</span>
                 </Space>
               </Divider>
 
@@ -601,9 +657,9 @@ export default function CustomerModal({
                   <Form.Item
                     label={
                       <Space>
-                        <span>🆔 Vergi Numarası</span>
+                        <span className="font-medium">🆔 Vergi Numarası</span>
                         <Tooltip title="10 veya 11 haneli vergi kimlik numarası">
-                          <InfoCircleOutlined style={{ color: '#8c8c8c' }} />
+                          <InfoCircleOutlined className="text-gray-400" />
                         </Tooltip>
                       </Space>
                     }
@@ -616,6 +672,7 @@ export default function CustomerModal({
                       size="large"
                       placeholder="1234567890"
                       maxLength={11}
+                      className="rounded-lg"
                     />
                   </Form.Item>
                 </Col>
@@ -624,9 +681,9 @@ export default function CustomerModal({
                   <Form.Item
                     label={
                       <Space>
-                        <span>💳 Kredi Limiti</span>
+                        <span className="font-medium">💳 Kredi Limiti</span>
                         <Tooltip title="Müşteriye tanımlanan maksimum alacak limiti">
-                          <InfoCircleOutlined style={{ color: '#8c8c8c' }} />
+                          <InfoCircleOutlined className="text-gray-400" />
                         </Tooltip>
                       </Space>
                     }
@@ -637,7 +694,7 @@ export default function CustomerModal({
                   >
                     <InputNumber
                       size="large"
-                      className="w-full"
+                      className="w-full rounded-lg"
                       placeholder="0"
                       formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
@@ -648,10 +705,10 @@ export default function CustomerModal({
               </Row>
 
               <Form.Item
-                label="📅 Ödeme Koşulları"
+                label={<span className="font-medium">📅 Ödeme Koşulları</span>}
                 name="paymentTerms"
               >
-                <Select size="large" placeholder="Ödeme koşulu seçin">
+                <Select size="large" placeholder="Ödeme koşulu seçin" className="rounded-lg">
                   <Option value="Peşin">💵 Peşin Ödeme</Option>
                   <Option value="15 Gün">📆 15 Gün Vadeli</Option>
                   <Option value="30 Gün">📆 30 Gün Vadeli</Option>
@@ -661,46 +718,45 @@ export default function CustomerModal({
                 </Select>
               </Form.Item>
 
-              <div
-                style={{
-                  padding: '16px',
-                  backgroundColor: '#e6f7ff',
-                  border: '1px solid #91d5ff',
-                  borderRadius: '8px',
-                  marginTop: '24px',
-                }}
-              >
-                <Space direction="vertical" size={8}>
-                  <span style={{ fontWeight: 600, color: '#0050b3' }}>
-                    💡 Mali Bilgiler Hakkında
-                  </span>
-                  <ul style={{ margin: 0, paddingLeft: '20px', color: '#096dd9' }}>
-                    <li>Vergi numarası müşteri faturalarında kullanılacaktır</li>
-                    <li>Kredi limiti, müşterinin maksimum borçlanma tutarını belirler</li>
-                    <li>Ödeme koşulları, fatura vadelerini otomatik olarak ayarlar</li>
-                  </ul>
-                </Space>
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 mt-6">
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex-shrink-0">
+                    <InfoCircleOutlined className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-blue-900 mb-2">Mali Bilgiler Hakkında</div>
+                    <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                      <li>Vergi numarası müşteri faturalarında kullanılacaktır</li>
+                      <li>Kredi limiti, müşterinin maksimum borçlanma tutarını belirler</li>
+                      <li>Ödeme koşulları, fatura vadelerini otomatik olarak ayarlar</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-            </Card>
-          </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Step 3: Notes & Summary */}
         {currentStep === 3 && (
-          <div style={{ minHeight: '400px' }}>
-            <Card
-              bordered={false}
-              style={{ backgroundColor: '#fafafa' }}
-            >
-              <Divider orientation="left">
-                <Space>
-                  <FileTextOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: 600 }}>Ek Notlar</span>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ minHeight: '400px' }}
+          >
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100">
+              <Divider orientation="left" className="!mt-0">
+                <Space className="text-base font-semibold text-gray-700">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500">
+                    <FileTextOutlined className="text-white" />
+                  </div>
+                  <span>Ek Notlar</span>
                 </Space>
               </Divider>
 
               <Form.Item
-                label="📝 Müşteri Notları"
+                label={<span className="font-medium">📝 Müşteri Notları</span>}
                 name="notes"
               >
                 <TextArea
@@ -709,52 +765,47 @@ export default function CustomerModal({
                   placeholder="Müşteri hakkında önemli notlar, özel durumlar, tercihler vb..."
                   maxLength={500}
                   showCount
+                  className="rounded-lg"
                   style={{ fontSize: '14px' }}
                 />
               </Form.Item>
 
-              <div
-                style={{
-                  padding: '20px',
-                  backgroundColor: '#f6ffed',
-                  border: '2px solid #b7eb8f',
-                  borderRadius: '8px',
-                  marginTop: '24px',
-                }}
-              >
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <CheckOutlined style={{ fontSize: '20px', color: '#52c41a' }} />
-                    <span style={{ fontWeight: 600, fontSize: '16px', color: '#389e0d' }}>
-                      Hazırsınız!
-                    </span>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-5 mt-6">
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex-shrink-0">
+                    <CheckOutlined className="text-white text-xl" />
                   </div>
-                  <p style={{ margin: 0, color: '#52c41a', fontSize: '14px' }}>
-                    Tüm gerekli bilgiler toplandı. "{isEditMode ? 'Güncelle' : 'Oluştur'}" butonuna tıklayarak
-                    müşteri kaydını {isEditMode ? 'güncelleyebilirsiniz' : 'oluşturabilirsiniz'}.
-                  </p>
-                </Space>
+                  <div>
+                    <div className="font-bold text-green-900 text-lg mb-2">Hazırsınız!</div>
+                    <p className="text-sm text-green-800 m-0">
+                      Tüm gerekli bilgiler toplandı. "{isEditMode ? 'Güncelle' : 'Oluştur'}" butonuna tıklayarak
+                      müşteri kaydını {isEditMode ? 'güncelleyebilirsiniz' : 'oluşturabilirsiniz'}.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </Card>
-          </div>
+            </div>
+          </motion.div>
         )}
       </Form>
 
-      {/* Footer Buttons */}
-      <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between' }}>
+      {/* Footer Buttons with Gradient */}
+      <div className="mt-6 flex justify-between items-center pt-6 border-t border-gray-200">
         <Button
           size="large"
           onClick={handleCancel}
+          className="rounded-lg px-6 hover:bg-gray-100"
         >
           İptal
         </Button>
 
-        <Space>
+        <Space size="middle">
           {currentStep > 0 && (
             <Button
               size="large"
               icon={<ArrowLeftOutlined />}
               onClick={handlePrev}
+              className="rounded-lg px-6 hover:bg-gray-100"
             >
               Geri
             </Button>
@@ -767,6 +818,7 @@ export default function CustomerModal({
               icon={<ArrowRightOutlined />}
               onClick={handleNext}
               iconPosition="end"
+              className="rounded-lg px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-md"
             >
               İleri
             </Button>
@@ -780,6 +832,7 @@ export default function CustomerModal({
               onClick={handleSubmit}
               loading={createCustomer.isPending || updateCustomer.isPending}
               iconPosition="end"
+              className="rounded-lg px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-md"
             >
               {isEditMode ? 'Güncelle' : 'Oluştur'}
             </Button>
