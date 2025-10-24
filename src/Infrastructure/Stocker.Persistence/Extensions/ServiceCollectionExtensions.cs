@@ -176,9 +176,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<MasterDbContext>());
         
         // Add Migration Services
-        services.AddScoped<IMigrationService, MigrationService>(); 
+        services.AddScoped<IMigrationService, MigrationService>();
         // Disabled automatic migration - handled manually in Program.cs
         // services.AddHostedService<DatabaseMigrationHostedService>();
+
+        // Add System Monitoring Service
+        services.AddScoped<ISystemMonitoringService, Monitoring.SystemMonitoringService>();
 
         return services;
     }
