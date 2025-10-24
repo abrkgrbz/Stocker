@@ -20,7 +20,11 @@ public class SystemMonitoringController : ApiController
     {
         var query = new GetSystemMetricsQuery();
         var result = await Mediator.Send(query, cancellationToken);
-        return HandleResult(result);
+
+        if (!result.IsSuccess)
+            return HandleFailure(result);
+
+        return OkResponse(result.Value);
     }
 
     /// <summary>
@@ -32,7 +36,11 @@ public class SystemMonitoringController : ApiController
     {
         var query = new GetSystemHealthQuery();
         var result = await Mediator.Send(query, cancellationToken);
-        return HandleResult(result);
+
+        if (!result.IsSuccess)
+            return HandleFailure(result);
+
+        return OkResponse(result.Value);
     }
 
     /// <summary>
@@ -44,6 +52,10 @@ public class SystemMonitoringController : ApiController
     {
         var query = new GetServiceStatusQuery();
         var result = await Mediator.Send(query, cancellationToken);
-        return HandleResult(result);
+
+        if (!result.IsSuccess)
+            return HandleFailure(result);
+
+        return OkResponse(result.Value);
     }
 }
