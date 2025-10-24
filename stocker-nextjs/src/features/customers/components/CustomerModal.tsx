@@ -17,6 +17,7 @@ import {
   Button,
   Tooltip,
   Alert,
+  Card,
 } from 'antd';
 import {
   UserOutlined,
@@ -32,7 +33,6 @@ import {
   CheckOutlined,
   BankOutlined,
   IdcardOutlined,
-  ShopOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/useCRM';
@@ -123,16 +123,13 @@ export default function CustomerModal({
 
         // Success alert
         Modal.success({
-          title: '✅ Başarılı!',
+          title: 'Success',
           content: (
             <div>
-              <p><strong>{values.companyName}</strong> başarıyla güncellendi.</p>
-              <p style={{ marginTop: '8px', color: '#52c41a' }}>
-                Müşteri bilgileri sisteme kaydedildi.
-              </p>
+              <p><strong>{values.companyName}</strong> has been updated successfully.</p>
             </div>
           ),
-          okText: 'Tamam',
+          okText: 'OK',
         });
       } else {
         console.log('📤 Calling createCustomer with:', values);
@@ -141,16 +138,13 @@ export default function CustomerModal({
 
         // Success alert
         Modal.success({
-          title: '✅ Müşteri Başarıyla Oluşturuldu!',
+          title: 'Customer Created',
           content: (
             <div>
-              <p><strong>{values.companyName}</strong> sisteme eklendi.</p>
-              <p style={{ marginTop: '8px', color: '#52c41a' }}>
-                Müşteri listesinde görüntüleyebilirsiniz.
-              </p>
+              <p><strong>{values.companyName}</strong> has been added to the system.</p>
             </div>
           ),
-          okText: 'Tamam',
+          okText: 'OK',
         });
       }
 
@@ -167,13 +161,13 @@ export default function CustomerModal({
 
       // Check if it's a validation error (form fields not filled correctly)
       if (error.errorFields) {
-        message.error('Lütfen tüm gerekli alanları doğru şekilde doldurun');
+        message.error('Please fill in all required fields correctly');
         return;
       }
 
       // API error handling
-      let errorTitle = '❌ İşlem Başarısız';
-      let errorMessage = 'Müşteri kaydedilirken bir hata oluştu.';
+      let errorTitle = 'Operation Failed';
+      let errorMessage = 'An error occurred while saving the customer.';
       let errorDetails: string[] = [];
 
       // Extract error details from API response
@@ -182,23 +176,23 @@ export default function CustomerModal({
 
         // Conflict error (duplicate customer)
         if (apiError.type === 'Conflict' || apiError.code?.includes('Customer.')) {
-          errorTitle = '⚠️ Müşteri Zaten Mevcut';
+          errorTitle = 'Duplicate Entry';
 
           // Check which field caused the conflict
           if (apiError.code === 'Customer.Email') {
-            errorMessage = 'Bu e-posta adresi ile kayıtlı bir müşteri zaten mevcut.';
-            errorDetails.push('E-posta: ' + form.getFieldValue('email'));
+            errorMessage = 'A customer with this email address already exists.';
+            errorDetails.push('Email: ' + form.getFieldValue('email'));
           } else if (apiError.code === 'Customer.TaxId') {
-            errorMessage = 'Bu vergi numarası ile kayıtlı bir müşteri zaten mevcut.';
-            errorDetails.push('Vergi No: ' + form.getFieldValue('taxId'));
+            errorMessage = 'A customer with this tax ID already exists.';
+            errorDetails.push('Tax ID: ' + form.getFieldValue('taxId'));
           } else {
-            errorMessage = apiError.description || 'Bu bilgilerle kayıtlı bir müşteri zaten var.';
+            errorMessage = apiError.description || 'A customer with these details already exists.';
           }
         }
         // Backend validation error
         else if (apiError.type === 'Validation' || apiError.code === 'ValidationError') {
-          errorTitle = '⚠️ Geçersiz Veri';
-          errorMessage = apiError.description || apiError.message || 'Girilen veriler geçersiz.';
+          errorTitle = 'Validation Error';
+          errorMessage = apiError.description || apiError.message || 'The data entered is invalid.';
 
           // Extract field-specific errors if available
           if (apiError.errors) {
@@ -210,21 +204,21 @@ export default function CustomerModal({
         }
         // RabbitMQ or infrastructure errors
         else if (error.message?.includes('RabbitMQ') || error.message?.includes('Broker unreachable')) {
-          errorTitle = '⚠️ Sistem Hatası';
-          errorMessage = 'Müşteri kaydedildi ancak bildirim gönderilemedi. Lütfen sistem yöneticisine bildirin.';
+          errorTitle = 'System Error';
+          errorMessage = 'Customer saved but notification failed. Please contact system administrator.';
         }
         // Generic API error
         else {
           errorMessage = apiError.description || apiError.message || errorMessage;
           if (apiError.code) {
-            errorDetails.push(`Hata Kodu: ${apiError.code}`);
+            errorDetails.push(`Error Code: ${apiError.code}`);
           }
         }
       }
       // Network error
       else if (error.message === 'Network Error') {
-        errorTitle = '🌐 Bağlantı Hatası';
-        errorMessage = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+        errorTitle = 'Connection Error';
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
       }
 
       // Show error modal with details
@@ -240,7 +234,7 @@ export default function CustomerModal({
             />
             {errorDetails.length > 0 && (
               <div style={{ marginTop: '12px' }}>
-                <strong>Detaylar:</strong>
+                <strong>Details:</strong>
                 <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
                   {errorDetails.map((detail, index) => (
                     <li key={index} style={{ color: '#ff4d4f' }}>{detail}</li>
@@ -249,11 +243,11 @@ export default function CustomerModal({
               </div>
             )}
             <div style={{ marginTop: '12px', fontSize: '12px', color: '#8c8c8c' }}>
-              Sorun devam ederse sistem yöneticisine başvurun.
+              If the problem persists, please contact system administrator.
             </div>
           </div>
         ),
-        okText: 'Tamam',
+        okText: 'OK',
         width: 500,
       });
     }
@@ -294,19 +288,19 @@ export default function CustomerModal({
 
   const steps = [
     {
-      title: 'Temel Bilgiler',
+      title: 'Basic Information',
       icon: <UserOutlined />,
     },
     {
-      title: 'İletişim & Adres',
+      title: 'Contact & Address',
       icon: <EnvironmentOutlined />,
     },
     {
-      title: 'Mali Bilgiler',
+      title: 'Financial Details',
       icon: <DollarOutlined />,
     },
     {
-      title: 'Notlar & Tamamla',
+      title: 'Notes & Complete',
       icon: <FileTextOutlined />,
     },
   ];
@@ -314,38 +308,25 @@ export default function CustomerModal({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
-          <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-            {isEditMode ? (
-              <IdcardOutlined className="text-2xl text-white" />
-            ) : (
-              <ShopOutlined className="text-2xl text-white" />
-            )}
-          </div>
-          <div>
-            <div className="text-xl font-bold text-gray-900">
-              {isEditMode ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle'}
-            </div>
-            <div className="text-sm text-gray-500 font-normal">
-              {isEditMode ? 'Müşteri bilgilerini güncelleyin' : 'Adım adım yeni müşteri kaydı oluşturun'}
-            </div>
+        <div className="flex items-center gap-3 pb-4">
+          <div className="text-lg font-semibold text-gray-800">
+            {isEditMode ? 'Edit Customer' : 'New Customer'}
           </div>
         </div>
       }
       open={open}
       onCancel={handleCancel}
-      width={900}
+      width={800}
       destroyOnClose
       footer={null}
       styles={{ body: { paddingTop: 24 } }}
     >
-      {/* Progress Steps with Gradient */}
+      {/* Progress Steps */}
       <div className="mb-8">
         <Steps
           current={currentStep}
           items={steps}
           size="small"
-          className="custom-steps"
         />
       </div>
 
@@ -365,131 +346,119 @@ export default function CustomerModal({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            style={{ minHeight: '400px' }}
+            style={{ minHeight: '380px' }}
           >
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-              <Divider orientation="left" className="!mt-0">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
-                    <UserOutlined className="text-white" />
-                  </div>
-                  <span>Müşteri Tipi</span>
-                </Space>
-              </Divider>
+            <Divider orientation="left" className="!mt-0 !mb-6">
+              <span className="text-sm font-medium text-gray-600">Customer Type</span>
+            </Divider>
 
-              <Form.Item
-                label={
-                  <Space>
-                    <span className="font-medium">Müşteri Kategorisi</span>
-                    <Tooltip title="Kurumsal müşteriler için firma bilgileri, bireysel müşteriler için kişisel bilgiler kullanılır">
-                      <InfoCircleOutlined className="text-gray-400" />
-                    </Tooltip>
-                  </Space>
-                }
-                name="customerType"
-                rules={[{ required: true, message: 'Müşteri tipi seçiniz' }]}
-              >
-                <Radio.Group
-                  size="large"
-                  buttonStyle="solid"
-                  className="w-full grid grid-cols-2 gap-3"
+            <Form.Item
+              name="customerType"
+              rules={[{ required: true, message: 'Please select customer type' }]}
+            >
+              <Radio.Group className="w-full">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Card
+                      hoverable
+                      className={`text-center cursor-pointer transition-all ${
+                        customerType === 'Corporate'
+                          ? 'border-blue-500 shadow-md'
+                          : 'border-gray-200'
+                      }`}
+                      onClick={() => form.setFieldValue('customerType', 'Corporate')}
+                    >
+                      <Radio value="Corporate" className="hidden" />
+                      <BankOutlined className="text-3xl text-gray-600 mb-2" />
+                      <div className="font-medium text-gray-800">Corporate</div>
+                      <div className="text-xs text-gray-500 mt-1">Business entity</div>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card
+                      hoverable
+                      className={`text-center cursor-pointer transition-all ${
+                        customerType === 'Individual'
+                          ? 'border-blue-500 shadow-md'
+                          : 'border-gray-200'
+                      }`}
+                      onClick={() => form.setFieldValue('customerType', 'Individual')}
+                    >
+                      <Radio value="Individual" className="hidden" />
+                      <UserOutlined className="text-3xl text-gray-600 mb-2" />
+                      <div className="font-medium text-gray-800">Individual</div>
+                      <div className="text-xs text-gray-500 mt-1">Personal account</div>
+                    </Card>
+                  </Col>
+                </Row>
+              </Radio.Group>
+            </Form.Item>
+
+            <Divider orientation="left" className="!my-6">
+              <span className="text-sm font-medium text-gray-600">Basic Details</span>
+            </Divider>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">{customerType === 'Corporate' ? 'Company Name' : 'Full Name'}</span>}
+                  name="companyName"
+                  rules={[
+                    { required: true, message: `${customerType === 'Corporate' ? 'Company name' : 'Full name'} is required` },
+                    { min: 2, message: 'Must be at least 2 characters' },
+                  ]}
                 >
-                  <Radio.Button value="Corporate" className="!h-auto border-2 hover:border-blue-400">
-                    <div className="py-4 text-center">
-                      <div className="inline-flex p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mb-2">
-                        <BankOutlined className="text-2xl text-white" />
-                      </div>
-                      <div className="font-semibold text-gray-700">🏢 Kurumsal Müşteri</div>
-                    </div>
-                  </Radio.Button>
-                  <Radio.Button value="Individual" className="!h-auto border-2 hover:border-purple-400">
-                    <div className="py-4 text-center">
-                      <div className="inline-flex p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 mb-2">
-                        <UserOutlined className="text-2xl text-white" />
-                      </div>
-                      <div className="font-semibold text-gray-700">👤 Bireysel Müşteri</div>
-                    </div>
-                  </Radio.Button>
-                </Radio.Group>
-              </Form.Item>
+                  <Input
+                    size="large"
+                    placeholder={customerType === 'Corporate' ? 'e.g., ABC Technology Inc.' : 'e.g., John Smith'}
+                    prefix={<BankOutlined className="text-gray-400" />}
+                  />
+                </Form.Item>
+              </Col>
 
-              <Divider orientation="left">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-                    <IdcardOutlined className="text-white" />
-                  </div>
-                  <span>Kimlik Bilgileri</span>
-                </Space>
-              </Divider>
+              <Col span={12}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">Contact Person</span>}
+                  name="contactPerson"
+                  rules={[
+                    { max: 100, message: 'Maximum 100 characters' },
+                  ]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="e.g., Jane Doe"
+                    prefix={<UserOutlined className="text-gray-400" />}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={
-                      <span className="font-medium">
-                        {customerType === 'Corporate' ? '🏢 Firma Adı' : '👤 Ad Soyad'}
-                      </span>
-                    }
-                    name="companyName"
-                    rules={[
-                      { required: true, message: `${customerType === 'Corporate' ? 'Firma adı' : 'Ad soyad'} gereklidir` },
-                      { min: 2, message: 'En az 2 karakter olmalıdır' },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder={customerType === 'Corporate' ? 'Örn: ABC Teknoloji A.Ş.' : 'Örn: Ahmet Yılmaz'}
-                      prefix={<BankOutlined className="text-blue-500" />}
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="font-medium">👔 İrtibat Kişisi</span>}
-                    name="contactPerson"
-                    rules={[
-                      { max: 100, message: 'En fazla 100 karakter olabilir' },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Örn: Mehmet Demir"
-                      prefix={<UserOutlined className="text-purple-500" />}
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Form.Item
-                label={<span className="font-medium">📊 Müşteri Durumu</span>}
-                name="status"
-                rules={[{ required: true, message: 'Durum seçiniz' }]}
-              >
-                <Select size="large" className="rounded-lg">
-                  <Option value="Active">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-green-500">●</span>
-                      <span>Aktif Müşteri</span>
-                    </span>
-                  </Option>
-                  <Option value="Inactive">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-gray-500">●</span>
-                      <span>Pasif Müşteri</span>
-                    </span>
-                  </Option>
-                  <Option value="Potential">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-yellow-500">●</span>
-                      <span>Potansiyel Müşteri</span>
-                    </span>
-                  </Option>
-                </Select>
-              </Form.Item>
-            </div>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Status</span>}
+              name="status"
+              rules={[{ required: true, message: 'Please select status' }]}
+            >
+              <Select size="large">
+                <Option value="Active">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                    <span>Active</span>
+                  </span>
+                </Option>
+                <Option value="Inactive">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-gray-400"></span>
+                    <span>Inactive</span>
+                  </span>
+                </Option>
+                <Option value="Potential">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-yellow-500"></span>
+                    <span>Potential</span>
+                  </span>
+                </Option>
+              </Select>
+            </Form.Item>
           </motion.div>
         )}
 
@@ -499,138 +468,122 @@ export default function CustomerModal({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            style={{ minHeight: '400px' }}
+            style={{ minHeight: '380px' }}
           >
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-              <Divider orientation="left" className="!mt-0">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-                    <MailOutlined className="text-white" />
-                  </div>
-                  <span>İletişim Bilgileri</span>
-                </Space>
-              </Divider>
+            <Divider orientation="left" className="!mt-0 !mb-6">
+              <span className="text-sm font-medium text-gray-600">Contact Information</span>
+            </Divider>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="font-medium">📧 E-posta Adresi</span>}
-                    name="email"
-                    rules={[
-                      { required: true, message: 'E-posta gereklidir' },
-                      { type: 'email', message: 'Geçerli bir e-posta adresi girin' },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="ornek@firma.com"
-                      prefix={<MailOutlined className="text-blue-500" />}
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </Col>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">Email Address</span>}
+                  name="email"
+                  rules={[
+                    { required: true, message: 'Email is required' },
+                    { type: 'email', message: 'Please enter a valid email address' },
+                  ]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="contact@company.com"
+                    prefix={<MailOutlined className="text-gray-400" />}
+                  />
+                </Form.Item>
+              </Col>
 
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="font-medium">📱 Telefon Numarası</span>}
-                    name="phone"
-                    rules={[
-                      { pattern: /^[0-9+\s()-]+$/, message: 'Geçerli bir telefon numarası girin' },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="+90 (555) 123-4567"
-                      prefix={<PhoneOutlined className="text-green-500" />}
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Col span={12}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">Phone Number</span>}
+                  name="phone"
+                  rules={[
+                    { pattern: /^[0-9+\s()-]+$/, message: 'Please enter a valid phone number' },
+                  ]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="+1 (555) 123-4567"
+                    prefix={<PhoneOutlined className="text-gray-400" />}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Form.Item
-                label={<span className="font-medium">🌐 Website</span>}
-                name="website"
-                rules={[
-                  { type: 'url', message: 'Geçerli bir website adresi girin (http:// veya https:// ile başlamalı)' },
-                ]}
-              >
-                <Input
-                  size="large"
-                  placeholder="https://www.firma.com"
-                  prefix={<GlobalOutlined className="text-cyan-500" />}
-                  className="rounded-lg"
-                />
-              </Form.Item>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Website</span>}
+              name="website"
+              rules={[
+                { type: 'url', message: 'Please enter a valid URL (must start with http:// or https://)' },
+              ]}
+            >
+              <Input
+                size="large"
+                placeholder="https://www.company.com"
+                prefix={<GlobalOutlined className="text-gray-400" />}
+              />
+            </Form.Item>
 
-              <Divider orientation="left">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
-                    <EnvironmentOutlined className="text-white" />
-                  </div>
-                  <span>Adres Bilgileri</span>
-                </Space>
-              </Divider>
+            <Divider orientation="left" className="!my-6">
+              <span className="text-sm font-medium text-gray-600">Address</span>
+            </Divider>
 
-              <Form.Item
-                label={<span className="font-medium">📍 Adres</span>}
-                name="address"
-              >
-                <TextArea
-                  size="large"
-                  rows={2}
-                  placeholder="Sokak, Mahalle, Bina No, vb."
-                  maxLength={200}
-                  showCount
-                  className="rounded-lg"
-                />
-              </Form.Item>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Street Address</span>}
+              name="address"
+            >
+              <TextArea
+                size="large"
+                rows={2}
+                placeholder="Street, District, Building No., etc."
+                maxLength={200}
+                showCount
+              />
+            </Form.Item>
 
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item
-                    label={<span className="font-medium">🏙️ Şehir</span>}
-                    name="city"
-                  >
-                    <Input size="large" placeholder="İstanbul" className="rounded-lg" />
-                  </Form.Item>
-                </Col>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">City</span>}
+                  name="city"
+                >
+                  <Input size="large" placeholder="Istanbul" />
+                </Form.Item>
+              </Col>
 
-                <Col span={8}>
-                  <Form.Item
-                    label={<span className="font-medium">🗺️ İlçe/Bölge</span>}
-                    name="state"
-                  >
-                    <Input size="large" placeholder="Kadıköy" className="rounded-lg" />
-                  </Form.Item>
-                </Col>
+              <Col span={8}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">State/Region</span>}
+                  name="state"
+                >
+                  <Input size="large" placeholder="Kadıköy" />
+                </Form.Item>
+              </Col>
 
-                <Col span={8}>
-                  <Form.Item
-                    label={<span className="font-medium">📮 Posta Kodu</span>}
-                    name="postalCode"
-                    rules={[
-                      { pattern: /^[0-9]{5}$/, message: '5 haneli posta kodu girin' },
-                    ]}
-                  >
-                    <Input size="large" placeholder="34000" className="rounded-lg" />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Col span={8}>
+                <Form.Item
+                  label={<span className="text-sm font-medium text-gray-700">Postal Code</span>}
+                  name="postalCode"
+                  rules={[
+                    { pattern: /^[0-9]{5}$/, message: 'Please enter a 5-digit postal code' },
+                  ]}
+                >
+                  <Input size="large" placeholder="34000" />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Form.Item
-                label={<span className="font-medium">🌍 Ülke</span>}
-                name="country"
-              >
-                <Select size="large" className="rounded-lg">
-                  <Option value="Türkiye">🇹🇷 Türkiye</Option>
-                  <Option value="Almanya">🇩🇪 Almanya</Option>
-                  <Option value="İngiltere">🇬🇧 İngiltere</Option>
-                  <Option value="ABD">🇺🇸 ABD</Option>
-                  <Option value="Fransa">🇫🇷 Fransa</Option>
-                </Select>
-              </Form.Item>
-            </div>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Country</span>}
+              name="country"
+            >
+              <Select size="large">
+                <Option value="Türkiye">Türkiye</Option>
+                <Option value="Germany">Germany</Option>
+                <Option value="United Kingdom">United Kingdom</Option>
+                <Option value="United States">United States</Option>
+                <Option value="France">France</Option>
+              </Select>
+            </Form.Item>
           </motion.div>
         )}
 
@@ -640,100 +593,90 @@ export default function CustomerModal({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            style={{ minHeight: '400px' }}
+            style={{ minHeight: '380px' }}
           >
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-              <Divider orientation="left" className="!mt-0">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
-                    <DollarOutlined className="text-white" />
-                  </div>
-                  <span>Mali Bilgiler</span>
-                </Space>
-              </Divider>
+            <Divider orientation="left" className="!mt-0 !mb-6">
+              <span className="text-sm font-medium text-gray-600">Financial Information</span>
+            </Divider>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={
-                      <Space>
-                        <span className="font-medium">🆔 Vergi Numarası</span>
-                        <Tooltip title="10 veya 11 haneli vergi kimlik numarası">
-                          <InfoCircleOutlined className="text-gray-400" />
-                        </Tooltip>
-                      </Space>
-                    }
-                    name="taxId"
-                    rules={[
-                      { pattern: /^[0-9]{10,11}$/, message: '10 veya 11 haneli vergi numarası girin' },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="1234567890"
-                      maxLength={11}
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </Col>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <Space>
+                      <span className="text-sm font-medium text-gray-700">Tax ID</span>
+                      <Tooltip title="10 or 11 digit tax identification number">
+                        <InfoCircleOutlined className="text-gray-400" />
+                      </Tooltip>
+                    </Space>
+                  }
+                  name="taxId"
+                  rules={[
+                    { pattern: /^[0-9]{10,11}$/, message: 'Please enter a 10 or 11 digit tax ID' },
+                  ]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="1234567890"
+                    maxLength={11}
+                  />
+                </Form.Item>
+              </Col>
 
-                <Col span={12}>
-                  <Form.Item
-                    label={
-                      <Space>
-                        <span className="font-medium">💳 Kredi Limiti</span>
-                        <Tooltip title="Müşteriye tanımlanan maksimum alacak limiti">
-                          <InfoCircleOutlined className="text-gray-400" />
-                        </Tooltip>
-                      </Space>
-                    }
-                    name="creditLimit"
-                    rules={[
-                      { type: 'number', min: 0, message: 'Kredi limiti negatif olamaz' },
-                    ]}
-                  >
-                    <InputNumber
-                      size="large"
-                      className="w-full rounded-lg"
-                      placeholder="0"
-                      formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
-                      style={{ width: '100%' }}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <Space>
+                      <span className="text-sm font-medium text-gray-700">Credit Limit</span>
+                      <Tooltip title="Maximum credit limit assigned to customer">
+                        <InfoCircleOutlined className="text-gray-400" />
+                      </Tooltip>
+                    </Space>
+                  }
+                  name="creditLimit"
+                  rules={[
+                    { type: 'number', min: 0, message: 'Credit limit cannot be negative' },
+                  ]}
+                >
+                  <InputNumber
+                    size="large"
+                    className="w-full"
+                    placeholder="0"
+                    formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Form.Item
-                label={<span className="font-medium">📅 Ödeme Koşulları</span>}
-                name="paymentTerms"
-              >
-                <Select size="large" placeholder="Ödeme koşulu seçin" className="rounded-lg">
-                  <Option value="Peşin">💵 Peşin Ödeme</Option>
-                  <Option value="15 Gün">📆 15 Gün Vadeli</Option>
-                  <Option value="30 Gün">📆 30 Gün Vadeli</Option>
-                  <Option value="45 Gün">📆 45 Gün Vadeli</Option>
-                  <Option value="60 Gün">📆 60 Gün Vadeli</Option>
-                  <Option value="90 Gün">📆 90 Gün Vadeli</Option>
-                </Select>
-              </Form.Item>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Payment Terms</span>}
+              name="paymentTerms"
+            >
+              <Select size="large" placeholder="Select payment terms">
+                <Option value="Immediate">Immediate Payment</Option>
+                <Option value="15 Days">Net 15 Days</Option>
+                <Option value="30 Days">Net 30 Days</Option>
+                <Option value="45 Days">Net 45 Days</Option>
+                <Option value="60 Days">Net 60 Days</Option>
+                <Option value="90 Days">Net 90 Days</Option>
+              </Select>
+            </Form.Item>
 
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 mt-6">
-                <div className="flex items-start gap-3">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex-shrink-0">
-                    <InfoCircleOutlined className="text-white text-lg" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-blue-900 mb-2">Mali Bilgiler Hakkında</div>
-                    <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
-                      <li>Vergi numarası müşteri faturalarında kullanılacaktır</li>
-                      <li>Kredi limiti, müşterinin maksimum borçlanma tutarını belirler</li>
-                      <li>Ödeme koşulları, fatura vadelerini otomatik olarak ayarlar</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Alert
+              message="Financial Information"
+              description={
+                <ul className="text-sm text-gray-600 mt-2 ml-4 space-y-1 list-disc">
+                  <li>Tax ID will be used on customer invoices</li>
+                  <li>Credit limit determines the maximum debt amount</li>
+                  <li>Payment terms automatically set invoice due dates</li>
+                </ul>
+              }
+              type="info"
+              showIcon
+              className="mt-6"
+            />
           </motion.div>
         )}
 
@@ -743,71 +686,53 @@ export default function CustomerModal({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            style={{ minHeight: '400px' }}
+            style={{ minHeight: '380px' }}
           >
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100">
-              <Divider orientation="left" className="!mt-0">
-                <Space className="text-base font-semibold text-gray-700">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500">
-                    <FileTextOutlined className="text-white" />
-                  </div>
-                  <span>Ek Notlar</span>
-                </Space>
-              </Divider>
+            <Divider orientation="left" className="!mt-0 !mb-6">
+              <span className="text-sm font-medium text-gray-600">Additional Notes</span>
+            </Divider>
 
-              <Form.Item
-                label={<span className="font-medium">📝 Müşteri Notları</span>}
-                name="notes"
-              >
-                <TextArea
-                  size="large"
-                  rows={6}
-                  placeholder="Müşteri hakkında önemli notlar, özel durumlar, tercihler vb..."
-                  maxLength={500}
-                  showCount
-                  className="rounded-lg"
-                  style={{ fontSize: '14px' }}
-                />
-              </Form.Item>
+            <Form.Item
+              label={<span className="text-sm font-medium text-gray-700">Customer Notes</span>}
+              name="notes"
+            >
+              <TextArea
+                size="large"
+                rows={8}
+                placeholder="Important notes about the customer, special conditions, preferences, etc..."
+                maxLength={500}
+                showCount
+              />
+            </Form.Item>
 
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-5 mt-6">
-                <div className="flex items-start gap-3">
-                  <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex-shrink-0">
-                    <CheckOutlined className="text-white text-xl" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-green-900 text-lg mb-2">Hazırsınız!</div>
-                    <p className="text-sm text-green-800 m-0">
-                      Tüm gerekli bilgiler toplandı. "{isEditMode ? 'Güncelle' : 'Oluştur'}" butonuna tıklayarak
-                      müşteri kaydını {isEditMode ? 'güncelleyebilirsiniz' : 'oluşturabilirsiniz'}.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Alert
+              message="Ready to Submit"
+              description={`All required information has been collected. Click "${isEditMode ? 'Update' : 'Create'}" to ${isEditMode ? 'update the customer record' : 'create the customer account'}.`}
+              type="success"
+              showIcon
+              className="mt-6"
+            />
           </motion.div>
         )}
       </Form>
 
-      {/* Footer Buttons with Gradient */}
+      {/* Footer Buttons */}
       <div className="mt-6 flex justify-between items-center pt-6 border-t border-gray-200">
         <Button
           size="large"
           onClick={handleCancel}
-          className="rounded-lg px-6 hover:bg-gray-100"
         >
-          İptal
+          Cancel
         </Button>
 
-        <Space size="middle">
+        <Space>
           {currentStep > 0 && (
             <Button
               size="large"
               icon={<ArrowLeftOutlined />}
               onClick={handlePrev}
-              className="rounded-lg px-6 hover:bg-gray-100"
             >
-              Geri
+              Back
             </Button>
           )}
 
@@ -818,9 +743,8 @@ export default function CustomerModal({
               icon={<ArrowRightOutlined />}
               onClick={handleNext}
               iconPosition="end"
-              className="rounded-lg px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-md"
             >
-              İleri
+              Next
             </Button>
           )}
 
@@ -832,9 +756,8 @@ export default function CustomerModal({
               onClick={handleSubmit}
               loading={createCustomer.isPending || updateCustomer.isPending}
               iconPosition="end"
-              className="rounded-lg px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 shadow-md"
             >
-              {isEditMode ? 'Güncelle' : 'Oluştur'}
+              {isEditMode ? 'Update' : 'Create'}
             </Button>
           )}
         </Space>
