@@ -32,6 +32,7 @@ import {
 } from '@ant-design/icons';
 import type { Deal } from '@/lib/api/services/crm.service';
 import { useDeals, useCreateDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/useCRM';
+import { DealsStats } from '@/components/crm/deals/DealsStats';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -302,45 +303,15 @@ export default function DealsPage() {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Açık Fırsatlar" value={stats.total} prefix={<DollarOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Değer"
-              value={stats.totalAmount}
-              prefix="₺"
-              precision={2}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Kazanılan"
-              value={stats.won}
-              prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Kazanılan Değer"
-              value={stats.wonAmount}
-              prefix="₺"
-              precision={2}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-6">
+        <DealsStats
+          totalDeals={stats.total}
+          totalAmount={stats.totalAmount}
+          wonDeals={stats.won}
+          wonAmount={stats.wonAmount}
+          loading={isLoading}
+        />
+      </div>
 
       <Row gutter={[16, 16]} className="mb-6">
         <Col flex="auto">
