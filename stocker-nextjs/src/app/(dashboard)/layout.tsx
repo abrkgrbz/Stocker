@@ -166,6 +166,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <Menu
           mode="inline"
           defaultSelectedKeys={['/dashboard']}
+          defaultOpenKeys={['crm']}
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
         />
