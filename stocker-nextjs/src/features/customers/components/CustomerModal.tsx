@@ -123,13 +123,13 @@ export default function CustomerModal({
 
         // Success alert
         Modal.success({
-          title: 'Success',
+          title: 'Başarılı',
           content: (
             <div>
-              <p><strong>{values.companyName}</strong> has been updated successfully.</p>
+              <p><strong>{values.companyName}</strong> başarıyla güncellendi.</p>
             </div>
           ),
-          okText: 'OK',
+          okText: 'Tamam',
         });
       } else {
         console.log('📤 Calling createCustomer with:', values);
@@ -138,13 +138,13 @@ export default function CustomerModal({
 
         // Success alert
         Modal.success({
-          title: 'Customer Created',
+          title: 'Müşteri Oluşturuldu',
           content: (
             <div>
-              <p><strong>{values.companyName}</strong> has been added to the system.</p>
+              <p><strong>{values.companyName}</strong> sisteme eklendi.</p>
             </div>
           ),
-          okText: 'OK',
+          okText: 'Tamam',
         });
       }
 
@@ -161,13 +161,13 @@ export default function CustomerModal({
 
       // Check if it's a validation error (form fields not filled correctly)
       if (error.errorFields) {
-        message.error('Please fill in all required fields correctly');
+        message.error('Lütfen tüm gerekli alanları doğru şekilde doldurun');
         return;
       }
 
       // API error handling
-      let errorTitle = 'Operation Failed';
-      let errorMessage = 'An error occurred while saving the customer.';
+      let errorTitle = 'İşlem Başarısız';
+      let errorMessage = 'Müşteri kaydedilirken bir hata oluştu.';
       let errorDetails: string[] = [];
 
       // Extract error details from API response
@@ -176,23 +176,23 @@ export default function CustomerModal({
 
         // Conflict error (duplicate customer)
         if (apiError.type === 'Conflict' || apiError.code?.includes('Customer.')) {
-          errorTitle = 'Duplicate Entry';
+          errorTitle = 'Müşteri Zaten Mevcut';
 
           // Check which field caused the conflict
           if (apiError.code === 'Customer.Email') {
-            errorMessage = 'A customer with this email address already exists.';
-            errorDetails.push('Email: ' + form.getFieldValue('email'));
+            errorMessage = 'Bu e-posta adresi ile kayıtlı bir müşteri zaten mevcut.';
+            errorDetails.push('E-posta: ' + form.getFieldValue('email'));
           } else if (apiError.code === 'Customer.TaxId') {
-            errorMessage = 'A customer with this tax ID already exists.';
-            errorDetails.push('Tax ID: ' + form.getFieldValue('taxId'));
+            errorMessage = 'Bu vergi numarası ile kayıtlı bir müşteri zaten mevcut.';
+            errorDetails.push('Vergi No: ' + form.getFieldValue('taxId'));
           } else {
-            errorMessage = apiError.description || 'A customer with these details already exists.';
+            errorMessage = apiError.description || 'Bu bilgilerle kayıtlı bir müşteri zaten var.';
           }
         }
         // Backend validation error
         else if (apiError.type === 'Validation' || apiError.code === 'ValidationError') {
-          errorTitle = 'Validation Error';
-          errorMessage = apiError.description || apiError.message || 'The data entered is invalid.';
+          errorTitle = 'Geçersiz Veri';
+          errorMessage = apiError.description || apiError.message || 'Girilen veriler geçersiz.';
 
           // Extract field-specific errors if available
           if (apiError.errors) {
@@ -204,21 +204,21 @@ export default function CustomerModal({
         }
         // RabbitMQ or infrastructure errors
         else if (error.message?.includes('RabbitMQ') || error.message?.includes('Broker unreachable')) {
-          errorTitle = 'System Error';
-          errorMessage = 'Customer saved but notification failed. Please contact system administrator.';
+          errorTitle = 'Sistem Hatası';
+          errorMessage = 'Müşteri kaydedildi ancak bildirim gönderilemedi. Lütfen sistem yöneticisine bildirin.';
         }
         // Generic API error
         else {
           errorMessage = apiError.description || apiError.message || errorMessage;
           if (apiError.code) {
-            errorDetails.push(`Error Code: ${apiError.code}`);
+            errorDetails.push(`Hata Kodu: ${apiError.code}`);
           }
         }
       }
       // Network error
       else if (error.message === 'Network Error') {
-        errorTitle = 'Connection Error';
-        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+        errorTitle = 'Bağlantı Hatası';
+        errorMessage = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
       }
 
       // Show error modal with details
@@ -234,7 +234,7 @@ export default function CustomerModal({
             />
             {errorDetails.length > 0 && (
               <div style={{ marginTop: '12px' }}>
-                <strong>Details:</strong>
+                <strong>Detaylar:</strong>
                 <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
                   {errorDetails.map((detail, index) => (
                     <li key={index} style={{ color: '#ff4d4f' }}>{detail}</li>
@@ -243,11 +243,11 @@ export default function CustomerModal({
               </div>
             )}
             <div style={{ marginTop: '12px', fontSize: '12px', color: '#8c8c8c' }}>
-              If the problem persists, please contact system administrator.
+              Sorun devam ederse sistem yöneticisine başvurun.
             </div>
           </div>
         ),
-        okText: 'OK',
+        okText: 'Tamam',
         width: 500,
       });
     }
@@ -288,19 +288,19 @@ export default function CustomerModal({
 
   const steps = [
     {
-      title: 'Basic Information',
+      title: 'Temel Bilgiler',
       icon: <UserOutlined />,
     },
     {
-      title: 'Contact & Address',
+      title: 'İletişim & Adres',
       icon: <EnvironmentOutlined />,
     },
     {
-      title: 'Financial Details',
+      title: 'Mali Bilgiler',
       icon: <DollarOutlined />,
     },
     {
-      title: 'Notes & Complete',
+      title: 'Notlar & Tamamla',
       icon: <FileTextOutlined />,
     },
   ];
@@ -310,7 +310,7 @@ export default function CustomerModal({
       title={
         <div className="flex items-center gap-3 pb-4">
           <div className="text-lg font-semibold text-gray-800">
-            {isEditMode ? 'Edit Customer' : 'New Customer'}
+            {isEditMode ? 'Müşteri Düzenle' : 'Yeni Müşteri'}
           </div>
         </div>
       }
@@ -349,12 +349,12 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Customer Type</span>
+              <span className="text-sm font-medium text-gray-600">Müşteri Tipi</span>
             </Divider>
 
             <Form.Item
               name="customerType"
-              rules={[{ required: true, message: 'Please select customer type' }]}
+              rules={[{ required: true, message: 'Lütfen müşteri tipi seçiniz' }]}
             >
               <Radio.Group className="w-full">
                 <Row gutter={16}>
@@ -370,8 +370,8 @@ export default function CustomerModal({
                     >
                       <Radio value="Corporate" className="hidden" />
                       <BankOutlined className="text-3xl text-gray-600 mb-2" />
-                      <div className="font-medium text-gray-800">Corporate</div>
-                      <div className="text-xs text-gray-500 mt-1">Business entity</div>
+                      <div className="font-medium text-gray-800">Kurumsal</div>
+                      <div className="text-xs text-gray-500 mt-1">İşletme</div>
                     </Card>
                   </Col>
                   <Col span={12}>
@@ -386,8 +386,8 @@ export default function CustomerModal({
                     >
                       <Radio value="Individual" className="hidden" />
                       <UserOutlined className="text-3xl text-gray-600 mb-2" />
-                      <div className="font-medium text-gray-800">Individual</div>
-                      <div className="text-xs text-gray-500 mt-1">Personal account</div>
+                      <div className="font-medium text-gray-800">Bireysel</div>
+                      <div className="text-xs text-gray-500 mt-1">Şahıs</div>
                     </Card>
                   </Col>
                 </Row>
@@ -395,22 +395,22 @@ export default function CustomerModal({
             </Form.Item>
 
             <Divider orientation="left" className="!my-6">
-              <span className="text-sm font-medium text-gray-600">Basic Details</span>
+              <span className="text-sm font-medium text-gray-600">Temel Bilgiler</span>
             </Divider>
 
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">{customerType === 'Corporate' ? 'Company Name' : 'Full Name'}</span>}
+                  label={<span className="text-sm font-medium text-gray-700">{customerType === 'Corporate' ? 'Firma Adı' : 'Ad Soyad'}</span>}
                   name="companyName"
                   rules={[
-                    { required: true, message: `${customerType === 'Corporate' ? 'Company name' : 'Full name'} is required` },
-                    { min: 2, message: 'Must be at least 2 characters' },
+                    { required: true, message: `${customerType === 'Corporate' ? 'Firma adı' : 'Ad soyad'} gereklidir` },
+                    { min: 2, message: 'En az 2 karakter olmalıdır' },
                   ]}
                 >
                   <Input
                     size="large"
-                    placeholder={customerType === 'Corporate' ? 'e.g., ABC Technology Inc.' : 'e.g., John Smith'}
+                    placeholder={customerType === 'Corporate' ? 'Örn: ABC Teknoloji A.Ş.' : 'Örn: Ahmet Yılmaz'}
                     prefix={<BankOutlined className="text-gray-400" />}
                   />
                 </Form.Item>
@@ -418,15 +418,15 @@ export default function CustomerModal({
 
               <Col span={12}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">Contact Person</span>}
+                  label={<span className="text-sm font-medium text-gray-700">İrtibat Kişisi</span>}
                   name="contactPerson"
                   rules={[
-                    { max: 100, message: 'Maximum 100 characters' },
+                    { max: 100, message: 'En fazla 100 karakter olabilir' },
                   ]}
                 >
                   <Input
                     size="large"
-                    placeholder="e.g., Jane Doe"
+                    placeholder="Örn: Mehmet Demir"
                     prefix={<UserOutlined className="text-gray-400" />}
                   />
                 </Form.Item>
@@ -434,27 +434,27 @@ export default function CustomerModal({
             </Row>
 
             <Form.Item
-              label={<span className="text-sm font-medium text-gray-700">Status</span>}
+              label={<span className="text-sm font-medium text-gray-700">Durum</span>}
               name="status"
-              rules={[{ required: true, message: 'Please select status' }]}
+              rules={[{ required: true, message: 'Lütfen durum seçiniz' }]}
             >
               <Select size="large">
                 <Option value="Active">
                   <span className="inline-flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
-                    <span>Active</span>
+                    <span>Aktif</span>
                   </span>
                 </Option>
                 <Option value="Inactive">
                   <span className="inline-flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-gray-400"></span>
-                    <span>Inactive</span>
+                    <span>Pasif</span>
                   </span>
                 </Option>
                 <Option value="Potential">
                   <span className="inline-flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-yellow-500"></span>
-                    <span>Potential</span>
+                    <span>Potansiyel</span>
                   </span>
                 </Option>
               </Select>
@@ -471,22 +471,22 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Contact Information</span>
+              <span className="text-sm font-medium text-gray-600">İletişim Bilgileri</span>
             </Divider>
 
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">Email Address</span>}
+                  label={<span className="text-sm font-medium text-gray-700">E-posta Adresi</span>}
                   name="email"
                   rules={[
-                    { required: true, message: 'Email is required' },
-                    { type: 'email', message: 'Please enter a valid email address' },
+                    { required: true, message: 'E-posta gereklidir' },
+                    { type: 'email', message: 'Geçerli bir e-posta adresi girin' },
                   ]}
                 >
                   <Input
                     size="large"
-                    placeholder="contact@company.com"
+                    placeholder="ornek@firma.com"
                     prefix={<MailOutlined className="text-gray-400" />}
                   />
                 </Form.Item>
@@ -494,15 +494,15 @@ export default function CustomerModal({
 
               <Col span={12}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">Phone Number</span>}
+                  label={<span className="text-sm font-medium text-gray-700">Telefon Numarası</span>}
                   name="phone"
                   rules={[
-                    { pattern: /^[0-9+\s()-]+$/, message: 'Please enter a valid phone number' },
+                    { pattern: /^[0-9+\s()-]+$/, message: 'Geçerli bir telefon numarası girin' },
                   ]}
                 >
                   <Input
                     size="large"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="+90 (555) 123-4567"
                     prefix={<PhoneOutlined className="text-gray-400" />}
                   />
                 </Form.Item>
@@ -513,28 +513,28 @@ export default function CustomerModal({
               label={<span className="text-sm font-medium text-gray-700">Website</span>}
               name="website"
               rules={[
-                { type: 'url', message: 'Please enter a valid URL (must start with http:// or https://)' },
+                { type: 'url', message: 'Geçerli bir website adresi girin (http:// veya https:// ile başlamalı)' },
               ]}
             >
               <Input
                 size="large"
-                placeholder="https://www.company.com"
+                placeholder="https://www.firma.com"
                 prefix={<GlobalOutlined className="text-gray-400" />}
               />
             </Form.Item>
 
             <Divider orientation="left" className="!my-6">
-              <span className="text-sm font-medium text-gray-600">Address</span>
+              <span className="text-sm font-medium text-gray-600">Adres Bilgileri</span>
             </Divider>
 
             <Form.Item
-              label={<span className="text-sm font-medium text-gray-700">Street Address</span>}
+              label={<span className="text-sm font-medium text-gray-700">Adres</span>}
               name="address"
             >
               <TextArea
                 size="large"
                 rows={2}
-                placeholder="Street, District, Building No., etc."
+                placeholder="Sokak, Mahalle, Bina No, vb."
                 maxLength={200}
                 showCount
               />
@@ -543,16 +543,16 @@ export default function CustomerModal({
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">City</span>}
+                  label={<span className="text-sm font-medium text-gray-700">Şehir</span>}
                   name="city"
                 >
-                  <Input size="large" placeholder="Istanbul" />
+                  <Input size="large" placeholder="İstanbul" />
                 </Form.Item>
               </Col>
 
               <Col span={8}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">State/Region</span>}
+                  label={<span className="text-sm font-medium text-gray-700">İlçe/Bölge</span>}
                   name="state"
                 >
                   <Input size="large" placeholder="Kadıköy" />
@@ -561,10 +561,10 @@ export default function CustomerModal({
 
               <Col span={8}>
                 <Form.Item
-                  label={<span className="text-sm font-medium text-gray-700">Postal Code</span>}
+                  label={<span className="text-sm font-medium text-gray-700">Posta Kodu</span>}
                   name="postalCode"
                   rules={[
-                    { pattern: /^[0-9]{5}$/, message: 'Please enter a 5-digit postal code' },
+                    { pattern: /^[0-9]{5}$/, message: '5 haneli posta kodu girin' },
                   ]}
                 >
                   <Input size="large" placeholder="34000" />
@@ -573,15 +573,15 @@ export default function CustomerModal({
             </Row>
 
             <Form.Item
-              label={<span className="text-sm font-medium text-gray-700">Country</span>}
+              label={<span className="text-sm font-medium text-gray-700">Ülke</span>}
               name="country"
             >
               <Select size="large">
                 <Option value="Türkiye">Türkiye</Option>
-                <Option value="Germany">Germany</Option>
-                <Option value="United Kingdom">United Kingdom</Option>
-                <Option value="United States">United States</Option>
-                <Option value="France">France</Option>
+                <Option value="Germany">Almanya</Option>
+                <Option value="United Kingdom">İngiltere</Option>
+                <Option value="United States">Amerika</Option>
+                <Option value="France">Fransa</Option>
               </Select>
             </Form.Item>
           </motion.div>
@@ -596,7 +596,7 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Financial Information</span>
+              <span className="text-sm font-medium text-gray-600">Mali Bilgiler</span>
             </Divider>
 
             <Row gutter={16}>
@@ -604,15 +604,15 @@ export default function CustomerModal({
                 <Form.Item
                   label={
                     <Space>
-                      <span className="text-sm font-medium text-gray-700">Tax ID</span>
-                      <Tooltip title="10 or 11 digit tax identification number">
+                      <span className="text-sm font-medium text-gray-700">Vergi Numarası</span>
+                      <Tooltip title="10 veya 11 haneli vergi kimlik numarası">
                         <InfoCircleOutlined className="text-gray-400" />
                       </Tooltip>
                     </Space>
                   }
                   name="taxId"
                   rules={[
-                    { pattern: /^[0-9]{10,11}$/, message: 'Please enter a 10 or 11 digit tax ID' },
+                    { pattern: /^[0-9]{10,11}$/, message: '10 veya 11 haneli vergi numarası girin' },
                   ]}
                 >
                   <Input
@@ -627,15 +627,15 @@ export default function CustomerModal({
                 <Form.Item
                   label={
                     <Space>
-                      <span className="text-sm font-medium text-gray-700">Credit Limit</span>
-                      <Tooltip title="Maximum credit limit assigned to customer">
+                      <span className="text-sm font-medium text-gray-700">Kredi Limiti</span>
+                      <Tooltip title="Müşteriye tanımlanan maksimum alacak limiti">
                         <InfoCircleOutlined className="text-gray-400" />
                       </Tooltip>
                     </Space>
                   }
                   name="creditLimit"
                   rules={[
-                    { type: 'number', min: 0, message: 'Credit limit cannot be negative' },
+                    { type: 'number', min: 0, message: 'Kredi limiti negatif olamaz' },
                   ]}
                 >
                   <InputNumber
@@ -651,26 +651,26 @@ export default function CustomerModal({
             </Row>
 
             <Form.Item
-              label={<span className="text-sm font-medium text-gray-700">Payment Terms</span>}
+              label={<span className="text-sm font-medium text-gray-700">Ödeme Koşulları</span>}
               name="paymentTerms"
             >
-              <Select size="large" placeholder="Select payment terms">
-                <Option value="Immediate">Immediate Payment</Option>
-                <Option value="15 Days">Net 15 Days</Option>
-                <Option value="30 Days">Net 30 Days</Option>
-                <Option value="45 Days">Net 45 Days</Option>
-                <Option value="60 Days">Net 60 Days</Option>
-                <Option value="90 Days">Net 90 Days</Option>
+              <Select size="large" placeholder="Ödeme koşulu seçin">
+                <Option value="Immediate">Peşin Ödeme</Option>
+                <Option value="15 Days">15 Gün Vadeli</Option>
+                <Option value="30 Days">30 Gün Vadeli</Option>
+                <Option value="45 Days">45 Gün Vadeli</Option>
+                <Option value="60 Days">60 Gün Vadeli</Option>
+                <Option value="90 Days">90 Gün Vadeli</Option>
               </Select>
             </Form.Item>
 
             <Alert
-              message="Financial Information"
+              message="Mali Bilgiler Hakkında"
               description={
                 <ul className="text-sm text-gray-600 mt-2 ml-4 space-y-1 list-disc">
-                  <li>Tax ID will be used on customer invoices</li>
-                  <li>Credit limit determines the maximum debt amount</li>
-                  <li>Payment terms automatically set invoice due dates</li>
+                  <li>Vergi numarası müşteri faturalarında kullanılacaktır</li>
+                  <li>Kredi limiti, müşterinin maksimum borçlanma tutarını belirler</li>
+                  <li>Ödeme koşulları, fatura vadelerini otomatik olarak ayarlar</li>
                 </ul>
               }
               type="info"
@@ -689,25 +689,25 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Additional Notes</span>
+              <span className="text-sm font-medium text-gray-600">Ek Notlar</span>
             </Divider>
 
             <Form.Item
-              label={<span className="text-sm font-medium text-gray-700">Customer Notes</span>}
+              label={<span className="text-sm font-medium text-gray-700">Müşteri Notları</span>}
               name="notes"
             >
               <TextArea
                 size="large"
                 rows={8}
-                placeholder="Important notes about the customer, special conditions, preferences, etc..."
+                placeholder="Müşteri hakkında önemli notlar, özel durumlar, tercihler vb..."
                 maxLength={500}
                 showCount
               />
             </Form.Item>
 
             <Alert
-              message="Ready to Submit"
-              description={`All required information has been collected. Click "${isEditMode ? 'Update' : 'Create'}" to ${isEditMode ? 'update the customer record' : 'create the customer account'}.`}
+              message="Tamamlamaya Hazır"
+              description={`Tüm gerekli bilgiler toplandı. "${isEditMode ? 'Güncelle' : 'Oluştur'}" butonuna tıklayarak müşteri kaydını ${isEditMode ? 'güncelleyebilirsiniz' : 'oluşturabilirsiniz'}.`}
               type="success"
               showIcon
               className="mt-6"
@@ -722,7 +722,7 @@ export default function CustomerModal({
           size="large"
           onClick={handleCancel}
         >
-          Cancel
+          İptal
         </Button>
 
         <Space>
@@ -732,7 +732,7 @@ export default function CustomerModal({
               icon={<ArrowLeftOutlined />}
               onClick={handlePrev}
             >
-              Back
+              Geri
             </Button>
           )}
 
@@ -744,7 +744,7 @@ export default function CustomerModal({
               onClick={handleNext}
               iconPosition="end"
             >
-              Next
+              İleri
             </Button>
           )}
 
@@ -757,7 +757,7 @@ export default function CustomerModal({
               loading={createCustomer.isPending || updateCustomer.isPending}
               iconPosition="end"
             >
-              {isEditMode ? 'Update' : 'Create'}
+              {isEditMode ? 'Güncelle' : 'Oluştur'}
             </Button>
           )}
         </Space>
