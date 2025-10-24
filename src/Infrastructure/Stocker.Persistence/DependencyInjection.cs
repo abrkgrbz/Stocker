@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
+using Stocker.Persistence.Monitoring;
 using Stocker.Persistence.Repositories;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Interfaces;
@@ -39,6 +40,9 @@ public static class DependencyInjection
 
         // Register migration service
         services.AddScoped<IMigrationService, Migrations.MigrationService>();
+
+        // Register system monitoring service
+        services.AddScoped<ISystemMonitoringService, SystemMonitoringService>();
 
         // Note: MigrationService is not registered as HostedService
         // Migrations should be handled explicitly or through a separate hosted service
