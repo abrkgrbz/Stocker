@@ -42,6 +42,7 @@ import {
   useDeleteActivity,
   useCompleteActivity,
 } from '@/hooks/useCRM';
+import { ActivitiesStats } from '@/components/crm/activities/ActivitiesStats';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
@@ -375,43 +376,15 @@ export default function ActivitiesPage() {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Zamanlanmış" value={stats.total} prefix={<ClockCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Bugün"
-              value={stats.today}
-              valueStyle={{ color: '#1890ff' }}
-              prefix={<CalendarOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Tamamlanan"
-              value={stats.completed}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Gecikmiş"
-              value={stats.overdue}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<ClockCircleOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-6">
+        <ActivitiesStats
+          scheduled={stats.total}
+          today={stats.today}
+          completed={stats.completed}
+          overdue={stats.overdue}
+          loading={isLoading}
+        />
+      </div>
 
       {viewMode === 'list' && (
         <Row gutter={[16, 16]} className="mb-6">
