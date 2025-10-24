@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic, Avatar, Dropdown } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -12,11 +12,13 @@ import {
   DollarOutlined,
   LineChartOutlined,
   ReloadOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline } from '@/hooks/useCRM';
 import { PipelineModal } from '@/components/crm/pipelines/PipelineModal';
+import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
 
 const { Title } = Typography;
 
@@ -94,13 +96,24 @@ export default function PipelinesPage() {
 
   const columns: ColumnsType<Pipeline> = [
     {
-      title: 'Pipeline Adı',
+      title: 'Pipeline',
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
-        <div>
-          <div className="font-semibold">{text}</div>
-          {record.description && <div className="text-xs text-gray-500">{record.description}</div>}
+        <div className="flex items-center gap-3">
+          <Avatar
+            size={40}
+            className="bg-gradient-to-br from-blue-500 to-blue-600 flex-shrink-0"
+            icon={<FunnelPlotOutlined />}
+          >
+            {text.charAt(0)}
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-900 truncate">{text}</div>
+            {record.description && (
+              <div className="text-xs text-gray-500 truncate">{record.description}</div>
+            )}
+          </div>
         </div>
       ),
     },
@@ -154,31 +167,40 @@ export default function PipelinesPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 200,
+      width: 80,
+      fixed: 'right' as const,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleToggleActive(record)}
-            loading={activatePipeline.isPending || deactivatePipeline.isPending}
-          >
-            {record.isActive ? 'Pasifleştir' : 'Aktifleştir'}
-          </Button>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            Düzenle
-          </Button>
-          <Button
-            type="link"
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-            loading={deletePipeline.isPending}
-          >
-            Sil
-          </Button>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'toggle',
+                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
+                icon: record.isActive ? <CloseCircleOutlined /> : <CheckCircleOutlined />,
+                onClick: () => handleToggleActive(record),
+                disabled: activatePipeline.isPending || deactivatePipeline.isPending,
+              },
+              {
+                key: 'edit',
+                label: 'Düzenle',
+                icon: <EditOutlined />,
+                onClick: () => handleEdit(record),
+              },
+              { type: 'divider' as const },
+              {
+                key: 'delete',
+                label: 'Sil',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => handleDelete(record.id),
+                disabled: deletePipeline.isPending,
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ];
@@ -214,50 +236,9 @@ export default function PipelinesPage() {
       </Row>
 
       {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Pipeline"
-              value={stats.total}
-              prefix={<FunnelPlotOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Aktif Pipeline"
-              value={stats.active}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Fırsat"
-              value={stats.totalDeals}
-              prefix={<LineChartOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Değer"
-              value={stats.totalValue}
-              prefix={<DollarOutlined />}
-              suffix="₺"
-              precision={0}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-6">
+        <PipelinesStats pipelines={pipelines} loading={isLoading} />
+      </div>
 
       {/* Pipelines Table */}
       <Card>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic, Progress } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Progress, Avatar, Dropdown } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -12,8 +12,9 @@ import {
   MailOutlined,
   DollarOutlined,
   UserAddOutlined,
-  PercentageOutlined,
   ReloadOutlined,
+  TrophyOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -24,6 +25,7 @@ import {
   useCompleteCampaign,
   useAbortCampaign,
 } from '@/hooks/useCRM';
+import { CampaignsStats } from '@/components/crm/campaigns/CampaignsStats';
 
 const { Title } = Typography;
 
@@ -100,15 +102,32 @@ export default function CampaignsPage() {
 
   const columns: ColumnsType<Campaign> = [
     {
-      title: 'Kampanya Adı',
+      title: 'Kampanya',
       dataIndex: 'name',
       key: 'name',
-      render: (text, record) => (
-        <div>
-          <div className="font-semibold">{text}</div>
-          {record.description && <div className="text-xs text-gray-500">{record.description}</div>}
-        </div>
-      ),
+      render: (text, record) => {
+        const typeConfig = campaignTypeLabels[record.type] || { icon: <TrophyOutlined />, color: 'blue' };
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar
+              size={40}
+              className="bg-gradient-to-br flex-shrink-0"
+              style={{
+                background: `linear-gradient(135deg, var(--ant-${typeConfig.color}-6), var(--ant-${typeConfig.color}-5))`,
+              }}
+              icon={typeConfig.icon}
+            >
+              {text.charAt(0)}
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-gray-900 truncate">{text}</div>
+              {record.description && (
+                <div className="text-xs text-gray-500 truncate">{record.description}</div>
+              )}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'Tip',
@@ -191,61 +210,80 @@ export default function CampaignsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 200,
-      render: (_, record) => (
-        <Space size="small" direction="vertical">
-          <Space size="small">
-            {record.status === 'Planned' && (
-              <Button
-                type="link"
-                size="small"
-                icon={<PlayCircleOutlined />}
-                onClick={() => handleStart(record.id)}
-                loading={startCampaign.isPending}
-              >
-                Başlat
-              </Button>
-            )}
-            {record.status === 'InProgress' && (
-              <Button
-                type="link"
-                size="small"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleComplete(record.id)}
-                loading={completeCampaign.isPending}
-              >
-                Tamamla
-              </Button>
-            )}
-            <Button type="link" size="small" icon={<EditOutlined />}>
-              Düzenle
-            </Button>
-          </Space>
-          <Space size="small">
-            {(record.status === 'Planned' || record.status === 'InProgress') && (
-              <Button
-                type="link"
-                danger
-                size="small"
-                onClick={() => handleAbort(record.id)}
-                loading={abortCampaign.isPending}
-              >
-                İptal Et
-              </Button>
-            )}
-            <Button
-              type="link"
-              danger
-              size="small"
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.id)}
-              loading={deleteCampaign.isPending}
-            >
-              Sil
-            </Button>
-          </Space>
-        </Space>
-      ),
+      width: 80,
+      fixed: 'right' as const,
+      render: (_, record) => {
+        const menuItems = [];
+
+        // Start action
+        if (record.status === 'Planned') {
+          menuItems.push({
+            key: 'start',
+            label: 'Başlat',
+            icon: <PlayCircleOutlined />,
+            onClick: () => handleStart(record.id),
+            disabled: startCampaign.isPending,
+          });
+        }
+
+        // Complete action
+        if (record.status === 'InProgress') {
+          menuItems.push({
+            key: 'complete',
+            label: 'Tamamla',
+            icon: <CheckCircleOutlined />,
+            onClick: () => handleComplete(record.id),
+            disabled: completeCampaign.isPending,
+          });
+        }
+
+        // Edit action
+        menuItems.push({
+          key: 'edit',
+          label: 'Düzenle',
+          icon: <EditOutlined />,
+          onClick: () => {
+            // TODO: Implement edit
+          },
+        });
+
+        // Separator
+        if (record.status === 'Planned' || record.status === 'InProgress') {
+          menuItems.push({ type: 'divider' as const });
+        }
+
+        // Abort action
+        if (record.status === 'Planned' || record.status === 'InProgress') {
+          menuItems.push({
+            key: 'abort',
+            label: 'İptal Et',
+            icon: <CloseCircleOutlined />,
+            danger: true,
+            onClick: () => handleAbort(record.id),
+            disabled: abortCampaign.isPending,
+          });
+        }
+
+        // Delete action
+        menuItems.push({ type: 'divider' as const });
+        menuItems.push({
+          key: 'delete',
+          label: 'Sil',
+          icon: <DeleteOutlined />,
+          danger: true,
+          onClick: () => handleDelete(record.id),
+          disabled: deleteCampaign.isPending,
+        });
+
+        return (
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={['click']}
+          >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -281,50 +319,9 @@ export default function CampaignsPage() {
       </Row>
 
       {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Kampanya"
-              value={stats.total}
-              prefix={<MailOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Aktif Kampanya"
-              value={stats.active}
-              prefix={<PlayCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Lead"
-              value={stats.totalLeads}
-              prefix={<UserAddOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Ortalama ROI"
-              value={stats.avgROI}
-              prefix={<PercentageOutlined />}
-              suffix="%"
-              precision={1}
-              valueStyle={{ color: stats.avgROI > 0 ? '#52c41a' : '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-6">
+        <CampaignsStats campaigns={campaigns} loading={isLoading} />
+      </div>
 
       {/* Campaigns Table */}
       <Card>

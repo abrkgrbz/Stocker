@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -11,10 +11,13 @@ import {
   TeamOutlined,
   UserOutlined,
   ReloadOutlined,
+  ApartmentOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { useCustomerSegments, useDeleteCustomerSegment } from '@/hooks/useCRM';
+import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
 
 const { Title } = Typography;
 
@@ -62,19 +65,27 @@ export default function CustomerSegmentsPage() {
 
   const columns: ColumnsType<CustomerSegment> = [
     {
-      title: 'Segment Adı',
+      title: 'Segment',
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
-        <div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: record.color || '#1890ff' }}
-            />
-            <span className="font-semibold">{text}</span>
+        <div className="flex items-center gap-3">
+          <Avatar
+            size={40}
+            className="flex-shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${record.color || '#1890ff'}, ${record.color || '#1890ff'}dd)`,
+            }}
+            icon={<ApartmentOutlined />}
+          >
+            {text.charAt(0)}
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-900 truncate">{text}</div>
+            {record.description && (
+              <div className="text-xs text-gray-500 truncate">{record.description}</div>
+            )}
           </div>
-          {record.description && <div className="text-xs text-gray-500 mt-1">{record.description}</div>}
         </div>
       ),
     },
@@ -127,23 +138,35 @@ export default function CustomerSegmentsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 150,
+      width: 80,
+      fixed: 'right' as const,
       render: (_, record) => (
-        <Space size="small">
-          <Button type="link" size="small" icon={<EditOutlined />}>
-            Düzenle
-          </Button>
-          <Button
-            type="link"
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-            loading={deleteSegment.isPending}
-          >
-            Sil
-          </Button>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                label: 'Düzenle',
+                icon: <EditOutlined />,
+                onClick: () => {
+                  // TODO: Implement edit
+                },
+              },
+              { type: 'divider' as const },
+              {
+                key: 'delete',
+                label: 'Sil',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => handleDelete(record.id),
+                disabled: deleteSegment.isPending,
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ];
@@ -179,47 +202,9 @@ export default function CustomerSegmentsPage() {
       </Row>
 
       {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Segment"
-              value={stats.total}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Aktif Segment"
-              value={stats.active}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Üye"
-              value={stats.totalMembers}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Dinamik Segment"
-              value={stats.dynamic}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="mb-6">
+        <SegmentsStats segments={segments} loading={isLoading} />
+      </div>
 
       {/* Segments Table */}
       <Card>
