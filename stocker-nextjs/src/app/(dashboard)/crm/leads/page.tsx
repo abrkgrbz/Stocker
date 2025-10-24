@@ -34,12 +34,16 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Lead } from '@/lib/api/services/crm.service';
+import {
+  useLeads,
+  useCreateLead,
+  useUpdateLead,
+  useDeleteLead,
+  useConvertLead,
+} from '@/hooks/useCRM';
 
 const { Title } = Typography;
 const { TextArea } = Input;
-
-// Mock data - replace with actual API calls
-const mockLeads: Lead[] = [];
 
 // Status colors
 const statusColors: Record<Lead['status'], string> = {
@@ -67,10 +71,22 @@ export default function LeadsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
   const [form] = Form.useForm();
   const [convertForm] = Form.useForm();
+
+  // API Hooks
+  const { data, isLoading, refetch } = useLeads({
+    pageNumber: currentPage,
+    pageSize,
+    search: debouncedSearch || undefined,
+  });
+  const createLead = useCreateLead();
+  const updateLead = useUpdateLead();
+  const deleteLead = useDeleteLead();
+  const convertLead = useConvertLead();
+
+  const leads = data?.items || [];
+  const totalCount = data?.totalCount || 0;
 
   // Debounce search input
   useEffect(() => {
@@ -110,8 +126,7 @@ export default function LeadsPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: API call to delete lead
-          setLeads(leads.filter((l) => l.id !== id));
+          await deleteLead.mutateAsync(id);
           message.success('Potansiyel müşteri silindi');
         } catch (error) {
           message.error('Silme işlemi başarısız');
@@ -132,47 +147,34 @@ export default function LeadsPage() {
   };
 
   const handleSubmit = async (values: any) => {
-    setLoading(true);
     try {
       if (selectedLead) {
-        // TODO: API call to update lead
-        setLeads(leads.map((l) => (l.id === selectedLead.id ? { ...l, ...values, updatedAt: new Date().toISOString() } : l)));
+        await updateLead.mutateAsync({ id: selectedLead.id, data: values });
         message.success('Potansiyel müşteri güncellendi');
       } else {
-        // TODO: API call to create lead
-        const newLead: Lead = {
-          id: Date.now(),
-          ...values,
-          score: values.score || 50,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setLeads([...leads, newLead]);
+        await createLead.mutateAsync(values);
         message.success('Potansiyel müşteri oluşturuldu');
       }
       setModalOpen(false);
       form.resetFields();
-    } catch (error) {
-      message.error('İşlem başarısız');
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      message.error(error?.message || 'İşlem başarısız');
     }
   };
 
   const handleConvertSubmit = async (values: any) => {
-    setLoading(true);
+    if (!selectedLead) return;
+
     try {
-      // TODO: API call to convert lead to customer
-      if (selectedLead) {
-        setLeads(leads.map((l) => (l.id === selectedLead.id ? { ...l, status: 'Converted' as const } : l)));
-      }
+      await convertLead.mutateAsync({
+        leadId: selectedLead.id,
+        customerData: values,
+      });
       message.success('Potansiyel müşteri, müşteriye dönüştürüldü');
       setConvertModalOpen(false);
       convertForm.resetFields();
-    } catch (error) {
-      message.error('Dönüştürme işlemi başarısız');
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      message.error(error?.message || 'Dönüştürme işlemi başarısız');
     }
   };
 
@@ -291,17 +293,8 @@ export default function LeadsPage() {
     },
   ];
 
-  // Filter leads based on search
-  const filteredLeads = leads.filter((lead) => {
-    const searchLower = debouncedSearch.toLowerCase();
-    return (
-      lead.firstName.toLowerCase().includes(searchLower) ||
-      lead.lastName.toLowerCase().includes(searchLower) ||
-      lead.email.toLowerCase().includes(searchLower) ||
-      lead.company?.toLowerCase().includes(searchLower) ||
-      ''
-    );
-  });
+  // Note: Filtering is now handled by the API via the search parameter
+  const filteredLeads = leads;
 
   return (
     <div className="p-6">
@@ -312,7 +305,7 @@ export default function LeadsPage() {
               Potansiyel Müşteriler
             </Title>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => message.info('Yenileniyor...')}>
+              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
@@ -370,7 +363,7 @@ export default function LeadsPage() {
             pagination={{
               current: currentPage,
               pageSize,
-              total: filteredLeads.length,
+              total: totalCount,
               showSizeChanger: true,
               showTotal: (total) => `Toplam ${total} potansiyel müşteri`,
               onChange: (page, size) => {
@@ -378,7 +371,7 @@ export default function LeadsPage() {
                 setPageSize(size);
               },
             }}
-            loading={loading}
+            loading={isLoading || createLead.isPending || updateLead.isPending || deleteLead.isPending}
           />
         </Space>
       </Card>
@@ -392,7 +385,7 @@ export default function LeadsPage() {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        confirmLoading={loading}
+        confirmLoading={createLead.isPending || updateLead.isPending}
         width={600}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -497,7 +490,7 @@ export default function LeadsPage() {
           convertForm.resetFields();
         }}
         onOk={() => convertForm.submit()}
-        confirmLoading={loading}
+        confirmLoading={convertLead.isPending}
         width={600}
       >
         <Form form={convertForm} layout="vertical" onFinish={handleConvertSubmit}>
