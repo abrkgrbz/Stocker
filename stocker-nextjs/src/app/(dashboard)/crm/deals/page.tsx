@@ -31,6 +31,7 @@ import {
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import type { Deal } from '@/lib/api/services/crm.service';
+import { useDeals, useCreateDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -45,9 +46,6 @@ const stages = [
   { id: 5, name: 'Kapalı', color: '#722ed1' },
 ];
 
-// Mock data
-const mockDeals: Deal[] = [];
-
 // Status colors
 const statusColors: Record<Deal['status'], string> = {
   Open: 'blue',
@@ -60,9 +58,15 @@ export default function DealsPage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [form] = Form.useForm();
+
+  // API Hooks
+  const { data, isLoading, refetch } = useDeals({});
+  const createDeal = useCreateDeal();
+  const updateDeal = useUpdateDeal();
+  const deleteDeal = useDeleteDeal();
+
+  const deals = data?.items || [];
 
   // Calculate statistics
   const stats = {
@@ -96,8 +100,7 @@ export default function DealsPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: API call to delete deal
-          setDeals(deals.filter((d) => d.id !== id));
+          await deleteDeal.mutateAsync(id);
           message.success('Fırsat silindi');
         } catch (error) {
           message.error('Silme işlemi başarısız');
@@ -107,7 +110,6 @@ export default function DealsPage() {
   };
 
   const handleSubmit = async (values: any) => {
-    setLoading(true);
     try {
       const dealData = {
         ...values,
@@ -115,38 +117,26 @@ export default function DealsPage() {
       };
 
       if (selectedDeal) {
-        // TODO: API call to update deal
-        setDeals(
-          deals.map((d) =>
-            d.id === selectedDeal.id ? { ...d, ...dealData, updatedAt: new Date().toISOString() } : d
-          )
-        );
+        await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
         message.success('Fırsat güncellendi');
       } else {
-        // TODO: API call to create deal
-        const newDeal: Deal = {
-          id: Date.now(),
-          ...dealData,
-          pipelineId: 1,
-          actualCloseDate: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setDeals([...deals, newDeal]);
+        await createDeal.mutateAsync({ ...dealData, pipelineId: 1, actualCloseDate: null });
         message.success('Fırsat oluşturuldu');
       }
       setModalOpen(false);
       form.resetFields();
-    } catch (error) {
-      message.error('İşlem başarısız');
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      message.error(error?.message || 'İşlem başarısız');
     }
   };
 
-  const handleDragEnd = (dealId: number, newStageId: number) => {
-    setDeals(deals.map((d) => (d.id === dealId ? { ...d, stageId: newStageId } : d)));
-    message.success('Fırsat aşaması güncellendi');
+  const handleDragEnd = async (dealId: number, newStageId: number) => {
+    try {
+      await updateDeal.mutateAsync({ id: dealId, data: { stageId: newStageId } });
+      message.success('Fırsat aşaması güncellendi');
+    } catch (error) {
+      message.error('Güncelleme başarısız');
+    }
   };
 
   // Filter deals based on search
@@ -285,7 +275,7 @@ export default function DealsPage() {
               Fırsatlar
             </Title>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => message.info('Yenileniyor...')}>
+              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
               <Button.Group>
@@ -376,7 +366,7 @@ export default function DealsPage() {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        confirmLoading={loading}
+        confirmLoading={createDeal.isPending || updateDeal.isPending}
         width={700}
         footer={[
           <Button key="cancel" onClick={() => setModalOpen(false)}>
@@ -387,7 +377,7 @@ export default function DealsPage() {
               Sil
             </Button>
           ),
-          <Button key="submit" type="primary" loading={loading} onClick={() => form.submit()}>
+          <Button key="submit" type="primary" loading={createDeal.isPending || updateDeal.isPending} onClick={() => form.submit()}>
             {selectedDeal ? 'Güncelle' : 'Oluştur'}
           </Button>,
         ]}
