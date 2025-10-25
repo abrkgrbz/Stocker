@@ -315,14 +315,6 @@ export default function CampaignsPage() {
     },
   ];
 
-  // Calculate statistics
-  const stats = {
-    total: campaigns.length,
-    active: campaigns.filter((c) => c.status === 'InProgress').length,
-    totalBudget: campaigns.reduce((sum, c) => sum + c.budgetedCost, 0),
-    totalLeads: campaigns.reduce((sum, c) => sum + c.actualLeads, 0),
-    avgROI: campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.roi, 0) / campaigns.length : 0,
-  };
 
   return (
     <div className="p-6">

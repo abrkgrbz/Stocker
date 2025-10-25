@@ -15,7 +15,7 @@ export function SegmentsStats({ segments, loading = false }: SegmentsStatsProps)
   const total = segments.length;
   const active = segments.filter((s) => s.isActive).length;
   const dynamic = segments.filter((s) => s.type === 'Dynamic').length;
-  const totalCustomers = segments.reduce((sum, s) => sum + (s.customerCount || 0), 0);
+  const totalCustomers = segments.reduce((sum, s) => sum + (s.memberCount || 0), 0);
 
   const stats = [
     {

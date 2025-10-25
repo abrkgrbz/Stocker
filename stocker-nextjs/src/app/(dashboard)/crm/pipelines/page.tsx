@@ -205,13 +205,6 @@ export default function PipelinesPage() {
     },
   ];
 
-  // Calculate statistics
-  const stats = {
-    total: pipelines.length,
-    active: pipelines.filter((p) => p.isActive).length,
-    totalDeals: pipelines.reduce((sum, p) => sum + (p.dealCount || 0), 0),
-    totalValue: pipelines.reduce((sum, p) => sum + (p.totalValue || 0), 0),
-  };
 
   return (
     <div className="p-6">

@@ -197,13 +197,6 @@ export default function CustomerSegmentsPage() {
     },
   ];
 
-  // Calculate statistics
-  const stats = {
-    total: segments.length,
-    active: segments.filter((s) => s.isActive).length,
-    totalMembers: segments.reduce((sum, s) => sum + (s.memberCount || 0), 0),
-    dynamic: segments.filter((s) => s.type === 'Dynamic').length,
-  };
 
   return (
     <div className="p-6">
