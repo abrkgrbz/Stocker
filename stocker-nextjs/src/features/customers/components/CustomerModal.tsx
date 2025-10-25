@@ -259,37 +259,34 @@ export default function CustomerModal({
         console.log('⚠️ Unhandled error type:', error);
       }
 
-      console.log('🔴 Showing Modal.error with:', { errorTitle, errorMessage, errorDetails });
+      console.log('🔴 Showing error message with:', { errorTitle, errorMessage, errorDetails });
 
-      // Show error modal with details
-      Modal.error({
-        title: errorTitle,
-        content: (
-          <div>
-            <Alert
-              message={errorMessage}
-              type="error"
-              showIcon
-              style={{ marginBottom: errorDetails.length > 0 ? '16px' : '0' }}
-            />
-            {errorDetails.length > 0 && (
-              <div style={{ marginTop: '12px' }}>
-                <strong>Detaylar:</strong>
-                <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                  {errorDetails.map((detail, index) => (
-                    <li key={index} style={{ color: '#ff4d4f' }}>{detail}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div style={{ marginTop: '12px', fontSize: '12px', color: '#8c8c8c' }}>
-              Sorun devam ederse sistem yöneticisine başvurun.
+      // Show error using message.error for better Next.js App Router compatibility
+      if (errorDetails.length > 0) {
+        // Show detailed error
+        const detailText = errorDetails.join(' • ');
+        message.error({
+          content: (
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>{errorTitle}</div>
+              <div>{errorMessage}</div>
+              <div style={{ fontSize: 12, marginTop: 4, color: '#ff4d4f' }}>{detailText}</div>
             </div>
-          </div>
-        ),
-        okText: 'Tamam',
-        width: 500,
-      });
+          ),
+          duration: 8,
+        });
+      } else {
+        // Show simple error
+        message.error({
+          content: (
+            <div>
+              <div style={{ fontWeight: 600 }}>{errorTitle}</div>
+              <div>{errorMessage}</div>
+            </div>
+          ),
+          duration: 6,
+        });
+      }
     }
   };
 
