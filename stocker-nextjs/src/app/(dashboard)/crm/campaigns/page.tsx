@@ -75,8 +75,10 @@ export default function CampaignsPage() {
       onOk: async () => {
         try {
           await deleteCampaign.mutateAsync(id);
-        } catch (error) {
-          message.error('Silme işlemi başarısız');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+          message.error(errorMessage);
         }
       },
     });
@@ -85,24 +87,30 @@ export default function CampaignsPage() {
   const handleStart = async (id: string) => {
     try {
       await startCampaign.mutateAsync(id);
-    } catch (error) {
-      message.error('Başlatma işlemi başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
+      message.error(errorMessage);
     }
   };
 
   const handleComplete = async (id: string) => {
     try {
       await completeCampaign.mutateAsync(id);
-    } catch (error) {
-      message.error('Tamamlama işlemi başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
+      message.error(errorMessage);
     }
   };
 
   const handleAbort = async (id: string) => {
     try {
       await abortCampaign.mutateAsync(id);
-    } catch (error) {
-      message.error('İptal işlemi başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
+      message.error(errorMessage);
     }
   };
 
@@ -115,8 +123,10 @@ export default function CampaignsPage() {
       }
       setIsModalOpen(false);
       setSelectedCampaign(null);
-    } catch (error) {
-      message.error('İşlem başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
+      message.error(errorMessage);
     }
   };
 

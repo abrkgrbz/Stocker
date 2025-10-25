@@ -51,8 +51,10 @@ export default function PipelinesPage() {
       onOk: async () => {
         try {
           await deletePipeline.mutateAsync(id);
-        } catch (error) {
-          message.error('Silme işlemi başarısız');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+          message.error(errorMessage);
         }
       },
     });
@@ -65,8 +67,10 @@ export default function PipelinesPage() {
       } else {
         await activatePipeline.mutateAsync(pipeline.id);
       }
-    } catch (error) {
-      message.error('İşlem başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      message.error(errorMessage);
     }
   };
 
@@ -79,8 +83,10 @@ export default function PipelinesPage() {
       }
       setIsModalOpen(false);
       setSelectedPipeline(null);
-    } catch (error) {
-      message.error('İşlem başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      message.error(errorMessage);
     }
   };
 

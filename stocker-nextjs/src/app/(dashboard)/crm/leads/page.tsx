@@ -93,7 +93,21 @@ export default function LeadsPage() {
       }
       setModalOpen(false);
     } catch (error: any) {
-      message.error(error?.message || 'İşlem başarısız');
+      // Extract API error details
+      const apiError = error.response?.data;
+      let errorMessage = 'İşlem başarısız';
+
+      if (apiError) {
+        // Use API error detail or first error message
+        errorMessage = apiError.detail ||
+                      apiError.errors?.[0]?.message ||
+                      apiError.title ||
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      message.error(errorMessage);
     }
   };
 
@@ -108,7 +122,20 @@ export default function LeadsPage() {
       message.success('Potansiyel müşteri, müşteriye dönüştürüldü');
       setConvertModalOpen(false);
     } catch (error: any) {
-      message.error(error?.message || 'Dönüştürme işlemi başarısız');
+      // Extract API error details
+      const apiError = error.response?.data;
+      let errorMessage = 'Dönüştürme işlemi başarısız';
+
+      if (apiError) {
+        errorMessage = apiError.detail ||
+                      apiError.errors?.[0]?.message ||
+                      apiError.title ||
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      message.error(errorMessage);
     }
   };
 

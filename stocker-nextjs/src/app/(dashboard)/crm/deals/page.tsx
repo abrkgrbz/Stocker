@@ -115,7 +115,20 @@ export default function DealsPage() {
       }
       setModalOpen(false);
     } catch (error: any) {
-      message.error(error?.message || 'İşlem başarısız');
+      // Extract API error details
+      const apiError = error.response?.data;
+      let errorMessage = 'İşlem başarısız';
+
+      if (apiError) {
+        errorMessage = apiError.detail ||
+                      apiError.errors?.[0]?.message ||
+                      apiError.title ||
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      message.error(errorMessage);
     }
   };
 
@@ -123,8 +136,21 @@ export default function DealsPage() {
     try {
       await updateDeal.mutateAsync({ id: dealId, data: { stageId: newStageId } });
       message.success('Fırsat aşaması güncellendi');
-    } catch (error) {
-      message.error('Güncelleme başarısız');
+    } catch (error: any) {
+      // Extract API error details
+      const apiError = error.response?.data;
+      let errorMessage = 'Güncelleme başarısız';
+
+      if (apiError) {
+        errorMessage = apiError.detail ||
+                      apiError.errors?.[0]?.message ||
+                      apiError.title ||
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      message.error(errorMessage);
     }
   };
 

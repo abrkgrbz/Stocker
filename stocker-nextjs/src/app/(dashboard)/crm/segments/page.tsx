@@ -60,8 +60,10 @@ export default function CustomerSegmentsPage() {
       onOk: async () => {
         try {
           await deleteSegment.mutateAsync(id);
-        } catch (error) {
-          message.error('Silme işlemi başarısız');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+          message.error(errorMessage);
         }
       },
     });
@@ -76,8 +78,10 @@ export default function CustomerSegmentsPage() {
       }
       setIsModalOpen(false);
       setSelectedSegment(null);
-    } catch (error) {
-      message.error('İşlem başarısız');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      message.error(errorMessage);
     }
   };
 
