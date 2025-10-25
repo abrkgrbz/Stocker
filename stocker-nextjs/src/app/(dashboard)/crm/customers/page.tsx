@@ -54,7 +54,7 @@ export default function CustomersPage() {
     setModalOpen(true);
   };
 
-  const handleView = (customerId: string) => {
+  const handleView = (customerId: number) => {
     window.location.href = `/crm/customers/${customerId}`;
   };
 

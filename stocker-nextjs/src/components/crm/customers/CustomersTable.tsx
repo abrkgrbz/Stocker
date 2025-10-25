@@ -26,7 +26,7 @@ interface CustomersTableProps {
   totalCount: number;
   onPageChange: (page: number, size: number) => void;
   onEdit: (customer: Customer) => void;
-  onView: (customerId: string) => void;
+  onView: (customerId: number) => void;
 }
 
 export function CustomersTable({
