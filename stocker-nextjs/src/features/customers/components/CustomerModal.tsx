@@ -186,7 +186,12 @@ export default function CustomerModal({
 
       // Check if it's a validation error (form fields not filled correctly)
       if (error.errorFields) {
-        message.error('Lütfen tüm gerekli alanları doğru şekilde doldurun');
+        console.log('📋 Validation errors:', error.errorFields);
+        // Show first field error
+        const firstError = error.errorFields[0];
+        const fieldLabel = firstError.name.join('.');
+        const fieldError = firstError.errors[0];
+        message.error(`${fieldLabel}: ${fieldError}`);
         return;
       }
 
@@ -244,6 +249,11 @@ export default function CustomerModal({
       else if (error.message === 'Network Error') {
         errorTitle = 'Bağlantı Hatası';
         errorMessage = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+      }
+      // Fallback for any other error
+      else if (error.message) {
+        errorMessage = error.message;
+        console.log('⚠️ Unhandled error type:', error);
       }
 
       // Show error modal with details
