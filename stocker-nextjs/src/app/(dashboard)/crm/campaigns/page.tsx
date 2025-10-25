@@ -24,8 +24,11 @@ import {
   useStartCampaign,
   useCompleteCampaign,
   useAbortCampaign,
+  useCreateCampaign,
+  useUpdateCampaign,
 } from '@/hooks/useCRM';
 import { CampaignsStats } from '@/components/crm/campaigns/CampaignsStats';
+import { CampaignModal } from '@/components/crm/campaigns/CampaignModal';
 
 const { Title } = Typography;
 
@@ -51,6 +54,7 @@ const campaignStatusLabels: Record<string, { label: string; color: string }> = {
 
 export default function CampaignsPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API Hooks
   const { data: campaigns = [], isLoading, refetch } = useCampaigns();
@@ -58,6 +62,8 @@ export default function CampaignsPage() {
   const startCampaign = useStartCampaign();
   const completeCampaign = useCompleteCampaign();
   const abortCampaign = useAbortCampaign();
+  const createCampaign = useCreateCampaign();
+  const updateCampaign = useUpdateCampaign();
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -98,6 +104,30 @@ export default function CampaignsPage() {
     } catch (error) {
       message.error('İptal işlemi başarısız');
     }
+  };
+
+  const handleCreateOrUpdate = async (values: any) => {
+    try {
+      if (selectedCampaign) {
+        await updateCampaign.mutateAsync({ id: selectedCampaign.id, ...values });
+      } else {
+        await createCampaign.mutateAsync(values);
+      }
+      setIsModalOpen(false);
+      setSelectedCampaign(null);
+    } catch (error) {
+      message.error('İşlem başarısız');
+    }
+  };
+
+  const handleEdit = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedCampaign(null);
+    setIsModalOpen(true);
   };
 
   const columns: ColumnsType<Campaign> = [
@@ -242,9 +272,7 @@ export default function CampaignsPage() {
           key: 'edit',
           label: 'Düzenle',
           icon: <EditOutlined />,
-          onClick: () => {
-            // TODO: Implement edit
-          },
+          onClick: () => handleEdit(record),
         });
 
         // Separator
@@ -310,7 +338,7 @@ export default function CampaignsPage() {
               <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
-              <Button type="primary" icon={<PlusOutlined />}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
                 Yeni Kampanya
               </Button>
             </Space>
@@ -338,6 +366,18 @@ export default function CampaignsPage() {
           scroll={{ x: 1400 }}
         />
       </Card>
+
+      {/* Campaign Modal */}
+      <CampaignModal
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setSelectedCampaign(null);
+        }}
+        onSubmit={handleCreateOrUpdate}
+        initialData={selectedCampaign}
+        loading={createCampaign.isPending || updateCampaign.isPending}
+      />
     </div>
   );
 }

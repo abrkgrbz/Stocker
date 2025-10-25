@@ -16,8 +16,9 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
-import { useCustomerSegments, useDeleteCustomerSegment } from '@/hooks/useCRM';
+import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment, useUpdateCustomerSegment } from '@/hooks/useCRM';
 import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
+import { CustomerSegmentModal } from '@/components/crm/segments/CustomerSegmentModal';
 
 const { Title } = Typography;
 
@@ -41,10 +42,13 @@ const segmentColors: Record<string, string> = {
 
 export default function CustomerSegmentsPage() {
   const [selectedSegment, setSelectedSegment] = useState<CustomerSegment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API Hooks
   const { data: segments = [], isLoading, refetch } = useCustomerSegments();
   const deleteSegment = useDeleteCustomerSegment();
+  const createSegment = useCreateCustomerSegment();
+  const updateSegment = useUpdateCustomerSegment();
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -61,6 +65,30 @@ export default function CustomerSegmentsPage() {
         }
       },
     });
+  };
+
+  const handleCreateOrUpdate = async (values: any) => {
+    try {
+      if (selectedSegment) {
+        await updateSegment.mutateAsync({ id: selectedSegment.id, ...values });
+      } else {
+        await createSegment.mutateAsync(values);
+      }
+      setIsModalOpen(false);
+      setSelectedSegment(null);
+    } catch (error) {
+      message.error('İşlem başarısız');
+    }
+  };
+
+  const handleEdit = (segment: CustomerSegment) => {
+    setSelectedSegment(segment);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedSegment(null);
+    setIsModalOpen(true);
   };
 
   const columns: ColumnsType<CustomerSegment> = [
@@ -148,9 +176,7 @@ export default function CustomerSegmentsPage() {
                 key: 'edit',
                 label: 'Düzenle',
                 icon: <EditOutlined />,
-                onClick: () => {
-                  // TODO: Implement edit
-                },
+                onClick: () => handleEdit(record),
               },
               { type: 'divider' as const },
               {
@@ -193,7 +219,7 @@ export default function CustomerSegmentsPage() {
               <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
                 Yenile
               </Button>
-              <Button type="primary" icon={<PlusOutlined />}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
                 Yeni Segment
               </Button>
             </Space>
@@ -220,6 +246,18 @@ export default function CustomerSegmentsPage() {
           }}
         />
       </Card>
+
+      {/* Segment Modal */}
+      <CustomerSegmentModal
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setSelectedSegment(null);
+        }}
+        onSubmit={handleCreateOrUpdate}
+        initialData={selectedSegment}
+        loading={createSegment.isPending || updateSegment.isPending}
+      />
     </div>
   );
 }
