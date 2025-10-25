@@ -33,6 +33,7 @@ import {
   CheckOutlined,
   BankOutlined,
   IdcardOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/useCRM';
@@ -345,25 +346,70 @@ export default function CustomerModal({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-3 pb-4">
-          <div className="text-lg font-semibold text-gray-800">
-            {isEditMode ? 'Müşteri Düzenle' : 'Yeni Müşteri'}
+        <div className="relative overflow-hidden -m-6 mb-0">
+          {/* Gradient Header Background */}
+          <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-8 pb-12">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/50 shadow-lg">
+                {isEditMode ? (
+                  <UserOutlined className="text-2xl text-white" />
+                ) : (
+                  <PlusOutlined className="text-2xl text-white" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  {isEditMode ? 'Müşteri Bilgilerini Düzenle' : 'Yeni Müşteri Ekle'}
+                </h2>
+                <p className="text-white/80 text-sm">
+                  {isEditMode
+                    ? 'Müşteri bilgilerini güncelleyin'
+                    : 'Adım adım müşteri bilgilerini girin'}
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Wave SVG Decoration */}
+          <svg
+            className="absolute bottom-0 left-0 w-full"
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            style={{ height: '40px' }}
+          >
+            <path
+              d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+              opacity=".25"
+              fill="#ffffff"
+            />
+            <path
+              d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
+              opacity=".5"
+              fill="#ffffff"
+            />
+            <path
+              d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
+              fill="#ffffff"
+            />
+          </svg>
         </div>
       }
       open={open}
       onCancel={handleCancel}
-      width={800}
-      destroyOnClose
+      width={850}
+      destroyOnHidden
       footer={null}
-      styles={{ body: { paddingTop: 24 } }}
+      styles={{ body: { paddingTop: 0 } }}
+      className="modern-customer-modal"
     >
-      {/* Progress Steps */}
-      <div className="mb-8">
+      {/* Progress Steps with Modern Design */}
+      <div className="mb-8 mt-6">
         <Steps
           current={currentStep}
           items={steps}
-          size="small"
+          size="default"
+          labelPlacement="vertical"
+          className="modern-steps"
         />
       </div>
 
@@ -386,7 +432,9 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Müşteri Tipi</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                ✨ Müşteri Tipi
+              </span>
             </Divider>
 
             <Form.Item
@@ -396,43 +444,61 @@ export default function CustomerModal({
               <Radio.Group className="w-full">
                 <Row gutter={16}>
                   <Col span={12}>
-                    <Card
-                      hoverable
-                      className={`text-center cursor-pointer transition-all ${
-                        customerType === 'Corporate'
-                          ? 'border-blue-500 shadow-md'
-                          : 'border-gray-200'
-                      }`}
-                      onClick={() => form.setFieldValue('customerType', 'Corporate')}
-                    >
-                      <Radio value="Corporate" className="hidden" />
-                      <BankOutlined className="text-3xl text-gray-600 mb-2" />
-                      <div className="font-medium text-gray-800">Kurumsal</div>
-                      <div className="text-xs text-gray-500 mt-1">İşletme</div>
-                    </Card>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Card
+                        hoverable
+                        className={`text-center cursor-pointer transition-all duration-300 ${
+                          customerType === 'Corporate'
+                            ? 'border-2 border-blue-500 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50'
+                            : 'border-2 border-gray-200 hover:border-blue-300'
+                        }`}
+                        onClick={() => form.setFieldValue('customerType', 'Corporate')}
+                      >
+                        <Radio value="Corporate" className="hidden" />
+                        <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                          customerType === 'Corporate'
+                            ? 'bg-gradient-to-br from-blue-500 to-purple-600'
+                            : 'bg-gray-100'
+                        }`}>
+                          <BankOutlined className={`text-3xl ${customerType === 'Corporate' ? 'text-white' : 'text-gray-600'}`} />
+                        </div>
+                        <div className="font-bold text-gray-800 text-lg">Kurumsal</div>
+                        <div className="text-xs text-gray-500 mt-1">Şirket & İşletme</div>
+                      </Card>
+                    </motion.div>
                   </Col>
                   <Col span={12}>
-                    <Card
-                      hoverable
-                      className={`text-center cursor-pointer transition-all ${
-                        customerType === 'Individual'
-                          ? 'border-blue-500 shadow-md'
-                          : 'border-gray-200'
-                      }`}
-                      onClick={() => form.setFieldValue('customerType', 'Individual')}
-                    >
-                      <Radio value="Individual" className="hidden" />
-                      <UserOutlined className="text-3xl text-gray-600 mb-2" />
-                      <div className="font-medium text-gray-800">Bireysel</div>
-                      <div className="text-xs text-gray-500 mt-1">Şahıs</div>
-                    </Card>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Card
+                        hoverable
+                        className={`text-center cursor-pointer transition-all duration-300 ${
+                          customerType === 'Individual'
+                            ? 'border-2 border-green-500 shadow-lg bg-gradient-to-br from-green-50 to-blue-50'
+                            : 'border-2 border-gray-200 hover:border-green-300'
+                        }`}
+                        onClick={() => form.setFieldValue('customerType', 'Individual')}
+                      >
+                        <Radio value="Individual" className="hidden" />
+                        <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                          customerType === 'Individual'
+                            ? 'bg-gradient-to-br from-green-500 to-blue-600'
+                            : 'bg-gray-100'
+                        }`}>
+                          <UserOutlined className={`text-3xl ${customerType === 'Individual' ? 'text-white' : 'text-gray-600'}`} />
+                        </div>
+                        <div className="font-bold text-gray-800 text-lg">Bireysel</div>
+                        <div className="text-xs text-gray-500 mt-1">Şahıs & Kişi</div>
+                      </Card>
+                    </motion.div>
                   </Col>
                 </Row>
               </Radio.Group>
             </Form.Item>
 
             <Divider orientation="left" className="!my-6">
-              <span className="text-sm font-medium text-gray-600">Temel Bilgiler</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                📝 Temel Bilgiler
+              </span>
             </Divider>
 
             <Row gutter={16}>
@@ -508,7 +574,9 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">İletişim Bilgileri</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                📧 İletişim Bilgileri
+              </span>
             </Divider>
 
             <Row gutter={16}>
@@ -561,7 +629,9 @@ export default function CustomerModal({
             </Form.Item>
 
             <Divider orientation="left" className="!my-6">
-              <span className="text-sm font-medium text-gray-600">Adres Bilgileri</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                🌍 Adres Bilgileri
+              </span>
             </Divider>
 
             <Form.Item
@@ -657,7 +727,9 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Mali Bilgiler</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                💰 Mali Bilgiler
+              </span>
             </Divider>
 
             <Row gutter={16}>
@@ -750,7 +822,9 @@ export default function CustomerModal({
             style={{ minHeight: '380px' }}
           >
             <Divider orientation="left" className="!mt-0 !mb-6">
-              <span className="text-sm font-medium text-gray-600">Ek Notlar</span>
+              <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                📄 Ek Notlar
+              </span>
             </Divider>
 
             <Form.Item
@@ -777,49 +851,71 @@ export default function CustomerModal({
         )}
       </Form>
 
-      {/* Footer Buttons */}
-      <div className="mt-6 flex justify-between items-center pt-6 border-t border-gray-200">
+      {/* Footer Buttons with Modern Design */}
+      <div className="mt-8 flex justify-between items-center pt-6 border-t-2 border-gradient-to-r from-blue-200 to-purple-200">
         <Button
           size="large"
           onClick={handleCancel}
+          className="hover:border-red-400 hover:text-red-500 transition-all duration-300"
         >
           İptal
         </Button>
 
-        <Space>
+        <Space size="middle">
           {currentStep > 0 && (
-            <Button
-              size="large"
-              icon={<ArrowLeftOutlined />}
-              onClick={handlePrev}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              Geri
-            </Button>
+              <Button
+                size="large"
+                icon={<ArrowLeftOutlined />}
+                onClick={handlePrev}
+                className="shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                Geri
+              </Button>
+            </motion.div>
           )}
 
           {currentStep < steps.length - 1 && (
-            <Button
-              type="primary"
-              size="large"
-              icon={<ArrowRightOutlined />}
-              onClick={handleNext}
-              iconPosition="end"
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              İleri
-            </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRightOutlined />}
+                onClick={handleNext}
+                iconPosition="end"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                İleri
+              </Button>
+            </motion.div>
           )}
 
           {currentStep === steps.length - 1 && (
-            <Button
-              type="primary"
-              size="large"
-              icon={<CheckOutlined />}
-              onClick={handleSubmit}
-              loading={createCustomer.isPending || updateCustomer.isPending}
-              iconPosition="end"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
             >
-              {isEditMode ? 'Güncelle' : 'Oluştur'}
-            </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<CheckOutlined />}
+                onClick={handleSubmit}
+                loading={createCustomer.isPending || updateCustomer.isPending}
+                iconPosition="end"
+                className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                {isEditMode ? '✓ Güncelle' : '✓ Oluştur'}
+              </Button>
+            </motion.div>
           )}
         </Space>
       </div>

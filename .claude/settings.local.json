@@ -63,7 +63,14 @@
       "Bash(scp:*)",
       "Bash(chmod:*)",
       "Bash(bash scripts/enable-crm-module.sh:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(head:*)",
+      "Bash(npm run dev:*)",
+      "Bash(grep:*)",
+      "Bash(dotnet run)",
+      "Bash(for dir in deals activities pipelines segments campaigns)",
+      "Bash(do echo \"=== $dir ===\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
