@@ -37,6 +37,7 @@ import {
 import { motion } from 'framer-motion';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
+import { getCityNames, getDistrictsByCity } from '@/lib/data/turkey-cities';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -58,9 +59,14 @@ export default function CustomerModal({
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [districts, setDistricts] = useState<string[]>([]);
 
   const isEditMode = !!customer;
   const customerType = Form.useWatch('customerType', form);
+
+  // Get city names for dropdown
+  const cityNames = getCityNames();
 
   // Initialize form with customer data when editing
   useEffect(() => {
@@ -83,6 +89,13 @@ export default function CustomerModal({
         paymentTerms: customer.paymentTerms || '',
         notes: customer.notes || '',
       });
+
+      // Load districts for existing city
+      if (customer.city) {
+        setSelectedCity(customer.city);
+        setDistricts(getDistrictsByCity(customer.city));
+      }
+
       setCurrentStep(0);
     } else if (open) {
       form.resetFields();
@@ -92,9 +105,21 @@ export default function CustomerModal({
         country: 'Türkiye',
         creditLimit: 0,
       });
+      setSelectedCity('');
+      setDistricts([]);
       setCurrentStep(0);
     }
   }, [open, customer, form]);
+
+  // Handle city selection change
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    const cityDistricts = getDistrictsByCity(city);
+    setDistricts(cityDistricts);
+
+    // Reset district when city changes
+    form.setFieldsValue({ state: undefined });
+  };
 
   const handleSubmit = async () => {
     console.log('🔵 handleSubmit called');
@@ -546,7 +571,19 @@ export default function CustomerModal({
                   label={<span className="text-sm font-medium text-gray-700">Şehir</span>}
                   name="city"
                 >
-                  <Input size="large" placeholder="İstanbul" />
+                  <Select
+                    size="large"
+                    placeholder="Şehir seçiniz"
+                    showSearch
+                    optionFilterProp="children"
+                    onChange={handleCityChange}
+                  >
+                    {cityNames.map((city) => (
+                      <Option key={city} value={city}>
+                        {city}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </Col>
 
@@ -555,7 +592,19 @@ export default function CustomerModal({
                   label={<span className="text-sm font-medium text-gray-700">İlçe/Bölge</span>}
                   name="state"
                 >
-                  <Input size="large" placeholder="Kadıköy" />
+                  <Select
+                    size="large"
+                    placeholder={selectedCity ? 'İlçe seçiniz' : 'Önce şehir seçiniz'}
+                    showSearch
+                    optionFilterProp="children"
+                    disabled={!selectedCity}
+                  >
+                    {districts.map((district) => (
+                      <Option key={district} value={district}>
+                        {district}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </Col>
 
@@ -567,7 +616,7 @@ export default function CustomerModal({
                     { pattern: /^[0-9]{5}$/, message: '5 haneli posta kodu girin' },
                   ]}
                 >
-                  <Input size="large" placeholder="34000" />
+                  <Input size="large" placeholder="34000" maxLength={10} />
                 </Form.Item>
               </Col>
             </Row>
