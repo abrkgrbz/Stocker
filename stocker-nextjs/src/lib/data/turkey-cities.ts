@@ -1,3 +1,5 @@
+'use client';
+
 // Türkiye Şehir ve İlçe Verileri
 
 export interface District {
