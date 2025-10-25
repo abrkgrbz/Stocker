@@ -184,6 +184,9 @@ export default function CustomerModal({
         data: error.response?.data,
       });
 
+      // DEBUG: Always show an alert to test
+      console.log('🔴 About to show error alert...');
+
       // Check if it's a validation error (form fields not filled correctly)
       if (error.errorFields) {
         console.log('📋 Validation errors:', error.errorFields);
@@ -255,6 +258,8 @@ export default function CustomerModal({
         errorMessage = error.message;
         console.log('⚠️ Unhandled error type:', error);
       }
+
+      console.log('🔴 Showing Modal.error with:', { errorTitle, errorMessage, errorDetails });
 
       // Show error modal with details
       Modal.error({
