@@ -10,6 +10,14 @@ import {
   UserOutlined,
   LogoutOutlined,
   TeamOutlined,
+  UserAddOutlined,
+  ContactsOutlined,
+  DollarOutlined,
+  RiseOutlined,
+  CalendarOutlined,
+  FunnelPlotOutlined,
+  GroupOutlined,
+  NotificationOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -69,34 +77,42 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       children: [
         {
           key: '/crm/customers',
+          icon: <ContactsOutlined />,
           label: 'Müşteriler',
         },
         {
           key: '/crm/leads',
+          icon: <UserAddOutlined />,
           label: 'Potansiyel Müşteriler',
         },
         {
           key: '/crm/deals',
+          icon: <DollarOutlined />,
           label: 'Anlaşmalar',
         },
         {
           key: '/crm/opportunities',
+          icon: <RiseOutlined />,
           label: 'Fırsatlar',
         },
         {
           key: '/crm/activities',
+          icon: <CalendarOutlined />,
           label: 'Aktiviteler',
         },
         {
           key: '/crm/pipelines',
+          icon: <FunnelPlotOutlined />,
           label: 'Satış Süreçleri',
         },
         {
           key: '/crm/segments',
+          icon: <GroupOutlined />,
           label: 'Müşteri Segmentleri',
         },
         {
           key: '/crm/campaigns',
+          icon: <NotificationOutlined />,
           label: 'Kampanyalar',
         },
       ],
