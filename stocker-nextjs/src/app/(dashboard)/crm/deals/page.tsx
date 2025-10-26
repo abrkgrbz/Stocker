@@ -177,16 +177,36 @@ export default function DealsPage() {
 
   const handleSubmit = async (values: any) => {
     try {
+      // Validation: CustomerId is required by backend
+      if (!values.customerId) {
+        message.error('Müşteri seçimi zorunludur');
+        return;
+      }
+
+      // Validation: ExpectedCloseDate is required and must be in future
+      if (!values.expectedCloseDate) {
+        message.error('Tahmini kapanış tarihi zorunludur');
+        return;
+      }
+
       const dealData = {
-        ...values,
-        expectedCloseDate: values.expectedCloseDate ? values.expectedCloseDate.toISOString() : null,
+        title: values.title,
+        description: values.description || undefined,
+        customerId: values.customerId,
+        amount: values.amount,
+        probability: values.probability || 50,
+        expectedCloseDate: values.expectedCloseDate.toISOString(),
+        status: values.status || 'Open',
+        priority: values.priority || 'Medium',
+        pipelineId: values.pipelineId || undefined,
+        currentStageId: values.stageId || undefined,
       };
 
       if (selectedDeal) {
         await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
         message.success('Fırsat güncellendi');
       } else {
-        await createDeal.mutateAsync({ ...dealData, pipelineId: 1, actualCloseDate: null });
+        await createDeal.mutateAsync(dealData);
         message.success('Fırsat oluşturuldu');
       }
       setModalOpen(false);

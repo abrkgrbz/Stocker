@@ -78,7 +78,7 @@ apiClient.interceptors.request.use(
     }
 
     // Debug logging for POST requests
-    if (config.method === 'post' && config.url?.includes('/opportunities')) {
+    if (config.method === 'post' && (config.url?.includes('/opportunities') || config.url?.includes('/deals'))) {
       console.log('📤 POST Request to:', config.url);
       console.log('📦 Request payload:', JSON.stringify(config.data, null, 2));
       console.log('📋 Payload keys:', Object.keys(config.data || {}));

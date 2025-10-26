@@ -118,7 +118,9 @@ export function DealModal({
       case 1:
         return ['amount', 'probability'];
       case 2:
-        return ['stageId', 'status'];
+        return ['stageId', 'status', 'expectedCloseDate'];
+      case 3:
+        return ['customerId'];
       default:
         return [];
     }
@@ -319,6 +321,7 @@ export function DealModal({
               <Form.Item
                 label={<span className="text-gray-700 font-medium">Tahmini Kapanış Tarihi</span>}
                 name="expectedCloseDate"
+                rules={[{ required: true, message: 'Tahmini kapanış tarihi zorunludur' }]}
               >
                 <DatePicker
                   style={{ width: '100%' }}
@@ -326,6 +329,9 @@ export function DealModal({
                   className="rounded-lg"
                   placeholder="Tarih seçiniz"
                   size="large"
+                  disabledDate={(current) => {
+                    return current && current < dayjs().startOf('day');
+                  }}
                 />
               </Form.Item>
             </Card>
@@ -339,19 +345,18 @@ export function DealModal({
               <div className="p-2 bg-orange-50 rounded-lg">
                 <UserOutlined className="text-orange-600 text-lg" />
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Müşteri Bilgisi (Opsiyonel)</h3>
+              <h3 className="text-base font-semibold text-gray-800 m-0">Müşteri Bilgisi</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
               <Form.Item
                 label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
                 name="customerId"
+                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
               >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
+                <Input
                   className="rounded-lg"
                   prefix={<UserOutlined className="text-gray-400" />}
-                  placeholder="Müşteri seçin (opsiyonel)"
+                  placeholder="Müşteri ID girin"
                   size="large"
                 />
               </Form.Item>
