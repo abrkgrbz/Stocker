@@ -268,28 +268,26 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
 
       {/* Header Card with Glassmorphism */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <div className="relative overflow-hidden rounded-2xl mb-6 shadow-2xl">
-          {/* Animated Background Gradient */}
+        <div className="relative overflow-hidden rounded-2xl mb-6 shadow-2xl"
+          style={{
+            background: customer.status === 'Active'
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              : customer.status === 'Pending'
+              ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+              : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          }}
+        >
+          {/* Decorative Pattern Overlay */}
           <div
-            className="absolute inset-0 -z-10"
+            className="absolute inset-0 opacity-20"
             style={{
-              background: customer.status === 'Active'
-                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                : customer.status === 'Pending'
-                ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              backgroundImage: 'radial-gradient(circle at 20% 50%, white 2px, transparent 2px), radial-gradient(circle at 80% 80%, white 2px, transparent 2px)',
+              backgroundSize: '60px 60px',
             }}
-          >
-            <div className="absolute inset-0 opacity-30"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)',
-                backgroundSize: '50px 50px',
-              }}
-            />
-          </div>
+          />
 
-          {/* Glassmorphism Card */}
-          <div className="backdrop-blur-md bg-white/10 border border-white/20 p-8">
+          {/* Content */}
+          <div className="relative p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar Section with Animation */}
               <motion.div
@@ -344,9 +342,9 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
                       {customer.companyName}
                     </motion.h1>
                     <div className="flex items-center gap-3 flex-wrap mb-4">
-                      <span className="text-white flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm border border-white/30">
-                        <UserOutlined />
-                        <span className="font-semibold">{customer.contactPerson}</span>
+                      <span className="text-white flex items-center gap-2 bg-white/30 px-3 py-1 rounded-full backdrop-blur-md border-2 border-white/50 shadow-lg">
+                        <UserOutlined className="text-lg" />
+                        <span className="font-bold">{customer.contactPerson}</span>
                       </span>
                       {customer.industry && (
                         <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-md flex items-center gap-2">
@@ -363,37 +361,38 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
                       </span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
-                        <MailOutlined className="text-white" />
-                        <span className="text-sm text-white font-medium">{customer.email}</span>
+                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
+                        <MailOutlined className="text-white text-lg" />
+                        <span className="text-sm text-white font-semibold">{customer.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
-                        <PhoneOutlined className="text-white" />
-                        <span className="text-sm text-white font-medium">{customer.phone}</span>
+                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
+                        <PhoneOutlined className="text-white text-lg" />
+                        <span className="text-sm text-white font-semibold">{customer.phone}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
-                        <EnvironmentOutlined className="text-white" />
-                        <span className="text-sm text-white font-medium truncate">{customer.city}, {customer.district}</span>
+                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
+                        <EnvironmentOutlined className="text-white text-lg" />
+                        <span className="text-sm text-white font-semibold truncate">{customer.city}, {customer.district}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex flex-col gap-3">
-                    <div className="bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30 flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
+                    <div className="bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full shadow-md ${
                         customer.status === 'Active' ? 'bg-green-400' :
                         customer.status === 'Pending' ? 'bg-yellow-400' : 'bg-gray-400'
                       }`} />
-                      <span className="text-white font-bold">{statusConfig.text}</span>
+                      <span className="text-white font-bold text-sm">{statusConfig.text}</span>
                     </div>
                     <Button
                       type="primary"
                       icon={<EditOutlined />}
                       size="large"
-                      className="shadow-lg hover:shadow-xl transition-all"
+                      className="shadow-xl hover:shadow-2xl transition-all hover:scale-105"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.25)',
+                        background: 'rgba(255, 255, 255, 0.35)',
+                        borderWidth: '2px',
                         borderColor: 'white',
                         color: 'white',
                         fontWeight: 'bold'
