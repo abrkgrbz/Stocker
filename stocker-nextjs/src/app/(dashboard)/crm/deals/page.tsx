@@ -24,9 +24,20 @@ import {
   ReloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
+  ArrowRightOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import type { Deal } from '@/lib/api/services/crm.service';
-import { useDeals, useCreateDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/useCRM';
+import {
+  useDeals,
+  useCreateDeal,
+  useUpdateDeal,
+  useDeleteDeal,
+  useMoveDealStage,
+  useCloseDealWon,
+  useCloseDealLost,
+} from '@/lib/api/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
 import { DealModal } from '@/features/deals/components';
 import dayjs from 'dayjs';
@@ -60,6 +71,9 @@ export default function DealsPage() {
   const createDeal = useCreateDeal();
   const updateDeal = useUpdateDeal();
   const deleteDeal = useDeleteDeal();
+  const moveDealStage = useMoveDealStage();
+  const closeDealWon = useCloseDealWon();
+  const closeDealLost = useCloseDealLost();
 
   const deals = data?.items || [];
 
@@ -94,6 +108,68 @@ export default function DealsPage() {
           message.success('Fırsat silindi');
         } catch (error) {
           message.error('Silme işlemi başarısız');
+        }
+      },
+    });
+  };
+
+  const handleMoveStage = async (dealId: number, newStageId: number) => {
+    try {
+      await moveDealStage.mutateAsync({
+        id: dealId.toString(),
+        newStageId: newStageId.toString(),
+      });
+      message.success('Fırsat aşaması değiştirildi');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Aşama değiştirme başarısız';
+      message.error(errorMessage);
+    }
+  };
+
+  const handleCloseWon = async (deal: Deal) => {
+    Modal.confirm({
+      title: 'Fırsatı Kazanıldı Olarak İşaretle',
+      content: `"${deal.title}" fırsatını kazanıldı olarak işaretlemek istediğinizden emin misiniz?`,
+      okText: 'Kazanıldı İşaretle',
+      okType: 'primary',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          await closeDealWon.mutateAsync({
+            id: deal.id.toString(),
+            actualAmount: deal.amount,
+            closedDate: new Date().toISOString(),
+          });
+          message.success('🎉 Fırsat kazanıldı olarak işaretlendi!');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+          message.error(errorMessage);
+        }
+      },
+    });
+  };
+
+  const handleCloseLost = async (deal: Deal) => {
+    Modal.confirm({
+      title: 'Fırsatı Kaybedildi Olarak İşaretle',
+      content: `"${deal.title}" fırsatını kaybedildi olarak işaretlemek istediğinizden emin misiniz?`,
+      okText: 'Kaybedildi İşaretle',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          await closeDealLost.mutateAsync({
+            id: deal.id.toString(),
+            lostReason: 'Kullanıcı tarafından kapatıldı',
+            closedDate: new Date().toISOString(),
+          });
+          message.info('Fırsat kaybedildi olarak işaretlendi');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+          message.error(errorMessage);
         }
       },
     });
@@ -172,12 +248,11 @@ export default function DealsPage() {
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
     <Card
-      className="mb-3 cursor-pointer hover:shadow-md transition-shadow"
+      className="mb-3 hover:shadow-md transition-shadow"
       bodyStyle={{ padding: '12px' }}
-      onClick={() => handleEdit(deal)}
     >
       <div className="flex justify-between items-start mb-2">
-        <Text strong className="text-sm">
+        <Text strong className="text-sm cursor-pointer" onClick={() => handleEdit(deal)}>
           {deal.title}
         </Text>
         <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
@@ -187,7 +262,7 @@ export default function DealsPage() {
         ₺{deal.amount.toLocaleString('tr-TR')}
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
         <Tooltip title="Olasılık">
           <span>{deal.probability}%</span>
         </Tooltip>
@@ -197,6 +272,42 @@ export default function DealsPage() {
           </Tooltip>
         )}
       </div>
+
+      {/* Action Buttons - Only show for Open deals */}
+      {deal.status === 'Open' && (
+        <Space size="small" className="w-full" direction="vertical">
+          <Space size="small" className="w-full">
+            <Tooltip title="Kazanıldı">
+              <Button
+                type="primary"
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCloseWon(deal);
+                }}
+                block
+              >
+                Kazanıldı
+              </Button>
+            </Tooltip>
+            <Tooltip title="Kaybedildi">
+              <Button
+                danger
+                size="small"
+                icon={<StopOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCloseLost(deal);
+                }}
+                block
+              >
+                Kaybedildi
+              </Button>
+            </Tooltip>
+          </Space>
+        </Space>
+      )}
     </Card>
   );
 

@@ -406,6 +406,53 @@ export function useConversionRates(pipelineId?: Guid, fromDate?: DateTime, toDat
   });
 }
 
+export function useCreateDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => CRMService.createDeal(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      message.success('Fırsat oluşturuldu');
+    },
+    onError: () => {
+      message.error('Fırsat oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Deal> }) =>
+      CRMService.updateDeal(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.id.toString()) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      message.success('Fırsat güncellendi');
+    },
+    onError: () => {
+      message.error('Fırsat güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteDeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.deleteDeal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
+      message.success('Fırsat silindi');
+    },
+    onError: () => {
+      message.error('Fırsat silinemedi');
+    },
+  });
+}
+
 export function useMoveDealStage() {
   const queryClient = useQueryClient();
 
