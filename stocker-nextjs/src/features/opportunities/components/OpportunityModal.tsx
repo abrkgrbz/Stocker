@@ -170,7 +170,7 @@ export function OpportunityModal({
             <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckOutlined />} size="large">
               {isEditMode ? 'Güncelle' : 'Oluştur'}
             </Button>
-          </div>
+          )}
         </div>
       }
     >
