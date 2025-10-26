@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
+  Drawer,
   Form,
   Input,
   Select,
@@ -344,7 +344,7 @@ export default function CustomerModal({
   ];
 
   return (
-    <Modal
+    <Drawer
       title={
         <div className="relative overflow-hidden -m-6 mb-0">
           {/* Gradient Header Background */}
@@ -395,12 +395,69 @@ export default function CustomerModal({
         </div>
       }
       open={open}
-      onCancel={handleCancel}
-      width={850}
-      destroyOnHidden
-      footer={null}
-      styles={{ body: { paddingTop: 0 } }}
-      className="modern-customer-modal"
+      onClose={handleCancel}
+      width={720}
+      destroyOnClose
+      placement="right"
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+        body: { paddingTop: 0 },
+      }}
+      className="modern-customer-drawer"
+      footer={
+        <div className="flex justify-between items-center">
+          <Button
+            size="large"
+            onClick={handleCancel}
+            className="hover:border-red-400 hover:text-red-500 transition-all duration-300"
+          >
+            İptal
+          </Button>
+
+          <Space size="middle">
+            {currentStep > 0 && (
+              <Button
+                size="large"
+                icon={<ArrowLeftOutlined />}
+                onClick={handlePrev}
+                className="shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                Geri
+              </Button>
+            )}
+
+            {currentStep < steps.length - 1 && (
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRightOutlined />}
+                onClick={handleNext}
+                iconPosition="end"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                İleri
+              </Button>
+            )}
+
+            {currentStep === steps.length - 1 && (
+              <Button
+                type="primary"
+                size="large"
+                icon={<CheckOutlined />}
+                onClick={handleSubmit}
+                loading={createCustomer.isPending || updateCustomer.isPending}
+                iconPosition="end"
+                className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                {isEditMode ? '✓ Güncelle' : '✓ Oluştur'}
+              </Button>
+            )}
+          </Space>
+        </div>
+      }
     >
       {/* Progress Steps with Modern Design */}
       <div className="mb-8 mt-6">
@@ -850,75 +907,6 @@ export default function CustomerModal({
           </motion.div>
         )}
       </Form>
-
-      {/* Footer Buttons with Modern Design */}
-      <div className="mt-8 flex justify-between items-center pt-6 border-t-2 border-gradient-to-r from-blue-200 to-purple-200">
-        <Button
-          size="large"
-          onClick={handleCancel}
-          className="hover:border-red-400 hover:text-red-500 transition-all duration-300"
-        >
-          İptal
-        </Button>
-
-        <Space size="middle">
-          {currentStep > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Button
-                size="large"
-                icon={<ArrowLeftOutlined />}
-                onClick={handlePrev}
-                className="shadow-md hover:shadow-lg transition-all duration-300"
-              >
-                Geri
-              </Button>
-            </motion.div>
-          )}
-
-          {currentStep < steps.length - 1 && (
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Button
-                type="primary"
-                size="large"
-                icon={<ArrowRightOutlined />}
-                onClick={handleNext}
-                iconPosition="end"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                İleri
-              </Button>
-            </motion.div>
-          )}
-
-          {currentStep === steps.length - 1 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Button
-                type="primary"
-                size="large"
-                icon={<CheckOutlined />}
-                onClick={handleSubmit}
-                loading={createCustomer.isPending || updateCustomer.isPending}
-                iconPosition="end"
-                className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {isEditMode ? '✓ Güncelle' : '✓ Oluştur'}
-              </Button>
-            </motion.div>
-          )}
-        </Space>
-      </div>
-    </Modal>
+    </Drawer>
   );
 }

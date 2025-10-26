@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, DatePicker, Row, Col, Card, Steps, Button } from 'antd';
+import { Drawer, Form, Input, InputNumber, Select, DatePicker, Row, Col, Card, Steps, Button } from 'antd';
 import {
   DollarOutlined,
   FileTextOutlined,
@@ -125,20 +125,43 @@ export function DealModal({
   };
 
   return (
-    <Modal
+    <Drawer
       title={
-        <div className="flex items-center gap-3 pb-4">
+        <div className="flex items-center gap-3">
           <div className="text-lg font-semibold text-gray-800">
             {isEditMode ? 'Fırsatı Düzenle' : 'Yeni Fırsat'}
           </div>
         </div>
       }
       open={open}
-      onCancel={handleCancel}
-      width={800}
+      onClose={handleCancel}
+      width={720}
       destroyOnClose
-      footer={null}
-      styles={{ body: { paddingTop: 24 } }}
+      placement="right"
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+        body: { paddingTop: 24 },
+      }}
+      footer={
+        <div className="flex justify-between items-center">
+          <Button onClick={handlePrev} disabled={currentStep === 0} icon={<ArrowLeftOutlined />} size="large">
+            Geri
+          </Button>
+          <div className="text-sm text-gray-500">Adım {currentStep + 1} / {steps.length}</div>
+          {currentStep < steps.length - 1 ? (
+            <Button type="primary" onClick={handleNext} icon={<ArrowRightOutlined />} iconPosition="end" size="large">
+              İleri
+            </Button>
+          ) : (
+            <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckOutlined />} size="large">
+              {isEditMode ? 'Güncelle' : 'Oluştur'}
+            </Button>
+          )}
+        </div>
+      }
     >
       {/* Steps */}
       <div className="mb-6">
@@ -362,32 +385,6 @@ export function DealModal({
           </div>
         )}
       </Form>
-
-      {/* Navigation Footer */}
-      <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-        <Button
-          onClick={handlePrev}
-          disabled={currentStep === 0}
-          icon={<ArrowLeftOutlined />}
-          size="large"
-        >
-          Geri
-        </Button>
-
-        <div className="text-sm text-gray-500">
-          Adım {currentStep + 1} / {steps.length}
-        </div>
-
-        {currentStep < steps.length - 1 ? (
-          <Button type="primary" onClick={handleNext} icon={<ArrowRightOutlined />} iconPosition="end" size="large">
-            İleri
-          </Button>
-        ) : (
-          <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckOutlined />} size="large">
-            {isEditMode ? 'Güncelle' : 'Oluştur'}
-          </Button>
-        )}
-      </div>
-    </Modal>
+    </Drawer>
   );
 }

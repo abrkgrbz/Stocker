@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, message, Tag } from 'antd';
+import { Drawer, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, message, Tag } from 'antd';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 
 interface CustomerSegmentModalProps {
@@ -219,27 +219,26 @@ export function CustomerSegmentModal({
   ];
 
   return (
-    <Modal
+    <Drawer
       title={initialData ? 'Segment Düzenle' : 'Yeni Segment Oluştur'}
       open={open}
-      onCancel={handleCancel}
-      width={700}
-      footer={null}
-    >
-      <Steps current={currentStep} items={steps} className="mb-6" />
-
-      <Form form={form} layout="vertical" initialValues={initialData || { type: 'Static', color: '#1890ff' }}>
-        <div className="min-h-[400px]">{steps[currentStep].content}</div>
-
-        <div className="flex justify-between mt-6 pt-4 border-t">
+      onClose={handleCancel}
+      width={720}
+      placement="right"
+      destroyOnClose
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+      }}
+      footer={
+        <div className="flex justify-between">
           <Button onClick={handleCancel}>İptal</Button>
-
           <Space>
             {currentStep > 0 && <Button onClick={handlePrev}>Geri</Button>}
             {currentStep < steps.length - 1 && (
-              <Button type="primary" onClick={handleNext}>
-                İleri
-              </Button>
+              <Button type="primary" onClick={handleNext}>İleri</Button>
             )}
             {currentStep === steps.length - 1 && (
               <Button type="primary" onClick={handleFinish} loading={loading}>
@@ -248,7 +247,13 @@ export function CustomerSegmentModal({
             )}
           </Space>
         </div>
+      }
+    >
+      <Steps current={currentStep} items={steps} className="mb-6" />
+
+      <Form form={form} layout="vertical" initialValues={initialData || { type: 'Static', color: '#1890ff' }}>
+        <div className="min-h-[400px]">{steps[currentStep].content}</div>
       </Form>
-    </Modal>
+    </Drawer>
   );
 }

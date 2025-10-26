@@ -137,6 +137,12 @@ export function ActivityModal({
       onClose={handleCancel}
       width={720}
       destroyOnClose
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+      }}
       footer={
         <div className="flex justify-between items-center">
           <Button

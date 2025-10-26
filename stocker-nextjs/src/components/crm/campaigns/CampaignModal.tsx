@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  Modal,
+  Drawer,
   Steps,
   Form,
   Input,
@@ -366,12 +366,35 @@ export function CampaignModal({
   ];
 
   return (
-    <Modal
+    <Drawer
       title={initialData ? 'Kampanya Düzenle' : 'Yeni Kampanya Oluştur'}
       open={open}
-      onCancel={handleCancel}
-      width={800}
-      footer={null}
+      onClose={handleCancel}
+      width={720}
+      placement="right"
+      destroyOnClose
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+      }}
+      footer={
+        <div className="flex justify-between">
+          <Button onClick={handleCancel}>İptal</Button>
+          <Space>
+            {currentStep > 0 && <Button onClick={handlePrev}>Geri</Button>}
+            {currentStep < steps.length - 1 && (
+              <Button type="primary" onClick={handleNext}>İleri</Button>
+            )}
+            {currentStep === steps.length - 1 && (
+              <Button type="primary" onClick={handleFinish} loading={loading}>
+                {initialData ? 'Güncelle' : 'Oluştur'}
+              </Button>
+            )}
+          </Space>
+        </div>
+      }
     >
       <Steps current={currentStep} items={steps} className="mb-6" />
 
@@ -390,25 +413,7 @@ export function CampaignModal({
         }
       >
         <div className="min-h-[400px]">{steps[currentStep].content}</div>
-
-        <div className="flex justify-between mt-6 pt-4 border-t">
-          <Button onClick={handleCancel}>İptal</Button>
-
-          <Space>
-            {currentStep > 0 && <Button onClick={handlePrev}>Geri</Button>}
-            {currentStep < steps.length - 1 && (
-              <Button type="primary" onClick={handleNext}>
-                İleri
-              </Button>
-            )}
-            {currentStep === steps.length - 1 && (
-              <Button type="primary" onClick={handleFinish} loading={loading}>
-                {initialData ? 'Güncelle' : 'Oluştur'}
-              </Button>
-            )}
-          </Space>
-        </div>
       </Form>
-    </Modal>
+    </Drawer>
   );
 }
