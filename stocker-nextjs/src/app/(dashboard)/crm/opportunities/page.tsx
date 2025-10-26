@@ -92,7 +92,7 @@ export default function OpportunitiesPage() {
           stageId: values.stageId,
           amount: values.amount,
           probability: values.probability || 50,
-          expectedCloseDate: values.expectedCloseDate?.toISOString(),
+          expectedCloseDate: values.expectedCloseDate ? values.expectedCloseDate.toISOString() : undefined,
           description: values.description,
         });
       }
