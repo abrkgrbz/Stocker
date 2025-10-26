@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, Avatar, Tag, Input, Button, Space, Badge, Statistic, Row, Col, Tooltip, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Avatar, Tag, Input, Button, Space, Badge, Statistic, Row, Col, Tooltip, message, Pagination } from 'antd';
 import {
   UserOutlined,
   PhoneOutlined,
@@ -29,6 +29,9 @@ export default function CustomersDemo() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mockCustomers, setMockCustomers] = useState<MockCustomer[]>(MOCK_CUSTOMERS);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [filterCustomerType, setFilterCustomerType] = useState<string | null>(null);
 
   // Filter customers
   const filteredCustomers = mockCustomers.filter((customer) => {
@@ -38,9 +41,28 @@ export default function CustomersDemo() {
       customer.email.toLowerCase().includes(searchText.toLowerCase());
 
     const matchesStatus = filterStatus ? customer.status === filterStatus : true;
+    const matchesType = filterCustomerType ? customer.customerType === filterCustomerType : true;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesType;
   });
+
+  // Pagination
+  const totalCustomers = filteredCustomers.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+
+  // Handle page change
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText, filterStatus, filterCustomerType]);
 
   // Handle modal success (add new customer to mock data)
   const handleModalSuccess = () => {
@@ -184,55 +206,108 @@ export default function CustomersDemo() {
 
         {/* Search and Filter */}
         <Card className="shadow-lg border-0 mb-6">
-          <Space size="middle" wrap className="w-full justify-between">
+          <Space direction="vertical" size="middle" className="w-full">
+            {/* Search Bar - Full Width */}
             <Input
               size="large"
-              placeholder="Müşteri ara (firma, kişi, email...)"
-              prefix={<SearchOutlined className="text-gray-400" />}
+              placeholder="🔍 Firma adı, kişi adı veya email ile müşteri arayın..."
+              prefix={<SearchOutlined className="text-blue-500 text-lg" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="max-w-md"
+              className="w-full text-base"
               allowClear
               suppressHydrationWarning
+              style={{ fontSize: '16px', padding: '12px 16px' }}
             />
-            <Space>
-              <Button
-                size="large"
-                icon={<FilterOutlined />}
-                type={filterStatus === null ? 'primary' : 'default'}
-                onClick={() => setFilterStatus(null)}
-              >
-                Tümü ({mockCustomers.length})
-              </Button>
-              <Button
-                size="large"
-                type={filterStatus === 'Active' ? 'primary' : 'default'}
-                onClick={() => setFilterStatus('Active')}
-              >
-                Aktif ({mockCustomers.filter((c) => c.status === 'Active').length})
-              </Button>
-              <Button
-                size="large"
-                type={filterStatus === 'Pending' ? 'primary' : 'default'}
-                onClick={() => setFilterStatus('Pending')}
-              >
-                Beklemede ({mockCustomers.filter((c) => c.status === 'Pending').length})
-              </Button>
-              <Button
-                size="large"
-                type={filterStatus === 'Inactive' ? 'primary' : 'default'}
-                onClick={() => setFilterStatus('Inactive')}
-              >
-                Pasif ({mockCustomers.filter((c) => c.status === 'Inactive').length})
-              </Button>
-            </Space>
+
+            {/* Filters Row */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <span className="text-sm font-medium text-gray-600">Filtrele:</span>
+
+              {/* Customer Type Filter */}
+              <Space>
+                <Button
+                  size="middle"
+                  type={filterCustomerType === null ? 'primary' : 'default'}
+                  onClick={() => setFilterCustomerType(null)}
+                  icon={<TeamOutlined />}
+                >
+                  Tümü ({mockCustomers.length})
+                </Button>
+                <Button
+                  size="middle"
+                  type={filterCustomerType === 'Corporate' ? 'primary' : 'default'}
+                  onClick={() => setFilterCustomerType('Corporate')}
+                  className={filterCustomerType === 'Corporate' ? 'bg-purple-500' : ''}
+                >
+                  🏢 Kurumsal ({mockCustomers.filter((c) => c.customerType === 'Corporate').length})
+                </Button>
+                <Button
+                  size="middle"
+                  type={filterCustomerType === 'Individual' ? 'primary' : 'default'}
+                  onClick={() => setFilterCustomerType('Individual')}
+                  className={filterCustomerType === 'Individual' ? 'bg-green-500' : ''}
+                >
+                  👤 Bireysel ({mockCustomers.filter((c) => c.customerType === 'Individual').length})
+                </Button>
+              </Space>
+
+              <div className="w-px h-6 bg-gray-300"></div>
+
+              {/* Status Filter */}
+              <Space>
+                <Button
+                  size="middle"
+                  icon={<FilterOutlined />}
+                  type={filterStatus === null ? 'primary' : 'default'}
+                  onClick={() => setFilterStatus(null)}
+                >
+                  Tüm Durumlar
+                </Button>
+                <Button
+                  size="middle"
+                  type={filterStatus === 'Active' ? 'primary' : 'default'}
+                  onClick={() => setFilterStatus('Active')}
+                  className={filterStatus === 'Active' ? 'bg-green-500' : ''}
+                >
+                  ✓ Aktif ({mockCustomers.filter((c) => c.status === 'Active').length})
+                </Button>
+                <Button
+                  size="middle"
+                  type={filterStatus === 'Pending' ? 'primary' : 'default'}
+                  onClick={() => setFilterStatus('Pending')}
+                  className={filterStatus === 'Pending' ? 'bg-yellow-500' : ''}
+                >
+                  ⏳ Beklemede ({mockCustomers.filter((c) => c.status === 'Pending').length})
+                </Button>
+                <Button
+                  size="middle"
+                  type={filterStatus === 'Inactive' ? 'primary' : 'default'}
+                  onClick={() => setFilterStatus('Inactive')}
+                >
+                  ✕ Pasif ({mockCustomers.filter((c) => c.status === 'Inactive').length})
+                </Button>
+              </Space>
+            </div>
           </Space>
         </Card>
       </motion.div>
 
+      {/* Results Summary */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="text-gray-600">
+          <span className="font-semibold text-gray-800">{totalCustomers}</span> müşteri bulundu
+          {totalCustomers > pageSize && (
+            <span className="ml-2">
+              (Sayfa {currentPage} / {Math.ceil(totalCustomers / pageSize)})
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Modern Customer List */}
       <div className="space-y-4">
-        {filteredCustomers.map((customer, index) => (
+        {paginatedCustomers.map((customer, index) => (
           <motion.div
             key={customer.id}
             initial={{ opacity: 0, x: -20 }}
@@ -386,6 +461,24 @@ export default function CustomersDemo() {
           </motion.div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalCustomers > 0 && (
+        <div className="mt-8 flex justify-center">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalCustomers}
+            onChange={handlePageChange}
+            onShowSizeChange={handlePageChange}
+            showSizeChanger
+            showQuickJumper
+            showTotal={(total, range) => `${range[0]}-${range[1]} / ${total} müşteri`}
+            pageSizeOptions={['5', '10', '20', '50']}
+            className="modern-pagination"
+          />
+        </div>
+      )}
 
       {/* No Results */}
       {filteredCustomers.length === 0 && (
