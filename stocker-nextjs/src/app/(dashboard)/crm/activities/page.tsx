@@ -16,6 +16,9 @@ import {
   Descriptions,
   Tag,
   Divider,
+  Form,
+  Input,
+  DatePicker,
 } from 'antd';
 import {
   PlusOutlined,
@@ -33,6 +36,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   UserOutlined,
+  CloseCircleOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
 import {
@@ -102,6 +107,8 @@ export default function ActivitiesPage() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerActivity, setDrawerActivity] = useState<Activity | null>(null);
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   // API Hooks
   const { data, isLoading, refetch } = useActivities({});
@@ -109,6 +116,8 @@ export default function ActivitiesPage() {
   const updateActivity = useUpdateActivity();
   const deleteActivity = useDeleteActivity();
   const completeActivity = useCompleteActivity();
+  const cancelActivity = useCancelActivity();
+  const rescheduleActivity = useRescheduleActivity();
 
   const activities = data?.items || [];
 
@@ -171,7 +180,7 @@ export default function ActivitiesPage() {
 
   const handleComplete = async (id: number) => {
     try {
-      await completeActivity.mutateAsync(id);
+      await completeActivity.mutateAsync({ id: id.toString() });
       notification.success({
         message: 'Başarılı',
         description: 'Aktivite tamamlandı olarak işaretlendi',
@@ -181,6 +190,68 @@ export default function ActivitiesPage() {
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      notification.error({
+        message: 'Hata',
+        description: errorMessage,
+        placement: 'bottomRight',
+      });
+    }
+  };
+
+  const handleCancel = (activity: Activity) => {
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelSubmit = async (values: { reason?: string }) => {
+    if (!drawerActivity) return;
+    
+    try {
+      await cancelActivity.mutateAsync({ 
+        id: drawerActivity.id.toString(), 
+        reason: values.reason 
+      });
+      notification.success({
+        message: 'Başarılı',
+        description: 'Aktivite iptal edildi',
+        placement: 'bottomRight',
+      });
+      setCancelModalOpen(false);
+      setDrawerOpen(false);
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İptal işlemi başarısız';
+      notification.error({
+        message: 'Hata',
+        description: errorMessage,
+        placement: 'bottomRight',
+      });
+    }
+  };
+
+  const handleReschedule = (activity: Activity) => {
+    setRescheduleModalOpen(true);
+  };
+
+  const handleRescheduleSubmit = async (values: { startTime: Dayjs; endTime?: Dayjs; reason?: string }) => {
+    if (!drawerActivity) return;
+    
+    try {
+      await rescheduleActivity.mutateAsync({
+        id: drawerActivity.id.toString(),
+        newStartDate: values.startTime.toISOString(),
+        newEndDate: values.endTime?.toISOString(),
+        reason: values.reason,
+      });
+      notification.success({
+        message: 'Başarılı',
+        description: 'Aktivite yeniden planlandı',
+        placement: 'bottomRight',
+      });
+      setRescheduleModalOpen(false);
+      setDrawerOpen(false);
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Yeniden planlama başarısız';
       notification.error({
         message: 'Hata',
         description: errorMessage,
@@ -414,22 +485,36 @@ export default function ActivitiesPage() {
         }}
         extra={
           drawerActivity && (
-            <Space>
+            <Space wrap>
+              {drawerActivity.status === 'Scheduled' && (
+                <>
+                  <Button
+                    icon={<FieldTimeOutlined />}
+                    onClick={() => handleReschedule(drawerActivity)}
+                  >
+                    Yeniden Planla
+                  </Button>
+                  <Button
+                    icon={<CloseCircleOutlined />}
+                    onClick={() => handleCancel(drawerActivity)}
+                  >
+                    İptal Et
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<CheckCircleOutlined />}
+                    onClick={() => handleComplete(drawerActivity.id)}
+                  >
+                    Tamamla
+                  </Button>
+                </>
+              )}
               <Button
                 icon={<EditOutlined />}
                 onClick={() => handleEdit(drawerActivity)}
               >
                 Düzenle
               </Button>
-              {drawerActivity.status === 'Scheduled' && (
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleComplete(drawerActivity.id)}
-                >
-                  Tamamla
-                </Button>
-              )}
               <Button
                 danger
                 icon={<DeleteOutlined />}
@@ -492,6 +577,35 @@ export default function ActivitiesPage() {
 
             {/* Action Buttons */}
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              {drawerActivity.status === 'Scheduled' && (
+                <>
+                  <Button
+                    block
+                    size="large"
+                    type="primary"
+                    icon={<CheckCircleOutlined />}
+                    onClick={() => handleComplete(drawerActivity.id)}
+                  >
+                    Tamamlandı Olarak İşaretle
+                  </Button>
+                  <Button
+                    block
+                    size="large"
+                    icon={<FieldTimeOutlined />}
+                    onClick={() => handleReschedule(drawerActivity)}
+                  >
+                    Aktiviteyi Yeniden Planla
+                  </Button>
+                  <Button
+                    block
+                    size="large"
+                    icon={<CloseCircleOutlined />}
+                    onClick={() => handleCancel(drawerActivity)}
+                  >
+                    Aktiviteyi İptal Et
+                  </Button>
+                </>
+              )}
               <Button
                 block
                 size="large"
@@ -500,17 +614,6 @@ export default function ActivitiesPage() {
               >
                 Aktiviteyi Düzenle
               </Button>
-              {drawerActivity.status === 'Scheduled' && (
-                <Button
-                  block
-                  size="large"
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleComplete(drawerActivity.id)}
-                >
-                  Tamamlandı Olarak İşaretle
-                </Button>
-              )}
               <Button
                 block
                 size="large"
@@ -533,6 +636,122 @@ export default function ActivitiesPage() {
         onCancel={() => setModalOpen(false)}
         onSubmit={handleSubmit}
       />
+
+      {/* Reschedule Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <FieldTimeOutlined className="text-blue-600" />
+            <span>Aktiviteyi Yeniden Planla</span>
+          </div>
+        }
+        open={rescheduleModalOpen}
+        onCancel={() => setRescheduleModalOpen(false)}
+        footer={null}
+        width={500}
+      >
+        <Form
+          layout="vertical"
+          onFinish={handleRescheduleSubmit}
+          initialValues={{
+            startTime: drawerActivity ? dayjs(drawerActivity.startTime) : undefined,
+            endTime: drawerActivity?.endTime ? dayjs(drawerActivity.endTime) : undefined,
+          }}
+        >
+          <Form.Item
+            label="Yeni Başlangıç Zamanı"
+            name="startTime"
+            rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
+          >
+            <DatePicker
+              showTime
+              format="DD.MM.YYYY HH:mm"
+              className="w-full"
+              placeholder="Başlangıç zamanı seçin"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Yeni Bitiş Zamanı (Opsiyonel)"
+            name="endTime"
+          >
+            <DatePicker
+              showTime
+              format="DD.MM.YYYY HH:mm"
+              className="w-full"
+              placeholder="Bitiş zamanı seçin"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Yeniden Planlama Nedeni (Opsiyonel)"
+            name="reason"
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Aktiviteyi neden yeniden planlıyorsunuz?"
+            />
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Space className="w-full justify-end">
+              <Button onClick={() => setRescheduleModalOpen(false)}>
+                İptal
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={rescheduleActivity.isPending}
+                icon={<FieldTimeOutlined />}
+              >
+                Yeniden Planla
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Cancel Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <CloseCircleOutlined className="text-red-600" />
+            <span>Aktiviteyi İptal Et</span>
+          </div>
+        }
+        open={cancelModalOpen}
+        onCancel={() => setCancelModalOpen(false)}
+        footer={null}
+        width={500}
+      >
+        <Form
+          layout="vertical"
+          onFinish={handleCancelSubmit}
+        >
+          <Form.Item
+            label="İptal Nedeni (Opsiyonel)"
+            name="reason"
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Aktiviteyi neden iptal ediyorsunuz?"
+            />
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Space className="w-full justify-end">
+              <Button onClick={() => setCancelModalOpen(false)}>
+                Vazgeç
+              </Button>
+              <Button
+                danger
+                type="primary"
+                htmlType="submit"
+                loading={cancelActivity.isPending}
+                icon={<CloseCircleOutlined />}
+              >
+                İptal Et
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
