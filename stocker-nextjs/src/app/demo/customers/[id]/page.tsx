@@ -413,18 +413,21 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
         <Row gutter={[16, 16]} className="mb-6">
           <Col xs={24} sm={12} lg={6}>
             <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-blue-500 to-blue-700 overflow-hidden relative">
+              <Card
+                className="shadow-xl border-0 h-full overflow-hidden relative"
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <Statistic
-                  title={<span className="text-white/90 flex items-center gap-2 text-base"><DollarOutlined /> Kredi Limiti</span>}
+                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><DollarOutlined /> Kredi Limiti</span>}
                   value={customer.creditLimit}
                   prefix="₺"
                   valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
                 />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.2)', margin: '12px 0' }} />
-                <div className="text-white/80 text-sm">
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                <div className="text-white text-sm">
                   <div className="flex justify-between">
-                    <span>Kullanılabilir:</span>
+                    <span className="font-medium">Kullanılabilir:</span>
                     <span className="font-bold">₺{availableCredit.toLocaleString('tr-TR')}</span>
                   </div>
                 </div>
@@ -434,18 +437,21 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
 
           <Col xs={24} sm={12} lg={6}>
             <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-green-500 to-green-700 overflow-hidden relative">
+              <Card
+                className="shadow-xl border-0 h-full overflow-hidden relative"
+                style={{ background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' }}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <Statistic
-                  title={<span className="text-white/90 flex items-center gap-2 text-base"><ShoppingOutlined /> Toplam Ciro</span>}
+                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><ShoppingOutlined /> Toplam Ciro</span>}
                   value={customer.totalPurchases}
                   prefix="₺"
                   valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
                 />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.2)', margin: '12px 0' }} />
-                <div className="text-white/80 text-sm">
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                <div className="text-white text-sm">
                   <div className="flex justify-between">
-                    <span>Sipariş Sayısı:</span>
+                    <span className="font-medium">Sipariş Sayısı:</span>
                     <span className="font-bold">{customer.totalOrders} adet</span>
                   </div>
                 </div>
@@ -455,10 +461,13 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
 
           <Col xs={24} sm={12} lg={6}>
             <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-purple-500 to-purple-700 overflow-hidden relative">
+              <Card
+                className="shadow-xl border-0 h-full overflow-hidden relative"
+                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <Statistic
-                  title={<span className="text-white/90 flex items-center gap-2 text-base"><RiseOutlined /> Kullanım Oranı</span>}
+                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><RiseOutlined /> Kullanım Oranı</span>}
                   value={parseFloat(creditUsagePercentage)}
                   suffix="%"
                   valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
@@ -469,6 +478,7 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
                   trailColor="rgba(255,255,255,0.3)"
                   showInfo={false}
                   className="mt-3"
+                  strokeWidth={8}
                 />
               </Card>
             </motion.div>
@@ -476,18 +486,21 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
 
           <Col xs={24} sm={12} lg={6}>
             <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-orange-500 to-orange-700 overflow-hidden relative">
+              <Card
+                className="shadow-xl border-0 h-full overflow-hidden relative"
+                style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' }}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <Statistic
-                  title={<span className="text-white/90 flex items-center gap-2 text-base"><BarChartOutlined /> Ort. Sipariş</span>}
+                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><BarChartOutlined /> Ort. Sipariş</span>}
                   value={averageOrderValue}
                   prefix="₺"
                   valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
                 />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.2)', margin: '12px 0' }} />
-                <div className="text-white/80 text-sm">
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                <div className="text-white text-sm">
                   <div className="flex justify-between items-center">
-                    <span>Son Alışveriş:</span>
+                    <span className="font-medium">Son Alışveriş:</span>
                     <span className="font-bold text-xs">
                       {new Date(customer.lastPurchaseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                     </span>
