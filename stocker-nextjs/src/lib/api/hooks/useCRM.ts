@@ -459,11 +459,13 @@ export function useCreateDeal() {
   return useMutation({
     mutationFn: (data: any) => CRMService.createDeal(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.success('Fırsat oluşturuldu');
+      // Invalidate all deal queries (including those with filters)
+      queryClient.invalidateQueries({ queryKey: ['crm', 'deals'] });
+      // Don't show message here - let the calling component handle it
     },
-    onError: () => {
-      message.error('Fırsat oluşturulamadı');
+    onError: (error: any) => {
+      console.error('Deal creation error:', error);
+      // Don't show message here - let the calling component handle it
     },
   });
 }
