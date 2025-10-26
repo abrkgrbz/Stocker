@@ -274,6 +274,53 @@ export function useLeadStatistics(fromDate?: DateTime, toDate?: DateTime) {
   });
 }
 
+export function useCreateLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => CRMService.createLead(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads });
+      message.success('Lead oluşturuldu');
+    },
+    onError: () => {
+      message.error('Lead oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Lead> }) =>
+      CRMService.updateLead(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.lead(variables.id.toString()) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads });
+      message.success('Lead güncellendi');
+    },
+    onError: () => {
+      message.error('Lead güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.deleteLead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.leads });
+      message.success('Lead silindi');
+    },
+    onError: () => {
+      message.error('Lead silinemedi');
+    },
+  });
+}
+
 export function useQualifyLead() {
   const queryClient = useQueryClient();
 

@@ -11,6 +11,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   UserOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Lead } from '@/lib/api/services/crm.service';
@@ -27,6 +29,8 @@ interface LeadsTableProps {
   onEdit: (lead: Lead) => void;
   onDelete: (id: number) => void;
   onConvert: (lead: Lead) => void;
+  onQualify?: (lead: Lead) => void;
+  onDisqualify?: (lead: Lead) => void;
 }
 
 // Source colors
@@ -48,6 +52,8 @@ export function LeadsTable({
   onEdit,
   onDelete,
   onConvert,
+  onQualify,
+  onDisqualify,
 }: LeadsTableProps) {
   const columns: ColumnsType<Lead> = [
     {
@@ -152,9 +158,10 @@ export function LeadsTable({
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 60,
       render: (_, record) => (
         <Dropdown
+          trigger={['click']}
           menu={{
             items: [
               {
@@ -163,6 +170,26 @@ export function LeadsTable({
                 icon: <EditOutlined />,
                 onClick: () => onEdit(record),
               },
+              ...(record.status !== 'Qualified' && record.status !== 'Converted' && onQualify
+                ? [
+                    {
+                      key: 'qualify',
+                      label: 'Nitelikli İşaretle',
+                      icon: <CheckCircleOutlined />,
+                      onClick: () => onQualify(record),
+                    },
+                  ]
+                : []),
+              ...(record.status !== 'Unqualified' && record.status !== 'Converted' && onDisqualify
+                ? [
+                    {
+                      key: 'disqualify',
+                      label: 'Niteliksiz İşaretle',
+                      icon: <StopOutlined />,
+                      onClick: () => onDisqualify(record),
+                    },
+                  ]
+                : []),
               {
                 key: 'convert',
                 label: 'Müşteriye Dönüştür',
@@ -181,13 +208,11 @@ export function LeadsTable({
                 onClick: () => onDelete(record.id),
               },
             ],
-            trigger: ['click'] as const,
           }}
         >
           <Button type="text" icon={<MoreOutlined />} className="hover:bg-gray-100" />
         </Dropdown>
       ),
-      width: 60,
     },
   ];
 

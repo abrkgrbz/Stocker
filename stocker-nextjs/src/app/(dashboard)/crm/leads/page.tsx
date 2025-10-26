@@ -10,7 +10,10 @@ import {
   useUpdateLead,
   useDeleteLead,
   useConvertLead,
-} from '@/hooks/useCRM';
+  useQualifyLead,
+  useDisqualifyLead,
+  useUpdateLeadScore,
+} from '@/lib/api/hooks/useCRM';
 import { LeadsStats, LeadsTable, LeadsFilters } from '@/components/crm/leads';
 import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 import { LeadModal, ConvertLeadModal } from '@/features/leads/components';
@@ -36,6 +39,9 @@ export default function LeadsPage() {
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
   const convertLead = useConvertLead();
+  const qualifyLead = useQualifyLead();
+  const disqualifyLead = useDisqualifyLead();
+  const updateLeadScore = useUpdateLeadScore();
 
   const leads = data?.items || [];
   const totalCount = data?.totalCount || 0;
@@ -80,6 +86,49 @@ export default function LeadsPage() {
   const handleConvert = (lead: Lead) => {
     setSelectedLead(lead);
     setConvertModalOpen(true);
+  };
+
+  const handleQualify = async (lead: Lead) => {
+    Modal.confirm({
+      title: 'Lead\'i Nitelikli Olarak İşaretle',
+      content: `"${lead.firstName} ${lead.lastName}" lead'ini nitelikli olarak işaretlemek istediğinizden emin misiniz?`,
+      okText: 'Nitelikli İşaretle',
+      okType: 'primary',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          await qualifyLead.mutateAsync({ id: lead.id.toString() });
+          message.success('Lead nitelikli olarak işaretlendi');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+          message.error(errorMessage);
+        }
+      },
+    });
+  };
+
+  const handleDisqualify = async (lead: Lead) => {
+    Modal.confirm({
+      title: 'Lead\'i Niteliksiz Olarak İşaretle',
+      content: `"${lead.firstName} ${lead.lastName}" lead'ini niteliksiz olarak işaretlemek istediğinizden emin misiniz?`,
+      okText: 'Niteliksiz İşaretle',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          await disqualifyLead.mutateAsync({
+            id: lead.id.toString(),
+            reason: 'Kullanıcı tarafından niteliksiz işaretlendi',
+          });
+          message.info('Lead niteliksiz olarak işaretlendi');
+        } catch (error: any) {
+          const apiError = error.response?.data;
+          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+          message.error(errorMessage);
+        }
+      },
+    });
   };
 
   const handleSubmit = async (values: any) => {
@@ -180,6 +229,8 @@ export default function LeadsPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onConvert={handleConvert}
+            onQualify={handleQualify}
+            onDisqualify={handleDisqualify}
           />
         </Space>
       </AnimatedCard>
