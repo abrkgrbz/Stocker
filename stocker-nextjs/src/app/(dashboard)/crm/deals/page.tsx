@@ -202,7 +202,8 @@ export default function DealsPage() {
       // Add optional fields only if they have values (avoid sending undefined)
       if (values.description) dealData.description = values.description;
       if (values.pipelineId) dealData.pipelineId = values.pipelineId;
-      if (values.stageId) dealData.currentStageId = values.stageId;
+      // Note: stageId is numeric but backend expects GUID, so we omit it
+      // TODO: Map numeric stage IDs to actual stage GUIDs when pipeline data is available
 
       if (selectedDeal) {
         await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
