@@ -237,66 +237,46 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6">
-      {/* Premium Header with Glassmorphism */}
+    <div className="p-6">
+      {/* Modern Minimalist Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl mb-6 shadow-2xl"
-        style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        }}
+        className="mb-8"
       >
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: 'radial-gradient(circle at 20% 50%, white 2px, transparent 2px), radial-gradient(circle at 80% 80%, white 2px, transparent 2px)',
-            backgroundSize: '60px 60px',
-          }}
-        />
-
-        <div className="relative p-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl shadow-lg">
-                  <CalendarOutlined />
-                </div>
-                <div>
-                  <Title level={2} className="!mb-0 !text-white">
-                    Aktiviteler
-                  </Title>
-                  <Text className="text-white/80">
-                    Tüm aktivitelerinizi takvimde yönetin ve takip edin
-                  </Text>
-                </div>
-              </div>
-            </div>
-            <Space size="large">
-              <Button
-                size="large"
-                icon={<ReloadOutlined />}
-                onClick={() => refetch()}
-                loading={isLoading}
-                className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
-              >
-                Yenile
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={() => handleCreate()}
-                className="bg-white text-purple-600 border-0 shadow-lg hover:scale-105 transition-transform"
-              >
-                Yeni Aktivite
-              </Button>
-            </Space>
+        <div className="flex justify-between items-center">
+          <div>
+            <Title level={2} className="!mb-2 !text-gray-800">
+              Aktiviteler
+            </Title>
+            <Text className="text-gray-500 text-base">
+              Tüm aktivitelerinizi takvimde yönetin ve takip edin
+            </Text>
           </div>
+          <Space size="middle">
+            <Button
+              size="large"
+              icon={<ReloadOutlined />}
+              onClick={() => refetch()}
+              loading={isLoading}
+              className="border-gray-300 hover:border-blue-500 hover:text-blue-500"
+            >
+              Yenile
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => handleCreate()}
+              className="shadow-sm"
+            >
+              Yeni Aktivite
+            </Button>
+          </Space>
         </div>
       </motion.div>
 
-      {/* Premium Stats Cards */}
+      {/* Professional Stats Cards */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <motion.div
@@ -304,16 +284,16 @@ export default function ActivitiesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card
-              className="shadow-xl border-0 h-full overflow-hidden relative"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              <Statistic
-                title={<span className="text-white flex items-center gap-2 text-base font-semibold"><CalendarOutlined /> Planlanmış</span>}
-                value={stats.total}
-                valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '2rem' }}
-                prefix={<Badge status="processing" />}
-              />
+            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Text className="text-gray-500 text-sm block mb-1">Planlanmış</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.total}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <CalendarOutlined className="text-2xl text-blue-600" />
+                </div>
+              </div>
             </Card>
           </motion.div>
         </Col>
@@ -323,16 +303,16 @@ export default function ActivitiesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card
-              className="shadow-xl border-0 h-full overflow-hidden relative"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-            >
-              <Statistic
-                title={<span className="text-white flex items-center gap-2 text-base font-semibold"><ThunderboltOutlined /> Bugün</span>}
-                value={stats.today}
-                valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '2rem' }}
-                prefix={<Badge status="warning" />}
-              />
+            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Text className="text-gray-500 text-sm block mb-1">Bugün</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.today}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                  <ThunderboltOutlined className="text-2xl text-orange-600" />
+                </div>
+              </div>
             </Card>
           </motion.div>
         </Col>
@@ -342,16 +322,16 @@ export default function ActivitiesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card
-              className="shadow-xl border-0 h-full overflow-hidden relative"
-              style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }}
-            >
-              <Statistic
-                title={<span className="text-white flex items-center gap-2 text-base font-semibold"><TrophyOutlined /> Tamamlandı</span>}
-                value={stats.completed}
-                valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '2rem' }}
-                prefix={<CheckCircleOutlined />}
-              />
+            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Text className="text-gray-500 text-sm block mb-1">Tamamlandı</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.completed}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-2xl text-green-600" />
+                </div>
+              </div>
             </Card>
           </motion.div>
         </Col>
@@ -361,33 +341,35 @@ export default function ActivitiesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card
-              className="shadow-xl border-0 h-full overflow-hidden relative"
-              style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}
-            >
-              <Statistic
-                title={<span className="text-white flex items-center gap-2 text-base font-semibold"><FireOutlined /> Gecikmiş</span>}
-                value={stats.overdue}
-                valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '2rem' }}
-                prefix={<Badge status="error" />}
-              />
+            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Text className="text-gray-500 text-sm block mb-1">Gecikmiş</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.overdue}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                  <FireOutlined className="text-2xl text-red-600" />
+                </div>
+              </div>
             </Card>
           </motion.div>
         </Col>
       </Row>
 
-      {/* Main Calendar */}
+      {/* Calendar Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <ActivityCalendar
-          activities={activities}
-          loading={isLoading}
-          onEventClick={handleEventClick}
-          onDateSelect={handleDateSelect}
-        />
+        <Card className="shadow-sm border border-gray-200">
+          <ActivityCalendar
+            activities={activities}
+            loading={isLoading}
+            onEventClick={handleEventClick}
+            onDateSelect={handleDateSelect}
+          />
+        </Card>
       </motion.div>
 
       {/* Activity Details Drawer */}
@@ -421,6 +403,12 @@ export default function ActivitiesPage() {
         width={480}
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
+        styles={{
+          mask: {
+            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          },
+        }}
         extra={
           drawerActivity && (
             <Space>
