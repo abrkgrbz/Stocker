@@ -332,11 +332,11 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
               </motion.div>
 
               {/* Company Info */}
-              <div className="flex-grow text-white">
+              <div className="flex-grow">
                 <div className="flex items-start justify-between flex-wrap gap-4">
                   <div>
                     <motion.h1
-                      className="text-4xl font-bold mb-3 drop-shadow-lg"
+                      className="text-4xl font-bold mb-3 text-white drop-shadow-lg"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
@@ -344,44 +344,60 @@ export default function CustomerDetailPage({ params }: CustomerDetailProps) {
                       {customer.companyName}
                     </motion.h1>
                     <div className="flex items-center gap-3 flex-wrap mb-4">
-                      <span className="text-white/90 flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                      <span className="text-white flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm border border-white/30">
                         <UserOutlined />
-                        <span className="font-medium">{customer.contactPerson}</span>
+                        <span className="font-semibold">{customer.contactPerson}</span>
                       </span>
                       {customer.industry && (
-                        <Tag color={getIndustryColor(customer.industry)} icon={<ShopOutlined />} className="text-sm">
+                        <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-md flex items-center gap-2">
+                          <ShopOutlined />
                           {customer.industry}
-                        </Tag>
+                        </span>
                       )}
-                      <Tag color={customer.customerType === 'Corporate' ? 'purple' : 'green'} className="text-sm">
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-md ${
+                        customer.customerType === 'Corporate'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-green-500 text-white'
+                      }`}>
                         {customer.customerType === 'Corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
-                      </Tag>
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
                         <MailOutlined className="text-white" />
-                        <span className="text-sm">{customer.email}</span>
+                        <span className="text-sm text-white font-medium">{customer.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
                         <PhoneOutlined className="text-white" />
-                        <span className="text-sm">{customer.phone}</span>
+                        <span className="text-sm text-white font-medium">{customer.phone}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
                         <EnvironmentOutlined className="text-white" />
-                        <span className="text-sm truncate">{customer.city}, {customer.district}</span>
+                        <span className="text-sm text-white font-medium truncate">{customer.city}, {customer.district}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Badge status={statusConfig.badge as any} text={<span className="text-white font-semibold">{statusConfig.text}</span>} />
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30 flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        customer.status === 'Active' ? 'bg-green-400' :
+                        customer.status === 'Pending' ? 'bg-yellow-400' : 'bg-gray-400'
+                      }`} />
+                      <span className="text-white font-bold">{statusConfig.text}</span>
+                    </div>
                     <Button
                       type="primary"
                       icon={<EditOutlined />}
                       size="large"
-                      className="shadow-lg"
-                      style={{ background: 'rgba(255, 255, 255, 0.2)', borderColor: 'white', color: 'white' }}
+                      className="shadow-lg hover:shadow-xl transition-all"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.25)',
+                        borderColor: 'white',
+                        color: 'white',
+                        fontWeight: 'bold'
+                      }}
                     >
                       Düzenle
                     </Button>
