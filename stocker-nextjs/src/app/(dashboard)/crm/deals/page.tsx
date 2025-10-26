@@ -189,18 +189,20 @@ export default function DealsPage() {
         return;
       }
 
-      const dealData = {
+      const dealData: any = {
         title: values.title,
-        description: values.description || undefined,
         customerId: values.customerId,
         amount: values.amount,
         probability: values.probability || 50,
         expectedCloseDate: values.expectedCloseDate.toISOString(),
         status: values.status || 'Open',
         priority: values.priority || 'Medium',
-        pipelineId: values.pipelineId || undefined,
-        currentStageId: values.stageId || undefined,
       };
+
+      // Add optional fields only if they have values (avoid sending undefined)
+      if (values.description) dealData.description = values.description;
+      if (values.pipelineId) dealData.pipelineId = values.pipelineId;
+      if (values.stageId) dealData.currentStageId = values.stageId;
 
       if (selectedDeal) {
         await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
