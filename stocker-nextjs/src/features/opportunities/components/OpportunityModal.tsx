@@ -86,7 +86,30 @@ export function OpportunityModal({
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      // Get all form values first
+      const values = form.getFieldsValue();
+
+      // Manual validation for required fields that might not be visible
+      const errors = [];
+
+      if (!values.name) errors.push('İsim gerekli');
+      if (!values.amount) errors.push('Tutar gerekli');
+      if (!values.probability && values.probability !== 0) errors.push('Olasılık gerekli');
+      if (!values.customerId) errors.push('Müşteri seçimi zorunlu');
+      if (!values.expectedCloseDate) errors.push('Tahmini kapanış tarihi zorunlu');
+      if (!values.status) errors.push('Durum gerekli');
+
+      if (errors.length > 0) {
+        console.error('Validation errors:', errors);
+        // Find which step has the first error and go there
+        if (!values.name) setCurrentStep(0);
+        else if (!values.amount || (!values.probability && values.probability !== 0)) setCurrentStep(1);
+        else if (!values.customerId || !values.expectedCloseDate || !values.status) setCurrentStep(2);
+        return;
+      }
+
+      // Validate visible fields
+      await form.validateFields();
       onSubmit(values);
       setCurrentStep(0);
     } catch (error) {

@@ -91,7 +91,32 @@ export function DealModal({
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      // Get all form values first
+      const values = form.getFieldsValue();
+
+      // Manual validation for required fields that might not be visible
+      const errors = [];
+
+      if (!values.title) errors.push('Başlık gerekli');
+      if (!values.amount) errors.push('Tutar gerekli');
+      if (!values.probability && values.probability !== 0) errors.push('Olasılık gerekli');
+      if (!values.stageId) errors.push('Aşama gerekli');
+      if (!values.status) errors.push('Durum gerekli');
+      if (!values.expectedCloseDate) errors.push('Tahmini kapanış tarihi zorunlu');
+      if (!values.customerId) errors.push('Müşteri seçimi zorunlu');
+
+      if (errors.length > 0) {
+        console.error('Validation errors:', errors);
+        // Find which step has the first error and go there
+        if (!values.title) setCurrentStep(0);
+        else if (!values.amount || (!values.probability && values.probability !== 0)) setCurrentStep(1);
+        else if (!values.stageId || !values.status || !values.expectedCloseDate) setCurrentStep(2);
+        else if (!values.customerId) setCurrentStep(3);
+        return;
+      }
+
+      // Validate visible fields
+      await form.validateFields();
       onSubmit(values);
       setCurrentStep(0);
     } catch (error) {
