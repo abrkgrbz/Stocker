@@ -189,6 +189,14 @@ export default function DealsPage() {
         return;
       }
 
+      // Ensure the date is in the future
+      const now = new Date();
+      const selectedDate = new Date(values.expectedCloseDate);
+      if (selectedDate <= now) {
+        message.error('Tahmini kapanış tarihi gelecekte olmalıdır');
+        return;
+      }
+
       const dealData: any = {
         title: values.title,
         customerId: values.customerId,
