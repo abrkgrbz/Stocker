@@ -33,6 +33,7 @@ import {
   useLoseOpportunity,
 } from '@/lib/api/hooks/useCRM';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
+import { OpportunityModal } from '@/features/opportunities/components/OpportunityModal';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 
@@ -76,6 +77,31 @@ export default function OpportunitiesPage() {
   const handleCreate = () => {
     setSelectedOpportunity(null);
     setModalOpen(true);
+  };
+
+  const handleSubmit = async (values: any) => {
+    try {
+      if (selectedOpportunity) {
+        // Update logic - if needed in the future
+        message.info('Güncelleme özelliği yakında eklenecek');
+      } else {
+        await createOpportunity.mutateAsync({
+          name: values.name,
+          customerId: values.customerId,
+          pipelineId: values.pipelineId,
+          stageId: values.stageId,
+          amount: values.amount,
+          probability: values.probability || 50,
+          expectedCloseDate: values.expectedCloseDate?.toISOString(),
+          description: values.description,
+        });
+      }
+      setModalOpen(false);
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'İşlem başarısız';
+      message.error(errorMessage);
+    }
   };
 
   const handleWin = async (opportunity: OpportunityDto) => {
@@ -366,6 +392,15 @@ export default function OpportunitiesPage() {
           </div>
         </Card>
       )}
+
+      {/* Opportunity Modal */}
+      <OpportunityModal
+        open={modalOpen}
+        opportunity={selectedOpportunity}
+        loading={createOpportunity.isPending}
+        onCancel={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
