@@ -41,7 +41,10 @@ import {
   useUpdateActivity,
   useDeleteActivity,
   useCompleteActivity,
-} from '@/hooks/useCRM';
+  useCancelActivity,
+  useRescheduleActivity,
+  useActivityStatistics,
+} from '@/lib/api/hooks/useCRM';
 import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
