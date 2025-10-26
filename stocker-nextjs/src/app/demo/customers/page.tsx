@@ -230,113 +230,162 @@ export default function CustomersDemo() {
         </Card>
       </motion.div>
 
-      {/* Customers Grid */}
-      <Row gutter={[16, 16]}>
+      {/* Modern Customer List */}
+      <div className="space-y-4">
         {filteredCustomers.map((customer, index) => (
-          <Col xs={24} sm={12} lg={8} xl={6} key={customer.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.3 }}
-              whileHover={{ scale: 1.02, translateY: -5 }}
+          <motion.div
+            key={customer.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.03, duration: 0.3 }}
+            whileHover={{ scale: 1.01, x: 5 }}
+          >
+            <Card
+              hoverable
+              className="shadow-md hover:shadow-2xl transition-all duration-300 border-l-4"
+              style={{
+                borderLeftColor:
+                  customer.status === 'Active'
+                    ? '#52c41a'
+                    : customer.status === 'Pending'
+                    ? '#faad14'
+                    : '#d9d9d9',
+              }}
             >
-              <Card
-                hoverable
-                className="h-full shadow-lg hover:shadow-2xl transition-all duration-300 border-0 overflow-hidden"
-                styles={{ body: { padding: 0 } }}
-              >
-                {/* Card Header with Gradient */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 pb-12">
-                  <div className="flex justify-between items-start mb-4">
-                    <Badge status={customer.status === 'Active' ? 'success' : customer.status === 'Pending' ? 'warning' : 'default'}>
-                      <Tag color={getStatusColor(customer.status)} className="font-semibold">
-                        {getStatusText(customer.status)}
-                      </Tag>
-                    </Badge>
-                    {customer.industry && (
-                      <Tag color={getIndustryColor(customer.industry)} icon={<ShopOutlined />}>
-                        {customer.industry}
-                      </Tag>
-                    )}
-                  </div>
-                  <div className="text-center">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                {/* Avatar Section */}
+                <div className="flex-shrink-0">
+                  <div className="relative">
                     <Avatar
-                      size={80}
+                      size={72}
                       icon={<UserOutlined />}
-                      className="bg-white/20 backdrop-blur-sm border-4 border-white shadow-lg mb-3"
+                      className={`border-4 ${
+                        customer.status === 'Active'
+                          ? 'border-green-200 bg-gradient-to-br from-green-400 to-blue-500'
+                          : customer.status === 'Pending'
+                          ? 'border-yellow-200 bg-gradient-to-br from-yellow-400 to-orange-500'
+                          : 'border-gray-200 bg-gradient-to-br from-gray-400 to-gray-600'
+                      }`}
                     />
-                    <h3 className="text-white font-bold text-lg mb-1">{customer.companyName}</h3>
-                    <p className="text-white/80 text-sm">{customer.contactPerson}</p>
+                    <div
+                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white ${
+                        customer.status === 'Active'
+                          ? 'bg-green-500'
+                          : customer.status === 'Pending'
+                          ? 'bg-yellow-500'
+                          : 'bg-gray-400'
+                      }`}
+                    ></div>
                   </div>
                 </div>
 
-                {/* Card Body */}
-                <div className="p-4 -mt-6 relative z-10">
-                  <Card className="shadow-md mb-4">
-                    <Space direction="vertical" size="small" className="w-full">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MailOutlined className="text-blue-500" />
-                        <span className="text-sm truncate">{customer.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <PhoneOutlined className="text-green-500" />
-                        <span className="text-sm">{customer.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <EnvironmentOutlined className="text-red-500" />
-                        <span className="text-sm">
-                          {customer.city}, {customer.district}
+                {/* Main Info Section */}
+                <div className="flex-grow min-w-0 w-full">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-3 gap-2">
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-xl font-bold text-gray-800 mb-1 truncate">
+                        {customer.companyName}
+                      </h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-gray-600 text-sm flex items-center gap-1">
+                          <UserOutlined className="text-blue-500" />
+                          {customer.contactPerson}
                         </span>
+                        {customer.industry && (
+                          <Tag
+                            color={getIndustryColor(customer.industry)}
+                            className="font-medium"
+                            icon={<ShopOutlined />}
+                          >
+                            {customer.industry}
+                          </Tag>
+                        )}
+                        <Tag
+                          color={customer.customerType === 'Corporate' ? 'purple' : 'green'}
+                          className="font-medium"
+                        >
+                          {customer.customerType === 'Corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
+                        </Tag>
                       </div>
-                    </Space>
-                  </Card>
+                    </div>
+                    <Tag
+                      color={getStatusColor(customer.status)}
+                      className="font-semibold text-sm px-4 py-1 self-start"
+                    >
+                      {getStatusText(customer.status)}
+                    </Tag>
+                  </div>
 
-                  {/* Stats */}
-                  <Row gutter={8}>
-                    <Col span={12}>
-                      <Tooltip title="Kredi Limiti">
-                        <Card size="small" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                          <Statistic
-                            title={<span className="text-xs text-gray-600">Limit</span>}
-                            value={customer.creditLimit}
-                            prefix={<DollarOutlined className="text-blue-500" />}
-                            suffix="₺"
-                            valueStyle={{ fontSize: '14px', fontWeight: 'bold', color: '#1890ff' }}
-                          />
-                        </Card>
-                      </Tooltip>
-                    </Col>
-                    <Col span={12}>
-                      <Tooltip title="Toplam Alışveriş">
-                        <Card size="small" className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                          <Statistic
-                            title={<span className="text-xs text-gray-600">Ciro</span>}
-                            value={customer.totalPurchases}
-                            prefix={<ShoppingOutlined className="text-green-500" />}
-                            suffix="₺"
-                            valueStyle={{ fontSize: '14px', fontWeight: 'bold', color: '#52c41a' }}
-                          />
-                        </Card>
-                      </Tooltip>
-                    </Col>
-                  </Row>
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div className="flex items-center gap-2 text-gray-600 bg-blue-50 px-3 py-2 rounded-lg">
+                      <MailOutlined className="text-blue-500" />
+                      <span className="text-sm truncate">{customer.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 bg-green-50 px-3 py-2 rounded-lg">
+                      <PhoneOutlined className="text-green-500" />
+                      <span className="text-sm">{customer.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 bg-red-50 px-3 py-2 rounded-lg">
+                      <EnvironmentOutlined className="text-red-500" />
+                      <span className="text-sm truncate">
+                        {customer.city}, {customer.district}
+                      </span>
+                    </div>
+                  </div>
 
-                  {/* Last Purchase */}
-                  <div className="mt-3 p-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg flex items-center justify-between">
-                    <span className="text-xs text-gray-600 flex items-center gap-1">
-                      <CalendarOutlined className="text-purple-500" />
-                      Son Alışveriş
-                    </span>
-                    <span className="text-xs font-semibold text-purple-700">
-                      {new Date(customer.lastPurchaseDate).toLocaleDateString('tr-TR')}
-                    </span>
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-3 rounded-lg border border-blue-200">
+                      <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
+                        <DollarOutlined className="text-blue-500" />
+                        Kredi Limiti
+                      </div>
+                      <div className="text-base font-bold text-blue-700">
+                        ₺{customer.creditLimit.toLocaleString('tr-TR')}
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 px-4 py-3 rounded-lg border border-green-200">
+                      <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
+                        <ShoppingOutlined className="text-green-500" />
+                        Toplam Ciro
+                      </div>
+                      <div className="text-base font-bold text-green-700">
+                        ₺{customer.totalPurchases.toLocaleString('tr-TR')}
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 px-4 py-3 rounded-lg border border-purple-200">
+                      <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
+                        <RiseOutlined className="text-purple-500" />
+                        Kullanım Oranı
+                      </div>
+                      <div className="text-base font-bold text-purple-700">
+                        {((customer.totalPurchases / customer.creditLimit) * 100).toFixed(0)}%
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 px-4 py-3 rounded-lg border border-orange-200">
+                      <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
+                        <CalendarOutlined className="text-orange-500" />
+                        Son Alışveriş
+                      </div>
+                      <div className="text-xs font-semibold text-orange-700">
+                        {new Date(customer.lastPurchaseDate).toLocaleDateString('tr-TR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </Card>
-            </motion.div>
-          </Col>
+              </div>
+            </Card>
+          </motion.div>
         ))}
-      </Row>
+      </div>
 
       {/* No Results */}
       {filteredCustomers.length === 0 && (

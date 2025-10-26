@@ -70,7 +70,8 @@
       "Bash(dotnet run)",
       "Bash(for dir in deals activities pipelines segments campaigns)",
       "Bash(do echo \"=== $dir ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
