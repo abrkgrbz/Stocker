@@ -4,53 +4,35 @@ import React, { useState } from 'react';
 import {
   Card,
   Button,
-  Input,
   Space,
-  Tag,
   Typography,
   Row,
   Col,
   Modal,
   notification,
-  List,
-  Avatar,
   Statistic,
-  Progress,
   Badge,
-  Dropdown,
-  Select,
-  DatePicker,
-  Empty,
-  Tooltip,
-  Timeline,
+  Drawer,
+  Descriptions,
+  Tag,
   Divider,
 } from 'antd';
 import {
   PlusOutlined,
-  SearchOutlined,
+  ReloadOutlined,
+  CheckCircleOutlined,
+  CalendarOutlined,
+  ThunderboltOutlined,
+  TrophyOutlined,
+  FireOutlined,
   PhoneOutlined,
   MailOutlined,
   TeamOutlined,
   FileTextOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
-  CalendarOutlined,
-  UnorderedListOutlined,
-  ReloadOutlined,
-  FilterOutlined,
-  MoreOutlined,
   EditOutlined,
   DeleteOutlined,
-  FireOutlined,
-  ThunderboltOutlined,
-  TrophyOutlined,
-  RiseOutlined,
-  FieldTimeOutlined,
   UserOutlined,
-  FolderOpenOutlined,
-  AppstoreOutlined,
-  BarsOutlined,
-  DashboardOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
 import {
@@ -60,17 +42,15 @@ import {
   useDeleteActivity,
   useCompleteActivity,
 } from '@/hooks/useCRM';
-import { ActivitiesStats } from '@/components/crm/activities/ActivitiesStats';
 import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
-// Activity type configuration with enhanced styling
+// Activity type configuration
 const activityConfig: Record<
   Activity['type'],
   { icon: React.ReactNode; color: string; label: string; gradient: string }
@@ -115,14 +95,10 @@ const statusColors: Record<Activity['status'], string> = {
 };
 
 export default function ActivitiesPage() {
-  const [searchText, setSearchText] = useState('');
-  const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'timeline' | 'kanban'>('list');
-  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerActivity, setDrawerActivity] = useState<Activity | null>(null);
 
   // API Hooks
   const { data, isLoading, refetch } = useActivities({});
@@ -145,19 +121,19 @@ export default function ActivitiesPage() {
     ).length,
   };
 
-  // Type distribution
-  const typeStats = activities.reduce((acc, activity) => {
-    acc[activity.type] = (acc[activity.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
   const handleCreate = (date?: Dayjs) => {
     setSelectedActivity(null);
     setModalOpen(true);
   };
 
+  const handleEventClick = (activity: Activity) => {
+    setDrawerActivity(activity);
+    setDrawerOpen(true);
+  };
+
   const handleEdit = (activity: Activity) => {
     setSelectedActivity(activity);
+    setDrawerOpen(false);
     setModalOpen(true);
   };
 
@@ -176,6 +152,7 @@ export default function ActivitiesPage() {
             description: 'Aktivite başarıyla silindi',
             placement: 'bottomRight',
           });
+          setDrawerOpen(false);
         } catch (error: any) {
           const apiError = error.response?.data;
           const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
@@ -197,6 +174,7 @@ export default function ActivitiesPage() {
         description: 'Aktivite tamamlandı olarak işaretlendi',
         placement: 'bottomRight',
       });
+      setDrawerOpen(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
@@ -253,360 +231,9 @@ export default function ActivitiesPage() {
     }
   };
 
-  // Filter activities
-  const filteredActivities = activities.filter((activity) => {
-    const searchLower = searchText.toLowerCase();
-    const matchesSearch =
-      activity.title.toLowerCase().includes(searchLower) ||
-      activity.description?.toLowerCase().includes(searchLower) ||
-      '';
-
-    const matchesType = filterType === 'all' || activity.type === filterType;
-    const matchesStatus = filterStatus === 'all' || activity.status === filterStatus;
-
-    let matchesDate = true;
-    if (dateRange) {
-      const activityDate = dayjs(activity.startTime);
-      matchesDate = activityDate.isAfter(dateRange[0].startOf('day')) &&
-                   activityDate.isBefore(dateRange[1].endOf('day'));
-    }
-
-    return matchesSearch && matchesType && matchesStatus && matchesDate;
-  });
-
-  // Calendar View
-  const CalendarView = () => (
-    <ActivityCalendar
-      activities={filteredActivities}
-      loading={isLoading}
-      onEventClick={(activity) => handleEdit(activity)}
-      onDateSelect={(start, end) => {
-        setSelectedActivity(null);
-        setModalOpen(true);
-      }}
-    />
-  );
-
-  // Timeline View
-  const TimelineView = () => {
-    const sortedActivities = [...filteredActivities].sort((a, b) =>
-      dayjs(a.startTime).isAfter(dayjs(b.startTime)) ? 1 : -1
-    );
-
-    return (
-      <Card className="shadow-xl">
-        <Timeline mode="left">
-          {sortedActivities.map((activity) => {
-            const config = activityConfig[activity.type];
-            const isPast = dayjs(activity.startTime).isBefore(dayjs());
-
-            return (
-              <Timeline.Item
-                key={activity.id}
-                color={config.color}
-                dot={
-                  <div
-                    className="flex items-center justify-center w-10 h-10 rounded-full text-white shadow-lg"
-                    style={{ background: config.gradient }}
-                  >
-                    {config.icon}
-                  </div>
-                }
-                label={
-                  <div className="font-semibold">
-                    {dayjs(activity.startTime).format('DD MMM YYYY HH:mm')}
-                  </div>
-                }
-              >
-                <Card
-                  size="small"
-                  className="shadow-md hover:shadow-xl transition-all cursor-pointer"
-                  onClick={() => handleEdit(activity)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Text strong className="text-base">{activity.title}</Text>
-                        <Tag color={config.color}>{config.label}</Tag>
-                        <Tag color={statusColors[activity.status]}>{activity.status}</Tag>
-                      </div>
-                      {activity.description && (
-                        <Text type="secondary" className="text-sm">{activity.description}</Text>
-                      )}
-                    </div>
-                    <Dropdown
-                      menu={{
-                        items: [
-                          {
-                            key: 'edit',
-                            icon: <EditOutlined />,
-                            label: 'Düzenle',
-                            onClick: () => handleEdit(activity),
-                          },
-                          activity.status === 'Scheduled' && {
-                            key: 'complete',
-                            icon: <CheckCircleOutlined />,
-                            label: 'Tamamla',
-                            onClick: () => handleComplete(activity.id),
-                          },
-                          {
-                            key: 'delete',
-                            icon: <DeleteOutlined />,
-                            label: 'Sil',
-                            danger: true,
-                            onClick: () => handleDelete(activity.id),
-                          },
-                        ].filter(Boolean),
-                      }}
-                      trigger={['click']}
-                    >
-                      <Button type="text" icon={<MoreOutlined />} />
-                    </Dropdown>
-                  </div>
-                </Card>
-              </Timeline.Item>
-            );
-          })}
-        </Timeline>
-        {sortedActivities.length === 0 && (
-          <Empty description="Aktivite bulunamadı" />
-        )}
-      </Card>
-    );
-  };
-
-  // Kanban View
-  const KanbanView = () => {
-    const columns = {
-      Scheduled: filteredActivities.filter(a => a.status === 'Scheduled'),
-      Completed: filteredActivities.filter(a => a.status === 'Completed'),
-      Cancelled: filteredActivities.filter(a => a.status === 'Cancelled'),
-    };
-
-    return (
-      <Row gutter={16}>
-        {Object.entries(columns).map(([status, items]) => (
-          <Col span={8} key={status}>
-            <Card
-              title={
-                <div className="flex items-center justify-between">
-                  <Space>
-                    <Badge
-                      count={items.length}
-                      style={{ backgroundColor: statusColors[status as Activity['status']] }}
-                    />
-                    <span>{status}</span>
-                  </Space>
-                </div>
-              }
-              className="shadow-xl"
-              style={{ minHeight: '600px' }}
-            >
-              <div className="space-y-3">
-                {items.map((activity) => {
-                  const config = activityConfig[activity.type];
-                  return (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                    >
-                      <Card
-                        size="small"
-                        className="shadow-md hover:shadow-xl transition-all cursor-pointer"
-                        onClick={() => handleEdit(activity)}
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-                              style={{ background: config.gradient }}
-                            >
-                              {config.icon}
-                            </div>
-                            <Text strong className="flex-1">{activity.title}</Text>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <ClockCircleOutlined />
-                            {dayjs(activity.startTime).format('DD MMM HH:mm')}
-                          </div>
-                          {activity.description && (
-                            <Text type="secondary" className="text-xs line-clamp-2">
-                              {activity.description}
-                            </Text>
-                          )}
-                          <div className="flex justify-between items-center pt-2">
-                            <Tag color={config.color} className="text-xs">{config.label}</Tag>
-                            <Dropdown
-                              menu={{
-                                items: [
-                                  {
-                                    key: 'edit',
-                                    icon: <EditOutlined />,
-                                    label: 'Düzenle',
-                                    onClick: () => handleEdit(activity),
-                                  },
-                                  activity.status === 'Scheduled' && {
-                                    key: 'complete',
-                                    icon: <CheckCircleOutlined />,
-                                    label: 'Tamamla',
-                                    onClick: () => handleComplete(activity.id),
-                                  },
-                                  {
-                                    key: 'delete',
-                                    icon: <DeleteOutlined />,
-                                    label: 'Sil',
-                                    danger: true,
-                                    onClick: () => handleDelete(activity.id),
-                                  },
-                                ].filter(Boolean),
-                              }}
-                              trigger={['click']}
-                            >
-                              <Button type="text" size="small" icon={<MoreOutlined />} />
-                            </Dropdown>
-                          </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-                {items.length === 0 && (
-                  <Empty description="Aktivite yok" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                )}
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-    );
-  };
-
-  // List View
-  const ListView = () => {
-    // Group by date
-    const groupedActivities = filteredActivities.reduce(
-      (acc, activity) => {
-        const date = dayjs(activity.startTime).format('YYYY-MM-DD');
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(activity);
-        return acc;
-      },
-      {} as Record<string, Activity[]>
-    );
-
-    return (
-      <Card className="shadow-xl">
-        <div className="space-y-6">
-          {Object.entries(groupedActivities)
-            .sort(([a], [b]) => (dayjs(a).isAfter(dayjs(b)) ? 1 : -1))
-            .map(([date, dateActivities]) => (
-              <div key={date}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="font-bold text-lg text-gray-700">
-                    {dayjs(date).format('DD MMMM YYYY')}
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    {dayjs(date).format('dddd')}
-                  </div>
-                  <Badge count={dateActivities.length} style={{ backgroundColor: '#52c41a' }} />
-                </div>
-                <List
-                  dataSource={dateActivities}
-                  renderItem={(activity) => {
-                    const config = activityConfig[activity.type];
-                    const isOverdue = dayjs(activity.startTime).isBefore(dayjs()) && activity.status === 'Scheduled';
-
-                    return (
-                      <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <List.Item
-                          className={`hover:bg-gray-50 transition-all rounded-lg px-4 ${isOverdue ? 'border-l-4 border-red-500' : ''}`}
-                          actions={[
-                            <Button
-                              key="edit"
-                              type="link"
-                              icon={<EditOutlined />}
-                              onClick={() => handleEdit(activity)}
-                            >
-                              Düzenle
-                            </Button>,
-                            activity.status === 'Scheduled' && (
-                              <Button
-                                key="complete"
-                                type="link"
-                                icon={<CheckCircleOutlined />}
-                                onClick={() => handleComplete(activity.id)}
-                                className="text-green-600"
-                              >
-                                Tamamla
-                              </Button>
-                            ),
-                            <Button
-                              key="delete"
-                              type="link"
-                              danger
-                              icon={<DeleteOutlined />}
-                              onClick={() => handleDelete(activity.id)}
-                            >
-                              Sil
-                            </Button>,
-                          ]}
-                        >
-                          <List.Item.Meta
-                            avatar={
-                              <div
-                                className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl shadow-lg"
-                                style={{ background: config.gradient }}
-                              >
-                                {config.icon}
-                              </div>
-                            }
-                            title={
-                              <div className="flex items-center gap-2">
-                                <Text strong className="text-base">{activity.title}</Text>
-                                <Tag color={config.color}>{config.label}</Tag>
-                                <Tag color={statusColors[activity.status]}>{activity.status}</Tag>
-                                {isOverdue && (
-                                  <Tag icon={<FireOutlined />} color="error">
-                                    Gecikmiş
-                                  </Tag>
-                                )}
-                              </div>
-                            }
-                            description={
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <ClockCircleOutlined />
-                                  {dayjs(activity.startTime).format('HH:mm')}
-                                  {activity.endTime && ` - ${dayjs(activity.endTime).format('HH:mm')}`}
-                                </div>
-                                {activity.description && (
-                                  <div className="text-gray-500">{activity.description}</div>
-                                )}
-                              </div>
-                            }
-                          />
-                        </List.Item>
-                      </motion.div>
-                    );
-                  }}
-                />
-              </div>
-            ))}
-          {Object.keys(groupedActivities).length === 0 && (
-            <Empty
-              description="Aktivite bulunamadı"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          )}
-        </div>
-      </Card>
-    );
+  const handleDateSelect = (start: Date, end: Date) => {
+    setSelectedActivity(null);
+    setModalOpen(true);
   };
 
   return (
@@ -620,7 +247,6 @@ export default function ActivitiesPage() {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         }}
       >
-        {/* Decorative Pattern */}
         <div
           className="absolute inset-0 opacity-20"
           style={{
@@ -641,7 +267,7 @@ export default function ActivitiesPage() {
                     Aktiviteler
                   </Title>
                   <Text className="text-white/80">
-                    Tüm aktivitelerinizi yönetin ve takip edin
+                    Tüm aktivitelerinizi takvimde yönetin ve takip edin
                   </Text>
                 </div>
               </div>
@@ -750,108 +376,163 @@ export default function ActivitiesPage() {
         </Col>
       </Row>
 
-      {/* Filters and View Switcher */}
-      <Card className="mb-6 shadow-xl">
-        <Row gutter={16} align="middle">
-          <Col flex="auto">
-            <Input
-              placeholder="Aktivite ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              size="large"
-              allowClear
-            />
-          </Col>
-          <Col>
-            <Select
-              placeholder="Tür"
-              style={{ width: 140 }}
-              size="large"
-              value={filterType}
-              onChange={setFilterType}
-              options={[
-                { label: 'Tümü', value: 'all' },
-                ...Object.entries(activityConfig).map(([type, config]) => ({
-                  label: config.label,
-                  value: type,
-                })),
-              ]}
-            />
-          </Col>
-          <Col>
-            <Select
-              placeholder="Durum"
-              style={{ width: 140 }}
-              size="large"
-              value={filterStatus}
-              onChange={setFilterStatus}
-              options={[
-                { label: 'Tümü', value: 'all' },
-                { label: 'Planlanmış', value: 'Scheduled' },
-                { label: 'Tamamlandı', value: 'Completed' },
-                { label: 'İptal', value: 'Cancelled' },
-              ]}
-            />
-          </Col>
-          <Col>
-            <RangePicker
-              size="large"
-              value={dateRange}
-              onChange={(dates) => setDateRange(dates as [Dayjs, Dayjs] | null)}
-              format="DD/MM/YYYY"
-            />
-          </Col>
-          <Col>
-            <Button.Group size="large">
-              <Tooltip title="Liste Görünümü">
-                <Button
-                  type={viewMode === 'list' ? 'primary' : 'default'}
-                  icon={<BarsOutlined />}
-                  onClick={() => setViewMode('list')}
-                />
-              </Tooltip>
-              <Tooltip title="Takvim Görünümü">
-                <Button
-                  type={viewMode === 'calendar' ? 'primary' : 'default'}
-                  icon={<CalendarOutlined />}
-                  onClick={() => setViewMode('calendar')}
-                />
-              </Tooltip>
-              <Tooltip title="Zaman Çizelgesi">
-                <Button
-                  type={viewMode === 'timeline' ? 'primary' : 'default'}
-                  icon={<FieldTimeOutlined />}
-                  onClick={() => setViewMode('timeline')}
-                />
-              </Tooltip>
-              <Tooltip title="Kanban Panosu">
-                <Button
-                  type={viewMode === 'kanban' ? 'primary' : 'default'}
-                  icon={<AppstoreOutlined />}
-                  onClick={() => setViewMode('kanban')}
-                />
-              </Tooltip>
-            </Button.Group>
-          </Col>
-        </Row>
-      </Card>
+      {/* Main Calendar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <ActivityCalendar
+          activities={activities}
+          loading={isLoading}
+          onEventClick={handleEventClick}
+          onDateSelect={handleDateSelect}
+        />
+      </motion.div>
 
-      {/* View Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {viewMode === 'calendar' && <CalendarView />}
-          {viewMode === 'list' && <ListView />}
-          {viewMode === 'timeline' && <TimelineView />}
-          {viewMode === 'kanban' && <KanbanView />}
-        </motion.div>
-      </AnimatePresence>
+      {/* Activity Details Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-3">
+            {drawerActivity && (
+              <>
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-lg"
+                  style={{ background: activityConfig[drawerActivity.type].gradient }}
+                >
+                  {activityConfig[drawerActivity.type].icon}
+                </div>
+                <div>
+                  <div className="font-semibold text-base">{drawerActivity.title}</div>
+                  <Space size="small">
+                    <Tag color={activityConfig[drawerActivity.type].color}>
+                      {activityConfig[drawerActivity.type].label}
+                    </Tag>
+                    <Tag color={statusColors[drawerActivity.status]}>
+                      {drawerActivity.status}
+                    </Tag>
+                  </Space>
+                </div>
+              </>
+            )}
+          </div>
+        }
+        placement="right"
+        width={480}
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        extra={
+          drawerActivity && (
+            <Space>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(drawerActivity)}
+              >
+                Düzenle
+              </Button>
+              {drawerActivity.status === 'Scheduled' && (
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleComplete(drawerActivity.id)}
+                >
+                  Tamamla
+                </Button>
+              )}
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(drawerActivity.id)}
+              >
+                Sil
+              </Button>
+            </Space>
+          )
+        }
+      >
+        {drawerActivity && (
+          <div className="space-y-6">
+            {/* Time Information */}
+            <Card size="small" className="shadow-sm">
+              <div className="flex items-center gap-2 text-gray-600 mb-2">
+                <ClockCircleOutlined />
+                <span className="font-semibold">Zaman</span>
+              </div>
+              <div className="text-base">
+                {dayjs(drawerActivity.startTime).format('DD MMMM YYYY, HH:mm')}
+                {drawerActivity.endTime && (
+                  <span> - {dayjs(drawerActivity.endTime).format('HH:mm')}</span>
+                )}
+              </div>
+              {dayjs(drawerActivity.startTime).isBefore(dayjs()) && drawerActivity.status === 'Scheduled' && (
+                <Tag icon={<FireOutlined />} color="error" className="mt-2">
+                  Gecikmiş
+                </Tag>
+              )}
+            </Card>
+
+            {/* Description */}
+            {drawerActivity.description && (
+              <Card size="small" className="shadow-sm">
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <FileTextOutlined />
+                  <span className="font-semibold">Açıklama</span>
+                </div>
+                <Text>{drawerActivity.description}</Text>
+              </Card>
+            )}
+
+            {/* Customer Information */}
+            {drawerActivity.customerId && (
+              <Card size="small" className="shadow-sm">
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <UserOutlined />
+                  <span className="font-semibold">Müşteri</span>
+                </div>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Müşteri ID">
+                    {drawerActivity.customerId}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            )}
+
+            <Divider />
+
+            {/* Action Buttons */}
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Button
+                block
+                size="large"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(drawerActivity)}
+              >
+                Aktiviteyi Düzenle
+              </Button>
+              {drawerActivity.status === 'Scheduled' && (
+                <Button
+                  block
+                  size="large"
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleComplete(drawerActivity.id)}
+                >
+                  Tamamlandı Olarak İşaretle
+                </Button>
+              )}
+              <Button
+                block
+                size="large"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(drawerActivity.id)}
+              >
+                Aktiviteyi Sil
+              </Button>
+            </Space>
+          </div>
+        )}
+      </Drawer>
 
       {/* Create/Edit Modal */}
       <ActivityModal
