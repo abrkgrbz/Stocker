@@ -170,7 +170,7 @@ export function OpportunityModal({
             <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckOutlined />} size="large">
               {isEditMode ? 'Güncelle' : 'Oluştur'}
             </Button>
-          )}
+          </div>
         </div>
       }
     >
@@ -179,9 +179,9 @@ export function OpportunityModal({
         <Steps current={currentStep} items={steps} className="px-4" />
       </div>
 
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" preserve={true}>
         {/* Step 0: Temel Bilgiler */}
-        {currentStep === 0 && (
+        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
@@ -216,10 +216,10 @@ export function OpportunityModal({
               </Form.Item>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 1: Finansal Bilgiler */}
-        {currentStep === 1 && (
+        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-green-50 rounded-lg">
@@ -276,10 +276,10 @@ export function OpportunityModal({
               </div>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 2: Müşteri & Tarih */}
-        {currentStep === 2 && (
+        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
@@ -336,10 +336,10 @@ export function OpportunityModal({
               </Form.Item>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 3: Tamamla */}
-        {currentStep === 3 && (
+        <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-orange-50 rounded-lg">
@@ -395,7 +395,7 @@ export function OpportunityModal({
               </div>
             </Card>
           </div>
-        )}
+        </div>
       </Form>
     </Drawer>
   );

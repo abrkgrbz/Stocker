@@ -94,6 +94,9 @@ export function DealModal({
       // Get all form values first
       const values = form.getFieldsValue();
 
+      console.log('🔍 All form values:', values);
+      console.log('📋 Form fields:', Object.keys(values));
+
       // Manual validation for required fields that might not be visible
       const errors = [];
 
@@ -106,7 +109,16 @@ export function DealModal({
       if (!values.customerId) errors.push('Müşteri seçimi zorunlu');
 
       if (errors.length > 0) {
-        console.error('Validation errors:', errors);
+        console.error('❌ Validation errors:', errors);
+        console.error('❌ Missing values:', {
+          title: values.title,
+          amount: values.amount,
+          probability: values.probability,
+          stageId: values.stageId,
+          status: values.status,
+          expectedCloseDate: values.expectedCloseDate,
+          customerId: values.customerId,
+        });
         // Find which step has the first error and go there
         if (!values.title) setCurrentStep(0);
         else if (!values.amount || (!values.probability && values.probability !== 0)) setCurrentStep(1);
@@ -195,9 +207,9 @@ export function DealModal({
         <Steps current={currentStep} items={steps} className="px-4" />
       </div>
 
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" preserve={true}>
         {/* Step 0: Temel Bilgiler */}
-        {currentStep === 0 && (
+        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
@@ -232,10 +244,10 @@ export function DealModal({
               </Form.Item>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 1: Finansal Bilgiler */}
-        {currentStep === 1 && (
+        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-green-50 rounded-lg">
@@ -292,10 +304,10 @@ export function DealModal({
               </div>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 2: Aşama & Durum */}
-        {currentStep === 2 && (
+        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
@@ -361,10 +373,10 @@ export function DealModal({
               </Form.Item>
             </Card>
           </div>
-        )}
+        </div>
 
         {/* Step 3: Tamamla */}
-        {currentStep === 3 && (
+        <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-orange-50 rounded-lg">
@@ -413,7 +425,7 @@ export function DealModal({
               )}
             </Card>
           </div>
-        )}
+        </div>
       </Form>
     </Drawer>
   );
