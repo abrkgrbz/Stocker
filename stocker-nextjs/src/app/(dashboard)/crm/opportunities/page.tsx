@@ -87,13 +87,13 @@ export default function OpportunitiesPage() {
       } else {
         await createOpportunity.mutateAsync({
           name: values.name,
-          customerId: values.customerId,
-          pipelineId: values.pipelineId,
-          stageId: values.stageId,
+          customerId: values.customerId || undefined,
+          pipelineId: values.pipelineId || undefined,
+          stageId: values.stageId || undefined,
           amount: values.amount,
           probability: values.probability || 50,
           expectedCloseDate: values.expectedCloseDate ? values.expectedCloseDate.toISOString() : undefined,
-          description: values.description,
+          description: values.description || undefined,
         });
       }
       setModalOpen(false);
