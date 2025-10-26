@@ -1,4 +1,62 @@
 import { ApiService } from '../api-service';
+import type {
+  // Statistics
+  ActivityStatisticsDto,
+  LeadStatisticsDto,
+  DealStatisticsDto,
+  ConversionRatesDto,
+  PipelineStatisticsDto,
+  CampaignRoiDto,
+  CampaignStatisticsDto,
+  // Opportunities
+  OpportunityDto,
+  OpportunityProductDto,
+  PipelineReportDto,
+  ForecastDto,
+  CreateOpportunityCommand,
+  UpdateOpportunityCommand,
+  OpportunityFilters,
+  // Documents
+  DocumentDto,
+  UploadDocumentResponse,
+  UpdateDocumentRequest,
+  DownloadUrlResponse,
+  DocumentCategory,
+  AccessLevel,
+  // Customer Tags
+  CustomerTagDto,
+  AddCustomerTagCommand,
+  // Campaign Members
+  CampaignMemberDto,
+  AddCampaignMemberCommand,
+  BulkImportResultDto,
+  BulkImportCampaignMembersCommand,
+  // Segment Members
+  CustomerSegmentMemberDto,
+  AddSegmentMemberCommand,
+  UpdateSegmentCriteriaCommand,
+  // Commands
+  CompleteActivityCommand,
+  CancelActivityCommand,
+  RescheduleActivityCommand,
+  QualifyLeadCommand,
+  DisqualifyLeadCommand,
+  AssignLeadCommand,
+  UpdateLeadScoreCommand,
+  MoveDealStageCommand,
+  CloseDealWonCommand,
+  CloseDealLostCommand,
+  MoveOpportunityStageCommand,
+  WinOpportunityCommand,
+  LoseOpportunityCommand,
+  AddDealProductCommand,
+  DealProductDto,
+  ReorderPipelineStagesCommand,
+  ScoringCriteria,
+  ActivityFilters,
+  Guid,
+  DateTime,
+} from './crm.types';
 
 // =====================================
 // TYPES - Based on Backend API
@@ -658,10 +716,700 @@ export class CRMService {
   }
 
   /**
-   * Abort campaign
+   * Pause campaign
    */
-  static async abortCampaign(id: string): Promise<Campaign> {
-    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/abort`), {});
+  static async pauseCampaign(id: string): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/pause`), {});
+  }
+
+  // =====================================
+  // ACTIVITIES - Extended Methods
+  // =====================================
+
+  /**
+   * Cancel an activity
+   */
+  static async cancelActivity(id: Guid, reason?: string): Promise<Activity> {
+    const command: CancelActivityCommand = { id, cancellationReason: reason };
+    return ApiService.post<Activity>(this.getPath(`activities/${id}/cancel`), command);
+  }
+
+  /**
+   * Reschedule an activity
+   */
+  static async rescheduleActivity(
+    id: Guid,
+    newStartDate: DateTime,
+    newEndDate?: DateTime,
+    reason?: string
+  ): Promise<Activity> {
+    const command: RescheduleActivityCommand = { id, newStartDate, newEndDate, reason };
+    return ApiService.post<Activity>(this.getPath(`activities/${id}/reschedule`), command);
+  }
+
+  /**
+   * Get upcoming activities (next N days)
+   */
+  static async getUpcomingActivities(days: number = 7): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(
+      this.getPath('activities/upcoming'),
+      { params: { days } }
+    );
+  }
+
+  /**
+   * Get overdue activities
+   */
+  static async getOverdueActivities(): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(this.getPath('activities/overdue'));
+  }
+
+  /**
+   * Get activities for calendar view (date range)
+   */
+  static async getCalendarActivities(
+    fromDate: DateTime,
+    toDate: DateTime
+  ): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(
+      this.getPath('activities/calendar'),
+      { params: { fromDate, toDate } }
+    );
+  }
+
+  /**
+   * Get activity statistics
+   */
+  static async getActivityStatistics(
+    fromDate?: DateTime,
+    toDate?: DateTime
+  ): Promise<ActivityStatisticsDto> {
+    return ApiService.get<ActivityStatisticsDto>(
+      this.getPath('activities/statistics'),
+      { params: { fromDate, toDate } }
+    );
+  }
+
+  // =====================================
+  // LEADS - Extended Methods
+  // =====================================
+
+  /**
+   * Qualify a lead
+   */
+  static async qualifyLead(id: Guid, notes?: string): Promise<Lead> {
+    const command: QualifyLeadCommand = { id, qualificationNotes: notes };
+    return ApiService.post<Lead>(this.getPath(`leads/${id}/qualify`), command);
+  }
+
+  /**
+   * Disqualify a lead
+   */
+  static async disqualifyLead(id: Guid, reason: string): Promise<Lead> {
+    const command: DisqualifyLeadCommand = { id, disqualificationReason: reason };
+    return ApiService.post<Lead>(this.getPath(`leads/${id}/disqualify`), command);
+  }
+
+  /**
+   * Assign lead to a user
+   */
+  static async assignLead(id: Guid, assignedToId: Guid): Promise<Lead> {
+    const command: AssignLeadCommand = { id, assignedToId };
+    return ApiService.post<Lead>(this.getPath(`leads/${id}/assign`), command);
+  }
+
+  /**
+   * Update lead score
+   */
+  static async updateLeadScore(
+    id: Guid,
+    score: number,
+    scoringCriteria?: ScoringCriteria
+  ): Promise<Lead> {
+    const command: UpdateLeadScoreCommand = { id, score, scoringCriteria };
+    return ApiService.post<Lead>(this.getPath(`leads/${id}/score`), command);
+  }
+
+  /**
+   * Get activities for a lead
+   */
+  static async getLeadActivities(id: Guid): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(this.getPath(`leads/${id}/activities`));
+  }
+
+  /**
+   * Get lead statistics
+   */
+  static async getLeadStatistics(
+    fromDate?: DateTime,
+    toDate?: DateTime
+  ): Promise<LeadStatisticsDto> {
+    return ApiService.get<LeadStatisticsDto>(
+      this.getPath('leads/statistics'),
+      { params: { fromDate, toDate } }
+    );
+  }
+
+  // =====================================
+  // DEALS - Extended Methods
+  // =====================================
+
+  /**
+   * Move deal to a different stage
+   */
+  static async moveDealStage(
+    id: Guid,
+    newStageId: Guid,
+    notes?: string
+  ): Promise<Deal> {
+    const command: MoveDealStageCommand = { dealId: id, newStageId, notes };
+    return ApiService.post<Deal>(this.getPath(`deals/${id}/move-stage`), command);
+  }
+
+  /**
+   * Close deal as won
+   */
+  static async closeDealWon(
+    id: Guid,
+    actualAmount?: number,
+    closedDate?: DateTime,
+    notes?: string
+  ): Promise<Deal> {
+    const command: CloseDealWonCommand = {
+      id,
+      actualAmount,
+      closedDate: closedDate || new Date().toISOString(),
+      notes,
+    };
+    return ApiService.post<Deal>(this.getPath(`deals/${id}/close-won`), command);
+  }
+
+  /**
+   * Close deal as lost
+   */
+  static async closeDealLost(
+    id: Guid,
+    lostReason: string,
+    competitorName?: string,
+    closedDate?: DateTime,
+    notes?: string
+  ): Promise<Deal> {
+    const command: CloseDealLostCommand = {
+      id,
+      lostReason,
+      competitorName,
+      closedDate: closedDate || new Date().toISOString(),
+      notes,
+    };
+    return ApiService.post<Deal>(this.getPath(`deals/${id}/close-lost`), command);
+  }
+
+  /**
+   * Get activities for a deal
+   */
+  static async getDealActivities(id: Guid): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(this.getPath(`deals/${id}/activities`));
+  }
+
+  /**
+   * Get products for a deal
+   */
+  static async getDealProducts(id: Guid): Promise<DealProductDto[]> {
+    return ApiService.get<DealProductDto[]>(this.getPath(`deals/${id}/products`));
+  }
+
+  /**
+   * Add product to a deal
+   */
+  static async addDealProduct(
+    dealId: Guid,
+    productId: Guid,
+    quantity: number,
+    unitPrice: number,
+    discount?: number
+  ): Promise<DealProductDto> {
+    const command: AddDealProductCommand = { dealId, productId, quantity, unitPrice, discount };
+    return ApiService.post<DealProductDto>(this.getPath(`deals/${dealId}/products`), command);
+  }
+
+  /**
+   * Remove product from a deal
+   */
+  static async removeDealProduct(dealId: Guid, productId: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`deals/${dealId}/products/${productId}`));
+  }
+
+  /**
+   * Get deal statistics
+   */
+  static async getDealStatistics(
+    fromDate?: DateTime,
+    toDate?: DateTime
+  ): Promise<DealStatisticsDto> {
+    return ApiService.get<DealStatisticsDto>(
+      this.getPath('deals/statistics'),
+      { params: { fromDate, toDate } }
+    );
+  }
+
+  /**
+   * Get conversion rates by pipeline
+   */
+  static async getConversionRates(
+    pipelineId?: Guid,
+    fromDate?: DateTime,
+    toDate?: DateTime
+  ): Promise<ConversionRatesDto> {
+    return ApiService.get<ConversionRatesDto>(
+      this.getPath('deals/conversion-rates'),
+      { params: { pipelineId, fromDate, toDate } }
+    );
+  }
+
+  // =====================================
+  // PIPELINES - Extended Methods
+  // =====================================
+
+  /**
+   * Reorder pipeline stages
+   */
+  static async reorderPipelineStages(
+    pipelineId: string,
+    stageOrders: { stageId: Guid; newOrder: number }[]
+  ): Promise<PipelineStage[]> {
+    const command: ReorderPipelineStagesCommand = { pipelineId, stageOrders };
+    return ApiService.post<PipelineStage[]>(
+      this.getPath(`pipelines/${pipelineId}/stages/reorder`),
+      command
+    );
+  }
+
+  /**
+   * Get pipeline statistics
+   */
+  static async getPipelineStatistics(pipelineId: string): Promise<PipelineStatisticsDto> {
+    return ApiService.get<PipelineStatisticsDto>(
+      this.getPath(`pipelines/${pipelineId}/statistics`)
+    );
+  }
+
+  // =====================================
+  // CAMPAIGNS - Extended Methods
+  // =====================================
+
+  /**
+   * Get campaign members
+   */
+  static async getCampaignMembers(id: string): Promise<CampaignMemberDto[]> {
+    return ApiService.get<CampaignMemberDto[]>(this.getPath(`campaigns/${id}/members`));
+  }
+
+  /**
+   * Add member to campaign
+   */
+  static async addCampaignMember(
+    campaignId: string,
+    data: Omit<AddCampaignMemberCommand, 'campaignId'>
+  ): Promise<CampaignMemberDto> {
+    const command: AddCampaignMemberCommand = { campaignId, ...data };
+    return ApiService.post<CampaignMemberDto>(
+      this.getPath(`campaigns/${campaignId}/members`),
+      command
+    );
+  }
+
+  /**
+   * Remove member from campaign
+   */
+  static async removeCampaignMember(campaignId: string, memberId: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`campaigns/${campaignId}/members/${memberId}`));
+  }
+
+  /**
+   * Convert campaign member (lead to customer)
+   */
+  static async convertCampaignMember(
+    campaignId: string,
+    memberId: Guid
+  ): Promise<CampaignMemberDto> {
+    return ApiService.post<CampaignMemberDto>(
+      this.getPath(`campaigns/${campaignId}/members/${memberId}/convert`),
+      {}
+    );
+  }
+
+  /**
+   * Get campaign ROI
+   */
+  static async getCampaignRoi(id: string): Promise<CampaignRoiDto> {
+    return ApiService.get<CampaignRoiDto>(this.getPath(`campaigns/${id}/roi`));
+  }
+
+  /**
+   * Get campaign statistics
+   */
+  static async getCampaignStatistics(id: string): Promise<CampaignStatisticsDto> {
+    return ApiService.get<CampaignStatisticsDto>(this.getPath(`campaigns/${id}/statistics`));
+  }
+
+  /**
+   * Bulk import campaign members
+   */
+  static async bulkImportCampaignMembers(
+    campaignId: string,
+    members: BulkImportCampaignMembersCommand['members']
+  ): Promise<BulkImportResultDto> {
+    const command: BulkImportCampaignMembersCommand = { campaignId, members };
+    return ApiService.post<BulkImportResultDto>(this.getPath('campaigns/bulk-import'), command);
+  }
+
+  // =====================================
+  // CUSTOMER SEGMENTS - Extended Methods
+  // =====================================
+
+  /**
+   * Get segment members
+   */
+  static async getSegmentMembers(id: string): Promise<CustomerSegmentMemberDto[]> {
+    return ApiService.get<CustomerSegmentMemberDto[]>(
+      this.getPath(`customersegments/${id}/members`)
+    );
+  }
+
+  /**
+   * Add member to segment
+   */
+  static async addSegmentMember(segmentId: string, customerId: Guid): Promise<void> {
+    const command: AddSegmentMemberCommand = { segmentId, customerId };
+    return ApiService.post<void>(this.getPath(`customersegments/${segmentId}/members`), command);
+  }
+
+  /**
+   * Remove member from segment
+   */
+  static async removeSegmentMember(segmentId: string, customerId: Guid): Promise<void> {
+    return ApiService.delete<void>(
+      this.getPath(`customersegments/${segmentId}/members/${customerId}`)
+    );
+  }
+
+  /**
+   * Update segment criteria (dynamic segments only)
+   */
+  static async updateSegmentCriteria(
+    id: string,
+    criteria: UpdateSegmentCriteriaCommand['criteria']
+  ): Promise<CustomerSegment> {
+    const command: UpdateSegmentCriteriaCommand = { id, criteria };
+    return ApiService.put<CustomerSegment>(
+      this.getPath(`customersegments/${id}/criteria`),
+      command
+    );
+  }
+
+  /**
+   * Recalculate segment members (dynamic segments only)
+   */
+  static async recalculateSegmentMembers(id: string): Promise<CustomerSegment> {
+    return ApiService.post<CustomerSegment>(
+      this.getPath(`customersegments/${id}/recalculate`),
+      {}
+    );
+  }
+
+  // =====================================
+  // OPPORTUNITIES (NEW MODULE)
+  // =====================================
+
+  /**
+   * Get all opportunities with filters
+   */
+  static async getOpportunities(
+    filters?: OpportunityFilters
+  ): Promise<PaginatedResponse<OpportunityDto>> {
+    return ApiService.get<PaginatedResponse<OpportunityDto>>(
+      this.getPath('opportunities'),
+      { params: filters }
+    );
+  }
+
+  /**
+   * Get single opportunity by ID
+   */
+  static async getOpportunity(id: Guid): Promise<OpportunityDto> {
+    return ApiService.get<OpportunityDto>(this.getPath(`opportunities/${id}`));
+  }
+
+  /**
+   * Create new opportunity
+   */
+  static async createOpportunity(data: CreateOpportunityCommand): Promise<OpportunityDto> {
+    return ApiService.post<OpportunityDto>(this.getPath('opportunities'), data);
+  }
+
+  /**
+   * Update existing opportunity
+   */
+  static async updateOpportunity(
+    id: Guid,
+    data: Omit<UpdateOpportunityCommand, 'id'>
+  ): Promise<OpportunityDto> {
+    const command: UpdateOpportunityCommand = { id, ...data };
+    return ApiService.put<OpportunityDto>(this.getPath(`opportunities/${id}`), command);
+  }
+
+  /**
+   * Delete opportunity
+   */
+  static async deleteOpportunity(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`opportunities/${id}`));
+  }
+
+  /**
+   * Move opportunity to different stage
+   */
+  static async moveOpportunityStage(
+    id: Guid,
+    newStageId: Guid,
+    notes?: string
+  ): Promise<OpportunityDto> {
+    const command: MoveOpportunityStageCommand = { opportunityId: id, newStageId, notes };
+    return ApiService.post<OpportunityDto>(
+      this.getPath(`opportunities/${id}/move-stage`),
+      command
+    );
+  }
+
+  /**
+   * Win an opportunity
+   */
+  static async winOpportunity(
+    id: Guid,
+    actualAmount?: number,
+    closedDate?: DateTime,
+    notes?: string
+  ): Promise<OpportunityDto> {
+    const command: WinOpportunityCommand = {
+      id,
+      actualAmount,
+      closedDate: closedDate || new Date().toISOString(),
+      notes,
+    };
+    return ApiService.post<OpportunityDto>(this.getPath(`opportunities/${id}/win`), command);
+  }
+
+  /**
+   * Lose an opportunity
+   */
+  static async loseOpportunity(
+    id: Guid,
+    lostReason: string,
+    competitorName?: string,
+    closedDate?: DateTime,
+    notes?: string
+  ): Promise<OpportunityDto> {
+    const command: LoseOpportunityCommand = {
+      id,
+      lostReason,
+      competitorName,
+      closedDate: closedDate || new Date().toISOString(),
+      notes,
+    };
+    return ApiService.post<OpportunityDto>(this.getPath(`opportunities/${id}/lose`), command);
+  }
+
+  /**
+   * Get activities for an opportunity
+   */
+  static async getOpportunityActivities(id: Guid): Promise<Activity[]> {
+    return ApiService.get<Activity[]>(this.getPath(`opportunities/${id}/activities`));
+  }
+
+  /**
+   * Get products for an opportunity
+   */
+  static async getOpportunityProducts(id: Guid): Promise<OpportunityProductDto[]> {
+    return ApiService.get<OpportunityProductDto[]>(this.getPath(`opportunities/${id}/products`));
+  }
+
+  /**
+   * Add product to an opportunity
+   */
+  static async addOpportunityProduct(
+    opportunityId: Guid,
+    productId: Guid,
+    quantity: number,
+    unitPrice: number,
+    discount?: number
+  ): Promise<OpportunityProductDto> {
+    const command = { opportunityId, productId, quantity, unitPrice, discount };
+    return ApiService.post<OpportunityProductDto>(
+      this.getPath(`opportunities/${opportunityId}/products`),
+      command
+    );
+  }
+
+  /**
+   * Remove product from an opportunity
+   */
+  static async removeOpportunityProduct(opportunityId: Guid, productId: Guid): Promise<void> {
+    return ApiService.delete<void>(
+      this.getPath(`opportunities/${opportunityId}/products/${productId}`)
+    );
+  }
+
+  /**
+   * Get pipeline report
+   */
+  static async getPipelineReport(
+    pipelineId?: Guid,
+    fromDate?: DateTime,
+    toDate?: DateTime
+  ): Promise<PipelineReportDto> {
+    return ApiService.get<PipelineReportDto>(
+      this.getPath('opportunities/pipeline-report'),
+      { params: { pipelineId, fromDate, toDate } }
+    );
+  }
+
+  /**
+   * Get sales forecast
+   */
+  static async getSalesForecast(fromDate: DateTime, toDate: DateTime): Promise<ForecastDto> {
+    return ApiService.get<ForecastDto>(
+      this.getPath('opportunities/forecast'),
+      { params: { fromDate, toDate } }
+    );
+  }
+
+  // =====================================
+  // DOCUMENTS (NEW MODULE)
+  // =====================================
+
+  /**
+   * Upload a document
+   */
+  static async uploadDocument(
+    file: File,
+    entityId: number,
+    entityType: string,
+    category: DocumentCategory,
+    metadata?: {
+      description?: string;
+      tags?: string;
+      accessLevel?: AccessLevel;
+      expiresAt?: DateTime;
+    }
+  ): Promise<UploadDocumentResponse> {
+    const formData = new FormData();
+    formData.append('File', file);
+    formData.append('EntityId', entityId.toString());
+    formData.append('EntityType', entityType);
+    formData.append('Category', category);
+
+    if (metadata?.description) formData.append('Description', metadata.description);
+    if (metadata?.tags) formData.append('Tags', metadata.tags);
+    if (metadata?.accessLevel) formData.append('AccessLevel', metadata.accessLevel);
+    if (metadata?.expiresAt) formData.append('ExpiresAt', metadata.expiresAt);
+
+    return ApiService.post<UploadDocumentResponse>(
+      this.getPath('documents/upload'),
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  }
+
+  /**
+   * Get document by ID
+   */
+  static async getDocument(id: number): Promise<DocumentDto> {
+    return ApiService.get<DocumentDto>(this.getPath(`documents/${id}`));
+  }
+
+  /**
+   * Get documents by entity
+   */
+  static async getDocumentsByEntity(
+    entityId: number,
+    entityType: string
+  ): Promise<DocumentDto[]> {
+    return ApiService.get<DocumentDto[]>(
+      this.getPath(`documents/entity/${entityId}/${entityType}`)
+    );
+  }
+
+  /**
+   * Download document
+   */
+  static async downloadDocument(id: number): Promise<Blob> {
+    return ApiService.get<Blob>(this.getPath(`documents/${id}/download`), {
+      responseType: 'blob',
+    });
+  }
+
+  /**
+   * Get temporary download URL
+   */
+  static async getDownloadUrl(
+    id: number,
+    expiresInMinutes: number = 60
+  ): Promise<DownloadUrlResponse> {
+    return ApiService.get<DownloadUrlResponse>(this.getPath(`documents/${id}/url`), {
+      params: { expiresInMinutes },
+    });
+  }
+
+  /**
+   * Update document metadata
+   */
+  static async updateDocument(id: number, metadata: UpdateDocumentRequest): Promise<void> {
+    return ApiService.put<void>(this.getPath(`documents/${id}`), metadata);
+  }
+
+  /**
+   * Delete document
+   */
+  static async deleteDocument(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`documents/${id}`));
+  }
+
+  // =====================================
+  // CUSTOMER TAGS (NEW MODULE)
+  // =====================================
+
+  /**
+   * Get all tags for a customer
+   */
+  static async getCustomerTags(customerId: Guid): Promise<CustomerTagDto[]> {
+    return ApiService.get<CustomerTagDto[]>(
+      this.getPath(`customertags/customer/${customerId}`)
+    );
+  }
+
+  /**
+   * Get all distinct tags (tenant-wide)
+   */
+  static async getDistinctTags(): Promise<string[]> {
+    return ApiService.get<string[]>(this.getPath('customertags/distinct'));
+  }
+
+  /**
+   * Add tag to a customer
+   */
+  static async addCustomerTag(
+    customerId: Guid,
+    tagName: string,
+    color?: string
+  ): Promise<CustomerTagDto> {
+    const command: AddCustomerTagCommand = { customerId, tagName, color };
+    return ApiService.post<CustomerTagDto>(this.getPath('customertags'), command);
+  }
+
+  /**
+   * Remove tag from a customer
+   */
+  static async removeCustomerTag(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`customertags/${id}`));
   }
 }
 
