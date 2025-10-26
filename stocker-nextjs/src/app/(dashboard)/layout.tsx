@@ -77,6 +77,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         },
         {
           key: '/crm/deals',
+          label: 'Anlaşmalar',
+        },
+        {
+          key: '/crm/opportunities',
           label: 'Fırsatlar',
         },
         {
