@@ -628,6 +628,47 @@ export function useCreateOpportunity() {
   });
 }
 
+export function useWinOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, actualAmount, closedDate, notes }: {
+      id: Guid;
+      actualAmount?: number;
+      closedDate?: DateTime;
+      notes?: string;
+    }) => CRMService.winOpportunity(id, actualAmount, closedDate, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      message.success('🎉 Fırsat kazanıldı!');
+    },
+    onError: () => {
+      message.error('İşlem başarısız');
+    },
+  });
+}
+
+export function useLoseOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, lostReason, competitorName, closedDate, notes }: {
+      id: Guid;
+      lostReason: string;
+      competitorName?: string;
+      closedDate?: DateTime;
+      notes?: string;
+    }) => CRMService.loseOpportunity(id, lostReason, competitorName, closedDate, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      message.info('Fırsat kaybedildi olarak işaretlendi');
+    },
+    onError: () => {
+      message.error('İşlem başarısız');
+    },
+  });
+}
+
 export function useSalesForecast(fromDate: DateTime, toDate: DateTime) {
   return useQuery({
     queryKey: crmKeys.salesForecast(fromDate, toDate),
