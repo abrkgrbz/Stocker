@@ -85,22 +85,39 @@ export default function OpportunitiesPage() {
         // Update logic - if needed in the future
         message.info('Güncelleme özelliği yakında eklenecek');
       } else {
-        await createOpportunity.mutateAsync({
+        // Validation: CustomerId is required by backend
+        if (!values.customerId) {
+          message.error('Müşteri seçimi zorunludur');
+          return;
+        }
+
+        // Validation: ExpectedCloseDate is required and must be in future
+        if (!values.expectedCloseDate) {
+          message.error('Tahmini kapanış tarihi zorunludur');
+          return;
+        }
+
+        const payload = {
           name: values.name,
-          customerId: values.customerId || undefined,
-          pipelineId: values.pipelineId || undefined,
-          stageId: values.stageId || undefined,
+          customerId: values.customerId,
           amount: values.amount,
           probability: values.probability || 50,
-          expectedCloseDate: values.expectedCloseDate ? values.expectedCloseDate.toISOString() : undefined,
+          expectedCloseDate: values.expectedCloseDate.toISOString(),
+          status: values.status || 'Prospecting',
           description: values.description || undefined,
-        });
+          pipelineId: values.pipelineId || undefined,
+          currentStageId: values.stageId || undefined,
+          score: 0, // Default score
+        };
+
+        await createOpportunity.mutateAsync(payload);
       }
       setModalOpen(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'İşlem başarısız';
       message.error(errorMessage);
+      console.error('❌ Opportunity creation error:', error);
     }
   };
 

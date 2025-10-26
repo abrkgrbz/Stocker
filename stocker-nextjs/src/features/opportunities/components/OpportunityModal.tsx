@@ -61,8 +61,8 @@ export function OpportunityModal({
       icon: <DollarOutlined />,
     },
     {
-      title: 'Durum & Tarih',
-      icon: <FlagOutlined />,
+      title: 'Müşteri & Tarih',
+      icon: <UserOutlined />,
     },
     {
       title: 'Tamamla',
@@ -106,7 +106,7 @@ export function OpportunityModal({
       case 1:
         return ['amount', 'probability'];
       case 2:
-        return ['status'];
+        return ['customerId', 'expectedCloseDate', 'status'];
       default:
         return [];
     }
@@ -255,16 +255,46 @@ export function OpportunityModal({
           </div>
         )}
 
-        {/* Step 2: Durum & Tarih */}
+        {/* Step 2: Müşteri & Tarih */}
         {currentStep === 2 && (
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
-                <FlagOutlined className="text-purple-600 text-lg" />
+                <UserOutlined className="text-purple-600 text-lg" />
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Durum ve Tarih</h3>
+              <h3 className="text-base font-semibold text-gray-800 m-0">Müşteri ve Tarih</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
+                name="customerId"
+                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
+              >
+                <Input
+                  prefix={<UserOutlined className="text-gray-400" />}
+                  className="rounded-lg"
+                  placeholder="Müşteri ID girin"
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">Tahmini Kapanış Tarihi</span>}
+                name="expectedCloseDate"
+                rules={[{ required: true, message: 'Tahmini kapanış tarihi zorunludur' }]}
+              >
+                <DatePicker
+                  style={{ width: '100%' }}
+                  format="DD/MM/YYYY"
+                  className="rounded-lg"
+                  placeholder="Tarih seçiniz"
+                  size="large"
+                  disabledDate={(current) => {
+                    return current && current < dayjs().startOf('day');
+                  }}
+                />
+              </Form.Item>
+
               <Form.Item
                 label={<span className="text-gray-700 font-medium">Durum</span>}
                 name="status"
@@ -281,19 +311,6 @@ export function OpportunityModal({
                   <Select.Option value="ClosedLost">Kaybedildi</Select.Option>
                 </Select>
               </Form.Item>
-
-              <Form.Item
-                label={<span className="text-gray-700 font-medium">Tahmini Kapanış Tarihi</span>}
-                name="expectedCloseDate"
-              >
-                <DatePicker
-                  style={{ width: '100%' }}
-                  format="DD/MM/YYYY"
-                  className="rounded-lg"
-                  placeholder="Tarih seçiniz"
-                  size="large"
-                />
-              </Form.Item>
             </Card>
           </div>
         )}
@@ -303,24 +320,12 @@ export function OpportunityModal({
           <div className="min-h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-orange-50 rounded-lg">
-                <UserOutlined className="text-orange-600 text-lg" />
+                <FlagOutlined className="text-orange-600 text-lg" />
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Ek Bilgiler (Opsiyonel)</h3>
+              <h3 className="text-base font-semibold text-gray-800 m-0">Satış Süreci (Opsiyonel)</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
               <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
-                    name="customerId"
-                  >
-                    <Input
-                      className="rounded-lg"
-                      placeholder="Müşteri ID"
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
                 <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Pipeline ID</span>}
@@ -328,23 +333,31 @@ export function OpportunityModal({
                   >
                     <Input
                       className="rounded-lg"
-                      placeholder="Pipeline ID"
+                      placeholder="Pipeline ID (opsiyonel)"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label={<span className="text-gray-700 font-medium">Stage ID</span>}
+                    name="stageId"
+                  >
+                    <Input
+                      className="rounded-lg"
+                      placeholder="Stage ID (opsiyonel)"
                       size="large"
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item
-                label={<span className="text-gray-700 font-medium">Stage ID</span>}
-                name="stageId"
-              >
-                <Input
-                  className="rounded-lg"
-                  placeholder="Stage ID"
-                  size="large"
-                />
-              </Form.Item>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="text-sm text-gray-600">
+                  <div className="font-medium mb-2">💡 Satış Süreci Bilgisi</div>
+                  <div>Pipeline ve Stage bilgileri opsiyoneldir. Fırsatları belirli satış süreçlerine bağlamak için kullanılır.</div>
+                </div>
+              </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                 <div className="flex items-start gap-3">
