@@ -19,12 +19,14 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { MOCK_CUSTOMERS, MOCK_CUSTOMER_STATS, type MockCustomer } from '@/lib/data/mock-customers';
 import CustomerModal from '@/features/customers/components/CustomerModal';
 
 const { Meta } = Card;
 
 export default function CustomersDemo() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -317,7 +319,8 @@ export default function CustomersDemo() {
           >
             <Card
               hoverable
-              className="shadow-md hover:shadow-2xl transition-all duration-300 border-l-4"
+              onClick={() => router.push(`/demo/customers/${customer.id}`)}
+              className="shadow-md hover:shadow-2xl transition-all duration-300 border-l-4 cursor-pointer"
               style={{
                 borderLeftColor:
                   customer.status === 'Active'
