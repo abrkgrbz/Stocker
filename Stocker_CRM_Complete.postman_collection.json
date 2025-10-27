@@ -1,0 +1,1157 @@
+{
+	"info": {
+		"_postman_id": "crm-complete-collection-2025",
+		"name": "Stocker CRM - Complete Collection",
+		"description": "Comprehensive Postman collection for all CRM module endpoints including Customers, Leads, Deals, Opportunities, Pipelines, Activities, Campaigns, Segments, Documents, Tags, and Workflows",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.stoocker.app",
+			"type": "string"
+		},
+		{
+			"key": "tenant_code",
+			"value": "abg-tech",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lead_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "deal_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "opportunity_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pipeline_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "stage_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "activity_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "campaign_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "segment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "document_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tag_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workflow_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Authentication",
+			"item": [
+				{
+					"name": "Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.accessToken) {",
+									"        pm.collectionVariables.set('access_token', response.accessToken);",
+									"        console.log('✅ Token saved:', response.accessToken.substring(0, 20) + '...');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@abg-tech.com\",\n  \"password\": \"Admin123!\",\n  \"tenantCode\": \"{{tenant_code}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login to get access token. Token is automatically saved to collection variables."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for getting access tokens"
+		},
+		{
+			"name": "1. Customers",
+			"item": [
+				{
+					"name": "List All Customers (Paged)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/customers?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "customers"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "SearchTerm",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "SortBy",
+									"value": "CreatedAt",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "customers", "{{customer_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('customer_id', response.id);",
+									"        console.log('✅ Customer ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Müşteri A.Ş.\",\n  \"email\": \"info@testmusteri.com\",\n  \"phone\": \"+905551234567\",\n  \"type\": \"Corporate\",\n  \"taxNumber\": \"1234567890\",\n  \"industry\": \"Technology\",\n  \"address\": {\n    \"street\": \"Atatürk Caddesi No:123\",\n    \"city\": \"İstanbul\",\n    \"state\": \"İstanbul\",\n    \"postalCode\": \"34000\",\n    \"country\": \"Türkiye\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/customers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "customers"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Customer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"{{customer_id}}\",\n  \"name\": \"Test Müşteri A.Ş. (Güncellendi)\",\n  \"email\": \"info@testmusteri.com\",\n  \"phone\": \"+905551234567\",\n  \"type\": \"Corporate\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "customers", "{{customer_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "customers", "{{customer_id}}"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Customer management endpoints - create, read, update, delete customers"
+		},
+		{
+			"name": "2. Leads",
+			"item": [
+				{
+					"name": "List All Leads",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/leads?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "leads"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Lead By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/leads/{{lead_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "leads", "{{lead_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Lead",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('lead_id', response.id);",
+									"        console.log('✅ Lead ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Ahmet\",\n  \"lastName\": \"Yılmaz\",\n  \"email\": \"ahmet.yilmaz@example.com\",\n  \"phone\": \"+905559876543\",\n  \"company\": \"Yılmaz Ltd. Şti.\",\n  \"jobTitle\": \"Satın Alma Müdürü\",\n  \"source\": \"Website\",\n  \"status\": \"New\",\n  \"score\": 50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/leads",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "leads"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Convert Lead to Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Corporate\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/leads/{{lead_id}}/convert",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "leads", "{{lead_id}}", "convert"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Lead management endpoints - create, track, and convert leads"
+		},
+		{
+			"name": "3. Deals",
+			"item": [
+				{
+					"name": "List All Deals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/deals?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "deals"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Deal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('deal_id', response.id);",
+									"        console.log('✅ Deal ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Fırsatı\",\n  \"amount\": 50000,\n  \"probability\": 60,\n  \"expectedCloseDate\": \"2025-12-31\",\n  \"status\": \"Open\",\n  \"pipelineId\": \"{{pipeline_id}}\",\n  \"stageId\": \"{{stage_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/deals",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "deals"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Deal management endpoints"
+		},
+		{
+			"name": "4. Opportunities",
+			"item": [
+				{
+					"name": "List All Opportunities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/opportunities?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "opportunities"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Opportunity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('opportunity_id', response.id);",
+									"        console.log('✅ Opportunity ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Yeni Satış Fırsatı\",\n  \"customerId\": \"{{customer_id}}\",\n  \"amount\": 75000,\n  \"probability\": 70,\n  \"expectedCloseDate\": \"2025-11-30\",\n  \"status\": \"Open\",\n  \"pipelineId\": \"{{pipeline_id}}\",\n  \"stageId\": \"{{stage_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/opportunities",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "opportunities"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Opportunity management endpoints"
+		},
+		{
+			"name": "5. Pipelines",
+			"item": [
+				{
+					"name": "List All Pipelines",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/pipelines",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "pipelines"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pipeline By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/pipelines/{{pipeline_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "pipelines", "{{pipeline_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pipeline",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('pipeline_id', response.id);",
+									"        console.log('✅ Pipeline ID saved:', response.id);",
+									"        if (response.stages && response.stages.length > 0) {",
+									"            pm.collectionVariables.set('stage_id', response.stages[0].id);",
+									"            console.log('✅ First Stage ID saved:', response.stages[0].id);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Satış Süreci 2025\",\n  \"description\": \"Ana satış pipeline\",\n  \"type\": \"Deal\",\n  \"isActive\": true,\n  \"isDefault\": false,\n  \"stages\": [\n    {\n      \"name\": \"İlk İletişim\",\n      \"order\": 1,\n      \"probability\": 10,\n      \"color\": \"#1890ff\",\n      \"isWon\": false,\n      \"isLost\": false\n    },\n    {\n      \"name\": \"Tekli Sunumu\",\n      \"order\": 2,\n      \"probability\": 30,\n      \"color\": \"#52c41a\",\n      \"isWon\": false,\n      \"isLost\": false\n    },\n    {\n      \"name\": \"Müzakere\",\n      \"order\": 3,\n      \"probability\": 60,\n      \"color\": \"#faad14\",\n      \"isWon\": false,\n      \"isLost\": false\n    },\n    {\n      \"name\": \"Anlaşma\",\n      \"order\": 4,\n      \"probability\": 100,\n      \"color\": \"#52c41a\",\n      \"isWon\": true,\n      \"isLost\": false\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/pipelines",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "pipelines"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pipeline",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"{{pipeline_id}}\",\n  \"name\": \"Satış Süreci 2025 (Güncellendi)\",\n  \"description\": \"Güncellenmiş satış pipeline\",\n  \"type\": \"Deal\",\n  \"isActive\": true,\n  \"isDefault\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/pipelines/{{pipeline_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "pipelines", "{{pipeline_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pipeline",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/pipelines/{{pipeline_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "pipelines", "{{pipeline_id}}"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Pipeline management endpoints - create sales processes with stages"
+		},
+		{
+			"name": "6. Activities",
+			"item": [
+				{
+					"name": "List All Activities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/activities?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "activities"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Activity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('activity_id', response.id);",
+									"        console.log('✅ Activity ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Müşteri Görüşmesi\",\n  \"type\": \"Meeting\",\n  \"startDate\": \"2025-11-01T10:00:00Z\",\n  \"endDate\": \"2025-11-01T11:00:00Z\",\n  \"relatedTo\": \"Customer\",\n  \"relatedId\": \"{{customer_id}}\",\n  \"priority\": \"High\",\n  \"description\": \"Ürün tanıtımı ve ihtiyaç analizi\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/activities",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "activities"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Activity management endpoints - meetings, calls, tasks, emails"
+		},
+		{
+			"name": "7. Campaigns",
+			"item": [
+				{
+					"name": "List All Campaigns",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/campaigns?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "campaigns"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Campaign",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('campaign_id', response.id);",
+									"        console.log('✅ Campaign ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sonbahar Kampanyası 2025\",\n  \"type\": \"Email\",\n  \"status\": \"Planned\",\n  \"startDate\": \"2025-09-01\",\n  \"endDate\": \"2025-11-30\",\n  \"budget\": 10000,\n  \"description\": \"E-posta kampanyası\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/campaigns",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "campaigns"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Campaign management endpoints"
+		},
+		{
+			"name": "8. Customer Segments",
+			"item": [
+				{
+					"name": "List All Segments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/segments?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "segments"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Segment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('segment_id', response.id);",
+									"        console.log('✅ Segment ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Kurumsal Müşteriler\",\n  \"description\": \"Kurumsal tip müşterilerin segmenti\",\n  \"criteria\": {\n    \"type\": \"Corporate\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/segments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "segments"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Customer segment management endpoints"
+		},
+		{
+			"name": "9. Tags",
+			"item": [
+				{
+					"name": "List All Tags",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/tags",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "tags"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Tag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('tag_id', response.id);",
+									"        console.log('✅ Tag ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"VIP\",\n  \"color\": \"#FFD700\",\n  \"description\": \"Öncelikli müşteriler\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/tags",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "tags"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Tag management endpoints"
+		},
+		{
+			"name": "10. Documents",
+			"item": [
+				{
+					"name": "List All Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/documents?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "documents"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Document management endpoints"
+		},
+		{
+			"name": "11. Workflows",
+			"item": [
+				{
+					"name": "List All Workflows",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/crm/workflows?PageNumber=1&PageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "workflows"],
+							"query": [
+								{
+									"key": "PageNumber",
+									"value": "1"
+								},
+								{
+									"key": "PageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Workflow",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.id) {",
+									"        pm.collectionVariables.set('workflow_id', response.id);",
+									"        console.log('✅ Workflow ID saved:', response.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-Code",
+								"value": "{{tenant_code}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Yeni Müşteri Karşılama\",\n  \"triggerType\": \"CustomerCreated\",\n  \"isActive\": true,\n  \"steps\": [\n    {\n      \"order\": 1,\n      \"type\": \"SendEmail\",\n      \"config\": {\n        \"template\": \"welcome_email\"\n      }\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/crm/workflows",
+							"host": ["{{base_url}}"],
+							"path": ["api", "crm", "workflows"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Workflow automation endpoints"
+		}
+	]
+}
