@@ -387,7 +387,7 @@ export function useCreatePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createPipeline,
+    mutationFn: (data: any) => CRMService.createPipeline(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
       message.success('Pipeline oluşturuldu');

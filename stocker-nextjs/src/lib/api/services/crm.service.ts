@@ -549,7 +549,7 @@ export class CRMService {
   /**
    * Create new pipeline
    */
-  static async createPipeline(data: Omit<Pipeline, 'id' | 'stages' | 'opportunityCount' | 'dealCount' | 'totalValue' | 'createdAt' | 'updatedAt'>): Promise<Pipeline> {
+  static async createPipeline(data: Omit<Pipeline, 'id' | 'opportunityCount' | 'dealCount' | 'totalValue' | 'createdAt' | 'updatedAt'>): Promise<Pipeline> {
     return ApiService.post<Pipeline>(this.getPath('pipelines'), data);
   }
 
