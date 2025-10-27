@@ -97,7 +97,20 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CustomerDto>> GetCustomer(Guid id)
     {
-        var result = await _mediator.Send(new GetCustomerByIdQuery { CustomerId = id });
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
+        }
+
+        var query = new GetCustomerByIdQuery
+        {
+            CustomerId = id,
+            TenantId = tenantId.Value
+        };
+
+        var result = await _mediator.Send(query);
         if (result.IsFailure)
             return NotFound();
         return Ok(result.Value);
