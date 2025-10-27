@@ -88,6 +88,12 @@ export function ActivityModal({
     try {
       const fieldsToValidate = getStepFields(currentStep);
       await form.validateFields(fieldsToValidate);
+
+      // Additional validation for step 2 (related entities)
+      if (currentStep === 2) {
+        await validateStep2();
+      }
+
       setCurrentStep(currentStep + 1);
     } catch (error) {
       console.error('Validation failed:', error);
@@ -101,7 +107,26 @@ export function ActivityModal({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      onSubmit(values);
+
+      // Map frontend fields to backend CreateActivityCommand
+      const mappedValues = {
+        subject: values.title, // Map title to subject
+        description: values.description || null,
+        type: values.type,
+        status: values.status,
+        priority: values.priority || 'Medium', // Default priority
+        dueDate: values.startTime.toISOString(), // Map startTime to dueDate
+        duration: values.endTime ? Math.round((values.endTime.valueOf() - values.startTime.valueOf()) / 60000) : null, // Calculate duration in minutes
+        location: values.location || null,
+        leadId: values.leadId || null,
+        customerId: values.customerId || null,
+        contactId: values.contactId || null,
+        opportunityId: values.opportunityId || null,
+        dealId: values.dealId || null,
+        notes: values.notes || null,
+      };
+
+      onSubmit(mappedValues);
       setCurrentStep(0);
     } catch (error) {
       console.error('Validation failed:', error);
@@ -119,9 +144,20 @@ export function ActivityModal({
         return ['title', 'type', 'status'];
       case 1:
         return ['startTime'];
+      case 2:
+        // At least one entity ID must be provided
+        return [];
       default:
         return [];
     }
+  };
+
+  const validateStep2 = () => {
+    const values = form.getFieldsValue();
+    if (!values.leadId && !values.customerId && !values.contactId && !values.opportunityId && !values.dealId) {
+      return Promise.reject(new Error('En az bir ilişki (Müşteri, Lead, İletişim, Fırsat veya Deal) seçmelisiniz'));
+    }
+    return Promise.resolve();
   };
 
   return (
@@ -318,42 +354,69 @@ export function ActivityModal({
             </div>
             <Card className="shadow-sm border-gray-200">
               <Row gutter={16}>
-                <Col span={8}>
+                <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
                     name="customerId"
                   >
                     <Input
-                      type="number"
-                      placeholder="Müşteri"
+                      placeholder="Müşteri GUID"
                       className="rounded-lg"
                       prefix={<UserOutlined className="text-gray-400" />}
                       size="large"
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Lead ID</span>}
                     name="leadId"
                   >
                     <Input
-                      type="number"
-                      placeholder="Lead"
+                      placeholder="Lead GUID"
                       className="rounded-lg"
                       prefix={<UserOutlined className="text-gray-400" />}
                       size="large"
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label={<span className="text-gray-700 font-medium">İletişim ID</span>}
+                    name="contactId"
+                  >
+                    <Input
+                      placeholder="İletişim GUID"
+                      className="rounded-lg"
+                      prefix={<UserOutlined className="text-gray-400" />}
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Fırsat ID</span>}
+                    name="opportunityId"
+                  >
+                    <Input
+                      placeholder="Fırsat GUID"
+                      className="rounded-lg"
+                      prefix={<TrophyOutlined className="text-gray-400" />}
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label={<span className="text-gray-700 font-medium">Deal ID</span>}
                     name="dealId"
                   >
                     <Input
-                      type="number"
-                      placeholder="Fırsat"
+                      placeholder="Deal GUID"
                       className="rounded-lg"
                       prefix={<TrophyOutlined className="text-gray-400" />}
                       size="large"
@@ -363,9 +426,9 @@ export function ActivityModal({
               </Row>
 
               <Alert
-                message="İlişkilendirme"
-                description="Bu aktiviteyi bir müşteri, lead veya fırsat ile ilişkilendirebilirsiniz. Tüm alanlar opsiyoneldir."
-                type="info"
+                message="⚠️ En Az Bir İlişki Gerekli"
+                description="Bu aktiviteyi oluşturmak için en az bir kayıt (Müşteri, Lead, İletişim, Fırsat veya Deal) ile ilişkilendirmeniz gerekmektedir."
+                type="warning"
                 showIcon
               />
             </Card>
