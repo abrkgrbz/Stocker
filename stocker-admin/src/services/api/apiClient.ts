@@ -140,6 +140,17 @@ class ApiClient {
 
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
+          // Check if token is explicitly expired (from backend header)
+          const tokenExpired = error.response.headers['token-expired'] === 'true';
+
+          if (tokenExpired) {
+            console.warn('🔒 Token expired - forcing logout');
+            tokenStorage.clearToken();
+            tokenStorage.clearRefreshToken();
+            window.location.href = '/login';
+            return Promise.reject(new AppError('Session expired. Please login again.', ERROR_CODES.UNAUTHORIZED, 401));
+          }
+
           if (!this.isRefreshing) {
             this.isRefreshing = true;
             originalRequest._retry = true;
@@ -149,13 +160,13 @@ class ApiClient {
               if (refreshToken) {
                 const response = await this.refreshAccessToken(refreshToken);
                 const newToken = response.data.accessToken;
-                
+
                 tokenStorage.setToken(newToken);
                 tokenStorage.setRefreshToken(response.data.refreshToken);
-                
+
                 this.onRefreshed(newToken);
                 this.refreshSubscribers = [];
-                
+
                 return this.client(originalRequest);
               }
             } catch (refreshError) {
