@@ -25,7 +25,7 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
 
         // Get all deals for the tenant
-        var deals = await _dealRepository.GetByTenantIdAsync(tenantId, cancellationToken);
+        var deals = await _dealRepository.FindAsync(d => d.TenantId == tenantId, cancellationToken);
 
         // Apply filters
         var query = deals.AsQueryable();
