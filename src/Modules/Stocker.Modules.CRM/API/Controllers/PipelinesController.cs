@@ -53,10 +53,15 @@ public class PipelinesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PipelineDto>> CreatePipeline(CreatePipelineCommand command)
     {
+        // Set TenantId from HttpContext
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (tenantId.HasValue)
+            command.TenantId = tenantId.Value;
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return CreatedAtAction(nameof(GetPipeline), new { id = result.Value.Id }, result.Value);
     }
 
