@@ -75,15 +75,21 @@ export default function PipelinesPage() {
   };
 
   const handleCreateOrUpdate = async (values: any) => {
+    console.log('🟢 handleCreateOrUpdate called with:', values);
+    console.log('🔍 selectedPipeline:', selectedPipeline);
+
     try {
       if (selectedPipeline) {
+        console.log('🔄 Updating pipeline...');
         await updatePipeline.mutateAsync({ id: selectedPipeline.id, ...values });
       } else {
+        console.log('➕ Creating new pipeline...');
         await createPipeline.mutateAsync(values);
       }
       setIsModalOpen(false);
       setSelectedPipeline(null);
     } catch (error: any) {
+      console.error('❌ Pipeline operation failed:', error);
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
       message.error(errorMessage);

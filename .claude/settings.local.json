@@ -71,7 +71,13 @@
       "Bash(for dir in deals activities pipelines segments campaigns)",
       "Bash(do echo \"=== $dir ===\")",
       "Bash(done)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(/dev/null)",
+      "Bash(for file in src/Modules/Stocker.Modules.CRM/API/Controllers/*.cs)",
+      "Bash(npx expo start --clear)",
+      "Read(//c/mnt/c/Users/PC/source/repos/Stocker/**)",
+      "Bash(tee:*)",
+      "Bash(dotnet run:*)"
     ],
     "deny": [],
     "ask": []

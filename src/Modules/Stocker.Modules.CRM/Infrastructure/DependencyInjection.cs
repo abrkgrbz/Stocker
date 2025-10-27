@@ -53,7 +53,7 @@ public static class DependencyInjection
         });
 
         // Register generic repository (for entities without specific repositories like Pipeline, Opportunity, etc.)
-        // Must register the same implementation type for all three interfaces
+        // CRMGenericRepository explicitly implements IRepository<>, IReadRepository<>, and IWriteRepository<>
         services.AddScoped(typeof(IRepository<>), typeof(CRMGenericRepository<>));
         services.AddScoped(typeof(IReadRepository<>), typeof(CRMGenericRepository<>));
         services.AddScoped(typeof(IWriteRepository<>), typeof(CRMGenericRepository<>));
