@@ -41,12 +41,18 @@ public class TenantModuleService : ITenantModuleService
         // If not in cache, query from database
         _logger.LogDebug("Fetching tenant {TenantId} modules from database", tenantId);
 
-        // Get tenant registration with selected package and its modules
+        // Get tenant registration - materialize first to avoid concurrency issues
         // Use AsNoTracking for read-only queries to avoid concurrency issues
         var tenantRegistration = await _masterDbContext.TenantRegistrations
             .AsNoTracking()
-            .Include(tr => tr.SelectedPackage)
-            .FirstOrDefaultAsync(tr => tr.TenantId == tenantId, cancellationToken);
+            .Where(tr => tr.TenantId == tenantId)
+            .Select(tr => new
+            {
+                tr.TenantId,
+                tr.SelectedPackageId,
+                PackageName = tr.SelectedPackage != null ? tr.SelectedPackage.Name : null
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (tenantRegistration == null)
         {
@@ -57,7 +63,7 @@ public class TenantModuleService : ITenantModuleService
         // Get subscribed modules from package
         var subscribedModules = new List<string>();
 
-        if (tenantRegistration.SelectedPackage != null && tenantRegistration.SelectedPackageId.HasValue)
+        if (tenantRegistration.SelectedPackageId.HasValue)
         {
             // Get package modules from PackageModules table
             // Use AsNoTracking for read-only queries to avoid concurrency issues
@@ -72,7 +78,7 @@ public class TenantModuleService : ITenantModuleService
             _logger.LogInformation(
                 "Tenant {TenantId} subscribed to package '{Package}' with {Count} modules: {Modules}",
                 tenantId,
-                tenantRegistration.SelectedPackage.Name,
+                tenantRegistration.PackageName ?? "Unknown",
                 subscribedModules.Count,
                 string.Join(", ", subscribedModules));
         }
