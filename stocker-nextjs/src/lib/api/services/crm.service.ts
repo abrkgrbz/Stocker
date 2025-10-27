@@ -287,7 +287,7 @@ export class CRMService {
   /**
    * Get single customer by ID
    */
-  static async getCustomer(id: number): Promise<Customer> {
+  static async getCustomer(id: string): Promise<Customer> {
     return ApiService.get<Customer>(this.getPath(`customers/${id}`));
   }
 
@@ -346,7 +346,7 @@ export class CRMService {
    * Update existing customer using CRM module's UpdateCustomerCommand
    */
   static async updateCustomer(
-    id: number,
+    id: string,
     data: UpdateCustomerDto
   ): Promise<Customer> {
     // CRM module expects: UpdateCustomerCommand { CustomerId, CustomerData }
@@ -379,7 +379,7 @@ export class CRMService {
   /**
    * Delete customer using CRM module's DeleteCustomerCommand
    */
-  static async deleteCustomer(id: number): Promise<void> {
+  static async deleteCustomer(id: string): Promise<void> {
     console.log('📤 Sending DeleteCustomerCommand to CRM module:', { customerId: id });
     return ApiService.delete<void>(this.getPath(`customers/${id}`));
   }

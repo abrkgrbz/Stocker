@@ -11,7 +11,7 @@ export const crmKeys = {
   customers: () => [...crmKeys.all, 'customers'] as const,
   customersList: (filters?: CustomerFilters) =>
     [...crmKeys.customers(), 'list', filters] as const,
-  customer: (id: number) => [...crmKeys.customers(), id] as const,
+  customer: (id: string) => [...crmKeys.customers(), id] as const,
   leads: () => [...crmKeys.all, 'leads'] as const,
   leadsList: (filters?: CustomerFilters) =>
     [...crmKeys.leads(), 'list', filters] as const,
@@ -51,7 +51,7 @@ export function useCustomers(filters?: CustomerFilters) {
 /**
  * Hook to fetch single customer
  */
-export function useCustomer(id: number) {
+export function useCustomer(id: string) {
   return useQuery({
     queryKey: crmKeys.customer(id),
     queryFn: () => CRMService.getCustomer(id),
@@ -83,7 +83,7 @@ export function useUpdateCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCustomerDto }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateCustomerDto }) =>
       CRMService.updateCustomer(id, data),
     onSuccess: (_, variables) => {
       // Invalidate both list and detail
@@ -102,7 +102,7 @@ export function useDeleteCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => CRMService.deleteCustomer(id),
+    mutationFn: (id: string) => CRMService.deleteCustomer(id),
     onSuccess: () => {
       // Invalidate customers list
       queryClient.invalidateQueries({ queryKey: crmKeys.customers() });

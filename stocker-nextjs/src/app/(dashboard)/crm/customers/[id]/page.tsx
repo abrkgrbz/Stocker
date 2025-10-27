@@ -49,7 +49,7 @@ import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCR
 export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const customerId = parseInt(params.id as string);
+  const customerId = params.id as string;
 
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
