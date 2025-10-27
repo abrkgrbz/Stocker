@@ -25,6 +25,13 @@ public class GetUnreadCountQueryHandler : IRequestHandler<GetUnreadCountQuery, R
 
         try
         {
+            // Check if tenant context is available (master admin users don't have tenant context)
+            if (_tenantContext == null)
+            {
+                _logger.LogWarning("TenantContext is null - user may be master admin or tenant context not resolved. Returning 0 count.");
+                return Result.Success(new UnreadCountResponse { UnreadCount = 0 });
+            }
+
             // Check if TenantNotifications table exists (migration may not be run yet)
             if (_tenantContext.TenantNotifications == null)
             {
