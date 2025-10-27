@@ -62,9 +62,11 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
   };
 
   const handleFinish = async () => {
+    console.log('🔵 handleFinish called - Starting validation...');
+
     try {
       const values = await form.validateFields();
-
+      console.log('✅ Validation passed');
       console.log('🚀 Pipeline Modal - Form Values:', values);
 
       // Ensure stages have proper order
@@ -386,7 +388,16 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
       <Steps current={currentStep} items={steps} className="mb-6" />
 
       <Form form={form} layout="vertical" initialValues={{ isActive: true, isDefault: true }}>
-        <div className="min-h-[450px]">{steps[currentStep].content}</div>
+        {/* Render all form content, control visibility with CSS */}
+        {steps.map((step, index) => (
+          <div
+            key={index}
+            className="min-h-[450px]"
+            style={{ display: currentStep === index ? 'block' : 'none' }}
+          >
+            {step.content}
+          </div>
+        ))}
       </Form>
     </Drawer>
   );
