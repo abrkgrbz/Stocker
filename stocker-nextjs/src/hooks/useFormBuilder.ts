@@ -1,12 +1,12 @@
 'use client';
 
-import { useForm, UseFormReturn, FieldValues } from 'react-hook-form';
+import { useForm, UseFormReturn, FieldValues, DefaultValues, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ZodSchema } from 'zod';
+import { ZodType } from 'zod';
 
 export interface UseFormBuilderOptions<T extends FieldValues> {
-  schema: ZodSchema<T>;
-  defaultValues?: Partial<T>;
+  schema: ZodType<T>;
+  defaultValues?: DefaultValues<T>;
   mode?: 'onChange' | 'onBlur' | 'onSubmit' | 'onTouched' | 'all';
 }
 
@@ -26,8 +26,9 @@ export function useFormBuilder<T extends FieldValues>({
   mode = 'onChange',
 }: UseFormBuilderOptions<T>): UseFormBuilderReturn<T> {
   const form = useForm<T>({
-    resolver: zodResolver(schema),
-    defaultValues,
+    // @ts-ignore - zodResolver type compatibility issue with generic schemas
+    resolver: zodResolver(schema) as Resolver<T>,
+    defaultValues: defaultValues as DefaultValues<T>,
     mode,
   });
 
@@ -37,5 +38,5 @@ export function useFormBuilder<T extends FieldValues>({
     ...form,
     isValid: formState.isValid,
     isDirty: formState.isDirty,
-  };
+  } as UseFormBuilderReturn<T>;
 }
