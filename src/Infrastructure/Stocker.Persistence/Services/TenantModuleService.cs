@@ -42,7 +42,9 @@ public class TenantModuleService : ITenantModuleService
         _logger.LogDebug("Fetching tenant {TenantId} modules from database", tenantId);
 
         // Get tenant registration with selected package and its modules
+        // Use AsNoTracking for read-only queries to avoid concurrency issues
         var tenantRegistration = await _masterDbContext.TenantRegistrations
+            .AsNoTracking()
             .Include(tr => tr.SelectedPackage)
             .FirstOrDefaultAsync(tr => tr.TenantId == tenantId, cancellationToken);
 
@@ -58,7 +60,9 @@ public class TenantModuleService : ITenantModuleService
         if (tenantRegistration.SelectedPackage != null && tenantRegistration.SelectedPackageId.HasValue)
         {
             // Get package modules from PackageModules table
+            // Use AsNoTracking for read-only queries to avoid concurrency issues
             var packageModules = await _masterDbContext.PackageModules
+                .AsNoTracking()
                 .Where(pm => pm.PackageId == tenantRegistration.SelectedPackageId.Value)
                 .Select(pm => pm.ModuleName)
                 .ToListAsync(cancellationToken);
@@ -152,7 +156,9 @@ public class TenantModuleService : ITenantModuleService
         _logger.LogDebug("Looking up tenant by code: {TenantCode}", tenantCode);
 
         // Query tenant from master database by code (case-insensitive)
+        // Use AsNoTracking for read-only queries to avoid concurrency issues
         var tenant = await _masterDbContext.Tenants
+            .AsNoTracking()
             .Where(t => t.Code.ToLower() == tenantCode.ToLower())
             .Select(t => new TenantModuleInfo
             {
