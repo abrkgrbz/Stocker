@@ -101,6 +101,24 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Check if token is explicitly expired (from backend header)
+      const tokenExpired = error.response.headers['token-expired'] === 'true';
+
+      if (tokenExpired) {
+        console.warn('🔒 Token expired - forcing logout');
+        if (typeof window !== 'undefined') {
+          // Clear all auth data
+          localStorage.removeItem('tenantId');
+          localStorage.removeItem('tenantIdentifier');
+          // Clear cookies
+          document.cookie.split(";").forEach(c => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+          });
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {
