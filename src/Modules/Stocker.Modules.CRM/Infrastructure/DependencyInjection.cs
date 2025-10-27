@@ -52,7 +52,12 @@ public static class DependencyInjection
             return new CRMDbContext(optionsBuilder.Options, tenantService);
         });
 
-        // Register repositories
+        // Register generic repositories (for entities without specific repositories like Pipeline, Opportunity, etc.)
+        services.AddScoped(typeof(IReadRepository<>), typeof(CRMGenericRepository<>));
+        services.AddScoped(typeof(IWriteRepository<>), typeof(CRMGenericRepository<>));
+        services.AddScoped(typeof(IRepository<>), typeof(CRMGenericRepository<>));
+
+        // Register specific repositories
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<ILeadRepository, LeadRepository>();

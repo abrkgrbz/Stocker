@@ -62,6 +62,14 @@ apiClient.interceptors.request.use(
         }
       }
 
+      // 3. Development fallback: Use env variable if localhost
+      if (!tenantCode && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        tenantCode = process.env.NEXT_PUBLIC_DEV_TENANT_CODE || null;
+        if (tenantCode) {
+          console.log('🔧 Using development tenant:', tenantCode);
+        }
+      }
+
       // Set tenant code header
       if (tenantCode) {
         config.headers['X-Tenant-Code'] = tenantCode;
