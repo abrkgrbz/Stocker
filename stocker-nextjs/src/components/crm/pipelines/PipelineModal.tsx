@@ -79,8 +79,17 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
       }
 
       console.log('📤 Pipeline Modal - Submitting to API:', values);
+      console.log('🎯 onSubmit prop type:', typeof onSubmit);
+      console.log('🎯 onSubmit prop:', onSubmit);
 
-      onSubmit(values);
+      if (typeof onSubmit === 'function') {
+        console.log('✅ Calling onSubmit...');
+        onSubmit(values);
+        console.log('✅ onSubmit called successfully');
+      } else {
+        console.error('❌ onSubmit is not a function!');
+      }
+
       form.resetFields();
       setCurrentStep(0);
     } catch (error) {
