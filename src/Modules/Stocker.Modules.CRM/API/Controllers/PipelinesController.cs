@@ -28,6 +28,12 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<IEnumerable<PipelineDto>>> GetPipelines()
     {
         var query = new GetPipelinesQuery();
+
+        // Set TenantId from HttpContext
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (tenantId.HasValue)
+            query.TenantId = tenantId.Value;
+
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -39,8 +45,14 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<PipelineDto>> GetPipeline(Guid id)
     {
         var query = new GetPipelineByIdQuery { Id = id };
+
+        // Set TenantId from HttpContext
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (tenantId.HasValue)
+            query.TenantId = tenantId.Value;
+
         var result = await _mediator.Send(query);
-        
+
         if (result == null)
             return NotFound();
 
