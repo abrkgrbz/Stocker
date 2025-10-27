@@ -107,34 +107,21 @@ export default function CustomerDetailPage() {
     );
   }
 
-  // Status configuration - API returns 'Potential' instead of 'Pending'
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return { color: 'green', icon: <CheckCircleOutlined />, text: '✓ Aktif', badge: 'success' };
-      case 'Potential':
-        return { color: 'gold', icon: <SyncOutlined spin />, text: '⏳ Potansiyel', badge: 'processing' };
-      case 'Inactive':
-        return { color: 'default', icon: <ExclamationCircleOutlined />, text: '✕ Pasif', badge: 'default' };
-      default:
-        return { color: 'default', icon: <ClockCircleOutlined />, text: status, badge: 'default' };
-    }
-  };
+  // Status configuration based on isActive
+  const statusConfig = customer.isActive
+    ? { color: 'green', icon: <CheckCircleOutlined />, text: '✓ Aktif', badge: 'success' as const }
+    : { color: 'default', icon: <ExclamationCircleOutlined />, text: '✕ Pasif', badge: 'default' as const };
 
-  const statusConfig = getStatusConfig(customer.status);
-
-  // Calculate metrics
-  const totalPurchases = customer.totalPurchases || 0;
-  const creditUsagePercentage = customer.creditLimit > 0
-    ? ((totalPurchases / customer.creditLimit) * 100).toFixed(1)
-    : '0';
-  const availableCredit = customer.creditLimit - totalPurchases;
-  const averageOrderValue = 0; // No totalOrders in API, set to 0
+  // Calculate metrics (mock values for now - will be replaced with real data from backend)
+  const totalPurchases = 0;
+  const creditLimit = 0;
+  const creditUsagePercentage = '0';
+  const availableCredit = 0;
+  const averageOrderValue = 0;
 
   // Calculate health score (0-100)
   const healthScore = Math.min(100, Math.round(
-    (parseFloat(creditUsagePercentage) < 80 ? 30 : 10) + // Credit usage health
-    (customer.status === 'Active' ? 40 : 20) + // Status health
+    (customer.isActive ? 70 : 30) + // Status health
     30 // Base score
   ));
 
@@ -309,11 +296,9 @@ export default function CustomerDetailPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <div className="relative overflow-hidden rounded-2xl mb-6 shadow-2xl"
           style={{
-            background: customer.status === 'Active'
+            background: customer.isActive
               ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              : customer.status === 'Potential'
-              ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-              : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              : 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
           }}
         >
           {/* Decorative Pattern Overlay */}
@@ -339,20 +324,14 @@ export default function CustomerDetailPage() {
                     size={140}
                     icon={<ShopOutlined />}
                     className={`border-8 border-white shadow-2xl ${
-                      customer.status === 'Active'
+                      customer.isActive
                         ? 'bg-gradient-to-br from-green-400 to-blue-500'
-                        : customer.status === 'Potential'
-                        ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
                         : 'bg-gradient-to-br from-gray-400 to-gray-600'
                     }`}
                   />
                   <motion.div
                     className={`absolute bottom-2 right-2 w-10 h-10 rounded-full border-4 border-white shadow-lg ${
-                      customer.status === 'Active'
-                        ? 'bg-green-500'
-                        : customer.status === 'Potential'
-                        ? 'bg-yellow-500'
-                        : 'bg-gray-400'
+                      customer.isActive ? 'bg-green-500' : 'bg-gray-400'
                     }`}
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ repeat: Infinity, duration: 2 }}
@@ -381,20 +360,16 @@ export default function CustomerDetailPage() {
                       {customer.companyName}
                     </motion.h1>
                     <div className="flex items-center gap-3 flex-wrap mb-4">
-                      <span className="text-white flex items-center gap-2 bg-white/30 px-3 py-1 rounded-full backdrop-blur-md border-2 border-white/50 shadow-lg">
-                        <UserOutlined className="text-lg" />
-                        <span className="font-bold">{customer.contactPerson}</span>
-                      </span>
-                      <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-md flex items-center gap-2">
-                        <ShopOutlined />
-                        Teknoloji
-                      </span>
+                      {customer.industry && (
+                        <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-md flex items-center gap-2">
+                          <ShopOutlined />
+                          {customer.industry}
+                        </span>
+                      )}
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-md ${
-                        customer.customerType === 'Corporate'
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-green-500 text-white'
+                        customer.isActive ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'
                       }`}>
-                        {customer.customerType === 'Corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
+                        {customer.isActive ? '✓ Aktif' : '✗ Pasif'}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -417,8 +392,7 @@ export default function CustomerDetailPage() {
                   <div className="flex flex-col gap-3">
                     <div className="bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg flex items-center gap-2">
                       <div className={`w-3 h-3 rounded-full shadow-md ${
-                        customer.status === 'Active' ? 'bg-green-400' :
-                        customer.status === 'Potential' ? 'bg-yellow-400' : 'bg-gray-400'
+                        customer.isActive ? 'bg-green-400' : 'bg-gray-400'
                       }`} />
                       <span className="text-white font-bold text-sm">{statusConfig.text}</span>
                     </div>
@@ -429,14 +403,18 @@ export default function CustomerDetailPage() {
                       onClick={() => {
                         form.setFieldsValue({
                           companyName: customer.companyName,
-                          contactPerson: customer.contactPerson,
                           email: customer.email,
                           phone: customer.phone,
+                          website: customer.website,
+                          industry: customer.industry,
+                          address: customer.address,
                           city: customer.city,
                           state: customer.state,
-                          customerType: customer.customerType,
-                          status: customer.status,
-                          creditLimit: customer.creditLimit,
+                          country: customer.country,
+                          postalCode: customer.postalCode,
+                          annualRevenue: customer.annualRevenue,
+                          numberOfEmployees: customer.numberOfEmployees,
+                          description: customer.description,
                         });
                         setIsEditModalOpen(true);
                       }}
@@ -470,69 +448,68 @@ export default function CustomerDetailPage() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <Statistic
-                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><DollarOutlined /> Kredi Limiti</span>}
-                  value={customer.creditLimit}
-                  prefix="₺"
+                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><UserOutlined /> Kişi Sayısı</span>}
+                  value={customer.contacts?.length || 0}
                   valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
                 />
                 <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
                 <div className="text-white text-sm">
                   <div className="flex justify-between">
-                    <span className="font-medium">Kullanılabilir:</span>
-                    <span className="font-bold">₺{availableCredit.toLocaleString('tr-TR')}</span>
+                    <span className="font-medium">Kayıtlı Kişiler</span>
                   </div>
                 </div>
               </Card>
             </motion.div>
           </Col>
 
-          <Col xs={24} sm={12} lg={6}>
-            <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card
-                className="shadow-xl border-0 h-full overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' }}
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                <Statistic
-                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><ShoppingOutlined /> Toplam Ciro</span>}
-                  value={totalPurchases}
-                  prefix="₺"
-                  valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
-                <div className="text-white text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Durum:</span>
-                    <span className="font-bold">Aktif</span>
+          {customer.annualRevenue && (
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
+                <Card
+                  className="shadow-xl border-0 h-full overflow-hidden relative"
+                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' }}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                  <Statistic
+                    title={<span className="text-white flex items-center gap-2 text-base font-semibold"><DollarOutlined /> Yıllık Gelir</span>}
+                    value={customer.annualRevenue}
+                    prefix="₺"
+                    valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
+                  />
+                  <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                  <div className="text-white text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Firma Cirosu</span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
-          </Col>
+                </Card>
+              </motion.div>
+            </Col>
+          )}
 
-          <Col xs={24} sm={12} lg={6}>
-            <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card
-                className="shadow-xl border-0 h-full overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }}
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                <Statistic
-                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><RiseOutlined /> Kullanım Oranı</span>}
-                  value={parseFloat(creditUsagePercentage)}
-                  suffix="%"
-                  valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                />
-                <Progress
-                  percent={parseFloat(creditUsagePercentage)}
-                  strokeColor="white"
-                  trailColor="rgba(255,255,255,0.2)"
-                  showInfo={false}
-                  size={8}
-                />
-              </Card>
-            </motion.div>
-          </Col>
+          {customer.numberOfEmployees && (
+            <Col xs={24} sm={12} lg={6}>
+              <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
+                <Card
+                  className="shadow-xl border-0 h-full overflow-hidden relative"
+                  style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                  <Statistic
+                    title={<span className="text-white flex items-center gap-2 text-base font-semibold"><TeamOutlined /> Çalışan Sayısı</span>}
+                    value={customer.numberOfEmployees}
+                    valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
+                  />
+                  <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                  <div className="text-white text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Toplam Çalışan</span>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </Col>
+          )}
 
           <Col xs={24} sm={12} lg={6}>
             <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
@@ -637,20 +614,31 @@ export default function CustomerDetailPage() {
                             <Descriptions.Item label="Firma Adı" labelStyle={{ fontWeight: 'bold' }}>
                               {customer.companyName}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Yetkili Kişi" labelStyle={{ fontWeight: 'bold' }}>
-                              {customer.contactPerson}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Müşteri Tipi" labelStyle={{ fontWeight: 'bold' }}>
-                              <Tag color={customer.customerType === 'Corporate' ? 'purple' : 'green'}>
-                                {customer.customerType === 'Corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
-                              </Tag>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Sektör" labelStyle={{ fontWeight: 'bold' }}>
-                              <Tag color="blue">Teknoloji</Tag>
-                            </Descriptions.Item>
+                            {customer.industry && (
+                              <Descriptions.Item label="Sektör" labelStyle={{ fontWeight: 'bold' }}>
+                                <Tag color="blue">{customer.industry}</Tag>
+                              </Descriptions.Item>
+                            )}
+                            {customer.website && (
+                              <Descriptions.Item label="Website" labelStyle={{ fontWeight: 'bold' }}>
+                                <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                  {customer.website}
+                                </a>
+                              </Descriptions.Item>
+                            )}
                             <Descriptions.Item label="Durum" labelStyle={{ fontWeight: 'bold' }}>
                               <Badge status={statusConfig.badge as any} text={statusConfig.text} />
                             </Descriptions.Item>
+                            {customer.numberOfEmployees && (
+                              <Descriptions.Item label="Çalışan Sayısı" labelStyle={{ fontWeight: 'bold' }}>
+                                {customer.numberOfEmployees.toLocaleString('tr-TR')}
+                              </Descriptions.Item>
+                            )}
+                            {customer.annualRevenue && (
+                              <Descriptions.Item label="Yıllık Gelir" labelStyle={{ fontWeight: 'bold' }}>
+                                ₺{customer.annualRevenue.toLocaleString('tr-TR')}
+                              </Descriptions.Item>
+                            )}
                           </Descriptions>
                         </motion.div>
                       </Col>
@@ -677,14 +665,17 @@ export default function CustomerDetailPage() {
                                 {customer.phone || 'N/A'}
                               </a>
                             </Descriptions.Item>
+                            <Descriptions.Item label="Adres" labelStyle={{ fontWeight: 'bold' }}>
+                              {customer.address || '-'}
+                            </Descriptions.Item>
                             <Descriptions.Item label={<><EnvironmentOutlined /> Şehir</>} labelStyle={{ fontWeight: 'bold' }}>
                               {customer.city || 'N/A'}
                             </Descriptions.Item>
                             <Descriptions.Item label="İlçe" labelStyle={{ fontWeight: 'bold' }}>
                               {customer.state || 'N/A'}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Adres" labelStyle={{ fontWeight: 'bold' }}>
-                              {customer.address || '-'}
+                            <Descriptions.Item label="Ülke" labelStyle={{ fontWeight: 'bold' }}>
+                              {customer.country || 'N/A'}
                             </Descriptions.Item>
                             <Descriptions.Item label="Posta Kodu" labelStyle={{ fontWeight: 'bold' }}>
                               {customer.postalCode || '-'}
@@ -693,57 +684,24 @@ export default function CustomerDetailPage() {
                         </motion.div>
                       </Col>
 
-                      {/* Financial Info */}
-                      <Col xs={24}>
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.7 }}
-                        >
-                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <CreditCardOutlined className="text-purple-500" />
-                            Finansal Bilgiler
-                          </h3>
-                          <Row gutter={[16, 16]}>
-                            <Col xs={24} md={8}>
-                              <motion.div whileHover={{ scale: 1.05, y: -5 }}>
-                                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
-                                  <Statistic
-                                    title={<span className="font-semibold">Kredi Limiti</span>}
-                                    value={customer.creditLimit}
-                                    prefix="₺"
-                                    valueStyle={{ color: '#1890ff', fontSize: '1.5rem' }}
-                                  />
-                                </Card>
-                              </motion.div>
-                            </Col>
-                            <Col xs={24} md={8}>
-                              <motion.div whileHover={{ scale: 1.05, y: -5 }}>
-                                <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg">
-                                  <Statistic
-                                    title={<span className="font-semibold">Kullanılan Kredi</span>}
-                                    value={totalPurchases}
-                                    prefix="₺"
-                                    valueStyle={{ color: '#52c41a', fontSize: '1.5rem' }}
-                                  />
-                                </Card>
-                              </motion.div>
-                            </Col>
-                            <Col xs={24} md={8}>
-                              <motion.div whileHover={{ scale: 1.05, y: -5 }}>
-                                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg">
-                                  <Statistic
-                                    title={<span className="font-semibold">Kalan Kredi</span>}
-                                    value={availableCredit}
-                                    prefix="₺"
-                                    valueStyle={{ color: availableCredit < 0 ? '#ef4444' : '#722ed1', fontSize: '1.5rem' }}
-                                  />
-                                </Card>
-                              </motion.div>
-                            </Col>
-                          </Row>
-                        </motion.div>
-                      </Col>
+                      {/* Description Section */}
+                      {customer.description && (
+                        <Col xs={24}>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.7 }}
+                          >
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                              <FileTextOutlined className="text-purple-500" />
+                              Açıklama
+                            </h3>
+                            <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg">
+                              <p className="text-gray-700">{customer.description}</p>
+                            </Card>
+                          </motion.div>
+                        </Col>
+                      )}
                     </Row>
                   </div>
                 ),
@@ -870,14 +828,6 @@ export default function CustomerDetailPage() {
             </Form.Item>
 
             <Form.Item
-              name="contactPerson"
-              label="Yetkili Kişi"
-              rules={[{ required: true, message: 'Yetkili kişi gereklidir' }]}
-            >
-              <Input size="large" prefix={<UserOutlined />} placeholder="Yetkili kişi" />
-            </Form.Item>
-
-            <Form.Item
               name="email"
               label="E-posta"
               rules={[
@@ -896,6 +846,27 @@ export default function CustomerDetailPage() {
             </Form.Item>
 
             <Form.Item
+              name="website"
+              label="Website"
+            >
+              <Input size="large" prefix={<GlobalOutlined />} placeholder="https://www.firma.com" />
+            </Form.Item>
+
+            <Form.Item
+              name="industry"
+              label="Sektör"
+            >
+              <Input size="large" prefix={<ShopOutlined />} placeholder="Teknoloji" />
+            </Form.Item>
+
+            <Form.Item
+              name="address"
+              label="Adres"
+            >
+              <Input size="large" prefix={<EnvironmentOutlined />} placeholder="Adres" />
+            </Form.Item>
+
+            <Form.Item
               name="city"
               label="Şehir"
             >
@@ -910,32 +881,22 @@ export default function CustomerDetailPage() {
             </Form.Item>
 
             <Form.Item
-              name="customerType"
-              label="Müşteri Tipi"
-              rules={[{ required: true, message: 'Müşteri tipi gereklidir' }]}
+              name="country"
+              label="Ülke"
             >
-              <Select size="large" placeholder="Müşteri tipi seçin">
-                <Select.Option value="Corporate">🏢 Kurumsal</Select.Option>
-                <Select.Option value="Individual">👤 Bireysel</Select.Option>
-              </Select>
+              <Input size="large" placeholder="Türkiye" />
             </Form.Item>
 
             <Form.Item
-              name="status"
-              label="Durum"
-              rules={[{ required: true, message: 'Durum gereklidir' }]}
+              name="postalCode"
+              label="Posta Kodu"
             >
-              <Select size="large" placeholder="Durum seçin">
-                <Select.Option value="Active">✓ Aktif</Select.Option>
-                <Select.Option value="Potential">⏳ Potansiyel</Select.Option>
-                <Select.Option value="Inactive">✗ Pasif</Select.Option>
-              </Select>
+              <Input size="large" placeholder="34000" />
             </Form.Item>
 
             <Form.Item
-              name="creditLimit"
-              label="Kredi Limiti (₺)"
-              rules={[{ required: true, message: 'Kredi limiti gereklidir' }]}
+              name="annualRevenue"
+              label="Yıllık Gelir (₺)"
             >
               <InputNumber
                 size="large"
@@ -944,10 +905,30 @@ export default function CustomerDetailPage() {
                 step={1000}
                 formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                 parser={(value) => (value || '').replace(/₺\s?|(,*)/g, '')}
-                placeholder="500,000"
+                placeholder="1,000,000"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="numberOfEmployees"
+              label="Çalışan Sayısı"
+            >
+              <InputNumber
+                size="large"
+                style={{ width: '100%' }}
+                min={0}
+                step={1}
+                placeholder="50"
               />
             </Form.Item>
           </div>
+
+          <Form.Item
+            name="description"
+            label="Açıklama"
+          >
+            <Input.TextArea rows={4} placeholder="Müşteri hakkında notlar..." />
+          </Form.Item>
 
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
             <Button size="large" onClick={() => setIsEditModalOpen(false)}>
