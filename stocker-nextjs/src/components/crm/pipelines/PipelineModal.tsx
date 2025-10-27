@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Button, Space, InputNumber, Switch, Divider, Card, Tag, message } from 'antd';
+import { Drawer, Steps, Form, Input, Select, Button, Space, InputNumber, Switch, message, Card, Tag } from 'antd';
 import { PlusOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 
@@ -14,12 +14,12 @@ interface PipelineModalProps {
 }
 
 const STAGE_COLORS = [
-  { value: '#1890ff', label: 'Mavi' },
-  { value: '#52c41a', label: 'Yeşil' },
-  { value: '#faad14', label: 'Turuncu' },
-  { value: '#f5222d', label: 'Kırmızı' },
-  { value: '#722ed1', label: 'Mor' },
-  { value: '#13c2c2', label: 'Cyan' },
+  { value: '#1890ff', label: 'Mavi', color: '#1890ff' },
+  { value: '#52c41a', label: 'Yeşil', color: '#52c41a' },
+  { value: '#faad14', label: 'Turuncu', color: '#faad14' },
+  { value: '#f5222d', label: 'Kırmızı', color: '#f5222d' },
+  { value: '#722ed1', label: 'Mor', color: '#722ed1' },
+  { value: '#13c2c2', label: 'Cyan', color: '#13c2c2' },
 ];
 
 const DEFAULT_STAGES = [
@@ -27,16 +27,14 @@ const DEFAULT_STAGES = [
   { name: 'Teklif Hazırlama', probability: 30, color: '#52c41a', isWon: false, isLost: false },
   { name: 'Müzakere', probability: 60, color: '#faad14', isWon: false, isLost: false },
   { name: 'Kazanıldı', probability: 100, color: '#52c41a', isWon: true, isLost: false },
-  { name: 'Kaybedildi', probability: 0, color: '#f5222d', isWon: false, isLost: true },
 ];
 
 export function PipelineModal({ open, onCancel, onSubmit, initialData, loading = false }: PipelineModalProps) {
+  const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
-  const [useDefaultStages, setUseDefaultStages] = useState(true);
 
   useEffect(() => {
     if (open && !initialData) {
-      // Reset form with default values when opening for new pipeline
       form.setFieldsValue({
         name: '',
         description: '',
@@ -45,62 +43,66 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
         isDefault: true,
         stages: DEFAULT_STAGES,
       });
-      setUseDefaultStages(true);
     } else if (open && initialData) {
       form.setFieldsValue(initialData);
-      setUseDefaultStages(false);
     }
   }, [open, initialData, form]);
 
-  const handleFinish = async (values: any) => {
-    console.log('🚀 Pipeline Modal - Form Values:', values);
-
-    // Ensure stages have proper order
-    if (values.stages) {
-      values.stages = values.stages.map((stage: any, index: number) => ({
-        ...stage,
-        order: index + 1,
-        color: stage.color || '#1890ff',
-      }));
+  const handleNext = async () => {
+    try {
+      await form.validateFields();
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      message.error('Lütfen tüm zorunlu alanları doldurun');
     }
+  };
 
-    console.log('📤 Pipeline Modal - Submitting to API:', values);
-    onSubmit(values);
+  const handlePrev = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  const handleFinish = async () => {
+    try {
+      const values = await form.validateFields();
+
+      console.log('🚀 Pipeline Modal - Form Values:', values);
+
+      // Ensure stages have proper order
+      if (values.stages) {
+        values.stages = values.stages.map((stage: any, index: number) => ({
+          ...stage,
+          order: index + 1,
+          color: stage.color || '#1890ff',
+        }));
+      }
+
+      console.log('📤 Pipeline Modal - Submitting to API:', values);
+
+      onSubmit(values);
+      form.resetFields();
+      setCurrentStep(0);
+    } catch (error) {
+      message.error('Lütfen tüm zorunlu alanları doldurun');
+    }
   };
 
   const handleCancel = () => {
     form.resetFields();
-    setUseDefaultStages(true);
+    setCurrentStep(0);
     onCancel();
   };
 
   const handleUseDefaultStages = () => {
     form.setFieldsValue({ stages: DEFAULT_STAGES });
-    setUseDefaultStages(true);
     message.success('Varsayılan aşamalar yüklendi');
   };
 
-  return (
-    <Modal
-      title={
-        <div className="text-lg font-semibold">
-          {initialData ? '✏️ Pipeline Düzenle' : '➕ Yeni Pipeline Oluştur'}
-        </div>
-      }
-      open={open}
-      onCancel={handleCancel}
-      width={800}
-      footer={null}
-      destroyOnClose
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        className="mt-4"
-      >
-        {/* Basic Info */}
-        <Card size="small" title="📋 Temel Bilgiler" className="mb-4">
+  const steps = [
+    {
+      title: 'Temel Bilgiler',
+      description: 'Pipeline detayları',
+      content: (
+        <div className="space-y-4">
           <Form.Item
             name="name"
             label="Pipeline Adı"
@@ -110,54 +112,36 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
           </Form.Item>
 
           <Form.Item name="description" label="Açıklama (Opsiyonel)">
-            <Input.TextArea rows={2} placeholder="Pipeline hakkında kısa açıklama" />
+            <Input.TextArea rows={3} placeholder="Pipeline hakkında kısa açıklama" />
           </Form.Item>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="type"
-              label="Pipeline Tipi"
-              rules={[{ required: true, message: 'Tip zorunludur' }]}
-            >
-              <Select size="large">
-                <Select.Option value="Sales">💼 Satış</Select.Option>
-                <Select.Option value="Lead">🎯 Potansiyel Müşteri</Select.Option>
-                <Select.Option value="Deal">🤝 Fırsat</Select.Option>
-                <Select.Option value="Custom">⚙️ Özel</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <div className="space-y-2">
-              <Form.Item name="isActive" valuePropName="checked" className="mb-2">
-                <div className="flex items-center gap-2 p-2 border rounded">
-                  <Switch defaultChecked />
-                  <span className="text-sm">✅ Pipeline Aktif</span>
-                </div>
-              </Form.Item>
-
-              <Form.Item name="isDefault" valuePropName="checked" className="mb-0">
-                <div className="flex items-center gap-2 p-2 border rounded bg-blue-50">
-                  <Switch />
-                  <span className="text-sm">⭐ Varsayılan Pipeline</span>
-                </div>
-              </Form.Item>
-            </div>
+          <Form.Item
+            name="type"
+            label="Pipeline Tipi"
+            rules={[{ required: true, message: 'Pipeline tipi zorunludur' }]}
+          >
+            <Select size="large" placeholder="Pipeline tipini seçin">
+              <Select.Option value="Sales">💼 Satış</Select.Option>
+              <Select.Option value="Lead">🎯 Potansiyel Müşteri</Select.Option>
+              <Select.Option value="Deal">🤝 Fırsat</Select.Option>
+              <Select.Option value="Custom">⚙️ Özel</Select.Option>
+            </Select>
+          </Form.Item>
+        </div>
+      ),
+    },
+    {
+      title: 'Aşamalar',
+      description: 'Satış adımları',
+      content: (
+        <div>
+          <div className="mb-4 flex justify-between items-center">
+            <h4 className="text-sm font-medium text-gray-700">Pipeline Aşamaları</h4>
+            <Button size="small" type="link" onClick={handleUseDefaultStages}>
+              Varsayılan Aşamaları Kullan
+            </Button>
           </div>
-        </Card>
 
-        {/* Stages */}
-        <Card
-          size="small"
-          title="🎯 Satış Aşamaları"
-          className="mb-4"
-          extra={
-            !useDefaultStages && (
-              <Button size="small" type="link" onClick={handleUseDefaultStages}>
-                Varsayılan Aşamaları Kullan
-              </Button>
-            )
-          }
-        >
           <Form.List
             name="stages"
             rules={[
@@ -172,85 +156,95 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
           >
             {(fields, { add, remove }) => (
               <>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                   {fields.map((field, index) => (
-                    <div key={field.key} className="p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Tag color="blue">#{index + 1}</Tag>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'name']}
-                          rules={[{ required: true, message: 'Ad gerekli' }]}
-                          className="mb-0 flex-1"
-                        >
-                          <Input placeholder="Aşama adı" />
-                        </Form.Item>
-                        {fields.length > 1 && (
+                    <Card
+                      key={field.key}
+                      size="small"
+                      className="bg-gray-50"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <Tag color="blue">#{index + 1}</Tag>
+                          <span className="text-sm">Aşama {index + 1}</span>
+                        </div>
+                      }
+                      extra={
+                        fields.length > 1 && (
                           <Button
                             type="text"
                             danger
                             size="small"
                             icon={<DeleteOutlined />}
-                            onClick={() => {
-                              remove(field.name);
-                              setUseDefaultStages(false);
-                            }}
+                            onClick={() => remove(field.name)}
                           />
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
+                        )
+                      }
+                    >
+                      <div className="space-y-3">
                         <Form.Item
                           {...field}
-                          name={[field.name, 'probability']}
-                          rules={[{ required: true, message: 'Gerekli' }]}
+                          name={[field.name, 'name']}
+                          label="Aşama Adı"
+                          rules={[{ required: true, message: 'Aşama adı zorunludur' }]}
                           className="mb-0"
                         >
-                          <InputNumber
-                            placeholder="Olasılık %"
-                            min={0}
-                            max={100}
-                            suffix="%"
-                            className="w-full"
-                          />
+                          <Input placeholder="Örn: Yeni Fırsat" />
                         </Form.Item>
 
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'color']}
-                          initialValue="#1890ff"
-                          className="mb-0"
-                        >
-                          <Select placeholder="Renk">
-                            {STAGE_COLORS.map((c) => (
-                              <Select.Option key={c.value} value={c.value}>
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="w-4 h-4 rounded"
-                                    style={{ backgroundColor: c.value }}
-                                  />
-                                  {c.label}
-                                </div>
-                              </Select.Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Form.Item
+                            {...field}
+                            name={[field.name, 'probability']}
+                            label="Başarı Olasılığı (%)"
+                            rules={[{ required: true, message: 'Olasılık zorunludur' }]}
+                            className="mb-0"
+                          >
+                            <InputNumber
+                              placeholder="0-100"
+                              min={0}
+                              max={100}
+                              suffix="%"
+                              className="w-full"
+                            />
+                          </Form.Item>
 
-                        <div className="flex gap-1">
+                          <Form.Item
+                            {...field}
+                            name={[field.name, 'color']}
+                            label="Renk"
+                            initialValue="#1890ff"
+                            className="mb-0"
+                          >
+                            <Select placeholder="Renk seçin">
+                              {STAGE_COLORS.map((c) => (
+                                <Select.Option key={c.value} value={c.value}>
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-4 h-4 rounded"
+                                      style={{ backgroundColor: c.color }}
+                                    />
+                                    {c.label}
+                                  </div>
+                                </Select.Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
                           <Form.Item
                             {...field}
                             name={[field.name, 'isWon']}
                             valuePropName="checked"
                             className="mb-0"
                           >
-                            <Button
-                              size="small"
-                              icon={<CheckCircleOutlined />}
-                              className="flex-1"
-                              type={form.getFieldValue(['stages', field.name, 'isWon']) ? 'primary' : 'default'}
-                            >
-                              Kazandı
-                            </Button>
+                            <div className="flex items-center gap-2 p-2 border rounded">
+                              <Switch size="small" />
+                              <span className="text-sm">
+                                <CheckCircleOutlined className="text-green-500 mr-1" />
+                                Kazanıldı olarak işaretle
+                              </span>
+                            </div>
                           </Form.Item>
 
                           <Form.Item
@@ -259,27 +253,25 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
                             valuePropName="checked"
                             className="mb-0"
                           >
-                            <Button
-                              size="small"
-                              icon={<CloseCircleOutlined />}
-                              className="flex-1"
-                              danger={form.getFieldValue(['stages', field.name, 'isLost'])}
-                            >
-                              Kaybetti
-                            </Button>
+                            <div className="flex items-center gap-2 p-2 border rounded">
+                              <Switch size="small" />
+                              <span className="text-sm">
+                                <CloseCircleOutlined className="text-red-500 mr-1" />
+                                Kaybedildi olarak işaretle
+                              </span>
+                            </div>
                           </Form.Item>
                         </div>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
 
                 <Button
                   type="dashed"
-                  onClick={() => {
-                    add({ name: '', probability: 50, color: '#1890ff', isWon: false, isLost: false });
-                    setUseDefaultStages(false);
-                  }}
+                  onClick={() =>
+                    add({ name: '', probability: 50, color: '#1890ff', isWon: false, isLost: false })
+                  }
                   block
                   icon={<PlusOutlined />}
                   className="mt-3"
@@ -289,18 +281,113 @@ export function PipelineModal({ open, onCancel, onSubmit, initialData, loading =
               </>
             )}
           </Form.List>
-        </Card>
-
-        {/* Footer Actions */}
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button onClick={handleCancel} size="large">
-            İptal
-          </Button>
-          <Button type="primary" htmlType="submit" loading={loading} size="large">
-            {initialData ? '💾 Güncelle' : '✨ Oluştur'}
-          </Button>
         </div>
+      ),
+    },
+    {
+      title: 'Ayarlar',
+      description: 'Son adım',
+      content: (
+        <div className="space-y-4">
+          <Form.Item name="isActive" valuePropName="checked" initialValue={true}>
+            <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-white">
+              <Switch defaultChecked />
+              <div>
+                <div className="font-medium">Pipeline Aktif</div>
+                <div className="text-sm text-gray-500">Bu pipeline'ı hemen kullanıma açın</div>
+              </div>
+            </div>
+          </Form.Item>
+
+          <Form.Item name="isDefault" valuePropName="checked" initialValue={true}>
+            <div className="flex items-center gap-3 p-4 border border-blue-200 rounded-lg bg-blue-50">
+              <Switch defaultChecked />
+              <div>
+                <div className="font-medium">⭐ Varsayılan Pipeline</div>
+                <div className="text-sm text-blue-600">
+                  Yeni oluşturulan kayıtlar için bu pipeline'ı varsayılan olarak kullan
+                </div>
+              </div>
+            </div>
+          </Form.Item>
+
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h4 className="font-medium text-green-900 mb-2">✅ Özet</h4>
+            <div className="text-sm text-green-800 space-y-1">
+              <div>
+                <strong>Pipeline Adı:</strong>{' '}
+                {Form.useWatch('name', form) || <span className="text-gray-400">Belirtilmedi</span>}
+              </div>
+              <div>
+                <strong>Tip:</strong>{' '}
+                {Form.useWatch('type', form) || <span className="text-gray-400">Belirtilmedi</span>}
+              </div>
+              <div>
+                <strong>Aşama Sayısı:</strong> {Form.useWatch('stages', form)?.length || 0} aşama
+              </div>
+              <div>
+                <strong>Durum:</strong>{' '}
+                {Form.useWatch('isActive', form) ? (
+                  <span className="text-green-600">✅ Aktif</span>
+                ) : (
+                  <span className="text-gray-500">❌ Pasif</span>
+                )}
+              </div>
+              <div>
+                <strong>Varsayılan:</strong>{' '}
+                {Form.useWatch('isDefault', form) ? (
+                  <span className="text-blue-600">⭐ Evet</span>
+                ) : (
+                  <span className="text-gray-500">Hayır</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <Drawer
+      title={initialData ? '✏️ Pipeline Düzenle' : '➕ Yeni Pipeline Oluştur'}
+      open={open}
+      onClose={handleCancel}
+      width={720}
+      placement="right"
+      destroyOnClose
+      styles={{
+        mask: {
+          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+      }}
+      footer={
+        <div className="flex justify-between">
+          <Button onClick={handleCancel}>İptal</Button>
+          <Space>
+            {currentStep > 0 && (
+              <Button onClick={handlePrev}>← Geri</Button>
+            )}
+            {currentStep < steps.length - 1 && (
+              <Button type="primary" onClick={handleNext}>
+                İleri →
+              </Button>
+            )}
+            {currentStep === steps.length - 1 && (
+              <Button type="primary" onClick={handleFinish} loading={loading}>
+                {initialData ? '💾 Güncelle' : '✨ Oluştur'}
+              </Button>
+            )}
+          </Space>
+        </div>
+      }
+    >
+      <Steps current={currentStep} items={steps} className="mb-6" />
+
+      <Form form={form} layout="vertical" initialValues={{ isActive: true, isDefault: true }}>
+        <div className="min-h-[450px]">{steps[currentStep].content}</div>
       </Form>
-    </Modal>
+    </Drawer>
   );
 }
