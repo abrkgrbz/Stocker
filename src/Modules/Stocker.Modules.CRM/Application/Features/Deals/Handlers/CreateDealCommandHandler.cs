@@ -1,9 +1,11 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Deals.Commands;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Handlers;
@@ -11,13 +13,16 @@ namespace Stocker.Modules.CRM.Application.Features.Deals.Handlers;
 public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Result<DealDto>>
 {
     private readonly IDealRepository _dealRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly IReadRepository<Pipeline> _pipelineRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateDealCommandHandler(
         IDealRepository dealRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork)
+        IReadRepository<Pipeline> pipelineRepository,
+        IUnitOfWork unitOfWork)
     {
         _dealRepository = dealRepository;
+        _pipelineRepository = pipelineRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -26,10 +31,41 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
         // Create Money value object
         var value = Money.Create(request.Amount, request.Currency);
 
-        // For now, use a default pipeline and stage if not provided
-        // TODO: Get default pipeline/stage from configuration or create one
-        var pipelineId = request.PipelineId ?? Guid.NewGuid(); // Temporary: should get from defaults
-        var stageId = request.CurrentStageId ?? Guid.NewGuid(); // Temporary: should get from defaults
+        // Get default pipeline and stage if not provided
+        Guid pipelineId;
+        Guid stageId;
+
+        if (request.PipelineId.HasValue && request.CurrentStageId.HasValue)
+        {
+            pipelineId = request.PipelineId.Value;
+            stageId = request.CurrentStageId.Value;
+        }
+        else
+        {
+            // Query for default pipeline with its stages
+            var defaultPipeline = await _pipelineRepository
+                .AsQueryable()
+                .Include(p => p.Stages)
+                .FirstOrDefaultAsync(p => p.TenantId == request.TenantId && p.IsDefault && p.IsActive, cancellationToken);
+
+            if (defaultPipeline == null)
+            {
+                return Result<DealDto>.Failure(
+                    Error.NotFound("Deal.Pipeline.NotFound", "No default pipeline found. Please create a pipeline first or specify pipeline and stage."));
+            }
+
+            pipelineId = defaultPipeline.Id;
+
+            // Get the first stage
+            var firstStage = defaultPipeline.GetFirstStage();
+            if (firstStage == null)
+            {
+                return Result<DealDto>.Failure(
+                    Error.Validation("Deal.Pipeline.NoStages", "Default pipeline has no stages. Please add stages to the pipeline."));
+            }
+
+            stageId = firstStage.Id;
+        }
 
         // Parse OwnerId (default to 1 if not provided or invalid)
         int ownerId = 1;
