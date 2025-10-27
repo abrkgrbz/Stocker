@@ -37,21 +37,13 @@ import {
   useMoveDealStage,
   useCloseDealWon,
   useCloseDealLost,
+  usePipelines,
 } from '@/lib/api/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
 import { DealModal } from '@/features/deals/components';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-
-// Pipeline stages
-const stages = [
-  { id: 1, name: 'Yeni', color: '#1890ff' },
-  { id: 2, name: 'İletişim', color: '#13c2c2' },
-  { id: 3, name: 'Teklif', color: '#52c41a' },
-  { id: 4, name: 'Müzakere', color: '#faad14' },
-  { id: 5, name: 'Kapalı', color: '#722ed1' },
-];
 
 // Status colors
 const statusColors: Record<Deal['status'], string> = {
@@ -68,6 +60,7 @@ export default function DealsPage() {
 
   // API Hooks
   const { data, isLoading, refetch } = useDeals({});
+  const { data: pipelines = [], isLoading: pipelinesLoading } = usePipelines();
   const createDeal = useCreateDeal();
   const updateDeal = useUpdateDeal();
   const deleteDeal = useDeleteDeal();
@@ -76,6 +69,10 @@ export default function DealsPage() {
   const closeDealLost = useCloseDealLost();
 
   const deals = data?.items || [];
+
+  // Get default pipeline's stages for kanban/list view
+  const defaultPipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
+  const stages = defaultPipeline?.stages || [];
 
   // Calculate statistics
   const stats = {
@@ -488,8 +485,8 @@ export default function DealsPage() {
       <DealModal
         open={modalOpen}
         deal={selectedDeal}
-        loading={createDeal.isPending || updateDeal.isPending}
-        stages={stages}
+        loading={createDeal.isPending || updateDeal.isPending || pipelinesLoading}
+        pipelines={pipelines}
         onCancel={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         onDelete={handleDelete}

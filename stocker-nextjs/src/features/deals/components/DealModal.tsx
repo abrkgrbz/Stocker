@@ -15,7 +15,7 @@ import {
   ArrowRightOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
-import type { Deal } from '@/lib/api/services/crm.service';
+import type { Deal, Pipeline } from '@/lib/api/services/crm.service';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -24,7 +24,7 @@ interface DealModalProps {
   open: boolean;
   deal: Deal | null;
   loading: boolean;
-  stages: Array<{ id: number; name: string; color: string }>;
+  pipelines: Pipeline[];
   onCancel: () => void;
   onSubmit: (values: any) => void;
   onDelete?: (id: number) => void;
@@ -34,14 +34,20 @@ export function DealModal({
   open,
   deal,
   loading,
-  stages,
+  pipelines,
   onCancel,
   onSubmit,
   onDelete,
 }: DealModalProps) {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const isEditMode = !!deal;
+
+  // Get stages from selected pipeline
+  const stages = selectedPipeline
+    ? pipelines.find((p) => p.id === selectedPipeline)?.stages || []
+    : [];
 
   React.useEffect(() => {
     if (open && deal) {
@@ -316,15 +322,44 @@ export function DealModal({
               <h3 className="text-base font-semibold text-gray-800 m-0">Aşama ve Durum</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">💼 Satış Süreci (Pipeline)</span>}
+                name="pipelineId"
+                rules={[{ required: true, message: 'Pipeline seçimi zorunludur' }]}
+              >
+                <Select
+                  placeholder="Satış sürecini seçiniz"
+                  className="rounded-lg"
+                  size="large"
+                  onChange={(value) => {
+                    setSelectedPipeline(value);
+                    form.setFieldsValue({ stageId: undefined }); // Reset stage when pipeline changes
+                  }}
+                >
+                  {pipelines.map((pipeline) => (
+                    <Select.Option key={pipeline.id} value={pipeline.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{pipeline.name}</span>
+                        <span className="text-gray-500 text-xs">({pipeline.stages?.length || 0} aşama)</span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Aşama</span>}
                     name="stageId"
                     rules={[{ required: true, message: 'Aşama gerekli' }]}
-                    initialValue={1}
                   >
-                    <Select placeholder="Aşama seçiniz" className="rounded-lg" size="large">
+                    <Select
+                      placeholder={selectedPipeline ? "Aşama seçiniz" : "Önce pipeline seçiniz"}
+                      className="rounded-lg"
+                      size="large"
+                      disabled={!selectedPipeline}
+                    >
                       {stages.map((stage) => (
                         <Select.Option key={stage.id} value={stage.id}>
                           <div className="flex items-center gap-2">
