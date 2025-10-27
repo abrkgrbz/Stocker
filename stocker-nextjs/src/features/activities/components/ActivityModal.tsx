@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin } from 'antd';
 import {
   PhoneOutlined,
   MailOutlined,
@@ -14,8 +14,10 @@ import {
   CheckCircleOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
+  ShopOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
+import { useCustomers, useLeads, useDeals } from '@/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -50,6 +52,11 @@ export function ActivityModal({
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
   const isEditMode = !!activity;
+
+  // Fetch data for dropdowns
+  const { data: customers, isLoading: customersLoading } = useCustomers();
+  const { data: leads, isLoading: leadsLoading } = useLeads();
+  const { data: deals, isLoading: dealsLoading } = useDeals();
 
   React.useEffect(() => {
     if (open && activity) {
@@ -154,8 +161,8 @@ export function ActivityModal({
 
   const validateStep2 = () => {
     const values = form.getFieldsValue();
-    if (!values.leadId && !values.customerId && !values.contactId && !values.opportunityId && !values.dealId) {
-      return Promise.reject(new Error('En az bir ilişki (Müşteri, Lead, İletişim, Fırsat veya Deal) seçmelisiniz'));
+    if (!values.leadId && !values.customerId && !values.dealId) {
+      return Promise.reject(new Error('En az bir ilişki (Müşteri, Lead veya Deal) seçmelisiniz'));
     }
     return Promise.resolve();
   };
@@ -353,84 +360,102 @@ export function ActivityModal({
               <h3 className="text-base font-semibold text-gray-800 m-0">İlgili Kayıtlar</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
-                    name="customerId"
-                  >
-                    <Input
-                      placeholder="Müşteri GUID"
-                      className="rounded-lg"
-                      prefix={<UserOutlined className="text-gray-400" />}
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Lead ID</span>}
-                    name="leadId"
-                  >
-                    <Input
-                      placeholder="Lead GUID"
-                      className="rounded-lg"
-                      prefix={<UserOutlined className="text-gray-400" />}
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">İletişim ID</span>}
-                    name="contactId"
-                  >
-                    <Input
-                      placeholder="İletişim GUID"
-                      className="rounded-lg"
-                      prefix={<UserOutlined className="text-gray-400" />}
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Fırsat ID</span>}
-                    name="opportunityId"
-                  >
-                    <Input
-                      placeholder="Fırsat GUID"
-                      className="rounded-lg"
-                      prefix={<TrophyOutlined className="text-gray-400" />}
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Deal ID</span>}
-                    name="dealId"
-                  >
-                    <Input
-                      placeholder="Deal GUID"
-                      className="rounded-lg"
-                      prefix={<TrophyOutlined className="text-gray-400" />}
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Spin spinning={customersLoading || leadsLoading || dealsLoading} tip="Veriler yükleniyor...">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label={<span className="text-gray-700 font-medium">Müşteri</span>}
+                      name="customerId"
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Müşteri seçiniz"
+                        className="rounded-lg"
+                        size="large"
+                        allowClear
+                        optionFilterProp="children"
+                        filterOption={(input, option) =>
+                          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={customers?.map((customer) => ({
+                          value: customer.id,
+                          label: customer.companyName,
+                        }))}
+                        suffixIcon={<ShopOutlined className="text-gray-400" />}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label={<span className="text-gray-700 font-medium">Lead</span>}
+                      name="leadId"
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Lead seçiniz"
+                        className="rounded-lg"
+                        size="large"
+                        allowClear
+                        optionFilterProp="children"
+                        filterOption={(input, option) =>
+                          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={leads?.map((lead) => ({
+                          value: lead.id,
+                          label: `${lead.firstName} ${lead.lastName} - ${lead.company || 'N/A'}`,
+                        }))}
+                        suffixIcon={<UserOutlined className="text-gray-400" />}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label={<span className="text-gray-700 font-medium">Deal</span>}
+                      name="dealId"
+                    >
+                      <Select
+                        showSearch
+                        placeholder="Deal seçiniz"
+                        className="rounded-lg"
+                        size="large"
+                        allowClear
+                        optionFilterProp="children"
+                        filterOption={(input, option) =>
+                          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={deals?.map((deal) => ({
+                          value: deal.id,
+                          label: `${deal.title} - ₺${deal.value?.toLocaleString('tr-TR') || '0'}`,
+                        }))}
+                        suffixIcon={<TrophyOutlined className="text-gray-400" />}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label={<span className="text-gray-700 font-medium">İletişim / Fırsat</span>}
+                      name="contactId"
+                    >
+                      <Input
+                        placeholder="İletişim veya Fırsat ID"
+                        className="rounded-lg"
+                        prefix={<UserOutlined className="text-gray-400" />}
+                        size="large"
+                        disabled
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
 
-              <Alert
-                message="⚠️ En Az Bir İlişki Gerekli"
-                description="Bu aktiviteyi oluşturmak için en az bir kayıt (Müşteri, Lead, İletişim, Fırsat veya Deal) ile ilişkilendirmeniz gerekmektedir."
-                type="warning"
-                showIcon
-              />
+                <Alert
+                  message="⚠️ En Az Bir İlişki Gerekli"
+                  description="Bu aktiviteyi oluşturmak için en az bir kayıt (Müşteri, Lead veya Deal) ile ilişkilendirmeniz gerekmektedir."
+                  type="warning"
+                  showIcon
+                />
+              </Spin>
             </Card>
           </div>
         )}
