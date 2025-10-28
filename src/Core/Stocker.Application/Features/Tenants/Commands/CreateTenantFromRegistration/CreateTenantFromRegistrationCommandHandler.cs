@@ -91,10 +91,11 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 return Result<TenantDto>.Failure(Error.Conflict("Tenant.AlreadyExists", "Bu kod ile tenant zaten mevcut."));
             }
 
-            // Get package (default to Trial if not selected)
+            // Get package with modules (eager loading to avoid N+1 query later)
             var packageId = registration.SelectedPackageId ?? await GetDefaultPackageId(cancellationToken);
-            var package = await _unitOfWork.Repository<Package>()
-                .GetByIdAsync(packageId);
+            var package = await _context.Packages
+                .Include(p => p.Modules)
+                .FirstOrDefaultAsync(p => p.Id == packageId, cancellationToken);
 
             if (package == null)
             {
@@ -164,9 +165,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             registration.Approve(approvedBy: "System", tenantId: tenant.Id);
             _context.TenantRegistrations.Update(registration);
 
-            // Save to database
+            // Save all changes in single transaction (tenant, subscription, registration)
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Tenant '{TenantName}' created successfully with ID: {TenantId} from registration: {RegistrationId}",
                 tenant.Name, tenant.Id, registration.Id);
@@ -272,16 +272,12 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
                 try
                 {
-                    // Get package with modules
-                    var packageWithModules = await _context.Packages
-                        .Include(p => p.Modules)
-                        .FirstOrDefaultAsync(p => p.Id == package.Id, cancellationToken);
-
-                    if (packageWithModules != null && packageWithModules.Modules.Any())
+                    // Use already loaded package with modules (eager loaded at line 96-98)
+                    if (package.Modules != null && package.Modules.Any())
                     {
                         var tenantModulesRepository = _unitOfWork.Repository<Domain.Tenant.Entities.TenantModules>();
 
-                        foreach (var packageModule in packageWithModules.Modules.Where(m => m.IsIncluded))
+                        foreach (var packageModule in package.Modules.Where(m => m.IsIncluded))
                         {
                             var tenantModule = Domain.Tenant.Entities.TenantModules.Create(
                                 tenantId: tenant.Id,
@@ -300,7 +296,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                         _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
-                            packageWithModules.Modules.Count(m => m.IsIncluded), tenant.Id);
+                            package.Modules.Count(m => m.IsIncluded), tenant.Id);
                     }
                     else
                     {
@@ -335,13 +331,22 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to setup tenant database for tenant: {TenantId}. Manual intervention may be required.", tenant.Id);
-                // If this is a module activation failure, re-throw to prevent tenant from being created in broken state
-                if (ex is InvalidOperationException && ex.Message.Contains("modules are not configured"))
+                _logger.LogError(ex, "Failed to setup tenant database for tenant: {TenantId}. Failing job to prevent orphaned tenant.", tenant.Id);
+
+                // Re-throw ALL critical database setup failures to properly fail the Hangfire job
+                // This prevents orphaned tenant records without functioning databases
+                if (ex is InvalidOperationException ||
+                    ex is DbUpdateException ||
+                    ex is SqlException ||
+                    ex.GetType().Name.Contains("Migration") ||
+                    ex.Message.Contains("database") ||
+                    ex.Message.Contains("migration"))
                 {
-                    throw;
+                    throw; // Critical database failure - must fail the entire operation
                 }
-                // For other errors, log but allow tenant creation to continue (can be retried)
+
+                // Only non-critical errors should be swallowed (very rare cases)
+                throw; // Changed: Default to failing to prevent silent failures
             }
 
             // Send welcome email
