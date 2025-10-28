@@ -54,12 +54,13 @@ public sealed class Tenant : AggregateRoot
 
     private Tenant() { } // EF Constructor
 
-    private Tenant( 
+    private Tenant(
         string name,
         string code,
         string databaseName,
         ConnectionString connectionString,
         Email contactEmail,
+        bool isActive,
         PhoneNumber? contactPhone = null,
         string? description = null,
         string? logoUrl = null)
@@ -69,7 +70,7 @@ public sealed class Tenant : AggregateRoot
         Code = code;
         DatabaseName = databaseName;
         ConnectionString = connectionString;
-        IsActive = true;
+        IsActive = isActive;
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
         Description = description;
@@ -87,7 +88,8 @@ public sealed class Tenant : AggregateRoot
         Email contactEmail,
         PhoneNumber? contactPhone = null,
         string? description = null,
-        string? logoUrl = null)
+        string? logoUrl = null,
+        bool isActive = false)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -104,7 +106,7 @@ public sealed class Tenant : AggregateRoot
             throw new ArgumentException("Database name cannot be empty.", nameof(databaseName));
         }
 
-        return new Tenant(name, code, databaseName, connectionString, contactEmail, contactPhone, description, logoUrl);
+        return new Tenant(name, code, databaseName, connectionString, contactEmail, isActive, contactPhone, description, logoUrl);
     }
 
     public void Activate()
