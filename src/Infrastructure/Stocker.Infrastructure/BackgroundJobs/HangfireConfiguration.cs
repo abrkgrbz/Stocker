@@ -75,23 +75,35 @@ public static class HangfireConfiguration
     public static IApplicationBuilder UseHangfireDashboard(this IApplicationBuilder app, IConfiguration configuration)
     {
         var dashboardPath = configuration.GetValue<string>("Hangfire:DashboardPath") ?? "/hangfire";
-        
+
         // Get JWT settings for authorization
         var jwtSecret = configuration["JwtSettings:Secret"];
         var jwtIssuer = configuration["JwtSettings:Issuer"] ?? "Stocker";
         var jwtAudience = configuration["JwtSettings:Audience"] ?? "Stocker";
-        
+
         app.UseHangfireDashboard(dashboardPath, new DashboardOptions
         {
             DashboardTitle = "Stocker - Background Jobs",
-            Authorization = new[] { 
-                new HangfireJwtAuthorizationFilter(jwtSecret, jwtIssuer, jwtAudience) 
+            Authorization = new[] {
+                new HangfireJwtAuthorizationFilter(jwtSecret, jwtIssuer, jwtAudience)
             },
             IgnoreAntiforgeryToken = true,
             DisplayStorageConnectionString = false,
             IsReadOnlyFunc = (DashboardContext context) => false
         });
 
+        // Schedule recurring jobs
+        ScheduleRecurringJobs();
+
         return app;
+    }
+
+    /// <summary>
+    /// Schedules all recurring background jobs
+    /// </summary>
+    private static void ScheduleRecurringJobs()
+    {
+        // Tenant health check - runs every 15 minutes
+        TenantHealthCheckJob.Schedule();
     }
 }

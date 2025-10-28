@@ -6,6 +6,7 @@ using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.Monitoring;
 using Stocker.Persistence.Repositories;
+using Stocker.Persistence.Services;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Repositories;
@@ -43,6 +44,9 @@ public static class DependencyInjection
 
         // Register system monitoring service
         services.AddScoped<ISystemMonitoringService, SystemMonitoringService>();
+
+        // Register tenant health check service
+        services.AddScoped<ITenantHealthCheckService, TenantHealthCheckService>();
 
         // Note: MigrationService is not registered as HostedService
         // Migrations should be handled explicitly or through a separate hosted service

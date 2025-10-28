@@ -77,7 +77,9 @@
       "Bash(npx expo start --clear)",
       "Read(//c/mnt/c/Users/PC/source/repos/Stocker/**)",
       "Bash(tee:*)",
-      "Bash(dotnet run:*)"
+      "Bash(dotnet run:*)",
+      "SlashCommand(/sc:analyze CreateTenantFromRegistrationCommandHandler.cs)",
+      "SlashCommand(/sc:analyze:*)"
     ],
     "deny": [],
     "ask": []
