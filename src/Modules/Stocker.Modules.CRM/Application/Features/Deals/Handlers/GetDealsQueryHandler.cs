@@ -24,15 +24,14 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
 
-        // Get all deals for the tenant
-        var deals = await _dealRepository.FindAsync(d => d.TenantId == tenantId, cancellationToken);
+        // Start with base query on database
+        var query = _dealRepository.AsQueryable()
+            .Where(d => d.TenantId == tenantId);
 
-        // Apply filters
-        var query = deals.AsQueryable();
-
+        // Apply filters at database level
         if (!string.IsNullOrEmpty(request.Search))
         {
-            query = query.Where(d => d.Name.Contains(request.Search, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(d => d.Name.Contains(request.Search));
         }
 
         if (request.Status.HasValue)
@@ -75,12 +74,14 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             query = query.Where(d => d.CreatedAt <= request.ToDate.Value);
         }
 
-        // Apply pagination
+        // Apply pagination at database level
         var skipCount = (request.Page - 1) * request.PageSize;
         query = query.Skip(skipCount).Take(request.PageSize);
 
-        // Map to DTOs
-        var dealDtos = query.Select(deal => new DealDto
+        // Execute query and map to DTOs
+        var deals = await query.ToListAsync(cancellationToken);
+
+        var dealDtos = deals.Select(deal => new DealDto
         {
             Id = deal.Id,
             Title = deal.Name,
