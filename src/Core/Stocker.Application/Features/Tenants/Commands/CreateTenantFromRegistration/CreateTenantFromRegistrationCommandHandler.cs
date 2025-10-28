@@ -154,6 +154,23 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 trialEndDate
             );
 
+            // Add package modules to subscription
+            if (package.Modules != null && package.Modules.Any())
+            {
+                foreach (var packageModule in package.Modules.Where(m => m.IsIncluded))
+                {
+                    subscription.AddModule(
+                        packageModule.ModuleCode,
+                        packageModule.ModuleName,
+                        packageModule.MaxEntities
+                    );
+                    _logger.LogInformation("Added module {ModuleCode} to subscription for tenant {TenantId}",
+                        packageModule.ModuleCode, tenant.Id);
+                }
+                _logger.LogInformation("🎯 Added {Count} modules to subscription for tenant {TenantId}",
+                    package.Modules.Count(m => m.IsIncluded), tenant.Id);
+            }
+
             // Activate subscription if not trial
             if (!trialEndDate.HasValue)
             {
