@@ -5,6 +5,7 @@ using Stocker.Identity.Models;
 using Stocker.SharedKernel.Results;
 using Stocker.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace Stocker.Infrastructure.Services;
 
@@ -14,27 +15,40 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
     private readonly IMasterDbContext _masterContext;
     private readonly IPasswordService _passwordService;
     private readonly ILogger<AuthenticationServiceAdapter> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthenticationServiceAdapter(
         Identity.Services.IAuthenticationService authenticationService,
         IMasterDbContext masterContext,
         IPasswordService passwordService,
-        ILogger<AuthenticationServiceAdapter> logger)
+        ILogger<AuthenticationServiceAdapter> logger,
+        IHttpContextAccessor httpContextAccessor)
     {
         _authenticationService = authenticationService;
         _masterContext = masterContext;
         _passwordService = passwordService;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<AuthResponse>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         try
         {
+            // Get TenantId from HttpContext (set by TenantResolutionMiddleware)
+            Guid? tenantId = null;
+            if (_httpContextAccessor.HttpContext != null &&
+                _httpContextAccessor.HttpContext.Items.ContainsKey("TenantId"))
+            {
+                tenantId = _httpContextAccessor.HttpContext.Items["TenantId"] as Guid?;
+                _logger.LogInformation("TenantId {TenantId} resolved from middleware for authentication", tenantId);
+            }
+
             var loginRequest = new LoginRequest
             {
                 Username = email, // Using email as username for now
-                Password = password
+                Password = password,
+                TenantId = tenantId // Include tenant ID in login request
             };
 
             var result = await _authenticationService.LoginAsync(loginRequest);
