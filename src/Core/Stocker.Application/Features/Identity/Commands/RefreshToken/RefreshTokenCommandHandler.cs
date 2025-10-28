@@ -31,18 +31,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         try
         {
             var result = await _authenticationService.RefreshTokenAsync(
-                request.RefreshToken, 
+                request.RefreshToken,
+                request.IpAddress,
+                request.UserAgent,
                 cancellationToken);
-            
+
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Token refreshed successfully");
+                _logger.LogInformation("Token refreshed successfully from IP: {IpAddress}", request.IpAddress);
             }
             else
             {
-                _logger.LogWarning("Failed to refresh token");
+                _logger.LogWarning("Failed to refresh token from IP: {IpAddress}", request.IpAddress);
             }
-            
+
             return result;
         }
         catch (Exception ex)

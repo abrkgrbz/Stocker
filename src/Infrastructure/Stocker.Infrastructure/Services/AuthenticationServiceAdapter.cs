@@ -190,14 +190,16 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         }
     }
 
-    public async Task<Result<AuthResponse>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> RefreshTokenAsync(string refreshToken, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var refreshRequest = new RefreshTokenRequest
             {
                 RefreshToken = refreshToken,
-                AccessToken = string.Empty // Will be validated in the service
+                AccessToken = string.Empty, // Will be validated in the service
+                DeviceInfo = userAgent,
+                IpAddress = ipAddress
             };
 
             var result = await _authenticationService.RefreshTokenAsync(refreshRequest);

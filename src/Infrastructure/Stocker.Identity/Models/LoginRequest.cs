@@ -16,6 +16,8 @@ public class RefreshTokenRequest
 {
     public string AccessToken { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
+    public string? DeviceInfo { get; set; }
+    public string? IpAddress { get; set; }
 }
 
 public class RegisterRequest

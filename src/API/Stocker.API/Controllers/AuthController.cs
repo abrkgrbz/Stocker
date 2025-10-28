@@ -112,13 +112,20 @@ public class AuthController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
     {
-        var result = await _mediator.Send(command);
-        
+        // Add IP address and User-Agent for refresh token tracking
+        var enrichedCommand = command with
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers["User-Agent"].ToString()
+        };
+
+        var result = await _mediator.Send(enrichedCommand);
+
         if (result.IsSuccess)
         {
             return Ok(result.Value);
         }
-        
+
         return BadRequest(new
         {
             success = false,
