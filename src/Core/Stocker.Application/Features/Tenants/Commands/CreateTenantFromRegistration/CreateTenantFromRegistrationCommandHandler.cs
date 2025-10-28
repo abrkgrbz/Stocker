@@ -315,10 +315,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                     throw new InvalidOperationException($"Failed to activate modules for tenant {tenant.Id}. Tenant database exists but modules are not configured.", moduleEx);
                 }
 
-                // Activate tenant after successful database setup AND module activation
-                tenant.Activate();
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-
+                // Tenant is already active (created with IsActive = true in Tenant.Create)
+                // No need to call tenant.Activate() - it would throw "Tenant is already active" exception
                 _logger.LogInformation("Tenant database setup completed for tenant: {TenantId}", tenant.Id);
 
                 // Publish domain event for real-time notification
