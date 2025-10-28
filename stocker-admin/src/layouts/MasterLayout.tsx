@@ -436,11 +436,11 @@ const MasterLayout: React.FC = () => {
   const settings: ProLayoutProps = {
     title: 'Stocker Master',
     logo: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="8" fill="#667eea"/>
-        <path d="M10 22V14L16 10L22 14V22H10Z" fill="white"/>
-        <path d="M14 22V18H18V22" stroke="#667eea" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
+      <img
+        src="/logo.svg"
+        alt="Stocker"
+        style={{ width: '32px', height: '32px', objectFit: 'contain', objectPosition: 'center 30%' }}
+      />
     ),
     layout: 'mix',
     splitMenus: false,

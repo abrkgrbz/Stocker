@@ -223,19 +223,12 @@ const LoginPage: React.FC = () => {
           <div className="login-header">
             <div className="logo-wrapper">
               <div className="logo-icon">
-                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 17L12 22L22 17" stroke="url(#gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 12L12 17L22 12" stroke="url(#gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#667eea" />
-                      <stop offset="100%" stopColor="#764ba2" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+                <img
+                  src="/logo.svg"
+                  alt="Stocker Logo"
+                  style={{ width: '200px', height: 'auto' }}
+                />
               </div>
-              <Title level={1} className="login-title">STOCKER</Title>
             </div>
             <div className="subtitle-wrapper">
               <div className="subtitle-line"></div>
