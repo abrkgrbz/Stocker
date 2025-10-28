@@ -24,6 +24,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly ILogger<CreateTenantFromRegistrationCommandHandler> _logger;
     private readonly IPublisher _publisher;
     private readonly IConfiguration _configuration;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -32,7 +33,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         IEmailService emailService,
         ILogger<CreateTenantFromRegistrationCommandHandler> logger,
         IPublisher publisher,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ITenantDbContextFactory tenantDbContextFactory)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -41,6 +43,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         _logger = logger;
         _publisher = publisher;
         _configuration = configuration;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -275,7 +278,9 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                     // Use already loaded package with modules (eager loaded at line 96-98)
                     if (package.Modules != null && package.Modules.Any())
                     {
-                        var tenantModulesRepository = _unitOfWork.Repository<Domain.Tenant.Entities.TenantModules>();
+                        // CRITICAL FIX: Use TenantDbContext instead of Master UnitOfWork
+                        // TenantModules must be saved to the TENANT database, not Master database!
+                        using var tenantDbContext = await _tenantDbContextFactory.CreateDbContextAsync(tenant.Id);
 
                         foreach (var packageModule in package.Modules.Where(m => m.IsIncluded))
                         {
@@ -289,12 +294,12 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                                 isTrial: package.TrialDays > 0
                             );
 
-                            await tenantModulesRepository.AddAsync(tenantModule);
+                            tenantDbContext.TenantModules.Add(tenantModule);
                             _logger.LogInformation("✅ Activated module {ModuleCode} ({ModuleName}) for tenant {TenantId}",
                                 packageModule.ModuleCode, packageModule.ModuleName, tenant.Id);
                         }
 
-                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        await tenantDbContext.SaveChangesAsync(cancellationToken);
                         _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
                             package.Modules.Count(m => m.IsIncluded), tenant.Id);
                     }
