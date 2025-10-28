@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Deals.Queries;
 using Stocker.Modules.CRM.Domain.Repositories;
@@ -11,18 +12,24 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
 {
     private readonly IDealRepository _dealRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<GetDealsQueryHandler> _logger;
 
     public GetDealsQueryHandler(
         IDealRepository dealRepository,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ILogger<GetDealsQueryHandler> logger)
     {
         _dealRepository = dealRepository;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<DealDto>> Handle(GetDealsQuery request, CancellationToken cancellationToken)
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+
+        _logger.LogInformation("GetDealsQuery: TenantId={TenantId}, Page={Page}, PageSize={PageSize}",
+            tenantId, request.Page, request.PageSize);
 
         // Start with base query on database
         var query = _dealRepository.AsQueryable()
@@ -80,6 +87,9 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
 
         // Execute query and map to DTOs
         var deals = await query.ToListAsync(cancellationToken);
+
+        _logger.LogInformation("GetDealsQuery: Found {Count} deals for TenantId={TenantId}",
+            deals.Count, tenantId);
 
         var dealDtos = deals.Select(deal => new DealDto
         {
