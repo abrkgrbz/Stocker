@@ -75,6 +75,10 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             query = query.Where(d => d.CreatedAt <= request.ToDate.Value);
         }
 
+        // Apply pagination
+        var skipCount = (request.Page - 1) * request.PageSize;
+        query = query.Skip(skipCount).Take(request.PageSize);
+
         // Map to DTOs
         var dealDtos = query.Select(deal => new DealDto
         {

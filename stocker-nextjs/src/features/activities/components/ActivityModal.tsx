@@ -380,7 +380,7 @@ export function ActivityModal({
                         options={customers?.map((customer) => ({
                           value: customer.id,
                           label: customer.companyName,
-                        }))}
+                        })) || []}
                         suffixIcon={<ShopOutlined className="text-gray-400" />}
                       />
                     </Form.Item>
@@ -403,7 +403,7 @@ export function ActivityModal({
                         options={leads?.map((lead) => ({
                           value: lead.id,
                           label: `${lead.firstName} ${lead.lastName} - ${lead.company || 'N/A'}`,
-                        }))}
+                        })) || []}
                         suffixIcon={<UserOutlined className="text-gray-400" />}
                       />
                     </Form.Item>
@@ -428,7 +428,7 @@ export function ActivityModal({
                         options={deals?.map((deal) => ({
                           value: deal.id,
                           label: `${deal.title} - ₺${deal.value?.toLocaleString('tr-TR') || '0'}`,
-                        }))}
+                        })) || []}
                         suffixIcon={<TrophyOutlined className="text-gray-400" />}
                       />
                     </Form.Item>
