@@ -336,8 +336,12 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to setup tenant database for tenant: {TenantId}. Manual intervention may be required.", tenant.Id);
-                // Note: We don't rollback the tenant creation here
-                // The tenant exists but database setup failed - this can be retried
+                // If this is a module activation failure, re-throw to prevent tenant from being created in broken state
+                if (ex is InvalidOperationException && ex.Message.Contains("modules are not configured"))
+                {
+                    throw;
+                }
+                // For other errors, log but allow tenant creation to continue (can be retried)
             }
 
             // Send welcome email

@@ -41,8 +41,9 @@ public class TenantDataSeeder
     public async Task SeedAsync()
     {
         await SeedPackageBasedRolesAsync();
+        await _context.SaveChangesAsync(); // Save roles first so they're available for user creation
         await SeedDefaultAdminUserAsync();
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(); // Save user after role assignment
     }
 
     private async Task SeedPackageBasedRolesAsync()
