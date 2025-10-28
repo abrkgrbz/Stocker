@@ -34,18 +34,18 @@ public static class ServiceCollectionExtensions
             // In Production/Docker, prefer ConnectionStrings over DatabaseSettings
             var connectionString = configuration.GetConnectionString("MasterConnection");
             var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
-            
+
             // Fallback to DatabaseSettings if ConnectionString is not provided
             if (string.IsNullOrEmpty(connectionString))
             {
                 connectionString = databaseSettings?.GetMasterConnectionString();
             }
-            
+
             // Log the connection string for debugging (remove sensitive parts)
             var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<MasterDbContext>>();
             if (logger != null && !string.IsNullOrEmpty(connectionString))
             {
-                var sanitizedConnStr = connectionString.Contains("Password") 
+                var sanitizedConnStr = connectionString.Contains("Password")
                     ? connectionString.Substring(0, connectionString.IndexOf("Password")) + "Password=***"
                     : connectionString;
                 logger.LogInformation("Connecting to MasterDb with connection string: {ConnectionString}", sanitizedConnStr);
@@ -54,17 +54,17 @@ public static class ServiceCollectionExtensions
             {
                 logger?.LogError("MasterDb connection string is null or empty!");
             }
-            
+
             options.UseSqlServer(connectionString);
-            
+
             // Suppress pending model changes warning in production
             options.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-            
+
             // Add interceptors
             var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
             options.AddInterceptors(auditInterceptor);
-            
+
             // Apply development settings if configured
             if (databaseSettings != null)
             {
@@ -72,7 +72,7 @@ public static class ServiceCollectionExtensions
                 {
                     options.EnableSensitiveDataLogging();
                 }
-                
+
                 if (databaseSettings.EnableDetailedErrors)
                 {
                     options.EnableDetailedErrors();
@@ -80,7 +80,41 @@ public static class ServiceCollectionExtensions
             }
         });
 
-         
+        // Add DbContextFactory for MasterDbContext to avoid concurrency issues
+        // Used by TenantModuleService which needs to run multiple queries per request
+        services.AddDbContextFactory<MasterDbContext>((serviceProvider, options) =>
+        {
+            var connectionString = configuration.GetConnectionString("MasterConnection");
+            var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                connectionString = databaseSettings?.GetMasterConnectionString();
+            }
+
+            options.UseSqlServer(connectionString);
+
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+            // Note: Interceptors are scoped services, so we can't add them to pooled contexts
+            // Factory-created contexts will not have interceptors
+
+            if (databaseSettings != null)
+            {
+                if (databaseSettings.EnableSensitiveDataLogging && configuration.GetValue<bool>("IsDevelopment", false))
+                {
+                    options.EnableSensitiveDataLogging();
+                }
+
+                if (databaseSettings.EnableDetailedErrors)
+                {
+                    options.EnableDetailedErrors();
+                }
+            }
+        });
+
+
 
         // Repository Registration
         // Repositories should be accessed through Unit of Work pattern (IMasterUnitOfWork or ITenantUnitOfWork)

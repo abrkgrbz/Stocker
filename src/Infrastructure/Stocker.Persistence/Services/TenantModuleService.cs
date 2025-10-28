@@ -9,20 +9,21 @@ namespace Stocker.Persistence.Services;
 /// <summary>
 /// Service for retrieving tenant module subscriptions from database
 /// Implements caching for performance optimization
+/// Uses IDbContextFactory to avoid DbContext concurrency issues
 /// </summary>
 public class TenantModuleService : ITenantModuleService
 {
-    private readonly MasterDbContext _masterDbContext;
+    private readonly IDbContextFactory<MasterDbContext> _dbContextFactory;
     private readonly IMemoryCache _cache;
     private readonly ILogger<TenantModuleService> _logger;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
     public TenantModuleService(
-        MasterDbContext masterDbContext,
+        IDbContextFactory<MasterDbContext> dbContextFactory,
         IMemoryCache cache,
         ILogger<TenantModuleService> logger)
     {
-        _masterDbContext = masterDbContext;
+        _dbContextFactory = dbContextFactory;
         _cache = cache;
         _logger = logger;
     }
@@ -38,12 +39,15 @@ public class TenantModuleService : ITenantModuleService
             return cachedModules ?? new List<string>();
         }
 
-        // If not in cache, query from database
+        // If not in cache, query from database with a dedicated DbContext instance
         _logger.LogDebug("Fetching tenant {TenantId} modules from database", tenantId);
 
-        // Get tenant registration - materialize first to avoid concurrency issues
-        // Use AsNoTracking for read-only queries to avoid concurrency issues
-        var tenantRegistration = await _masterDbContext.TenantRegistrations
+        // Use IDbContextFactory to create a new DbContext instance for this operation
+        // This avoids concurrency issues when multiple queries are needed
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Get tenant registration - use AsNoTracking for read-only queries
+        var tenantRegistration = await dbContext.TenantRegistrations
             .AsNoTracking()
             .Where(tr => tr.TenantId == tenantId)
             .Select(tr => new
@@ -66,8 +70,7 @@ public class TenantModuleService : ITenantModuleService
         if (tenantRegistration.SelectedPackageId.HasValue)
         {
             // Get package modules from PackageModules table
-            // Use AsNoTracking for read-only queries to avoid concurrency issues
-            var packageModules = await _masterDbContext.PackageModules
+            var packageModules = await dbContext.PackageModules
                 .AsNoTracking()
                 .Where(pm => pm.PackageId == tenantRegistration.SelectedPackageId.Value)
                 .Select(pm => pm.ModuleName)
@@ -161,9 +164,11 @@ public class TenantModuleService : ITenantModuleService
 
         _logger.LogDebug("Looking up tenant by code: {TenantCode}", tenantCode);
 
+        // Use IDbContextFactory to create a new DbContext instance for this operation
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
         // Query tenant from master database by code (case-insensitive)
-        // Use AsNoTracking for read-only queries to avoid concurrency issues
-        var tenant = await _masterDbContext.Tenants
+        var tenant = await dbContext.Tenants
             .AsNoTracking()
             .Where(t => t.Code.ToLower() == tenantCode.ToLower())
             .Select(t => new TenantModuleInfo
