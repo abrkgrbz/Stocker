@@ -59,9 +59,9 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="Stocker Logo"
-                width={150}
-                height={50}
-                className={`transition-all ${isScrolled ? 'brightness-100' : 'brightness-0 invert'}`}
+                width={120}
+                height={40}
+                className={`transition-all object-contain ${isScrolled ? 'brightness-100' : 'brightness-0 invert'}`}
                 priority
               />
             </motion.div>
