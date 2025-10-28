@@ -16,17 +16,20 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
     private readonly ILogger<VerifyTenantEmailCommandHandler> _logger;
     private readonly IMediator _mediator;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly ISecurityAuditService _auditService;
 
     public VerifyTenantEmailCommandHandler(
         IMasterDbContext context,
         ILogger<VerifyTenantEmailCommandHandler> logger,
         IMediator mediator,
-        IBackgroundJobService backgroundJobService)
+        IBackgroundJobService backgroundJobService,
+        ISecurityAuditService auditService)
     {
         _context = context;
         _logger = logger;
         _mediator = mediator;
         _backgroundJobService = backgroundJobService;
+        _auditService = auditService;
     }
 
     public async Task<Result<bool>> Handle(VerifyTenantEmailCommand request, CancellationToken cancellationToken)
@@ -55,23 +58,68 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
 
             if (matchingRegistration == null)
             {
+                // Log failed verification - invalid token/code
+                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+                {
+                    Event = "tenant_email_verification_failed",
+                    Email = request.Email,
+                    RiskScore = 30,
+                    GdprCategory = "authentication",
+                    Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        reason = "invalid_token_or_code",
+                        tokenOrCode = tokenOrCode
+                    })
+                }, cancellationToken);
+
                 return Result<bool>.Failure(Error.NotFound("Registration.NotFound", "Kayıt bulunamadı veya doğrulama kodu geçersiz."));
             }
 
             if (matchingRegistration.EmailVerified)
             {
+                // Log failed verification - already verified
+                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+                {
+                    Event = "tenant_email_verification_failed",
+                    Email = matchingRegistration.ContactEmail.Value,
+                    TenantCode = matchingRegistration.CompanyCode,
+                    RiskScore = 20,
+                    GdprCategory = "authentication",
+                    Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        reason = "already_verified",
+                        registrationId = matchingRegistration.Id
+                    })
+                }, cancellationToken);
+
                 return Result<bool>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
             }
 
             // Verify email (use token or code)
             matchingRegistration.VerifyEmail(tokenOrCode);
-            
-            _logger.LogInformation("Email verified successfully for: {Email}, Company: {CompanyCode}", 
-                matchingRegistration.ContactEmail.Value, 
+
+            _logger.LogInformation("Email verified successfully for: {Email}, Company: {CompanyCode}",
+                matchingRegistration.ContactEmail.Value,
                 matchingRegistration.CompanyCode);
 
             // Save email verification first
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Log successful email verification
+            await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+            {
+                Event = "tenant_email_verification_success",
+                Email = matchingRegistration.ContactEmail.Value,
+                TenantCode = matchingRegistration.CompanyCode,
+                RiskScore = 10,
+                GdprCategory = "authentication",
+                Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    registrationId = matchingRegistration.Id,
+                    companyName = matchingRegistration.CompanyName,
+                    verificationType = !string.IsNullOrEmpty(request.Code) ? "code" : "token"
+                })
+            }, cancellationToken);
 
             // Enqueue tenant provisioning job (async) - don't block user
             // Only if tenant doesn't already exist
@@ -117,6 +165,20 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying email");
+
+            // Log verification error
+            await _auditService.LogSecurityEventAsync(new SecurityAuditEvent
+            {
+                Event = "tenant_email_verification_error",
+                Email = request.Email,
+                RiskScore = 50,
+                Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace != null ? ex.StackTrace.Substring(0, Math.Min(500, ex.StackTrace.Length)) : null
+                })
+            }, cancellationToken);
+
             return Result<bool>.Failure(Error.Failure("Verification.Failed", $"E-posta doğrulama işlemi başarısız: {ex.Message}"));
         }
     }

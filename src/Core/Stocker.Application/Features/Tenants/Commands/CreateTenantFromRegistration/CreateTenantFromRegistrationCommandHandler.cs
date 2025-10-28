@@ -25,6 +25,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly IPublisher _publisher;
     private readonly IConfiguration _configuration;
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
+    private readonly ISecurityAuditService _auditService;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -34,7 +35,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         ILogger<CreateTenantFromRegistrationCommandHandler> logger,
         IPublisher publisher,
         IConfiguration configuration,
-        ITenantDbContextFactory tenantDbContextFactory)
+        ITenantDbContextFactory tenantDbContextFactory,
+        ISecurityAuditService auditService)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -44,6 +46,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         _publisher = publisher;
         _configuration = configuration;
         _tenantDbContextFactory = tenantDbContextFactory;
+        _auditService = auditService;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -340,6 +343,25 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
                 _logger.LogInformation("✅ Tenant activated successfully: {TenantId}", tenant.Id);
 
+                // Log successful tenant activation
+                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
+                {
+                    Event = "tenant_activated",
+                    Email = registration.ContactEmail.Value,
+                    TenantCode = tenant.Code,
+                    RiskScore = 10,
+                    GdprCategory = "authentication",
+                    Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        tenantId = tenant.Id,
+                        tenantName = tenant.Name,
+                        registrationId = registration.Id,
+                        packageId = package?.Id,
+                        packageName = package?.Name,
+                        modulesActivated = package?.Modules?.Count(m => m.IsIncluded) ?? 0
+                    })
+                }, cancellationToken);
+
                 // Publish domain event for real-time notification
                 var tenantActivatedEvent = new TenantActivatedDomainEvent(
                     tenant.Id,
@@ -395,6 +417,32 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating tenant from registration: {RegistrationId}", request.RegistrationId);
+
+            // Log tenant activation failure
+            try
+            {
+                var registration = await _context.TenantRegistrations
+                    .FirstOrDefaultAsync(r => r.Id == request.RegistrationId, cancellationToken);
+
+                await _auditService.LogSecurityEventAsync(new SecurityAuditEvent
+                {
+                    Event = "tenant_activation_failed",
+                    Email = registration?.ContactEmail?.Value,
+                    TenantCode = registration?.CompanyCode,
+                    RiskScore = 70,
+                    Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        registrationId = request.RegistrationId,
+                        error = ex.Message,
+                        errorType = ex.GetType().Name,
+                        stackTrace = ex.StackTrace != null ? ex.StackTrace.Substring(0, Math.Min(500, ex.StackTrace.Length)) : null
+                    })
+                }, cancellationToken);
+            }
+            catch
+            {
+                // Ignore audit logging errors in error handler
+            }
 
             // For critical failures (like module activation), re-throw to fail the Hangfire job
             // This prevents "successful" jobs that actually failed
