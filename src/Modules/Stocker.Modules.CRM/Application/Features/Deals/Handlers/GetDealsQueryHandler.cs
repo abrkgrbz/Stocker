@@ -28,8 +28,18 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
     {
         var tenantId = _currentUserService.TenantId ?? Guid.Empty;
 
-        _logger.LogInformation("GetDealsQuery: TenantId={TenantId}, Page={Page}, PageSize={PageSize}",
+        _logger.LogWarning("========== GetDealsQuery START ==========");
+        _logger.LogWarning("GetDealsQuery: TenantId={TenantId}, Page={Page}, PageSize={PageSize}",
             tenantId, request.Page, request.PageSize);
+
+        // Get total count without filters for debugging
+        var totalDeals = await _dealRepository.AsQueryable().CountAsync(cancellationToken);
+        _logger.LogWarning("Total deals in database (all tenants): {TotalDeals}", totalDeals);
+
+        var dealsForTenant = await _dealRepository.AsQueryable()
+            .Where(d => d.TenantId == tenantId)
+            .CountAsync(cancellationToken);
+        _logger.LogWarning("Total deals for TenantId {TenantId}: {DealsForTenant}", tenantId, dealsForTenant);
 
         // Start with base query on database
         var query = _dealRepository.AsQueryable()
@@ -88,8 +98,9 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
         // Execute query and map to DTOs
         var deals = await query.ToListAsync(cancellationToken);
 
-        _logger.LogInformation("GetDealsQuery: Found {Count} deals for TenantId={TenantId}",
+        _logger.LogWarning("GetDealsQuery: Found {Count} deals AFTER pagination for TenantId={TenantId}",
             deals.Count, tenantId);
+        _logger.LogWarning("========== GetDealsQuery END ==========");
 
         var dealDtos = deals.Select(deal => new DealDto
         {
