@@ -366,6 +366,14 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating tenant from registration: {RegistrationId}", request.RegistrationId);
+
+            // For critical failures (like module activation), re-throw to fail the Hangfire job
+            // This prevents "successful" jobs that actually failed
+            if (ex is InvalidOperationException)
+            {
+                throw; // Re-throw critical errors to fail Hangfire job properly
+            }
+
             return Result<TenantDto>.Failure(Error.Failure("Tenant.CreateFailed", $"Tenant oluşturulurken hata oluştu: {ex.Message}"));
         }
     }
