@@ -23,10 +23,10 @@ export default function Logo({ size = 'md', showText = false, className = '' }: 
     return (
       <div className={`inline-flex items-center ${className}`}>
         <Image
-          src="/logo.svg"
+          src="/logo.png"
           alt="Stocker"
-          width={width * 2}
-          height={height}
+          width={width * 3}
+          height={height * 3}
           priority
           className="object-contain"
         />
@@ -34,19 +34,19 @@ export default function Logo({ size = 'md', showText = false, className = '' }: 
     )
   }
 
-  // For icon-only, we'll crop to just the cube portion
+  // For icon-only, we'll crop to just the cube portion (65% from top to exclude text)
   return (
     <div className={`inline-flex items-center ${className}`}>
       <div style={{ width, height }} className="relative overflow-hidden">
         <Image
-          src="/logo.svg"
+          src="/logo.png"
           alt="Stocker"
           width={width}
           height={width}
           priority
           className="object-cover"
           style={{
-            objectPosition: 'center 30%',
+            objectPosition: 'center 35%',
           }}
         />
       </div>

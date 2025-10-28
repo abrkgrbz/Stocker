@@ -437,9 +437,9 @@ const MasterLayout: React.FC = () => {
     title: 'Stocker Master',
     logo: (
       <img
-        src="/logo.svg"
+        src="/logo.png"
         alt="Stocker"
-        style={{ width: '32px', height: '32px', objectFit: 'contain', objectPosition: 'center 30%' }}
+        style={{ width: '40px', height: '40px', objectFit: 'cover', objectPosition: 'center 35%' }}
       />
     ),
     layout: 'mix',

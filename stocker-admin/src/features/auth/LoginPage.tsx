@@ -224,9 +224,9 @@ const LoginPage: React.FC = () => {
             <div className="logo-wrapper">
               <div className="logo-icon">
                 <img
-                  src="/logo.svg"
+                  src="/logo.png"
                   alt="Stocker Logo"
-                  style={{ width: '200px', height: 'auto' }}
+                  style={{ width: '280px', height: 'auto' }}
                 />
               </div>
             </div>
