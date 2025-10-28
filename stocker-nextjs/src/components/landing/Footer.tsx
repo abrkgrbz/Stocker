@@ -61,10 +61,10 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="Stocker Logo"
-                width={60}
-                height={75}
+                width={180}
+                height={60}
                 className="brightness-0 invert"
               />
             </div>

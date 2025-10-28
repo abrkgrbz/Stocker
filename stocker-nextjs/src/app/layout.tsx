@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   publisher: "Stocker",
   metadataBase: new URL('https://stocker.app'),
   icons: {
-    icon: '/logo.svg',
-    shortcut: '/logo.svg',
-    apple: '/logo.svg',
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
   alternates: {
     canonical: '/',

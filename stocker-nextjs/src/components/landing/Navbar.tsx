@@ -57,10 +57,10 @@ export default function Navbar() {
               className="relative"
             >
               <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="Stocker Logo"
-                width={50}
-                height={62}
+                width={150}
+                height={50}
                 className={`transition-all ${isScrolled ? 'brightness-100' : 'brightness-0 invert'}`}
                 priority
               />
