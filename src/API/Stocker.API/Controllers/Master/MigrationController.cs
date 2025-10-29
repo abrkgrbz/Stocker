@@ -52,10 +52,10 @@ public class MigrationController : ApiController
 
         return Ok(new
         {
-            Success = true,
-            Data = tenants,
-            TotalTenants = tenants.Count,
-            TenantsWithPendingMigrations = tenants.Count(t => t.HasPendingMigrations)
+            success = true,
+            data = tenants,
+            totalTenants = tenants.Count,
+            tenantsWithPendingMigrations = tenants.Count(t => t.HasPendingMigrations)
         });
     }
 
@@ -86,9 +86,7 @@ public class MigrationController : ApiController
         return Ok(new
         {
             success = true,
-            message = migrationResult.Message,
-            tenantName = migrationResult.TenantName,
-            appliedMigrations = migrationResult.AppliedMigrations
+            data = migrationResult
         });
     }
 
@@ -116,11 +114,7 @@ public class MigrationController : ApiController
         return Ok(new
         {
             success = true,
-            message = $"İşlem tamamlandı. Başarılı: {successCount}, Başarısız: {failureCount}",
-            totalTenants = results.Count,
-            successCount,
-            failureCount,
-            results
+            data = results
         });
     }
 
@@ -151,10 +145,7 @@ public class MigrationController : ApiController
         return Ok(new
         {
             success = true,
-            tenantName = history.TenantName,
-            tenantCode = history.TenantCode,
-            appliedMigrations = history.AppliedMigrations,
-            totalMigrations = history.TotalMigrations
+            data = history
         });
     }
 
@@ -217,9 +208,7 @@ public class MigrationController : ApiController
 
         return Ok(new
         {
-            success = rollbackResult.Success,
-            message = rollbackResult.Message,
-            error = rollbackResult.Error,
+            success = true,
             data = rollbackResult
         });
     }
@@ -276,8 +265,7 @@ public class MigrationController : ApiController
         return Ok(new
         {
             success = true,
-            data = scheduled,
-            total = scheduled.Count
+            data = scheduled
         });
     }
 
@@ -302,8 +290,8 @@ public class MigrationController : ApiController
 
         return Ok(new
         {
-            success = cancelled,
-            message = cancelled ? "Zamanlanmış migration iptal edildi" : "Migration bulunamadı"
+            success = true,
+            data = cancelled
         });
     }
 
@@ -355,8 +343,7 @@ public class MigrationController : ApiController
         return Ok(new
         {
             success = true,
-            data = updatedSettings,
-            message = "Ayarlar güncellendi"
+            data = updatedSettings
         });
     }
 }
