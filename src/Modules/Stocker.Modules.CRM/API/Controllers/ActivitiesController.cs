@@ -1,4 +1,5 @@
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.CRM.API.Controllers;
 public class ActivitiesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUserService;
 
-    public ActivitiesController(IMediator mediator)
+    public ActivitiesController(IMediator mediator, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -43,6 +46,7 @@ public class ActivitiesController : ControllerBase
     {
         var query = new GetActivitiesQuery
         {
+            TenantId = _currentUserService.TenantId ?? Guid.Empty,
             Type = type,
             Status = status,
             LeadId = leadId,
