@@ -1,3 +1,4 @@
+using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -78,6 +79,36 @@ public class Customer : TenantAggregateRoot
     public string? Description { get; private set; }
 
     /// <summary>
+    /// Gets the customer type
+    /// </summary>
+    public CustomerType CustomerType { get; private set; }
+
+    /// <summary>
+    /// Gets the customer status
+    /// </summary>
+    public CustomerStatus Status { get; private set; }
+
+    /// <summary>
+    /// Gets the customer's credit limit
+    /// </summary>
+    public decimal CreditLimit { get; private set; }
+
+    /// <summary>
+    /// Gets the customer's tax ID
+    /// </summary>
+    public string? TaxId { get; private set; }
+
+    /// <summary>
+    /// Gets the customer's payment terms
+    /// </summary>
+    public string? PaymentTerms { get; private set; }
+
+    /// <summary>
+    /// Gets the customer's contact person name
+    /// </summary>
+    public string? ContactPerson { get; private set; }
+
+    /// <summary>
     /// Gets whether the customer is active
     /// </summary>
     public bool IsActive { get; private set; }
@@ -142,6 +173,9 @@ public class Customer : TenantAggregateRoot
         customer.Phone = phone;
         customer.Website = website;
         customer.Industry = industry;
+        customer.CustomerType = CustomerType.Corporate;
+        customer.Status = CustomerStatus.Active;
+        customer.CreditLimit = 0;
         customer.IsActive = true;
         customer.CreatedAt = DateTime.UtcNow;
 
@@ -214,6 +248,37 @@ public class Customer : TenantAggregateRoot
         AnnualRevenue = annualRevenue;
         NumberOfEmployees = numberOfEmployees;
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Updates the customer's financial and business settings
+    /// </summary>
+    public Result UpdateFinancialInfo(
+        CustomerType? customerType,
+        CustomerStatus? status,
+        decimal? creditLimit,
+        string? taxId,
+        string? paymentTerms,
+        string? contactPerson)
+    {
+        if (creditLimit.HasValue && creditLimit.Value < 0)
+            return Result.Failure(Error.Validation("Customer.CreditLimit", "Credit limit cannot be negative"));
+
+        if (customerType.HasValue)
+            CustomerType = customerType.Value;
+
+        if (status.HasValue)
+            Status = status.Value;
+
+        if (creditLimit.HasValue)
+            CreditLimit = creditLimit.Value;
+
+        TaxId = taxId;
+        PaymentTerms = paymentTerms;
+        ContactPerson = contactPerson;
         UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();

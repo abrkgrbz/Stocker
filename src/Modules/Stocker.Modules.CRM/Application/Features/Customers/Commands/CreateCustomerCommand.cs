@@ -137,6 +137,23 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
                 request.CustomerData.Description);
         }
 
+        // Update financial information
+        if (request.CustomerData.CustomerType.HasValue ||
+            request.CustomerData.Status.HasValue ||
+            request.CustomerData.CreditLimit.HasValue ||
+            !string.IsNullOrEmpty(request.CustomerData.TaxId) ||
+            !string.IsNullOrEmpty(request.CustomerData.PaymentTerms) ||
+            !string.IsNullOrEmpty(request.CustomerData.ContactPerson))
+        {
+            customer.UpdateFinancialInfo(
+                request.CustomerData.CustomerType,
+                request.CustomerData.Status,
+                request.CustomerData.CreditLimit,
+                request.CustomerData.TaxId,
+                request.CustomerData.PaymentTerms,
+                request.CustomerData.ContactPerson);
+        }
+
         // Save to repository
         await _customerRepository.AddAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -182,6 +199,12 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
             AnnualRevenue = customer.AnnualRevenue,
             NumberOfEmployees = customer.NumberOfEmployees,
             Description = customer.Description,
+            CustomerType = customer.CustomerType,
+            Status = customer.Status,
+            CreditLimit = customer.CreditLimit,
+            TaxId = customer.TaxId,
+            PaymentTerms = customer.PaymentTerms,
+            ContactPerson = customer.ContactPerson,
             IsActive = customer.IsActive,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt,

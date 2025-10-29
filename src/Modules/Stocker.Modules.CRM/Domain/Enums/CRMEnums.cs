@@ -154,12 +154,15 @@ public enum ContactType
 
 public enum CustomerType
 {
-    Prospect = 1,
-    Customer = 2,
-    Partner = 3,
-    Competitor = 4,
-    Vendor = 5,
-    Other = 6
+    Individual = 1,
+    Corporate = 2
+}
+
+public enum CustomerStatus
+{
+    Potential = 1,
+    Active = 2,
+    Inactive = 3
 }
 
 public enum CustomerSegment

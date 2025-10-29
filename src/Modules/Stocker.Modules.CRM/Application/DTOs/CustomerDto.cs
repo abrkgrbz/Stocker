@@ -1,3 +1,5 @@
+using Stocker.Modules.CRM.Domain.Enums;
+
 namespace Stocker.Modules.CRM.Application.DTOs;
 
 /// <summary>
@@ -19,6 +21,12 @@ public class CustomerDto
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
+    public CustomerType CustomerType { get; set; }
+    public CustomerStatus Status { get; set; }
+    public decimal CreditLimit { get; set; }
+    public string? TaxId { get; set; }
+    public string? PaymentTerms { get; set; }
+    public string? ContactPerson { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -43,6 +51,12 @@ public class CreateCustomerDto
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
+    public CustomerType? CustomerType { get; set; }
+    public CustomerStatus? Status { get; set; }
+    public decimal? CreditLimit { get; set; }
+    public string? TaxId { get; set; }
+    public string? PaymentTerms { get; set; }
+    public string? ContactPerson { get; set; }
 }
 
 /// <summary>
@@ -63,4 +77,10 @@ public class UpdateCustomerDto
     public decimal? AnnualRevenue { get; set; }
     public int? NumberOfEmployees { get; set; }
     public string? Description { get; set; }
+    public CustomerType? CustomerType { get; set; }
+    public CustomerStatus? Status { get; set; }
+    public decimal? CreditLimit { get; set; }
+    public string? TaxId { get; set; }
+    public string? PaymentTerms { get; set; }
+    public string? ContactPerson { get; set; }
 }
