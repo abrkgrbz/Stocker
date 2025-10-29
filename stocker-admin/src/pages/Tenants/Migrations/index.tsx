@@ -260,8 +260,10 @@ const TenantMigrations: React.FC = () => {
   const handleRunMigration = async (migrationId: string) => {
     const migration = migrations.find(m => m.id === migrationId);
 
-    // Extract tenantId from migration ID (format: tenantId-module-migrationName)
-    const tenantId = migrationId.split('-')[0];
+    // Use tenantId from URL params instead of parsing migrationId
+    // Migration ID format: {guid-with-dashes}-{module}-{migration-name}
+    // Using split('-')[0] only gets first segment "5f94c9ec" instead of full GUID
+    const tenantId = id!; // Get from URL params
 
     const result = await Swal.fire({
       title: 'Migration Çalıştır',
