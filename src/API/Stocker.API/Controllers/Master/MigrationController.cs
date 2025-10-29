@@ -52,19 +52,22 @@ public class MigrationController : ApiController
 
         var tenants = result.Value!;
 
-        // DEBUG: Log tenant IDs
+        // DEBUG: Log tenant IDs and full object
         foreach (var tenant in tenants)
         {
-            _logger.LogWarning("DEBUG GetPendingMigrations: TenantId={TenantId}, TenantName={TenantName}", tenant.TenantId, tenant.TenantName);
+            _logger.LogWarning("DEBUG GetPendingMigrations: TenantId={TenantId} (Length={Length}), TenantName={TenantName}",
+                tenant.TenantId, tenant.TenantId.ToString().Length, tenant.TenantName);
         }
 
-        return Ok(new
+        var response = new
         {
             success = true,
-            data = tenants,
-            totalTenants = tenants.Count,
-            tenantsWithPendingMigrations = tenants.Count(t => t.HasPendingMigrations)
-        });
+            data = tenants
+        };
+
+        _logger.LogWarning("DEBUG GetPendingMigrations: Returning {Count} tenants", tenants.Count);
+
+        return Ok(response);
     }
 
     /// <summary>
