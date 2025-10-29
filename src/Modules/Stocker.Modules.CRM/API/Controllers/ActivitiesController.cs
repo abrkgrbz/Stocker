@@ -1,5 +1,6 @@
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.DTOs;
@@ -27,10 +28,10 @@ public class ActivitiesController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<ActivityDto>), 200)]
+    [ProducesResponseType(typeof(PagedResult<ActivityDto>), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<IEnumerable<ActivityDto>>> GetActivities(
+    public async Task<ActionResult<PagedResult<ActivityDto>>> GetActivities(
         [FromQuery] ActivityType? type,
         [FromQuery] ActivityStatus? status,
         [FromQuery] Guid? leadId,

@@ -4,10 +4,11 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Activities.Queries;
 using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.Modules.CRM.Infrastructure.Persistence;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Handlers;
 
-public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, IEnumerable<ActivityDto>>
+public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, PagedResult<ActivityDto>>
 {
     private readonly CRMDbContext _context;
 
@@ -16,7 +17,7 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, IEn
         _context = context;
     }
 
-    public async Task<IEnumerable<ActivityDto>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ActivityDto>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Activities.AsQueryable();
 
@@ -51,6 +52,9 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, IEn
                                    a.DueDate.HasValue &&
                                    a.DueDate.Value < DateTime.UtcNow);
 
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
         // Apply pagination
         var activities = await query
             .OrderByDescending(a => a.Id)
@@ -80,6 +84,6 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, IEn
             UpdatedAt = null
         }).ToList();
 
-        return activityDtos;
+        return PagedResult<ActivityDto>.Create(activityDtos, totalCount, request.Page, request.PageSize);
     }
 }

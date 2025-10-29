@@ -2,10 +2,11 @@ using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetActivitiesQuery : IRequest<IEnumerable<ActivityDto>>, ITenantRequest
+public class GetActivitiesQuery : IRequest<PagedResult<ActivityDto>>, ITenantRequest
 {
     public Guid TenantId { get; set; }
     public ActivityType? Type { get; set; }
