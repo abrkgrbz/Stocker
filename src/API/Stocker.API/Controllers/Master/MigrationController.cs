@@ -50,6 +50,12 @@ public class MigrationController : ApiController
 
         var tenants = result.Value!;
 
+        // DEBUG: Log tenant IDs
+        foreach (var tenant in tenants)
+        {
+            Console.WriteLine($"DEBUG: TenantId={tenant.TenantId}, TenantName={tenant.TenantName}");
+        }
+
         return Ok(new
         {
             success = true,
@@ -65,6 +71,8 @@ public class MigrationController : ApiController
     [HttpPost("apply/{tenantId}")]
     public async Task<IActionResult> ApplyMigrationToTenant(Guid tenantId)
     {
+        Console.WriteLine($"DEBUG: Received tenantId parameter: {tenantId}");
+
         var result = await _sender.Send(new ApplyMigrationCommand { TenantId = tenantId });
 
         if (!result.IsSuccess)

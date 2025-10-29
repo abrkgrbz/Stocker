@@ -127,6 +127,12 @@ const MigrationsPage: React.FC = () => {
   };
 
   const handleApplyMigration = async (tenant: ExtendedTenantMigration) => {
+    console.log('DEBUG handleApplyMigration:', {
+      id: tenant.id,
+      tenantId: tenant.tenantId,
+      tenantName: tenant.tenantName
+    });
+
     const result = await Swal.fire({
       title: 'Migration Uygula',
       html: `
@@ -244,6 +250,12 @@ const MigrationsPage: React.FC = () => {
   };
 
   const handleViewDetails = async (tenant: ExtendedTenantMigration) => {
+    console.log('DEBUG handleViewDetails:', {
+      id: tenant.id,
+      tenantId: tenant.tenantId,
+      tenantName: tenant.tenantName
+    });
+
     setSelectedTenant(tenant);
 
     try {
