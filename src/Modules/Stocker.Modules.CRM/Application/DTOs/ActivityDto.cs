@@ -31,6 +31,11 @@ public class ActivityDto
     public bool IsOverdue => !CompletedAt.HasValue && DueDate < DateTime.UtcNow;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    
+    // Frontend compatibility aliases
+    public string Title => Subject;
+    public DateTime StartTime => DueDate;
+    public DateTime? EndTime => Duration.HasValue ? DueDate.AddMinutes(Duration.Value) : null;
 }
 
 public class ActivityStatisticsDto
