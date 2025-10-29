@@ -25,10 +25,12 @@ namespace Stocker.API.Controllers.Master;
 public class MigrationController : ApiController
 {
     private readonly ISender _sender;
+    private readonly ILogger<MigrationController> _logger;
 
-    public MigrationController(ISender sender)
+    public MigrationController(ISender sender, ILogger<MigrationController> logger)
     {
         _sender = sender;
+        _logger = logger;
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ public class MigrationController : ApiController
         // DEBUG: Log tenant IDs
         foreach (var tenant in tenants)
         {
-            Console.WriteLine($"DEBUG: TenantId={tenant.TenantId}, TenantName={tenant.TenantName}");
+            _logger.LogWarning("DEBUG GetPendingMigrations: TenantId={TenantId}, TenantName={TenantName}", tenant.TenantId, tenant.TenantName);
         }
 
         return Ok(new
@@ -71,7 +73,7 @@ public class MigrationController : ApiController
     [HttpPost("apply/{tenantId}")]
     public async Task<IActionResult> ApplyMigrationToTenant(Guid tenantId)
     {
-        Console.WriteLine($"DEBUG: Received tenantId parameter: {tenantId}");
+        _logger.LogWarning("DEBUG ApplyMigration: Received tenantId parameter: {TenantId}", tenantId);
 
         var result = await _sender.Send(new ApplyMigrationCommand { TenantId = tenantId });
 
