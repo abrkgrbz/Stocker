@@ -71,7 +71,6 @@ const { TabPane } = Tabs;
 const { Step } = Steps;
 
 interface ExtendedTenantMigration extends TenantMigrationStatusDto {
-  id: string;
   status: 'completed' | 'pending' | 'error';
   totalPending: number;
   totalApplied: number;
@@ -111,7 +110,6 @@ const MigrationsPage: React.FC = () => {
       const data = await migrationService.getPendingMigrations();
       const extended = data.map(tenant => ({
         ...tenant,
-        id: tenant.tenantId,
         status: tenant.error ? 'error' as const :
                 tenant.hasPendingMigrations ? 'pending' as const :
                 'completed' as const,
@@ -128,7 +126,6 @@ const MigrationsPage: React.FC = () => {
 
   const handleApplyMigration = async (tenant: ExtendedTenantMigration) => {
     console.log('DEBUG handleApplyMigration:', {
-      id: tenant.id,
       tenantId: tenant.tenantId,
       tenantName: tenant.tenantName
     });
@@ -251,7 +248,6 @@ const MigrationsPage: React.FC = () => {
 
   const handleViewDetails = async (tenant: ExtendedTenantMigration) => {
     console.log('DEBUG handleViewDetails:', {
-      id: tenant.id,
       tenantId: tenant.tenantId,
       tenantName: tenant.tenantName
     });
@@ -770,7 +766,7 @@ const MigrationsPage: React.FC = () => {
             <ProTable<ExtendedTenantMigration>
               columns={columns}
               dataSource={tenantMigrations}
-              rowKey="id"
+              rowKey="tenantId"
               search={false}
               loading={loading}
               pagination={{
