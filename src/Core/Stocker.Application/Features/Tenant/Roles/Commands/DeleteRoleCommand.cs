@@ -1,5 +1,5 @@
 using MediatR;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.MultiTenancy;
 
 namespace Stocker.Application.Features.Tenant.Roles.Commands;
 

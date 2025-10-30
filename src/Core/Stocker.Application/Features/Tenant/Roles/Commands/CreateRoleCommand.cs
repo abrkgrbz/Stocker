@@ -1,6 +1,7 @@
 using MediatR;
+using Stocker.SharedKernel.MultiTenancy;
 using Stocker.Application.DTOs.Tenant.Users;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Application.DTOs.Tenant.Users;
 
 namespace Stocker.Application.Features.Tenant.Roles.Commands;
 

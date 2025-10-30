@@ -1,11 +1,11 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Roles.Commands;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Tenant.Enums;
-using Stocker.Persistence.Contexts;
-using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Application.Features.Tenant.Roles.Handlers;
 
