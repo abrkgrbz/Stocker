@@ -610,6 +610,7 @@ public partial class MigrationService
     {
         using var scope = _serviceProvider.CreateScope();
         var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<Stocker.SharedKernel.Repositories.IMasterUnitOfWork>();
+        var tenantModuleService = scope.ServiceProvider.GetRequiredService<ITenantModuleService>();
 
         var tenant = await masterUnitOfWork.Tenants()
             .AsQueryable()
@@ -629,10 +630,88 @@ public partial class MigrationService
 
         using var tenantContext = new TenantDbContext(optionsBuilder.Options, tenant.Id);
 
+        // Check CORE/Tenant migrations
         var pendingMigrations = await tenantContext.Database.GetPendingMigrationsAsync(cancellationToken);
         var pendingList = pendingMigrations.ToList();
+        var allAppliedMigrations = new List<string>();
 
-        if (!pendingList.Any())
+        _logger.LogWarning("DEBUG ApplyMigration: Core pending migrations count: {Count}, Migrations: {Migrations}",
+            pendingList.Count, string.Join(", ", pendingList));
+
+        // Apply Core/Tenant migrations if any
+        if (pendingList.Any())
+        {
+            _logger.LogInformation("Applying {Count} Core migrations to tenant {TenantId}", pendingList.Count, tenant.Id);
+            await tenantContext.Database.MigrateAsync(cancellationToken);
+            allAppliedMigrations.AddRange(pendingList);
+            _logger.LogInformation("Core migrations applied successfully. Applied: {Migrations}", string.Join(", ", pendingList));
+        }
+        else
+        {
+            _logger.LogInformation("No Core migrations to apply for tenant {TenantId}", tenant.Id);
+        }
+
+        // Check CRM module migrations if tenant has CRM access
+        List<string> crmPendingMigrations = new();
+        try
+        {
+            var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "CRM", cancellationToken);
+            _logger.LogWarning("DEBUG ApplyMigration: Tenant {TenantId} has CRM access: {HasCrmAccess}", tenant.Id, hasCrmAccess);
+
+            if (hasCrmAccess)
+            {
+                _logger.LogInformation("Tenant {TenantId} has CRM module access. Checking CRM migrations...", tenant.Id);
+
+                var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                crmOptionsBuilder.UseSqlServer(tenant.ConnectionString.Value, sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
+                    sqlOptions.CommandTimeout(30);
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                });
+                crmOptionsBuilder.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                var mockTenantService = new MockTenantService(tenant.Id, tenant.ConnectionString.Value);
+
+                using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                    crmOptionsBuilder.Options,
+                    mockTenantService);
+
+                var crmPending = await crmDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                crmPendingMigrations = crmPending.ToList();
+
+                _logger.LogWarning("DEBUG ApplyMigration: CRM pending migrations count: {Count}, Migrations: {Migrations}",
+                    crmPendingMigrations.Count, string.Join(", ", crmPendingMigrations));
+
+                if (crmPendingMigrations.Any())
+                {
+                    _logger.LogInformation("Applying {Count} CRM migrations to tenant {TenantId}", crmPendingMigrations.Count, tenant.Id);
+                    await crmDbContext.Database.MigrateAsync(cancellationToken);
+                    allAppliedMigrations.AddRange(crmPendingMigrations.Select(m => $"CRM:{m}"));
+                    _logger.LogInformation("CRM migrations applied successfully. Applied: {Migrations}", string.Join(", ", crmPendingMigrations));
+                }
+                else
+                {
+                    _logger.LogInformation("No CRM migrations to apply for tenant {TenantId}", tenant.Id);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Tenant {TenantId} does not have CRM module access. CRM migrations skipped.", tenant.Id);
+            }
+        }
+        catch (Exception crmEx)
+        {
+            _logger.LogError(crmEx, "Error applying CRM migrations for tenant {TenantId}. Continuing...", tenant.Id);
+            // Don't fail the overall migration if CRM migrations fail
+        }
+
+        // Return result
+        if (!allAppliedMigrations.Any())
         {
             return new ApplyMigrationResultDto
             {
@@ -644,18 +723,16 @@ public partial class MigrationService
             };
         }
 
-        await tenantContext.Database.MigrateAsync(cancellationToken);
-
-        _logger.LogInformation("Migrations applied successfully to tenant {TenantId}. Applied: {Migrations}",
-            tenant.Id, string.Join(", ", pendingList));
+        _logger.LogInformation("All migrations applied successfully to tenant {TenantId}. Total applied: {Count}",
+            tenant.Id, allAppliedMigrations.Count);
 
         return new ApplyMigrationResultDto
         {
             TenantId = tenant.Id,
             TenantName = tenant.Name,
             Success = true,
-            Message = $"{pendingList.Count} migration başarıyla uygulandı",
-            AppliedMigrations = pendingList
+            Message = $"{allAppliedMigrations.Count} migration başarıyla uygulandı",
+            AppliedMigrations = allAppliedMigrations
         };
     }
 
