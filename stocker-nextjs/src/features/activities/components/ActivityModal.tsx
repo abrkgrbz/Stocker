@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag, message } from 'antd';
 import {
   PhoneOutlined,
   MailOutlined,
@@ -172,16 +172,27 @@ export function ActivityModal({
   const handleNext = async () => {
     try {
       const fieldsToValidate = getStepFields(currentStep);
-      await form.validateFields(fieldsToValidate);
 
-      // Additional validation for step 2 (related entities)
+      // Validate current step fields first
+      if (fieldsToValidate.length > 0) {
+        await form.validateFields(fieldsToValidate);
+      }
+
+      // Additional validation for step 2 (İlgili Kayıtlar) - validate BEFORE moving to step 3
       if (currentStep === 2) {
-        await validateStep2();
+        const values = form.getFieldsValue();
+        if (!values.leadId && !values.customerId && !values.dealId) {
+          throw new Error('En az bir ilişki (Müşteri, Lead veya Deal) seçmelisiniz');
+        }
       }
 
       setCurrentStep(currentStep + 1);
     } catch (error) {
       console.error('Validation failed:', error);
+      // Show error message to user
+      if (error instanceof Error) {
+        message.error(error.message);
+      }
     }
   };
 
@@ -230,19 +241,11 @@ export function ActivityModal({
       case 1:
         return ['startTime', 'priority'];
       case 2:
-        // At least one entity ID must be provided
+        // Step 2 validation is handled in handleNext
         return [];
       default:
         return [];
     }
-  };
-
-  const validateStep2 = () => {
-    const values = form.getFieldsValue();
-    if (!values.leadId && !values.customerId && !values.dealId) {
-      return Promise.reject(new Error('En az bir ilişki (Müşteri, Lead veya Deal) seçmelisiniz'));
-    }
-    return Promise.resolve();
   };
 
   return (
