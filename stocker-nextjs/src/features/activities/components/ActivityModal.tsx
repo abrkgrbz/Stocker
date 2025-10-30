@@ -122,9 +122,14 @@ export function ActivityModal({
   const isEditMode = !!activity;
 
   // Fetch data for dropdowns
-  const { data: customers, isLoading: customersLoading } = useCustomers();
-  const { data: leads, isLoading: leadsLoading } = useLeads();
-  const { data: deals, isLoading: dealsLoading } = useDeals();
+  const { data: customersData, isLoading: customersLoading } = useCustomers();
+  const { data: leadsData, isLoading: leadsLoading } = useLeads();
+  const { data: dealsData, isLoading: dealsLoading } = useDeals();
+
+  // Extract arrays from API response (handle both array and object responses)
+  const customers = Array.isArray(customersData) ? customersData : customersData?.data || customersData?.items || [];
+  const leads = Array.isArray(leadsData) ? leadsData : leadsData?.data || leadsData?.items || [];
+  const deals = Array.isArray(dealsData) ? dealsData : dealsData?.data || dealsData?.items || [];
 
   React.useEffect(() => {
     if (open && activity) {
