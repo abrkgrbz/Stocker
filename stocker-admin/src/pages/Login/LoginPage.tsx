@@ -74,7 +74,6 @@ const LoginPage: React.FC = () => {
       <div className="login-box">
         <div className="login-header">
           <h1>Stocker Admin Panel</h1>
-          <p>Yönetim paneline hoş geldiniz</p>
         </div>
         
         <Form
