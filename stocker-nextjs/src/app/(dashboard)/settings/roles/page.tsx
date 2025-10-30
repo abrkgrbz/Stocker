@@ -180,61 +180,51 @@ export default function RolesPage() {
   };
 
   return (
-    <AdminOnly
-      fallback={
-        <Card>
-          <Empty
-            description="Bu sayfaya erişim yetkiniz yok"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
+    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+      <Card
+        style={{
+          borderRadius: 8,
+          border: '1px solid #f0f0f0',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        }}
+        title={
+          <Space>
+            <LockOutlined />
+            <span style={{ fontWeight: 600, fontSize: 18 }}>Rol Yönetimi</span>
+          </Space>
+        }
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} size="large">
+            Yeni Rol Oluştur
+          </Button>
+        }
+      >
+        <Spin spinning={isLoading}>
+          <Table
+            columns={columns}
+            dataSource={roles || []}
+            rowKey="id"
+            expandable={{
+              expandedRowRender,
+              rowExpandable: (record) => record.permissions.length > 0,
+            }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} rol`,
+            }}
           />
-        </Card>
-      }
-    >
-      <div style={{ padding: '24px' }}>
-        <Card
-          title={
-            <Space>
-              <LockOutlined />
-              <span>Rol Yönetimi</span>
-            </Space>
-          }
-          extra={
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
-              Yeni Rol Oluştur
-            </Button>
-          }
-        >
-          <Spin spinning={isLoading}>
-            <Table
-              columns={columns}
-              dataSource={roles || []}
-              rowKey="id"
-              expandable={{
-                expandedRowRender,
-                rowExpandable: (record) => record.permissions.length > 0,
-              }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} rol`,
-              }}
-            />
-          </Spin>
-        </Card>
+        </Spin>
+      </Card>
 
-        <RoleModal
-          open={modalOpen}
-          role={editingRole}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingRole(null);
-          }}
-        />
-      </div>
-    </AdminOnly>
+      <RoleModal
+        open={modalOpen}
+        role={editingRole}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingRole(null);
+        }}
+      />
+    </div>
   );
 }

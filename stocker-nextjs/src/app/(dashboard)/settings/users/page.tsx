@@ -55,6 +55,7 @@ import {
   SafetyOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
+import { UserModal } from '@/features/users/components/UserModal';
 
 const { Text, Title } = Typography;
 const { confirm } = Modal;
@@ -171,6 +172,18 @@ export default function UsersPage() {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setModalOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setModalOpen(true);
+  };
 
   const handleToggleStatus = (user: User) => {
     confirm({
@@ -204,7 +217,7 @@ export default function UsersPage() {
         key: 'edit',
         label: 'Düzenle',
         icon: <EditOutlined />,
-        onClick: () => message.info('Düzenleme özelliği yakında...'),
+        onClick: () => handleEditUser(user),
       },
       {
         key: 'toggle',
@@ -434,7 +447,7 @@ export default function UsersPage() {
         }
         extra={
           <AdminOnly>
-            <Button type="primary" icon={<PlusOutlined />} size="large">
+            <Button type="primary" icon={<PlusOutlined />} size="large" onClick={handleCreateUser}>
               Yeni Kullanıcı
             </Button>
           </AdminOnly>
@@ -677,6 +690,16 @@ export default function UsersPage() {
           </div>
         )}
       </Card>
+
+      {/* User Modal */}
+      <UserModal
+        open={modalOpen}
+        user={editingUser}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingUser(null);
+        }}
+      />
     </div>
   );
 }
