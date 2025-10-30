@@ -87,10 +87,19 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ActivityDto>> CreateActivity(CreateActivityCommand command)
     {
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new { code = "Tenant.Required", description = "Tenant ID is required", type = "Validation" });
+        }
+
+        command.TenantId = tenantId.Value;
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return CreatedAtAction(nameof(GetActivity), new { id = result.Value.Id }, result.Value);
     }
 
@@ -104,10 +113,19 @@ public class ActivitiesController : ControllerBase
         if (id != command.Id)
             return BadRequest("Id mismatch");
 
+        // Set TenantId from TenantResolutionMiddleware context
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (!tenantId.HasValue)
+        {
+            return BadRequest(new { code = "Tenant.Required", description = "Tenant ID is required", type = "Validation" });
+        }
+
+        command.TenantId = tenantId.Value;
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return Ok(result.Value);
     }
 
