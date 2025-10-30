@@ -230,11 +230,6 @@ const LoginPage: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="subtitle-wrapper">
-              <div className="subtitle-line"></div>
-              <Text className="login-subtitle">Admin Panel'e Hoş Geldiniz</Text>
-              <div className="subtitle-line"></div>
-            </div>
           </div>
 
           {/* Form */}
