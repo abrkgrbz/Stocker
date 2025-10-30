@@ -1,16 +1,15 @@
 'use client';
 
 /**
- * Role Creation/Editing Modal
- * Allows admins to create/edit roles and assign permissions
+ * Role Creation/Editing Drawer
+ * Modern side panel for creating/editing roles with permissions
  */
 
 import { useEffect, useState } from 'react';
 import {
-  Modal,
+  Drawer,
   Form,
   Input,
-  Select,
   Button,
   Space,
   Tag,
@@ -20,8 +19,17 @@ import {
   Col,
   Divider,
   Alert,
+  Typography,
+  Badge,
+  Collapse,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  SaveOutlined,
+  CloseOutlined,
+  LockOutlined,
+  CheckCircleOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
 import { useCreateRole, useUpdateRole } from '@/hooks/useRoles';
 import {
   AVAILABLE_RESOURCES,
@@ -32,6 +40,9 @@ import {
   type Role,
   type Permission,
 } from '@/lib/api/roles';
+
+const { Title, Text } = Typography;
+const { Panel } = Collapse;
 
 interface RoleModalProps {
   open: boolean;
@@ -154,113 +165,176 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
   }));
 
   return (
-    <Modal
-      title={isEditing ? 'Rol Düzenle' : 'Yeni Rol Oluştur'}
+    <Drawer
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 8,
+              background: '#f0f5ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <LockOutlined style={{ fontSize: 20, color: '#1890ff' }} />
+          </div>
+          <div>
+            <Title level={4} style={{ margin: 0 }}>
+              {isEditing ? 'Rol Düzenle' : 'Yeni Rol Oluştur'}
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              {isEditing ? 'Rol bilgilerini ve yetkilerini güncelleyin' : 'Yeni bir rol oluşturun ve yetkilerini belirleyin'}
+            </Text>
+          </div>
+        </div>
+      }
       open={open}
-      onCancel={onClose}
-      width={800}
-      footer={[
-        <Button key="cancel" onClick={onClose}>
-          İptal
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={createMutation.isPending || updateMutation.isPending}
-          onClick={handleSubmit}
-        >
-          {isEditing ? 'Güncelle' : 'Oluştur'}
-        </Button>,
-      ]}
+      onClose={onClose}
+      width={720}
+      extra={
+        <Space>
+          <Button icon={<CloseOutlined />} onClick={onClose}>
+            İptal
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={createMutation.isPending || updateMutation.isPending}
+            onClick={handleSubmit}
+          >
+            {isEditing ? 'Güncelle' : 'Kaydet'}
+          </Button>
+        </Space>
+      }
+      styles={{
+        body: { paddingBottom: 80 },
+      }}
     >
       <Form form={form} layout="vertical">
-        <Form.Item
-          label="Rol Adı"
-          name="name"
-          rules={[
-            { required: true, message: 'Rol adı gereklidir' },
-            { min: 2, message: 'Rol adı en az 2 karakter olmalıdır' },
-          ]}
-        >
-          <Input placeholder="Örn: Satış Müdürü, Muhasebeci" />
-        </Form.Item>
-
-        <Form.Item label="Açıklama" name="description">
-          <Input.TextArea
-            rows={3}
-            placeholder="Rolün görev ve sorumluluklarını açıklayın"
-          />
-        </Form.Item>
-
-        <Divider>Yetkiler</Divider>
-
-        <Alert
-          message="Her kaynak için izin vermek istediğiniz işlemleri seçin"
-          type="info"
-          showIcon
+        {/* Basic Info Section */}
+        <Card
+          size="small"
+          title={
+            <Space>
+              <InfoCircleOutlined style={{ color: '#1890ff' }} />
+              <span>Temel Bilgiler</span>
+            </Space>
+          }
           style={{ marginBottom: 16 }}
-        />
+        >
+          <Form.Item
+            label="Rol Adı"
+            name="name"
+            rules={[
+              { required: true, message: 'Rol adı gereklidir' },
+              { min: 2, message: 'Rol adı en az 2 karakter olmalıdır' },
+            ]}
+          >
+            <Input size="large" placeholder="Örn: Satış Müdürü, Muhasebeci" />
+          </Form.Item>
 
-        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-          {groupedPermissions.map((resource) => (
-            <Card
-              key={resource.value}
-              size="small"
-              title={
-                <Checkbox
-                  checked={resource.hasAll}
-                  onChange={(e) =>
-                    handleToggleAllPermissionsForResource(
-                      resource.value,
-                      e.target.checked
-                    )
-                  }
-                >
-                  <strong>{resource.label}</strong>
-                </Checkbox>
-              }
-              style={{ marginBottom: 12 }}
-            >
-              <Row gutter={[8, 8]}>
-                {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
-                  const permType = parseInt(type) as PermissionType;
-                  const isSelected = resource.permissions.some(
-                    (p) => p.permissionType === permType
-                  );
+          <Form.Item label="Açıklama" name="description">
+            <Input.TextArea
+              rows={3}
+              placeholder="Rolün görev ve sorumluluklarını açıklayın"
+            />
+          </Form.Item>
+        </Card>
 
-                  return (
-                    <Col span={6} key={type}>
+        {/* Permissions Section */}
+        <Card
+          size="small"
+          title={
+            <Space>
+              <CheckCircleOutlined style={{ color: '#52c41a' }} />
+              <span>Yetkiler</span>
+              <Badge count={selectedPermissions.length} style={{ backgroundColor: '#52c41a' }} />
+            </Space>
+          }
+          style={{ marginBottom: 16 }}
+        >
+          <Alert
+            message="Kaynak bazlı yetkilendirme"
+            description="Her kaynak için izin vermek istediğiniz işlemleri seçin. Tümünü seç butonuyla bir kaynağın tüm yetkilerini hızlıca atayabilirsiniz."
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+
+          <Collapse defaultActiveKey={[]} accordion ghost>
+            {groupedPermissions.map((resource) => (
+              <Panel
+                key={resource.value}
+                header={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <Space>
                       <Checkbox
-                        checked={isSelected}
+                        checked={resource.hasAll}
                         onChange={(e) => {
-                          if (e.target.checked) {
-                            handleAddPermission(resource.value, permType);
-                          } else {
-                            handleRemovePermission({
-                              resource: resource.value,
-                              permissionType: permType,
-                            });
-                          }
+                          e.stopPropagation();
+                          handleToggleAllPermissionsForResource(resource.value, e.target.checked);
                         }}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {label}
+                        <strong>{resource.label}</strong>
                       </Checkbox>
-                    </Col>
-                  );
-                })}
-              </Row>
-            </Card>
-          ))}
-        </div>
+                    </Space>
+                    <Badge count={resource.permissions.length} style={{ backgroundColor: '#1890ff' }} />
+                  </div>
+                }
+                style={{ marginBottom: 8 }}
+              >
+                <div style={{ padding: '0 24px' }}>
+                  <Row gutter={[12, 12]}>
+                    {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
+                      const permType = parseInt(type) as PermissionType;
+                      const isSelected = resource.permissions.some((p) => p.permissionType === permType);
 
-        {selectedPermissions.length > 0 && (
-          <>
-            <Divider>Seçilen Yetkiler ({selectedPermissions.length})</Divider>
-            <Space wrap>
+                      return (
+                        <Col span={12} key={type}>
+                          <Checkbox
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleAddPermission(resource.value, permType);
+                              } else {
+                                handleRemovePermission({
+                                  resource: resource.value,
+                                  permissionType: permType,
+                                });
+                              }
+                            }}
+                            style={{ width: '100%' }}
+                          >
+                            <span style={{ fontSize: 14 }}>{label}</span>
+                          </Checkbox>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                </div>
+              </Panel>
+            ))}
+          </Collapse>
+        </Card>
+
+        {/* Selected Permissions Summary */}
+        {selectedPermissions.length > 0 ? (
+          <Card
+            size="small"
+            title={
+              <Space>
+                <Tag color="blue">{selectedPermissions.length}</Tag>
+                <span>Seçilen Yetkiler</span>
+              </Space>
+            }
+          >
+            <Space wrap size="small">
               {selectedPermissions.map((perm, index) => {
-                const resource = AVAILABLE_RESOURCES.find(
-                  (r) => r.value === perm.resource
-                );
+                const resource = AVAILABLE_RESOURCES.find((r) => r.value === perm.resource);
                 return (
                   <Tag
                     key={index}
@@ -273,19 +347,16 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
                 );
               })}
             </Space>
-          </>
-        )}
-
-        {selectedPermissions.length === 0 && (
+          </Card>
+        ) : (
           <Alert
             message="Henüz yetki seçilmedi"
-            description="Bu rol için en az bir yetki seçmelisiniz"
+            description="Bu rol için en az bir yetki seçmelisiniz. Yukarıdaki kaynaklardan yetkileri seçerek başlayın."
             type="warning"
             showIcon
-            style={{ marginTop: 16 }}
           />
         )}
       </Form>
-    </Modal>
+    </Drawer>
   );
 }
