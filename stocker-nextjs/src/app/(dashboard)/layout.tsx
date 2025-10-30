@@ -18,6 +18,8 @@ import {
   FunnelPlotOutlined,
   GroupOutlined,
   NotificationOutlined,
+  LockOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -123,9 +125,31 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       label: 'Modüller',
     },
     {
-      key: '/settings',
+      key: 'settings',
       icon: <SettingOutlined />,
       label: 'Ayarlar',
+      children: [
+        {
+          key: '/settings/general',
+          icon: <SettingOutlined />,
+          label: 'Genel Ayarlar',
+        },
+        {
+          key: '/settings/users',
+          icon: <UserOutlined />,
+          label: 'Kullanıcı Yönetimi',
+        },
+        {
+          key: '/settings/roles',
+          icon: <LockOutlined />,
+          label: 'Rol Yönetimi',
+        },
+        {
+          key: '/settings/security',
+          icon: <SafetyOutlined />,
+          label: 'Güvenlik',
+        },
+      ],
     },
   ];
 
