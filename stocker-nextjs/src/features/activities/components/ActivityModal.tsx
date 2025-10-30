@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
 import {
   PhoneOutlined,
   MailOutlined,
@@ -15,6 +15,27 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   ShopOutlined,
+  WhatsAppOutlined,
+  MessageOutlined,
+  VideoCameraOutlined,
+  BookOutlined,
+  ToolOutlined,
+  GlobalOutlined,
+  SyncOutlined,
+  CoffeeOutlined,
+  HomeOutlined,
+  EnvironmentOutlined,
+  DollarOutlined,
+  PhoneTwoTone,
+  QuestionCircleOutlined,
+  ExclamationCircleOutlined,
+  WarningOutlined,
+  StarOutlined,
+  FireOutlined,
+  CloseCircleOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  MinusOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
 import { useCustomers, useLeads, useDeals } from '@/hooks/useCRM';
@@ -22,17 +43,64 @@ import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 
-// Activity type configuration
-const activityConfig: Record<
-  Activity['type'],
-  { icon: React.ReactNode; color: string; label: string }
-> = {
-  Call: { icon: <PhoneOutlined />, color: 'blue', label: 'Arama' },
-  Email: { icon: <MailOutlined />, color: 'cyan', label: 'E-posta' },
-  Meeting: { icon: <TeamOutlined />, color: 'green', label: 'Toplantı' },
-  Task: { icon: <FileTextOutlined />, color: 'orange', label: 'Görev' },
-  Note: { icon: <FileTextOutlined />, color: 'default', label: 'Not' },
-};
+// Activity Type enum values (1-30) with Turkish labels
+const activityTypes = [
+  { value: 1, label: 'Telefon Görüşmesi', icon: <PhoneOutlined />, color: 'blue' },
+  { value: 2, label: 'E-posta', icon: <MailOutlined />, color: 'cyan' },
+  { value: 3, label: 'Toplantı', icon: <TeamOutlined />, color: 'green' },
+  { value: 4, label: 'Görev', icon: <FileTextOutlined />, color: 'orange' },
+  { value: 5, label: 'Not', icon: <FileTextOutlined />, color: 'default' },
+  { value: 6, label: 'Etkinlik', icon: <CalendarOutlined />, color: 'purple' },
+  { value: 7, label: 'Demo', icon: <ToolOutlined />, color: 'geekblue' },
+  { value: 8, label: 'Sunum', icon: <BookOutlined />, color: 'volcano' },
+  { value: 9, label: 'Ziyaret', icon: <EnvironmentOutlined />, color: 'magenta' },
+  { value: 10, label: 'Diğer', icon: <QuestionCircleOutlined />, color: 'default' },
+  { value: 11, label: 'WhatsApp Mesajı', icon: <WhatsAppOutlined />, color: 'green' },
+  { value: 12, label: 'SMS', icon: <MessageOutlined />, color: 'blue' },
+  { value: 13, label: 'Video Görüşme', icon: <VideoCameraOutlined />, color: 'red' },
+  { value: 14, label: 'Eğitim', icon: <BookOutlined />, color: 'gold' },
+  { value: 15, label: 'Atölye Çalışması', icon: <ToolOutlined />, color: 'lime' },
+  { value: 16, label: 'Webinar', icon: <GlobalOutlined />, color: 'cyan' },
+  { value: 17, label: 'Takip', icon: <SyncOutlined />, color: 'orange' },
+  { value: 18, label: 'İş Yemeği', icon: <CoffeeOutlined />, color: 'gold' },
+  { value: 19, label: 'Akşam Yemeği', icon: <CoffeeOutlined />, color: 'volcano' },
+  { value: 20, label: 'Konferans', icon: <TeamOutlined />, color: 'purple' },
+  { value: 21, label: 'Saha Ziyareti', icon: <EnvironmentOutlined />, color: 'blue' },
+  { value: 22, label: 'Ürün Demosu', icon: <ToolOutlined />, color: 'geekblue' },
+  { value: 23, label: 'Müzakere', icon: <DollarOutlined />, color: 'gold' },
+  { value: 24, label: 'Sözleşme İmzalama', icon: <FileTextOutlined />, color: 'green' },
+  { value: 25, label: 'Destek Talebi', icon: <QuestionCircleOutlined />, color: 'orange' },
+  { value: 26, label: 'Şikayet İşleme', icon: <WarningOutlined />, color: 'red' },
+  { value: 27, label: 'Anket', icon: <FileTextOutlined />, color: 'cyan' },
+  { value: 28, label: 'İnceleme/Gözden Geçirme', icon: <CheckCircleOutlined />, color: 'purple' },
+  { value: 29, label: 'Planlama', icon: <CalendarOutlined />, color: 'blue' },
+  { value: 30, label: 'Raporlama', icon: <FileTextOutlined />, color: 'magenta' },
+];
+
+// Activity Status enum values (1-12) with Turkish labels
+const activityStatuses = [
+  { value: 1, label: 'Başlamadı', icon: <ClockCircleOutlined />, color: 'default' },
+  { value: 2, label: 'Devam Ediyor', icon: <SyncOutlined spin />, color: 'processing' },
+  { value: 3, label: 'Tamamlandı', icon: <CheckCircleOutlined />, color: 'success' },
+  { value: 4, label: 'İptal Edildi', icon: <CloseCircleOutlined />, color: 'error' },
+  { value: 5, label: 'Ertelendi', icon: <ClockCircleOutlined />, color: 'warning' },
+  { value: 6, label: 'Birini Bekliyor', icon: <UserOutlined />, color: 'default' },
+  { value: 7, label: 'Planlandı', icon: <CalendarOutlined />, color: 'blue' },
+  { value: 8, label: 'Yeniden Planlandı', icon: <CalendarOutlined />, color: 'orange' },
+  { value: 9, label: 'Katılım Olmadı', icon: <WarningOutlined />, color: 'warning' },
+  { value: 10, label: 'Kısmen Tamamlandı', icon: <CheckCircleOutlined />, color: 'processing' },
+  { value: 11, label: 'Beklemede', icon: <ClockCircleOutlined />, color: 'default' },
+  { value: 12, label: 'Takip Gerekiyor', icon: <SyncOutlined />, color: 'warning' },
+];
+
+// Activity Priority enum values (1-5) with Turkish labels
+const activityPriorities = [
+  { value: 1, label: 'Düşük', icon: <ArrowDownOutlined />, color: 'default' },
+  { value: 2, label: 'Normal', icon: <MinusOutlined />, color: 'blue' },
+  { value: 3, label: 'Yüksek', icon: <ArrowUpOutlined />, color: 'orange' },
+  { value: 4, label: 'Acil', icon: <ExclamationCircleOutlined />, color: 'red' },
+  { value: 5, label: 'Kritik', icon: <FireOutlined />, color: 'error' },
+];
 
 interface ActivityModalProps {
   open: boolean;
@@ -68,6 +136,11 @@ export function ActivityModal({
       setCurrentStep(0);
     } else if (open) {
       form.resetFields();
+      // Set default values
+      form.setFieldsValue({
+        status: 7, // Planlandı
+        priority: 2, // Normal
+      });
       setCurrentStep(0);
     }
   }, [open, activity, form]);
@@ -78,7 +151,7 @@ export function ActivityModal({
       icon: <FileTextOutlined />,
     },
     {
-      title: 'Tarih ve Saat',
+      title: 'Tarih ve Öncelik',
       icon: <CalendarOutlined />,
     },
     {
@@ -86,7 +159,7 @@ export function ActivityModal({
       icon: <UserOutlined />,
     },
     {
-      title: 'Açıklama & Tamamla',
+      title: 'Detaylar & Tamamla',
       icon: <CheckCircleOutlined />,
     },
   ];
@@ -119,9 +192,9 @@ export function ActivityModal({
       const mappedValues = {
         subject: values.title, // Map title to subject
         description: values.description || null,
-        type: values.type,
-        status: values.status,
-        priority: values.priority || 'Medium', // Default priority
+        type: values.type, // Integer enum value
+        status: values.status, // Integer enum value
+        priority: values.priority || 2, // Integer enum value, default Normal
         dueDate: values.startTime.toISOString(), // Map startTime to dueDate
         duration: values.endTime ? Math.round((values.endTime.valueOf() - values.startTime.valueOf()) / 60000) : null, // Calculate duration in minutes
         location: values.location || null,
@@ -150,7 +223,7 @@ export function ActivityModal({
       case 0:
         return ['title', 'type', 'status'];
       case 1:
-        return ['startTime'];
+        return ['startTime', 'priority'];
       case 2:
         // At least one entity ID must be provided
         return [];
@@ -172,13 +245,13 @@ export function ActivityModal({
       title={
         <div className="flex items-center gap-3">
           <div className="text-lg font-semibold text-gray-800">
-            {isEditMode ? 'Aktiviteyi Düzenle' : 'Yeni Aktivite'}
+            {isEditMode ? 'Aktiviteyi Düzenle' : 'Yeni Aktivite Oluştur'}
           </div>
         </div>
       }
       open={open}
       onClose={handleCancel}
-      width={720}
+      width={800}
       destroyOnClose
       styles={{
         mask: {
@@ -221,7 +294,7 @@ export function ActivityModal({
       <Form form={form} layout="vertical">
         {/* Step 0: Temel Bilgiler */}
         {currentStep === 0 && (
-          <div className="min-h-[300px]">
+          <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
                 <FileTextOutlined className="text-blue-600 text-lg" />
@@ -232,11 +305,14 @@ export function ActivityModal({
               <Form.Item
                 label={<span className="text-gray-700 font-medium">Başlık</span>}
                 name="title"
-                rules={[{ required: true, message: 'Başlık gerekli' }]}
+                rules={[
+                  { required: true, message: 'Başlık gerekli' },
+                  { max: 200, message: 'Başlık en fazla 200 karakter olabilir' }
+                ]}
               >
                 <Input
                   prefix={<FileTextOutlined className="text-gray-400" />}
-                  placeholder="Örn: Müşteri Görüşmesi"
+                  placeholder="Örn: Müşteri Görüşmesi - Ürün Demo"
                   className="rounded-lg"
                   size="large"
                 />
@@ -245,16 +321,25 @@ export function ActivityModal({
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    label={<span className="text-gray-700 font-medium">Tip</span>}
+                    label={<span className="text-gray-700 font-medium">Aktivite Tipi</span>}
                     name="type"
-                    rules={[{ required: true, message: 'Tip gerekli' }]}
+                    rules={[{ required: true, message: 'Aktivite tipi gerekli' }]}
                   >
-                    <Select placeholder="Aktivite tipi seçiniz" className="rounded-lg" size="large">
-                      {Object.entries(activityConfig).map(([key, config]) => (
-                        <Select.Option key={key} value={key}>
+                    <Select
+                      placeholder="Aktivite tipi seçiniz"
+                      className="rounded-lg"
+                      size="large"
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {activityTypes.map((type) => (
+                        <Select.Option key={type.value} value={type.value} label={type.label}>
                           <Space>
-                            {config.icon}
-                            {config.label}
+                            {type.icon}
+                            <span>{type.label}</span>
                           </Space>
                         </Select.Option>
                       ))}
@@ -266,49 +351,55 @@ export function ActivityModal({
                     label={<span className="text-gray-700 font-medium">Durum</span>}
                     name="status"
                     rules={[{ required: true, message: 'Durum gerekli' }]}
-                    initialValue="Scheduled"
                   >
-                    <Select placeholder="Durum seçiniz" className="rounded-lg" size="large">
-                      <Select.Option value="Scheduled">
-                        <Space>
-                          <ClockCircleOutlined className="text-blue-500" />
-                          <span>Zamanlanmış</span>
-                        </Space>
-                      </Select.Option>
-                      <Select.Option value="Completed">
-                        <Space>
-                          <CheckCircleOutlined className="text-green-500" />
-                          <span>Tamamlandı</span>
-                        </Space>
-                      </Select.Option>
-                      <Select.Option value="Cancelled">
-                        <Space>
-                          <CheckCircleOutlined className="text-red-500" />
-                          <span>İptal Edildi</span>
-                        </Space>
-                      </Select.Option>
+                    <Select
+                      placeholder="Durum seçiniz"
+                      className="rounded-lg"
+                      size="large"
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {activityStatuses.map((status) => (
+                        <Select.Option key={status.value} value={status.value} label={status.label}>
+                          <Space>
+                            {status.icon}
+                            <Tag color={status.color}>{status.label}</Tag>
+                          </Space>
+                        </Select.Option>
+                      ))}
                     </Select>
                   </Form.Item>
                 </Col>
               </Row>
+
+              <Alert
+                message="30 Farklı Aktivite Tipi"
+                description="Telefon görüşmesinden webinara, ziyaretten sözleşme imzalamaya kadar 30 farklı aktivite tipinden birini seçebilirsiniz."
+                type="info"
+                showIcon
+                className="mt-2"
+              />
             </Card>
           </div>
         )}
 
-        {/* Step 1: Tarih ve Saat */}
+        {/* Step 1: Tarih ve Öncelik */}
         {currentStep === 1 && (
-          <div className="min-h-[300px]">
+          <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-green-50 rounded-lg">
                 <CalendarOutlined className="text-green-600 text-lg" />
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Tarih ve Saat</h3>
+              <h3 className="text-base font-semibold text-gray-800 m-0">Tarih, Saat ve Öncelik</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    label={<span className="text-gray-700 font-medium">Başlangıç</span>}
+                    label={<span className="text-gray-700 font-medium">Başlangıç Zamanı</span>}
                     name="startTime"
                     rules={[{ required: true, message: 'Başlangıç zamanı gerekli' }]}
                   >
@@ -324,7 +415,7 @@ export function ActivityModal({
                 </Col>
                 <Col span={12}>
                   <Form.Item
-                    label={<span className="text-gray-700 font-medium">Bitiş</span>}
+                    label={<span className="text-gray-700 font-medium">Bitiş Zamanı (Opsiyonel)</span>}
                     name="endTime"
                   >
                     <DatePicker
@@ -339,9 +430,48 @@ export function ActivityModal({
                 </Col>
               </Row>
 
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label={<span className="text-gray-700 font-medium">Öncelik Seviyesi</span>}
+                    name="priority"
+                    rules={[{ required: true, message: 'Öncelik seviyesi gerekli' }]}
+                  >
+                    <Select
+                      placeholder="Öncelik seçiniz"
+                      className="rounded-lg"
+                      size="large"
+                    >
+                      {activityPriorities.map((priority) => (
+                        <Select.Option key={priority.value} value={priority.value}>
+                          <Space>
+                            {priority.icon}
+                            <Tag color={priority.color}>{priority.label}</Tag>
+                          </Space>
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label={<span className="text-gray-700 font-medium">Konum (Opsiyonel)</span>}
+                    name="location"
+                  >
+                    <Input
+                      prefix={<EnvironmentOutlined className="text-gray-400" />}
+                      placeholder="Örn: Merkez Ofis, Toplantı Odası A"
+                      className="rounded-lg"
+                      size="large"
+                      maxLength={500}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
               <Alert
-                message="Zaman Planlaması"
-                description="Bitiş zamanı opsiyoneldir. Belirtmezseniz, aktivite tüm gün için zamanlanmış sayılır."
+                message="Süre Otomatik Hesaplanır"
+                description="Bitiş zamanı belirtirseniz, aktivite süresi otomatik olarak dakika cinsinden hesaplanır ve kaydedilir."
                 type="info"
                 showIcon
                 className="mt-2"
@@ -352,7 +482,7 @@ export function ActivityModal({
 
         {/* Step 2: İlgili Kayıtlar */}
         {currentStep === 2 && (
-          <div className="min-h-[300px]">
+          <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
                 <UserOutlined className="text-purple-600 text-lg" />
@@ -387,7 +517,7 @@ export function ActivityModal({
                   </Col>
                   <Col span={12}>
                     <Form.Item
-                      label={<span className="text-gray-700 font-medium">Lead</span>}
+                      label={<span className="text-gray-700 font-medium">Lead (Potansiyel Müşteri)</span>}
                       name="leadId"
                     >
                       <Select
@@ -412,7 +542,7 @@ export function ActivityModal({
                 <Row gutter={16}>
                   <Col span={12}>
                     <Form.Item
-                      label={<span className="text-gray-700 font-medium">Deal</span>}
+                      label={<span className="text-gray-700 font-medium">Deal (Satış Fırsatı)</span>}
                       name="dealId"
                     >
                       <Select
@@ -435,8 +565,9 @@ export function ActivityModal({
                   </Col>
                   <Col span={12}>
                     <Form.Item
-                      label={<span className="text-gray-700 font-medium">İletişim / Fırsat</span>}
+                      label={<span className="text-gray-700 font-medium">İletişim / Fırsat ID</span>}
                       name="contactId"
+                      tooltip="Gelecekte eklenecek özellik"
                     >
                       <Input
                         placeholder="İletişim veya Fırsat ID"
@@ -460,35 +591,58 @@ export function ActivityModal({
           </div>
         )}
 
-        {/* Step 3: Açıklama & Tamamla */}
+        {/* Step 3: Detaylar & Tamamla */}
         {currentStep === 3 && (
-          <div className="min-h-[300px]">
+          <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-orange-50 rounded-lg">
                 <CheckCircleOutlined className="text-orange-600 text-lg" />
               </div>
-              <h3 className="text-base font-semibold text-gray-800 m-0">Açıklama</h3>
+              <h3 className="text-base font-semibold text-gray-800 m-0">Detaylar ve Notlar</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
               <Form.Item
-                label={<span className="text-gray-700 font-medium">Detaylar</span>}
+                label={<span className="text-gray-700 font-medium">Açıklama</span>}
                 name="description"
+                rules={[
+                  { max: 1000, message: 'Açıklama en fazla 1000 karakter olabilir' }
+                ]}
               >
                 <TextArea
-                  rows={6}
-                  placeholder="Aktivite hakkında notlar..."
+                  rows={4}
+                  placeholder="Aktivite hakkında detaylı açıklama..."
                   className="rounded-lg"
                   size="large"
+                  showCount
+                  maxLength={1000}
                 />
               </Form.Item>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">Notlar</span>}
+                name="notes"
+                rules={[
+                  { max: 2000, message: 'Notlar en fazla 2000 karakter olabilir' }
+                ]}
+              >
+                <TextArea
+                  rows={6}
+                  placeholder="Aktivite ile ilgili özel notlar, hatırlatmalar veya önemli detaylar..."
+                  className="rounded-lg"
+                  size="large"
+                  showCount
+                  maxLength={2000}
+                />
+              </Form.Item>
+
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4 mt-4">
                 <div className="flex items-start gap-3">
                   <CheckCircleOutlined className="text-blue-600 text-xl mt-1" />
                   <div>
-                    <div className="font-semibold text-blue-900 mb-1">Tamamlamaya Hazır</div>
+                    <div className="font-semibold text-blue-900 mb-1">✨ Tamamlamaya Hazır</div>
                     <div className="text-sm text-blue-700">
-                      Aktivite bilgilerini gözden geçirin ve kaydetmek için "{isEditMode ? 'Güncelle' : 'Oluştur'}" butonuna tıklayın.
+                      Aktivite bilgilerini gözden geçirin ve kaydetmek için "<strong>{isEditMode ? 'Güncelle' : 'Oluştur'}</strong>" butonuna tıklayın.
+                      Oluşturulduktan sonra aktivite takvim ve listede görünür olacaktır.
                     </div>
                   </div>
                 </div>
@@ -500,3 +654,4 @@ export function ActivityModal({
     </Drawer>
   );
 }
+
