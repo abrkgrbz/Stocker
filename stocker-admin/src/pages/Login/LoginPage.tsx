@@ -54,10 +54,8 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
 
-      // Don't show any success message here
-      // If 2FA required: useEffect will navigate to /verify-2fa
-      // If 2FA not required: useEffect will navigate to /dashboard
-      // Success messages handled by destination pages
+      // Show success message on successful login
+      message.success('Giriş başarılı! Yönlendiriliyorsunuz...');
 
       form.resetFields();
     } catch (err: any) {
