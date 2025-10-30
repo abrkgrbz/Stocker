@@ -41,34 +41,61 @@ public enum OpportunityPriority
 
 public enum ActivityType
 {
-    Call = 1,
-    Email = 2,
-    Meeting = 3,
-    Task = 4,
-    Note = 5,
-    Event = 6,
-    Demo = 7,
-    Presentation = 8,
-    Visit = 9,
-    Other = 10
+    Call = 1,                    // Telefon Görüşmesi
+    Email = 2,                   // E-posta
+    Meeting = 3,                 // Toplantı
+    Task = 4,                    // Görev
+    Note = 5,                    // Not
+    Event = 6,                   // Etkinlik
+    Demo = 7,                    // Demo
+    Presentation = 8,            // Sunum
+    Visit = 9,                   // Ziyaret
+    Other = 10,                  // Diğer
+    WhatsApp = 11,               // WhatsApp Mesajı
+    SMS = 12,                    // SMS
+    VideoCall = 13,              // Video Görüşme
+    Training = 14,               // Eğitim
+    Workshop = 15,               // Atölye Çalışması
+    Webinar = 16,                // Webinar
+    FollowUp = 17,               // Takip
+    Lunch = 18,                  // İş Yemeği
+    Dinner = 19,                 // Akşam Yemeği
+    Conference = 20,             // Konferans
+    SiteVisit = 21,              // Saha Ziyareti
+    ProductDemo = 22,            // Ürün Demosu
+    Negotiation = 23,            // Müzakere
+    Contract = 24,               // Sözleşme İmzalama
+    Support = 25,                // Destek Talebi
+    Complaint = 26,              // Şikayet İşleme
+    Survey = 27,                 // Anket
+    Review = 28,                 // İnceleme/Gözden Geçirme
+    Planning = 29,               // Planlama
+    Reporting = 30               // Raporlama
 }
 
 public enum ActivityStatus
 {
-    NotStarted = 1,
-    InProgress = 2,
-    Completed = 3,
-    Cancelled = 4,
-    Deferred = 5,
-    WaitingOnSomeone = 6
+    NotStarted = 1,              // Başlamadı
+    InProgress = 2,              // Devam Ediyor
+    Completed = 3,               // Tamamlandı
+    Cancelled = 4,               // İptal Edildi
+    Deferred = 5,                // Ertelendi
+    WaitingOnSomeone = 6,        // Birini Bekliyor
+    Scheduled = 7,               // Planlandı
+    Rescheduled = 8,             // Yeniden Planlandı
+    NoShow = 9,                  // Katılım Olmadı
+    PartiallyCompleted = 10,     // Kısmen Tamamlandı
+    OnHold = 11,                 // Beklemede
+    NeedsFollowUp = 12           // Takip Gerekiyor
 }
 
 public enum ActivityPriority
 {
-    Low = 1,
-    Normal = 2,
-    High = 3,
-    Urgent = 4
+    Low = 1,                     // Düşük
+    Normal = 2,                  // Normal
+    High = 3,                    // Yüksek
+    Urgent = 4,                  // Acil
+    Critical = 5                 // Kritik
 }
 
 public enum CampaignType
