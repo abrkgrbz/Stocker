@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * Modern User Management Page
- * Beautiful and functional user management interface
+ * Ultra-Modern User Management Page
+ * Beautiful, visual, and highly interactive user management interface
  */
 
 import { useState } from 'react';
@@ -24,6 +24,9 @@ import {
   Select,
   Modal,
   Segmented,
+  Progress,
+  Tooltip,
+  Divider,
 } from 'antd';
 import {
   UserOutlined,
@@ -43,6 +46,13 @@ import {
   FilterOutlined,
   AppstoreOutlined,
   BarsOutlined,
+  RiseOutlined,
+  TrophyOutlined,
+  FireOutlined,
+  ThunderboltOutlined,
+  StarOutlined,
+  ClockCircleOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 
@@ -62,9 +72,13 @@ interface User {
   lastLogin?: string;
   createdAt: string;
   avatar?: string;
+  activityScore?: number; // 0-100
+  tasksCompleted?: number;
+  performance?: number; // 0-100
+  joinedDays?: number;
 }
 
-// Mock data with more details
+// Enhanced mock data with activity metrics
 const mockUsers: User[] = [
   {
     id: '1',
@@ -78,6 +92,10 @@ const mockUsers: User[] = [
     department: 'Yönetim',
     lastLogin: '2025-01-29T15:30:00Z',
     createdAt: '2024-01-15T10:30:00Z',
+    activityScore: 95,
+    tasksCompleted: 248,
+    performance: 98,
+    joinedDays: 379,
   },
   {
     id: '2',
@@ -91,6 +109,10 @@ const mockUsers: User[] = [
     department: 'Satış',
     lastLogin: '2025-01-29T14:20:00Z',
     createdAt: '2024-02-20T14:20:00Z',
+    activityScore: 88,
+    tasksCompleted: 167,
+    performance: 92,
+    joinedDays: 343,
   },
   {
     id: '3',
@@ -103,6 +125,10 @@ const mockUsers: User[] = [
     department: 'Muhasebe',
     lastLogin: '2025-01-28T09:15:00Z',
     createdAt: '2024-03-10T11:00:00Z',
+    activityScore: 76,
+    tasksCompleted: 134,
+    performance: 85,
+    joinedDays: 325,
   },
   {
     id: '4',
@@ -116,6 +142,10 @@ const mockUsers: User[] = [
     department: 'İnsan Kaynakları',
     lastLogin: '2025-01-20T16:45:00Z',
     createdAt: '2024-04-05T13:20:00Z',
+    activityScore: 45,
+    tasksCompleted: 89,
+    performance: 68,
+    joinedDays: 299,
   },
   {
     id: '5',
@@ -129,6 +159,10 @@ const mockUsers: User[] = [
     department: 'Satış',
     lastLogin: '2025-01-29T10:00:00Z',
     createdAt: '2024-05-12T09:30:00Z',
+    activityScore: 82,
+    tasksCompleted: 145,
+    performance: 88,
+    joinedDays: 262,
   },
 ];
 
@@ -227,203 +261,526 @@ export default function UsersPage() {
   };
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Stats Cards */}
+    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', minHeight: 'calc(100vh - 64px)' }}>
+      {/* Enhanced Stats Cards with Gradients */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Kullanıcı"
-              value={stats.total}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
+          <Card
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              borderRadius: 16,
+              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+            }}
+            bodyStyle={{ padding: 24 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
+                  Toplam Kullanıcı
+                </Text>
+                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                  {stats.total}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <TeamOutlined style={{ fontSize: 28, color: 'white' }} />
+              </div>
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Aktif"
-              value={stats.active}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
+          <Card
+            style={{
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              border: 'none',
+              borderRadius: 16,
+              boxShadow: '0 8px 24px rgba(240, 147, 251, 0.4)',
+            }}
+            bodyStyle={{ padding: 24 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
+                  Aktif Kullanıcı
+                </Text>
+                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                  {stats.active}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FireOutlined style={{ fontSize: 28, color: 'white' }} />
+              </div>
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Pasif"
-              value={stats.inactive}
-              prefix={<CloseCircleOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
+          <Card
+            style={{
+              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              border: 'none',
+              borderRadius: 16,
+              boxShadow: '0 8px 24px rgba(79, 172, 254, 0.4)',
+            }}
+            bodyStyle={{ padding: 24 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
+                  Pasif Kullanıcı
+                </Text>
+                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                  {stats.inactive}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ClockCircleOutlined style={{ fontSize: 28, color: 'white' }} />
+              </div>
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Adminler"
-              value={stats.admins}
-              prefix={<LockOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
+          <Card
+            style={{
+              background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+              border: 'none',
+              borderRadius: 16,
+              boxShadow: '0 8px 24px rgba(250, 112, 154, 0.4)',
+            }}
+            bodyStyle={{ padding: 24 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
+                  Adminler
+                </Text>
+                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                  {stats.admins}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <SafetyOutlined style={{ fontSize: 28, color: 'white' }} />
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>
 
-      {/* Main Card */}
+      {/* Main Card - Ultra Modern */}
       <Card
+        style={{
+          borderRadius: 16,
+          border: 'none',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+          overflow: 'hidden',
+        }}
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <TeamOutlined style={{ fontSize: 20 }} />
-            <Title level={4} style={{ margin: 0 }}>
-              Kullanıcı Yönetimi
-            </Title>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <TeamOutlined style={{ fontSize: 24, color: 'white' }} />
+            </div>
+            <div>
+              <Title level={4} style={{ margin: 0, fontSize: 20 }}>
+                Kullanıcı Yönetimi
+              </Title>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {filteredUsers.length} kullanıcı bulundu
+              </Text>
+            </div>
           </div>
         }
         extra={
           <AdminOnly>
-            <Button type="primary" icon={<PlusOutlined />} size="large">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              size="large"
+              style={{
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+                fontWeight: 500,
+              }}
+            >
               Yeni Kullanıcı
             </Button>
           </AdminOnly>
         }
       >
-        {/* Filters */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={24} md={10}>
-            <Input
-              size="large"
-              placeholder="Kullanıcı ara (ad, email, departman...)"
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col xs={12} sm={8} md={5}>
-            <Select
-              size="large"
-              style={{ width: '100%' }}
-              placeholder="Rol Filtrele"
-              value={filterRole}
-              onChange={setFilterRole}
-            >
-              <Select.Option value="all">Tüm Roller</Select.Option>
-              <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
-              <Select.Option value="Yönetici">Yönetici</Select.Option>
-              <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
-            </Select>
-          </Col>
-          <Col xs={12} sm={8} md={5}>
-            <Select
-              size="large"
-              style={{ width: '100%' }}
-              placeholder="Durum Filtrele"
-              value={filterStatus}
-              onChange={setFilterStatus}
-            >
-              <Select.Option value="all">Tüm Durumlar</Select.Option>
-              <Select.Option value="active">Aktif</Select.Option>
-              <Select.Option value="inactive">Pasif</Select.Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={8} md={4}>
-            <Segmented
-              size="large"
-              style={{ width: '100%' }}
-              value={viewMode}
-              onChange={(value) => setViewMode(value as 'grid' | 'list')}
-              options={[
-                { value: 'grid', icon: <AppstoreOutlined /> },
-                { value: 'list', icon: <BarsOutlined /> },
-              ]}
-            />
-          </Col>
-        </Row>
-
-        {/* Users Display */}
-        {viewMode === 'grid' ? (
+        {/* Modern Filters with Background */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            padding: 20,
+            borderRadius: 12,
+            marginBottom: 24,
+          }}
+        >
           <Row gutter={[16, 16]}>
-            {filteredUsers.map((user) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
-                <Card
-                  hoverable
-                  style={{
-                    borderRadius: 8,
-                    border: user.isActive ? '1px solid #d9d9d9' : '1px solid #ff4d4f',
-                  }}
-                  bodyStyle={{ padding: 20 }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <Avatar
-                      size={64}
+            <Col xs={24} sm={24} md={10}>
+              <Input
+                size="large"
+                placeholder="🔍 Kullanıcı ara (ad, email, departman...)"
+                prefix={<SearchOutlined style={{ color: '#667eea', fontSize: 16 }} />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                style={{
+                  borderRadius: 8,
+                  border: '2px solid #e8e8e8',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                }}
+              />
+            </Col>
+            <Col xs={12} sm={8} md={5}>
+              <Select
+                size="large"
+                style={{
+                  width: '100%',
+                }}
+                placeholder="Rol Filtrele"
+                value={filterRole}
+                onChange={setFilterRole}
+                suffixIcon={<FilterOutlined style={{ color: '#667eea' }} />}
+              >
+                <Select.Option value="all">✨ Tüm Roller</Select.Option>
+                <Select.Option value="FirmaYöneticisi">👑 Admin</Select.Option>
+                <Select.Option value="Yönetici">⭐ Yönetici</Select.Option>
+                <Select.Option value="Kullanıcı">👤 Kullanıcı</Select.Option>
+              </Select>
+            </Col>
+            <Col xs={12} sm={8} md={5}>
+              <Select
+                size="large"
+                style={{ width: '100%' }}
+                placeholder="Durum Filtrele"
+                value={filterStatus}
+                onChange={setFilterStatus}
+                suffixIcon={<FilterOutlined style={{ color: '#667eea' }} />}
+              >
+                <Select.Option value="all">🌟 Tüm Durumlar</Select.Option>
+                <Select.Option value="active">✅ Aktif</Select.Option>
+                <Select.Option value="inactive">❌ Pasif</Select.Option>
+              </Select>
+            </Col>
+            <Col xs={24} sm={8} md={4}>
+              <Segmented
+                size="large"
+                block
+                value={viewMode}
+                onChange={(value) => setViewMode(value as 'grid' | 'list')}
+                options={[
+                  {
+                    value: 'grid',
+                    icon: <AppstoreOutlined />,
+                    label: 'Kart',
+                  },
+                  {
+                    value: 'list',
+                    icon: <BarsOutlined />,
+                    label: 'Liste',
+                  },
+                ]}
+                style={{
+                  background: 'white',
+                  padding: 4,
+                  borderRadius: 8,
+                }}
+              />
+            </Col>
+          </Row>
+        </div>
+
+        {/* Users Display - Enhanced Visual Cards */}
+        {viewMode === 'grid' ? (
+          <Row gutter={[24, 24]}>
+            {filteredUsers.map((user) => {
+              const activityColor =
+                (user.activityScore ?? 0) >= 80
+                  ? '#52c41a'
+                  : (user.activityScore ?? 0) >= 60
+                    ? '#faad14'
+                    : '#ff4d4f';
+
+              const performanceColor =
+                (user.performance ?? 0) >= 90
+                  ? '#52c41a'
+                  : (user.performance ?? 0) >= 70
+                    ? '#1890ff'
+                    : '#ff4d4f';
+
+              return (
+                <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
+                  <Card
+                    hoverable
+                    style={{
+                      borderRadius: 16,
+                      border: 'none',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      overflow: 'hidden',
+                      transition: 'all 0.3s ease',
+                      background: 'white',
+                    }}
+                    bodyStyle={{ padding: 0 }}
+                  >
+                    {/* Card Header with Gradient */}
+                    <div
                       style={{
-                        backgroundColor: user.isActive ? '#1890ff' : '#999',
+                        background: user.isActive
+                          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                          : 'linear-gradient(135deg, #636363 0%, #a2ab58 100%)',
+                        padding: '20px 20px 60px 20px',
+                        position: 'relative',
                       }}
                     >
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </Avatar>
-                    <AdminOnly>
-                      <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                        <Button type="text" icon={<MoreOutlined />} />
-                      </Dropdown>
-                    </AdminOnly>
-                  </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {getRoleBadge(user.role)}
+                          {(user.activityScore ?? 0) >= 90 && (
+                            <Tooltip title="Yüksek Performans">
+                              <Tag color="gold" icon={<TrophyOutlined />}>
+                                MVP
+                              </Tag>
+                            </Tooltip>
+                          )}
+                        </div>
+                        <AdminOnly>
+                          <Dropdown menu={getUserMenu(user)} trigger={['click']}>
+                            <Button
+                              type="text"
+                              icon={<MoreOutlined style={{ color: 'white' }} />}
+                              style={{ color: 'white' }}
+                            />
+                          </Dropdown>
+                        </AdminOnly>
+                      </div>
 
-                  <Title level={5} style={{ marginBottom: 4 }}>
-                    {user.firstName} {user.lastName}
-                  </Title>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    @{user.username}
-                  </Text>
-
-                  <div style={{ marginTop: 12, marginBottom: 12 }}>
-                    {getRoleBadge(user.role)}
-                    <Badge
-                      status={user.isActive ? 'success' : 'error'}
-                      text={user.isActive ? 'Aktif' : 'Pasif'}
-                      style={{ marginLeft: 8 }}
-                    />
-                  </div>
-
-                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <MailOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
-                      <Text style={{ fontSize: 12 }} ellipsis>
-                        {user.email}
-                      </Text>
+                      {/* Avatar - positioned to overlap */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: -40,
+                          left: 20,
+                        }}
+                      >
+                        <Avatar
+                          size={80}
+                          style={{
+                            backgroundColor: 'white',
+                            color: user.isActive ? '#667eea' : '#999',
+                            fontSize: 32,
+                            fontWeight: 'bold',
+                            border: '4px solid white',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          }}
+                        >
+                          {user.firstName[0]}
+                          {user.lastName[0]}
+                        </Avatar>
+                        {user.isActive && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 5,
+                              right: 5,
+                              width: 16,
+                              height: 16,
+                              background: '#52c41a',
+                              border: '3px solid white',
+                              borderRadius: '50%',
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
-                    {user.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <PhoneOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
-                        <Text style={{ fontSize: 12 }}>{user.phone}</Text>
-                      </div>
-                    )}
-                    {user.department && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <TeamOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
-                        <Text style={{ fontSize: 12 }}>{user.department}</Text>
-                      </div>
-                    )}
-                    {user.lastLogin && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <CalendarOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
-                        <Text style={{ fontSize: 12 }}>
-                          Son giriş:{' '}
-                          {new Date(user.lastLogin).toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
-                        </Text>
-                      </div>
-                    )}
-                  </Space>
-                </Card>
-              </Col>
-            ))}
+
+                    {/* Card Body */}
+                    <div style={{ padding: '50px 20px 20px 20px' }}>
+                      <Title level={5} style={{ marginBottom: 2, fontSize: 18 }}>
+                        {user.firstName} {user.lastName}
+                      </Title>
+                      <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 16 }}>
+                        @{user.username}
+                      </Text>
+
+                      <Divider style={{ margin: '12px 0' }} />
+
+                      {/* Contact Info */}
+                      <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <MailOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                          <Text style={{ fontSize: 13 }} ellipsis>
+                            {user.email}
+                          </Text>
+                        </div>
+                        {user.phone && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <PhoneOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                            <Text style={{ fontSize: 13 }}>{user.phone}</Text>
+                          </div>
+                        )}
+                        {user.department && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <TeamOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                            <Text style={{ fontSize: 13 }}>{user.department}</Text>
+                          </div>
+                        )}
+                      </Space>
+
+                      {/* Activity Metrics */}
+                      {user.activityScore !== undefined && (
+                        <div style={{ marginTop: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                              <ThunderboltOutlined style={{ color: activityColor }} /> Aktivite Skoru
+                            </Text>
+                            <Text style={{ fontSize: 12, fontWeight: 600, color: activityColor }}>
+                              {user.activityScore}%
+                            </Text>
+                          </div>
+                          <Progress
+                            percent={user.activityScore}
+                            strokeColor={activityColor}
+                            showInfo={false}
+                            size="small"
+                          />
+                        </div>
+                      )}
+
+                      {user.performance !== undefined && (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                              <StarOutlined style={{ color: performanceColor }} /> Performans
+                            </Text>
+                            <Text style={{ fontSize: 12, fontWeight: 600, color: performanceColor }}>
+                              {user.performance}%
+                            </Text>
+                          </div>
+                          <Progress
+                            percent={user.performance}
+                            strokeColor={performanceColor}
+                            showInfo={false}
+                            size="small"
+                          />
+                        </div>
+                      )}
+
+                      {/* Stats */}
+                      <Row gutter={8} style={{ marginTop: 16 }}>
+                        {user.tasksCompleted !== undefined && (
+                          <Col span={12}>
+                            <div
+                              style={{
+                                background: '#f0f2f5',
+                                padding: '8px 12px',
+                                borderRadius: 8,
+                                textAlign: 'center',
+                              }}
+                            >
+                              <Text style={{ fontSize: 18, fontWeight: 'bold', display: 'block', color: '#1890ff' }}>
+                                {user.tasksCompleted}
+                              </Text>
+                              <Text style={{ fontSize: 11, color: '#8c8c8c' }}>Görev</Text>
+                            </div>
+                          </Col>
+                        )}
+                        {user.joinedDays !== undefined && (
+                          <Col span={12}>
+                            <div
+                              style={{
+                                background: '#f0f2f5',
+                                padding: '8px 12px',
+                                borderRadius: 8,
+                                textAlign: 'center',
+                              }}
+                            >
+                              <Text style={{ fontSize: 18, fontWeight: 'bold', display: 'block', color: '#52c41a' }}>
+                                {user.joinedDays}
+                              </Text>
+                              <Text style={{ fontSize: 11, color: '#8c8c8c' }}>Gün</Text>
+                            </div>
+                          </Col>
+                        )}
+                      </Row>
+
+                      {user.lastLogin && (
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: '8px 12px',
+                            background: '#f6ffed',
+                            borderRadius: 8,
+                            border: '1px solid #b7eb8f',
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, color: '#52c41a' }}>
+                            <CalendarOutlined /> Son giriş:{' '}
+                            {new Date(user.lastLogin).toLocaleDateString('tr-TR', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </Text>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         ) : (
           <List
@@ -489,12 +846,35 @@ export default function UsersPage() {
         )}
 
         {filteredUsers.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <UserOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
-            <Title level={4} type="secondary">
-              Kullanıcı bulunamadı
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '80px 20px',
+              background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+              borderRadius: 16,
+            }}
+          >
+            <div
+              style={{
+                width: 120,
+                height: 120,
+                margin: '0 auto 24px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+              }}
+            >
+              <UserOutlined style={{ fontSize: 60, color: 'white' }} />
+            </div>
+            <Title level={3} style={{ color: '#667eea', marginBottom: 8 }}>
+              Kullanıcı Bulunamadı
             </Title>
-            <Text type="secondary">Arama kriterlerinizi değiştirmeyi deneyin</Text>
+            <Text style={{ fontSize: 15, color: '#8c8c8c' }}>
+              🔍 Arama kriterlerinizi değiştirmeyi deneyin veya yeni kullanıcı ekleyin
+            </Text>
           </div>
         )}
       </Card>
