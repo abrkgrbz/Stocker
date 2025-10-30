@@ -261,257 +261,223 @@ export default function UsersPage() {
   };
 
   return (
-    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Enhanced Stats Cards with Gradients */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+      {/* Sophisticated Stats Cards */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card
+            hoverable
             style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+              background: 'white',
+              border: '1px solid #f0f0f0',
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
             }}
-            bodyStyle={{ padding: 24 }}
+            bodyStyle={{ padding: '20px 24px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
-                  Toplam Kullanıcı
+                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                  TOPLAM KULLANICI
                 </Text>
-                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
                   {stats.total}
                 </Title>
               </div>
               <div
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.2)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  background: '#f0f5ff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <TeamOutlined style={{ fontSize: 28, color: 'white' }} />
+                <TeamOutlined style={{ fontSize: 24, color: '#1890ff' }} />
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
+            hoverable
             style={{
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-              border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 24px rgba(240, 147, 251, 0.4)',
+              background: 'white',
+              border: '1px solid #f0f0f0',
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
             }}
-            bodyStyle={{ padding: 24 }}
+            bodyStyle={{ padding: '20px 24px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
-                  Aktif Kullanıcı
+                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                  AKTİF
                 </Text>
-                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
                   {stats.active}
                 </Title>
               </div>
               <div
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.2)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  background: '#f6ffed',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <FireOutlined style={{ fontSize: 28, color: 'white' }} />
+                <CheckCircleOutlined style={{ fontSize: 24, color: '#52c41a' }} />
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
+            hoverable
             style={{
-              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-              border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 24px rgba(79, 172, 254, 0.4)',
+              background: 'white',
+              border: '1px solid #f0f0f0',
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
             }}
-            bodyStyle={{ padding: 24 }}
+            bodyStyle={{ padding: '20px 24px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
-                  Pasif Kullanıcı
+                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                  PASİF
                 </Text>
-                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
                   {stats.inactive}
                 </Title>
               </div>
               <div
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.2)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  background: '#fff1f0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <ClockCircleOutlined style={{ fontSize: 28, color: 'white' }} />
+                <CloseCircleOutlined style={{ fontSize: 24, color: '#ff4d4f' }} />
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
+            hoverable
             style={{
-              background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-              border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 24px rgba(250, 112, 154, 0.4)',
+              background: 'white',
+              border: '1px solid #f0f0f0',
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
             }}
-            bodyStyle={{ padding: 24 }}
+            bodyStyle={{ padding: '20px 24px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, display: 'block', marginBottom: 8 }}>
-                  Adminler
+                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                  YÖNETİCİ
                 </Text>
-                <Title level={2} style={{ color: 'white', margin: 0 }}>
+                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
                   {stats.admins}
                 </Title>
               </div>
               <div
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.2)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  background: '#fff7e6',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <SafetyOutlined style={{ fontSize: 28, color: 'white' }} />
+                <SafetyOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
               </div>
             </div>
           </Card>
         </Col>
       </Row>
 
-      {/* Main Card - Ultra Modern */}
+      {/* Main Card - Professional */}
       <Card
         style={{
-          borderRadius: 16,
-          border: 'none',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-          overflow: 'hidden',
+          borderRadius: 8,
+          border: '1px solid #f0f0f0',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         }}
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TeamOutlined style={{ fontSize: 24, color: 'white' }} />
-            </div>
-            <div>
-              <Title level={4} style={{ margin: 0, fontSize: 20 }}>
-                Kullanıcı Yönetimi
-              </Title>
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                {filteredUsers.length} kullanıcı bulundu
-              </Text>
-            </div>
+            <Title level={4} style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#262626' }}>
+              Kullanıcı Yönetimi
+            </Title>
+            <Badge
+              count={filteredUsers.length}
+              style={{ backgroundColor: '#f0f0f0', color: '#595959', boxShadow: 'none' }}
+            />
           </div>
         }
         extra={
           <AdminOnly>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size="large"
-              style={{
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none',
-                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
-                fontWeight: 500,
-              }}
-            >
+            <Button type="primary" icon={<PlusOutlined />} size="large">
               Yeni Kullanıcı
             </Button>
           </AdminOnly>
         }
       >
-        {/* Modern Filters with Background */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            padding: 20,
-            borderRadius: 12,
-            marginBottom: 24,
-          }}
-        >
+        {/* Professional Filters */}
+        <div style={{ marginBottom: 24 }}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={24} md={10}>
               <Input
                 size="large"
-                placeholder="🔍 Kullanıcı ara (ad, email, departman...)"
-                prefix={<SearchOutlined style={{ color: '#667eea', fontSize: 16 }} />}
+                placeholder="Kullanıcı ara..."
+                prefix={<SearchOutlined />}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 allowClear
-                style={{
-                  borderRadius: 8,
-                  border: '2px solid #e8e8e8',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                }}
               />
             </Col>
             <Col xs={12} sm={8} md={5}>
               <Select
                 size="large"
-                style={{
-                  width: '100%',
-                }}
-                placeholder="Rol Filtrele"
+                style={{ width: '100%' }}
+                placeholder="Rol"
                 value={filterRole}
                 onChange={setFilterRole}
-                suffixIcon={<FilterOutlined style={{ color: '#667eea' }} />}
               >
-                <Select.Option value="all">✨ Tüm Roller</Select.Option>
-                <Select.Option value="FirmaYöneticisi">👑 Admin</Select.Option>
-                <Select.Option value="Yönetici">⭐ Yönetici</Select.Option>
-                <Select.Option value="Kullanıcı">👤 Kullanıcı</Select.Option>
+                <Select.Option value="all">Tüm Roller</Select.Option>
+                <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
+                <Select.Option value="Yönetici">Yönetici</Select.Option>
+                <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
               </Select>
             </Col>
             <Col xs={12} sm={8} md={5}>
               <Select
                 size="large"
                 style={{ width: '100%' }}
-                placeholder="Durum Filtrele"
+                placeholder="Durum"
                 value={filterStatus}
                 onChange={setFilterStatus}
-                suffixIcon={<FilterOutlined style={{ color: '#667eea' }} />}
               >
-                <Select.Option value="all">🌟 Tüm Durumlar</Select.Option>
-                <Select.Option value="active">✅ Aktif</Select.Option>
-                <Select.Option value="inactive">❌ Pasif</Select.Option>
+                <Select.Option value="all">Tüm Durumlar</Select.Option>
+                <Select.Option value="active">Aktif</Select.Option>
+                <Select.Option value="inactive">Pasif</Select.Option>
               </Select>
             </Col>
             <Col xs={24} sm={8} md={4}>
@@ -521,266 +487,122 @@ export default function UsersPage() {
                 value={viewMode}
                 onChange={(value) => setViewMode(value as 'grid' | 'list')}
                 options={[
-                  {
-                    value: 'grid',
-                    icon: <AppstoreOutlined />,
-                    label: 'Kart',
-                  },
-                  {
-                    value: 'list',
-                    icon: <BarsOutlined />,
-                    label: 'Liste',
-                  },
+                  { value: 'grid', icon: <AppstoreOutlined /> },
+                  { value: 'list', icon: <BarsOutlined /> },
                 ]}
-                style={{
-                  background: 'white',
-                  padding: 4,
-                  borderRadius: 8,
-                }}
               />
             </Col>
           </Row>
         </div>
 
-        {/* Users Display - Enhanced Visual Cards */}
+        {/* Professional User Cards */}
         {viewMode === 'grid' ? (
-          <Row gutter={[24, 24]}>
-            {filteredUsers.map((user) => {
-              const activityColor =
-                (user.activityScore ?? 0) >= 80
-                  ? '#52c41a'
-                  : (user.activityScore ?? 0) >= 60
-                    ? '#faad14'
-                    : '#ff4d4f';
-
-              const performanceColor =
-                (user.performance ?? 0) >= 90
-                  ? '#52c41a'
-                  : (user.performance ?? 0) >= 70
-                    ? '#1890ff'
-                    : '#ff4d4f';
-
-              return (
-                <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
-                  <Card
-                    hoverable
-                    style={{
-                      borderRadius: 16,
-                      border: 'none',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                      overflow: 'hidden',
-                      transition: 'all 0.3s ease',
-                      background: 'white',
-                    }}
-                    bodyStyle={{ padding: 0 }}
-                  >
-                    {/* Card Header with Gradient */}
-                    <div
+          <Row gutter={[16, 16]}>
+            {filteredUsers.map((user) => (
+              <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
+                <Card
+                  hoverable
+                  style={{
+                    borderRadius: 8,
+                    border: '1px solid #f0f0f0',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    height: '100%',
+                  }}
+                  bodyStyle={{ padding: 20 }}
+                >
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <Avatar
+                      size={56}
                       style={{
-                        background: user.isActive
-                          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                          : 'linear-gradient(135deg, #636363 0%, #a2ab58 100%)',
-                        padding: '20px 20px 60px 20px',
-                        position: 'relative',
+                        backgroundColor: user.isActive ? '#1890ff' : '#d9d9d9',
+                        fontWeight: 600,
+                        fontSize: 20,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          {getRoleBadge(user.role)}
-                          {(user.activityScore ?? 0) >= 90 && (
-                            <Tooltip title="Yüksek Performans">
-                              <Tag color="gold" icon={<TrophyOutlined />}>
-                                MVP
-                              </Tag>
-                            </Tooltip>
-                          )}
-                        </div>
-                        <AdminOnly>
-                          <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                            <Button
-                              type="text"
-                              icon={<MoreOutlined style={{ color: 'white' }} />}
-                              style={{ color: 'white' }}
-                            />
-                          </Dropdown>
-                        </AdminOnly>
-                      </div>
+                      {user.firstName[0]}
+                      {user.lastName[0]}
+                    </Avatar>
+                    <AdminOnly>
+                      <Dropdown menu={getUserMenu(user)} trigger={['click']}>
+                        <Button type="text" icon={<MoreOutlined />} />
+                      </Dropdown>
+                    </AdminOnly>
+                  </div>
 
-                      {/* Avatar - positioned to overlap */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: -40,
-                          left: 20,
-                        }}
-                      >
-                        <Avatar
-                          size={80}
-                          style={{
-                            backgroundColor: 'white',
-                            color: user.isActive ? '#667eea' : '#999',
-                            fontSize: 32,
-                            fontWeight: 'bold',
-                            border: '4px solid white',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          }}
-                        >
-                          {user.firstName[0]}
-                          {user.lastName[0]}
-                        </Avatar>
-                        {user.isActive && (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              bottom: 5,
-                              right: 5,
-                              width: 16,
-                              height: 16,
-                              background: '#52c41a',
-                              border: '3px solid white',
-                              borderRadius: '50%',
-                            }}
-                          />
-                        )}
-                      </div>
-                    </div>
+                  {/* User Info */}
+                  <Title level={5} style={{ marginBottom: 4, fontSize: 16, fontWeight: 600 }}>
+                    {user.firstName} {user.lastName}
+                  </Title>
+                  <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>
+                    @{user.username}
+                  </Text>
 
-                    {/* Card Body */}
-                    <div style={{ padding: '50px 20px 20px 20px' }}>
-                      <Title level={5} style={{ marginBottom: 2, fontSize: 18 }}>
-                        {user.firstName} {user.lastName}
-                      </Title>
-                      <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 16 }}>
-                        @{user.username}
+                  {/* Role and Status */}
+                  <div style={{ marginBottom: 16 }}>
+                    {getRoleBadge(user.role)}
+                    <Badge
+                      status={user.isActive ? 'success' : 'default'}
+                      text={user.isActive ? 'Aktif' : 'Pasif'}
+                      style={{ marginLeft: 8 }}
+                    />
+                  </div>
+
+                  <Divider style={{ margin: '16px 0' }} />
+
+                  {/* Contact Info */}
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <MailOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                      <Text style={{ fontSize: 13 }} ellipsis>
+                        {user.email}
                       </Text>
+                    </div>
+                    {user.phone && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <PhoneOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                        <Text style={{ fontSize: 13 }}>{user.phone}</Text>
+                      </div>
+                    )}
+                    {user.department && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <TeamOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
+                        <Text style={{ fontSize: 13 }}>{user.department}</Text>
+                      </div>
+                    )}
+                  </Space>
 
-                      <Divider style={{ margin: '12px 0' }} />
-
-                      {/* Contact Info */}
-                      <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <MailOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                          <Text style={{ fontSize: 13 }} ellipsis>
-                            {user.email}
-                          </Text>
-                        </div>
-                        {user.phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <PhoneOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                            <Text style={{ fontSize: 13 }}>{user.phone}</Text>
-                          </div>
-                        )}
-                        {user.department && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <TeamOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                            <Text style={{ fontSize: 13 }}>{user.department}</Text>
-                          </div>
-                        )}
-                      </Space>
-
-                      {/* Activity Metrics */}
-                      {user.activityScore !== undefined && (
-                        <div style={{ marginTop: 16 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <Text style={{ fontSize: 12, fontWeight: 500 }}>
-                              <ThunderboltOutlined style={{ color: activityColor }} /> Aktivite Skoru
-                            </Text>
-                            <Text style={{ fontSize: 12, fontWeight: 600, color: activityColor }}>
-                              {user.activityScore}%
-                            </Text>
-                          </div>
-                          <Progress
-                            percent={user.activityScore}
-                            strokeColor={activityColor}
-                            showInfo={false}
-                            size="small"
-                          />
-                        </div>
-                      )}
-
-                      {user.performance !== undefined && (
-                        <div style={{ marginTop: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <Text style={{ fontSize: 12, fontWeight: 500 }}>
-                              <StarOutlined style={{ color: performanceColor }} /> Performans
-                            </Text>
-                            <Text style={{ fontSize: 12, fontWeight: 600, color: performanceColor }}>
-                              {user.performance}%
-                            </Text>
-                          </div>
-                          <Progress
-                            percent={user.performance}
-                            strokeColor={performanceColor}
-                            showInfo={false}
-                            size="small"
-                          />
-                        </div>
-                      )}
-
-                      {/* Stats */}
-                      <Row gutter={8} style={{ marginTop: 16 }}>
-                        {user.tasksCompleted !== undefined && (
+                  {/* Performance Stats */}
+                  {(user.activityScore !== undefined || user.performance !== undefined) && (
+                    <>
+                      <Divider style={{ margin: '16px 0' }} />
+                      <Row gutter={8}>
+                        {user.activityScore !== undefined && (
                           <Col span={12}>
-                            <div
-                              style={{
-                                background: '#f0f2f5',
-                                padding: '8px 12px',
-                                borderRadius: 8,
-                                textAlign: 'center',
-                              }}
-                            >
-                              <Text style={{ fontSize: 18, fontWeight: 'bold', display: 'block', color: '#1890ff' }}>
-                                {user.tasksCompleted}
+                            <div style={{ textAlign: 'center' }}>
+                              <Text style={{ fontSize: 11, color: '#8c8c8c', display: 'block' }}>Aktivite</Text>
+                              <Text style={{ fontSize: 20, fontWeight: 600, color: '#1890ff' }}>
+                                {user.activityScore}
                               </Text>
-                              <Text style={{ fontSize: 11, color: '#8c8c8c' }}>Görev</Text>
                             </div>
                           </Col>
                         )}
-                        {user.joinedDays !== undefined && (
+                        {user.performance !== undefined && (
                           <Col span={12}>
-                            <div
-                              style={{
-                                background: '#f0f2f5',
-                                padding: '8px 12px',
-                                borderRadius: 8,
-                                textAlign: 'center',
-                              }}
-                            >
-                              <Text style={{ fontSize: 18, fontWeight: 'bold', display: 'block', color: '#52c41a' }}>
-                                {user.joinedDays}
+                            <div style={{ textAlign: 'center' }}>
+                              <Text style={{ fontSize: 11, color: '#8c8c8c', display: 'block' }}>Performans</Text>
+                              <Text style={{ fontSize: 20, fontWeight: 600, color: '#52c41a' }}>
+                                {user.performance}
                               </Text>
-                              <Text style={{ fontSize: 11, color: '#8c8c8c' }}>Gün</Text>
                             </div>
                           </Col>
                         )}
                       </Row>
-
-                      {user.lastLogin && (
-                        <div
-                          style={{
-                            marginTop: 12,
-                            padding: '8px 12px',
-                            background: '#f6ffed',
-                            borderRadius: 8,
-                            border: '1px solid #b7eb8f',
-                          }}
-                        >
-                          <Text style={{ fontSize: 11, color: '#52c41a' }}>
-                            <CalendarOutlined /> Son giriş:{' '}
-                            {new Date(user.lastLogin).toLocaleDateString('tr-TR', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </Text>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                </Col>
-              );
-            })}
+                    </>
+                  )}
+                </Card>
+              </Col>
+            ))}
           </Row>
         ) : (
           <List
@@ -846,35 +668,12 @@ export default function UsersPage() {
         )}
 
         {filteredUsers.length === 0 && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '80px 20px',
-              background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-              borderRadius: 16,
-            }}
-          >
-            <div
-              style={{
-                width: 120,
-                height: 120,
-                margin: '0 auto 24px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
-              }}
-            >
-              <UserOutlined style={{ fontSize: 60, color: 'white' }} />
-            </div>
-            <Title level={3} style={{ color: '#667eea', marginBottom: 8 }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <UserOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
+            <Title level={4} style={{ color: '#595959', marginBottom: 8 }}>
               Kullanıcı Bulunamadı
             </Title>
-            <Text style={{ fontSize: 15, color: '#8c8c8c' }}>
-              🔍 Arama kriterlerinizi değiştirmeyi deneyin veya yeni kullanıcı ekleyin
-            </Text>
+            <Text type="secondary">Arama kriterlerinizi değiştirmeyi deneyin</Text>
           </div>
         )}
       </Card>
