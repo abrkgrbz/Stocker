@@ -5,7 +5,7 @@
  * Standalone page without sidebar/header
  */
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown } from 'antd';
 import {
