@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Layout, Menu, Avatar, Dropdown, Spin } from 'antd';
 import {
   DashboardOutlined,
@@ -35,6 +35,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Initialize SignalR notification hub
   useNotificationHub();
@@ -243,10 +244,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </Dropdown>
         </Header>
 
-        <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-          <div style={{ padding: 24, background: '#fff', minHeight: 360 }}>
-            {children}
-          </div>
+        <Content style={{ overflow: 'initial' }}>
+          {pathname === '/' ? (
+            children
+          ) : (
+            <div style={{ margin: '24px 16px 0' }}>
+              <div style={{ padding: 24, background: '#fff', minHeight: 360, borderRadius: 8 }}>
+                {children}
+              </div>
+            </div>
+          )}
         </Content>
       </Layout>
     </Layout>
