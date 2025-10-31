@@ -36,6 +36,7 @@ import {
 } from '@ant-design/icons';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';
 import { RoleModal } from '@/features/roles/components/RoleModal';
+import { RoleDetailsDrawer } from '@/features/roles/components/RoleDetailsDrawer';
 import {
   parsePermission,
   getPermissionLabel,
@@ -48,9 +49,16 @@ const { Title, Text, Paragraph } = Typography;
 export default function RolesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const { data: roles, isLoading } = useRoles();
   const deleteRoleMutation = useDeleteRole();
+
+  const handleViewDetails = (role: Role) => {
+    setSelectedRole(role);
+    setDetailsDrawerOpen(true);
+  };
 
   const handleCreate = () => {
     setEditingRole(null);
@@ -294,11 +302,13 @@ export default function RolesPage() {
                 <Card
                   hoverable
                   bordered={false}
+                  onClick={() => handleViewDetails(role)}
                   style={{
                     borderRadius: 12,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     transition: 'all 0.3s ease',
                     height: '100%',
+                    cursor: 'pointer',
                   }}
                   bodyStyle={{ padding: 20 }}
                 >
@@ -314,7 +324,11 @@ export default function RolesPage() {
                       {getRoleIcon(role)}
                     </Avatar>
                     <Dropdown menu={{ items: getMenuItems(role) }} trigger={['click']}>
-                      <Button type="text" icon={<MoreOutlined />} />
+                      <Button
+                        type="text"
+                        icon={<MoreOutlined />}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </Dropdown>
                   </div>
 
@@ -407,7 +421,10 @@ export default function RolesPage() {
                           type="text"
                           size="small"
                           icon={<EditOutlined />}
-                          onClick={() => handleEdit(role)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(role);
+                          }}
                           disabled={role.isSystemRole}
                         />
                       </Tooltip>
@@ -417,7 +434,10 @@ export default function RolesPage() {
                           size="small"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(role)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(role);
+                          }}
                           disabled={role.isSystemRole}
                         />
                       </Tooltip>
@@ -440,6 +460,15 @@ export default function RolesPage() {
         onClose={() => {
           setModalOpen(false);
           setEditingRole(null);
+        }}
+      />
+
+      <RoleDetailsDrawer
+        role={selectedRole}
+        open={detailsDrawerOpen}
+        onClose={() => {
+          setDetailsDrawerOpen(false);
+          setSelectedRole(null);
         }}
       />
     </div>
