@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/crm', '/sales', '/inventory', '/finance', '/settings']
+  const protectedRoutes = ['/app', '/crm', '/sales', '/inventory', '/finance', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Public routes that don't require auth
