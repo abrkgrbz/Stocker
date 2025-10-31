@@ -1,12 +1,13 @@
 'use client';
 
 /**
- * Main Dashboard Landing Page
- * Modern module selection interface
+ * App Home - Module Selection Page
+ * Standalone page without sidebar/header
  */
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Typography, Badge, Tooltip } from 'antd';
+import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown } from 'antd';
 import {
   MessageOutlined,
   CalendarOutlined,
@@ -15,14 +16,12 @@ import {
   DashboardOutlined,
   AppstoreOutlined,
   SettingOutlined,
-  PieChartOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  CustomerServiceOutlined,
-  GiftOutlined,
   ThunderboltOutlined,
   RocketOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
+import { useAuth } from '@/lib/auth';
+import { useTenant } from '@/lib/tenant';
 
 const { Title, Text } = Typography;
 
@@ -38,8 +37,22 @@ interface ModuleCard {
   disabled?: boolean;
 }
 
-export default function DashboardHomePage() {
+export default function AppHomePage() {
   const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { tenant } = useTenant();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  // Don't render until authenticated
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   const modules: ModuleCard[] = [
     {
@@ -116,10 +129,32 @@ export default function DashboardHomePage() {
     router.push(module.path);
   };
 
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profil',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Çıkış Yap',
+      danger: true,
+    },
+  ];
+
+  const handleUserMenuClick = (key: string) => {
+    if (key === 'logout') {
+      logout();
+    } else if (key === 'profile') {
+      router.push('/profile');
+    }
+  };
+
   return (
     <div
       style={{
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: '48px 24px',
         display: 'flex',
@@ -127,7 +162,53 @@ export default function DashboardHomePage() {
         alignItems: 'center',
       }}
     >
-      {/* Header */}
+      {/* Header with User Menu */}
+      <div
+        style={{
+          maxWidth: 1200,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 32,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Text
+            style={{
+              color: 'white',
+              fontSize: 24,
+              fontWeight: 700,
+            }}
+          >
+            {tenant?.name || 'Stocker'}
+          </Text>
+        </div>
+
+        <Dropdown
+          menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
+          placement="bottomRight"
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 24,
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
+            <span style={{ color: 'white', fontWeight: 500 }}>
+              {user?.firstName} {user?.lastName}
+            </span>
+          </div>
+        </Dropdown>
+      </div>
+
+      {/* Welcome Header */}
       <div style={{ textAlign: 'center', marginBottom: 48, maxWidth: 800 }}>
         <Title
           level={1}
