@@ -58,9 +58,9 @@ export default function AppHomePage() {
     {
       id: 'messaging',
       title: 'Mesajlaşma',
-      icon: <MessageOutlined style={{ fontSize: 48 }} />,
-      color: '#FF6B35',
-      gradient: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)',
+      icon: <MessageOutlined />,
+      color: '#c026d3',
+      gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
       path: '/messaging',
       description: 'İletişim ve mesajlaşma',
       disabled: true,
@@ -68,9 +68,9 @@ export default function AppHomePage() {
     {
       id: 'calendar',
       title: 'Takvim',
-      icon: <CalendarOutlined style={{ fontSize: 48 }} />,
-      color: '#9B51E0',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: <CalendarOutlined />,
+      color: '#7c3aed',
+      gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
       path: '/calendar',
       description: 'Etkinlik ve toplantılar',
       disabled: true,
@@ -78,9 +78,9 @@ export default function AppHomePage() {
     {
       id: 'contacts',
       title: 'Kontaklar',
-      icon: <UserOutlined style={{ fontSize: 48 }} />,
-      color: '#2ECC71',
-      gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+      icon: <UserOutlined />,
+      color: '#0891b2',
+      gradient: 'linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)',
       path: '/contacts',
       description: 'Kişiler ve iletişim',
       disabled: true,
@@ -88,9 +88,9 @@ export default function AppHomePage() {
     {
       id: 'crm',
       title: 'CRM',
-      icon: <TeamOutlined style={{ fontSize: 48 }} />,
-      color: '#3498DB',
-      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      icon: <TeamOutlined />,
+      color: '#7c3aed',
+      gradient: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 100%)',
       path: '/crm',
       description: 'Müşteri ilişkileri yönetimi',
       badge: 'Aktif',
@@ -98,27 +98,27 @@ export default function AppHomePage() {
     {
       id: 'dashboards',
       title: 'Dashboards',
-      icon: <DashboardOutlined style={{ fontSize: 48 }} />,
-      color: '#E74C3C',
-      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      icon: <DashboardOutlined />,
+      color: '#c026d3',
+      gradient: 'linear-gradient(135deg, #c026d3 0%, #0891b2 100%)',
       path: '/dashboard',
       description: 'Analiz ve raporlar',
     },
     {
       id: 'apps',
       title: 'Uygulamalar',
-      icon: <AppstoreOutlined style={{ fontSize: 48 }} />,
-      color: '#9B59B6',
-      gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+      icon: <AppstoreOutlined />,
+      color: '#0891b2',
+      gradient: 'linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)',
       path: '/modules',
       description: 'Modül yönetimi',
     },
     {
       id: 'settings',
       title: 'Ayarlar',
-      icon: <SettingOutlined style={{ fontSize: 48 }} />,
-      color: '#34495E',
-      gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)',
+      icon: <SettingOutlined />,
+      color: '#6b7280',
+      gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
       path: '/settings',
       description: 'Sistem ayarları',
     },
@@ -155,7 +155,7 @@ export default function AppHomePage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #0891b2 100%)',
         padding: '48px 24px',
         display: 'flex',
         flexDirection: 'column',
@@ -303,7 +303,7 @@ export default function AppHomePage() {
                     overflow: 'hidden',
                   }}
                   bodyStyle={{
-                    padding: 32,
+                    padding: 24,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -337,31 +337,33 @@ export default function AppHomePage() {
                   {/* Icon with gradient background */}
                   <div
                     style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: 20,
-                      background: module.disabled ? '#d9d9d9' : module.gradient,
+                      width: 56,
+                      height: 56,
+                      borderRadius: 12,
+                      background: module.disabled ? '#e5e7eb' : module.gradient,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      marginBottom: 20,
+                      marginBottom: 16,
                       color: 'white',
                       boxShadow: module.disabled
                         ? 'none'
-                        : `0 8px 16px ${module.color}33`,
+                        : `0 4px 12px ${module.color}40`,
                     }}
                   >
-                    {module.icon}
+                    {React.cloneElement(module.icon as React.ReactElement, {
+                      style: { fontSize: 28 },
+                    })}
                   </div>
 
                   {/* Title */}
                   <Title
-                    level={4}
+                    level={5}
                     style={{
                       margin: 0,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: 600,
-                      color: module.disabled ? '#8c8c8c' : '#262626',
+                      color: module.disabled ? '#9ca3af' : '#1f2937',
                     }}
                   >
                     {module.title}
@@ -371,9 +373,9 @@ export default function AppHomePage() {
                   <Text
                     type="secondary"
                     style={{
-                      marginTop: 8,
-                      fontSize: 13,
-                      color: module.disabled ? '#bfbfbf' : '#8c8c8c',
+                      marginTop: 6,
+                      fontSize: 12,
+                      color: module.disabled ? '#d1d5db' : '#6b7280',
                     }}
                   >
                     {module.description}
