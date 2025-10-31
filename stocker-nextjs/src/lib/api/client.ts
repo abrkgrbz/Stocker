@@ -68,6 +68,19 @@ export class ApiClient {
   }
 
   /**
+   * Get tenant code from cookie (browser only)
+   */
+  private getTenantCode(): string | null {
+    if (typeof window === 'undefined') return null;
+
+    const tenantCodeCookie = document.cookie
+      .split(';')
+      .find(c => c.trim().startsWith('tenant-code='));
+
+    return tenantCodeCookie ? tenantCodeCookie.split('=')[1] : null;
+  }
+
+  /**
    * Generic request method
    */
   private async request<T>(
@@ -84,12 +97,20 @@ export class ApiClient {
 
     const url = `${this.baseUrl}${endpoint}${buildQueryString(params)}`;
 
+    // Add tenant code header if available
+    const tenantCode = this.getTenantCode();
+    const requestHeaders = {
+      ...this.defaultHeaders,
+      ...headers,
+    };
+
+    if (tenantCode) {
+      requestHeaders['X-Tenant-Code'] = tenantCode;
+    }
+
     const config: RequestInit = {
       method,
-      headers: {
-        ...this.defaultHeaders,
-        ...headers,
-      },
+      headers: requestHeaders,
       credentials: 'include', // Include HttpOnly cookies for authentication
       signal,
     };

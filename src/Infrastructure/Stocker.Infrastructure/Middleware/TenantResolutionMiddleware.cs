@@ -38,14 +38,18 @@ public class TenantResolutionMiddleware
             return;
         }
 
-        // Skip tenant resolution for public endpoints
-        if (context.Request.Path.StartsWithSegments("/api/public") ||
+        // Skip tenant resolution for public endpoints (EXCEPT /api/auth/login)
+        // We need tenant resolution for login to include TenantId in JWT claims
+        var isLoginEndpoint = context.Request.Path.Value?.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) == true;
+
+        if (!isLoginEndpoint && (
+            context.Request.Path.StartsWithSegments("/api/public") ||
             context.Request.Path.StartsWithSegments("/api/auth") ||
             context.Request.Path.StartsWithSegments("/api/master") ||
             context.Request.Path.StartsWithSegments("/api/admin") ||
             context.Request.Path.StartsWithSegments("/swagger") ||
             context.Request.Path.Value == "/" ||
-            context.Request.Path.StartsWithSegments("/hangfire"))
+            context.Request.Path.StartsWithSegments("/hangfire")))
         {
             _logger.LogDebug("Skipping tenant resolution for public/master endpoint: {Path}", context.Request.Path);
             await _next(context);
