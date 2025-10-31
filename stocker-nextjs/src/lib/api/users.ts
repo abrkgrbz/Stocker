@@ -131,10 +131,6 @@ export async function getUsers(
     `/api/tenant/users?${params.toString()}`
   );
 
-  // Debug: Log the response structure
-  console.log('📋 Users API Response:', response);
-  console.log('📊 Users Data:', response.data);
-
   return response.data;
 }
 

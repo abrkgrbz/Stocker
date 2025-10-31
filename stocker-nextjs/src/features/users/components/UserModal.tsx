@@ -162,7 +162,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              name="phone"
+              name="phoneNumber"
               label="Telefon (Opsiyonel)"
             >
               <Input

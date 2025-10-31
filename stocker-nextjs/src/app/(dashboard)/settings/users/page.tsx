@@ -52,11 +52,15 @@ import { UserDetailsDrawer } from '@/features/users/components/UserDetailsDrawer
 import {
   getUsers,
   getUserById,
+  createUser,
+  updateUser,
   deleteUser,
   toggleUserStatus,
   getRoleLabel,
   type UserListItem,
   type User,
+  type CreateUserRequest,
+  type UpdateUserRequest,
 } from '@/lib/api/users';
 
 const { Text, Title } = Typography;
@@ -114,6 +118,34 @@ export default function UsersPage() {
     },
   });
 
+  // Create user mutation
+  const createMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      message.success('Kullanıcı başarıyla oluşturuldu');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setModalOpen(false);
+      setEditingUser(null);
+    },
+    onError: (error: any) => {
+      message.error(error?.message || 'Kullanıcı oluşturulurken bir hata oluştu');
+    },
+  });
+
+  // Update user mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) => updateUser(userId, data),
+    onSuccess: () => {
+      message.success('Kullanıcı başarıyla güncellendi');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setModalOpen(false);
+      setEditingUser(null);
+    },
+    onError: (error: any) => {
+      message.error(error?.message || 'Kullanıcı güncellenirken bir hata oluştu');
+    },
+  });
+
   const handleCreateUser = () => {
     setEditingUser(null);
     setModalOpen(true);
@@ -122,6 +154,32 @@ export default function UsersPage() {
   const handleEditUser = (user: UserListItem) => {
     setEditingUser(user);
     setModalOpen(true);
+  };
+
+  const handleSubmitUser = async (values: any) => {
+    if (editingUser) {
+      // Update existing user
+      const updateData: UpdateUserRequest = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phoneNumber: values.phoneNumber,
+      };
+      await updateMutation.mutateAsync({ userId: editingUser.id, data: updateData });
+    } else {
+      // Create new user
+      const createData: CreateUserRequest = {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phoneNumber: values.phoneNumber,
+        role: values.role,
+        department: values.department,
+      };
+      await createMutation.mutateAsync(createData);
+    }
   };
 
   const handleViewDetails = (userId: string) => {
@@ -647,6 +705,7 @@ export default function UsersPage() {
           setModalOpen(false);
           setEditingUser(null);
         }}
+        onSubmit={handleSubmitUser}
       />
 
       {/* User Details Drawer */}
