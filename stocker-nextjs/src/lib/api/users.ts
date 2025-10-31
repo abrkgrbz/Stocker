@@ -130,6 +130,11 @@ export async function getUsers(
   const response = await apiClient.get<{ success: boolean; data: UsersListDto; message: string }>(
     `/api/tenant/users?${params.toString()}`
   );
+
+  // Debug: Log the response structure
+  console.log('📋 Users API Response:', response);
+  console.log('📊 Users Data:', response.data);
+
   return response.data;
 }
 

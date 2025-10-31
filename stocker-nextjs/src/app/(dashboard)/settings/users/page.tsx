@@ -209,8 +209,11 @@ export default function UsersPage() {
     );
   };
 
+  // Get users array safely
+  const users = usersData?.users || [];
+
   // Filter users
-  const filteredUsers = usersData?.users.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const matchesRole =
       filterRole === 'all' ||
       user.roles.some(
@@ -222,15 +225,14 @@ export default function UsersPage() {
       (filterStatus === 'inactive' && !user.isActive);
 
     return matchesRole && matchesStatus;
-  }) || [];
+  });
 
   // Calculate stats
   const stats = {
-    total: usersData?.users.length || 0,
-    active: usersData?.users.filter((u) => u.isActive).length || 0,
-    inactive: usersData?.users.filter((u) => !u.isActive).length || 0,
-    admins:
-      usersData?.users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length || 0,
+    total: users.length,
+    active: users.filter((u) => u.isActive).length,
+    inactive: users.filter((u) => !u.isActive).length,
+    admins: users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length,
   };
 
   if (error) {
