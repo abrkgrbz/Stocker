@@ -39,18 +39,18 @@ interface ModuleCard {
 
 export default function AppHomePage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { tenant } = useTenant();
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  // Don't render until authenticated
-  if (!isAuthenticated || !user) {
+  // Don't render until auth check completes
+  if (isLoading || !isAuthenticated || !user) {
     return null;
   }
 
