@@ -78,26 +78,48 @@ export const AVAILABLE_RESOURCES = [
  * Get all roles for current tenant
  */
 export async function getRoles(): Promise<Role[]> {
-  const response = await apiClient.get<Role[]>('/api/tenant/roles');
-  return response.data;
+  const response = await apiClient.get<{ success: boolean; data: Role[]; message: string }>(
+    '/api/tenant/roles'
+  );
+  return response.data?.data || [];
 }
 
 /**
  * Create a new role
  */
 export async function createRole(data: CreateRoleRequest): Promise<Role> {
-  const response = await apiClient.post<Role>('/api/tenant/roles', data);
-  return response.data;
+  // Convert Permission[] to DTO format expected by backend
+  const requestData = {
+    name: data.name,
+    description: data.description,
+    permissions: data.permissions.map((p) => ({
+      resource: p.resource,
+      permissionType: p.permissionType,
+    })),
+  };
+
+  const response = await apiClient.post<{ success: boolean; data: Role; message: string }>(
+    '/api/tenant/roles',
+    requestData
+  );
+  return response.data?.data as Role;
 }
 
 /**
  * Update an existing role
  */
-export async function updateRole(
-  roleId: string,
-  data: UpdateRoleRequest
-): Promise<void> {
-  await apiClient.put(`/api/tenant/roles/${roleId}`, data);
+export async function updateRole(roleId: string, data: UpdateRoleRequest): Promise<void> {
+  // Convert Permission[] to DTO format expected by backend
+  const requestData = {
+    name: data.name,
+    description: data.description,
+    permissions: data.permissions.map((p) => ({
+      resource: p.resource,
+      permissionType: p.permissionType,
+    })),
+  };
+
+  await apiClient.put(`/api/tenant/roles/${roleId}`, requestData);
 }
 
 /**

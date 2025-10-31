@@ -90,6 +90,7 @@ export class ApiClient {
         ...this.defaultHeaders,
         ...headers,
       },
+      credentials: 'include', // Include HttpOnly cookies for authentication
       signal,
     };
 
