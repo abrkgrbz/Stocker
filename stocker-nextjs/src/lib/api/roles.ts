@@ -78,14 +78,12 @@ export const AVAILABLE_RESOURCES = [
  * Get all roles for current tenant
  */
 export async function getRoles(): Promise<Role[]> {
-  console.log('🔍 Fetching roles from /api/tenant/roles...');
   const response = await apiClient.get<{ success: boolean; data: Role[]; message: string }>(
     '/api/tenant/roles'
   );
-  console.log('📋 Roles API Response:', response);
-  console.log('📊 Roles Data:', response.data);
-  console.log('🎯 Extracted Roles:', response.data?.data);
-  return response.data?.data || [];
+  // Backend returns: { success, data: Role[], message }
+  // We need response.data directly (not response.data.data)
+  return response.data || [];
 }
 
 /**
@@ -106,7 +104,7 @@ export async function createRole(data: CreateRoleRequest): Promise<Role> {
     '/api/tenant/roles',
     requestData
   );
-  return response.data?.data as Role;
+  return response.data as Role;
 }
 
 /**
