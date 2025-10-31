@@ -48,8 +48,8 @@ export default function Verify2FAPage() {
         // Clear 2FA session
         sessionStorage.removeItem('2fa_email');
 
-        // Success - redirect to dashboard
-        router.push('/dashboard');
+        // Success - redirect to home
+        router.push('/');
       } else {
         setError('Geçersiz kod. Lütfen tekrar deneyin.');
       }

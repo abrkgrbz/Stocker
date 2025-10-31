@@ -285,9 +285,9 @@ function LoginForm() {
       console.log('📋 Tenant code:', tenant.code)
       const tenantUrl = getClientTenantUrl(tenant.code)
       console.log('🌐 Tenant URL:', tenantUrl)
-      console.log('🚀 Full redirect URL:', `${tenantUrl}/dashboard`)
+      console.log('🚀 Full redirect URL:', `${tenantUrl}/`)
 
-      window.location.href = `${tenantUrl}/dashboard`
+      window.location.href = `${tenantUrl}/`
     } catch (err) {
       trackAuth({ event: 'login_failure', metadata: { step: 'password', errorType: 'exception' } })
       setError('Giriş yapılırken bir hata oluştu')
