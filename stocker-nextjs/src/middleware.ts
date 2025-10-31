@@ -22,12 +22,12 @@ export function middleware(request: NextRequest) {
   const isTenantDomain = !isRootDomain && !isAuthDomain && subdomain !== 'www'
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/crm', '/sales', '/inventory', '/finance', '/settings']
+  const protectedRoutes = ['/crm', '/sales', '/inventory', '/finance', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Public routes that don't require auth
   const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing']
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || pathname === '/'
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   // Check authentication (tenant-code cookie exists)
   const tenantCodeCookie = request.cookies.get('tenant-code')
@@ -56,19 +56,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  // Tenant subdomain: redirect to dashboard and set tenant header
+  // Tenant subdomain: set tenant header
   if (isTenantDomain && !isDev) {
-    // Redirect root path to dashboard
-    if (pathname === '/') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url, 307)
-    }
-
-    // For all other tenant subdomain requests, set tenant code header
+    // Set tenant code header for all tenant subdomain requests
     const response = NextResponse.next()
     response.headers.set('x-tenant-code', subdomain)
-
     return response
   }
 
