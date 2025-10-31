@@ -281,99 +281,89 @@ export default function AppHomePage() {
       <div style={{ maxWidth: 1200, width: '100%' }}>
         <Row gutter={[24, 24]}>
           {modules.map((module) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={module.id}>
-              <Tooltip
-                title={module.disabled ? 'Yakında aktif olacak' : module.description}
-                placement="top"
+            <Col xs={12} sm={8} md={6} lg={4} key={module.id}>
+              <div
+                onClick={() => handleModuleClick(module)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  cursor: module.disabled ? 'not-allowed' : 'pointer',
+                  opacity: module.disabled ? 0.5 : 1,
+                  transition: 'all 0.3s ease',
+                  padding: '16px',
+                  position: 'relative',
+                }}
+                onMouseEnter={(e) => {
+                  if (!module.disabled) {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!module.disabled) {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
               >
-                <Card
-                  hoverable={!module.disabled}
-                  onClick={() => handleModuleClick(module)}
-                  style={{
-                    borderRadius: 16,
-                    border: 'none',
-                    background: module.disabled ? '#f5f5f5' : 'white',
-                    boxShadow: module.disabled
-                      ? 'none'
-                      : '0 8px 24px rgba(0,0,0,0.12)',
-                    transition: 'all 0.3s ease',
-                    cursor: module.disabled ? 'not-allowed' : 'pointer',
-                    opacity: module.disabled ? 0.5 : 1,
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  bodyStyle={{
-                    padding: 24,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!module.disabled) {
-                      e.currentTarget.style.transform = 'translateY(-8px)';
-                      e.currentTarget.style.boxShadow = '0 16px 32px rgba(0,0,0,0.16)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!module.disabled) {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
-                    }
-                  }}
-                >
-                  {/* Badge */}
-                  {module.badge && (
-                    <Badge.Ribbon
-                      text={module.badge}
-                      color={module.color}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    />
-                  )}
-
-                  {/* Icon logo only */}
-                  {React.cloneElement(module.icon as React.ReactElement, {
-                    style: {
-                      fontSize: 48,
-                      color: module.disabled ? '#d1d5db' : module.color,
-                      marginBottom: 12,
-                    },
-                  })}
-
-                  {/* Description only */}
-                  <Text
+                {/* Badge */}
+                {module.badge && (
+                  <div
                     style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: module.disabled ? '#9ca3af' : '#4b5563',
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      background: module.color,
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: 12,
+                      fontSize: 10,
+                      fontWeight: 600,
                     }}
                   >
-                    {module.description}
-                  </Text>
+                    {module.badge}
+                  </div>
+                )}
 
-                  {/* Disabled overlay */}
-                  {module.disabled && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        background: '#ffa940',
-                        color: 'white',
-                        padding: '4px 12px',
-                        borderRadius: 12,
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Yakında
-                    </div>
-                  )}
-                </Card>
-              </Tooltip>
+                {/* Disabled tag */}
+                {module.disabled && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      background: '#ffa940',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: 12,
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Yakında
+                  </div>
+                )}
+
+                {/* Icon */}
+                {React.cloneElement(module.icon as React.ReactElement, {
+                  style: {
+                    fontSize: 56,
+                    color: module.disabled ? 'rgba(255,255,255,0.5)' : 'white',
+                    marginBottom: 8,
+                  },
+                })}
+
+                {/* Description */}
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: module.disabled ? 'rgba(255,255,255,0.5)' : 'white',
+                  }}
+                >
+                  {module.description}
+                </Text>
+              </div>
             </Col>
           ))}
         </Row>
