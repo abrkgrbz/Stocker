@@ -334,48 +334,21 @@ export default function AppHomePage() {
                     />
                   )}
 
-                  {/* Icon with gradient background */}
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 12,
-                      background: module.disabled ? '#e5e7eb' : module.gradient,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 16,
-                      color: 'white',
-                      boxShadow: module.disabled
-                        ? 'none'
-                        : `0 4px 12px ${module.color}40`,
-                    }}
-                  >
-                    {React.cloneElement(module.icon as React.ReactElement, {
-                      style: { fontSize: 28 },
-                    })}
-                  </div>
+                  {/* Icon logo only */}
+                  {React.cloneElement(module.icon as React.ReactElement, {
+                    style: {
+                      fontSize: 48,
+                      color: module.disabled ? '#d1d5db' : module.color,
+                      marginBottom: 12,
+                    },
+                  })}
 
-                  {/* Title */}
-                  <Title
-                    level={5}
-                    style={{
-                      margin: 0,
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: module.disabled ? '#9ca3af' : '#1f2937',
-                    }}
-                  >
-                    {module.title}
-                  </Title>
-
-                  {/* Description */}
+                  {/* Description only */}
                   <Text
-                    type="secondary"
                     style={{
-                      marginTop: 6,
-                      fontSize: 12,
-                      color: module.disabled ? '#d1d5db' : '#6b7280',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: module.disabled ? '#9ca3af' : '#4b5563',
                     }}
                   >
                     {module.description}
