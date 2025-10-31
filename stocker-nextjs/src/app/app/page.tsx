@@ -239,23 +239,37 @@ export default function AppHomePage() {
           maxWidth: 1200,
           width: '100%',
           marginBottom: 32,
-          borderRadius: 12,
-          background: 'rgba(231, 76, 60, 0.1)',
-          border: '1px solid rgba(231, 76, 60, 0.3)',
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%)',
+          border: '3px solid #E74C3C',
+          boxShadow: '0 8px 32px rgba(231, 76, 60, 0.3), 0 0 0 1px rgba(231, 76, 60, 0.1)',
           backdropFilter: 'blur(10px)',
         }}
-        bodyStyle={{ padding: '16px 24px' }}
+        bodyStyle={{ padding: '24px 32px' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ThunderboltOutlined style={{ fontSize: 24, color: '#E74C3C' }} />
-          <div>
-            <Text strong style={{ color: '#E74C3C', fontSize: 16 }}>
-              Aktivasyon e-postası gönderildi!
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(231, 76, 60, 0.4)',
+              flexShrink: 0,
+            }}
+          >
+            <ThunderboltOutlined style={{ fontSize: 32, color: 'white' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Text strong style={{ color: '#E74C3C', fontSize: 20, display: 'block', marginBottom: 8 }}>
+              ⚡ Aktivasyon e-postası gönderildi!
             </Text>
-            <br />
-            <Text style={{ color: 'rgba(0,0,0,0.65)' }}>
-              Veri tabanınızın geçerliliği süresi: <strong>3 hours</strong>.{' '}
-              <a href="#" style={{ color: '#E74C3C' }}>
+            <Text style={{ color: '#2c3e50', fontSize: 15, display: 'block' }}>
+              Veri tabanınızın geçerliliği süresi: <strong style={{ color: '#E74C3C' }}>3 hours</strong>.{' '}
+              <a href="#" style={{ color: '#E74C3C', fontWeight: 600, textDecoration: 'underline' }}>
                 E-posta tarafınıza ulaşmadı mı?
               </a>
             </Text>
