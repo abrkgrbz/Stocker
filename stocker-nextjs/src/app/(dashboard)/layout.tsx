@@ -69,7 +69,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   const menuItems = [
     {
-      key: '/dashboard',
+      key: '/',
       icon: <DashboardOutlined />,
       label: 'Ana Sayfa',
     },
@@ -210,7 +210,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
         <Menu
           mode="inline"
-          defaultSelectedKeys={['/dashboard']}
+          defaultSelectedKeys={['/']}
           defaultOpenKeys={['crm']}
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
