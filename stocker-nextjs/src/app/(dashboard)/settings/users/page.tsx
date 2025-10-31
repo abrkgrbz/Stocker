@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Ultra-Modern User Management Page
- * Beautiful, visual, and highly interactive user management interface
+ * User Management Page - API Integrated
+ * Real-time user management with comprehensive features
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   Row,
@@ -16,17 +17,15 @@ import {
   Tag,
   Dropdown,
   Space,
-  Statistic,
-  List,
   Typography,
   Badge,
   message,
   Select,
   Modal,
   Segmented,
-  Progress,
-  Tooltip,
+  List,
   Divider,
+  Spin,
 } from 'antd';
 import {
   UserOutlined,
@@ -39,180 +38,129 @@ import {
   UnlockOutlined,
   MailOutlined,
   PhoneOutlined,
-  CalendarOutlined,
   TeamOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  FilterOutlined,
   AppstoreOutlined,
   BarsOutlined,
-  RiseOutlined,
-  TrophyOutlined,
-  FireOutlined,
-  ThunderboltOutlined,
-  StarOutlined,
-  ClockCircleOutlined,
   SafetyOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
+import { UserDetailsDrawer } from '@/features/users/components/UserDetailsDrawer';
+import {
+  getUsers,
+  getUserById,
+  deleteUser,
+  toggleUserStatus,
+  getRoleLabel,
+  type UserListItem,
+  type User,
+} from '@/lib/api/users';
 
 const { Text, Title } = Typography;
 const { confirm } = Modal;
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  isActive: boolean;
-  phone?: string;
-  department?: string;
-  lastLogin?: string;
-  createdAt: string;
-  avatar?: string;
-  activityScore?: number; // 0-100
-  tasksCompleted?: number;
-  performance?: number; // 0-100
-  joinedDays?: number;
-}
-
-// Enhanced mock data with activity metrics
-const mockUsers: User[] = [
-  {
-    id: '1',
-    username: 'admin',
-    email: 'admin@example.com',
-    firstName: 'Ahmet',
-    lastName: 'Yılmaz',
-    role: 'FirmaYöneticisi',
-    isActive: true,
-    phone: '+90 555 123 4567',
-    department: 'Yönetim',
-    lastLogin: '2025-01-29T15:30:00Z',
-    createdAt: '2024-01-15T10:30:00Z',
-    activityScore: 95,
-    tasksCompleted: 248,
-    performance: 98,
-    joinedDays: 379,
-  },
-  {
-    id: '2',
-    username: 'manager',
-    email: 'mehmet.demir@example.com',
-    firstName: 'Mehmet',
-    lastName: 'Demir',
-    role: 'Yönetici',
-    isActive: true,
-    phone: '+90 555 234 5678',
-    department: 'Satış',
-    lastLogin: '2025-01-29T14:20:00Z',
-    createdAt: '2024-02-20T14:20:00Z',
-    activityScore: 88,
-    tasksCompleted: 167,
-    performance: 92,
-    joinedDays: 343,
-  },
-  {
-    id: '3',
-    username: 'ayse.kara',
-    email: 'ayse.kara@example.com',
-    firstName: 'Ayşe',
-    lastName: 'Kara',
-    role: 'Kullanıcı',
-    isActive: true,
-    department: 'Muhasebe',
-    lastLogin: '2025-01-28T09:15:00Z',
-    createdAt: '2024-03-10T11:00:00Z',
-    activityScore: 76,
-    tasksCompleted: 134,
-    performance: 85,
-    joinedDays: 325,
-  },
-  {
-    id: '4',
-    username: 'fatma.yildirim',
-    email: 'fatma.yildirim@example.com',
-    firstName: 'Fatma',
-    lastName: 'Yıldırım',
-    role: 'Kullanıcı',
-    isActive: false,
-    phone: '+90 555 345 6789',
-    department: 'İnsan Kaynakları',
-    lastLogin: '2025-01-20T16:45:00Z',
-    createdAt: '2024-04-05T13:20:00Z',
-    activityScore: 45,
-    tasksCompleted: 89,
-    performance: 68,
-    joinedDays: 299,
-  },
-  {
-    id: '5',
-    username: 'can.ozturk',
-    email: 'can.ozturk@example.com',
-    firstName: 'Can',
-    lastName: 'Öztürk',
-    role: 'Kullanıcı',
-    isActive: true,
-    phone: '+90 555 456 7890',
-    department: 'Satış',
-    lastLogin: '2025-01-29T10:00:00Z',
-    createdAt: '2024-05-12T09:30:00Z',
-    activityScore: 82,
-    tasksCompleted: 145,
-    performance: 88,
-    joinedDays: 262,
-  },
-];
-
 export default function UsersPage() {
+  const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  // Fetch users list
+  const {
+    data: usersData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['users', searchText],
+    queryFn: () => getUsers(1, 100, searchText || undefined),
+  });
+
+  // Fetch selected user details
+  const { data: selectedUserDetails } = useQuery({
+    queryKey: ['user', selectedUserId],
+    queryFn: () => getUserById(selectedUserId!),
+    enabled: !!selectedUserId && detailsDrawerOpen,
+  });
+
+  // Delete user mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      message.success('Kullanıcı başarıyla silindi');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: () => {
+      message.error('Kullanıcı silinirken bir hata oluştu');
+    },
+  });
+
+  // Toggle user status mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: toggleUserStatus,
+    onSuccess: (result) => {
+      message.success(result.message);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: () => {
+      message.error('Kullanıcı durumu değiştirilirken bir hata oluştu');
+    },
+  });
 
   const handleCreateUser = () => {
     setEditingUser(null);
     setModalOpen(true);
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserListItem) => {
     setEditingUser(user);
     setModalOpen(true);
   };
 
-  const handleToggleStatus = (user: User) => {
+  const handleViewDetails = (userId: string) => {
+    setSelectedUserId(userId);
+    setDetailsDrawerOpen(true);
+  };
+
+  const handleToggleStatus = (user: UserListItem) => {
     confirm({
       title: user.isActive ? 'Kullanıcıyı Devre Dışı Bırak' : 'Kullanıcıyı Aktif Et',
       content: `${user.firstName} ${user.lastName} kullanıcısını ${
         user.isActive ? 'devre dışı bırakmak' : 'aktif etmek'
       } istediğinizden emin misiniz?`,
       onOk: () => {
-        message.success(
-          `${user.firstName} ${user.lastName} ${user.isActive ? 'devre dışı bırakıldı' : 'aktif edildi'}`
-        );
+        toggleStatusMutation.mutate(user.id);
       },
     });
   };
 
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = (user: UserListItem) => {
     confirm({
       title: 'Kullanıcıyı Sil',
       content: `${user.firstName} ${user.lastName} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       onOk: () => {
-        message.success(`${user.firstName} ${user.lastName} silindi`);
+        deleteMutation.mutate(user.id);
       },
     });
   };
 
-  const getUserMenu = (user: User) => ({
+  const getUserMenu = (user: UserListItem) => ({
     items: [
+      {
+        key: 'view',
+        label: 'Detayları Görüntüle',
+        icon: <EyeOutlined />,
+        onClick: () => handleViewDetails(user.id),
+      },
       {
         key: 'edit',
         label: 'Düzenle',
@@ -233,49 +181,69 @@ export default function UsersPage() {
         label: 'Sil',
         icon: <DeleteOutlined />,
         danger: true,
-        disabled: user.role === 'FirmaYöneticisi',
+        disabled: user.roles.includes('FirmaYöneticisi') || user.roles.includes('Admin'),
         onClick: () => handleDeleteUser(user),
       },
     ],
   });
 
-  const getRoleBadge = (role: string) => {
-    const config = {
+  const getRoleBadge = (roles: string[]) => {
+    if (roles.length === 0) return <Tag>Rol Yok</Tag>;
+
+    const primaryRole = roles[0];
+    const config: Record<string, { color: string; label: string }> = {
       FirmaYöneticisi: { color: 'red', label: 'Admin' },
+      Admin: { color: 'red', label: 'Admin' },
       Yönetici: { color: 'blue', label: 'Yönetici' },
+      Manager: { color: 'blue', label: 'Yönetici' },
       Kullanıcı: { color: 'default', label: 'Kullanıcı' },
+      User: { color: 'default', label: 'Kullanıcı' },
     };
-    const { color, label } = config[role as keyof typeof config] || config.Kullanıcı;
-    return <Tag color={color}>{label}</Tag>;
+
+    const { color, label } = config[primaryRole] || { color: 'default', label: getRoleLabel(primaryRole) };
+    return (
+      <>
+        <Tag color={color}>{label}</Tag>
+        {roles.length > 1 && <Tag>+{roles.length - 1}</Tag>}
+      </>
+    );
   };
 
-  const filteredUsers = mockUsers.filter((user) => {
-    const matchesSearch =
-      user.firstName.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.department?.toLowerCase().includes(searchText.toLowerCase());
-
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
+  // Filter users
+  const filteredUsers = usersData?.users.filter((user) => {
+    const matchesRole =
+      filterRole === 'all' ||
+      user.roles.some(
+        (r) => r === filterRole || getRoleLabel(r).toLowerCase() === filterRole.toLowerCase()
+      );
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && user.isActive) ||
       (filterStatus === 'inactive' && !user.isActive);
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+    return matchesRole && matchesStatus;
+  }) || [];
 
+  // Calculate stats
   const stats = {
-    total: mockUsers.length,
-    active: mockUsers.filter((u) => u.isActive).length,
-    inactive: mockUsers.filter((u) => !u.isActive).length,
-    admins: mockUsers.filter((u) => u.role === 'FirmaYöneticisi').length,
+    total: usersData?.users.length || 0,
+    active: usersData?.users.filter((u) => u.isActive).length || 0,
+    inactive: usersData?.users.filter((u) => !u.isActive).length || 0,
+    admins:
+      usersData?.users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length || 0,
   };
+
+  if (error) {
+    return (
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Text type="danger">Kullanıcılar yüklenirken bir hata oluştu</Text>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Sophisticated Stats Cards */}
+      {/* Stats Cards */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card
@@ -427,7 +395,7 @@ export default function UsersPage() {
         </Col>
       </Row>
 
-      {/* Main Card - Professional */}
+      {/* Main Card */}
       <Card
         style={{
           borderRadius: 8,
@@ -453,7 +421,7 @@ export default function UsersPage() {
           </AdminOnly>
         }
       >
-        {/* Professional Filters */}
+        {/* Filters */}
         <div style={{ marginBottom: 24 }}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={24} md={10}>
@@ -508,18 +476,30 @@ export default function UsersPage() {
           </Row>
         </div>
 
-        {/* Professional User Cards */}
-        {viewMode === 'grid' ? (
+        {/* Loading State */}
+        {isLoading && (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>
+              <Text type="secondary">Kullanıcılar yükleniyor...</Text>
+            </div>
+          </div>
+        )}
+
+        {/* User Cards - Grid View */}
+        {!isLoading && viewMode === 'grid' && (
           <Row gutter={[16, 16]}>
             {filteredUsers.map((user) => (
               <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
                 <Card
                   hoverable
+                  onClick={() => handleViewDetails(user.id)}
                   style={{
                     borderRadius: 8,
                     border: '1px solid #f0f0f0',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                     height: '100%',
+                    cursor: 'pointer',
                   }}
                   bodyStyle={{ padding: 20 }}
                 >
@@ -538,7 +518,7 @@ export default function UsersPage() {
                     </Avatar>
                     <AdminOnly>
                       <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                        <Button type="text" icon={<MoreOutlined />} />
+                        <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
                       </Dropdown>
                     </AdminOnly>
                   </div>
@@ -553,7 +533,7 @@ export default function UsersPage() {
 
                   {/* Role and Status */}
                   <div style={{ marginBottom: 16 }}>
-                    {getRoleBadge(user.role)}
+                    {getRoleBadge(user.roles)}
                     <Badge
                       status={user.isActive ? 'success' : 'default'}
                       text={user.isActive ? 'Aktif' : 'Pasif'}
@@ -571,12 +551,6 @@ export default function UsersPage() {
                         {user.email}
                       </Text>
                     </div>
-                    {user.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <PhoneOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                        <Text style={{ fontSize: 13 }}>{user.phone}</Text>
-                      </div>
-                    )}
                     {user.department && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <TeamOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
@@ -584,48 +558,24 @@ export default function UsersPage() {
                       </div>
                     )}
                   </Space>
-
-                  {/* Performance Stats */}
-                  {(user.activityScore !== undefined || user.performance !== undefined) && (
-                    <>
-                      <Divider style={{ margin: '16px 0' }} />
-                      <Row gutter={8}>
-                        {user.activityScore !== undefined && (
-                          <Col span={12}>
-                            <div style={{ textAlign: 'center' }}>
-                              <Text style={{ fontSize: 11, color: '#8c8c8c', display: 'block' }}>Aktivite</Text>
-                              <Text style={{ fontSize: 20, fontWeight: 600, color: '#1890ff' }}>
-                                {user.activityScore}
-                              </Text>
-                            </div>
-                          </Col>
-                        )}
-                        {user.performance !== undefined && (
-                          <Col span={12}>
-                            <div style={{ textAlign: 'center' }}>
-                              <Text style={{ fontSize: 11, color: '#8c8c8c', display: 'block' }}>Performans</Text>
-                              <Text style={{ fontSize: 20, fontWeight: 600, color: '#52c41a' }}>
-                                {user.performance}
-                              </Text>
-                            </div>
-                          </Col>
-                        )}
-                      </Row>
-                    </>
-                  )}
                 </Card>
               </Col>
             ))}
           </Row>
-        ) : (
+        )}
+
+        {/* User List - List View */}
+        {!isLoading && viewMode === 'list' && (
           <List
             dataSource={filteredUsers}
             renderItem={(user) => (
               <List.Item
+                onClick={() => handleViewDetails(user.id)}
+                style={{ cursor: 'pointer' }}
                 actions={[
                   <AdminOnly key="actions">
                     <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                      <Button type="text" icon={<MoreOutlined />} />
+                      <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
                     </Dropdown>
                   </AdminOnly>,
                 ]}
@@ -647,7 +597,7 @@ export default function UsersPage() {
                       <span>
                         {user.firstName} {user.lastName}
                       </span>
-                      {getRoleBadge(user.role)}
+                      {getRoleBadge(user.roles)}
                       <Badge
                         status={user.isActive ? 'success' : 'error'}
                         text={user.isActive ? 'Aktif' : 'Pasif'}
@@ -661,11 +611,6 @@ export default function UsersPage() {
                         <span>
                           <MailOutlined /> {user.email}
                         </span>
-                        {user.phone && (
-                          <span>
-                            <PhoneOutlined /> {user.phone}
-                          </span>
-                        )}
                         {user.department && (
                           <span>
                             <TeamOutlined /> {user.department}
@@ -680,7 +625,8 @@ export default function UsersPage() {
           />
         )}
 
-        {filteredUsers.length === 0 && (
+        {/* Empty State */}
+        {!isLoading && filteredUsers.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             <UserOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
             <Title level={4} style={{ color: '#595959', marginBottom: 8 }}>
@@ -698,6 +644,16 @@ export default function UsersPage() {
         onClose={() => {
           setModalOpen(false);
           setEditingUser(null);
+        }}
+      />
+
+      {/* User Details Drawer */}
+      <UserDetailsDrawer
+        user={selectedUserDetails || null}
+        open={detailsDrawerOpen}
+        onClose={() => {
+          setDetailsDrawerOpen(false);
+          setSelectedUserId(null);
         }}
       />
     </div>
