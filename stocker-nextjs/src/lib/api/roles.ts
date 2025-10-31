@@ -134,12 +134,48 @@ export async function deleteRole(roleId: string): Promise<void> {
 /**
  * Parse permission string to Permission object
  * Format: "resource:permissionType" -> { resource, permissionType }
+ * Handles both numeric (e.g., "Users:1") and string enum names (e.g., "Users:Create")
  */
 export function parsePermission(permissionStr: string): Permission {
-  const [resource, permissionType] = permissionStr.split(':');
+  const [resource, permissionTypeStr] = permissionStr.split(':');
+
+  // Try to parse as number first
+  const numericType = parseInt(permissionTypeStr, 10);
+
+  // If it's a valid number, use it directly
+  if (!isNaN(numericType)) {
+    return {
+      resource,
+      permissionType: numericType,
+    };
+  }
+
+  // Otherwise, it's a string enum name - convert to numeric value
+  // Map string enum names to their numeric values
+  const permissionTypeMap: Record<string, PermissionType> = {
+    'View': PermissionType.View,
+    'Create': PermissionType.Create,
+    'Edit': PermissionType.Edit,
+    'Delete': PermissionType.Delete,
+    'Export': PermissionType.Export,
+    'Import': PermissionType.Import,
+    'Approve': PermissionType.Approve,
+    'Execute': PermissionType.Execute,
+  };
+
+  const permissionType = permissionTypeMap[permissionTypeStr];
+
+  if (permissionType === undefined) {
+    console.warn(`Unknown permission type: ${permissionTypeStr}`);
+    return {
+      resource,
+      permissionType: 0, // Default to View
+    };
+  }
+
   return {
     resource,
-    permissionType: parseInt(permissionType, 10),
+    permissionType,
   };
 }
 

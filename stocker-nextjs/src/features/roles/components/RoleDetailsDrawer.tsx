@@ -22,14 +22,7 @@ interface RoleDetailsDrawerProps {
 export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProps) {
   if (!role) return null;
 
-  // Debug: Log raw permission data
-  console.log('🔍 Raw role.permissions:', role.permissions);
-
   const permissions = role.permissions.map(parsePermission);
-
-  // Debug: Log parsed permissions
-  console.log('📊 Parsed permissions:', permissions);
-  console.log('🏷️ PERMISSION_TYPE_LABELS:', PERMISSION_TYPE_LABELS);
 
   // Group permissions by resource
   const groupedPermissions = permissions.reduce((acc, perm) => {
@@ -177,15 +170,11 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
                   {resource}
                 </Text>
                 <Space wrap>
-                  {perms.map((perm, index) => {
-                    const label = PERMISSION_TYPE_LABELS[perm.permissionType];
-                    console.log(`🔖 Permission ${resource}:${perm.permissionType} → Label: "${label}"`);
-                    return (
-                      <Tag key={index} color="blue">
-                        {label}
-                      </Tag>
-                    );
-                  })}
+                  {perms.map((perm, index) => (
+                    <Tag key={index} color="blue">
+                      {PERMISSION_TYPE_LABELS[perm.permissionType]}
+                    </Tag>
+                  ))}
                 </Space>
                 <Divider style={{ margin: '12px 0' }} />
               </div>
