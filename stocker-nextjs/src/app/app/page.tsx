@@ -160,52 +160,55 @@ export default function AppHomePage() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'space-between',
       }}
     >
-      {/* Activation Notification Bar */}
-      <div
-        style={{
-          width: '100%',
-          background: 'rgba(231, 76, 60, 0.95)',
-          backdropFilter: 'blur(10px)',
-          padding: '12px 24px',
-          marginBottom: 24,
-          boxShadow: '0 4px 12px rgba(231, 76, 60, 0.3)',
-        }}
-      >
+      {/* Main Content Wrapper */}
+      <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Activation Notification Bar */}
         <div
           style={{
-            maxWidth: 1200,
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
+            width: '100%',
+            background: 'rgba(231, 76, 60, 0.95)',
+            backdropFilter: 'blur(10px)',
+            padding: '12px 24px',
+            marginBottom: 24,
+            boxShadow: '0 4px 12px rgba(231, 76, 60, 0.3)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <ThunderboltOutlined style={{ fontSize: 20, color: 'white' }} />
-            <Text style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>
-              ⚡ Aktivasyon e-postası gönderildi! Veri tabanınızın geçerliliği süresi:{' '}
-              <strong>3 hours</strong>
-            </Text>
-          </div>
-          <a
-            href="#"
+          <div
             style={{
-              color: 'white',
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: 'underline',
-              whiteSpace: 'nowrap',
+              maxWidth: 1200,
+              margin: '0 auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
             }}
           >
-            E-posta ulaşmadı mı?
-          </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <ThunderboltOutlined style={{ fontSize: 20, color: 'white' }} />
+              <Text style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>
+                ⚡ Aktivasyon e-postası gönderildi! Veri tabanınızın geçerliliği süresi:{' '}
+                <strong>3 hours</strong>
+              </Text>
+            </div>
+            <a
+              href="#"
+              style={{
+                color: 'white',
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: 'underline',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              E-posta ulaşmadı mı?
+            </a>
+          </div>
         </div>
-      </div>
 
-      {/* Header with User Menu */}
+        {/* Header with User Menu */}
       <div
         style={{
           maxWidth: 1200,
@@ -367,9 +370,10 @@ export default function AppHomePage() {
           ))}
         </Row>
       </div>
+      </div>
 
       {/* Footer Info */}
-      <div style={{ marginTop: 48, textAlign: 'center' }}>
+      <div style={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
         <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>
           <RocketOutlined style={{ marginRight: 8 }} />
           Stocker - Modern İşletme Yönetim Sistemi
