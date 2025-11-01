@@ -155,7 +155,7 @@ export default function AppHomePage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #0891b2 100%)',
+        background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
         padding: '48px 24px',
         display: 'flex',
         flexDirection: 'column',
