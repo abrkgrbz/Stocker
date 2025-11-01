@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/landing/Navbar';
 import AnimatedHero from '@/components/landing/AnimatedHero';
 import SocialProof from '@/components/landing/SocialProof';
@@ -19,6 +21,21 @@ import AnimatedBackground from '@/components/landing/AnimatedBackground';
 import StructuredData from '@/components/landing/StructuredData';
 
 export default function Home() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Redirect to /app if user is already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/app');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Show nothing while checking auth or redirecting
+  if (isLoading || isAuthenticated) {
+    return null;
+  }
+
   return (
     <>
       <StructuredData />
