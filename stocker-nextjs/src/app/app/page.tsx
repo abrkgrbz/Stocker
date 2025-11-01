@@ -162,6 +162,49 @@ export default function AppHomePage() {
         alignItems: 'center',
       }}
     >
+      {/* Activation Notification Bar */}
+      <div
+        style={{
+          width: '100%',
+          background: 'rgba(231, 76, 60, 0.95)',
+          backdropFilter: 'blur(10px)',
+          padding: '12px 24px',
+          marginBottom: 24,
+          boxShadow: '0 4px 12px rgba(231, 76, 60, 0.3)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <ThunderboltOutlined style={{ fontSize: 20, color: 'white' }} />
+            <Text style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>
+              ⚡ Aktivasyon e-postası gönderildi! Veri tabanınızın geçerliliği süresi:{' '}
+              <strong>3 hours</strong>
+            </Text>
+          </div>
+          <a
+            href="#"
+            style={{
+              color: 'white',
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: 'underline',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            E-posta ulaşmadı mı?
+          </a>
+        </div>
+      </div>
+
       {/* Header with User Menu */}
       <div
         style={{
@@ -232,50 +275,6 @@ export default function AppHomePage() {
           İşletmenizi yönetmek için bir modül seçin
         </Text>
       </div>
-
-      {/* Warning Banner */}
-      <Card
-        style={{
-          maxWidth: 1200,
-          width: '100%',
-          marginBottom: 32,
-          borderRadius: 16,
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%)',
-          border: '3px solid #E74C3C',
-          boxShadow: '0 8px 32px rgba(231, 76, 60, 0.3), 0 0 0 1px rgba(231, 76, 60, 0.1)',
-          backdropFilter: 'blur(10px)',
-        }}
-        bodyStyle={{ padding: '24px 32px' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(231, 76, 60, 0.4)',
-              flexShrink: 0,
-            }}
-          >
-            <ThunderboltOutlined style={{ fontSize: 32, color: 'white' }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <Text strong style={{ color: '#E74C3C', fontSize: 20, display: 'block', marginBottom: 8 }}>
-              ⚡ Aktivasyon e-postası gönderildi!
-            </Text>
-            <Text style={{ color: '#2c3e50', fontSize: 15, display: 'block' }}>
-              Veri tabanınızın geçerliliği süresi: <strong style={{ color: '#E74C3C' }}>3 hours</strong>.{' '}
-              <a href="#" style={{ color: '#E74C3C', fontWeight: 600, textDecoration: 'underline' }}>
-                E-posta tarafınıza ulaşmadı mı?
-              </a>
-            </Text>
-          </div>
-        </div>
-      </Card>
 
       {/* Module Grid */}
       <div style={{ maxWidth: 1200, width: '100%' }}>
