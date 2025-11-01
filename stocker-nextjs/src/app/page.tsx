@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/lib/auth';
 import Navbar from '@/components/landing/Navbar';
 import AnimatedHero from '@/components/landing/AnimatedHero';
 import SocialProof from '@/components/landing/SocialProof';
