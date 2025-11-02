@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 import {
   Card,
   Row,
@@ -19,7 +20,6 @@ import {
   Space,
   Typography,
   Badge,
-  message,
   Select,
   Modal,
   Segmented,
@@ -69,7 +69,6 @@ import {
 import { getSubscriptionInfo } from '@/lib/api/subscription';
 
 const { Text, Title } = Typography;
-const { confirm } = Modal;
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -123,12 +122,31 @@ export default function UsersPage() {
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      message.success('Kullanıcı başarıyla silindi');
+      Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: 'Kullanıcı başarıyla silindi',
+        confirmButtonColor: '#667eea',
+        timer: 2000,
+      });
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
     },
-    onError: () => {
-      message.error('Kullanıcı silinirken bir hata oluştu');
+    onError: (error: any) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Hata!',
+        html: `<p>${error?.message || 'Kullanıcı silinirken bir hata oluştu'}</p>${
+          error?.response?.data?.errors
+            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
+                Object.entries(error.response.data.errors)
+                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                  .join('<br/>')
+              }</div>`
+            : ''
+        }`,
+        confirmButtonColor: '#667eea',
+      });
     },
   });
 
@@ -136,11 +154,30 @@ export default function UsersPage() {
   const toggleStatusMutation = useMutation({
     mutationFn: toggleUserStatus,
     onSuccess: (result) => {
-      message.success(result.message);
+      Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: result.message,
+        confirmButtonColor: '#667eea',
+        timer: 2000,
+      });
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
-    onError: () => {
-      message.error('Kullanıcı durumu değiştirilirken bir hata oluştu');
+    onError: (error: any) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Hata!',
+        html: `<p>${error?.message || 'Kullanıcı durumu değiştirilirken bir hata oluştu'}</p>${
+          error?.response?.data?.errors
+            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
+                Object.entries(error.response.data.errors)
+                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                  .join('<br/>')
+              }</div>`
+            : ''
+        }`,
+        confirmButtonColor: '#667eea',
+      });
     },
   });
 
@@ -148,14 +185,33 @@ export default function UsersPage() {
   const createMutation = useMutation({
     mutationFn: createUser,
     onSuccess: (response) => {
-      message.success(response.message || 'Kullanıcı başarıyla oluşturuldu');
+      Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: response.message || 'Kullanıcı başarıyla oluşturuldu',
+        confirmButtonColor: '#667eea',
+        timer: 2000,
+      });
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
       setModalOpen(false);
       setEditingUser(null);
     },
     onError: (error: any) => {
-      message.error(error?.message || 'Kullanıcı oluşturulurken bir hata oluştu');
+      Swal.fire({
+        icon: 'error',
+        title: 'Hata!',
+        html: `<p>${error?.message || 'Kullanıcı oluşturulurken bir hata oluştu'}</p>${
+          error?.response?.data?.errors
+            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
+                Object.entries(error.response.data.errors)
+                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                  .join('<br/>')
+              }</div>`
+            : ''
+        }`,
+        confirmButtonColor: '#667eea',
+      });
     },
   });
 
@@ -163,13 +219,32 @@ export default function UsersPage() {
   const updateMutation = useMutation({
     mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) => updateUser(userId, data),
     onSuccess: () => {
-      message.success('Kullanıcı başarıyla güncellendi');
+      Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: 'Kullanıcı başarıyla güncellendi',
+        confirmButtonColor: '#667eea',
+        timer: 2000,
+      });
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setModalOpen(false);
       setEditingUser(null);
     },
     onError: (error: any) => {
-      message.error(error?.message || 'Kullanıcı güncellenirken bir hata oluştu');
+      Swal.fire({
+        icon: 'error',
+        title: 'Hata!',
+        html: `<p>${error?.message || 'Kullanıcı güncellenirken bir hata oluştu'}</p>${
+          error?.response?.data?.errors
+            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
+                Object.entries(error.response.data.errors)
+                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                  .join('<br/>')
+              }</div>`
+            : ''
+        }`,
+        confirmButtonColor: '#667eea',
+      });
     },
   });
 
@@ -215,26 +290,38 @@ export default function UsersPage() {
   };
 
   const handleToggleStatus = (user: UserListItem) => {
-    confirm({
+    Swal.fire({
       title: user.isActive ? 'Kullanıcıyı Devre Dışı Bırak' : 'Kullanıcıyı Aktif Et',
-      content: `${user.firstName} ${user.lastName} kullanıcısını ${
+      text: `${user.firstName} ${user.lastName} kullanıcısını ${
         user.isActive ? 'devre dışı bırakmak' : 'aktif etmek'
       } istediğinizden emin misiniz?`,
-      onOk: () => {
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#667eea',
+      cancelButtonColor: '#d33',
+      confirmButtonText: user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et',
+      cancelButtonText: 'İptal',
+    }).then((result) => {
+      if (result.isConfirmed) {
         toggleStatusMutation.mutate(user.id);
-      },
+      }
     });
   };
 
   const handleDeleteUser = (user: UserListItem) => {
-    confirm({
+    Swal.fire({
       title: 'Kullanıcıyı Sil',
-      content: `${user.firstName} ${user.lastName} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      onOk: () => {
+      text: `${user.firstName} ${user.lastName} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#667eea',
+      confirmButtonText: 'Evet, Sil',
+      cancelButtonText: 'İptal',
+    }).then((result) => {
+      if (result.isConfirmed) {
         deleteMutation.mutate(user.id);
-      },
+      }
     });
   };
 
