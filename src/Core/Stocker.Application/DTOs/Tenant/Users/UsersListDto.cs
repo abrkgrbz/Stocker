@@ -17,7 +17,7 @@ public class UserDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public string Role { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
     public string? Department { get; set; }
     public string? Branch { get; set; }
     public bool IsActive { get; set; }

@@ -45,10 +45,10 @@ public class UserRepository : IUserRepository
             .Select(u => new
             {
                 User = u,
-                RoleName = _tenantContext.UserRoles
+                RoleNames = _tenantContext.UserRoles
                     .Where(ur => ur.UserId == u.Id)
                     .Join(_tenantContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
-                    .FirstOrDefault()
+                    .ToList()
             })
             .ToListAsync(cancellationToken);
 
@@ -60,7 +60,7 @@ public class UserRepository : IUserRepository
             Email = item.User.Email.Value,
             FirstName = item.User.FirstName,
             LastName = item.User.LastName,
-            Role = item.RoleName ?? "User",
+            Roles = item.RoleNames.Count > 0 ? item.RoleNames : new List<string> { "User" },
             Department = item.User.DepartmentId.HasValue
                 ? _tenantContext.Departments.Where(d => d.Id == item.User.DepartmentId.Value).Select(d => d.Name).FirstOrDefault()
                 : null,

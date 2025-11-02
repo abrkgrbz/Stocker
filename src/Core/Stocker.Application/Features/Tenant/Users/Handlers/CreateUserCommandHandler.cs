@@ -99,7 +99,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             Phone = createdUser.Phone?.Value,
             Department = request.Department ?? "Default",
             Branch = request.Branch ?? "Merkez",
-            Role = request.Role,
+            Roles = new List<string> { request.Role },
             IsActive = createdUser.Status == Stocker.Domain.Tenant.Enums.TenantUserStatus.Active,
             CreatedDate = createdUser.CreatedAt
         };

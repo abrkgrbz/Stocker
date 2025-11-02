@@ -66,10 +66,11 @@ export interface LoginHistory {
 }
 
 export interface UsersListDto {
-  users: UserListItem[];
-  totalCount: number;
+  items: UserListItem[];
+  totalItems: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 export interface UserListItem {

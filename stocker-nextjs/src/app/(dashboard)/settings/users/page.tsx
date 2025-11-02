@@ -382,7 +382,7 @@ export default function UsersPage() {
   };
 
   // Get users array safely
-  const users = usersData?.users || [];
+  const users = usersData?.items || [];
 
   // Filter users
   const filteredUsers = users.filter((user) => {
