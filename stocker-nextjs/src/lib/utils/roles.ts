@@ -49,7 +49,12 @@ export interface RolePermissions {
  */
 export function isAdmin(role: string | undefined): boolean {
   if (!role) return false;
-  return role === UserRole.FirmaYoneticisi || role.toLowerCase() === 'firmayöneticisi';
+  const normalizedRole = role.toLowerCase().replace(/ö/g, 'o').replace(/ı/g, 'i');
+  return (
+    role === UserRole.FirmaYoneticisi ||
+    role === 'FirmaYoneticisi' || // Backend version without Turkish chars
+    normalizedRole === 'firmayoneticisi'
+  );
 }
 
 /**
