@@ -207,7 +207,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             email: result.data.email,
             firstName: result.data.fullName?.split(' ')[0] || '',
             lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
-            role: result.data.roles?.[0] || 'User',
+            role: result.data.role || result.data.roles?.[0] || 'User',
             tenantId: result.data.tenantId || '',
             tenantCode: result.data.tenantCode || tenantCode,
           };
