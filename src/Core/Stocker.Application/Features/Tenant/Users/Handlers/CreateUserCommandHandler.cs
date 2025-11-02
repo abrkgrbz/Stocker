@@ -13,13 +13,16 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
 {
     private readonly IUserRepository _userRepository;
     private readonly IMasterDbContext _masterDbContext;
+    private readonly IPasswordService _passwordService;
 
     public CreateUserCommandHandler(
         IUserRepository userRepository,
-        IMasterDbContext masterDbContext)
+        IMasterDbContext masterDbContext,
+        IPasswordService passwordService)
     {
         _userRepository = userRepository;
         _masterDbContext = masterDbContext;
+        _passwordService = passwordService;
     }
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -45,9 +48,18 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
-        // Note: In a real implementation, this would create a MasterUser first and then a TenantUser
-        // For now, we'll use a temporary MasterUserId
-        var masterUserId = Guid.NewGuid();
+        // Validate and hash password
+        var passwordValidation = _passwordService.ValidatePassword(request.Password, request.Username, request.Email);
+        if (passwordValidation.IsFailure)
+        {
+            throw new InvalidOperationException($"Şifre geçersiz: {passwordValidation.Error}");
+        }
+
+        var hashedPassword = _passwordService.HashPassword(request.Password);
+        var passwordHash = _passwordService.GetCombinedHash(hashedPassword);
+
+        // Note: MasterUserId is kept for legacy compatibility but tenant users have independent login
+        var masterUserId = Guid.Empty;
 
         // Create value objects
         var emailResult = Stocker.Domain.Common.ValueObjects.Email.Create(request.Email);
@@ -55,7 +67,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         {
             return new UserDto(); // Should handle error properly
         }
-        
+
         Stocker.Domain.Common.ValueObjects.PhoneNumber? phone = null;
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
@@ -66,11 +78,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
-        // Use factory method to create TenantUser
+        // Use factory method to create TenantUser with password hash
         var user = TenantUser.Create(
             request.TenantId,
             masterUserId,
             request.Username,
+            passwordHash,
             emailResult.Value,
             request.FirstName,
             request.LastName,

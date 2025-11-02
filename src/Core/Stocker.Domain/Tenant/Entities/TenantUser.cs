@@ -11,6 +11,7 @@ public sealed class TenantUser : TenantAggregateRoot
 
     public Guid MasterUserId { get; private set; }
     public string Username { get; private set; }
+    public string PasswordHash { get; private set; }
     public Email Email { get; private set; }
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
@@ -37,6 +38,7 @@ public sealed class TenantUser : TenantAggregateRoot
         Guid tenantId,
         Guid masterUserId,
         string username,
+        string passwordHash,
         Email email,
         string firstName,
         string lastName,
@@ -50,6 +52,7 @@ public sealed class TenantUser : TenantAggregateRoot
     {
         MasterUserId = masterUserId;
         Username = username;
+        PasswordHash = passwordHash;
         Email = email;
         FirstName = firstName;
         LastName = lastName;
@@ -68,6 +71,7 @@ public sealed class TenantUser : TenantAggregateRoot
         Guid tenantId,
         Guid masterUserId,
         string username,
+        string passwordHash,
         Email email,
         string firstName,
         string lastName,
@@ -84,6 +88,11 @@ public sealed class TenantUser : TenantAggregateRoot
             throw new ArgumentException("Username cannot be empty.", nameof(username));
         }
 
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
+        }
+
         if (string.IsNullOrWhiteSpace(firstName))
         {
             throw new ArgumentException("First name cannot be empty.", nameof(firstName));
@@ -98,6 +107,7 @@ public sealed class TenantUser : TenantAggregateRoot
             tenantId,
             masterUserId,
             username,
+            passwordHash,
             email,
             firstName,
             lastName,

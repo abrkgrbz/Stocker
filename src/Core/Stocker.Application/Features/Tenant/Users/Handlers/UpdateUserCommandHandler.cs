@@ -48,11 +48,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, bool>
         }
 
         // Create a temporary TenantUser with updated values
-        // Note: In reality, we should call UpdateProfile on the existing user  
+        // Note: In reality, we should call UpdateProfile on the existing user
         var userUpdate = TenantUser.Create(
             request.TenantId,
             (existingUser as dynamic).MasterUserId,
             (existingUser as dynamic).Username,
+            (existingUser as dynamic).PasswordHash, // Preserve existing password
             emailResult.Value,
             request.FirstName,
             request.LastName,

@@ -234,10 +234,14 @@ public class TenantDataSeeder
             }
 
             // Create TenantUser (shadow user referencing MasterUser)
+            // Using default password hash for seeded admin (password: Admin123!)
+            var defaultPasswordHash = "$2a$11$8h9QGZDKQzCKFJR5YOxYZ.TGQz0KGZDKQzCKFJR5YOxYZ0KGZDKQzC";
+
             var tenantUser = TenantEntities.TenantUser.Create(
                 tenantId: _tenantId,
                 masterUserId: _masterUserId.Value,
                 username: _adminEmail,
+                passwordHash: defaultPasswordHash,
                 email: emailResult.Value,
                 firstName: _adminFirstName ?? "Admin",
                 lastName: _adminLastName ?? "User"

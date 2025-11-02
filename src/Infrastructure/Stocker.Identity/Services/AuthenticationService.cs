@@ -169,6 +169,7 @@ public class AuthenticationService : IAuthenticationService
                 tenantId: tenantId,
                 masterUserId: masterUser.Id,
                 username: masterUser.Username,
+                passwordHash: masterUser.Password.Value, // Use MasterUser's password hash (combined salt+hash)
                 email: masterUser.Email,
                 firstName: masterUser.FirstName,
                 lastName: masterUser.LastName,
@@ -357,10 +358,14 @@ public class AuthenticationService : IAuthenticationService
             tenantPhoneNumber = phoneResult.Value;
         }
 
+        // Get the MasterUser to access password hash
+        var masterUser = await _masterContext.MasterUsers.FindAsync(masterUserResult.User.Id);
+
         var tenantUser = TenantUser.Create(
             tenantId: tenantId,
             masterUserId: masterUserResult.User.Id,
             username: request.Username,
+            passwordHash: masterUser.Password.Value, // Use MasterUser's password hash (combined salt+hash)
             email: tenantEmailResult.Value,
             firstName: request.FirstName,
             lastName: request.LastName,
@@ -374,7 +379,6 @@ public class AuthenticationService : IAuthenticationService
         // await tenantContext.SaveChangesAsync();
 
         // UserTenant iliÅŸkisini ekle
-        var masterUser = await _masterContext.MasterUsers.FindAsync(masterUserResult.User.Id);
         if (masterUser != null)
         {
             masterUser.AddTenant(tenantId, true);

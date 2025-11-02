@@ -149,6 +149,7 @@ public class UserManagementService : IUserManagementService
                 tenantId: tenantId,
                 masterUserId: masterUser.Id,
                 username: masterUser.Username,
+                passwordHash: masterUser.Password.Value, // Use MasterUser's password hash (combined salt+hash)
                 email: masterUser.Email,
                 firstName: masterUser.FirstName,
                 lastName: masterUser.LastName,
