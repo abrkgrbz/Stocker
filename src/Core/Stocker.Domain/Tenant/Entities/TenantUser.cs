@@ -46,9 +46,8 @@ public sealed class TenantUser : TenantAggregateRoot
         string? title = null,
         Guid? departmentId = null,
         Guid? branchId = null,
-        DateTime? hireDate = null)
-    { 
-        SetTenantId(tenantId);
+        DateTime? hireDate = null) : base(Guid.NewGuid(), tenantId)
+    {
         MasterUserId = masterUserId;
         Username = username;
         Email = email;
