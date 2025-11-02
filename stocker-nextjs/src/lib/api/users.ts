@@ -147,12 +147,12 @@ export async function getUserById(userId: string): Promise<User> {
 /**
  * Create a new user
  */
-export async function createUser(data: CreateUserRequest): Promise<UserListItem> {
+export async function createUser(data: CreateUserRequest): Promise<{ data: UserListItem; message: string }> {
   const response = await apiClient.post<{ success: boolean; data: UserListItem; message: string }>(
     '/api/tenant/users',
     data
   );
-  return response.data;
+  return { data: response.data, message: response.message };
 }
 
 /**

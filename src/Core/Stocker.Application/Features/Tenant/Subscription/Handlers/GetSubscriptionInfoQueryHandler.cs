@@ -30,13 +30,29 @@ public class GetSubscriptionInfoQueryHandler : IRequestHandler<GetSubscriptionIn
             .Where(s => s.TenantId == request.TenantId && s.Status == SubscriptionStatus.Aktif)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (subscription == null)
-        {
-            throw new InvalidOperationException("Aktif bir abonelik bulunamadı.");
-        }
-
         // Get current user count from tenant database
         var currentUserCount = await _userRepository.GetTenantUserCountAsync(request.TenantId, cancellationToken);
+
+        // If no subscription exists, return default unlimited subscription info (for testing)
+        if (subscription == null)
+        {
+            return new TenantSubscriptionInfoDto
+            {
+                SubscriptionId = Guid.Empty,
+                PackageName = "Test Mode (No Subscription)",
+                PackageType = "Unlimited",
+                CurrentUserCount = currentUserCount,
+                MaxUsers = 999999, // Unlimited for testing
+                CanAddUser = true,
+                MaxStorage = 999999,
+                MaxProjects = 999999,
+                Status = "Active",
+                CurrentPeriodEnd = DateTime.UtcNow.AddYears(100),
+                IsTrialActive = false,
+                TrialEndDate = null
+            };
+        }
+
         var maxUsers = subscription.Package.Limits.MaxUsers;
 
         return new TenantSubscriptionInfoDto

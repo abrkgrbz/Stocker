@@ -147,8 +147,8 @@ export default function UsersPage() {
   // Create user mutation
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
-      message.success('Kullanıcı başarıyla oluşturuldu');
+    onSuccess: (response) => {
+      message.success(response.message || 'Kullanıcı başarıyla oluşturuldu');
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
       setModalOpen(false);
