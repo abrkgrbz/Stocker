@@ -49,6 +49,8 @@ import {
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
 import { UserDetailsDrawer } from '@/features/users/components/UserDetailsDrawer';
+import { useAuth } from '@/lib/auth';
+import { useRole } from '@/hooks/useRole';
 import {
   getUsers,
   getUserById,
