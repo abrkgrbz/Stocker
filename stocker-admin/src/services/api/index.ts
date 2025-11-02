@@ -8,6 +8,7 @@ export { featureService } from './featureService';
 export { moduleService } from './moduleService';
 export { migrationService } from './migrationService';
 export { systemMonitoringService } from './systemMonitoringService';
+export { systemManagementService } from './systemManagementService';
 
 // Re-export types
 export type {
@@ -86,3 +87,11 @@ export type {
   ServiceHealth,
   ServiceStatus,
 } from './systemMonitoringService';
+
+export type {
+  DockerCacheInfo,
+  DockerCleanupResult,
+  DockerStats,
+  SystemError,
+  ErrorStatistics,
+} from './systemManagementService';

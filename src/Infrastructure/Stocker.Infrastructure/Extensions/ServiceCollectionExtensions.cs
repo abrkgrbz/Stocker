@@ -77,7 +77,10 @@ public static class ServiceCollectionExtensions
         // Add Payment Service
         services.AddHttpClient("Iyzico");
         services.AddScoped<IPaymentService, PaymentService>();
-        
+
+        // Add Docker Management Service
+        services.AddScoped<IDockerManagementService, DockerManagementService>();
+
         // Add Memory Cache for tenant caching
         services.AddMemoryCache();
 

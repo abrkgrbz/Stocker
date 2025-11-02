@@ -1,36 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Form, 
-  Input, 
-  Select, 
-  Switch, 
-  Button, 
-  Tabs, 
-  Space, 
-  Typography, 
-  Divider, 
-  Alert, 
-  Upload, 
-  Radio, 
-  Checkbox, 
-  InputNumber, 
-  TimePicker, 
-  ColorPicker, 
-  Slider, 
-  Tag, 
-  Badge, 
-  List, 
-  Avatar, 
-  Table, 
-  Modal, 
-  Tooltip, 
+import {
+  Card,
+  Row,
+  Col,
+  Form,
+  Input,
+  Select,
+  Switch,
+  Button,
+  Tabs,
+  Space,
+  Typography,
+  Divider,
+  Alert,
+  Upload,
+  Radio,
+  Checkbox,
+  InputNumber,
+  TimePicker,
+  ColorPicker,
+  Slider,
+  Tag,
+  Badge,
+  List,
+  Avatar,
+  Table,
+  Modal,
+  Tooltip,
   Popconfirm,
-  Progress, 
-  message, 
-  notification 
+  Progress,
+  message,
+  notification,
+  Statistic
 } from 'antd';
 import {
   SettingOutlined,
@@ -79,7 +80,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { TwoFactorSettings } from './TwoFactorSettings';
-import { systemMonitoringService } from '../../services/api';
+import { systemMonitoringService, systemManagementService } from '../../services/api';
+import type { DockerStats, SystemError, ErrorStatistics } from '../../services/api';
 
 const { Title, Text, Paragraph, Link } = Typography;
 const { TabPane } = Tabs;
@@ -137,6 +139,11 @@ const SettingsPage: React.FC = () => {
   const [templateForm] = Form.useForm();
   const [systemMetrics, setSystemMetrics] = useState<any>(null);
   const [systemMetricsLoading, setSystemMetricsLoading] = useState(false);
+  const [dockerStats, setDockerStats] = useState<DockerStats | null>(null);
+  const [dockerLoading, setDockerLoading] = useState(false);
+  const [systemErrors, setSystemErrors] = useState<SystemError[]>([]);
+  const [errorStats, setErrorStats] = useState<ErrorStatistics | null>(null);
+  const [errorsLoading, setErrorsLoading] = useState(false);
 
   const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([
     {
@@ -284,6 +291,9 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'system') {
       fetchSystemMetrics();
+    } else if (activeTab === 'system-management') {
+      fetchDockerStats();
+      fetchSystemErrors();
     }
   }, [activeTab]);
 
@@ -297,6 +307,109 @@ const SettingsPage: React.FC = () => {
       message.error('Sistem bilgileri alınamadı');
     } finally {
       setSystemMetricsLoading(false);
+    }
+  };
+
+  const fetchDockerStats = async () => {
+    setDockerLoading(true);
+    try {
+      const stats = await systemManagementService.getDockerStats();
+      setDockerStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch Docker stats:', error);
+      message.error('Docker bilgileri alınamadı');
+    } finally {
+      setDockerLoading(false);
+    }
+  };
+
+  const fetchSystemErrors = async () => {
+    setErrorsLoading(true);
+    try {
+      const [errorsResponse, stats] = await Promise.all([
+        systemManagementService.getSystemErrors({ page: 1, pageSize: 50 }),
+        systemManagementService.getErrorStatistics(),
+      ]);
+      setSystemErrors(errorsResponse.errors);
+      setErrorStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch system errors:', error);
+      message.error('Hata bilgileri alınamadı');
+    } finally {
+      setErrorsLoading(false);
+    }
+  };
+
+  const handleDockerCleanup = async (type: 'build-cache' | 'images' | 'containers' | 'volumes' | 'all') => {
+    const loadingMessage = message.loading('Docker temizliği yapılıyor...', 0);
+    try {
+      let result;
+      switch (type) {
+        case 'build-cache':
+          result = await systemManagementService.cleanDockerBuildCache();
+          break;
+        case 'images':
+          result = await systemManagementService.cleanDockerImages();
+          break;
+        case 'containers':
+          result = await systemManagementService.cleanDockerContainers();
+          break;
+        case 'volumes':
+          result = await systemManagementService.cleanDockerVolumes();
+          break;
+        case 'all':
+          result = await systemManagementService.cleanAllDocker();
+          break;
+      }
+
+      loadingMessage();
+      if (result.success) {
+        notification.success({
+          message: 'Temizlik Başarılı',
+          description: result.message + (result.spaceClaimed ? ` (${result.spaceClaimed} alan kazanıldı)` : ''),
+          duration: 5,
+        });
+        fetchDockerStats(); // Refresh stats
+      } else {
+        message.error(result.message);
+      }
+    } catch (error) {
+      loadingMessage();
+      console.error('Docker cleanup failed:', error);
+      message.error('Docker temizliği sırasında hata oluştu');
+    }
+  };
+
+  const handleResolveError = async (errorId: string) => {
+    try {
+      await systemManagementService.resolveError(errorId);
+      message.success('Hata çözüldü olarak işaretlendi');
+      fetchSystemErrors();
+    } catch (error) {
+      console.error('Failed to resolve error:', error);
+      message.error('Hata işaretlenemedi');
+    }
+  };
+
+  const handleDeleteError = async (errorId: string) => {
+    try {
+      await systemManagementService.deleteError(errorId);
+      message.success('Hata silindi');
+      fetchSystemErrors();
+    } catch (error) {
+      console.error('Failed to delete error:', error);
+      message.error('Hata silinemedi');
+    }
+  };
+
+  const handleClearResolvedErrors = async () => {
+    try {
+      await systemManagementService.clearResolvedErrors();
+      message.success('Çözülmüş hatalar temizlendi');
+      fetchSystemErrors();
+    } catch (error) {
+      console.error('Failed to clear resolved errors:', error);
+      message.error('Hatalar temizlenemedi');
     }
   };
 
@@ -933,6 +1046,434 @@ const SettingsPage: React.FC = () => {
                 </Col>
               ))}
             </Row>
+          </TabPane>
+
+          <TabPane tab="Sistem Yönetimi" key="system-management">
+            <Alert
+              message="Sistem Yönetimi ve Bakım"
+              description="Docker cache temizleme, hata izleme ve sistem bakım işlemleri."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            {/* Docker Management Section */}
+            <Card
+              title={<><DatabaseOutlined /> Docker Yönetimi</>}
+              extra={<Button size="small" icon={<SyncOutlined />} onClick={fetchDockerStats} loading={dockerLoading}>Yenile</Button>}
+              style={{ marginBottom: 16 }}
+            >
+              {dockerLoading ? (
+                <Card loading={true}>Yükleniyor...</Card>
+              ) : dockerStats ? (
+                <>
+                  <Row gutter={[16, 16]}>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Çalışan Container"
+                          value={dockerStats.containers.running}
+                          suffix={`/ ${dockerStats.containers.total}`}
+                          valueStyle={{ color: '#3f8600' }}
+                          prefix={<CheckCircleOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Toplam Image"
+                          value={dockerStats.images.total}
+                          suffix="images"
+                          prefix={<CloudOutlined />}
+                        />
+                        <Text type="secondary" style={{ fontSize: 12 }}>{dockerStats.images.size}</Text>
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Volume Sayısı"
+                          value={dockerStats.volumes.total}
+                          suffix="volumes"
+                          prefix={<DatabaseOutlined />}
+                        />
+                        <Text type="secondary" style={{ fontSize: 12 }}>{dockerStats.volumes.size}</Text>
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Network Sayısı"
+                          value={dockerStats.networks}
+                          suffix="networks"
+                          prefix={<WifiOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Divider orientation="left">
+                    <Space>
+                      <DatabaseOutlined /> Cache Bilgileri
+                    </Space>
+                  </Divider>
+
+                  {dockerStats.cacheInfo && dockerStats.cacheInfo.length > 0 && (
+                    <Table
+                      size="small"
+                      dataSource={dockerStats.cacheInfo}
+                      pagination={false}
+                      columns={[
+                        {
+                          title: 'Tip',
+                          dataIndex: 'type',
+                          key: 'type',
+                          render: (text: string) => <Tag color="blue">{text}</Tag>
+                        },
+                        {
+                          title: 'Toplam',
+                          dataIndex: 'total',
+                          key: 'total',
+                        },
+                        {
+                          title: 'Aktif',
+                          dataIndex: 'active',
+                          key: 'active',
+                          render: (text: string) => <Tag color="green">{text}</Tag>
+                        },
+                        {
+                          title: 'Boyut',
+                          dataIndex: 'size',
+                          key: 'size',
+                          render: (text: string) => <Text strong>{text}</Text>
+                        },
+                        {
+                          title: 'Temizlenebilir',
+                          dataIndex: 'reclaimable',
+                          key: 'reclaimable',
+                          render: (text: string) => <Tag color="orange">{text}</Tag>
+                        },
+                      ]}
+                    />
+                  )}
+
+                  <Divider orientation="left">
+                    <Space>
+                      <DeleteOutlined /> Temizleme İşlemleri
+                    </Space>
+                  </Divider>
+
+                  <Row gutter={[16, 16]}>
+                    <Col span={8}>
+                      <Card size="small" title="Build Cache">
+                        <Paragraph type="secondary" style={{ fontSize: 12 }}>
+                          Kullanılmayan Docker build cache'lerini temizler
+                        </Paragraph>
+                        <Popconfirm
+                          title="Build cache temizlensin mi?"
+                          description="Bu işlem geri alınamaz"
+                          onConfirm={() => handleDockerCleanup('build-cache')}
+                          okText="Evet"
+                          cancelText="Hayır"
+                        >
+                          <Button type="primary" danger block icon={<DeleteOutlined />}>
+                            Build Cache Temizle
+                          </Button>
+                        </Popconfirm>
+                      </Card>
+                    </Col>
+                    <Col span={8}>
+                      <Card size="small" title="Unused Images">
+                        <Paragraph type="secondary" style={{ fontSize: 12 }}>
+                          Kullanılmayan Docker image'larını temizler
+                        </Paragraph>
+                        <Popconfirm
+                          title="Kullanılmayan image'lar silinsin mi?"
+                          description="Container'larda kullanılmayan image'lar silinecek"
+                          onConfirm={() => handleDockerCleanup('images')}
+                          okText="Evet"
+                          cancelText="Hayır"
+                        >
+                          <Button type="primary" danger block icon={<DeleteOutlined />}>
+                            Image Temizle
+                          </Button>
+                        </Popconfirm>
+                      </Card>
+                    </Col>
+                    <Col span={8}>
+                      <Card size="small" title="Volumes">
+                        <Paragraph type="secondary" style={{ fontSize: 12 }}>
+                          Kullanılmayan Docker volume'ları temizler
+                        </Paragraph>
+                        <Popconfirm
+                          title="Kullanılmayan volume'lar silinsin mi?"
+                          description="Bu işlem veri kaybına neden olabilir"
+                          onConfirm={() => handleDockerCleanup('volumes')}
+                          okText="Evet"
+                          cancelText="Hayır"
+                        >
+                          <Button type="primary" danger block icon={<DeleteOutlined />}>
+                            Volume Temizle
+                          </Button>
+                        </Popconfirm>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Divider />
+
+                  <Row justify="center">
+                    <Col>
+                      <Popconfirm
+                        title="Tüm Docker kaynakları temizlensin mi?"
+                        description="Bu işlem tüm kullanılmayan container, image, volume ve cache'leri silecektir. İşlem geri alınamaz!"
+                        onConfirm={() => handleDockerCleanup('all')}
+                        okText="Evet, Tümünü Temizle"
+                        cancelText="Hayır"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button type="primary" danger size="large" icon={<ThunderboltOutlined />}>
+                          TÜM DOCKER KAYNAKLARINI TEMİZLE
+                        </Button>
+                      </Popconfirm>
+                    </Col>
+                  </Row>
+                </>
+              ) : (
+                <Alert
+                  message="Docker Bilgileri Yüklenemedi"
+                  description="Docker bilgilerini yüklerken bir hata oluştu. Sunucu bağlantısını kontrol edin."
+                  type="warning"
+                  showIcon
+                  action={
+                    <Button size="small" type="primary" onClick={fetchDockerStats}>
+                      Tekrar Dene
+                    </Button>
+                  }
+                />
+              )}
+            </Card>
+
+            {/* Error Monitoring Section */}
+            <Card
+              title={<><ExclamationCircleOutlined /> Hata İzleme</>}
+              extra={
+                <Space>
+                  {errorStats && errorStats.unresolved > 0 && (
+                    <Badge count={errorStats.unresolved} overflowCount={999}>
+                      <Button size="small" icon={<BellOutlined />}>
+                        Çözülmemiş Hatalar
+                      </Button>
+                    </Badge>
+                  )}
+                  <Button
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    onClick={handleClearResolvedErrors}
+                    disabled={!errorStats || errorStats.unresolved === errorStats.total}
+                  >
+                    Çözülmüş Hataları Temizle
+                  </Button>
+                  <Button size="small" icon={<SyncOutlined />} onClick={fetchSystemErrors} loading={errorsLoading}>
+                    Yenile
+                  </Button>
+                </Space>
+              }
+            >
+              {errorsLoading ? (
+                <Card loading={true}>Yükleniyor...</Card>
+              ) : errorStats ? (
+                <>
+                  <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Toplam Hata"
+                          value={errorStats.total}
+                          prefix={<ExclamationCircleOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Çözülmemiş"
+                          value={errorStats.unresolved}
+                          valueStyle={{ color: '#cf1322' }}
+                          prefix={<CloseCircleOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Statistic
+                          title="Son 24 Saat"
+                          value={errorStats.last24Hours}
+                          valueStyle={{ color: errorStats.last24Hours > 10 ? '#cf1322' : '#3f8600' }}
+                          prefix={<ClockCircleOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col span={6}>
+                      <Card size="small">
+                        <Space direction="vertical" size={0}>
+                          <Text type="secondary">Seviyeye Göre</Text>
+                          <Space>
+                            <Tag color="red">Error: {errorStats.byLevel.error}</Tag>
+                            <Tag color="orange">Warning: {errorStats.byLevel.warning}</Tag>
+                            <Tag color="blue">Info: {errorStats.byLevel.info}</Tag>
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Table
+                    dataSource={systemErrors}
+                    rowKey="id"
+                    pagination={{ pageSize: 10 }}
+                    size="small"
+                    columns={[
+                      {
+                        title: 'Seviye',
+                        dataIndex: 'level',
+                        key: 'level',
+                        width: 90,
+                        render: (level: string) => {
+                          const config = {
+                            error: { color: 'red', icon: <CloseCircleOutlined /> },
+                            warning: { color: 'orange', icon: <ExclamationCircleOutlined /> },
+                            info: { color: 'blue', icon: <InfoCircleOutlined /> },
+                          }[level] || { color: 'default', icon: <InfoCircleOutlined /> };
+
+                          return <Tag color={config.color} icon={config.icon}>{level.toUpperCase()}</Tag>;
+                        },
+                      },
+                      {
+                        title: 'Zaman',
+                        dataIndex: 'timestamp',
+                        key: 'timestamp',
+                        width: 150,
+                        render: (timestamp: string) => dayjs(timestamp).format('DD.MM.YYYY HH:mm:ss'),
+                      },
+                      {
+                        title: 'Kaynak',
+                        dataIndex: 'source',
+                        key: 'source',
+                        width: 120,
+                        render: (source: string) => <Tag color="purple">{source}</Tag>,
+                      },
+                      {
+                        title: 'Mesaj',
+                        dataIndex: 'message',
+                        key: 'message',
+                        ellipsis: true,
+                      },
+                      {
+                        title: 'Durum',
+                        dataIndex: 'resolved',
+                        key: 'resolved',
+                        width: 100,
+                        render: (resolved: boolean) => (
+                          <Badge
+                            status={resolved ? 'success' : 'error'}
+                            text={resolved ? 'Çözüldü' : 'Açık'}
+                          />
+                        ),
+                      },
+                      {
+                        title: 'İşlemler',
+                        key: 'actions',
+                        width: 150,
+                        render: (_, record: SystemError) => (
+                          <Space size="small">
+                            <Tooltip title="Detaylar">
+                              <Button
+                                size="small"
+                                icon={<EyeOutlined />}
+                                onClick={() => {
+                                  Modal.info({
+                                    title: 'Hata Detayları',
+                                    width: 700,
+                                    content: (
+                                      <div>
+                                        <Paragraph>
+                                          <Text strong>Seviye:</Text> <Tag color={record.level === 'error' ? 'red' : record.level === 'warning' ? 'orange' : 'blue'}>{record.level}</Tag>
+                                        </Paragraph>
+                                        <Paragraph>
+                                          <Text strong>Zaman:</Text> {dayjs(record.timestamp).format('DD.MM.YYYY HH:mm:ss')}
+                                        </Paragraph>
+                                        <Paragraph>
+                                          <Text strong>Kaynak:</Text> {record.source}
+                                        </Paragraph>
+                                        <Paragraph>
+                                          <Text strong>Mesaj:</Text><br />
+                                          {record.message}
+                                        </Paragraph>
+                                        {record.stackTrace && (
+                                          <Paragraph>
+                                            <Text strong>Stack Trace:</Text><br />
+                                            <pre style={{ background: '#f5f5f5', padding: 8, overflow: 'auto', maxHeight: 300 }}>
+                                              {record.stackTrace}
+                                            </pre>
+                                          </Paragraph>
+                                        )}
+                                        {record.resolved && (
+                                          <Paragraph>
+                                            <Text strong>Çözüm:</Text><br />
+                                            <Text type="success">
+                                              {dayjs(record.resolvedAt).format('DD.MM.YYYY HH:mm:ss')} tarihinde
+                                              {record.resolvedBy && ` ${record.resolvedBy} tarafından`} çözüldü
+                                            </Text>
+                                          </Paragraph>
+                                        )}
+                                      </div>
+                                    ),
+                                  });
+                                }}
+                              />
+                            </Tooltip>
+                            {!record.resolved && (
+                              <Tooltip title="Çözüldü olarak işaretle">
+                                <Button
+                                  size="small"
+                                  type="primary"
+                                  icon={<CheckCircleOutlined />}
+                                  onClick={() => handleResolveError(record.id)}
+                                />
+                              </Tooltip>
+                            )}
+                            <Tooltip title="Sil">
+                              <Popconfirm
+                                title="Bu hatayı silmek istediğinize emin misiniz?"
+                                onConfirm={() => handleDeleteError(record.id)}
+                                okText="Evet"
+                                cancelText="Hayır"
+                              >
+                                <Button size="small" danger icon={<DeleteOutlined />} />
+                              </Popconfirm>
+                            </Tooltip>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                  />
+                </>
+              ) : (
+                <Alert
+                  message="Hata Bilgileri Yüklenemedi"
+                  description="Hata bilgilerini yüklerken bir sorun oluştu."
+                  type="warning"
+                  showIcon
+                  action={
+                    <Button size="small" type="primary" onClick={fetchSystemErrors}>
+                      Tekrar Dene
+                    </Button>
+                  }
+                />
+              )}
+            </Card>
           </TabPane>
 
           <TabPane tab="Sistem Bilgisi" key="system">
