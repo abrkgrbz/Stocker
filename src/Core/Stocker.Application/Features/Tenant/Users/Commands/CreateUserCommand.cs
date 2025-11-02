@@ -12,7 +12,8 @@ public class CreateUserCommand : IRequest<UserDto>, ITenantRequest
     public string Password { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty; // Legacy: single role
+    public List<Guid>? RoleIds { get; set; } // Multiple roles support
     public string? Department { get; set; }
     public string? Branch { get; set; }
     public string? Phone { get; set; }

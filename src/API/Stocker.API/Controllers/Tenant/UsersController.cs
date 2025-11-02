@@ -107,7 +107,8 @@ public class UsersController : ApiController
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Phone = dto.PhoneNumber,
-            Role = dto.Role ?? "User",
+            Role = dto.Role ?? "User", // Legacy support
+            RoleIds = dto.RoleIds, // Multiple roles support
             Department = dto.Department,
             Branch = dto.Branch,
             CreatedBy = User.Identity?.Name
@@ -352,7 +353,8 @@ public class CreateUserDto
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? Title { get; set; }
-    public string? Role { get; set; }
+    public string? Role { get; set; } // Legacy: single role (deprecated)
+    public List<Guid>? RoleIds { get; set; } // Multiple roles support
     public string? Department { get; set; }
     public string? Branch { get; set; }
 }

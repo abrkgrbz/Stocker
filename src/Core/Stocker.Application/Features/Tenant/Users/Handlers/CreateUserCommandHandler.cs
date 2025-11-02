@@ -81,6 +81,15 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
 
         var createdUser = await _userRepository.CreateTenantUserAsync(user, cancellationToken);
 
+        // 4. Assign roles if RoleIds provided
+        if (request.RoleIds != null && request.RoleIds.Count > 0)
+        {
+            foreach (var roleId in request.RoleIds)
+            {
+                await _userRepository.AssignRoleAsync(request.TenantId, createdUser.Id, roleId, cancellationToken);
+            }
+        }
+
         return new UserDto
         {
             Id = createdUser.Id,
