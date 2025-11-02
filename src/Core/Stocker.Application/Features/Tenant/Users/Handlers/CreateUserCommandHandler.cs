@@ -1,26 +1,55 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Interfaces.Repositories;
 using Stocker.Domain.Tenant.Entities;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenant.Users.Handlers;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IMasterDbContext _masterDbContext;
 
-    public CreateUserCommandHandler(IUserRepository userRepository)
+    public CreateUserCommandHandler(
+        IUserRepository userRepository,
+        IMasterDbContext masterDbContext)
     {
         _userRepository = userRepository;
+        _masterDbContext = masterDbContext;
     }
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
+        // 1. Check user limit from subscription
+        var subscription = await _masterDbContext.Subscriptions
+            .Include(s => s.Package)
+            .ThenInclude(p => p.Limits)
+            .Where(s => s.TenantId == request.TenantId && s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (subscription == null)
+        {
+            throw new InvalidOperationException("Aktif bir abonelik bulunamadı.");
+        }
+
+        // 2. Get current user count from tenant database
+        var currentUserCount = await _userRepository.GetTenantUserCountAsync(request.TenantId, cancellationToken);
+        var maxUsers = subscription.Package.Limits.MaxUsers;
+
+        // 3. Check if limit exceeded
+        if (currentUserCount >= maxUsers)
+        {
+            throw new InvalidOperationException($"Kullanıcı limiti aşıldı. Paketiniz maksimum {maxUsers} kullanıcıya izin veriyor. Lütfen paketinizi yükseltin.");
+        }
+
         // Note: In a real implementation, this would create a MasterUser first and then a TenantUser
         // For now, we'll use a temporary MasterUserId
         var masterUserId = Guid.NewGuid();
-        
+
         // Create value objects
         var emailResult = Stocker.Domain.Common.ValueObjects.Email.Create(request.Email);
         if (emailResult.IsFailure)

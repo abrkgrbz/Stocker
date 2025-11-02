@@ -284,6 +284,13 @@ public class UserRepository : IUserRepository
         return roles;
     }
 
+    public async Task<int> GetTenantUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await _tenantContext.TenantUsers
+            .Where(u => u.TenantId == tenantId)
+            .CountAsync(cancellationToken);
+    }
+
     public async Task<bool> AssignRoleAsync(Guid tenantId, Guid userId, Guid roleId, CancellationToken cancellationToken = default)
     {
         var user = await _tenantContext.TenantUsers

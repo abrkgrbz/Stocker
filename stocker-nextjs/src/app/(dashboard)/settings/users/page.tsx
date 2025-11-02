@@ -26,6 +26,7 @@ import {
   List,
   Divider,
   Spin,
+  Tooltip,
 } from 'antd';
 import {
   UserOutlined,
@@ -45,6 +46,7 @@ import {
   BarsOutlined,
   SafetyOutlined,
   EyeOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
@@ -64,6 +66,7 @@ import {
   type CreateUserRequest,
   type UpdateUserRequest,
 } from '@/lib/api/users';
+import { getSubscriptionInfo } from '@/lib/api/subscription';
 
 const { Text, Title } = Typography;
 const { confirm } = Modal;
@@ -102,6 +105,13 @@ export default function UsersPage() {
     queryFn: () => getUsers(1, 100, searchText || undefined),
   });
 
+  // Fetch subscription info for user limits
+  const { data: subscriptionInfo } = useQuery({
+    queryKey: ['subscription-info'],
+    queryFn: getSubscriptionInfo,
+    staleTime: 60 * 1000, // Cache for 1 minute
+  });
+
   // Fetch selected user details
   const { data: selectedUserDetails } = useQuery({
     queryKey: ['user', selectedUserId],
@@ -115,6 +125,7 @@ export default function UsersPage() {
     onSuccess: () => {
       message.success('Kullanıcı başarıyla silindi');
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
     },
     onError: () => {
       message.error('Kullanıcı silinirken bir hata oluştu');
@@ -139,6 +150,7 @@ export default function UsersPage() {
     onSuccess: () => {
       message.success('Kullanıcı başarıyla oluşturuldu');
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
       setModalOpen(false);
       setEditingUser(null);
     },
@@ -190,7 +202,7 @@ export default function UsersPage() {
         firstName: values.firstName,
         lastName: values.lastName,
         phoneNumber: values.phoneNumber,
-        role: values.role,
+        roleIds: values.roleIds, // Changed from role to roleIds (array)
         department: values.department,
       };
       await createMutation.mutateAsync(createData);
@@ -334,12 +346,36 @@ export default function UsersPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                  TOPLAM KULLANICI
-                </Text>
-                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
-                  {stats.total}
-                </Title>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <Text style={{ color: '#8c8c8c', fontSize: 13, fontWeight: 500 }}>
+                    TOPLAM KULLANICI
+                  </Text>
+                  {subscriptionInfo && (
+                    <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
+                      <CrownOutlined style={{ color: '#faad14', fontSize: 14 }} />
+                    </Tooltip>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
+                    {stats.total}
+                  </Title>
+                  {subscriptionInfo && (
+                    <Text style={{ color: '#8c8c8c', fontSize: 16 }}>
+                      / {subscriptionInfo.maxUsers}
+                    </Text>
+                  )}
+                </div>
+                {subscriptionInfo && (
+                  <Text
+                    type={subscriptionInfo.canAddUser ? 'secondary' : 'danger'}
+                    style={{ fontSize: 12, marginTop: 4, display: 'block' }}
+                  >
+                    {subscriptionInfo.canAddUser
+                      ? `${subscriptionInfo.maxUsers - subscriptionInfo.currentUserCount} kullanıcı eklenebilir`
+                      : 'Limit doldu'}
+                  </Text>
+                )}
               </div>
               <div
                 style={{
@@ -490,9 +526,23 @@ export default function UsersPage() {
         }
         extra={
           <AdminOnly>
-            <Button type="primary" icon={<PlusOutlined />} size="large" onClick={handleCreateUser}>
-              Yeni Kullanıcı
-            </Button>
+            <Tooltip
+              title={
+                subscriptionInfo && !subscriptionInfo.canAddUser
+                  ? `Kullanıcı limiti doldu (${subscriptionInfo.currentUserCount}/${subscriptionInfo.maxUsers}). Paketinizi yükseltin.`
+                  : ''
+              }
+            >
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={handleCreateUser}
+                disabled={subscriptionInfo && !subscriptionInfo.canAddUser}
+              >
+                Yeni Kullanıcı
+              </Button>
+            </Tooltip>
           </AdminOnly>
         }
       >

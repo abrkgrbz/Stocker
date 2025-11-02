@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
+using Stocker.Application.DTOs.Tenant;
 using Stocker.Application.DTOs.Tenant.Users;
+using Stocker.Application.Features.Tenant.Subscription.Queries;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Features.Tenant.Users.Queries;
 using Stocker.SharedKernel.Interfaces;
@@ -271,6 +273,29 @@ public class UsersController : ApiController
             Success = true,
             Data = result,
             Message = "Roller başarıyla listelendi"
+        });
+    }
+
+    [HttpGet("subscription-info")]
+    [ProducesResponseType(typeof(ApiResponse<TenantSubscriptionInfoDto>), 200)]
+    public async Task<IActionResult> GetSubscriptionInfo()
+    {
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+            throw new UnauthorizedException("Tenant bulunamadı");
+
+        var query = new GetSubscriptionInfoQuery
+        {
+            TenantId = tenantId
+        };
+
+        var result = await _mediator.Send(query);
+
+        return Ok(new ApiResponse<TenantSubscriptionInfoDto>
+        {
+            Success = true,
+            Data = result,
+            Message = "Abonelik bilgisi başarıyla getirildi"
         });
     }
 
