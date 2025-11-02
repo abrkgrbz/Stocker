@@ -47,8 +47,11 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
   useEffect(() => {
     if (open) {
       if (user) {
-        // Edit mode - populate form
-        form.setFieldsValue(user);
+        // Edit mode - populate form with roleIds array
+        form.setFieldsValue({
+          ...user,
+          roleIds: Array.isArray(user.roleIds) ? user.roleIds : [],
+        });
       } else {
         // Create mode - reset form
         form.resetFields();
