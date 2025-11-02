@@ -143,6 +143,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Helper function to decode JWT token (only the payload, not verifying signature)
+  const decodeJwtPayload = (token: string): any => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Failed to decode JWT:', error);
+      return null;
+    }
+  };
+
   const refreshUser = async () => {
     try {
       console.log('🔍 Checking authentication...');
@@ -160,6 +178,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const tenantCode = tenantCodeCookie.split('=')[1];
       console.log('✅ Found tenant-code cookie:', tenantCode);
+
+      // Try to get JWT token from cookie (even though it's httpOnly, some browsers allow reading)
+      // If not available, we'll rely on /auth/me endpoint
+      const authTokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth-token='));
+      let jwtPayload = null;
+
+      if (authTokenCookie) {
+        const token = authTokenCookie.split('=')[1];
+        jwtPayload = decodeJwtPayload(token);
+        console.log('🔓 Decoded JWT payload:', jwtPayload);
+      }
 
       // Fetch real user data from /auth/me endpoint
       console.log('📡 Fetching user data from /auth/me...');
@@ -180,16 +209,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           // Fallback to temp user if endpoint not available yet (401/404)
           if (response.status === 401 || response.status === 404) {
-            console.log('📝 Using fallback temp user (endpoint not deployed yet)');
+            console.log('📝 Using fallback user from JWT (endpoint not deployed yet)');
             const userData: User = {
-              id: 'temp-user-id',
-              email: '',
-              firstName: 'User',
+              id: jwtPayload?.nameid || 'temp-user-id',
+              email: jwtPayload?.email || '',
+              firstName: jwtPayload?.unique_name?.split('-')[0] || 'User',
               lastName: '',
-              role: 'User',
-              tenantId: '',
-              tenantCode: tenantCode,
+              role: jwtPayload?.role || 'User',
+              tenantId: jwtPayload?.TenantId || '',
+              tenantCode: jwtPayload?.TenantName || tenantCode,
             };
+            console.log('✅ User from JWT:', userData);
             setUser(userData);
             return;
           }
@@ -207,7 +237,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             email: result.data.email,
             firstName: result.data.fullName?.split(' ')[0] || '',
             lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
-            role: result.data.role || result.data.roles?.[0] || 'User',
+            role: result.data.roles?.[0] || result.data.role || jwtPayload?.role || 'User',
             tenantId: result.data.tenantId || '',
             tenantCode: result.data.tenantCode || tenantCode,
           };
@@ -219,17 +249,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(null);
         }
       } catch (fetchError) {
-        console.warn('⚠️ /auth/me fetch failed, using fallback:', fetchError);
-        // Fallback to temp user on network error
+        console.warn('⚠️ /auth/me fetch failed, using fallback from JWT:', fetchError);
+        // Fallback to user data from JWT on network error
         const userData: User = {
-          id: 'temp-user-id',
-          email: '',
-          firstName: 'User',
+          id: jwtPayload?.nameid || 'temp-user-id',
+          email: jwtPayload?.email || '',
+          firstName: jwtPayload?.unique_name?.split('-')[0] || 'User',
           lastName: '',
-          role: 'User',
-          tenantId: '',
-          tenantCode: tenantCode,
+          role: jwtPayload?.role || 'User',
+          tenantId: jwtPayload?.TenantId || '',
+          tenantCode: jwtPayload?.TenantName || tenantCode,
         };
+        console.log('✅ User from JWT fallback:', userData);
         setUser(userData);
       }
     } catch (error) {
