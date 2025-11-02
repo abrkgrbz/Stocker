@@ -62,6 +62,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
+import { userService } from '../../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -147,83 +148,48 @@ const TenantUsers: React.FC = () => {
   }, [id]);
 
   const fetchUsers = async () => {
+    if (!id) {
+      message.error('Tenant ID bulunamadı');
+      return;
+    }
+
     setLoading(true);
-    // Simulated data
-    setTimeout(() => {
-      setUsers([
-        {
-          id: '1',
-          name: 'Ahmet Yılmaz',
-          email: 'ahmet.yilmaz@company.com',
-          phone: '+90 532 123 4567',
-          role: 'Admin',
-          department: 'IT',
-          title: 'IT Müdürü',
-          status: 'active',
-          avatar: 'AY',
-          lastLogin: '2024-01-15T10:30:00',
-          createdAt: '2023-06-15T09:00:00',
-          emailVerified: true,
-          twoFactorEnabled: true,
-          permissions: ['users.read', 'users.write', 'settings.write'],
-          loginCount: 245,
-          ipAddress: '192.168.1.100',
-          location: 'İstanbul, TR'
-        },
-        {
-          id: '2',
-          name: 'Ayşe Demir',
-          email: 'ayse.demir@company.com',
-          phone: '+90 533 234 5678',
-          role: 'Manager',
-          department: 'Sales',
-          title: 'Satış Müdürü',
-          status: 'active',
-          avatar: 'AD',
-          lastLogin: '2024-01-15T14:20:00',
-          createdAt: '2023-07-20T10:00:00',
-          emailVerified: true,
-          twoFactorEnabled: false,
-          permissions: ['sales.read', 'sales.write', 'reports.read'],
-          loginCount: 189,
-          ipAddress: '192.168.1.101',
-          location: 'Ankara, TR'
-        },
-        {
-          id: '3',
-          name: 'Mehmet Kaya',
-          email: 'mehmet.kaya@company.com',
-          role: 'User',
-          department: 'Finance',
-          title: 'Muhasebe Uzmanı',
-          status: 'inactive',
-          avatar: 'MK',
-          lastLogin: '2024-01-10T16:45:00',
-          createdAt: '2023-08-10T11:00:00',
-          emailVerified: true,
-          twoFactorEnabled: false,
-          permissions: ['reports.read'],
-          loginCount: 67,
-          ipAddress: '192.168.1.102',
-          location: 'İzmir, TR'
-        },
-        {
-          id: '4',
-          name: 'Zeynep Öz',
-          email: 'zeynep.oz@company.com',
-          role: 'User',
-          department: 'HR',
-          status: 'pending',
-          avatar: 'ZÖ',
-          createdAt: '2024-01-14T09:00:00',
-          emailVerified: false,
-          twoFactorEnabled: false,
-          permissions: [],
-          loginCount: 0
-        }
-      ]);
+    try {
+      const response = await userService.getByTenant(id);
+
+      // Transform API response to match component interface
+      const transformedUsers: TenantUser[] = response.map(user => ({
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        phone: undefined, // API'de phoneNumber yok, düzeltilecek
+        role: user.roles.length > 0 ? user.roles.join(', ') : 'User',
+        department: undefined, // API'de department yok
+        title: undefined,
+        status: user.isActive ? 'active' : 'inactive',
+        avatar: user.fullName.split(' ').map(n => n[0]).join('').toUpperCase(),
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+        emailVerified: user.isEmailConfirmed,
+        twoFactorEnabled: user.isTwoFactorEnabled,
+        permissions: [], // API'de permissions listesi yok
+        loginCount: 0, // API'de loginCount yok
+        ipAddress: undefined,
+        location: undefined
+      }));
+
+      setUsers(transformedUsers);
+
+      if (transformedUsers.length === 0) {
+        message.info('Bu tenant için henüz kullanıcı bulunmuyor');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch users:', error);
+      message.error(error.response?.data?.message || 'Kullanıcılar yüklenirken hata oluştu');
+      setUsers([]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const fetchRoles = async () => {
