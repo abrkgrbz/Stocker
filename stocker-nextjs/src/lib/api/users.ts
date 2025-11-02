@@ -92,7 +92,7 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   phoneNumber?: string;
-  role?: string;
+  roleIds?: string[]; // Multiple roles support
   department?: string;
   branch?: string;
 }

@@ -5,9 +5,11 @@
  * Professional drawer for user management
  */
 
-import { useEffect } from 'react';
-import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space } from 'antd';
+import { useEffect, useState } from 'react';
+import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space, Spin } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { getRoles, type Role } from '@/lib/api/roles';
 
 const { Option } = Select;
 
@@ -17,9 +19,9 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  roleIds: string[]; // Changed to array for multiple roles
   isActive: boolean;
-  phone?: string;
+  phoneNumber?: string;
   department?: string;
   password?: string;
 }
@@ -35,6 +37,13 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
   const [form] = Form.useForm();
   const isEditMode = !!user;
 
+  // Fetch available roles from backend
+  const { data: roles, isLoading: rolesLoading } = useQuery<Role[]>({
+    queryKey: ['roles'],
+    queryFn: getRoles,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   useEffect(() => {
     if (open) {
       if (user) {
@@ -43,7 +52,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
       } else {
         // Create mode - reset form
         form.resetFields();
-        form.setFieldsValue({ isActive: true, role: 'Kullanıcı' });
+        form.setFieldsValue({ isActive: true, roleIds: [] });
       }
     }
   }, [open, user, form]);
@@ -242,49 +251,57 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
 
         {/* Role & Department Section */}
         <div style={{ marginBottom: 24 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="role"
-                label={<span style={{ fontWeight: 500 }}>Rol</span>}
-                rules={[{ required: true, message: 'Rol gerekli' }]}
-              >
-                <Select size="large" placeholder="Rol seçin" style={{ borderRadius: 8 }}>
-                  <Option value="FirmaYöneticisi">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: '#667eea', fontSize: 16 }}>★</span>
-                      Admin
+          <Form.Item
+            name="roleIds"
+            label={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 500 }}>Roller</span>
+                <span style={{ fontSize: 12, color: '#8c8c8c', fontWeight: 400 }}>
+                  (Birden fazla seçilebilir)
+                </span>
+              </div>
+            }
+            rules={[{ required: true, message: 'En az bir rol seçmelisiniz' }]}
+          >
+            <Select
+              mode="multiple"
+              size="large"
+              placeholder={rolesLoading ? 'Roller yükleniyor...' : 'Rol seçin'}
+              loading={rolesLoading}
+              disabled={rolesLoading}
+              style={{ borderRadius: 8 }}
+              maxTagCount="responsive"
+              notFoundContent={rolesLoading ? <Spin size="small" /> : 'Rol bulunamadı'}
+            >
+              {roles?.map((role) => (
+                <Option key={role.id} value={role.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: role.isSystemRole ? '#667eea' : '#52c41a', fontSize: 16 }}>
+                      {role.isSystemRole ? '★' : '●'}
+                    </span>
+                    <div>
+                      <div>{role.name}</div>
+                      {role.description && (
+                        <div style={{ fontSize: 12, color: '#8c8c8c' }}>{role.description}</div>
+                      )}
                     </div>
-                  </Option>
-                  <Option value="Yönetici">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: '#667eea', fontSize: 16 }}>◆</span>
-                      Yönetici
-                    </div>
-                  </Option>
-                  <Option value="Kullanıcı">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: '#667eea', fontSize: 16 }}>●</span>
-                      Kullanıcı
-                    </div>
-                  </Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="department"
-                label={<span style={{ fontWeight: 500 }}>Departman</span>}
-              >
-                <Input
-                  size="large"
-                  prefix={<TeamOutlined style={{ color: '#667eea' }} />}
-                  placeholder="Satış"
-                  style={{ borderRadius: 8 }}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="department"
+            label={<span style={{ fontWeight: 500 }}>Departman</span>}
+          >
+            <Input
+              size="large"
+              prefix={<TeamOutlined style={{ color: '#667eea' }} />}
+              placeholder="Satış"
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
         </div>
 
         {/* Status Section */}
