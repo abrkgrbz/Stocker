@@ -77,6 +77,19 @@ export default function UsersPage() {
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
+  // DEBUG: Check auth and role
+  const { user } = useAuth();
+  const { role, isAdmin } = useRole();
+
+  useEffect(() => {
+    console.log('🔍 UsersPage - Auth Debug:', {
+      user,
+      role,
+      isAdmin,
+      userRole: user?.role
+    });
+  }, [user, role, isAdmin]);
+
   // Fetch users list
   const {
     data: usersData,
