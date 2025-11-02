@@ -1,12 +1,12 @@
 'use client';
 
 /**
- * User Create/Edit Modal Component
- * Professional modal for user management
+ * User Create/Edit Drawer Component
+ * Professional drawer for user management
  */
 
 import { useEffect } from 'react';
-import { Modal, Form, Input, Select, Switch, Row, Col, message } from 'antd';
+import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -70,7 +70,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
   };
 
   return (
-    <Modal
+    <Drawer
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <UserOutlined />
@@ -78,17 +78,23 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         </div>
       }
       open={open}
-      onOk={handleSubmit}
-      onCancel={onClose}
-      okText={isEditMode ? 'Güncelle' : 'Oluştur'}
-      cancelText="İptal"
-      width={700}
+      onClose={onClose}
+      width={600}
       destroyOnClose
+      footer={
+        <div style={{ textAlign: 'right' }}>
+          <Space>
+            <Button onClick={onClose}>İptal</Button>
+            <Button type="primary" onClick={handleSubmit}>
+              {isEditMode ? 'Güncelle' : 'Oluştur'}
+            </Button>
+          </Space>
+        </div>
+      }
     >
       <Form
         form={form}
         layout="vertical"
-        style={{ marginTop: 24 }}
       >
         <Row gutter={16}>
           <Col span={12}>
@@ -213,6 +219,6 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           </Col>
         </Row>
       </Form>
-    </Modal>
+    </Drawer>
   );
 }
