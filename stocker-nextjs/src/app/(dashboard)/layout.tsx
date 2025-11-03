@@ -20,6 +20,8 @@ import {
   NotificationOutlined,
   LockOutlined,
   SafetyOutlined,
+  SafetyCertificateOutlined,
+  ControlOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -131,24 +133,42 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       label: 'Ayarlar',
       children: [
         {
-          key: '/settings/general',
-          icon: <SettingOutlined />,
-          label: 'Genel Ayarlar',
+          type: 'group',
+          label: 'Genel',
+          children: [
+            {
+              key: '/settings/general',
+              icon: <ControlOutlined />,
+              label: 'Genel Ayarlar',
+            },
+          ],
         },
         {
-          key: '/settings/users',
-          icon: <UserOutlined />,
-          label: 'Kullanıcı Yönetimi',
+          type: 'group',
+          label: 'Kullanıcılar & Roller',
+          children: [
+            {
+              key: '/settings/users',
+              icon: <TeamOutlined />,
+              label: 'Kullanıcılar',
+            },
+            {
+              key: '/settings/roles',
+              icon: <SafetyCertificateOutlined />,
+              label: 'Roller',
+            },
+          ],
         },
         {
-          key: '/settings/roles',
-          icon: <LockOutlined />,
-          label: 'Rol Yönetimi',
-        },
-        {
-          key: '/settings/security',
-          icon: <SafetyOutlined />,
+          type: 'group',
           label: 'Güvenlik',
+          children: [
+            {
+              key: '/settings/security',
+              icon: <SafetyOutlined />,
+              label: 'Güvenlik Ayarları',
+            },
+          ],
         },
       ],
     },
