@@ -239,8 +239,17 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               label={<span style={{ fontWeight: 500 }}>Şifre</span>}
               rules={[
                 { required: true, message: 'Şifre gerekli' },
-                { min: 6, message: 'En az 6 karakter olmalı' },
+                { min: 8, message: 'En az 8 karakter olmalı' },
+                {
+                  pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+                  message: 'Şifre en az 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir'
+                },
               ]}
+              extra={
+                <span style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4, display: 'block' }}>
+                  Şifre en az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir
+                </span>
+              }
             >
               <Input.Password
                 size="large"

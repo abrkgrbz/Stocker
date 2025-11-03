@@ -52,7 +52,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         var passwordValidation = _passwordService.ValidatePassword(request.Password, request.Username, request.Email);
         if (passwordValidation.IsFailure)
         {
-            throw new InvalidOperationException($"Şifre geçersiz: {passwordValidation.Error}");
+            var errorMessage = passwordValidation.Error?.Description ?? "Şifre gereksinimlerini karşılamıyor";
+            throw new InvalidOperationException($"Şifre geçersiz: {errorMessage}. Şifre en az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir.");
         }
 
         var hashedPassword = _passwordService.HashPassword(request.Password);
@@ -94,12 +95,25 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         var createdUser = await _userRepository.CreateTenantUserAsync(user, cancellationToken);
 
         // 4. Assign roles if RoleIds provided
+        var assignedRoleNames = new List<string>();
         if (request.RoleIds != null && request.RoleIds.Count > 0)
         {
             foreach (var roleId in request.RoleIds)
             {
                 await _userRepository.AssignRoleAsync(request.TenantId, createdUser.Id, roleId, cancellationToken);
             }
+
+            // Get the actual assigned role names from the user details
+            var userDetails = await _userRepository.GetTenantUserByIdAsync(request.TenantId, createdUser.Id, cancellationToken);
+            if (userDetails != null && userDetails.Roles.Count > 0)
+            {
+                assignedRoleNames = userDetails.Roles.Select(r => r.Name).ToList();
+            }
+        }
+        else if (!string.IsNullOrEmpty(request.Role))
+        {
+            // Legacy single role support - add the role name if provided
+            assignedRoleNames.Add(request.Role);
         }
 
         return new UserDto
@@ -112,7 +126,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             Phone = createdUser.Phone?.Value,
             Department = request.Department ?? "Default",
             Branch = request.Branch ?? "Merkez",
-            Roles = new List<string> { request.Role },
+            Roles = assignedRoleNames, // Return actual assigned role names
             IsActive = createdUser.Status == Stocker.Domain.Tenant.Enums.TenantUserStatus.Active,
             CreatedDate = createdUser.CreatedAt
         };
