@@ -2,20 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { HubConnectionState } from '@microsoft/signalr';
-import { notificationHub, inventoryHub, orderHub, SignalRClient } from './signalr-client';
+import { notificationHub, SignalRClient } from './signalr-client';
 
 interface SignalRContextValue {
   // Notification Hub
   notificationHub: SignalRClient;
   isNotificationConnected: boolean;
-
-  // Inventory Hub
-  inventoryHub: SignalRClient;
-  isInventoryConnected: boolean;
-
-  // Order Hub
-  orderHub: SignalRClient;
-  isOrderConnected: boolean;
 
   // Methods
   connectAll: () => Promise<void>;
@@ -26,8 +18,6 @@ const SignalRContext = createContext<SignalRContextValue | undefined>(undefined)
 
 export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isNotificationConnected, setIsNotificationConnected] = useState(false);
-  const [isInventoryConnected, setIsInventoryConnected] = useState(false);
-  const [isOrderConnected, setIsOrderConnected] = useState(false);
 
   // Get access token from cookie or localStorage
   const getAccessToken = useCallback(() => {
@@ -53,20 +43,8 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
         await notificationHub.start(token);
         setIsNotificationConnected(true);
       }
-
-      // Connect to inventory hub
-      if (!inventoryHub.isConnected) {
-        await inventoryHub.start(token);
-        setIsInventoryConnected(true);
-      }
-
-      // Connect to order hub
-      if (!orderHub.isConnected) {
-        await orderHub.start(token);
-        setIsOrderConnected(true);
-      }
     } catch (error) {
-      console.error('Failed to connect to SignalR hubs:', error);
+      console.error('Failed to connect to SignalR hub:', error);
     }
   }, [getAccessToken]);
 
@@ -74,14 +52,8 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     try {
       await notificationHub.stop();
       setIsNotificationConnected(false);
-
-      await inventoryHub.stop();
-      setIsInventoryConnected(false);
-
-      await orderHub.stop();
-      setIsOrderConnected(false);
     } catch (error) {
-      console.error('Failed to disconnect from SignalR hubs:', error);
+      console.error('Failed to disconnect from SignalR hub:', error);
     }
   }, []);
 
@@ -99,8 +71,6 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setIsNotificationConnected(notificationHub.state === HubConnectionState.Connected);
-      setIsInventoryConnected(inventoryHub.state === HubConnectionState.Connected);
-      setIsOrderConnected(orderHub.state === HubConnectionState.Connected);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -109,10 +79,6 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const value: SignalRContextValue = {
     notificationHub,
     isNotificationConnected,
-    inventoryHub,
-    isInventoryConnected,
-    orderHub,
-    isOrderConnected,
     connectAll,
     disconnectAll,
   };

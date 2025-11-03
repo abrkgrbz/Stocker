@@ -118,7 +118,7 @@ export class SignalRClient {
   }
 }
 
-// Singleton instances for different hubs
+// Singleton instance for notification hub
+// Note: Only notification hub is currently available on backend
+// Future hubs (inventory, orders) can be added when backend endpoints are implemented
 export const notificationHub = new SignalRClient('/hubs/notification');
-export const inventoryHub = new SignalRClient('/hubs/inventory');
-export const orderHub = new SignalRClient('/hubs/orders');
