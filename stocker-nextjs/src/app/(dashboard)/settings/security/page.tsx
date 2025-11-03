@@ -24,7 +24,7 @@ import {
   LockOutlined,
   ClockCircleOutlined,
   KeyOutlined,
-  ShieldOutlined,
+  SecurityScanOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 
@@ -165,7 +165,7 @@ export default function SecurityPage() {
                 key: '2fa',
                 label: (
                   <span>
-                    <ShieldOutlined />
+                    <SecurityScanOutlined />
                     {' 2FA & Doğrulama'}
                   </span>
                 ),
