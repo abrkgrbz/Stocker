@@ -50,7 +50,6 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">Password policy settings</param>
     /// <returns>Success result</returns>
     [HttpPut("password-policy")]
-    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -94,7 +93,6 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">2FA settings</param>
     /// <returns>Success result</returns>
     [HttpPut("two-factor")]
-    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -135,7 +133,6 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">Session settings</param>
     /// <returns>Success result</returns>
     [HttpPut("session")]
-    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -175,7 +172,6 @@ public class SecuritySettingsController : ApiController
     /// <param name="request">API security settings</param>
     /// <returns>Success result</returns>
     [HttpPut("api-security")]
-    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
