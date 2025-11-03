@@ -18,7 +18,7 @@ export function PermissionGate({ permission, children, fallback = null }: Permis
   const { hasPermission } = useRole();
 
   if (!hasPermission(permission)) {
-    return <>{fallback}</>;
+    return <>{fallback ?? null}</>;
   }
 
   return <>{children}</>;

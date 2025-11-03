@@ -28,8 +28,6 @@ import {
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 
-const { TabPane } = Tabs;
-
 export default function SecurityPage() {
   const [form] = Form.useForm();
 
@@ -64,16 +62,18 @@ export default function SecurityPage() {
             </div>
           }
         >
-          <Tabs defaultActiveKey="password">
-            <TabPane
-              tab={
-                <span>
-                  <LockOutlined />
-                  Şifre Politikası
-                </span>
-              }
-              key="password"
-            >
+          <Tabs
+            defaultActiveKey="password"
+            items={[
+              {
+                key: 'password',
+                label: (
+                  <span>
+                    <LockOutlined />
+                    {' Şifre Politikası'}
+                  </span>
+                ),
+                children: (
               <Form
                 form={form}
                 layout="vertical"
@@ -159,17 +159,17 @@ export default function SecurityPage() {
                   </Button>
                 </Form.Item>
               </Form>
-            </TabPane>
-
-            <TabPane
-              tab={
-                <span>
-                  <ShieldOutlined />
-                  2FA & Doğrulama
-                </span>
-              }
-              key="2fa"
-            >
+                ),
+              },
+              {
+                key: '2fa',
+                label: (
+                  <span>
+                    <ShieldOutlined />
+                    {' 2FA & Doğrulama'}
+                  </span>
+                ),
+                children: (
               <Form
                 layout="vertical"
                 initialValues={{
@@ -219,17 +219,17 @@ export default function SecurityPage() {
                   </Button>
                 </Form.Item>
               </Form>
-            </TabPane>
-
-            <TabPane
-              tab={
-                <span>
-                  <ClockCircleOutlined />
-                  Oturum Yönetimi
-                </span>
-              }
-              key="session"
-            >
+                ),
+              },
+              {
+                key: 'session',
+                label: (
+                  <span>
+                    <ClockCircleOutlined />
+                    {' Oturum Yönetimi'}
+                  </span>
+                ),
+                children: (
               <Form
                 layout="vertical"
                 initialValues={{
@@ -269,17 +269,17 @@ export default function SecurityPage() {
                   </Button>
                 </Form.Item>
               </Form>
-            </TabPane>
-
-            <TabPane
-              tab={
-                <span>
-                  <KeyOutlined />
-                  API & Entegrasyon
-                </span>
-              }
-              key="api"
-            >
+                ),
+              },
+              {
+                key: 'api',
+                label: (
+                  <span>
+                    <KeyOutlined />
+                    {' API & Entegrasyon'}
+                  </span>
+                ),
+                children: (
               <Form
                 layout="vertical"
                 initialValues={{
@@ -346,8 +346,10 @@ export default function SecurityPage() {
                   </Button>
                 </Form.Item>
               </Form>
-            </TabPane>
-          </Tabs>
+                ),
+              },
+            ]}
+          />
         </Card>
       </div>
     </AdminOnly>
