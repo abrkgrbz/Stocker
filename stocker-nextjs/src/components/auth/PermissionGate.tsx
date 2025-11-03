@@ -25,12 +25,12 @@ export function PermissionGate({ permission, children, fallback = null }: Permis
 }
 
 // Convenience components for common permissions
-export function AdminOnly({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
+export function AdminOnly({ children, fallback = null }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   const { isAdmin } = useRole();
-  return isAdmin ? <>{children}</> : <>{fallback}</>;
+  return isAdmin ? <>{children}</> : <>{fallback ?? null}</>;
 }
 
-export function ManagerOnly({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
+export function ManagerOnly({ children, fallback = null }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   const { isManager } = useRole();
-  return isManager ? <>{children}</> : <>{fallback}</>;
+  return isManager ? <>{children}</> : <>{fallback ?? null}</>;
 }
