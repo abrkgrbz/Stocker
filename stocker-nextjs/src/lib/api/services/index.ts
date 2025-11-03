@@ -21,3 +21,16 @@ export type {
   CustomerListResponse,
   CustomerFilters,
 } from './customer.service';
+
+export { securitySettingsService, SecuritySettingsService } from './security-settings.service';
+export type {
+  SecuritySettingsDto,
+  PasswordPolicyDto,
+  TwoFactorSettingsDto,
+  SessionSettingsDto,
+  ApiSecuritySettingsDto,
+  UpdatePasswordPolicyRequest,
+  UpdateTwoFactorSettingsRequest,
+  UpdateSessionSettingsRequest,
+  UpdateApiSecurityRequest,
+} from './security-settings.service';
