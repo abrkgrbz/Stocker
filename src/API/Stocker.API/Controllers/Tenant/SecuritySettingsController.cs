@@ -45,12 +45,12 @@ public class SecuritySettingsController : ApiController
 
     /// <summary>
     /// Update password policy settings
-    /// Requires Admin role
+    /// Requires FirmaYöneticisi role
     /// </summary>
     /// <param name="request">Password policy settings</param>
     /// <returns>Success result</returns>
     [HttpPut("password-policy")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -89,12 +89,12 @@ public class SecuritySettingsController : ApiController
 
     /// <summary>
     /// Update two-factor authentication settings
-    /// Requires Admin role
+    /// Requires FirmaYöneticisi role
     /// </summary>
     /// <param name="request">2FA settings</param>
     /// <returns>Success result</returns>
     [HttpPut("two-factor")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -130,12 +130,12 @@ public class SecuritySettingsController : ApiController
 
     /// <summary>
     /// Update session management settings
-    /// Requires Admin role
+    /// Requires FirmaYöneticisi role
     /// </summary>
     /// <param name="request">Session settings</param>
     /// <returns>Success result</returns>
     [HttpPut("session")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -170,12 +170,12 @@ public class SecuritySettingsController : ApiController
 
     /// <summary>
     /// Update API security settings
-    /// Requires Admin role
+    /// Requires FirmaYöneticisi role
     /// </summary>
     /// <param name="request">API security settings</param>
     /// <returns>Success result</returns>
     [HttpPut("api-security")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "FirmaYöneticisi")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 401)]
