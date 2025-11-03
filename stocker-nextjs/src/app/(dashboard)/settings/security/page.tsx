@@ -74,7 +74,7 @@ export default function SecurityPage() {
                   </span>
                 ),
                 children: (
-              <Form
+                  <Form
                 form={form}
                 layout="vertical"
                 onFinish={handleSave}
@@ -158,7 +158,7 @@ export default function SecurityPage() {
                     Kaydet
                   </Button>
                 </Form.Item>
-              </Form>
+                  </Form>
                 ),
               },
               {
@@ -170,7 +170,7 @@ export default function SecurityPage() {
                   </span>
                 ),
                 children: (
-              <Form
+                  <Form
                 layout="vertical"
                 initialValues={{
                   require2FA: false,
@@ -218,7 +218,7 @@ export default function SecurityPage() {
                     Kaydet
                   </Button>
                 </Form.Item>
-              </Form>
+                  </Form>
                 ),
               },
               {
@@ -230,7 +230,7 @@ export default function SecurityPage() {
                   </span>
                 ),
                 children: (
-              <Form
+                  <Form
                 layout="vertical"
                 initialValues={{
                   sessionTimeout: 60,
@@ -268,7 +268,7 @@ export default function SecurityPage() {
                     Kaydet
                   </Button>
                 </Form.Item>
-              </Form>
+                  </Form>
                 ),
               },
               {
@@ -280,7 +280,7 @@ export default function SecurityPage() {
                   </span>
                 ),
                 children: (
-              <Form
+                  <Form
                 layout="vertical"
                 initialValues={{
                   allowApiAccess: true,
@@ -345,7 +345,7 @@ export default function SecurityPage() {
                     Kaydet
                   </Button>
                 </Form.Item>
-              </Form>
+                  </Form>
                 ),
               },
             ]}
