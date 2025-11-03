@@ -14,7 +14,7 @@ interface AdminRouteProps {
   fallback?: React.ReactNode;
 }
 
-export function AdminRoute({ children, fallback }: AdminRouteProps) {
+export function AdminRoute({ children, fallback = null }: AdminRouteProps) {
   const { isAdmin, role } = useRole();
   const router = useRouter();
 
@@ -27,12 +27,12 @@ export function AdminRoute({ children, fallback }: AdminRouteProps) {
 
   // Show nothing while checking (prevents flash of admin content)
   if (!role) {
-    return fallback || null;
+    return <>{fallback ?? null}</>;
   }
 
   // Show content only for admins
   if (!isAdmin) {
-    return fallback || null;
+    return <>{fallback ?? null}</>;
   }
 
   return <>{children}</>;
