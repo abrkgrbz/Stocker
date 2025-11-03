@@ -201,21 +201,27 @@ public static class MiddlewareExtensions
             options.Transports = HttpTransportType.WebSockets |
                                  HttpTransportType.ServerSentEvents |
                                  HttpTransportType.LongPolling;
-        }).RequireCors(corsPolicy);
+        })
+        .RequireCors(corsPolicy)
+        .RequireAuthorization(); // ✅ Authentication required
 
         app.MapHub<NotificationHub>("/hubs/notification", options =>
         {
             options.Transports = HttpTransportType.WebSockets |
                                  HttpTransportType.ServerSentEvents |
                                  HttpTransportType.LongPolling;
-        }).RequireCors(corsPolicy);
+        })
+        .RequireCors(corsPolicy)
+        .RequireAuthorization(); // ✅ Authentication required
 
         app.MapHub<ChatHub>("/hubs/chat", options =>
         {
             options.Transports = HttpTransportType.WebSockets |
                                  HttpTransportType.ServerSentEvents |
                                  HttpTransportType.LongPolling;
-        }).RequireCors(corsPolicy);
+        })
+        .RequireCors(corsPolicy)
+        .RequireAuthorization(); // ✅ Authentication required
 
         // 21. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
