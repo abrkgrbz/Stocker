@@ -16,7 +16,8 @@ import {
 
 export function useRole() {
   const { user } = useAuth();
-  const role = user?.role;
+  // Support both single role (legacy) and roles array (new)
+  const role = (user as any)?.roles?.[0] || user?.role;
 
   return {
     // Raw role value
