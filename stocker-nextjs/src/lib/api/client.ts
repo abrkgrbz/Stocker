@@ -133,9 +133,18 @@ export class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        // Transform backend error response to ApiError format
+        // Backend returns: { detail, errors: [{code, message}], ... }
+        const apiError: ApiError = {
+          code: (data.errors?.[0]?.code || 'UNKNOWN_ERROR') as any,
+          message: data.detail || data.errors?.[0]?.message || data.message || 'An error occurred',
+          details: data.errors || data,
+          timestamp: data.timestamp || new Date().toISOString(),
+        };
+
         throw new ApiClientError(
           response.status,
-          data as ApiError,
+          apiError,
           response
         );
       }

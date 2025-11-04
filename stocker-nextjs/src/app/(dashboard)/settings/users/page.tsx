@@ -198,24 +198,8 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
-      // Debug: Log error structure to console
-      console.error('Create user error:', error);
-      console.error('Error structure:', {
-        error: error?.error,
-        message: error?.message,
-        response: error?.response,
-        statusCode: error?.statusCode,
-      });
-
-      // Extract error message from various possible structures
-      const errorMessage =
-        error?.error?.message ||           // ApiClientError structure
-        error?.error?.detail ||             // API error detail
-        error?.message ||                   // Standard Error message
-        error?.error?.errors?.[0]?.message || // Array of errors
-        'Kullanıcı oluşturulurken bir hata oluştu';
-
-      console.log('Extracted error message:', errorMessage);
+      // ApiClientError now has correct message in error.message
+      const errorMessage = error?.message || 'Kullanıcı oluşturulurken bir hata oluştu';
 
       Swal.fire({
         icon: 'error',
@@ -242,8 +226,8 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
-      // Extract error message from ApiClientError structure
-      const errorMessage = error?.error?.message || error?.message || 'Kullanıcı güncellenirken bir hata oluştu';
+      // ApiClientError now has correct message in error.message
+      const errorMessage = error?.message || 'Kullanıcı güncellenirken bir hata oluştu';
 
       Swal.fire({
         icon: 'error',
