@@ -84,15 +84,16 @@ public class TenantRateLimitingMiddleware
     private bool ShouldSkipRateLimiting(HttpContext context)
     {
         var path = context.Request.Path.Value?.ToLower() ?? "";
-        
+
         // Skip rate limiting for health checks, static files, etc.
-        var skipPaths = new[] 
-        { 
-            "/health", 
-            "/swagger", 
+        var skipPaths = new[]
+        {
+            "/health",
+            "/swagger",
             "/hangfire",
             "/.well-known",
-            "/favicon.ico"
+            "/favicon.ico",
+            "/api/tenant/securitysettings" // Settings page needs frequent access
         };
 
         foreach (var skipPath in skipPaths)
