@@ -130,7 +130,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // ✅ NO COOKIE CLEARING - Backend handles HttpOnly cookies
+      // Clear tenant-code cookie (not httpOnly, so we must clear it manually)
+      document.cookie = 'tenant-code=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.stoocker.app';
+      document.cookie = 'tenant-code=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; // Also clear without domain
+
       setUser(null);
 
       // Redirect to auth subdomain for login

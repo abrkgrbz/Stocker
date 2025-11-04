@@ -24,15 +24,11 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Redirect to /app if user is already authenticated
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/app');
-    }
-  }, [isLoading, isAuthenticated, router]);
+  // Don't redirect authenticated users - let them see the landing page
+  // They can navigate to /app via the navbar button
 
-  // Show nothing while checking auth or redirecting
-  if (isLoading || isAuthenticated) {
+  // Show loading state
+  if (isLoading) {
     return null;
   }
 
