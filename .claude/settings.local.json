@@ -79,7 +79,14 @@
       "Bash(tee:*)",
       "Bash(dotnet run:*)",
       "SlashCommand(/sc:analyze CreateTenantFromRegistrationCommandHandler.cs)",
-      "SlashCommand(/sc:analyze:*)"
+      "SlashCommand(/sc:analyze:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git pull:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -30 {}')",
+      "Bash(wc:*)",
+      "Bash(dotnet --list-runtimes:*)"
     ],
     "deny": [],
     "ask": []
