@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.CreateWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.ActivateWorkflow;
+using Stocker.Modules.CRM.Application.Features.Workflows.Commands.DeactivateWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.ExecuteWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Queries.GetWorkflow;
 
@@ -77,9 +78,15 @@ public class WorkflowsController : ControllerBase
     [HttpPost("{id}/deactivate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeactivateWorkflow(int id)
     {
-        // TODO: Implement DeactivateWorkflowCommand
+        var command = new DeactivateWorkflowCommand(id);
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
         return Ok(new { message = "Workflow deactivated successfully" });
     }
 
