@@ -198,18 +198,13 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
+      // Extract error message from ApiClientError structure
+      const errorMessage = error?.error?.message || error?.message || 'Kullanıcı oluşturulurken bir hata oluştu';
+
       Swal.fire({
         icon: 'error',
         title: 'Hata!',
-        html: `<p>${error?.message || 'Kullanıcı oluşturulurken bir hata oluştu'}</p>${
-          error?.response?.data?.errors
-            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
-                Object.entries(error.response.data.errors)
-                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
-                  .join('<br/>')
-              }</div>`
-            : ''
-        }`,
+        text: errorMessage,
         confirmButtonColor: '#667eea',
       });
     },
@@ -231,18 +226,13 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
+      // Extract error message from ApiClientError structure
+      const errorMessage = error?.error?.message || error?.message || 'Kullanıcı güncellenirken bir hata oluştu';
+
       Swal.fire({
         icon: 'error',
         title: 'Hata!',
-        html: `<p>${error?.message || 'Kullanıcı güncellenirken bir hata oluştu'}</p>${
-          error?.response?.data?.errors
-            ? `<div style="margin-top: 10px; text-align: left; font-size: 12px;"><strong>Detaylar:</strong><br/>${
-                Object.entries(error.response.data.errors)
-                  .map(([key, val]: any) => `• ${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
-                  .join('<br/>')
-              }</div>`
-            : ''
-        }`,
+        text: errorMessage,
         confirmButtonColor: '#667eea',
       });
     },
