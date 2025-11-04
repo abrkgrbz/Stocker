@@ -10,6 +10,7 @@ import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space, 
 import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getRoles, type Role } from '@/lib/api/roles';
+import { getDepartments, type Department } from '@/lib/api/departments';
 
 const { Option } = Select;
 
@@ -41,6 +42,13 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
   const { data: roles, isLoading: rolesLoading } = useQuery<Role[]>({
     queryKey: ['roles'],
     queryFn: getRoles,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Fetch available departments from backend
+  const { data: departments, isLoading: departmentsLoading } = useQuery<Department[]>({
+    queryKey: ['departments'],
+    queryFn: getDepartments,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -307,12 +315,29 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             name="department"
             label={<span style={{ fontWeight: 500 }}>Departman</span>}
           >
-            <Input
+            <Select
               size="large"
-              prefix={<TeamOutlined style={{ color: '#667eea' }} />}
-              placeholder="Satış"
+              placeholder={departmentsLoading ? 'Departmanlar yükleniyor...' : 'Departman seçin'}
+              loading={departmentsLoading}
+              disabled={departmentsLoading}
+              allowClear
               style={{ borderRadius: 8 }}
-            />
+              notFoundContent={departmentsLoading ? <Spin size="small" /> : 'Departman bulunamadı'}
+            >
+              {departments?.map((department) => (
+                <Option key={department.id} value={department.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <TeamOutlined style={{ color: '#667eea' }} />
+                    <div>
+                      <div>{department.name}</div>
+                      {department.code && (
+                        <div style={{ fontSize: 12, color: '#8c8c8c' }}>{department.code}</div>
+                      )}
+                    </div>
+                  </div>
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </div>
 

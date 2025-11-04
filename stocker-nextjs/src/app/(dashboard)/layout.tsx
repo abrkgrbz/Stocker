@@ -22,6 +22,7 @@ import {
   SafetyOutlined,
   SafetyCertificateOutlined,
   ControlOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -156,6 +157,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               key: '/settings/roles',
               icon: <SafetyCertificateOutlined />,
               label: 'Roller',
+            },
+            {
+              key: '/settings/departments',
+              icon: <ApartmentOutlined />,
+              label: 'Departmanlar',
             },
           ],
         },

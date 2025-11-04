@@ -34,6 +34,14 @@ public static class DomainErrors
             "Tenant.NotFound",
             $"Tenant with ID '{tenantId}' was not found.");
 
+        public static Error TenantNotFound => Error.NotFound(
+            "Tenant.NotFound",
+            "Tenant not found.");
+
+        public static Error CompanyNotFound => Error.NotFound(
+            "Tenant.CompanyNotFound",
+            "Company not found.");
+
         public static Error NotFoundByCode(string code) => Error.NotFound(
             "Tenant.NotFoundByCode",
             $"Tenant with code '{code}' was not found.");
@@ -98,5 +106,20 @@ public static class DomainErrors
         public static Error TrialNotAvailable => Error.Validation(
             "Subscription.TrialNotAvailable",
             "Trial period is not available for this subscription.");
+    }
+
+    public static class Department
+    {
+        public static Error NotFound => Error.NotFound(
+            "Department.NotFound",
+            "Department was not found.");
+
+        public static Error AlreadyExists => Error.Conflict(
+            "Department.AlreadyExists",
+            "Department with this name already exists.");
+
+        public static Error HasEmployees => Error.Validation(
+            "Department.HasEmployees",
+            "Department cannot be deleted because it has employees.");
     }
 }

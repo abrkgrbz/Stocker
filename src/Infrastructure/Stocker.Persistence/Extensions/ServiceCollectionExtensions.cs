@@ -170,6 +170,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantUnitOfWorkFactory, TenantUnitOfWorkFactory>();
         services.AddScoped<ITenantContextFactory, TenantContextFactory>();
         services.AddScoped<ITenantResolver, TenantResolver>();
+        services.AddScoped<ICompanyService, Services.CompanyService>();
 
         // Add Tenant Module Service (for module authorization - Phase 4.5)
         services.AddScoped<ITenantModuleService, Services.TenantModuleService>();
@@ -199,6 +200,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISettingsRepository, SettingsRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         
         // Register DbContext interfaces for Application layer
         services.AddScoped<ITenantDbContext>(provider => 
