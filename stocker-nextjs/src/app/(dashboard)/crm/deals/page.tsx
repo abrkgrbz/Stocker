@@ -73,22 +73,9 @@ export default function DealsPage() {
   // Handle both response formats: array or { items: [] }
   const deals = Array.isArray(data) ? data : (data?.items || []);
 
-  // Debug: Log critical data
-  console.log('🔍 Debug Info:');
-  console.log('  📊 isLoading:', isLoading);
-  console.log('  📊 data:', data);
-  console.log('  📊 deals array:', deals);
-  console.log('  📊 deals.length:', deals.length);
-  console.log('  📊 pipelines:', pipelines);
-  console.log('  📊 pipelines.length:', pipelines.length);
-
   // Get default pipeline's stages for kanban/list view
   const defaultPipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
   const stages = defaultPipeline?.stages || [];
-
-  console.log('  📊 defaultPipeline:', defaultPipeline);
-  console.log('  📊 stages:', stages);
-  console.log('  📊 stages.length:', stages.length);
 
   // Calculate statistics
   const stats = {
@@ -290,12 +277,6 @@ export default function DealsPage() {
 
   // Get deals without a stage (for "Aşamasız" column)
   const dealsWithoutStage = filteredDeals.filter((d) => !d.stageId && d.status === 'Open');
-
-  console.log('  📊 filteredDeals:', filteredDeals);
-  console.log('  📊 filteredDeals.length:', filteredDeals.length);
-  console.log('  📊 dealsWithoutStage:', dealsWithoutStage);
-  console.log('  📊 dealsWithoutStage.length:', dealsWithoutStage.length);
-  console.log('  📊 dealsByStage:', dealsByStage);
 
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
