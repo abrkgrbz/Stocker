@@ -6,3 +6,4 @@ export { EntityLink } from './EntityLink';
 export { QuickActions } from './QuickActions';
 export { CRMCardSkeleton } from './CRMCardSkeleton';
 export { CRMTableSkeleton } from './CRMTableSkeleton';
+export { DocumentUpload } from './DocumentUpload';

@@ -45,6 +45,7 @@ import {
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCRM';
+import { DocumentUpload } from '@/components/crm/shared';
 
 export default function CustomerDetailPage() {
   const params = useParams();
@@ -777,19 +778,13 @@ export default function CustomerDetailPage() {
                   </span>
                 ),
                 children: (
-                  <div className="py-16">
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span className="text-gray-500 text-base">
-                          Henüz döküman bulunmuyor
-                        </span>
-                      }
-                    >
-                      <Button type="primary" icon={<FileTextOutlined />} size="large">
-                        Döküman Ekle
-                      </Button>
-                    </Empty>
+                  <div className="py-4">
+                    <DocumentUpload
+                      entityId={parseInt(customer.id as string)}
+                      entityType="Customer"
+                      maxFileSize={10}
+                      allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}
+                    />
                   </div>
                 ),
               },

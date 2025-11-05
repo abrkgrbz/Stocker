@@ -719,6 +719,52 @@ export function useUploadDocument() {
   });
 }
 
+export function useDocument(id: number) {
+  return useQuery({
+    queryKey: crmKeys.document(id),
+    queryFn: () => CRMService.getDocument(id),
+    enabled: !!id,
+  });
+}
+
+export function useDownloadDocument() {
+  return useMutation({
+    mutationFn: (id: number) => CRMService.downloadDocument(id),
+    onSuccess: (blob, id) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document-${id}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      message.success('Döküman indirildi');
+    },
+    onError: () => {
+      message.error('Döküman indirilemedi');
+    },
+  });
+}
+
+export function useUpdateDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, metadata }: { id: number; metadata: any }) =>
+      CRMService.updateDocument(id, metadata),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.document(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'documents'] });
+      message.success('Döküman güncellendi');
+    },
+    onError: () => {
+      message.error('Döküman güncellenemedi');
+    },
+  });
+}
+
 export function useDeleteDocument() {
   const queryClient = useQueryClient();
 
