@@ -274,6 +274,9 @@ export default function DealsPage() {
     {} as Record<number, Deal[]>
   );
 
+  // Get deals without a stage (for "Aşamasız" column)
+  const dealsWithoutStage = filteredDeals.filter((d) => !d.stageId && d.status === 'Open');
+
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
     <Card
@@ -386,6 +389,32 @@ export default function DealsPage() {
           </div>
         );
       })}
+
+      {/* Aşamasız (No Stage) Column */}
+      {dealsWithoutStage.length > 0 && (
+        <div className="flex-shrink-0" style={{ width: 300 }}>
+          <Card
+            title={
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-gray-400" />
+                  <span>Aşamasız</span>
+                  <Tag>{dealsWithoutStage.length}</Tag>
+                </div>
+                <div className="text-sm font-normal text-gray-500 mt-1">
+                  ₺{dealsWithoutStage.reduce((sum, d) => sum + d.amount, 0).toLocaleString('tr-TR')}
+                </div>
+              </div>
+            }
+            className="h-full"
+            bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto' }}
+          >
+            {dealsWithoutStage.map((deal) => (
+              <DealCard key={deal.id} deal={deal} />
+            ))}
+          </Card>
+        </div>
+      )}
     </div>
   );
 
