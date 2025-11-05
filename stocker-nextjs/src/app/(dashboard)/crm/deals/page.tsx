@@ -72,9 +72,22 @@ export default function DealsPage() {
 
   const deals = data?.items || [];
 
+  // Debug: Log critical data
+  console.log('🔍 Debug Info:');
+  console.log('  📊 isLoading:', isLoading);
+  console.log('  📊 data:', data);
+  console.log('  📊 deals array:', deals);
+  console.log('  📊 deals.length:', deals.length);
+  console.log('  📊 pipelines:', pipelines);
+  console.log('  📊 pipelines.length:', pipelines.length);
+
   // Get default pipeline's stages for kanban/list view
   const defaultPipeline = pipelines.find((p) => p.isDefault) || pipelines[0];
   const stages = defaultPipeline?.stages || [];
+
+  console.log('  📊 defaultPipeline:', defaultPipeline);
+  console.log('  📊 stages:', stages);
+  console.log('  📊 stages.length:', stages.length);
 
   // Calculate statistics
   const stats = {
@@ -276,6 +289,12 @@ export default function DealsPage() {
 
   // Get deals without a stage (for "Aşamasız" column)
   const dealsWithoutStage = filteredDeals.filter((d) => !d.stageId && d.status === 'Open');
+
+  console.log('  📊 filteredDeals:', filteredDeals);
+  console.log('  📊 filteredDeals.length:', filteredDeals.length);
+  console.log('  📊 dealsWithoutStage:', dealsWithoutStage);
+  console.log('  📊 dealsWithoutStage.length:', dealsWithoutStage.length);
+  console.log('  📊 dealsByStage:', dealsByStage);
 
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
@@ -523,7 +542,16 @@ export default function DealsPage() {
         </Col>
       </Row>
 
-      {viewMode === 'kanban' ? <KanbanView /> : <ListView />}
+      {isLoading ? (
+        <Card className="text-center py-16">
+          <div className="text-4xl mb-4">⏳</div>
+          <div className="text-gray-500">Fırsatlar yükleniyor...</div>
+        </Card>
+      ) : viewMode === 'kanban' ? (
+        <KanbanView />
+      ) : (
+        <ListView />
+      )}
 
       {/* Create/Edit Modal */}
       <DealModal
