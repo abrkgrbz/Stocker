@@ -32,6 +32,7 @@ import {
   useCreateOpportunity,
   useWinOpportunity,
   useLoseOpportunity,
+  usePipelines,
 } from '@/lib/api/hooks/useCRM';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
 import { OpportunityModal } from '@/features/opportunities/components/OpportunityModal';
@@ -58,6 +59,7 @@ export default function OpportunitiesPage() {
 
   // API Hooks
   const { data, isLoading, refetch } = useOpportunities();
+  const { data: pipelines = [], isLoading: pipelinesLoading } = usePipelines();
   const createOpportunity = useCreateOpportunity();
   const winOpportunity = useWinOpportunity();
   const loseOpportunity = useLoseOpportunity();
@@ -215,6 +217,13 @@ export default function OpportunitiesPage() {
             />
           </div>
         </div>
+
+        {opportunity.customerName && (
+          <div className="mb-2 text-xs text-gray-600 flex items-center gap-1">
+            <UserOutlined className="text-gray-400" />
+            <span>{opportunity.customerName}</span>
+          </div>
+        )}
 
         {opportunity.expectedCloseDate && (
           <div className="mb-3 text-xs text-gray-500">
@@ -423,7 +432,8 @@ export default function OpportunitiesPage() {
       <OpportunityModal
         open={modalOpen}
         opportunity={selectedOpportunity}
-        loading={createOpportunity.isPending}
+        loading={createOpportunity.isPending || pipelinesLoading}
+        pipelines={pipelines}
         onCancel={() => setModalOpen(false)}
         onSubmit={handleSubmit}
       />

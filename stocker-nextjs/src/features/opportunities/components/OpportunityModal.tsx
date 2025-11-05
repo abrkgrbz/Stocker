@@ -14,7 +14,7 @@ import {
   ArrowRightOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
-import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
+import type { OpportunityDto, OpportunityStatus, Pipeline } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/hooks/useCRM';
 import dayjs from 'dayjs';
 
@@ -24,6 +24,7 @@ interface OpportunityModalProps {
   open: boolean;
   opportunity: OpportunityDto | null;
   loading: boolean;
+  pipelines: Pipeline[];
   onCancel: () => void;
   onSubmit: (values: any) => void;
 }
@@ -32,16 +33,23 @@ export function OpportunityModal({
   open,
   opportunity,
   loading,
+  pipelines,
   onCancel,
   onSubmit,
 }: OpportunityModalProps) {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const isEditMode = !!opportunity;
 
   // Fetch customers for dropdown
   const { data: customersData, isLoading: customersLoading } = useCustomers();
   const customers = customersData?.items || [];
+
+  // Get stages from selected pipeline
+  const stages = selectedPipeline
+    ? pipelines.find((p) => p.id === selectedPipeline)?.stages || []
+    : [];
 
   React.useEffect(() => {
     if (open && opportunity) {
@@ -362,35 +370,58 @@ export function OpportunityModal({
               <h3 className="text-base font-semibold text-gray-800 m-0">Satış Süreci (Opsiyonel)</h3>
             </div>
             <Card className="shadow-sm border-gray-200">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Pipeline ID</span>}
-                    name="pipelineId"
-                  >
-                    <Input
-                      className="rounded-lg"
-                      placeholder="Pipeline ID (opsiyonel)"
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label={<span className="text-gray-700 font-medium">Stage ID</span>}
-                    name="stageId"
-                  >
-                    <Input
-                      className="rounded-lg"
-                      placeholder="Stage ID (opsiyonel)"
-                      size="large"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">💼 Satış Süreci (Pipeline)</span>}
+                name="pipelineId"
+              >
+                <Select
+                  placeholder="Satış sürecini seçiniz (opsiyonel)"
+                  className="rounded-lg"
+                  size="large"
+                  allowClear
+                  onChange={(value) => {
+                    setSelectedPipeline(value);
+                    form.setFieldsValue({ stageId: undefined }); // Reset stage when pipeline changes
+                  }}
+                >
+                  {pipelines.map((pipeline) => (
+                    <Select.Option key={pipeline.id} value={pipeline.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{pipeline.name}</span>
+                        <span className="text-gray-500 text-xs">({pipeline.stages?.length || 0} aşama)</span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="text-sm text-gray-600">
+              <Form.Item
+                label={<span className="text-gray-700 font-medium">Aşama</span>}
+                name="stageId"
+              >
+                <Select
+                  placeholder={selectedPipeline ? "Aşama seçiniz (opsiyonel)" : "Önce pipeline seçiniz"}
+                  className="rounded-lg"
+                  size="large"
+                  allowClear
+                  disabled={!selectedPipeline}
+                >
+                  {stages.map((stage) => (
+                    <Select.Option key={stage.id} value={stage.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: stage.color }}
+                        />
+                        <span>{stage.name}</span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="text-sm text-blue-700">
                   <div className="font-medium mb-2">💡 Satış Süreci Bilgisi</div>
                   <div>Pipeline ve Stage bilgileri opsiyoneldir. Fırsatları belirli satış süreçlerine bağlamak için kullanılır.</div>
                 </div>

@@ -105,14 +105,20 @@ export interface Deal {
   id: number;
   title: string;
   customerId: number | null;
+  customerName?: string;
   pipelineId: number;
+  pipelineName?: string;
   stageId: number;
+  stageName?: string;
   amount: number;
   probability: number;
   expectedCloseDate: string | null;
   actualCloseDate: string | null;
   status: 'Open' | 'Won' | 'Lost';
+  priority?: 'Low' | 'Medium' | 'High';
   description: string | null;
+  assignedToId?: number;
+  assignedToName?: string;
   createdAt: string;
   updatedAt: string;
 }

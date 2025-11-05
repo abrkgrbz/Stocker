@@ -293,6 +293,13 @@ export default function DealsPage() {
         ₺{deal.amount.toLocaleString('tr-TR')}
       </div>
 
+      {deal.customerName && (
+        <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
+          <UserOutlined className="text-gray-400" />
+          <span>{deal.customerName}</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
         <Tooltip title="Olasılık">
           <span>{deal.probability}%</span>
@@ -401,6 +408,12 @@ export default function DealsPage() {
                   <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
                 </div>
                 {deal.description && <Text type="secondary">{deal.description}</Text>}
+                {deal.customerName && (
+                  <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                    <UserOutlined className="text-gray-400" />
+                    <span>{deal.customerName}</span>
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="text-xl font-semibold text-green-600">
