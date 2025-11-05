@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Interfaces.Repositories;
 using Stocker.Domain.Tenant.Entities;
-using Stocker.Persistence.Context;
+using Stocker.Persistence.Contexts;
 
 namespace Stocker.Persistence.Repositories.Tenant;
 
 public class DepartmentRepository : IDepartmentRepository
 {
-    private readonly AppDbContext _context;
+    private readonly TenantDbContext _context;
 
-    public DepartmentRepository(AppDbContext context)
+    public DepartmentRepository(TenantDbContext context)
     {
         _context = context;
     }
@@ -55,7 +55,7 @@ public class DepartmentRepository : IDepartmentRepository
 
     public async Task<int> GetEmployeeCountAsync(Guid departmentId, Guid tenantId, CancellationToken cancellationToken = default)
     {
-        return await _context.Users
+        return await _context.TenantUsers
             .Where(u => u.DepartmentId == departmentId && u.TenantId == tenantId)
             .CountAsync(cancellationToken);
     }

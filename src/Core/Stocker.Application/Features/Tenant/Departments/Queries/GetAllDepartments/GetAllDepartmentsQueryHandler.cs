@@ -1,9 +1,9 @@
 using MediatR;
 using Stocker.Application.Common.Interfaces;
-using Stocker.Application.Common.Models;
 using Stocker.Application.DTOs.Tenant.Departments;
 using Stocker.Application.Interfaces.Repositories;
-using Stocker.SharedKernel.Errors;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenant.Departments.Queries.GetAllDepartments;
 
@@ -22,7 +22,7 @@ public class GetAllDepartmentsQueryHandler : IRequestHandler<GetAllDepartmentsQu
 
     public async Task<Result<List<DepartmentListDto>>> Handle(GetAllDepartmentsQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetTenantId();
+        var tenantId = _tenantService.GetCurrentTenantId() ?? Guid.Empty;
         if (tenantId == Guid.Empty)
             return Result<List<DepartmentListDto>>.Failure(DomainErrors.Tenant.TenantNotFound);
 

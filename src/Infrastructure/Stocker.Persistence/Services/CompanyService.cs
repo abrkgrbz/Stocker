@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Common.Interfaces;
-using Stocker.Persistence.Context;
+using Stocker.Persistence.Contexts;
 
 namespace Stocker.Persistence.Services;
 
 public class CompanyService : ICompanyService
 {
-    private readonly AppDbContext _context;
+    private readonly TenantDbContext _context;
 
-    public CompanyService(AppDbContext context)
+    public CompanyService(TenantDbContext context)
     {
         _context = context;
     }

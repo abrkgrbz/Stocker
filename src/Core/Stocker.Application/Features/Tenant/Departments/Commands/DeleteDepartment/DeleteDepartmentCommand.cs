@@ -1,5 +1,5 @@
 using MediatR;
-using Stocker.Application.Common.Models;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenant.Departments.Commands.DeleteDepartment;
 

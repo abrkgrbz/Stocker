@@ -1,8 +1,8 @@
 using MediatR;
 using Stocker.Application.Common.Interfaces;
-using Stocker.Application.Common.Models;
 using Stocker.Application.Interfaces.Repositories;
-using Stocker.SharedKernel.Errors;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Tenant.Departments.Commands.DeleteDepartment;
 
@@ -21,7 +21,7 @@ public class DeleteDepartmentCommandHandler : IRequestHandler<DeleteDepartmentCo
 
     public async Task<Result<bool>> Handle(DeleteDepartmentCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetTenantId();
+        var tenantId = _tenantService.GetCurrentTenantId() ?? Guid.Empty;
         if (tenantId == Guid.Empty)
             return Result<bool>.Failure(DomainErrors.Tenant.TenantNotFound);
 

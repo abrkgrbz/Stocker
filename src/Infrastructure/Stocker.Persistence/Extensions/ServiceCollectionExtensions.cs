@@ -11,6 +11,7 @@ using Stocker.Persistence.Factories;
 using Stocker.Persistence.Interceptors;
 using Stocker.Persistence.Migrations;
 using Stocker.Persistence.Repositories;
+using Stocker.Persistence.Repositories.Tenant;
 using Stocker.Persistence.Services;
 using Stocker.Persistence.UnitOfWork;
 using Stocker.SharedKernel.Interfaces;
