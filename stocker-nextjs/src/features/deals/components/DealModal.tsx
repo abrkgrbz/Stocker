@@ -16,6 +16,7 @@ import {
   CheckOutlined,
 } from '@ant-design/icons';
 import type { Deal, Pipeline } from '@/lib/api/services/crm.service';
+import { useCustomers } from '@/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -43,6 +44,10 @@ export function DealModal({
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const isEditMode = !!deal;
+
+  // Fetch customers for dropdown
+  const { data: customersData, isLoading: customersLoading } = useCustomers();
+  const customers = customersData?.items || [];
 
   // Get stages from selected pipeline
   const stages = selectedPipeline
@@ -421,15 +426,24 @@ export function DealModal({
             </div>
             <Card className="shadow-sm border-gray-200">
               <Form.Item
-                label={<span className="text-gray-700 font-medium">Müşteri ID</span>}
+                label={<span className="text-gray-700 font-medium">Müşteri</span>}
                 name="customerId"
                 rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
               >
-                <Input
+                <Select
                   className="rounded-lg"
-                  prefix={<UserOutlined className="text-gray-400" />}
-                  placeholder="Müşteri ID girin"
+                  placeholder="Müşteri seçiniz"
                   size="large"
+                  showSearch
+                  loading={customersLoading}
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={customers.map((customer) => ({
+                    label: customer.customerName,
+                    value: customer.id,
+                  }))}
                 />
               </Form.Item>
 
