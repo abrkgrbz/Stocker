@@ -418,7 +418,7 @@ export function useDeals(filters?: any) {
 export function useDeal(id: Guid) {
   return useQuery({
     queryKey: crmKeys.deal(id),
-    queryFn: () => CRMService.getDeal(Number(id)),
+    queryFn: () => CRMService.getDeal(id),
     enabled: !!id,
   });
 }
@@ -513,10 +513,10 @@ export function useUpdateDeal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Deal> }) =>
+    mutationFn: ({ id, data }: { id: Guid; data: Partial<Deal> }) =>
       CRMService.updateDeal(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.id.toString()) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       message.success('Fırsat güncellendi');
     },
@@ -530,7 +530,7 @@ export function useDeleteDeal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => CRMService.deleteDeal(id),
+    mutationFn: (id: Guid) => CRMService.deleteDeal(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       message.success('Fırsat silindi');
@@ -732,7 +732,7 @@ export function useSalesForecast(fromDate: DateTime, toDate: DateTime) {
 // DOCUMENTS HOOKS (NEW)
 // =====================================
 
-export function useDocumentsByEntity(entityId: number, entityType: string) {
+export function useDocumentsByEntity(entityId: number | string, entityType: string) {
   return useQuery({
     queryKey: crmKeys.documents(entityId, entityType),
     queryFn: () => CRMService.getDocumentsByEntity(entityId, entityType),
@@ -746,7 +746,7 @@ export function useUploadDocument() {
   return useMutation({
     mutationFn: ({ file, entityId, entityType, category, metadata }: {
       file: File;
-      entityId: number;
+      entityId: number | string;
       entityType: string;
       category: DocumentCategory;
       metadata?: {
