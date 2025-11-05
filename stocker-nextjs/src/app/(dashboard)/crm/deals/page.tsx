@@ -70,7 +70,8 @@ export default function DealsPage() {
   const closeDealWon = useCloseDealWon();
   const closeDealLost = useCloseDealLost();
 
-  const deals = data?.items || [];
+  // Handle both response formats: array or { items: [] }
+  const deals = Array.isArray(data) ? data : (data?.items || []);
 
   // Debug: Log critical data
   console.log('🔍 Debug Info:');
