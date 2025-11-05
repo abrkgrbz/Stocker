@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Stocker.SharedKernel.Results;
 
 public class Result
@@ -61,6 +63,7 @@ public class Result<TValue> : Result
         _value = value;
     }
 
+    [JsonIgnore]
     public TValue Value => IsSuccess
         ? _value!
         : throw new InvalidOperationException("Cannot access value on failure result.");
