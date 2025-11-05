@@ -497,13 +497,16 @@ export function useCreateDeal() {
 
   return useMutation({
     mutationFn: (data: any) => CRMService.createDeal(data),
-    onSuccess: () => {
-      // Invalidate all deal queries (including those with filters)
-      queryClient.invalidateQueries({ queryKey: ['crm', 'deals'] });
+    onSuccess: async () => {
+      console.log('✅ Deal created successfully, invalidating queries...');
+      // Invalidate and refetch all deal queries
+      await queryClient.invalidateQueries({ queryKey: ['crm', 'deals'] });
+      console.log('✅ Deal queries invalidated and refetched');
       // Don't show message here - let the calling component handle it
     },
     onError: (error: any) => {
-      console.error('Deal creation error:', error);
+      console.error('❌ Deal creation error:', error);
+      console.error('❌ Error response:', error.response?.data);
       // Don't show message here - let the calling component handle it
     },
   });
