@@ -46,6 +46,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
+import { CustomerTags } from '@/components/crm/customers';
 
 export default function CustomerDetailPage() {
   const params = useParams();
@@ -372,6 +373,9 @@ export default function CustomerDetailPage() {
                       }`}>
                         {customer.isActive ? '✓ Aktif' : '✗ Pasif'}
                       </span>
+                    </div>
+                    <div className="mt-3 bg-white/20 px-4 py-3 rounded-lg backdrop-blur-md border-2 border-white/40">
+                      <CustomerTags customerId={customer.id} editable={true} size="default" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">

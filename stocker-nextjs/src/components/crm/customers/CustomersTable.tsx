@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { formatCurrency } from '@/lib/crm/formatters';
 import { CRM_STATUS_LABELS } from '@/lib/crm/constants';
+import { CustomerTagList } from './CustomerTags';
 
 interface CustomersTableProps {
   customers: Customer[];
@@ -183,6 +184,7 @@ export function CustomersTable({
                         >
                           {customer.customerType === 'Corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
                         </Tag>
+                        <CustomerTagList customerId={customer.id} />
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
