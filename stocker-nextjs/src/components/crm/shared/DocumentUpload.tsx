@@ -24,7 +24,7 @@ import {
 import type { DocumentCategory, AccessLevel } from '@/lib/api/services/crm.types';
 
 interface DocumentUploadProps {
-  entityId: number;
+  entityId: number | string; // Support both numeric IDs and GUIDs
   entityType: string;
   maxFileSize?: number; // in MB
   allowedFileTypes?: string[];

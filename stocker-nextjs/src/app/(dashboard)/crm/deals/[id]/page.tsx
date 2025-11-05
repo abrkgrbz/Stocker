@@ -342,7 +342,7 @@ export default function DealDetailPage() {
               ),
               children: (
                 <DocumentUpload
-                  entityId={parseInt(dealId as string)}
+                  entityId={dealId}
                   entityType="Deal"
                   maxFileSize={10}
                   allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}

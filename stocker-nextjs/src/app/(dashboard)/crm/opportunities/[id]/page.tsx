@@ -336,7 +336,7 @@ export default function OpportunityDetailPage() {
               ),
               children: (
                 <DocumentUpload
-                  entityId={parseInt(opportunityId as string)}
+                  entityId={opportunityId}
                   entityType="Opportunity"
                   maxFileSize={10}
                   allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}

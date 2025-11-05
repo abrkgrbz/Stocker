@@ -784,7 +784,7 @@ export default function CustomerDetailPage() {
                 children: (
                   <div className="py-4">
                     <DocumentUpload
-                      entityId={parseInt(customer.id as string)}
+                      entityId={customer.id}
                       entityType="Customer"
                       maxFileSize={10}
                       allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}
