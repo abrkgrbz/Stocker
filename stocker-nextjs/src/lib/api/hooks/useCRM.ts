@@ -498,16 +498,13 @@ export function useCreateDeal() {
   return useMutation({
     mutationFn: (data: any) => CRMService.createDeal(data),
     onSuccess: async () => {
-      console.log('✅ Deal created successfully, invalidating queries...');
-      // Invalidate and refetch all deal queries
-      await queryClient.invalidateQueries({ queryKey: ['crm', 'deals'] });
-      console.log('✅ Deal queries invalidated and refetched');
+      // Invalidate and refetch all deal queries (using exact: false to match all filter variations)
+      await queryClient.invalidateQueries({ queryKey: crmKeys.deals, exact: false });
       // Don't show message here - let the calling component handle it
     },
     onError: (error: any) => {
-      console.error('❌ Deal creation error:', error);
-      console.error('❌ Error response:', error.response?.data);
       // Don't show message here - let the calling component handle it
+      console.error('Deal creation error:', error.response?.data);
     },
   });
 }
@@ -626,7 +623,7 @@ export function useCreateOpportunity() {
   return useMutation({
     mutationFn: (data: CreateOpportunityCommand) => CRMService.createOpportunity(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       message.success('Fırsat oluşturuldu');
     },
     onError: () => {
@@ -646,7 +643,7 @@ export function useWinOpportunity() {
       notes?: string;
     }) => CRMService.winOpportunity(id, actualAmount, closedDate, notes),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       message.success('🎉 Fırsat kazanıldı!');
     },
     onError: () => {
@@ -714,7 +711,7 @@ export function useLoseOpportunity() {
       notes?: string;
     }) => CRMService.loseOpportunity(id, lostReason, competitorName, closedDate, notes),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       message.info('Fırsat kaybedildi olarak işaretlendi');
     },
     onError: () => {

@@ -175,18 +175,15 @@ export default function DealsPage() {
   };
 
   const handleSubmit = async (values: any) => {
-    console.log('🔍 handleSubmit called with values:', values);
     try {
       // Validation: CustomerId is required by backend
       if (!values.customerId) {
-        console.log('❌ Validation failed: customerId missing');
         message.error('Müşteri seçimi zorunludur');
         return;
       }
 
       // Validation: ExpectedCloseDate is required and must be in future
       if (!values.expectedCloseDate) {
-        console.log('❌ Validation failed: expectedCloseDate missing');
         message.error('Tahmini kapanış tarihi zorunludur');
         return;
       }
@@ -195,7 +192,6 @@ export default function DealsPage() {
       const now = new Date();
       const selectedDate = new Date(values.expectedCloseDate);
       if (selectedDate <= now) {
-        console.log('❌ Validation failed: expectedCloseDate not in future');
         message.error('Tahmini kapanış tarihi gelecekte olmalıdır');
         return;
       }
@@ -215,14 +211,10 @@ export default function DealsPage() {
       if (values.pipelineId) dealData.pipelineId = values.pipelineId;
       if (values.stageId) dealData.stageId = values.stageId;
 
-      console.log('📤 Sending dealData:', dealData);
-
       if (selectedDeal) {
-        console.log('📝 Updating existing deal:', selectedDeal.id);
         await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
         message.success('Fırsat güncellendi');
       } else {
-        console.log('✨ Creating new deal');
         await createDeal.mutateAsync(dealData);
         message.success('Fırsat oluşturuldu');
       }
