@@ -598,43 +598,6 @@ export function useCloseDealLost() {
   });
 }
 
-export function useAddDealProduct() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ dealId, productId, quantity, unitPrice, discount }: {
-      dealId: Guid;
-      productId: Guid;
-      quantity: number;
-      unitPrice: number;
-      discount?: number;
-    }) => CRMService.addDealProduct(dealId, productId, quantity, unitPrice, discount),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
-      message.success('Ürün eklendi');
-    },
-    onError: () => {
-      message.error('Ürün eklenemedi');
-    },
-  });
-}
-
-export function useRemoveDealProduct() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ dealId, productId }: { dealId: Guid; productId: Guid }) =>
-      CRMService.removeDealProduct(dealId, productId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
-      message.success('Ürün kaldırıldı');
-    },
-    onError: () => {
-      message.error('Ürün kaldırılamadı');
-    },
-  });
-}
-
 // =====================================
 // OPPORTUNITIES HOOKS (NEW)
 // =====================================
