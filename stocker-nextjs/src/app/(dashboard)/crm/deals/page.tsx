@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Button,
@@ -53,6 +54,7 @@ const statusColors: Record<Deal['status'], string> = {
 };
 
 export default function DealsPage() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [modalOpen, setModalOpen] = useState(false);
@@ -276,11 +278,12 @@ export default function DealsPage() {
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
     <Card
-      className="mb-3 hover:shadow-md transition-shadow"
+      className="mb-3 hover:shadow-md transition-shadow cursor-pointer"
       bodyStyle={{ padding: '12px' }}
+      onClick={() => router.push(`/crm/deals/${deal.id}`)}
     >
       <div className="flex justify-between items-start mb-2">
-        <Text strong className="text-sm cursor-pointer" onClick={() => handleEdit(deal)}>
+        <Text strong className="text-sm">
           {deal.title}
         </Text>
         <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
@@ -385,7 +388,7 @@ export default function DealsPage() {
     <Card>
       <div className="space-y-3">
         {filteredDeals.map((deal) => (
-          <Card key={deal.id} className="cursor-pointer hover:shadow-md" onClick={() => handleEdit(deal)}>
+          <Card key={deal.id} className="cursor-pointer hover:shadow-md" onClick={() => router.push(`/crm/deals/${deal.id}`)}>
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">

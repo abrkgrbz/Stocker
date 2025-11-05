@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Button,
@@ -51,6 +52,7 @@ const statusConfig: Record<OpportunityStatus, { color: string; label: string; ic
 };
 
 export default function OpportunitiesPage() {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityDto | null>(null);
 
@@ -176,8 +178,9 @@ export default function OpportunitiesPage() {
 
     return (
       <Card
-        className="hover:shadow-lg transition-all duration-300"
+        className="hover:shadow-lg transition-all duration-300 cursor-pointer"
         bodyStyle={{ padding: '20px' }}
+        onClick={() => router.push(`/crm/opportunities/${opportunity.id}`)}
       >
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
@@ -225,7 +228,10 @@ export default function OpportunitiesPage() {
               type="primary"
               size="small"
               icon={<CheckCircleOutlined />}
-              onClick={() => handleWin(opportunity)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWin(opportunity);
+              }}
               block
             >
               Kazanıldı
@@ -234,7 +240,10 @@ export default function OpportunitiesPage() {
               danger
               size="small"
               icon={<StopOutlined />}
-              onClick={() => handleLose(opportunity)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLose(opportunity);
+              }}
               block
             >
               Kaybedildi

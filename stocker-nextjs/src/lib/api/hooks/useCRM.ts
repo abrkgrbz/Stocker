@@ -439,6 +439,45 @@ export function useDealProducts(id: Guid) {
   });
 }
 
+export function useAddDealProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ dealId, productId, quantity, unitPrice, discount }: {
+      dealId: Guid;
+      productId: Guid;
+      quantity: number;
+      unitPrice: number;
+      discount?: number;
+    }) => CRMService.addDealProduct(dealId, productId, quantity, unitPrice, discount),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
+      message.success('Ürün eklendi');
+    },
+    onError: () => {
+      message.error('Ürün eklenemedi');
+    },
+  });
+}
+
+export function useRemoveDealProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ dealId, productId }: { dealId: Guid; productId: Guid }) =>
+      CRMService.removeDealProduct(dealId, productId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
+      message.success('Ürün kaldırıldı');
+    },
+    onError: () => {
+      message.error('Ürün kaldırılamadı');
+    },
+  });
+}
+
 export function useDealStatistics(fromDate?: DateTime, toDate?: DateTime) {
   return useQuery({
     queryKey: crmKeys.dealsStats(fromDate, toDate),
@@ -646,6 +685,53 @@ export function useWinOpportunity() {
     },
     onError: () => {
       message.error('İşlem başarısız');
+    },
+  });
+}
+
+export function useOpportunityProducts(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.opportunityProducts(id),
+    queryFn: () => CRMService.getOpportunityProducts(id),
+    enabled: !!id,
+  });
+}
+
+export function useAddOpportunityProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ opportunityId, productId, quantity, unitPrice, discount }: {
+      opportunityId: Guid;
+      productId: Guid;
+      quantity: number;
+      unitPrice: number;
+      discount?: number;
+    }) => CRMService.addOpportunityProduct(opportunityId, productId, quantity, unitPrice, discount),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunityProducts(variables.opportunityId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
+      message.success('Ürün eklendi');
+    },
+    onError: () => {
+      message.error('Ürün eklenemedi');
+    },
+  });
+}
+
+export function useRemoveOpportunityProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ opportunityId, productId }: { opportunityId: Guid; productId: Guid }) =>
+      CRMService.removeOpportunityProduct(opportunityId, productId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunityProducts(variables.opportunityId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
+      message.success('Ürün kaldırıldı');
+    },
+    onError: () => {
+      message.error('Ürün kaldırılamadı');
     },
   });
 }
