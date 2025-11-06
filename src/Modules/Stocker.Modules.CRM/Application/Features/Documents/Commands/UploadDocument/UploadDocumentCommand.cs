@@ -9,7 +9,7 @@ public record UploadDocumentCommand(
     string ContentType,
     long FileSize,
     byte[] FileData,
-    int EntityId,
+    string EntityId,
     string EntityType,
     DocumentCategory Category,
     string? Description = null,

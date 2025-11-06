@@ -19,7 +19,7 @@ public class Document : BaseEntity
         long fileSize,
         string storagePath,
         string storageProvider,
-        int entityId,
+        string entityId,
         string entityType,
         DocumentCategory category,
         Guid tenantId,
@@ -81,8 +81,9 @@ public class Document : BaseEntity
 
     /// <summary>
     /// ID of the related entity (Customer, Deal, Contract, etc.)
+    /// Supports both numeric IDs and GUIDs as string
     /// </summary>
-    public int EntityId { get; private set; }
+    public string EntityId { get; private set; }
 
     /// <summary>
     /// Type of the related entity (e.g., "Customer", "Deal", "Contract")
@@ -160,7 +161,7 @@ public class Document : BaseEntity
         long fileSize,
         string storagePath,
         string storageProvider,
-        int entityId,
+        string entityId,
         string entityType,
         DocumentCategory category,
         Guid tenantId,
@@ -184,7 +185,7 @@ public class Document : BaseEntity
         if (string.IsNullOrWhiteSpace(storageProvider))
             return Result<Document>.Failure(Error.Validation("Document", "Storage provider is required"));
 
-        if (entityId <= 0)
+        if (string.IsNullOrWhiteSpace(entityId))
             return Result<Document>.Failure(Error.Validation("Document", "Entity ID is required"));
 
         if (string.IsNullOrWhiteSpace(entityType))

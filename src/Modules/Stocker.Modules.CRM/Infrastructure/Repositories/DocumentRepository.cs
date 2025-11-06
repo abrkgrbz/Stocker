@@ -44,7 +44,7 @@ public class DocumentRepository : IDocumentRepository
     }
 
     public async Task<IEnumerable<Document>> GetByEntityAsync(
-        int entityId,
+        string entityId,
         string entityType,
         CancellationToken cancellationToken = default)
     {
@@ -102,7 +102,7 @@ public class DocumentRepository : IDocumentRepository
     }
 
     public async Task<long> GetEntityStorageSizeAsync(
-        int entityId,
+        string entityId,
         string entityType,
         CancellationToken cancellationToken = default)
     {

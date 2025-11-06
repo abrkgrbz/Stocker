@@ -1297,7 +1297,7 @@ export class CRMService {
    */
   static async uploadDocument(
     file: File,
-    entityId: number,
+    entityId: number | string,
     entityType: string,
     category: DocumentCategory,
     metadata?: {
@@ -1309,7 +1309,7 @@ export class CRMService {
   ): Promise<UploadDocumentResponse> {
     const formData = new FormData();
     formData.append('File', file);
-    formData.append('EntityId', entityId.toString());
+    formData.append('EntityId', typeof entityId === 'number' ? entityId.toString() : entityId);
     formData.append('EntityType', entityType);
     formData.append('Category', category);
 
@@ -1318,10 +1318,10 @@ export class CRMService {
     if (metadata?.accessLevel) formData.append('AccessLevel', metadata.accessLevel);
     if (metadata?.expiresAt) formData.append('ExpiresAt', metadata.expiresAt);
 
+    // Don't set Content-Type manually - axios will add boundary automatically
     return ApiService.post<UploadDocumentResponse>(
       this.getPath('documents/upload'),
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     );
   }
 
@@ -1336,7 +1336,7 @@ export class CRMService {
    * Get documents by entity
    */
   static async getDocumentsByEntity(
-    entityId: number,
+    entityId: number | string,
     entityType: string
   ): Promise<DocumentDto[]> {
     return ApiService.get<DocumentDto[]>(

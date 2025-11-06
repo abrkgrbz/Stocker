@@ -13,7 +13,7 @@ public record DocumentDto(
     string ContentType,
     long FileSize,
     string StoragePath,
-    int EntityId,
+    string EntityId,
     string EntityType,
     DocumentCategory Category,
     string? Description,

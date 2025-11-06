@@ -87,7 +87,7 @@ public class DocumentsController : ControllerBase
     /// </summary>
     [HttpGet("entity/{entityId}/{entityType}")]
     [ProducesResponseType(typeof(List<DocumentDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetDocumentsByEntity(int entityId, string entityType)
+    public async Task<IActionResult> GetDocumentsByEntity(string entityId, string entityType)
     {
         var query = new GetDocumentsByEntityQuery(entityId, entityType);
         var result = await _mediator.Send(query);
@@ -192,7 +192,7 @@ public class DocumentsController : ControllerBase
 // Request DTOs
 public record UploadDocumentRequest(
     IFormFile File,
-    int EntityId,
+    string EntityId,
     string EntityType,
     Domain.Enums.DocumentCategory Category,
     string? Description = null,
