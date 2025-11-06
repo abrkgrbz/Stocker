@@ -70,7 +70,8 @@ public enum ActivityType
     Survey = 27,                 // Anket
     Review = 28,                 // İnceleme/Gözden Geçirme
     Planning = 29,               // Planlama
-    Reporting = 30               // Raporlama
+    Reporting = 30,              // Raporlama
+    Document = 31                // Doküman Yükleme
 }
 
 public enum ActivityStatus

@@ -4,7 +4,9 @@ using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Application.Contracts;
 using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.Common;
 using Stocker.SharedKernel.MultiTenancy;
 
@@ -16,6 +18,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
     private readonly IDocumentStorageService _storageService;
     private readonly ITenantService _tenantService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly CRMDbContext _context;
     private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
     public UploadDocumentCommandHandler(
@@ -23,12 +26,14 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
         IDocumentStorageService storageService,
         ITenantService tenantService,
         ICurrentUserService currentUserService,
+        CRMDbContext context,
         ILogger<UploadDocumentCommandHandler> logger)
     {
         _documentRepository = documentRepository;
         _storageService = storageService;
         _tenantService = tenantService;
         _currentUserService = currentUserService;
+        _context = context;
         _logger = logger;
     }
 
@@ -99,6 +104,48 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             // Save to database
             await _documentRepository.AddAsync(document, cancellationToken);
             await _documentRepository.SaveChangesAsync(cancellationToken);
+
+            // Create Activity for document upload
+            var activity = new Activity(
+                tenantId: tenantId.Value,
+                subject: $"Doküman yüklendi: {document.OriginalFileName}",
+                type: ActivityType.Document,
+                ownerId: 1); // TODO: Map UserId from Guid to int properly
+
+            activity.UpdateDetails(
+                subject: $"Doküman yüklendi: {document.OriginalFileName}",
+                description: $"{document.Category} kategorisinde doküman yüklendi. Dosya boyutu: {document.FileSize / 1024:F2} KB",
+                priority: ActivityPriority.Normal);
+
+            // Link activity to the entity based on EntityType
+            if (Guid.TryParse(request.EntityId, out var entityGuid))
+            {
+                switch (request.EntityType.ToLower())
+                {
+                    case "deal":
+                        activity.RelateToDeal(entityGuid);
+                        break;
+                    case "customer":
+                        activity.RelateToCustomer(entityGuid);
+                        break;
+                    case "contact":
+                        activity.RelateToContact(entityGuid);
+                        break;
+                    case "lead":
+                        activity.RelateToDeal(entityGuid);
+                        break;
+                    case "opportunity":
+                        activity.RelateToOpportunity(entityGuid);
+                        break;
+                }
+            }
+
+            // Mark activity as completed since upload is done
+            activity.Complete($"Doküman başarıyla yüklendi: {document.StoragePath}");
+
+            // Save activity
+            _context.Activities.Add(activity);
+            await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "Document uploaded successfully. DocumentId: {DocumentId}, FileName: {FileName}, EntityId: {EntityId}, EntityType: {EntityType}",
