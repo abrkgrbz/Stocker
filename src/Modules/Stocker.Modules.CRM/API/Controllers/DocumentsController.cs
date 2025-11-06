@@ -32,6 +32,7 @@ public class DocumentsController : ControllerBase
     /// Upload a new document
     /// </summary>
     [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(UploadDocumentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadDocument([FromForm] UploadDocumentRequest request)
