@@ -27,9 +27,7 @@ const API_URL = getApiUrl();
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Don't set Content-Type here - let interceptor handle it based on data type
   withCredentials: true, // ✅ Enable HttpOnly cookie support
 });
 
@@ -82,6 +80,13 @@ apiClient.interceptors.request.use(
       const tenantId = localStorage.getItem('tenantId');
       if (tenantId) {
         config.headers['X-Tenant-Id'] = tenantId;
+      }
+
+      // Set Content-Type based on data type
+      // If data is FormData, let axios set multipart/form-data with boundary automatically
+      // Otherwise, set application/json as default
+      if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
       }
     }
 
