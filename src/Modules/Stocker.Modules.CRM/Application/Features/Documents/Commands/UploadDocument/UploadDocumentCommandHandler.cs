@@ -15,17 +15,20 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentStorageService _storageService;
     private readonly ITenantService _tenantService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
     public UploadDocumentCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentStorageService storageService,
         ITenantService tenantService,
+        ICurrentUserService currentUserService,
         ILogger<UploadDocumentCommandHandler> logger)
     {
         _documentRepository = documentRepository;
         _storageService = storageService;
         _tenantService = tenantService;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -39,9 +42,9 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             if (!tenantId.HasValue)
                 return Result<UploadDocumentResponse>.Failure(Error.Validation("Document", "Tenant context is required"));
 
-            // TODO: Get current user ID from claims or authentication context
-            var userId = Guid.Empty; // Temporary - should come from authenticated user context
-            if (userId == Guid.Empty)
+            // Get current authenticated user ID
+            var userId = _currentUserService.UserId;
+            if (!userId.HasValue)
                 return Result<UploadDocumentResponse>.Failure(Error.Validation("Document", "User context is required"));
 
             // Validate file size (e.g., max 50MB)
@@ -70,7 +73,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
                 request.EntityType,
                 request.Category,
                 tenantId.Value,
-                userId,
+                userId.Value,
                 request.Description,
                 request.Tags);
 

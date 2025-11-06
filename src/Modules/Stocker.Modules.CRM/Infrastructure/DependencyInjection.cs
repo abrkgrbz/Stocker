@@ -2,12 +2,14 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Minio;
 using Stocker.Modules.CRM.Domain.Repositories;
 using Stocker.Modules.CRM.Infrastructure.EventConsumers;
 using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.Modules.CRM.Infrastructure.Persistence.Repositories;
 using Stocker.Modules.CRM.Infrastructure.Services;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
+using Stocker.Modules.CRM.Infrastructure.Configuration;
 using Stocker.Modules.CRM.Application.Contracts;
 using Stocker.SharedKernel.Interfaces;
 
@@ -78,8 +80,24 @@ public static class DependencyInjection
         // Register Segmentation Services
         services.AddScoped<Application.Segmentation.SegmentCriteriaEngine>();
 
-        // Register Document Storage Service
-        services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
+        // Register MinIO Storage Configuration
+        services.Configure<MinioSettings>(configuration.GetSection(MinioSettings.SectionName));
+
+        // Register MinIO Client
+        services.AddSingleton<IMinioClient>(serviceProvider =>
+        {
+            var settings = configuration.GetSection(MinioSettings.SectionName).Get<MinioSettings>()
+                ?? throw new InvalidOperationException("MinioStorage configuration section is missing");
+
+            return new MinioClient()
+                .WithEndpoint(settings.Endpoint)
+                .WithCredentials(settings.AccessKey, settings.SecretKey)
+                .WithSSL(settings.UseSSL)
+                .Build();
+        });
+
+        // Register Document Storage Service (MinIO)
+        services.AddScoped<IDocumentStorageService, MinioDocumentStorageService>();
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.CRM.ICrmCustomerService, Application.Services.CrmCustomerService>();
