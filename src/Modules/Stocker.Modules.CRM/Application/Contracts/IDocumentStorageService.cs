@@ -14,6 +14,9 @@ public interface IDocumentStorageService
         byte[] fileData,
         string fileName,
         string contentType,
+        Guid tenantId,
+        string entityType,
+        string entityId,
         CancellationToken cancellationToken = default);
 
     /// <summary>

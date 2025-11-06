@@ -32,6 +32,9 @@ public class MinioDocumentStorageService : IDocumentStorageService
         byte[] fileData,
         string fileName,
         string contentType,
+        Guid tenantId,
+        string entityType,
+        string entityId,
         CancellationToken cancellationToken = default)
     {
         try
@@ -39,9 +42,11 @@ public class MinioDocumentStorageService : IDocumentStorageService
             // Ensure bucket exists
             await EnsureBucketExistsAsync(cancellationToken);
 
-            // Generate unique file name with timestamp to prevent collisions
-            var uniqueFileName = $"{DateTimeOffset.UtcNow.Ticks}_{Guid.NewGuid():N}_{fileName}";
-            var objectName = $"documents/{uniqueFileName}";
+            // Organize folder structure: tenant/entityType/entityId/year/month/timestamp_guid_filename
+            var now = DateTimeOffset.UtcNow;
+            var folderPath = $"{tenantId}/{entityType.ToLowerInvariant()}/{entityId}/{now:yyyy}/{now:MM}";
+            var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{fileName}";
+            var objectName = $"{folderPath}/{uniqueFileName}";
 
             // Upload file to MinIO
             using var stream = new MemoryStream(fileData);
@@ -55,8 +60,8 @@ public class MinioDocumentStorageService : IDocumentStorageService
             await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
             _logger.LogInformation(
-                "File uploaded successfully to MinIO. Bucket: {Bucket}, Object: {Object}, Size: {Size} bytes",
-                _settings.BucketName, objectName, fileData.Length);
+                "File uploaded successfully to MinIO. Tenant: {TenantId}, Entity: {EntityType}/{EntityId}, Path: {ObjectPath}, Size: {Size} bytes",
+                tenantId, entityType, entityId, objectName, fileData.Length);
 
             // Generate public URL (or use presigned URL for temporary access)
             var url = $"{(_settings.UseSSL ? "https" : "http")}://{_settings.Endpoint}/{_settings.BucketName}/{objectName}";

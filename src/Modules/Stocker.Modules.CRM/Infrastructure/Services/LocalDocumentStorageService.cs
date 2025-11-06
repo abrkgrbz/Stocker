@@ -35,28 +35,41 @@ public class LocalDocumentStorageService : IDocumentStorageService
         byte[] fileData,
         string fileName,
         string contentType,
+        Guid tenantId,
+        string entityType,
+        string entityId,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Generate unique file name with date organization
-            var dateFolder = DateTime.UtcNow.ToString("yyyy/MM/dd");
-            var fullPath = Path.Combine(_storagePath, dateFolder);
-            
-            if (!Directory.Exists(fullPath))
+            // Generate organized folder structure: tenant/entityType/entityId/year/month/day
+            var now = DateTime.UtcNow;
+            var folderPath = Path.Combine(
+                _storagePath,
+                tenantId.ToString(),
+                entityType.ToLowerInvariant(),
+                entityId,
+                now.ToString("yyyy"),
+                now.ToString("MM"),
+                now.ToString("dd")
+            );
+
+            if (!Directory.Exists(folderPath))
             {
-                Directory.CreateDirectory(fullPath);
+                Directory.CreateDirectory(folderPath);
             }
 
-            var uniqueFileName = $"{Guid.NewGuid():N}_{Path.GetFileName(fileName)}";
-            var filePath = Path.Combine(fullPath, uniqueFileName);
+            var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{Path.GetFileName(fileName)}";
+            var filePath = Path.Combine(folderPath, uniqueFileName);
 
             await File.WriteAllBytesAsync(filePath, fileData, cancellationToken);
 
-            var relativePath = Path.Combine(dateFolder, uniqueFileName);
+            var relativePath = Path.GetRelativePath(_storagePath, filePath);
             var url = $"{_baseUrl}/{relativePath.Replace("\\", "/")}";
 
-            _logger.LogInformation("File uploaded successfully to local storage: {FilePath}", relativePath);
+            _logger.LogInformation(
+                "File uploaded successfully to local storage. Tenant: {TenantId}, Entity: {EntityType}/{EntityId}, Path: {FilePath}",
+                tenantId, entityType, entityId, relativePath);
 
             return Result<DocumentStorageResult>.Success(
                 new DocumentStorageResult(relativePath, "Local", url));

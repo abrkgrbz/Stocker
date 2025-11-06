@@ -52,11 +52,14 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             if (request.FileSize > maxFileSize)
                 return Result<UploadDocumentResponse>.Failure(Error.Validation("Document", $"File size exceeds maximum allowed size of {maxFileSize / (1024 * 1024)}MB"));
 
-            // Upload file to storage
+            // Upload file to storage with organized folder structure
             var uploadResult = await _storageService.UploadFileAsync(
                 request.FileData,
                 request.OriginalFileName,
                 request.ContentType,
+                tenantId.Value,
+                request.EntityType,
+                request.EntityId,
                 cancellationToken);
 
             if (!uploadResult.IsSuccess)
