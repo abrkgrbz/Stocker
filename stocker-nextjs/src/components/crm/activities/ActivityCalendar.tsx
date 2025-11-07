@@ -72,7 +72,7 @@ export function ActivityCalendar({
 
   // Transform activities to FullCalendar events
   const events = activities.map((activity) => {
-    const config = activityConfig[activity.type];
+    const config = activityConfig[activity.type] || activityConfig.Note; // Fallback to Note config
     const isCompleted = activity.status === 'Completed';
     const isCancelled = activity.status === 'Cancelled';
 
@@ -106,7 +106,7 @@ export function ActivityCalendar({
   // Custom event content renderer
   const renderEventContent = (eventInfo: EventContentArg) => {
     const { activity, type, status } = eventInfo.event.extendedProps;
-    const config = activityConfig[type as Activity['type']];
+    const config = activityConfig[type as Activity['type']] || activityConfig.Note; // Fallback to Note config
     const isCompleted = status === 'Completed';
     const isCancelled = status === 'Cancelled';
     const isAllDay = !eventInfo.event.end || eventInfo.event.allDay;

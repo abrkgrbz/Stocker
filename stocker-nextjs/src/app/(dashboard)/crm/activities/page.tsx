@@ -450,27 +450,30 @@ export default function ActivitiesPage() {
       <Drawer
         title={
           <div className="flex items-center gap-3">
-            {drawerActivity && (
-              <>
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-lg"
-                  style={{ background: activityConfig[drawerActivity.type].gradient }}
-                >
-                  {activityConfig[drawerActivity.type].icon}
-                </div>
-                <div>
-                  <div className="font-semibold text-base">{drawerActivity.title}</div>
-                  <Space size="small">
-                    <Tag color={activityConfig[drawerActivity.type].color}>
-                      {activityConfig[drawerActivity.type].label}
-                    </Tag>
-                    <Tag color={statusColors[drawerActivity.status]}>
-                      {drawerActivity.status}
-                    </Tag>
-                  </Space>
-                </div>
-              </>
-            )}
+            {drawerActivity && (() => {
+              const config = activityConfig[drawerActivity.type] || activityConfig.Note;
+              return (
+                <>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-lg"
+                    style={{ background: config.gradient }}
+                  >
+                    {config.icon}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-base">{drawerActivity.title}</div>
+                    <Space size="small">
+                      <Tag color={config.color}>
+                        {config.label}
+                      </Tag>
+                      <Tag color={statusColors[drawerActivity.status]}>
+                        {drawerActivity.status}
+                      </Tag>
+                    </Space>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         }
         placement="right"
