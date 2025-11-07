@@ -15,6 +15,8 @@ import {
   ReloadOutlined,
   TrophyOutlined,
   MoreOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -226,26 +228,50 @@ export default function CampaignsPage() {
       title: 'ROI',
       dataIndex: 'roi',
       key: 'roi',
-      width: 100,
+      width: 120,
       align: 'right',
       render: (roi) => (
-        <Tag color={roi > 0 ? 'success' : roi < 0 ? 'error' : 'default'}>
-          {roi > 0 ? '+' : ''}
-          {roi.toFixed(1)}%
-        </Tag>
+        <div className="flex items-center justify-end gap-1">
+          {roi > 0 ? (
+            <ArrowUpOutlined className="text-green-500 text-xs" />
+          ) : roi < 0 ? (
+            <ArrowDownOutlined className="text-red-500 text-xs" />
+          ) : null}
+          <Tag color={roi > 0 ? 'success' : roi < 0 ? 'error' : 'default'}>
+            {roi > 0 ? '+' : ''}
+            {roi.toFixed(1)}%
+          </Tag>
+        </div>
       ),
     },
     {
       title: 'Bütçe',
       key: 'budget',
-      width: 150,
-      align: 'right',
-      render: (_, record) => (
-        <div className="text-xs">
-          <div>₺{record.actualCost.toLocaleString('tr-TR')}</div>
-          <div className="text-gray-500">/ ₺{record.budgetedCost.toLocaleString('tr-TR')}</div>
-        </div>
-      ),
+      width: 180,
+      render: (_, record) => {
+        const budgetPercent = record.budgetedCost > 0
+          ? Math.round((record.actualCost / record.budgetedCost) * 100)
+          : 0;
+        const isOverBudget = record.actualCost > record.budgetedCost;
+
+        return (
+          <div>
+            <div className="text-xs mb-1 flex justify-between">
+              <span>₺{record.actualCost.toLocaleString('tr-TR')}</span>
+              <span className="text-gray-500">/ ₺{record.budgetedCost.toLocaleString('tr-TR')}</span>
+            </div>
+            <Progress
+              percent={budgetPercent}
+              size="small"
+              status={isOverBudget ? 'exception' : budgetPercent > 80 ? 'normal' : 'active'}
+              strokeColor={isOverBudget ? '#ef4444' : budgetPercent > 80 ? '#f59e0b' : '#10b981'}
+            />
+            <div className="text-xs mt-1" style={{ color: isOverBudget ? '#ef4444' : '#6b7280' }}>
+              {budgetPercent}% Kullanıldı
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'İşlemler',

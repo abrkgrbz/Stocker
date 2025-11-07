@@ -13,6 +13,7 @@ import {
   LineChartOutlined,
   ReloadOutlined,
   MoreOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
@@ -32,6 +33,8 @@ const pipelineTypeLabels: Record<string, string> = {
 export default function PipelinesPage() {
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [stagesModalOpen, setStagesModalOpen] = useState(false);
+  const [viewingPipeline, setViewingPipeline] = useState<Pipeline | null>(null);
 
   // API Hooks
   const { data: pipelines = [], isLoading, refetch } = usePipelines();
@@ -106,6 +109,11 @@ export default function PipelinesPage() {
     setIsModalOpen(true);
   };
 
+  const handleViewStages = (pipeline: Pipeline) => {
+    setViewingPipeline(pipeline);
+    setStagesModalOpen(true);
+  };
+
   const columns: ColumnsType<Pipeline> = [
     {
       title: 'Pipeline',
@@ -140,9 +148,21 @@ export default function PipelinesPage() {
       title: 'Aşamalar',
       dataIndex: 'stages',
       key: 'stages',
-      width: 100,
+      width: 120,
       align: 'center',
-      render: (stages) => <Tag color="purple">{stages?.length || 0} Aşama</Tag>,
+      render: (stages, record) => (
+        <Button
+          type="link"
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => handleViewStages(record)}
+          className="flex items-center gap-1"
+        >
+          <Tag color="purple" className="m-0">
+            {stages?.length || 0} Aşama
+          </Tag>
+        </Button>
+      ),
     },
     {
       title: 'Fırsatlar',
@@ -300,6 +320,58 @@ export default function PipelinesPage() {
         initialData={selectedPipeline}
         loading={createPipeline.isPending || updatePipeline.isPending}
       />
+
+      {/* Stages Quick View Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <FunnelPlotOutlined className="text-blue-500" />
+            <span>{viewingPipeline?.name} - Aşamalar</span>
+          </div>
+        }
+        open={stagesModalOpen}
+        onCancel={() => {
+          setStagesModalOpen(false);
+          setViewingPipeline(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => setStagesModalOpen(false)}>
+            Kapat
+          </Button>,
+        ]}
+        width={600}
+      >
+        {viewingPipeline?.stages && viewingPipeline.stages.length > 0 ? (
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600 mb-4">
+              Bu pipeline <strong>{viewingPipeline.stages.length} aşamadan</strong> oluşmaktadır:
+            </div>
+            {viewingPipeline.stages
+              .sort((a, b) => a.order - b.order)
+              .map((stage, index) => (
+                <div
+                  key={stage.id}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">{stage.name}</div>
+                    {stage.probability !== undefined && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Kazanma Olasılığı: <span className="font-medium">{stage.probability}%</span>
+                      </div>
+                    )}
+                  </div>
+                  <Tag color="blue">{stage.order}. Sıra</Tag>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <Empty description="Bu pipeline için henüz aşama tanımlanmamış" />
+        )}
+      </Modal>
     </div>
   );
 }
