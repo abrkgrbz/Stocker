@@ -276,71 +276,134 @@ export function DocumentUpload({
         </div>
       </Card>
 
-      {/* Documents List */}
+      {/* Documents List - Modern Grid Layout */}
       {documents && documents.length > 0 && (
         <Card
           title={
-            <div className="flex items-center space-x-2">
-              <FileOutlined />
-              <span>Yüklü Dokümanlar ({documents.length})</span>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500">
+                <FileOutlined className="text-white text-lg" />
+              </div>
+              <div>
+                <div className="text-lg font-semibold">Yüklü Dokümanlar</div>
+                <div className="text-sm text-gray-500">{documents.length} dosya</div>
+              </div>
             </div>
           }
           className="shadow-lg"
         >
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((doc, index) => (
               <motion.div
                 key={doc.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  transition: { duration: 0.2 }
+                }}
               >
                 <Card
-                  size="small"
-                  className="hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-500"
-                  extra={
-                    <Space>
-                      <Tooltip title="İndir">
-                        <Button
-                          type="text"
-                          icon={<DownloadOutlined />}
-                          onClick={() => handleDownload(doc.id)}
-                          loading={downloadMutation.isPending}
-                          className="hover:text-blue-500"
-                        />
-                      </Tooltip>
-                      <Tooltip title="Sil">
-                        <Button
-                          type="text"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(doc.id)}
-                          loading={deleteMutation.isPending}
-                        />
-                      </Tooltip>
-                    </Space>
-                  }
+                  className="h-full hover:shadow-2xl transition-all duration-300 border-0 overflow-hidden group"
+                  style={{
+                    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  }}
+                  bodyStyle={{ padding: 0 }}
                 >
-                  <div className="flex items-start space-x-3">
-                    {getFileIcon(doc.fileName)}
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-800">{doc.fileName}</div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Tag color="blue">{doc.category}</Tag>
-                        <span className="text-xs text-gray-500">
-                          {formatFileSize(doc.fileSizeBytes)}
-                        </span>
-                        {doc.uploadedAt && (
-                          <span className="text-xs text-gray-500">
-                            • {new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}
-                          </span>
-                        )}
+                  {/* Header with Icon */}
+                  <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 p-6 border-b border-gray-100">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-shrink-0">
+                        {getFileIcon(doc.fileName)}
                       </div>
-                      {doc.description && (
-                        <p className="text-sm text-gray-600 mt-2">{doc.description}</p>
-                      )}
+                      <Space>
+                        <Tooltip title="İndir">
+                          <Button
+                            type="text"
+                            icon={<DownloadOutlined />}
+                            onClick={() => handleDownload(doc.id)}
+                            loading={downloadMutation.isPending}
+                            className="hover:text-blue-500 hover:bg-blue-50 transition-all"
+                            size="small"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Sil">
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleDelete(doc.id)}
+                            loading={deleteMutation.isPending}
+                            className="hover:bg-red-50 transition-all"
+                            size="small"
+                          />
+                        </Tooltip>
+                      </Space>
                     </div>
                   </div>
+
+                  {/* Content */}
+                  <div className="p-4 space-y-3">
+                    {/* File Name */}
+                    <Tooltip title={doc.fileName}>
+                      <div className="font-semibold text-gray-800 truncate text-base">
+                        {doc.fileName}
+                      </div>
+                    </Tooltip>
+
+                    {/* Metadata */}
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <Tag
+                        color="blue"
+                        className="rounded-full px-3 py-1"
+                      >
+                        {doc.category}
+                      </Tag>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <span className="font-medium bg-gray-100 px-2 py-1 rounded">
+                          {formatFileSize(doc.fileSize)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Upload Date */}
+                    {doc.uploadedAt && (
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <span className="inline-flex items-center">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                          </svg>
+                          {new Date(doc.uploadedAt).toLocaleDateString('tr-TR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    {doc.description && (
+                      <div className="pt-2 border-t border-gray-100">
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {doc.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hover Gradient Border Effect */}
+                  <div
+                    className="absolute inset-0 border-2 border-transparent group-hover:border-blue-400 rounded-lg transition-all duration-300 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6) border-box'
+                    }}
+                  />
                 </Card>
               </motion.div>
             ))}
