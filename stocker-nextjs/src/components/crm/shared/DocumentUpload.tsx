@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import React, { useState, useEffect, useRef } from 'react';
+import Dropzone from 'dropzone';
+import 'dropzone/dist/dropzone.css';
 import {
   Button,
   Select,
@@ -16,7 +17,6 @@ import {
   Tooltip,
 } from 'antd';
 import {
-  CloudUploadOutlined,
   FileOutlined,
   DeleteOutlined,
   DownloadOutlined,
@@ -25,10 +25,8 @@ import {
   FileExcelOutlined,
   FileImageOutlined,
   FileZipOutlined,
-  InboxOutlined,
-  CheckCircleOutlined,
 } from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   useUploadDocument,
   useDocumentsByEntity,
@@ -36,6 +34,11 @@ import {
   useDownloadDocument,
 } from '@/lib/api/hooks/useCRM';
 import type { DocumentCategory, AccessLevel } from '@/lib/api/services/crm.types';
+
+// Disable Dropzone auto-discover
+if (typeof window !== 'undefined') {
+  Dropzone.autoDiscover = false;
+}
 
 interface DocumentUploadProps {
   entityId: number | string;
@@ -94,7 +97,7 @@ const formatFileSize = (bytes: number): string => {
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 
 export function DocumentUpload({
@@ -108,42 +111,52 @@ export function DocumentUpload({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const dropzoneRef = useRef<HTMLDivElement>(null);
+  const dropzoneInstance = useRef<Dropzone | null>(null);
 
   const uploadMutation = useUploadDocument();
   const { data: documents, refetch } = useDocumentsByEntity(entityId, entityType);
   const deleteMutation = useDeleteDocument();
   const downloadMutation = useDownloadDocument();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Check file size
-    const oversizedFiles = acceptedFiles.filter(
-      (file) => file.size / 1024 / 1024 > maxFileSize
-    );
+  useEffect(() => {
+    if (!dropzoneRef.current) return;
 
-    if (oversizedFiles.length > 0) {
-      message.error(`Bazı dosyalar ${maxFileSize}MB limitini aşıyor`);
-      return;
-    }
+    // Initialize Dropzone
+    const myDropzone = new Dropzone(dropzoneRef.current, {
+      url: '/api/placeholder', // Dummy URL (we handle upload manually)
+      autoProcessQueue: false,
+      maxFilesize: maxFileSize,
+      maxFiles: multiple ? null : 1,
+      acceptedFiles: allowedFileTypes.length > 0 ? allowedFileTypes.join(',') : undefined,
+      addRemoveLinks: true,
+      dictDefaultMessage: '📁 Dosyaları buraya sürükleyin veya tıklayın',
+      dictFallbackMessage: 'Tarayıcınız drag & drop desteklemiyor.',
+      dictFileTooBig: `Dosya çok büyük ({{filesize}}MB). Maksimum: ${maxFileSize}MB.`,
+      dictInvalidFileType: 'Bu dosya türü desteklenmiyor.',
+      dictRemoveFile: 'Kaldır',
+      dictCancelUpload: 'İptal',
+      dictMaxFilesExceeded: multiple ? 'Çok fazla dosya.' : 'Sadece bir dosya yükleyebilirsiniz.',
+    });
 
-    if (multiple) {
-      setSelectedFiles((prev) => [...prev, ...acceptedFiles]);
-    } else {
-      setSelectedFiles(acceptedFiles.slice(0, 1));
-    }
+    // Handle file added
+    myDropzone.on('addedfile', (file) => {
+      setSelectedFiles((prev) => [...prev, file as File]);
+    });
 
-    message.success(
-      `${acceptedFiles.length} dosya seçildi. Yüklemek için bilgileri doldurun.`
-    );
-  }, [maxFileSize, multiple]);
+    // Handle file removed
+    myDropzone.on('removedfile', (file) => {
+      setSelectedFiles((prev) => prev.filter((f) => f !== file));
+    });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: allowedFileTypes.length > 0
-      ? allowedFileTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {})
-      : undefined,
-    multiple,
-    maxSize: maxFileSize * 1024 * 1024,
-  });
+    dropzoneInstance.current = myDropzone;
+
+    return () => {
+      if (dropzoneInstance.current) {
+        dropzoneInstance.current.destroy();
+      }
+    };
+  }, [maxFileSize, multiple, allowedFileTypes]);
 
   const handleUploadClick = () => {
     if (selectedFiles.length === 0) {
@@ -188,6 +201,12 @@ export function DocumentUpload({
       setSelectedFiles([]);
       setUploadProgress(0);
       form.resetFields();
+
+      // Clear dropzone
+      if (dropzoneInstance.current) {
+        dropzoneInstance.current.removeAllFiles();
+      }
+
       refetch();
     } catch (error) {
       console.error('Upload error:', error);
@@ -199,10 +218,6 @@ export function DocumentUpload({
     setIsModalVisible(false);
     setUploadProgress(0);
     form.resetFields();
-  };
-
-  const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleDelete = async (id: number) => {
@@ -226,97 +241,38 @@ export function DocumentUpload({
 
   return (
     <div className="space-y-6">
-      {/* Modern Dropzone Upload Section */}
+      {/* Dropzone Upload Section */}
       <Card title="📁 Doküman Yükle" className="shadow-lg">
         <div className="space-y-4">
-          {/* Dropzone */}
-          <div
-            {...getRootProps()}
-            className={`
-              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-              transition-all duration-300 ease-in-out
-              ${isDragActive
-                ? 'border-blue-500 bg-blue-50 scale-105'
-                : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
-              }
-            `}
-          >
-            <input {...getInputProps()} />
-            <motion.div
-              animate={isDragActive ? { scale: 1.1 } : { scale: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <InboxOutlined className="text-6xl text-blue-500 mb-4" />
-              {isDragActive ? (
-                <p className="text-xl font-semibold text-blue-600">
-                  Dosyaları buraya bırakın...
+          {/* Dropzone Container */}
+          <div ref={dropzoneRef} className="dropzone-custom">
+            <div className="dz-message needsclick">
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">📥</div>
+                <p className="text-lg font-semibold mb-2">
+                  Dosyaları sürükleyip bırakın veya tıklayın
                 </p>
-              ) : (
-                <div>
-                  <p className="text-lg font-semibold mb-2">
-                    Dosyaları sürükleyip bırakın veya tıklayın
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Maksimum dosya boyutu: {maxFileSize}MB
-                    {multiple && ' • Birden fazla dosya seçebilirsiniz'}
-                  </p>
-                </div>
-              )}
-            </motion.div>
+                <p className="text-gray-500 text-sm">
+                  Maksimum dosya boyutu: {maxFileSize}MB
+                  {multiple && ' • Birden fazla dosya seçebilirsiniz'}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Selected Files Preview */}
-          <AnimatePresence>
-            {selectedFiles.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+          {/* Upload Button */}
+          {selectedFiles.length > 0 && (
+            <div className="flex justify-end">
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleUploadClick}
+                loading={uploadMutation.isPending}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700">
-                    Seçili Dosyalar ({selectedFiles.length})
-                  </span>
-                  <Button
-                    type="primary"
-                    icon={<CloudUploadOutlined />}
-                    onClick={handleUploadClick}
-                    loading={uploadMutation.isPending}
-                  >
-                    Yükle
-                  </Button>
-                </div>
-
-                {selectedFiles.map((file, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center justify-between p-3 bg-white border rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center space-x-3">
-                      {getFileIcon(file.name)}
-                      <div>
-                        <div className="font-medium">{file.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {formatFileSize(file.size)}
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => removeFile(index)}
-                      size="small"
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {selectedFiles.length} Dosya Yükle
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -394,12 +350,7 @@ export function DocumentUpload({
 
       {/* Upload Metadata Modal */}
       <Modal
-        title={
-          <div className="flex items-center space-x-2">
-            <CloudUploadOutlined className="text-blue-500" />
-            <span>Doküman Bilgileri</span>
-          </div>
-        }
+        title="📋 Doküman Bilgileri"
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
@@ -434,10 +385,7 @@ export function DocumentUpload({
           </Form.Item>
 
           <Form.Item name="tags" label="Etiketler">
-            <Input
-              placeholder="Virgülle ayrılmış etiketler (opsiyonel)"
-              prefix={<Tag />}
-            />
+            <Input placeholder="Virgülle ayrılmış etiketler (opsiyonel)" />
           </Form.Item>
 
           <Form.Item
@@ -461,14 +409,56 @@ export function DocumentUpload({
               />
               <p className="text-center text-sm text-gray-500 mt-2">
                 {selectedFiles.length > 1
-                  ? `${Math.round(uploadProgress / 100 * selectedFiles.length)} / ${selectedFiles.length} dosya yüklendi`
-                  : 'Yükleniyor...'
-                }
+                  ? `${Math.round((uploadProgress / 100) * selectedFiles.length)} / ${selectedFiles.length} dosya yüklendi`
+                  : 'Yükleniyor...'}
               </p>
             </div>
           )}
         </Form>
       </Modal>
+
+      {/* Dropzone Custom Styles */}
+      <style jsx global>{`
+        .dropzone-custom {
+          border: 2px dashed #d9d9d9;
+          border-radius: 8px;
+          background: #fafafa;
+          transition: all 0.3s;
+        }
+
+        .dropzone-custom:hover {
+          border-color: #1890ff;
+          background: #f0f7ff;
+        }
+
+        .dropzone-custom.dz-drag-hover {
+          border-color: #1890ff;
+          background: #e6f4ff;
+          transform: scale(1.02);
+        }
+
+        .dropzone-custom .dz-preview {
+          margin: 16px;
+        }
+
+        .dropzone-custom .dz-preview .dz-image {
+          border-radius: 8px;
+        }
+
+        .dropzone-custom .dz-preview .dz-remove {
+          color: #ff4d4f;
+          font-size: 12px;
+        }
+
+        .dropzone-custom .dz-preview .dz-remove:hover {
+          text-decoration: none;
+          color: #ff7875;
+        }
+
+        .dropzone-custom .dz-message {
+          margin: 0;
+        }
+      `}</style>
     </div>
   );
 }

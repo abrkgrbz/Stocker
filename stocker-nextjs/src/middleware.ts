@@ -8,11 +8,6 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const pathname = request.nextUrl.pathname
 
-  // Skip all middleware checks for demo page
-  if (pathname.startsWith('/document-upload-demo')) {
-    return NextResponse.next()
-  }
-
   // Extract just the domain without protocol and port
   const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
 
@@ -31,7 +26,7 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Public routes that don't require auth
-  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing', '/document-upload-demo']
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   // Check authentication (tenant-code cookie exists)
