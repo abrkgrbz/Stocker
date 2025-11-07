@@ -108,6 +108,7 @@ interface ActivityModalProps {
   loading: boolean;
   onCancel: () => void;
   onSubmit: (values: any) => void;
+  initialType?: number; // Quick action initial type
 }
 
 export function ActivityModal({
@@ -116,6 +117,7 @@ export function ActivityModal({
   loading,
   onCancel,
   onSubmit,
+  initialType,
 }: ActivityModalProps) {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
@@ -143,12 +145,13 @@ export function ActivityModal({
       form.resetFields();
       // Set default values
       form.setFieldsValue({
+        type: initialType, // Quick action type
         status: 7, // Planlandı
         priority: 2, // Normal
       });
       setCurrentStep(0);
     }
-  }, [open, activity, form]);
+  }, [open, activity, form, initialType]);
 
   const steps = [
     {

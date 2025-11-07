@@ -105,6 +105,7 @@ const statusColors: Record<Activity['status'], string> = {
 export default function ActivitiesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [quickActionType, setQuickActionType] = useState<number | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerActivity, setDrawerActivity] = useState<Activity | null>(null);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
@@ -135,6 +136,20 @@ export default function ActivitiesPage() {
 
   const handleCreate = (date?: Dayjs) => {
     setSelectedActivity(null);
+    setQuickActionType(undefined);
+    setModalOpen(true);
+  };
+
+  const handleQuickAction = (activityTypeName: 'Call' | 'Email' | 'Meeting') => {
+    // Map activity type names to numeric enum values
+    const typeMap = {
+      'Call': 1, // Telefon Görüşmesi
+      'Email': 2, // E-posta
+      'Meeting': 3, // Toplantı
+    };
+
+    setSelectedActivity(null);
+    setQuickActionType(typeMap[activityTypeName]);
     setModalOpen(true);
   };
 
@@ -337,6 +352,29 @@ export default function ActivitiesPage() {
             >
               Yenile
             </Button>
+            <Space.Compact size="large">
+              <Button
+                icon={<PhoneOutlined />}
+                onClick={() => handleQuickAction('Call')}
+                className="border-blue-300 hover:border-blue-500 hover:text-blue-500"
+              >
+                Görüşme
+              </Button>
+              <Button
+                icon={<MailOutlined />}
+                onClick={() => handleQuickAction('Email')}
+                className="border-cyan-300 hover:border-cyan-500 hover:text-cyan-500"
+              >
+                E-posta
+              </Button>
+              <Button
+                icon={<TeamOutlined />}
+                onClick={() => handleQuickAction('Meeting')}
+                className="border-green-300 hover:border-green-500 hover:text-green-500"
+              >
+                Toplantı
+              </Button>
+            </Space.Compact>
             <Button
               type="primary"
               size="large"
@@ -636,8 +674,12 @@ export default function ActivitiesPage() {
         open={modalOpen}
         activity={selectedActivity}
         loading={createActivity.isPending || updateActivity.isPending}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => {
+          setModalOpen(false);
+          setQuickActionType(undefined);
+        }}
         onSubmit={handleSubmit}
+        initialType={quickActionType}
       />
 
       {/* Reschedule Modal */}
