@@ -374,7 +374,7 @@ export function DocumentUpload({
                         <span className="text-xs text-gray-500">
                           {formatFileSize(doc.fileSizeBytes)}
                         </span>
-                        {doc.uploadedBy && (
+                        {doc.uploadedAt && (
                           <span className="text-xs text-gray-500">
                             • {new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}
                           </span>
