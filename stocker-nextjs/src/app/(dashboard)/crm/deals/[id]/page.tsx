@@ -27,6 +27,9 @@ import {
   FileTextOutlined,
   ShoppingCartOutlined,
   ClockCircleOutlined,
+  EditOutlined,
+  UserOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import {
@@ -81,7 +84,7 @@ export default function DealDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-8">
+      <div className="p-6">
         <Skeleton active />
         <Skeleton active className="mt-4" />
         <Skeleton active className="mt-4" />
@@ -91,7 +94,7 @@ export default function DealDetailPage() {
 
   if (error || !deal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-8">
+      <div className="p-6">
         <Card className="text-center py-16">
           <div className="text-6xl mb-4">🔍</div>
           <h3 className="text-2xl font-bold text-gray-700 mb-2">Fırsat Bulunamadı</h3>
@@ -124,234 +127,334 @@ export default function DealDetailPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card
-          className="mb-6 shadow-xl"
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            border: 'none',
-          }}
+    <div className="p-6">
+      {/* Back Button */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => router.push('/crm/deals')}
+          className="mb-4 hover:bg-white/50 backdrop-blur-sm"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => router.push('/crm/deals')}
-                className="mb-4 bg-white/20 border-white/40 text-white hover:bg-white/30"
-              >
-                Geri Dön
-              </Button>
-
-              <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-3xl font-bold text-white m-0">{deal.title}</h1>
-                <Tag color={statusColors[deal.status]} className="text-base px-3 py-1">
-                  {deal.status}
-                </Tag>
-                <Tag color={priorityColors[deal.priority]} className="text-base px-3 py-1">
-                  {deal.priority}
-                </Tag>
-              </div>
-
-              {deal.description && (
-                <p className="text-white/90 text-base mb-0">{deal.description}</p>
-              )}
-            </div>
-
-            <div className="text-right">
-              <div className="text-5xl font-bold text-white mb-2">
-                ₺{deal.amount.toLocaleString('tr-TR')}
-              </div>
-              <div className="flex items-center justify-end gap-2 text-white/90">
-                <PercentageOutlined />
-                <span>Olasılık: {deal.probability}%</span>
-              </div>
-            </div>
-          </div>
-        </Card>
+          Fırsat Listesine Dön
+        </Button>
       </motion.div>
 
-      {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Toplam Tutar"
-              value={deal.amount}
-              precision={2}
-              prefix="₺"
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Başarı Olasılığı"
-              value={deal.probability}
-              suffix="%"
-              valueStyle={{ color: '#1890ff' }}
-            />
-            <Progress percent={deal.probability} showInfo={false} strokeColor="#1890ff" />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Tahmini Kapanış"
-              value={deal.expectedCloseDate ? dayjs(deal.expectedCloseDate).format('DD/MM/YYYY') : '-'}
-              prefix={<CalendarOutlined />}
-            />
-            {daysUntilClose !== null && (
-              <div className="text-sm text-gray-500 mt-2">
-                {daysUntilClose > 0 ? `${daysUntilClose} gün kaldı` : 'Süresi doldu'}
-              </div>
-            )}
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Ürün Sayısı"
-              value={dealProducts.length}
-              prefix={<ShoppingCartOutlined />}
-            />
-            {dealProducts.length > 0 && (
-              <div className="text-sm text-gray-500 mt-2">
-                Toplam: ₺{dealProducts.reduce((sum, p) => sum + p.totalPrice, 0).toLocaleString('tr-TR')}
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
+      {/* Clean Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-100"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Left: Deal Title + Status/Priority Tags */}
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{deal.title}</h1>
+            <div className="flex items-center gap-2">
+              <Tag color={statusColors[deal.status]} className="m-0">
+                {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? 'Kazanıldı' : 'Kaybedildi'}
+              </Tag>
+              <Tag color={priorityColors[deal.priority]} className="m-0">
+                {deal.priority}
+              </Tag>
+            </div>
+          </div>
 
-      {/* Tabs */}
-      <Card>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'overview',
-              label: (
-                <span>
-                  <FileTextOutlined />
-                  Genel Bakış
-                </span>
-              ),
-              children: (
-                <div className="space-y-6">
-                  <Descriptions title="Fırsat Bilgileri" bordered column={2}>
-                    <Descriptions.Item label="Fırsat Adı" span={2}>
-                      {deal.title}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Müşteri">
-                      {deal.customerName || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Durum">
-                      <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Öncelik">
-                      <Tag color={priorityColors[deal.priority]}>{deal.priority}</Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Pipeline">
-                      {deal.pipelineName || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Aşama">
-                      {deal.stageName || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Toplam Tutar">
-                      ₺{deal.amount.toLocaleString('tr-TR')}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Olasılık">
-                      {deal.probability}%
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Tahmini Kapanış">
-                      {deal.expectedCloseDate ? dayjs(deal.expectedCloseDate).format('DD/MM/YYYY') : '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Atanan Kişi">
-                      {deal.assignedToName || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Oluşturulma">
-                      {dayjs(deal.createdAt).format('DD/MM/YYYY HH:mm')}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Güncellenme">
-                      {deal.updatedAt ? dayjs(deal.updatedAt).format('DD/MM/YYYY HH:mm') : '-'}
-                    </Descriptions.Item>
-                    {deal.description && (
-                      <Descriptions.Item label="Açıklama" span={2}>
-                        {deal.description}
-                      </Descriptions.Item>
-                    )}
-                  </Descriptions>
+          {/* Right: Edit Button */}
+          <Button type="primary" icon={<EditOutlined />} size="large">
+            Düzenle
+          </Button>
+        </div>
+      </motion.div>
 
-                  {/* Timeline */}
-                  <Card title="Aktivite Geçmişi" className="mt-6">
-                    <Timeline
-                      items={[
-                        {
-                          dot: <ClockCircleOutlined style={{ fontSize: '16px' }} />,
-                          color: 'blue',
-                          children: (
-                            <>
-                              <p className="font-semibold">Fırsat oluşturuldu</p>
-                              <p className="text-gray-500">
-                                {dayjs(deal.createdAt).format('DD/MM/YYYY HH:mm')}
-                              </p>
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </Card>
+      {/* Clean Stats Row */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Toplam Tutar</span>}
+                value={deal.amount}
+                precision={2}
+                prefix="₺"
+                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+              />
+              <div className="text-xs text-gray-400 mt-2">Fırsat Değeri</div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Başarı Olasılığı</span>}
+                value={deal.probability}
+                suffix="%"
+                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+              />
+              <Progress
+                percent={deal.probability}
+                showInfo={false}
+                strokeColor={deal.probability > 70 ? '#10b981' : deal.probability > 40 ? '#f59e0b' : '#ef4444'}
+                className="mt-2"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Tahmini Kapanış</span>}
+                value={deal.expectedCloseDate ? dayjs(deal.expectedCloseDate).format('DD MMM YYYY') : '-'}
+                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '1.5rem' }}
+              />
+              {daysUntilClose !== null && (
+                <div className="text-xs font-medium mt-2" style={{ color: daysUntilClose > 0 ? '#10b981' : '#ef4444' }}>
+                  {daysUntilClose > 0 ? `${daysUntilClose} gün kaldı` : 'Süresi doldu'}
                 </div>
-              ),
-            },
-            {
-              key: 'products',
-              label: (
-                <span>
-                  <ShoppingCartOutlined />
-                  Ürünler ({dealProducts.length})
-                </span>
-              ),
-              children: (
-                <ProductSelector
-                  entityType="deal"
-                  entityId={dealId}
-                  products={dealProducts}
-                  availableProducts={mockProducts}
-                  isLoading={productsLoading}
-                  onAdd={handleAddProduct}
-                  onRemove={handleRemoveProduct}
-                />
-              ),
-            },
-            {
-              key: 'documents',
-              label: (
-                <span>
-                  <FileTextOutlined />
-                  Dokümanlar
-                </span>
-              ),
-              children: (
-                <DocumentUpload
-                  entityId={dealId}
-                  entityType="Deal"
-                  maxFileSize={10}
-                  allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}
-                />
-              ),
-            },
-          ]}
-        />
-      </Card>
+              )}
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Ürün Sayısı</span>}
+                value={dealProducts.length}
+                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+              />
+              {dealProducts.length > 0 && (
+                <div className="text-xs text-gray-400 mt-2">
+                  Toplam: ₺{dealProducts.reduce((sum, p) => sum + p.totalPrice, 0).toLocaleString('tr-TR')}
+                </div>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </motion.div>
+
+      {/* Tabs Section */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <Card className="shadow-sm border border-gray-100">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            size="large"
+            items={[
+              {
+                key: 'overview',
+                label: (
+                  <span className="flex items-center gap-2">
+                    <HomeOutlined />
+                    Genel Bakış
+                  </span>
+                ),
+                children: (
+                  <div className="py-4">
+                    <Row gutter={[24, 24]}>
+                      {/* Left Column - Static Information */}
+                      <Col xs={24} lg={12}>
+                        {/* Deal Information Card */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <FileTextOutlined className="text-blue-500" />
+                            Fırsat Bilgileri
+                          </h3>
+                          <Descriptions bordered column={1} size="middle">
+                            <Descriptions.Item
+                              label={
+                                <>
+                                  <UserOutlined /> Müşteri
+                                </>
+                              }
+                              labelStyle={{ fontWeight: 'bold' }}
+                            >
+                              {deal.customerName || '-'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Pipeline" labelStyle={{ fontWeight: 'bold' }}>
+                              {deal.pipelineName || '-'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Aşama" labelStyle={{ fontWeight: 'bold' }}>
+                              {deal.stageName || '-'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Durum" labelStyle={{ fontWeight: 'bold' }}>
+                              <Tag color={statusColors[deal.status]}>
+                                {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? 'Kazanıldı' : 'Kaybedildi'}
+                              </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Öncelik" labelStyle={{ fontWeight: 'bold' }}>
+                              <Tag color={priorityColors[deal.priority]}>{deal.priority}</Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Atanan Kişi" labelStyle={{ fontWeight: 'bold' }}>
+                              {deal.assignedToName || '-'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Oluşturulma" labelStyle={{ fontWeight: 'bold' }}>
+                              {dayjs(deal.createdAt).format('DD/MM/YYYY HH:mm')}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Güncellenme" labelStyle={{ fontWeight: 'bold' }}>
+                              {deal.updatedAt ? dayjs(deal.updatedAt).format('DD/MM/YYYY HH:mm') : '-'}
+                            </Descriptions.Item>
+                          </Descriptions>
+                        </motion.div>
+
+                        {/* Description Card */}
+                        {deal.description && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="mt-6"
+                          >
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                              <FileTextOutlined className="text-blue-500" />
+                              Açıklama
+                            </h3>
+                            <Card className="bg-gray-50 border border-gray-200 shadow-sm">
+                              <p className="text-gray-700">{deal.description}</p>
+                            </Card>
+                          </motion.div>
+                        )}
+
+                        {/* Products Summary */}
+                        {dealProducts.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6 }}
+                            className="mt-6"
+                          >
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                              <ShoppingCartOutlined className="text-blue-500" />
+                              Ürünler Özeti
+                            </h3>
+                            <Card className="border border-gray-200 shadow-sm">
+                              <div className="space-y-2">
+                                {dealProducts.slice(0, 3).map((product) => (
+                                  <div key={product.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                                    <span className="text-gray-700">
+                                      {product.quantity}x {product.productName || 'Ürün'}
+                                    </span>
+                                    <span className="font-medium text-gray-900">
+                                      ₺{product.totalPrice.toLocaleString('tr-TR')}
+                                    </span>
+                                  </div>
+                                ))}
+                                {dealProducts.length > 3 && (
+                                  <div className="text-center text-sm text-gray-500 pt-2">
+                                    +{dealProducts.length - 3} daha fazla ürün
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          </motion.div>
+                        )}
+                      </Col>
+
+                      {/* Right Column - Dynamic Information */}
+                      <Col xs={24} lg={12}>
+                        {/* Activity Timeline - Most Important */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <ClockCircleOutlined className="text-blue-500" />
+                            Aktivite Geçmişi
+                          </h3>
+                          <Card className="border border-gray-200 shadow-sm">
+                            <Timeline
+                              items={[
+                                {
+                                  dot: <ClockCircleOutlined style={{ fontSize: '16px' }} />,
+                                  color: 'blue',
+                                  children: (
+                                    <>
+                                      <p className="font-semibold text-gray-900">Fırsat oluşturuldu</p>
+                                      <p className="text-gray-500 text-sm">
+                                        {dayjs(deal.createdAt).format('DD/MM/YYYY HH:mm')}
+                                      </p>
+                                    </>
+                                  ),
+                                },
+                              ]}
+                            />
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <Button type="dashed" block>
+                                + Yeni Aktivite Ekle
+                              </Button>
+                            </div>
+                          </Card>
+                        </motion.div>
+
+                        {/* Documents Section */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="mt-6"
+                        >
+                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <FileTextOutlined className="text-blue-500" />
+                            Dokümanlar
+                          </h3>
+                          <Card className="border border-gray-200 shadow-sm">
+                            <div className="text-center py-4">
+                              <p className="text-gray-500 mb-3">Henüz doküman eklenmemiş</p>
+                              <Button type="primary">Doküman Yükle</Button>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      </Col>
+                    </Row>
+                  </div>
+                ),
+              },
+              {
+                key: 'products',
+                label: (
+                  <span className="flex items-center gap-2">
+                    <ShoppingCartOutlined />
+                    Ürünler ({dealProducts.length})
+                  </span>
+                ),
+                children: (
+                  <div className="py-4">
+                    <ProductSelector
+                      entityType="deal"
+                      entityId={dealId}
+                      products={dealProducts}
+                      availableProducts={mockProducts}
+                      isLoading={productsLoading}
+                      onAdd={handleAddProduct}
+                      onRemove={handleRemoveProduct}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'documents',
+                label: (
+                  <span className="flex items-center gap-2">
+                    <FileTextOutlined />
+                    Dokümanlar
+                  </span>
+                ),
+                children: (
+                  <div className="py-4">
+                    <DocumentUpload
+                      entityId={dealId}
+                      entityType="Deal"
+                      maxFileSize={10}
+                      allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      </motion.div>
     </div>
   );
 }
