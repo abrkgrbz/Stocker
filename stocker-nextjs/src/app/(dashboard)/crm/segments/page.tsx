@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -240,6 +240,35 @@ export default function CustomerSegmentsPage() {
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} segment`,
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={<TeamOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />}
+                imageStyle={{ height: 100 }}
+                description={
+                  <div className="py-8">
+                    <div className="text-2xl font-bold text-gray-800 mb-4">
+                      Müşterilerinizi Anlamlı Gruplara Ayırın
+                    </div>
+                    <div className="text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+                      Müşteri Segmentleri, doğru kişilere doğru mesajı göndermenizi sağlar.
+                      &apos;İstanbul&apos;daki VIP Müşteriler&apos; veya &apos;Son 6 ayda alışveriş yapmayanlar&apos;
+                      gibi dinamik segmentler oluşturun.
+                    </div>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<PlusOutlined />}
+                      onClick={handleCreate}
+                      className="h-12 px-8 text-base font-semibold"
+                    >
+                      İlk Segmentini Oluştur
+                    </Button>
+                  </div>
+                }
+              />
+            ),
           }}
         />
       </Card>
