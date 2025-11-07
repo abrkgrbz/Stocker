@@ -470,13 +470,10 @@ export default function DealsPage() {
       <Row gutter={[16, 16]} className="mb-6">
         <Col span={24}>
           <div className="flex justify-between items-center">
-            <Title level={2} className="!mb-0">
-              Fırsatlar
-            </Title>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-                Yenile
-              </Button>
+            <div className="flex items-center gap-4">
+              <Title level={2} className="!mb-0">
+                Fırsatlar
+              </Title>
               <Button.Group>
                 <Button
                   type={viewMode === 'kanban' ? 'primary' : 'default'}
@@ -493,7 +490,20 @@ export default function DealsPage() {
                   Liste
                 </Button>
               </Button.Group>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            </div>
+            <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => refetch()}
+                loading={isLoading}
+                size="large"
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+                size="large"
+              >
                 Yeni Fırsat
               </Button>
             </Space>
