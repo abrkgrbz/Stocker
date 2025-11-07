@@ -42,6 +42,9 @@ import {
   SafetyOutlined,
   WarningOutlined,
   SmileOutlined,
+  HomeOutlined,
+  FileOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCRM';
@@ -457,45 +460,22 @@ export default function CustomerDetailPage() {
                 key: 'overview',
                 label: (
                   <span className="flex items-center gap-2">
-                    <FileTextOutlined />
+                    <HomeOutlined />
                     Genel Bakış
                   </span>
                 ),
                 children: (
                   <div className="py-4">
                     <Row gutter={[24, 24]}>
-                      {/* Company Details */}
-                      <Col xs={24} lg={12}>
+                      {/* Contact & Address */}
+                      <Col xs={24}>
                         <motion.div
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
                         >
                           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <BankOutlined className="text-blue-500" />
-                            Firma Bilgileri
-                          </h3>
-                          <Descriptions bordered column={1} size="middle">
-                            {customer.website && (
-                              <Descriptions.Item label="Website" labelStyle={{ fontWeight: 'bold' }}>
-                                <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                  {customer.website}
-                                </a>
-                              </Descriptions.Item>
-                            )}
-                          </Descriptions>
-                        </motion.div>
-                      </Col>
-
-                      {/* Contact & Address */}
-                      <Col xs={24} lg={12}>
-                        <motion.div
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 }}
-                        >
-                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <GlobalOutlined className="text-green-500" />
+                            <GlobalOutlined className="text-blue-500" />
                             İletişim & Adres
                           </h3>
                           <Descriptions bordered column={1} size="middle">
@@ -509,6 +489,13 @@ export default function CustomerDetailPage() {
                                 {customer.phone || 'N/A'}
                               </a>
                             </Descriptions.Item>
+                            {customer.website && (
+                              <Descriptions.Item label={<><GlobalOutlined /> Website</>} labelStyle={{ fontWeight: 'bold' }}>
+                                <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                  {customer.website}
+                                </a>
+                              </Descriptions.Item>
+                            )}
                             <Descriptions.Item label="Adres" labelStyle={{ fontWeight: 'bold' }}>
                               {customer.address || '-'}
                             </Descriptions.Item>
@@ -556,7 +543,6 @@ export default function CustomerDetailPage() {
                   <span className="flex items-center gap-2">
                     <ShoppingOutlined />
                     Siparişler
-                    <Badge count={mockOrders.length} showZero style={{ backgroundColor: '#52c41a' }} />
                   </span>
                 ),
                 children: (
@@ -580,7 +566,7 @@ export default function CustomerDetailPage() {
                 key: 'activities',
                 label: (
                   <span className="flex items-center gap-2">
-                    <ClockCircleOutlined />
+                    <UnorderedListOutlined />
                     Aktiviteler
                   </span>
                 ),
@@ -616,8 +602,8 @@ export default function CustomerDetailPage() {
                 key: 'documents',
                 label: (
                   <span className="flex items-center gap-2">
-                    <FileTextOutlined />
-                    Dökümanlar
+                    <FileOutlined />
+                    Dokümanlar
                   </span>
                 ),
                 children: (
