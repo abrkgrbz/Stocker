@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Public routes that don't require auth
-  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing']
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/landing', '/pricing', '/document-upload-demo']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   // Check authentication (tenant-code cookie exists)
