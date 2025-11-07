@@ -1,9 +1,141 @@
 'use client';
 
-import { DocumentUpload } from '@/components/crm/shared/DocumentUpload';
+import { useState } from 'react';
 import { Card, Tag } from 'antd';
+import { motion } from 'framer-motion';
+import {
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FileImageOutlined,
+  FileZipOutlined,
+  FileOutlined,
+  DownloadOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+
+// Mock data
+const mockDocuments = [
+  {
+    id: 1,
+    fileName: 'Sözleşme_2024.pdf',
+    originalFileName: 'Sözleşme_2024.pdf',
+    contentType: 'application/pdf',
+    fileSize: 2458624, // 2.4 MB
+    category: 'Contract',
+    description: 'Tedarikçi sözleşmesi - 2024 yılı için geçerli',
+    uploadedAt: new Date('2024-11-01'),
+  },
+  {
+    id: 2,
+    fileName: 'Teknik_Şartname.docx',
+    originalFileName: 'Teknik_Şartname.docx',
+    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    fileSize: 1245184, // 1.2 MB
+    category: 'General',
+    description: 'Proje teknik şartname dokümanı',
+    uploadedAt: new Date('2024-11-03'),
+  },
+  {
+    id: 3,
+    fileName: 'Fiyat_Listesi.xlsx',
+    originalFileName: 'Fiyat_Listesi.xlsx',
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    fileSize: 856320, // 836 KB
+    category: 'Quote',
+    description: '2024 Q4 güncel fiyat listesi',
+    uploadedAt: new Date('2024-11-05'),
+  },
+  {
+    id: 4,
+    fileName: 'Logo_Tasarım.png',
+    originalFileName: 'Logo_Tasarım.png',
+    contentType: 'image/png',
+    fileSize: 458752, // 448 KB
+    category: 'Other',
+    description: 'Yeni logo tasarım önerisi - yüksek çözünürlük',
+    uploadedAt: new Date('2024-11-06'),
+  },
+  {
+    id: 5,
+    fileName: 'Proje_Arsiv.zip',
+    originalFileName: 'Proje_Arsiv.zip',
+    contentType: 'application/zip',
+    fileSize: 15728640, // 15 MB
+    category: 'Other',
+    description: 'Tüm proje dosyaları arşivi',
+    uploadedAt: new Date('2024-11-07'),
+  },
+];
+
+// File type info helper
+const getFileTypeInfo = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf':
+      return {
+        icon: <FilePdfOutlined className="text-white text-4xl" />,
+        color: 'from-red-500 to-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200',
+      };
+    case 'doc':
+    case 'docx':
+      return {
+        icon: <FileWordOutlined className="text-white text-4xl" />,
+        color: 'from-blue-500 to-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+      };
+    case 'xls':
+    case 'xlsx':
+      return {
+        icon: <FileExcelOutlined className="text-white text-4xl" />,
+        color: 'from-green-500 to-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
+      };
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'svg':
+      return {
+        icon: <FileImageOutlined className="text-white text-4xl" />,
+        color: 'from-purple-500 to-purple-600',
+        bgColor: 'bg-purple-50',
+        borderColor: 'border-purple-200',
+      };
+    case 'zip':
+    case 'rar':
+    case '7z':
+      return {
+        icon: <FileZipOutlined className="text-white text-4xl" />,
+        color: 'from-orange-500 to-orange-600',
+        bgColor: 'bg-orange-50',
+        borderColor: 'border-orange-200',
+      };
+    default:
+      return {
+        icon: <FileOutlined className="text-white text-4xl" />,
+        color: 'from-gray-500 to-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200',
+      };
+  }
+};
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+};
 
 export default function DocumentDemoPage() {
+  const [documents] = useState(mockDocuments);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -63,16 +195,98 @@ export default function DocumentDemoPage() {
           <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 -m-6 mb-6 rounded-t-lg">
             <h2 className="text-xl font-semibold">🚀 Canlı Demo</h2>
             <p className="text-sm text-blue-100">
-              Test entity için doküman yükleme ve listeleme
+              Doküman listesi görünümü - 5 farklı dosya tipi
             </p>
           </div>
 
-          <DocumentUpload
-            entityId="demo-entity-123"
-            entityType="Deal"
-            maxFileSize={50}
-            multiple={true}
-          />
+          {/* Documents List */}
+          <Card
+            title={
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileOutlined className="text-xl" />
+                  <span className="font-semibold">Dokümanlar</span>
+                  <span className="text-sm text-gray-500">({documents.length})</span>
+                </div>
+              </div>
+            }
+            className="shadow-lg"
+          >
+            <div className="space-y-3">
+              {documents.map((doc, index) => {
+                const fileInfo = getFileTypeInfo(doc.fileName);
+                return (
+                  <motion.div
+                    key={doc.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ x: 4 }}
+                  >
+                    <div
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 ${fileInfo.borderColor} ${fileInfo.bgColor} hover:shadow-lg transition-all duration-300 cursor-pointer group`}
+                    >
+                      {/* Icon Section */}
+                      <div className={`flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br ${fileInfo.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                        {fileInfo.icon}
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="flex-1 min-w-0">
+                        {/* File Name */}
+                        <Tooltip title={doc.fileName}>
+                          <h3 className="font-semibold text-gray-900 truncate text-lg mb-1">
+                            {doc.fileName}
+                          </h3>
+                        </Tooltip>
+
+                        {/* Metadata Row */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <Tag color="blue" className="m-0">
+                            {doc.category}
+                          </Tag>
+                          <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200">
+                            {formatFileSize(doc.fileSize)}
+                          </span>
+                          {doc.uploadedAt && (
+                            <span className="text-xs text-gray-500">
+                              📅 {doc.uploadedAt.toLocaleDateString('tr-TR')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        {doc.description && (
+                          <p className="text-sm text-gray-600 line-clamp-1">
+                            {doc.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        <Tooltip title="İndir">
+                          <Button
+                            type="primary"
+                            icon={<DownloadOutlined />}
+                            className="shadow-sm"
+                            size="large"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Sil">
+                          <Button
+                            danger
+                            icon={<DeleteOutlined />}
+                            size="large"
+                          />
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </Card>
         </Card>
 
         {/* Features List */}
