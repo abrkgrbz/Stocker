@@ -75,7 +75,7 @@ const getFileTypeInfo = (fileName: string) => {
   switch (ext) {
     case 'pdf':
       return {
-        icon: <FilePdfOutlined className="text-white text-4xl" />,
+        icon: <FilePdfOutlined className="text-white text-2xl" />,
         color: 'from-red-500 to-red-600',
         bgColor: 'bg-red-50',
         borderColor: 'border-red-200',
@@ -83,7 +83,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'doc':
     case 'docx':
       return {
-        icon: <FileWordOutlined className="text-white text-4xl" />,
+        icon: <FileWordOutlined className="text-white text-2xl" />,
         color: 'from-blue-500 to-blue-600',
         bgColor: 'bg-blue-50',
         borderColor: 'border-blue-200',
@@ -91,7 +91,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'xls':
     case 'xlsx':
       return {
-        icon: <FileExcelOutlined className="text-white text-4xl" />,
+        icon: <FileExcelOutlined className="text-white text-2xl" />,
         color: 'from-green-500 to-green-600',
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200',
@@ -102,7 +102,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'gif':
     case 'svg':
       return {
-        icon: <FileImageOutlined className="text-white text-4xl" />,
+        icon: <FileImageOutlined className="text-white text-2xl" />,
         color: 'from-purple-500 to-purple-600',
         bgColor: 'bg-purple-50',
         borderColor: 'border-purple-200',
@@ -111,14 +111,14 @@ const getFileTypeInfo = (fileName: string) => {
     case 'rar':
     case '7z':
       return {
-        icon: <FileZipOutlined className="text-white text-4xl" />,
+        icon: <FileZipOutlined className="text-white text-2xl" />,
         color: 'from-orange-500 to-orange-600',
         bgColor: 'bg-orange-50',
         borderColor: 'border-orange-200',
       };
     default:
       return {
-        icon: <FileOutlined className="text-white text-4xl" />,
+        icon: <FileOutlined className="text-white text-2xl" />,
         color: 'from-gray-500 to-gray-600',
         bgColor: 'bg-gray-50',
         borderColor: 'border-gray-200',
@@ -227,7 +227,7 @@ export default function DocumentDemoPage() {
                       className={`flex items-center gap-4 p-4 rounded-xl border-2 ${fileInfo.borderColor} ${fileInfo.bgColor} hover:shadow-lg transition-all duration-300 cursor-pointer group`}
                     >
                       {/* Icon Section */}
-                      <div className={`flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br ${fileInfo.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br ${fileInfo.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
                         {fileInfo.icon}
                       </div>
 
