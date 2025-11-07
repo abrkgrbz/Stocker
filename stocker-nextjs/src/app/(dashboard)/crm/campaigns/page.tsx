@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Progress, Avatar, Dropdown } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Progress, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -366,6 +366,34 @@ export default function CampaignsPage() {
             showTotal: (total) => `Toplam ${total} kampanya`,
           }}
           scroll={{ x: 1400 }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={<TrophyOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />}
+                imageStyle={{ height: 100 }}
+                description={
+                  <div className="py-8">
+                    <div className="text-2xl font-bold text-gray-800 mb-4">
+                      Pazarlama Kampanyalarınızı Yönetin
+                    </div>
+                    <div className="text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+                      Kampanyalar, hedef kitlenize ulaşmanın en etkili yoludur.
+                      E-posta, sosyal medya veya etkinlik kampanyaları oluşturun ve performanslarını takip edin.
+                    </div>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<PlusOutlined />}
+                      onClick={handleCreate}
+                      className="h-12 px-8 text-base font-semibold"
+                    >
+                      İlk Kampanyanızı Oluşturun
+                    </Button>
+                  </div>
+                }
+              />
+            ),
+          }}
         />
       </Card>
 
