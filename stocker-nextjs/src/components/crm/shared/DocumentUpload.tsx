@@ -64,30 +64,60 @@ const accessLevels: { label: string; value: AccessLevel }[] = [
   { label: 'Çok Gizli', value: 'Restricted' },
 ];
 
-// File type icon mapping
-const getFileIcon = (fileName: string) => {
+// File type icon and color mapping
+const getFileTypeInfo = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'pdf':
-      return <FilePdfOutlined className="text-red-500 text-2xl" />;
+      return {
+        icon: <FilePdfOutlined className="text-white text-4xl" />,
+        color: 'from-red-500 to-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200',
+      };
     case 'doc':
     case 'docx':
-      return <FileWordOutlined className="text-blue-500 text-2xl" />;
+      return {
+        icon: <FileWordOutlined className="text-white text-4xl" />,
+        color: 'from-blue-500 to-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+      };
     case 'xls':
     case 'xlsx':
-      return <FileExcelOutlined className="text-green-500 text-2xl" />;
+      return {
+        icon: <FileExcelOutlined className="text-white text-4xl" />,
+        color: 'from-green-500 to-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
+      };
     case 'jpg':
     case 'jpeg':
     case 'png':
     case 'gif':
     case 'svg':
-      return <FileImageOutlined className="text-purple-500 text-2xl" />;
+      return {
+        icon: <FileImageOutlined className="text-white text-4xl" />,
+        color: 'from-purple-500 to-purple-600',
+        bgColor: 'bg-purple-50',
+        borderColor: 'border-purple-200',
+      };
     case 'zip':
     case 'rar':
     case '7z':
-      return <FileZipOutlined className="text-orange-500 text-2xl" />;
+      return {
+        icon: <FileZipOutlined className="text-white text-4xl" />,
+        color: 'from-orange-500 to-orange-600',
+        bgColor: 'bg-orange-50',
+        borderColor: 'border-orange-200',
+      };
     default:
-      return <FileOutlined className="text-gray-500 text-2xl" />;
+      return {
+        icon: <FileOutlined className="text-white text-4xl" />,
+        color: 'from-gray-500 to-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200',
+      };
   }
 };
 
@@ -276,137 +306,97 @@ export function DocumentUpload({
         </div>
       </Card>
 
-      {/* Documents List - Modern Grid Layout */}
+      {/* Documents List - Colorful Compact Layout */}
       {documents && documents.length > 0 && (
         <Card
           title={
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500">
-                <FileOutlined className="text-white text-lg" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold">Yüklü Dokümanlar</div>
-                <div className="text-sm text-gray-500">{documents.length} dosya</div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileOutlined className="text-xl" />
+                <span className="font-semibold">Dokümanlar</span>
+                <span className="text-sm text-gray-500">({documents.length})</span>
               </div>
             </div>
           }
           className="shadow-lg"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc, index) => (
-              <motion.div
-                key={doc.id}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                whileHover={{
-                  scale: 1.03,
-                  transition: { duration: 0.2 }
-                }}
-              >
-                <Card
-                  className="h-full hover:shadow-2xl transition-all duration-300 border-0 overflow-hidden group"
-                  style={{
-                    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                  }}
-                  bodyStyle={{ padding: 0 }}
+          <div className="space-y-3">
+            {documents.map((doc, index) => {
+              const fileInfo = getFileTypeInfo(doc.fileName);
+              return (
+                <motion.div
+                  key={doc.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ x: 4 }}
                 >
-                  {/* Header with Icon */}
-                  <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 p-6 border-b border-gray-100">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-shrink-0">
-                        {getFileIcon(doc.fileName)}
-                      </div>
-                      <Space>
-                        <Tooltip title="İndir">
-                          <Button
-                            type="text"
-                            icon={<DownloadOutlined />}
-                            onClick={() => handleDownload(doc.id)}
-                            loading={downloadMutation.isPending}
-                            className="hover:text-blue-500 hover:bg-blue-50 transition-all"
-                            size="small"
-                          />
-                        </Tooltip>
-                        <Tooltip title="Sil">
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleDelete(doc.id)}
-                            loading={deleteMutation.isPending}
-                            className="hover:bg-red-50 transition-all"
-                            size="small"
-                          />
-                        </Tooltip>
-                      </Space>
+                  <div
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 ${fileInfo.borderColor} ${fileInfo.bgColor} hover:shadow-lg transition-all duration-300 cursor-pointer group`}
+                  >
+                    {/* Icon Section */}
+                    <div className={`flex-shrink-0 w-20 h-20 rounded-xl bg-gradient-to-br ${fileInfo.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                      {fileInfo.icon}
                     </div>
-                  </div>
 
-                  {/* Content */}
-                  <div className="p-4 space-y-3">
-                    {/* File Name */}
-                    <Tooltip title={doc.fileName}>
-                      <div className="font-semibold text-gray-800 truncate text-base">
-                        {doc.fileName}
-                      </div>
-                    </Tooltip>
+                    {/* Content Section */}
+                    <div className="flex-1 min-w-0">
+                      {/* File Name */}
+                      <Tooltip title={doc.fileName}>
+                        <h3 className="font-semibold text-gray-900 truncate text-lg mb-1">
+                          {doc.fileName}
+                        </h3>
+                      </Tooltip>
 
-                    {/* Metadata */}
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <Tag
-                        color="blue"
-                        className="rounded-full px-3 py-1"
-                      >
-                        {doc.category}
-                      </Tag>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span className="font-medium bg-gray-100 px-2 py-1 rounded">
+                      {/* Metadata Row */}
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <Tag color="blue" className="m-0">
+                          {doc.category}
+                        </Tag>
+                        <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200">
                           {formatFileSize(doc.fileSize)}
                         </span>
+                        {doc.uploadedAt && (
+                          <span className="text-xs text-gray-500">
+                            📅 {new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}
+                          </span>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Upload Date */}
-                    {doc.uploadedAt && (
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span className="inline-flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                          </svg>
-                          {new Date(doc.uploadedAt).toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    {doc.description && (
-                      <div className="pt-2 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                      {/* Description */}
+                      {doc.description && (
+                        <p className="text-sm text-gray-600 line-clamp-1">
                           {doc.description}
                         </p>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  {/* Hover Gradient Border Effect */}
-                  <div
-                    className="absolute inset-0 border-2 border-transparent group-hover:border-blue-400 rounded-lg transition-all duration-300 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #3b82f6, #8b5cf6) border-box'
-                    }}
-                  />
-                </Card>
-              </motion.div>
-            ))}
+                    {/* Actions */}
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <Tooltip title="İndir">
+                        <Button
+                          type="primary"
+                          icon={<DownloadOutlined />}
+                          onClick={() => handleDownload(doc.id)}
+                          loading={downloadMutation.isPending}
+                          className="shadow-sm"
+                          size="large"
+                        />
+                      </Tooltip>
+                      <Tooltip title="Sil">
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDelete(doc.id)}
+                          loading={deleteMutation.isPending}
+                          size="large"
+                        />
+                      </Tooltip>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </Card>
       )}
