@@ -8,6 +8,11 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const pathname = request.nextUrl.pathname
 
+  // Skip all middleware checks for demo page
+  if (pathname.startsWith('/document-upload-demo')) {
+    return NextResponse.next()
+  }
+
   // Extract just the domain without protocol and port
   const authHostname = authDomain.replace(/^https?:\/\//, '').split(':')[0]
 
