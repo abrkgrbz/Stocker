@@ -281,34 +281,40 @@ export default function DealsPage() {
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => (
     <Card
-      className="mb-3 hover:shadow-md transition-shadow cursor-pointer"
+      className="mb-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
       bodyStyle={{ padding: '12px' }}
       onClick={() => router.push(`/crm/deals/${deal.id}`)}
     >
+      {/* Header: Title + Status */}
       <div className="flex justify-between items-start mb-2">
-        <Text strong className="text-sm">
+        <Text strong className="text-base flex-1">
           {deal.title}
         </Text>
-        <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
+        <Tag color={statusColors[deal.status]} className="ml-2">
+          {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? 'Kazanıldı' : 'Kaybedildi'}
+        </Tag>
       </div>
 
-      <div className="text-lg font-semibold text-green-600 mb-2">
-        ₺{deal.amount.toLocaleString('tr-TR')}
-      </div>
-
+      {/* Customer Name */}
       {deal.customerName && (
-        <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
+        <div className="text-sm text-gray-600 mb-3 flex items-center gap-1">
           <UserOutlined className="text-gray-400" />
           <span>{deal.customerName}</span>
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-        <Tooltip title="Olasılık">
-          <span>{deal.probability}%</span>
+      {/* Deal Amount - Prominent */}
+      <div className="text-2xl font-bold text-gray-900 mb-3">
+        ₺{deal.amount.toLocaleString('tr-TR')}
+      </div>
+
+      {/* Metadata: Probability + Date */}
+      <div className="flex items-center gap-3 text-xs text-gray-500 mb-3 pb-3 border-b border-gray-100">
+        <Tooltip title="Kazanma Olasılığı">
+          <span className="font-medium">{deal.probability}% olasılık</span>
         </Tooltip>
         {deal.expectedCloseDate && (
-          <Tooltip title="Tahmini Kapanış">
+          <Tooltip title="Tahmini Kapanış Tarihi">
             <span>{dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}</span>
           </Tooltip>
         )}
@@ -316,38 +322,32 @@ export default function DealsPage() {
 
       {/* Action Buttons - Only show for Open deals */}
       {deal.status === 'Open' && (
-        <Space size="small" className="w-full" direction="vertical">
-          <Space size="small" className="w-full">
-            <Tooltip title="Kazanıldı">
-              <Button
-                type="primary"
-                size="small"
-                icon={<CheckCircleOutlined />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCloseWon(deal);
-                }}
-                block
-              >
-                Kazanıldı
-              </Button>
-            </Tooltip>
-            <Tooltip title="Kaybedildi">
-              <Button
-                danger
-                size="small"
-                icon={<StopOutlined />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCloseLost(deal);
-                }}
-                block
-              >
-                Kaybedildi
-              </Button>
-            </Tooltip>
-          </Space>
-        </Space>
+        <div className="flex gap-2">
+          <Button
+            type="primary"
+            size="small"
+            icon={<CheckCircleOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCloseWon(deal);
+            }}
+            className="flex-1"
+          >
+            Kazanıldı
+          </Button>
+          <Button
+            danger
+            size="small"
+            icon={<StopOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCloseLost(deal);
+            }}
+            className="flex-1"
+          >
+            Kaybedildi
+          </Button>
+        </div>
       )}
     </Card>
   );
