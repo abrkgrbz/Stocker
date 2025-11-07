@@ -294,250 +294,132 @@ export default function CustomerDetailPage() {
         </Button>
       </motion.div>
 
-      {/* Header Card with Glassmorphism */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <div className="relative overflow-hidden rounded-2xl mb-6 shadow-2xl"
-          style={{
-            background: customer.isActive
-              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              : 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)',
-          }}
-        >
-          {/* Decorative Pattern Overlay */}
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 20% 50%, white 2px, transparent 2px), radial-gradient(circle at 80% 80%, white 2px, transparent 2px)',
-              backgroundSize: '60px 60px',
-            }}
-          />
-
-          {/* Content */}
-          <div className="relative p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              {/* Avatar Section with Animation */}
-              <motion.div
-                className="flex-shrink-0"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-              >
-                <div className="relative">
-                  <Avatar
-                    size={140}
-                    icon={<ShopOutlined />}
-                    className={`border-8 border-white shadow-2xl ${
-                      customer.isActive
-                        ? 'bg-gradient-to-br from-green-400 to-blue-500'
-                        : 'bg-gradient-to-br from-gray-400 to-gray-600'
-                    }`}
-                  />
-                  <motion.div
-                    className={`absolute bottom-2 right-2 w-10 h-10 rounded-full border-4 border-white shadow-lg ${
-                      customer.isActive ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  />
-                  {/* Health Score Badge */}
-                  <Tooltip title={`Müşteri Sağlık Skoru: ${healthScore}/100`}>
-                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-lg">
-                      <span className="text-xs font-bold" style={{ color: healthScoreConfig.color }}>
-                        {healthScoreConfig.emoji} {healthScore}
-                      </span>
-                    </div>
-                  </Tooltip>
-                </div>
-              </motion.div>
-
-              {/* Company Info */}
-              <div className="flex-grow">
-                <div className="flex items-start justify-between flex-wrap gap-4">
-                  <div>
-                    <motion.h1
-                      className="text-4xl font-bold mb-3 text-white drop-shadow-lg"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      {customer.companyName}
-                    </motion.h1>
-                    <div className="flex items-center gap-3 flex-wrap mb-4">
-                      {customer.industry && (
-                        <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-md flex items-center gap-2">
-                          <ShopOutlined />
-                          {customer.industry}
-                        </span>
-                      )}
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-md ${
-                        customer.isActive ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'
-                      }`}>
-                        {customer.isActive ? '✓ Aktif' : '✗ Pasif'}
-                      </span>
-                    </div>
-                    <div className="mt-3 bg-white/20 px-4 py-3 rounded-lg backdrop-blur-md border-2 border-white/40">
-                      <CustomerTags customerId={customer.id} editable={true} size="default" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
-                        <MailOutlined className="text-white text-lg" />
-                        <span className="text-sm text-white font-semibold">{customer.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
-                        <PhoneOutlined className="text-white text-lg" />
-                        <span className="text-sm text-white font-semibold">{customer.phone || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg">
-                        <EnvironmentOutlined className="text-white text-lg" />
-                        <span className="text-sm text-white font-semibold truncate">{customer.city || 'N/A'}, {customer.state || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-3">
-                    <div className="bg-white/30 px-4 py-2 rounded-lg backdrop-blur-md border-2 border-white/50 shadow-lg flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full shadow-md ${
-                        customer.isActive ? 'bg-green-400' : 'bg-gray-400'
-                      }`} />
-                      <span className="text-white font-bold text-sm">{statusConfig.text}</span>
-                    </div>
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      size="large"
-                      onClick={() => {
-                        form.setFieldsValue({
-                          companyName: customer.companyName,
-                          email: customer.email,
-                          phone: customer.phone,
-                          website: customer.website,
-                          industry: customer.industry,
-                          address: customer.address,
-                          city: customer.city,
-                          state: customer.state,
-                          country: customer.country,
-                          postalCode: customer.postalCode,
-                          annualRevenue: customer.annualRevenue,
-                          numberOfEmployees: customer.numberOfEmployees,
-                          description: customer.description,
-                        });
-                        setIsEditModalOpen(true);
-                      }}
-                      className="shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.35)',
-                        borderWidth: '2px',
-                        borderColor: 'white',
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      Düzenle
-                    </Button>
-                  </div>
-                </div>
+      {/* Clean Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-100"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Left: Avatar + Name + Status */}
+          <div className="flex items-center gap-4">
+            <Avatar
+              size={64}
+              icon={<ShopOutlined />}
+              className={`${
+                customer.isActive
+                  ? 'bg-blue-500'
+                  : 'bg-gray-400'
+              }`}
+            />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {customer.companyName}
+              </h1>
+              <div className="flex items-center gap-2">
+                <Tag
+                  color={customer.isActive ? 'success' : 'default'}
+                  className="m-0"
+                >
+                  {customer.isActive ? '✓ Aktif' : '✗ Pasif'}
+                </Tag>
+                {customer.industry && (
+                  <Tag color="blue" className="m-0">
+                    {customer.industry}
+                  </Tag>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Right: Edit Button */}
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            size="large"
+            onClick={() => {
+              form.setFieldsValue({
+                companyName: customer.companyName,
+                email: customer.email,
+                phone: customer.phone,
+                website: customer.website,
+                industry: customer.industry,
+                address: customer.address,
+                city: customer.city,
+                state: customer.state,
+                country: customer.country,
+                postalCode: customer.postalCode,
+                annualRevenue: customer.annualRevenue,
+                numberOfEmployees: customer.numberOfEmployees,
+                description: customer.description,
+              });
+              setIsEditModalOpen(true);
+            }}
+          >
+            Düzenle
+          </Button>
+        </div>
+
+        {/* Tags Section */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <CustomerTags customerId={customer.id} editable={true} size="default" />
         </div>
       </motion.div>
 
-      {/* Enhanced Stats Row */}
+      {/* Clean Stats Row */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <Row gutter={[16, 16]} className="mb-6">
           <Col xs={24} sm={12} lg={6}>
-            <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card
-                className="shadow-xl border-0 h-full overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                <Statistic
-                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><UserOutlined /> Kişi Sayısı</span>}
-                  value={customer.contacts?.length || 0}
-                  valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
-                <div className="text-white text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Kayıtlı Kişiler</span>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Kişi Sayısı</span>}
+                value={customer.contacts?.length || 0}
+                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+              />
+              <div className="text-xs text-gray-400 mt-2">Kayıtlı Kişiler</div>
+            </Card>
           </Col>
 
           {customer.annualRevenue && (
             <Col xs={24} sm={12} lg={6}>
-              <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-                <Card
-                  className="shadow-xl border-0 h-full overflow-hidden relative"
-                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' }}
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                  <Statistic
-                    title={<span className="text-white flex items-center gap-2 text-base font-semibold"><DollarOutlined /> Yıllık Gelir</span>}
-                    value={customer.annualRevenue}
-                    prefix="₺"
-                    valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                  />
-                  <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
-                  <div className="text-white text-sm">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Firma Cirosu</span>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+              <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <Statistic
+                  title={<span className="text-gray-500 text-sm">Yıllık Gelir</span>}
+                  value={customer.annualRevenue}
+                  prefix="₺"
+                  valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+                />
+                <div className="text-xs text-gray-400 mt-2">Firma Cirosu</div>
+              </Card>
             </Col>
           )}
 
           {customer.numberOfEmployees && (
             <Col xs={24} sm={12} lg={6}>
-              <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-                <Card
-                  className="shadow-xl border-0 h-full overflow-hidden relative"
-                  style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }}
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                  <Statistic
-                    title={<span className="text-white flex items-center gap-2 text-base font-semibold"><TeamOutlined /> Çalışan Sayısı</span>}
-                    value={customer.numberOfEmployees}
-                    valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                  />
-                  <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
-                  <div className="text-white text-sm">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Toplam Çalışan</span>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+              <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <Statistic
+                  title={<span className="text-gray-500 text-sm">Çalışan Sayısı</span>}
+                  value={customer.numberOfEmployees}
+                  valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
+                />
+                <div className="text-xs text-gray-400 mt-2">Toplam Çalışan</div>
+              </Card>
             </Col>
           )}
 
           <Col xs={24} sm={12} lg={6}>
-            <motion.div whileHover={{ scale: 1.05, y: -5 }} transition={{ type: 'spring' }}>
-              <Card
-                className="shadow-xl border-0 h-full overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' }}
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                <Statistic
-                  title={<span className="text-white flex items-center gap-2 text-base font-semibold"><TrophyOutlined /> Sağlık Skoru</span>}
-                  value={healthScore}
-                  suffix="/100"
-                  valueStyle={{ color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}
-                />
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
-                <div className="text-white text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Değerlendirme:</span>
-                    <span className="font-bold">{healthScore > 70 ? 'Mükemmel' : healthScore > 50 ? 'İyi' : 'Geliştirilmeli'}</span>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title={<span className="text-gray-500 text-sm">Sağlık Skoru</span>}
+                value={healthScore}
+                suffix="/100"
+                valueStyle={{ color: healthScore > 70 ? '#10b981' : healthScore > 50 ? '#f59e0b' : '#ef4444', fontWeight: 'bold', fontSize: '2rem' }}
+              />
+              <div className="text-xs font-medium mt-2" style={{ color: healthScore > 70 ? '#10b981' : healthScore > 50 ? '#f59e0b' : '#ef4444' }}>
+                {healthScore > 70 ? 'Mükemmel' : healthScore > 50 ? 'İyi' : 'Geliştirilmeli'}
+              </div>
+            </Card>
           </Col>
         </Row>
       </motion.div>
@@ -545,49 +427,27 @@ export default function CustomerDetailPage() {
       {/* AI Insights Card */}
       {insights.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card
-            className="shadow-xl border-0 mb-6 bg-gradient-to-r from-indigo-50 to-purple-50"
-            title={
-              <span className="flex items-center gap-2 text-lg">
-                <ThunderboltOutlined className="text-yellow-500" />
-                <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-bold">
-                  Akıllı İçgörüler & Öneriler
-                </span>
-              </span>
-            }
-          >
+          <div className="bg-white border-l-4 border-blue-500 rounded-lg p-6 mb-6 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">💡</span>
+              <h3 className="text-lg font-semibold text-blue-600">Akıllı İçgörü</h3>
+            </div>
             <Row gutter={[16, 16]}>
               {insights.map((insight, index) => (
                 <Col xs={24} md={12} key={index}>
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <Alert
-                      message={
-                        <span className="flex items-center gap-2 font-semibold">
-                          {insight.icon}
-                          {insight.title}
-                        </span>
-                      }
-                      description={insight.description}
-                      type={insight.type as any}
-                      showIcon
-                      className="shadow-md"
-                    />
-                  </motion.div>
+                  <div className="text-sm text-gray-700 leading-relaxed">
+                    <span className="font-medium">{insight.title}:</span> {insight.description}
+                  </div>
                 </Col>
               ))}
             </Row>
-          </Card>
+          </div>
         </motion.div>
       )}
 
       {/* Tabs Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-        <Card className="shadow-xl border-0">
+        <Card className="shadow-sm border border-gray-100">
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -616,32 +476,11 @@ export default function CustomerDetailPage() {
                             Firma Bilgileri
                           </h3>
                           <Descriptions bordered column={1} size="middle">
-                            <Descriptions.Item label="Firma Adı" labelStyle={{ fontWeight: 'bold' }}>
-                              {customer.companyName}
-                            </Descriptions.Item>
-                            {customer.industry && (
-                              <Descriptions.Item label="Sektör" labelStyle={{ fontWeight: 'bold' }}>
-                                <Tag color="blue">{customer.industry}</Tag>
-                              </Descriptions.Item>
-                            )}
                             {customer.website && (
                               <Descriptions.Item label="Website" labelStyle={{ fontWeight: 'bold' }}>
                                 <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                   {customer.website}
                                 </a>
-                              </Descriptions.Item>
-                            )}
-                            <Descriptions.Item label="Durum" labelStyle={{ fontWeight: 'bold' }}>
-                              <Badge status={statusConfig.badge as any} text={statusConfig.text} />
-                            </Descriptions.Item>
-                            {customer.numberOfEmployees && (
-                              <Descriptions.Item label="Çalışan Sayısı" labelStyle={{ fontWeight: 'bold' }}>
-                                {customer.numberOfEmployees.toLocaleString('tr-TR')}
-                              </Descriptions.Item>
-                            )}
-                            {customer.annualRevenue && (
-                              <Descriptions.Item label="Yıllık Gelir" labelStyle={{ fontWeight: 'bold' }}>
-                                ₺{customer.annualRevenue.toLocaleString('tr-TR')}
                               </Descriptions.Item>
                             )}
                           </Descriptions>
@@ -698,10 +537,10 @@ export default function CustomerDetailPage() {
                             transition={{ delay: 0.7 }}
                           >
                             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                              <FileTextOutlined className="text-purple-500" />
+                              <FileTextOutlined className="text-blue-500" />
                               Açıklama
                             </h3>
-                            <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg">
+                            <Card className="bg-gray-50 border border-gray-200 shadow-sm">
                               <p className="text-gray-700">{customer.description}</p>
                             </Card>
                           </motion.div>
