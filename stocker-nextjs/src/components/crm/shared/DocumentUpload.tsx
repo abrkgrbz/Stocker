@@ -25,6 +25,7 @@ import {
   FileExcelOutlined,
   FileImageOutlined,
   FileZipOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import {

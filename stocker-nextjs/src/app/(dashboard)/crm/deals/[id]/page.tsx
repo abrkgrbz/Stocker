@@ -221,7 +221,7 @@ export default function DealDetailPage() {
               />
               {dealProducts.length > 0 && (
                 <div className="text-xs text-gray-400 mt-2">
-                  Toplam: ₺{dealProducts.reduce((sum, p) => sum + p.totalPrice, 0).toLocaleString('tr-TR')}
+                  Toplam: ₺{dealProducts.reduce((sum, p) => sum + (p.totalPrice || 0), 0).toLocaleString('tr-TR')}
                 </div>
               )}
             </Card>
@@ -335,7 +335,7 @@ export default function DealDetailPage() {
                                       {product.quantity}x {product.productName || 'Ürün'}
                                     </span>
                                     <span className="font-medium text-gray-900">
-                                      ₺{product.totalPrice.toLocaleString('tr-TR')}
+                                      ₺{(product.totalPrice || 0).toLocaleString('tr-TR')}
                                     </span>
                                   </div>
                                 ))}
