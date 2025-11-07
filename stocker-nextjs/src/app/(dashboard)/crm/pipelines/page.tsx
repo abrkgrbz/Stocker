@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic, Avatar, Dropdown } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -256,6 +256,35 @@ export default function PipelinesPage() {
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} pipeline`,
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={<FunnelPlotOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />}
+                imageStyle={{ height: 100 }}
+                description={
+                  <div className="py-8">
+                    <div className="text-2xl font-bold text-gray-800 mb-4">
+                      Satış Sürecinizi Yapılandırın
+                    </div>
+                    <div className="text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+                      Pipeline&apos;lar, fırsatlarınızın hangi aşamalardan geçeceğini tanımlar.
+                      &apos;Kurumsal Satış Süreci&apos; veya &apos;E-Ticaret Hunisi&apos; gibi
+                      özelleştirilmiş satış süreçleri oluşturun.
+                    </div>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<PlusOutlined />}
+                      onClick={handleCreate}
+                      className="h-12 px-8 text-base font-semibold"
+                    >
+                      İlk Pipeline&apos;ınızı Oluşturun
+                    </Button>
+                  </div>
+                }
+              />
+            ),
           }}
         />
       </Card>
