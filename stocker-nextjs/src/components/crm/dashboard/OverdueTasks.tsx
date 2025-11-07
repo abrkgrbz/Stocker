@@ -9,7 +9,8 @@ import {
   TeamOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import type { Activity } from '@/lib/api/services/crm.service';
