@@ -615,6 +615,13 @@ export class CRMService {
     return ApiService.post<Pipeline>(this.getPath(`pipelines/${id}/deactivate`), {});
   }
 
+  /**
+   * Set pipeline as default
+   */
+  static async setDefaultPipeline(id: string): Promise<Pipeline> {
+    return ApiService.post<Pipeline>(this.getPath(`pipelines/${id}/set-default`), {});
+  }
+
   // =====================================
   // CUSTOMER SEGMENTS
   // =====================================

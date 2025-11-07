@@ -466,6 +466,21 @@ export function useDeactivatePipeline() {
   });
 }
 
+/**
+ * Hook to set pipeline as default
+ */
+export function useSetDefaultPipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.setDefaultPipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines() });
+      message.success('Pipeline varsayılan olarak ayarlandı');
+    },
+  });
+}
+
 // =====================================
 // CUSTOMER SEGMENTS HOOKS
 // =====================================

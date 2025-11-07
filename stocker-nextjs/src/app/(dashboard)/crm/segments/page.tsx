@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
@@ -44,6 +45,7 @@ const segmentColors: Record<string, string> = {
 };
 
 export default function CustomerSegmentsPage() {
+  const router = useRouter();
   const [selectedSegment, setSelectedSegment] = useState<CustomerSegment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -116,14 +118,47 @@ export default function CustomerSegmentsPage() {
     }
   };
 
-  const handleExport = (segment: CustomerSegment) => {
-    message.info('CSV export özelliği için backend desteği gerekiyor');
-    // Future: Download CSV of segment members
+  const handleExport = async (segment: CustomerSegment) => {
+    try {
+      const response = await fetch(`/api/crm/CustomerSegments/${segment.id}/export`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      const filename = filenameMatch?.[1] || `${segment.name}_members.csv`;
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success(`${segment.name} üyeleri başarıyla dışa aktarıldı`);
+    } catch (error: any) {
+      message.error('CSV export işlemi başarısız oldu');
+      console.error('Export error:', error);
+    }
   };
 
   const handleSendCampaign = (segment: CustomerSegment) => {
-    message.info('Kampanya entegrasyonu için backend desteği gerekiyor');
-    // Future: Navigate to /crm/campaigns/new?targetSegment={id}
+    // Navigate to campaign creation with pre-selected segment
+    // Note: Campaign modal needs to be updated to accept targetSegmentId parameter
+    router.push(`/crm/campaigns?createNew=true&targetSegmentId=${segment.id}&targetSegmentName=${encodeURIComponent(segment.name)}`);
+    message.success(`Kampanya oluşturma sayfasına yönlendiriliyorsunuz: ${segment.name}`);
   };
 
   const columns: ColumnsType<CustomerSegment> = [

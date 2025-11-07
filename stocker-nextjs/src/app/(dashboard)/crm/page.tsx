@@ -4,8 +4,16 @@ import React from 'react';
 import { Typography, Space, Button, Row, Col, Card, Table, List, Tag } from 'antd';
 import { TrophyOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { useCustomers, useLeads, useDeals, useActivities } from '@/hooks/useCRM';
-import { MetricsOverview, SalesFunnel, TopCustomers } from '@/components/crm/dashboard';
+import { useCustomers, useLeads, useDeals, useActivities, useCampaigns, usePipelines } from '@/hooks/useCRM';
+import {
+  MetricsOverview,
+  SalesFunnel,
+  TopCustomers,
+  CampaignPerformance,
+  TodaysActivities,
+  OverdueTasks,
+  PipelineStats
+} from '@/components/crm/dashboard';
 import { calculateDashboardMetrics } from '@/lib/crm';
 import { AnimatedCard } from '@/components/crm/shared';
 import { formatDate } from '@/lib/crm';
@@ -17,13 +25,17 @@ export default function CRMDashboardPage() {
   // Fetch CRM data
   const { data: customersData, isLoading: customersLoading } = useCustomers({ pageSize: 10 });
   const { data: leadsData, isLoading: leadsLoading } = useLeads({ pageSize: 5 });
-  const { data: dealsData, isLoading: dealsLoading } = useDeals({ pageSize: 5 });
-  const { data: activitiesData, isLoading: activitiesLoading } = useActivities({ pageSize: 5 });
+  const { data: dealsData, isLoading: dealsLoading } = useDeals({ pageSize: 50 }); // Increased for pipeline stats
+  const { data: activitiesData, isLoading: activitiesLoading } = useActivities({ pageSize: 50 }); // Increased for today/overdue
+  const { data: campaignsData, isLoading: campaignsLoading } = useCampaigns();
+  const { data: pipelinesData, isLoading: pipelinesLoading } = usePipelines();
 
   const customers = customersData?.items || [];
   const leads = leadsData?.items || [];
   const deals = dealsData?.items || [];
   const activities = activitiesData?.items || [];
+  const campaigns = campaignsData?.items || [];
+  const pipelines = pipelinesData || [];
 
   // Calculate all metrics using utility function
   const metrics = calculateDashboardMetrics({ customers, leads, deals });
@@ -92,7 +104,18 @@ export default function CRMDashboardPage() {
         />
       </div>
 
-      {/* Sales Funnel & Top Customers */}
+      {/* Today's Activities & Overdue Tasks */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} lg={12}>
+          <TodaysActivities activities={activities} loading={activitiesLoading} />
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <OverdueTasks activities={activities} loading={activitiesLoading} />
+        </Col>
+      </Row>
+
+      {/* Sales Funnel & Pipeline Stats */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} lg={12}>
           <SalesFunnel
@@ -102,6 +125,17 @@ export default function CRMDashboardPage() {
             wonDeals={metrics.wonDeals}
             loading={leadsLoading}
           />
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <PipelineStats pipelines={pipelines} deals={deals} loading={pipelinesLoading || dealsLoading} />
+        </Col>
+      </Row>
+
+      {/* Campaign Performance & Top Customers */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} lg={12}>
+          <CampaignPerformance campaigns={campaigns} loading={campaignsLoading} />
         </Col>
 
         <Col xs={24} lg={12}>
@@ -123,7 +157,7 @@ export default function CRMDashboardPage() {
           >
             <Table
               columns={activityColumns}
-              dataSource={activities}
+              dataSource={activities.slice(0, 5)}
               rowKey="id"
               pagination={false}
               size="small"

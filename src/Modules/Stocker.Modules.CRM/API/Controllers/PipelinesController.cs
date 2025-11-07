@@ -220,7 +220,28 @@ public class PipelinesController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{id}/set-default")]
+    [ProducesResponseType(typeof(PipelineDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<PipelineDto>> SetDefaultPipeline(Guid id)
+    {
+        var command = new SetDefaultPipelineCommand { Id = id };
+
+        // Set TenantId from HttpContext
+        var tenantId = HttpContext.Items["TenantId"] as Guid?;
+        if (tenantId.HasValue)
+            command.TenantId = tenantId.Value;
+
+        var result = await _mediator.Send(command);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
         return Ok(result.Value);
     }
 }

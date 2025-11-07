@@ -6,6 +6,7 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 using Stocker.Modules.CRM.Application.Features.CustomerSegments.Queries;
 using Stocker.SharedKernel.Results;
+using System.Text;
 
 namespace Stocker.Modules.CRM.API.Controllers;
 
@@ -302,5 +303,56 @@ public class CustomerSegmentsController : ControllerBase
         }
 
         return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Export segment members to CSV
+    /// </summary>
+    [HttpGet("{id}/export")]
+    [ProducesResponseType(typeof(FileContentResult), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ExportSegmentMembers(Guid id)
+    {
+        // Get segment info
+        var segmentQuery = new GetCustomerSegmentByIdQuery { Id = id };
+        var segmentResult = await _mediator.Send(segmentQuery);
+
+        if (segmentResult.IsFailure)
+        {
+            if (segmentResult.Error.Type == ErrorType.NotFound)
+                return NotFound(segmentResult.Error);
+
+            return BadRequest(segmentResult.Error);
+        }
+
+        // Get segment members
+        var membersQuery = new GetSegmentMembersQuery { SegmentId = id };
+        var membersResult = await _mediator.Send(membersQuery);
+
+        if (membersResult.IsFailure)
+        {
+            return BadRequest(membersResult.Error);
+        }
+
+        var members = membersResult.Value;
+
+        // Generate CSV
+        var csv = new StringBuilder();
+        csv.AppendLine("Customer ID,Name,Email,Added Date,Membership Reason");
+
+        foreach (var member in members)
+        {
+            csv.AppendLine($"{member.CustomerId}," +
+                          $"\"{member.CustomerName ?? ""}\"," +
+                          $"\"{member.CustomerEmail ?? ""}\"," +
+                          $"\"{member.AddedAt:yyyy-MM-dd HH:mm:ss}\"," +
+                          $"\"{member.Reason}\"");
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+        var fileName = $"{segmentResult.Value.Name}_members_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
+
+        return File(bytes, "text/csv", fileName);
     }
 }

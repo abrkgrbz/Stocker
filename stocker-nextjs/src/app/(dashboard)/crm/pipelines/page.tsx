@@ -15,10 +15,12 @@ import {
   MoreOutlined,
   EyeOutlined,
   CopyOutlined,
+  StarOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
-import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline } from '@/hooks/useCRM';
+import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline, useSetDefaultPipeline } from '@/hooks/useCRM';
 import { PipelineModal } from '@/components/crm/pipelines/PipelineModal';
 import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
 
@@ -44,6 +46,7 @@ export default function PipelinesPage() {
   const deactivatePipeline = useDeactivatePipeline();
   const createPipeline = useCreatePipeline();
   const updatePipeline = useUpdatePipeline();
+  const setDefaultPipeline = useSetDefaultPipeline();
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -137,6 +140,16 @@ export default function PipelinesPage() {
     }
   };
 
+  const handleSetDefault = async (pipeline: Pipeline) => {
+    try {
+      await setDefaultPipeline.mutateAsync(pipeline.id);
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      message.error(errorMessage);
+    }
+  };
+
   const columns: ColumnsType<Pipeline> = [
     {
       title: 'Pipeline',
@@ -152,7 +165,12 @@ export default function PipelinesPage() {
             {text.charAt(0)}
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">{text}</div>
+            <div className="flex items-center gap-2">
+              <div className="font-semibold text-gray-900 truncate">{text}</div>
+              {(record as any).isDefault && (
+                <StarFilled className="text-yellow-500 text-sm flex-shrink-0" title="Varsayılan Pipeline" />
+              )}
+            </div>
             {record.description && (
               <div className="text-xs text-gray-500 truncate">{record.description}</div>
             )}
@@ -235,6 +253,14 @@ export default function PipelinesPage() {
                 onClick: () => handleToggleActive(record),
                 disabled: activatePipeline.isPending || deactivatePipeline.isPending,
               },
+              {
+                key: 'setDefault',
+                label: 'Varsayılan Yap',
+                icon: <StarOutlined />,
+                onClick: () => handleSetDefault(record),
+                disabled: (record as any).isDefault, // Can't set as default if already default
+              },
+              { type: 'divider' as const },
               {
                 key: 'edit',
                 label: 'Düzenle',

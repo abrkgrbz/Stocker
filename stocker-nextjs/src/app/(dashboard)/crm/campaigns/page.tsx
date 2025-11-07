@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Progress, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
@@ -56,6 +57,7 @@ const campaignStatusLabels: Record<string, { label: string; color: string }> = {
 };
 
 export default function CampaignsPage() {
+  const searchParams = useSearchParams();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -67,6 +69,19 @@ export default function CampaignsPage() {
   const abortCampaign = useAbortCampaign();
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
+
+  // Handle query parameters for segment integration
+  useEffect(() => {
+    const createNew = searchParams.get('createNew');
+    const targetSegmentId = searchParams.get('targetSegmentId');
+    const targetSegmentName = searchParams.get('targetSegmentName');
+
+    if (createNew === 'true' && targetSegmentId) {
+      setIsModalOpen(true);
+      message.info(`Hedef segment: ${targetSegmentName || 'Seçili Segment'}`);
+      // Note: The modal will need to be updated to accept and display the target segment
+    }
+  }, [searchParams]);
 
   const handleDelete = (id: string) => {
     Modal.confirm({
