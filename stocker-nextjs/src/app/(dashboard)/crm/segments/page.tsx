@@ -13,6 +13,9 @@ import {
   ReloadOutlined,
   ApartmentOutlined,
   MoreOutlined,
+  CopyOutlined,
+  MailOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
@@ -93,6 +96,34 @@ export default function CustomerSegmentsPage() {
   const handleCreate = () => {
     setSelectedSegment(null);
     setIsModalOpen(true);
+  };
+
+  const handleClone = async (segment: CustomerSegment) => {
+    try {
+      const clonedData = {
+        name: `${segment.name} (Kopya)`,
+        description: segment.description,
+        type: segment.type,
+        color: segment.color,
+        isActive: false, // Cloned segments start as inactive
+      };
+      await createSegment.mutateAsync(clonedData);
+      message.success('Segment başarıyla kopyalandı');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
+      message.error(errorMessage);
+    }
+  };
+
+  const handleExport = (segment: CustomerSegment) => {
+    message.info('CSV export özelliği için backend desteği gerekiyor');
+    // Future: Download CSV of segment members
+  };
+
+  const handleSendCampaign = (segment: CustomerSegment) => {
+    message.info('Kampanya entegrasyonu için backend desteği gerekiyor');
+    // Future: Navigate to /crm/campaigns/new?targetSegment={id}
   };
 
   const columns: ColumnsType<CustomerSegment> = [
@@ -181,6 +212,26 @@ export default function CustomerSegmentsPage() {
                 label: 'Düzenle',
                 icon: <EditOutlined />,
                 onClick: () => handleEdit(record),
+              },
+              {
+                key: 'clone',
+                label: 'Kopyala',
+                icon: <CopyOutlined />,
+                onClick: () => handleClone(record),
+                disabled: createSegment.isPending,
+              },
+              { type: 'divider' as const },
+              {
+                key: 'export',
+                label: 'Üyeleri Dışa Aktar (.csv)',
+                icon: <DownloadOutlined />,
+                onClick: () => handleExport(record),
+              },
+              {
+                key: 'campaign',
+                label: 'Bu Segmente Kampanya Gönder',
+                icon: <MailOutlined />,
+                onClick: () => handleSendCampaign(record),
               },
               { type: 'divider' as const },
               {

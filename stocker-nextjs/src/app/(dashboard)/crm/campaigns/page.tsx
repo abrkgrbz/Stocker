@@ -17,6 +17,7 @@ import {
   MoreOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -140,6 +141,27 @@ export default function CampaignsPage() {
   const handleCreate = () => {
     setSelectedCampaign(null);
     setIsModalOpen(true);
+  };
+
+  const handleClone = async (campaign: Campaign) => {
+    try {
+      const clonedData = {
+        name: `${campaign.name} (Kopya)`,
+        description: campaign.description,
+        type: campaign.type,
+        status: 'Planned', // Cloned campaigns start as Planned
+        startDate: campaign.startDate,
+        endDate: campaign.endDate,
+        budgetedCost: campaign.budgetedCost,
+        targetLeads: campaign.targetLeads,
+      };
+      await createCampaign.mutateAsync(clonedData);
+      message.success('Kampanya başarıyla kopyalandı');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
+      message.error(errorMessage);
+    }
   };
 
   const columns: ColumnsType<Campaign> = [
@@ -309,6 +331,15 @@ export default function CampaignsPage() {
           label: 'Düzenle',
           icon: <EditOutlined />,
           onClick: () => handleEdit(record),
+        });
+
+        // Clone action
+        menuItems.push({
+          key: 'clone',
+          label: 'Kopyala',
+          icon: <CopyOutlined />,
+          onClick: () => handleClone(record),
+          disabled: createCampaign.isPending,
         });
 
         // Separator

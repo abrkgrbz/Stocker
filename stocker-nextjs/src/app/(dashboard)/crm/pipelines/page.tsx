@@ -14,6 +14,7 @@ import {
   ReloadOutlined,
   MoreOutlined,
   EyeOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
@@ -112,6 +113,28 @@ export default function PipelinesPage() {
   const handleViewStages = (pipeline: Pipeline) => {
     setViewingPipeline(pipeline);
     setStagesModalOpen(true);
+  };
+
+  const handleClone = async (pipeline: Pipeline) => {
+    try {
+      const clonedData = {
+        name: `${pipeline.name} (Kopya)`,
+        description: pipeline.description,
+        type: pipeline.type,
+        isActive: false, // Cloned pipelines start as inactive
+        stages: pipeline.stages?.map((stage) => ({
+          name: stage.name,
+          order: stage.order,
+          probability: stage.probability,
+        })) || [],
+      };
+      await createPipeline.mutateAsync(clonedData);
+      message.success('Pipeline başarıyla kopyalandı');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
+      message.error(errorMessage);
+    }
   };
 
   const columns: ColumnsType<Pipeline> = [
@@ -217,6 +240,13 @@ export default function PipelinesPage() {
                 label: 'Düzenle',
                 icon: <EditOutlined />,
                 onClick: () => handleEdit(record),
+              },
+              {
+                key: 'clone',
+                label: 'Kopyala',
+                icon: <CopyOutlined />,
+                onClick: () => handleClone(record),
+                disabled: createPipeline.isPending,
               },
               { type: 'divider' as const },
               {
