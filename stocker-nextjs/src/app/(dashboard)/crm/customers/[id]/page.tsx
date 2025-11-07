@@ -48,8 +48,15 @@ import {
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCRM';
+import { useActivities } from '@/lib/api/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
 import { CustomerTags } from '@/components/crm/customers';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/tr';
+
+dayjs.extend(relativeTime);
+dayjs.locale('tr');
 
 export default function CustomerDetailPage() {
   const params = useParams();
@@ -64,6 +71,11 @@ export default function CustomerDetailPage() {
   // Fetch customer data from API
   const { data: customer, isLoading, error } = useCustomer(customerId);
   const updateCustomer = useUpdateCustomer();
+
+  // Fetch customer activities
+  const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
+    customerId: customerId,
+  });
 
   // Handle edit customer
   const handleEdit = async (values: any) => {
@@ -181,16 +193,43 @@ export default function CustomerDetailPage() {
 
   const insights = generateInsights();
 
-  // Mock timeline data (will be replaced with real API data later)
-  const timelineData = [
-    {
-      color: 'green',
-      icon: <CheckCircleOutlined />,
-      title: 'Müşteri Kaydı Oluşturuldu',
-      description: 'Sistem kaydı tamamlandı',
-      time: 'Bugün',
-    },
-  ];
+  // Activity type to icon/color mapping
+  const getActivityIcon = (type: string) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      Call: <PhoneOutlined />,
+      Email: <MailOutlined />,
+      Meeting: <TeamOutlined />,
+      Task: <FileTextOutlined />,
+      Note: <FileTextOutlined />,
+      Document: <FileOutlined />,
+    };
+    return iconMap[type] || <ClockCircleOutlined />;
+  };
+
+  const getActivityColor = (type: string, status: string) => {
+    if (status === 'Completed') return 'green';
+    if (status === 'Cancelled') return 'red';
+
+    const colorMap: Record<string, string> = {
+      Call: 'blue',
+      Email: 'cyan',
+      Meeting: 'green',
+      Task: 'orange',
+      Note: 'gray',
+      Document: 'purple',
+    };
+    return colorMap[type] || 'blue';
+  };
+
+  // Real timeline data from activities
+  const timelineData = activitiesData?.items?.map((activity: any) => ({
+    color: getActivityColor(activity.type, activity.status),
+    icon: getActivityIcon(activity.type),
+    title: activity.subject || activity.title,
+    description: activity.description || `${activity.type} aktivitesi`,
+    time: dayjs(activity.createdAt).fromNow(),
+    status: activity.status,
+  })) || [];
 
   // Mock orders data (will be replaced with real API data later)
   const mockOrders: any[] = [];
@@ -572,29 +611,53 @@ export default function CustomerDetailPage() {
                 ),
                 children: (
                   <div className="py-4">
-                    <Timeline
-                      mode="left"
-                      items={timelineData.map((item, index) => ({
-                        color: item.color,
-                        dot: item.icon,
-                        children: (
-                          <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.02 }}
-                          >
-                            <Card size="small" className="shadow-md hover:shadow-lg transition-shadow">
-                              <p className="font-bold text-gray-800 text-base mb-1">{item.title}</p>
-                              <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-400 text-xs">{item.time}</span>
-                              </div>
-                            </Card>
-                          </motion.div>
-                        ),
+                    {activitiesLoading ? (
+                      <div className="space-y-4">
+                        <Skeleton active />
+                        <Skeleton active />
+                        <Skeleton active />
+                      </div>
+                    ) : timelineData.length === 0 ? (
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span className="text-gray-500 text-base">
+                            Henüz aktivite bulunmuyor
+                          </span>
+                        }
+                      >
+                        <Button type="dashed" icon={<ClockCircleOutlined />}>
+                          Yeni Aktivite Oluştur
+                        </Button>
+                      </Empty>
+                    ) : (
+                      <Timeline
+                        mode="left"
+                        items={timelineData.map((item, index) => ({
+                          color: item.color,
+                          dot: item.icon,
+                          children: (
+                            <motion.div
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              whileHover={{ scale: 1.02 }}
+                            >
+                              <Card size="small" className="shadow-md hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="font-bold text-gray-800 text-base">{item.title}</p>
+                                  <Tag color={item.color}>{item.status}</Tag>
+                                </div>
+                                <p className="text-gray-600 text-sm mb-2">{item.description}</p>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-400 text-xs">{item.time}</span>
+                                </div>
+                              </Card>
+                            </motion.div>
+                          ),
                       }))}
-                    />
+                      />
+                    )}
                   </div>
                 ),
               },
