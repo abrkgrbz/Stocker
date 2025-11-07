@@ -66,9 +66,12 @@ export default function CustomersPage() {
           Müşteriler
         </Title>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            loading={isLoading}
+            size="large"
+          />
           <Button
             type="primary"
             icon={<PlusOutlined />}
