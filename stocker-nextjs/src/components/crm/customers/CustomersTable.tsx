@@ -40,31 +40,12 @@ export function CustomersTable({
 }: CustomersTableProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'success';
-      case 'Inactive':
-        return 'default';
-      case 'Potential':
-        return 'warning';
-      default:
-        return 'default';
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'success' : 'default';
   };
 
-  const getStatusText = (status: string) => {
-    const label = CRM_STATUS_LABELS.customers[status as keyof typeof CRM_STATUS_LABELS.customers] || status;
-    switch (status) {
-      case 'Active':
-        return `✓ Aktif`;
-      case 'Inactive':
-        return `✕ Pasif`;
-      case 'Potential':
-        return `⏳ Potansiyel`;
-      default:
-        return label;
-    }
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? '✓ Aktif' : '✕ Pasif';
   };
 
   const columns: TableColumnsType<Customer> = [
@@ -80,13 +61,7 @@ export function CustomersTable({
           <Avatar
             size={40}
             icon={<ShopOutlined />}
-            className={
-              record.status === 'Active'
-                ? 'bg-blue-500'
-                : record.status === 'Potential'
-                ? 'bg-yellow-500'
-                : 'bg-gray-400'
-            }
+            className={record.isActive ? 'bg-blue-500' : 'bg-gray-400'}
           />
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-gray-900 truncate">{text}</div>
@@ -97,18 +72,17 @@ export function CustomersTable({
     },
     {
       title: 'Durum',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 120,
       filters: [
-        { text: 'Aktif', value: 'Active' },
-        { text: 'Pasif', value: 'Inactive' },
-        { text: 'Potansiyel', value: 'Potential' },
+        { text: 'Aktif', value: true },
+        { text: 'Pasif', value: false },
       ],
-      onFilter: (value, record) => record.status === value,
-      render: (status) => (
-        <Tag color={getStatusColor(status)} className="m-0">
-          {getStatusText(status)}
+      onFilter: (value, record) => record.isActive === value,
+      render: (isActive: boolean) => (
+        <Tag color={getStatusColor(isActive)} className="m-0">
+          {getStatusText(isActive)}
         </Tag>
       ),
     },
@@ -200,7 +174,11 @@ export function CustomersTable({
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button
+            type="text"
+            icon={<MoreOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
         </Dropdown>
       ),
     },
