@@ -85,7 +85,7 @@ export const crmKeys = {
   segmentMembers: (id: string) => ['crm', 'segments', id, 'members'] as const,
 
   // Documents
-  documents: (entityId: number, entityType: string) => ['crm', 'documents', entityType, entityId] as const,
+  documents: (entityId: number | string, entityType: string) => ['crm', 'documents', entityType, entityId] as const,
   document: (id: number) => ['crm', 'documents', id] as const,
 
   // Customer Tags
