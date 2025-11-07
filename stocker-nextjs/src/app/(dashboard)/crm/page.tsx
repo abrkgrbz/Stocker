@@ -189,8 +189,8 @@ export default function CRMDashboardPage() {
                     }
                   />
                   <div className="text-right">
-                    <div className="font-semibold">₺{deal.amount.toLocaleString('tr-TR')}</div>
-                    <div className="text-xs text-gray-500">{deal.probability}% olasılık</div>
+                    <div className="font-semibold">₺{(deal.amount || 0).toLocaleString('tr-TR')}</div>
+                    <div className="text-xs text-gray-500">{deal.probability || 0}% olasılık</div>
                   </div>
                 </List.Item>
               )}
