@@ -141,6 +141,7 @@ export function DocumentUpload({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const dropzoneInstance = useRef<Dropzone | null>(null);
 
@@ -159,25 +160,27 @@ export function DocumentUpload({
       maxFilesize: maxFileSize,
       maxFiles: multiple ? null : 1,
       acceptedFiles: allowedFileTypes.length > 0 ? allowedFileTypes.join(',') : undefined,
-      addRemoveLinks: true,
-      dictDefaultMessage: '📁 Dosyaları buraya sürükleyin veya tıklayın',
+      addRemoveLinks: false,
+      clickable: '.upload-trigger', // Only trigger on button click
+      previewsContainer: false, // Disable preview UI
+      dictDefaultMessage: '',
       dictFallbackMessage: 'Tarayıcınız drag & drop desteklemiyor.',
       dictFileTooBig: `Dosya çok büyük ({{filesize}}MB). Maksimum: ${maxFileSize}MB.`,
       dictInvalidFileType: 'Bu dosya türü desteklenmiyor.',
-      dictRemoveFile: 'Kaldır',
-      dictCancelUpload: 'İptal',
-      dictMaxFilesExceeded: multiple ? 'Çok fazla dosya.' : 'Sadece bir dosya yükleyebilirsiniz.',
     });
 
     // Handle file added
     myDropzone.on('addedfile', (file) => {
       setSelectedFiles((prev) => [...prev, file as File]);
+      setIsDragging(false);
+      // Auto open modal when file is added
+      setIsModalVisible(true);
     });
 
-    // Handle file removed
-    myDropzone.on('removedfile', (file) => {
-      setSelectedFiles((prev) => prev.filter((f) => f !== file));
-    });
+    // Handle drag events
+    myDropzone.on('dragenter', () => setIsDragging(true));
+    myDropzone.on('dragleave', () => setIsDragging(false));
+    myDropzone.on('drop', () => setIsDragging(false));
 
     dropzoneInstance.current = myDropzone;
 
@@ -188,12 +191,12 @@ export function DocumentUpload({
     };
   }, [maxFileSize, multiple, allowedFileTypes]);
 
-  const handleUploadClick = () => {
-    if (selectedFiles.length === 0) {
-      message.warning('Lütfen dosya seçin');
-      return;
+  const handleNewDocumentClick = () => {
+    // Trigger file selection dialog
+    if (dropzoneInstance.current) {
+      const fileInput = dropzoneRef.current?.querySelector('input[type="file"]') as HTMLInputElement;
+      fileInput?.click();
     }
-    setIsModalVisible(true);
   };
 
   const handleModalOk = async () => {
@@ -232,10 +235,11 @@ export function DocumentUpload({
       setUploadProgress(0);
       form.resetFields();
 
-      // Clear dropzone
+      // Clear dropzone and selected files
       if (dropzoneInstance.current) {
         dropzoneInstance.current.removeAllFiles();
       }
+      setSelectedFiles([]);
 
       refetch();
     } catch (error) {
@@ -247,7 +251,13 @@ export function DocumentUpload({
   const handleModalCancel = () => {
     setIsModalVisible(false);
     setUploadProgress(0);
+    setSelectedFiles([]);
     form.resetFields();
+
+    // Clear dropzone
+    if (dropzoneInstance.current) {
+      dropzoneInstance.current.removeAllFiles();
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -270,58 +280,51 @@ export function DocumentUpload({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Dropzone Upload Section */}
-      <Card title="📁 Doküman Yükle" className="shadow-lg">
-        <div className="space-y-4">
-          {/* Dropzone Container */}
-          <div ref={dropzoneRef} className="dropzone-custom">
-            <div className="dz-message needsclick">
-              <div className="text-center py-8">
+    <div className="relative">
+      {/* Modern Single Card with Integrated Upload */}
+      <Card
+        title={
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <FileOutlined className="text-xl" />
+              <span className="font-semibold">Dokümanlar</span>
+              {documents && documents.length > 0 && (
+                <span className="text-sm text-gray-500">({documents.length})</span>
+              )}
+            </div>
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              onClick={handleNewDocumentClick}
+              className="upload-trigger"
+            >
+              Yeni Doküman
+            </Button>
+          </div>
+        }
+        className="shadow-sm border border-gray-100"
+      >
+        {/* Dropzone Container - Invisible but active */}
+        <div ref={dropzoneRef} className="dropzone-modern">
+          {/* Drag Overlay */}
+          {isDragging && (
+            <div className="absolute inset-0 z-50 bg-blue-500/10 border-4 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none">
+              <div className="text-center bg-white p-8 rounded-xl shadow-2xl">
                 <div className="text-6xl mb-4">📥</div>
-                <p className="text-lg font-semibold mb-2">
-                  Dosyaları sürükleyip bırakın veya tıklayın
+                <p className="text-xl font-bold text-blue-600 mb-2">
+                  Yüklemek için buraya bırakın
                 </p>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500">
                   Maksimum dosya boyutu: {maxFileSize}MB
-                  {multiple && ' • Birden fazla dosya seçebilirsiniz'}
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Upload Button */}
-          {selectedFiles.length > 0 && (
-            <div className="flex justify-end">
-              <Button
-                type="primary"
-                size="large"
-                onClick={handleUploadClick}
-                loading={uploadMutation.isPending}
-              >
-                {selectedFiles.length} Dosya Yükle
-              </Button>
             </div>
           )}
-        </div>
-      </Card>
 
-      {/* Documents List - Colorful Compact Layout */}
-      {documents && documents.length > 0 && (
-        <Card
-          title={
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FileOutlined className="text-xl" />
-                <span className="font-semibold">Dokümanlar</span>
-                <span className="text-sm text-gray-500">({documents.length})</span>
-              </div>
-            </div>
-          }
-          className="shadow-lg"
-        >
-          <div className="space-y-3">
-            {documents.map((doc, index) => {
+          {/* Documents List or Empty State */}
+          {documents && documents.length > 0 ? (
+            <div className="space-y-3">
+              {documents.map((doc, index) => {
               const fileInfo = getFileTypeInfo(doc.fileName);
               return (
                 <motion.div
@@ -397,9 +400,28 @@ export function DocumentUpload({
                 </motion.div>
               );
             })}
-          </div>
-        </Card>
-      )}
+            </div>
+          ) : (
+            /* Empty State */
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📁</div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">Henüz doküman yok</h3>
+              <p className="text-gray-500 mb-6">
+                Dokümanları sürükleyip bırakın veya yükle butonuna tıklayın
+              </p>
+              <Button
+                type="dashed"
+                size="large"
+                icon={<UploadOutlined />}
+                onClick={handleNewDocumentClick}
+                className="upload-trigger"
+              >
+                İlk Dokümanı Yükle
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Upload Metadata Modal */}
       <Modal

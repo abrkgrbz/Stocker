@@ -394,16 +394,12 @@ export default function DealDetailPage() {
                           transition={{ delay: 0.5 }}
                           className="mt-6"
                         >
-                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <FileTextOutlined className="text-blue-500" />
-                            Dokümanlar
-                          </h3>
-                          <Card className="border border-gray-200 shadow-sm">
-                            <div className="text-center py-4">
-                              <p className="text-gray-500 mb-3">Henüz doküman eklenmemiş</p>
-                              <Button type="primary">Doküman Yükle</Button>
-                            </div>
-                          </Card>
+                          <DocumentUpload
+                            entityId={dealId}
+                            entityType="Deal"
+                            maxFileSize={10}
+                            allowedFileTypes={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'png', 'jpeg']}
+                          />
                         </motion.div>
                       </Col>
                     </Row>

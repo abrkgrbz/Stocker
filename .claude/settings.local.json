@@ -88,7 +88,10 @@
       "Bash(wc:*)",
       "Bash(dotnet --list-runtimes:*)",
       "Bash(dotnet ef database update:*)",
-      "Bash(dotnet ef migrations script:*)"
+      "Bash(dotnet ef migrations script:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
