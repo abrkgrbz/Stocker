@@ -82,6 +82,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       label: 'CRM',
       children: [
         {
+          key: '/crm',
+          icon: <DashboardOutlined />,
+          label: 'CRM Dashboard',
+        },
+        {
           key: '/crm/customers',
           icon: <ContactsOutlined />,
           label: 'Müşteriler',
@@ -134,6 +139,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       label: 'Ayarlar',
       children: [
         {
+          key: '/settings',
+          icon: <SettingOutlined />,
+          label: 'Ayarlar Ana Sayfa',
+        },
+        {
           type: 'group',
           label: 'Genel',
           children: [
@@ -179,6 +189,37 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       ],
     },
   ];
+
+  // Calculate selected and open keys based on current pathname
+  const getSelectedKeys = () => {
+    // Direct match
+    if (pathname === '/app') return ['/app'];
+    if (pathname === '/modules') return ['/modules'];
+
+    // CRM routes
+    if (pathname.startsWith('/crm')) return [pathname];
+
+    // Settings routes
+    if (pathname.startsWith('/settings')) return [pathname];
+
+    return [pathname];
+  };
+
+  const getOpenKeys = () => {
+    const openKeys: string[] = [];
+
+    // Open CRM submenu if on any CRM page
+    if (pathname.startsWith('/crm')) {
+      openKeys.push('crm');
+    }
+
+    // Open Settings submenu if on any settings page
+    if (pathname.startsWith('/settings')) {
+      openKeys.push('settings');
+    }
+
+    return openKeys;
+  };
 
   const handleMenuClick = (key: string) => {
     router.push(key);
@@ -236,8 +277,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </div>
         <Menu
           mode="inline"
-          defaultSelectedKeys={['/app']}
-          defaultOpenKeys={['crm']}
+          selectedKeys={getSelectedKeys()}
+          openKeys={getOpenKeys()}
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
         />
