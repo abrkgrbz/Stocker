@@ -6,8 +6,9 @@ dayjs.locale('tr');
 dayjs.extend(relativeTime);
 
 // Currency formatter
-export function formatCurrency(amount: number, currency: string = '₺'): string {
-  return `${currency}${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export function formatCurrency(amount: number | null | undefined, currency: string = '₺'): string {
+  const safeAmount = amount ?? 0;
+  return `${currency}${safeAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Date formatters
@@ -24,12 +25,14 @@ export function formatRelativeTime(date: string | Date): string {
 }
 
 // Number formatters
-export function formatNumber(num: number): string {
-  return num.toLocaleString('tr-TR');
+export function formatNumber(num: number | null | undefined): string {
+  const safeNum = num ?? 0;
+  return safeNum.toLocaleString('tr-TR');
 }
 
-export function formatPercent(value: number, decimals: number = 1): string {
-  return `%${value.toFixed(decimals)}`;
+export function formatPercent(value: number | null | undefined, decimals: number = 1): string {
+  const safeValue = value ?? 0;
+  return `%${safeValue.toFixed(decimals)}`;
 }
 
 // Phone number formatter
@@ -44,12 +47,13 @@ export function formatPhone(phone: string): string {
 }
 
 // Compact number formatter (1.5K, 2.3M, etc.)
-export function formatCompactNumber(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
+export function formatCompactNumber(num: number | null | undefined): string {
+  const safeNum = num ?? 0;
+  if (safeNum >= 1000000) {
+    return `${(safeNum / 1000000).toFixed(1)}M`;
   }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
+  if (safeNum >= 1000) {
+    return `${(safeNum / 1000).toFixed(1)}K`;
   }
-  return num.toString();
+  return safeNum.toString();
 }
