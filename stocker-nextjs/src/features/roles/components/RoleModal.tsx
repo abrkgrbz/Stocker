@@ -22,6 +22,7 @@ import {
   Typography,
   Badge,
   Collapse,
+  Select,
 } from 'antd';
 import {
   SaveOutlined,
@@ -29,8 +30,11 @@ import {
   LockOutlined,
   CheckCircleOutlined,
   InfoCircleOutlined,
+  DownOutlined,
+  RightOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
-import { useCreateRole, useUpdateRole } from '@/hooks/useRoles';
+import { useCreateRole, useUpdateRole, useRoles } from '@/hooks/useRoles';
 import {
   AVAILABLE_RESOURCES,
   PERMISSION_TYPE_LABELS,
@@ -44,6 +48,26 @@ import {
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
+// Resource icon mapping for better visual hierarchy
+const getResourceIcon = (resourceValue: string): string => {
+  if (resourceValue.startsWith('CRM.')) return '💼';
+
+  const iconMap: Record<string, string> = {
+    'Users': '👥',
+    'Roles': '🔐',
+    'Tenants': '🏢',
+    'Modules': '🧩',
+    'Settings': '⚙️',
+    'Reports': '📊',
+    'Integrations': '🔌',
+    'Billing': '💳',
+    'Security': '🛡️',
+    'Audit': '📋',
+  };
+
+  return iconMap[resourceValue] || '📦';
+};
+
 interface RoleModalProps {
   open: boolean;
   role: Role | null;
@@ -53,9 +77,11 @@ interface RoleModalProps {
 export function RoleModal({ open, role, onClose }: RoleModalProps) {
   const [form] = Form.useForm();
   const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([]);
+  const [copyFromRoleId, setCopyFromRoleId] = useState<string | undefined>(undefined);
 
   const createMutation = useCreateRole();
   const updateMutation = useUpdateRole();
+  const { data: allRoles } = useRoles();
 
   const isEditing = !!role;
 
@@ -71,8 +97,20 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
       // Reset form for new role
       form.resetFields();
       setSelectedPermissions([]);
+      setCopyFromRoleId(undefined);
     }
   }, [open, role, form]);
+
+  // Handle copying permissions from another role
+  const handleCopyFromRole = (roleId: string | undefined) => {
+    setCopyFromRoleId(roleId);
+    if (roleId) {
+      const selectedRole = allRoles?.find((r) => r.id === roleId);
+      if (selectedRole) {
+        setSelectedPermissions(selectedRole.permissions.map(parsePermission));
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -194,12 +232,26 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
       open={open}
       onClose={onClose}
       width={720}
-      extra={
-        <Space>
-          <Button icon={<CloseOutlined />} onClick={onClose}>
+      footer={
+        <div
+          style={{
+            position: 'sticky',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '16px 24px',
+            background: '#fff',
+            borderTop: '1px solid #f0f0f0',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 8,
+          }}
+        >
+          <Button size="large" icon={<CloseOutlined />} onClick={onClose}>
             İptal
           </Button>
           <Button
+            size="large"
             type="primary"
             icon={<SaveOutlined />}
             loading={createMutation.isPending || updateMutation.isPending}
@@ -207,26 +259,26 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
           >
             {isEditing ? 'Güncelle' : 'Kaydet'}
           </Button>
-        </Space>
+        </div>
       }
       styles={{
         body: { paddingBottom: 80 },
       }}
     >
       <Form form={form} layout="vertical">
-        {/* Basic Info Section */}
+        {/* Basic Info Section - Prominent Display */}
         <Card
           size="small"
           title={
             <Space>
-              <InfoCircleOutlined style={{ color: '#1890ff' }} />
-              <span>Temel Bilgiler</span>
+              <InfoCircleOutlined style={{ color: '#1890ff', fontSize: 18 }} />
+              <Text strong style={{ fontSize: 16 }}>Temel Bilgiler</Text>
             </Space>
           }
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, borderColor: '#1890ff' }}
         >
           <Form.Item
-            label="Rol Adı"
+            label={<Text strong style={{ fontSize: 15 }}>Rol Adı</Text>}
             name="name"
             rules={[
               { required: true, message: 'Rol adı gereklidir' },
@@ -236,7 +288,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
             <Input size="large" placeholder="Örn: Satış Müdürü, Muhasebeci" />
           </Form.Item>
 
-          <Form.Item label="Açıklama" name="description">
+          <Form.Item label={<Text strong style={{ fontSize: 15 }}>Açıklama</Text>} name="description">
             <Input.TextArea
               rows={3}
               placeholder="Rolün görev ve sorumluluklarını açıklayın"
@@ -256,21 +308,55 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
           }
           style={{ marginBottom: 16 }}
         >
-          <Alert
-            message="Kaynak bazlı yetkilendirme"
-            description="Her kaynak için izin vermek istediğiniz işlemleri seçin. Tümünü seç butonuyla bir kaynağın tüm yetkilerini hızlıca atayabilirsiniz."
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
+          {/* Copy from existing role option */}
+          {!isEditing && allRoles && allRoles.length > 0 && (
+            <Alert
+              message="Bu rolü mevcut bir rolün yetkileriyle başlatmak ister misiniz?"
+              description={
+                <div style={{ marginTop: 8 }}>
+                  <Select
+                    placeholder="Mevcut bir rol seçin (isteğe bağlı)"
+                    allowClear
+                    style={{ width: '100%' }}
+                    value={copyFromRoleId}
+                    onChange={handleCopyFromRole}
+                    options={allRoles
+                      .filter((r) => !r.isSystemRole)
+                      .map((r) => ({
+                        label: `${r.name} (${r.permissions.length} yetki)`,
+                        value: r.id,
+                      }))}
+                  />
+                </div>
+              }
+              type="warning"
+              showIcon
+              icon={<WarningOutlined />}
+              style={{ marginBottom: 16, backgroundColor: '#fff7e6', borderColor: '#ffc53d' }}
+            />
+          )}
 
-          <Collapse defaultActiveKey={[]} accordion ghost>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+            Her kaynak için izin vermek istediğiniz işlemleri seçin. Tümünü seç ile bir kaynağın tüm yetkilerini hızlıca atayabilirsiniz.
+          </Text>
+
+          <Collapse
+            defaultActiveKey={[]}
+            accordion
+            ghost
+            expandIcon={({ isActive }) => (
+              isActive ? <DownOutlined /> : <RightOutlined />
+            )}
+          >
             {groupedPermissions.map((resource) => (
               <Panel
                 key={resource.value}
                 header={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <Space>
+                      <span style={{ fontSize: 20, marginRight: 8 }}>
+                        {getResourceIcon(resource.value)}
+                      </span>
                       <Checkbox
                         checked={resource.hasAll}
                         onChange={(e) => {
