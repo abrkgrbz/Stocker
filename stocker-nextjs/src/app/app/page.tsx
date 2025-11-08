@@ -56,36 +56,6 @@ export default function AppHomePage() {
 
   const modules: ModuleCard[] = [
     {
-      id: 'messaging',
-      title: 'Mesajlaşma',
-      icon: <MessageOutlined />,
-      color: '#c026d3',
-      gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
-      path: '/messaging',
-      description: 'İletişim ve mesajlaşma',
-      disabled: true,
-    },
-    {
-      id: 'calendar',
-      title: 'Takvim',
-      icon: <CalendarOutlined />,
-      color: '#7c3aed',
-      gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
-      path: '/calendar',
-      description: 'Etkinlik ve toplantılar',
-      disabled: true,
-    },
-    {
-      id: 'contacts',
-      title: 'Kontaklar',
-      icon: <UserOutlined />,
-      color: '#0891b2',
-      gradient: 'linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)',
-      path: '/contacts',
-      description: 'Kişiler ve iletişim',
-      disabled: true,
-    },
-    {
       id: 'crm',
       title: 'CRM',
       icon: <TeamOutlined />,
@@ -121,6 +91,50 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
       path: '/settings',
       description: 'Sistem ayarları',
+    },
+    {
+      id: 'messaging',
+      title: 'Mesajlaşma',
+      icon: <MessageOutlined />,
+      color: '#c026d3',
+      gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
+      path: '/messaging',
+      description: 'İletişim ve mesajlaşma',
+      badge: 'Yakında',
+      disabled: true,
+    },
+    {
+      id: 'calendar',
+      title: 'Takvim',
+      icon: <CalendarOutlined />,
+      color: '#7c3aed',
+      gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+      path: '/calendar',
+      description: 'Etkinlik ve toplantılar',
+      badge: 'Yakında',
+      disabled: true,
+    },
+    {
+      id: 'contacts',
+      title: 'Kontaklar',
+      icon: <UserOutlined />,
+      color: '#0891b2',
+      gradient: 'linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)',
+      path: '/contacts',
+      description: 'Kişiler ve iletişim',
+      badge: 'Yakında',
+      disabled: true,
+    },
+    {
+      id: 'inventory',
+      title: 'Stok',
+      icon: <RocketOutlined />,
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+      path: '/inventory',
+      description: 'Envanter yönetimi',
+      badge: 'Yakında',
+      disabled: true,
     },
   ];
 
@@ -165,21 +179,21 @@ export default function AppHomePage() {
     >
       {/* Main Content Wrapper */}
       <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Activation Notification Bar */}
+        {/* Activation Notification Bar - Elegant Design */}
         <div
           style={{
             width: '100%',
-            background: 'rgba(231, 76, 60, 0.95)',
-            backdropFilter: 'blur(10px)',
-            padding: '12px 24px',
-            marginBottom: 24,
-            boxShadow: '0 4px 12px rgba(231, 76, 60, 0.3)',
+            maxWidth: 1200,
+            margin: '0 auto 24px',
           }}
         >
           <div
             style={{
-              maxWidth: 1200,
-              margin: '0 auto',
+              background: 'rgba(239, 68, 68, 0.15)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 12,
+              padding: '12px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -187,20 +201,21 @@ export default function AppHomePage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <ThunderboltOutlined style={{ fontSize: 20, color: 'white' }} />
-              <Text style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>
-                ⚡ Aktivasyon e-postası gönderildi! Veri tabanınızın geçerliliği süresi:{' '}
-                <strong>3 hours</strong>
+              <ThunderboltOutlined style={{ fontSize: 18, color: '#fca5a5' }} />
+              <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: 14, fontWeight: 500 }}>
+                Aktivasyon e-postası gönderildi • Veri tabanı geçerlilik süresi:{' '}
+                <strong style={{ color: '#fca5a5' }}>3 saat</strong>
               </Text>
             </div>
             <a
               href="#"
               style={{
-                color: 'white',
+                color: '#fca5a5',
                 fontSize: 13,
                 fontWeight: 600,
-                textDecoration: 'underline',
+                textDecoration: 'none',
                 whiteSpace: 'nowrap',
+                borderBottom: '1px solid #fca5a5',
               }}
             >
               E-posta ulaşmadı mı?
@@ -279,11 +294,11 @@ export default function AppHomePage() {
         </Text>
       </div>
 
-      {/* Module Grid */}
-      <div style={{ maxWidth: 1200, width: '100%' }}>
-        <Row gutter={[24, 24]}>
+      {/* Module Grid - 4x2 Balanced Layout */}
+      <div style={{ maxWidth: 900, width: '100%' }}>
+        <Row gutter={[32, 32]} justify="center">
           {modules.map((module) => (
-            <Col xs={12} sm={8} md={6} lg={4} key={module.id}>
+            <Col xs={12} sm={12} md={6} lg={6} key={module.id}>
               <div
                 onClick={() => handleModuleClick(module)}
                 style={{
@@ -308,41 +323,25 @@ export default function AppHomePage() {
                   }
                 }}
               >
-                {/* Badge */}
+                {/* Single Badge - No Confusion */}
                 {module.badge && (
                   <div
                     style={{
                       position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      background: module.color,
+                      top: 8,
+                      right: 8,
+                      background: module.disabled
+                        ? 'rgba(250, 173, 20, 0.9)'
+                        : 'rgba(16, 185, 129, 0.9)',
                       color: 'white',
-                      padding: '4px 8px',
+                      padding: '4px 10px',
                       borderRadius: 12,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 600,
+                      backdropFilter: 'blur(4px)',
                     }}
                   >
                     {module.badge}
-                  </div>
-                )}
-
-                {/* Disabled tag */}
-                {module.disabled && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      background: '#ffa940',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: 12,
-                      fontSize: 10,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Yakında
                   </div>
                 )}
 
