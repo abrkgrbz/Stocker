@@ -19,9 +19,10 @@ export function AnimatedCard({ children, delay = 0, ...cardProps }: AnimatedCard
       <Card
         {...cardProps}
         bordered={false}
-        className={`shadow-md hover:shadow-xl transition-all duration-300 rounded-lg ${cardProps.className || ''}`}
+        className={`shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl ${cardProps.className || ''}`}
         style={{
-          border: '1px solid #f0f0f0',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e0e0e0',
           ...cardProps.style
         }}
       >

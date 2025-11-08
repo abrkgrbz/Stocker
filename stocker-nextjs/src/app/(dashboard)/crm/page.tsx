@@ -74,7 +74,7 @@ export default function CRMDashboardPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <Title level={2} style={{ margin: 0 }}>
