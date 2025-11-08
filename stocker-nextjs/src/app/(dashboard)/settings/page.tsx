@@ -257,10 +257,15 @@ export default function SettingsPage() {
                         size="large"
                         icon={<RightOutlined />}
                         iconPosition="end"
-                        style={{
-                          backgroundColor: category.color,
-                          borderColor: category.color,
-                        }}
+                        danger={category.id === 'security'}
+                        style={
+                          category.id === 'security'
+                            ? undefined
+                            : {
+                                backgroundColor: '#1890ff',
+                                borderColor: '#1890ff',
+                              }
+                        }
                       >
                         Ayarlara Git
                       </Button>
