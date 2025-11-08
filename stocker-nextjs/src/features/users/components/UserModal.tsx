@@ -72,8 +72,17 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
     try {
       const values = await form.validateFields();
 
+      // Auto-generate username from email (before @ symbol)
+      // Modern SaaS best practice: use email for login, no separate username field
+      const username = values.email.split('@')[0];
+
+      const submissionData = {
+        ...values,
+        username, // Add auto-generated username for backend compatibility
+      };
+
       if (onSubmit) {
-        await onSubmit(values);
+        await onSubmit(submissionData);
       } else {
         // Mock success for now
         message.success(
@@ -125,15 +134,22 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         },
         body: {
           paddingTop: 24,
+          paddingBottom: 80, // Extra space for sticky footer
         },
       }}
       footer={
         <div style={{
+          position: 'sticky',
+          bottom: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'flex-end',
           gap: 12,
-          padding: '16px 0',
+          padding: '16px 24px',
+          background: '#fff',
           borderTop: '1px solid #f0f0f0',
+          zIndex: 10,
         }}>
           <Button
             size="large"
@@ -163,29 +179,8 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         layout="vertical"
         requiredMark="optional"
       >
-        {/* Name Section */}
+        {/* Personal Info Section - Natural Flow: Name → Contact */}
         <div style={{ marginBottom: 24 }}>
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item
-                name="username"
-                label={<span style={{ fontWeight: 500 }}>Kullanıcı Adı</span>}
-                rules={[
-                  { required: true, message: 'Kullanıcı adı gerekli' },
-                  { min: 3, message: 'En az 3 karakter olmalı' },
-                ]}
-              >
-                <Input
-                  size="large"
-                  prefix={<UserOutlined style={{ color: '#667eea' }} />}
-                  placeholder="ahmet.yilmaz"
-                  disabled={isEditMode}
-                  style={{ borderRadius: 8 }}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -228,7 +223,14 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
 
           <Form.Item
             name="phoneNumber"
-            label={<span style={{ fontWeight: 500 }}>Telefon</span>}
+            label={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 500 }}>Telefon</span>
+                <span style={{ fontSize: 12, color: '#8c8c8c', fontWeight: 400 }}>
+                  (Opsiyonel)
+                </span>
+              </div>
+            }
           >
             <Input
               size="large"
