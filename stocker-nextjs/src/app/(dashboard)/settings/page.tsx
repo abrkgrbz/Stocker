@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Card, Row, Col, Typography, Tag, Button, Space } from 'antd';
+import React, { useState } from 'react';
+import { Card, Input, Typography, Tag, Space, Divider } from 'antd';
 import {
   SettingOutlined,
   SafetyOutlined,
@@ -17,129 +17,149 @@ import {
   RightOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  SearchOutlined,
+  ControlOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
-// Settings categories definition
-const settingsCategories = [
+// Settings organized by logical groups
+const settingsGroups = [
   {
-    id: 'general',
-    name: 'Genel Ayarlar',
-    description: 'Şirket bilgileri, zaman dilimi, dil ve temel sistem ayarları',
-    icon: <SettingOutlined style={{ fontSize: 40, color: '#1890ff' }} />,
-    color: '#1890ff',
-    path: '/settings/general',
-    enabled: true,
-    badge: 'Aktif',
+    id: 'organization',
+    title: '🏛️ Organizasyon ve Kullanıcılar',
+    items: [
+      {
+        id: 'users',
+        name: 'Kullanıcı Yönetimi',
+        description: 'Kullanıcıları ekleyin, düzenleyin, silin ve profil ayarlarını yönetin',
+        icon: <TeamOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/users',
+        enabled: true,
+      },
+      {
+        id: 'roles',
+        name: 'Rol ve Yetki Yönetimi',
+        description: 'Farklı roller oluşturun ve bu rollerin hangi modüllere erişebileceğini belirleyin',
+        icon: <SafetyCertificateOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/roles',
+        enabled: true,
+      },
+      {
+        id: 'departments',
+        name: 'Departman Yönetimi',
+        description: 'Şirketinizin departman yapısını, hiyerarşisini ve organizasyon şemasını yönetin',
+        icon: <ApartmentOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/departments',
+        enabled: true,
+      },
+    ],
   },
   {
     id: 'security',
-    name: 'Güvenlik Ayarları',
-    description: 'Parola politikaları, oturum ayarları, IP kısıtlamaları ve 2FA',
-    icon: <SafetyOutlined style={{ fontSize: 40, color: '#f5222d' }} />,
-    color: '#f5222d',
-    path: '/settings/security',
-    enabled: true,
-    badge: 'Aktif',
+    title: '🛡️ Güvenlik ve Uyumluluk',
+    items: [
+      {
+        id: 'security',
+        name: 'Güvenlik Ayarları',
+        description: 'Parola politikaları, oturum süreleri, IP kısıtlamaları ve 2FA ayarları',
+        icon: <SafetyOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/security',
+        enabled: true,
+      },
+      {
+        id: 'audit-logs',
+        name: 'Denetim Günlükleri',
+        description: 'Sistemde kimin, ne zaman, hangi değişikliği yaptığını takip edin',
+        icon: <FileTextOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/audit-logs',
+        enabled: false,
+      },
+      {
+        id: 'backup',
+        name: 'Yedekleme ve Geri Yükleme',
+        description: 'Önemli verileri yedekleyin, market yerinden geri yükleme yapın',
+        icon: <CloudUploadOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/backup',
+        enabled: false,
+      },
+    ],
   },
   {
-    id: 'users',
-    name: 'Kullanıcı Yönetimi',
-    description: 'Kullanıcı ekleme, düzenleme, silme ve profil yönetimi',
-    icon: <TeamOutlined style={{ fontSize: 40, color: '#52c41a' }} />,
-    color: '#52c41a',
-    path: '/settings/users',
-    enabled: true,
-    badge: 'Aktif',
-  },
-  {
-    id: 'roles',
-    name: 'Rol ve Yetki Yönetimi',
-    description: 'Roller oluşturma, yetkilendirme ve erişim kontrolü',
-    icon: <SafetyCertificateOutlined style={{ fontSize: 40, color: '#722ed1' }} />,
-    color: '#722ed1',
-    path: '/settings/roles',
-    enabled: true,
-    badge: 'Aktif',
-  },
-  {
-    id: 'departments',
-    name: 'Departman Yönetimi',
-    description: 'Departman yapısı, hiyerarşi ve organizasyon ayarları',
-    icon: <ApartmentOutlined style={{ fontSize: 40, color: '#13c2c2' }} />,
-    color: '#13c2c2',
-    path: '/settings/departments',
-    enabled: true,
-    badge: 'Aktif',
-  },
-  {
-    id: 'notifications',
-    name: 'Bildirim Ayarları',
-    description: 'Email, SMS, push bildirimleri ve bildirim kuralları',
-    icon: <BellOutlined style={{ fontSize: 40, color: '#faad14' }} />,
-    color: '#faad14',
-    path: '/settings/notifications',
-    enabled: false,
-    badge: 'Yakında',
-  },
-  {
-    id: 'email',
-    name: 'Email/SMTP Ayarları',
-    description: 'SMTP yapılandırması, email şablonları ve gönderim ayarları',
-    icon: <MailOutlined style={{ fontSize: 40, color: '#eb2f96' }} />,
-    color: '#eb2f96',
-    path: '/settings/email',
-    enabled: false,
-    badge: 'Yakında',
-  },
-  {
-    id: 'backup',
-    name: 'Yedekleme ve Geri Yükleme',
-    description: 'Otomatik yedekleme, manuel yedek alma ve veri geri yükleme',
-    icon: <CloudUploadOutlined style={{ fontSize: 40, color: '#2f54eb' }} />,
-    color: '#2f54eb',
-    path: '/settings/backup',
-    enabled: false,
-    badge: 'Yakında',
-  },
-  {
-    id: 'audit-logs',
-    name: 'Denetim Günlükleri',
-    description: 'Kullanıcı aktiviteleri, sistem logları ve güvenlik kayıtları',
-    icon: <FileTextOutlined style={{ fontSize: 40, color: '#faad14' }} />,
-    color: '#faad14',
-    path: '/settings/audit-logs',
-    enabled: false,
-    badge: 'Yakında',
+    id: 'application',
+    title: '⚙️ Uygulama Ayarları',
+    items: [
+      {
+        id: 'general',
+        name: 'Genel Ayarlar',
+        description: 'Şirket bilgileri, logolar, diller, varsayılan para birimi ve temel sistem ayarları',
+        icon: <ControlOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/general',
+        enabled: true,
+      },
+      {
+        id: 'notifications',
+        name: 'Bildirim Ayarları',
+        description: 'E-posta, SMS ve uygulama içi bildirimlerin şablonlarını ve kurallarını yönetin',
+        icon: <BellOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/notifications',
+        enabled: false,
+      },
+      {
+        id: 'regional',
+        name: 'Bölgesel Ayarlar',
+        description: 'Zaman dilimi, para birimi formatları ve tarih/saat lokalizasyonu',
+        icon: <GlobalOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/regional',
+        enabled: false,
+      },
+    ],
   },
   {
     id: 'integrations',
-    name: 'Entegrasyonlar',
-    description: 'Gmail, Slack, Zapier, API ve üçüncü parti entegrasyonlar',
-    icon: <ApiOutlined style={{ fontSize: 40, color: '#52c41a' }} />,
-    color: '#52c41a',
-    path: '/settings/integrations',
-    enabled: false,
-    badge: 'Yakında',
-  },
-  {
-    id: 'regional',
-    name: 'Bölgesel Ayarlar',
-    description: 'Zaman dilimi, para birimi, tarih formatı ve lokalizasyon',
-    icon: <GlobalOutlined style={{ fontSize: 40, color: '#1890ff' }} />,
-    color: '#1890ff',
-    path: '/settings/regional',
-    enabled: false,
-    badge: 'Yakında',
+    title: '🔌 Entegrasyonlar ve Veri',
+    items: [
+      {
+        id: 'email',
+        name: 'Email / SMTP Ayarları',
+        description: 'Giden ve gelen e-postalarınız için e-posta sunucu ayarları',
+        icon: <MailOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/email',
+        enabled: false,
+      },
+      {
+        id: 'integrations',
+        name: 'Entegrasyonlar',
+        description: 'Gmail, Slack, Zapier, API ve diğer 3. parti uygulamalara bağlanın',
+        icon: <ApiOutlined style={{ fontSize: 20 }} />,
+        path: '/settings/integrations',
+        enabled: false,
+      },
+    ],
   },
 ];
 
 export default function SettingsPage() {
-  const activeCount = settingsCategories.filter(c => c.enabled).length;
-  const totalCount = settingsCategories.length;
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Calculate stats
+  const allItems = settingsGroups.flatMap(group => group.items);
+  const activeCount = allItems.filter(item => item.enabled).length;
+  const totalCount = allItems.length;
+
+  // Filter items based on search
+  const filteredGroups = settingsGroups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(
+        item =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -196,120 +216,104 @@ export default function SettingsPage() {
             </div>
           </Card>
         </div>
-      </motion.div>
 
-      {/* Settings Categories Grid */}
-      <Row gutter={[24, 24]}>
-        {settingsCategories.map((category, index) => (
-          <Col key={category.id} xs={24} lg={12} xl={8}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card
-                className="h-full shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{
-                  borderTop: `4px solid ${category.color}`,
-                  opacity: category.enabled ? 1 : 0.7,
-                }}
-                bodyStyle={{ padding: '24px' }}
-              >
-                {/* Category Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="p-3 rounded-lg"
-                      style={{ backgroundColor: `${category.color}15` }}
-                    >
-                      {category.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Title level={4} className="!mb-0">
-                          {category.name}
-                        </Title>
-                      </div>
-                      <Text className="text-gray-500 text-sm">
-                        {category.description}
-                      </Text>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Badge */}
-                <div className="mb-4">
-                  <Tag
-                    color={category.enabled ? 'success' : 'warning'}
-                    icon={category.enabled ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-                  >
-                    {category.badge}
-                  </Tag>
-                </div>
-
-                {/* Action Button */}
-                <div className="mt-4">
-                  {category.enabled ? (
-                    <Link href={category.path}>
-                      <Button
-                        type="primary"
-                        block
-                        size="large"
-                        icon={<RightOutlined />}
-                        iconPosition="end"
-                        danger={category.id === 'security'}
-                        style={
-                          category.id === 'security'
-                            ? undefined
-                            : {
-                                backgroundColor: '#1890ff',
-                                borderColor: '#1890ff',
-                              }
-                        }
-                      >
-                        Ayarlara Git
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      type="dashed"
-                      block
-                      size="large"
-                      disabled
-                      icon={<ClockCircleOutlined />}
-                    >
-                      Yakında Gelecek
-                    </Button>
-                  )}
-                </div>
-              </Card>
-            </motion.div>
-          </Col>
-        ))}
-      </Row>
-
-      {/* Info Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="mt-8"
-      >
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">💡</div>
-            <div>
-              <Title level={4} className="!mb-2">Sistem Ayarları Hakkında</Title>
-              <Paragraph className="text-gray-600 mb-0">
-                Sistem ayarları sayfası, uygulamanızın tüm yapılandırma seçeneklerini merkezi bir
-                yerden yönetmenizi sağlar. Her kategori, ilgili ayarları içerir ve kolayca
-                erişilebilir durumdadır. Güvenlik ayarlarından kullanıcı yönetimine, bildirim
-                ayarlarından entegrasyonlara kadar tüm önemli yapılandırmalar burada bulunur.
-              </Paragraph>
-            </div>
-          </div>
+        {/* Search Bar */}
+        <Card className="shadow-sm mb-6">
+          <Input
+            size="large"
+            placeholder="Ayarlarda ara... (ör: 'parola', 'kullanıcı', 'e-posta')"
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            allowClear
+          />
         </Card>
       </motion.div>
+
+      {/* Grouped Settings List */}
+      <Space direction="vertical" size="large" className="w-full">
+        {filteredGroups.map((group, groupIndex) => (
+          <motion.div
+            key={group.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: groupIndex * 0.1 }}
+          >
+            <Card className="shadow-lg">
+              {/* Group Header */}
+              <Title level={4} className="!mb-4 !text-gray-800">
+                {group.title}
+              </Title>
+
+              {/* Group Items */}
+              <div className="space-y-0">
+                {group.items.map((item, itemIndex) => (
+                  <React.Fragment key={item.id}>
+                    {itemIndex > 0 && <Divider className="!my-0" />}
+                    <Link
+                      href={item.enabled ? item.path : '#'}
+                      className={item.enabled ? '' : 'pointer-events-none'}
+                    >
+                      <div
+                        className={`
+                          flex items-center justify-between p-4
+                          ${item.enabled ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}
+                          transition-all duration-200
+                        `}
+                      >
+                        {/* Left: Icon + Content */}
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="p-2 bg-blue-50 rounded-lg text-blue-600 mt-1">
+                            {item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                              <Text className="text-base font-semibold text-gray-800">
+                                {item.name}
+                              </Text>
+                              <Tag
+                                color={item.enabled ? 'success' : 'warning'}
+                                icon={item.enabled ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                              >
+                                {item.enabled ? 'Aktif' : 'Yakında'}
+                              </Tag>
+                            </div>
+                            <Text className="text-sm text-gray-500">
+                              {item.description}
+                            </Text>
+                          </div>
+                        </div>
+
+                        {/* Right: Arrow */}
+                        {item.enabled && (
+                          <RightOutlined className="text-gray-400 text-sm ml-4" />
+                        )}
+                      </div>
+                    </Link>
+                  </React.Fragment>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </Space>
+
+      {/* No Results */}
+      {searchQuery && filteredGroups.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-12"
+        >
+          <SearchOutlined className="text-6xl text-gray-300 mb-4" />
+          <Title level={4} className="!text-gray-500">
+            Sonuç Bulunamadı
+          </Title>
+          <Text className="text-gray-400">
+            "{searchQuery}" için eşleşen ayar bulunamadı
+          </Text>
+        </motion.div>
+      )}
     </div>
   );
 }
