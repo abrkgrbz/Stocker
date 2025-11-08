@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * Role Management Page - Modern Card Layout
- * Professional role management with card-based design
+ * Role Management Page - Compact List Layout
+ * Search-focused, scalable role management interface
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -19,9 +19,8 @@ import {
   Col,
   Typography,
   Dropdown,
-  Avatar,
-  Badge,
   Divider,
+  Input,
 } from 'antd';
 import {
   PlusOutlined,
@@ -33,6 +32,7 @@ import {
   SafetyOutlined,
   MoreOutlined,
   CheckCircleOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';
 import { RoleModal } from '@/features/roles/components/RoleModal';
@@ -44,16 +44,31 @@ import {
 } from '@/lib/api/roles';
 
 const { confirm } = Modal;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 export default function RolesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: roles, isLoading } = useRoles();
   const deleteRoleMutation = useDeleteRole();
+
+  // Filter roles based on search
+  const filteredRoles = useMemo(() => {
+    if (!roles) return [];
+    if (!searchQuery.trim()) return roles;
+
+    const query = searchQuery.toLowerCase();
+    return roles.filter(
+      (role) =>
+        role.name.toLowerCase().includes(query) ||
+        role.description?.toLowerCase().includes(query) ||
+        (role.isSystemRole && 'sistem'.includes(query))
+    );
+  }, [roles, searchQuery]);
 
   const handleViewDetails = (role: Role) => {
     setSelectedRole(role);
@@ -96,13 +111,6 @@ export default function RolesPage() {
     });
   };
 
-  const getRoleColor = (role: Role) => {
-    if (role.isSystemRole) return '#722ed1'; // Purple for system roles
-    if (role.permissions.length > 50) return '#1890ff'; // Blue for admin-like
-    if (role.permissions.length > 20) return '#52c41a'; // Green for managers
-    return '#8c8c8c'; // Gray for basic roles
-  };
-
   const getRoleIcon = (role: Role) => {
     if (role.isSystemRole) return '🔐';
     if (role.permissions.length > 50) return '👑';
@@ -111,6 +119,14 @@ export default function RolesPage() {
   };
 
   const getMenuItems = (role: Role) => [
+    {
+      key: 'view',
+      label: 'Detayları Görüntüle',
+      onClick: () => handleViewDetails(role),
+    },
+    {
+      type: 'divider',
+    },
     {
       key: 'edit',
       label: 'Düzenle',
@@ -134,23 +150,19 @@ export default function RolesPage() {
       <div
         style={{
           marginBottom: 24,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
         }}
       >
-        <div>
-          <Title level={2} style={{ margin: 0, marginBottom: 8 }}>
-            <SafetyOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-            Rol Yönetimi
-          </Title>
-          <Text type="secondary">
-            Sistemdeki rolleri yönetin ve yetkileri düzenleyin
-          </Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <Title level={2} style={{ margin: 0, marginBottom: 8 }}>
+              <SafetyOutlined style={{ marginRight: 12, color: '#1890ff' }} />
+              Rol Yönetimi
+            </Title>
+            <Text type="secondary">
+              Sistemdeki rolleri yönetin ve yetkileri düzenleyin
+            </Text>
+          </div>
         </div>
-        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={handleCreate}>
-          Yeni Rol Oluştur
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -293,160 +305,168 @@ export default function RolesPage() {
         </Col>
       </Row>
 
-      {/* Roles Grid */}
+      {/* Search Bar + Create Button */}
+      <Card style={{ marginBottom: 24 }} bordered={false}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <Input
+            size="large"
+            placeholder="Rolleri ara... (rol adı, açıklama, durum)"
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            allowClear
+            style={{ flex: 1, minWidth: 300 }}
+          />
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            style={{ minWidth: 160 }}
+          >
+            Yeni Rol Oluştur
+          </Button>
+        </div>
+      </Card>
+
+      {/* Roles List */}
       <Spin spinning={isLoading}>
-        {roles && roles.length > 0 ? (
-          <Row gutter={[16, 16]}>
-            {roles.map((role) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={role.id}>
-                <Card
-                  hoverable
-                  bordered={false}
-                  onClick={() => handleViewDetails(role)}
-                  style={{
-                    borderRadius: 12,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    transition: 'all 0.3s ease',
-                    height: '100%',
-                    cursor: 'pointer',
-                  }}
-                  bodyStyle={{ padding: 20 }}
-                >
-                  {/* Card Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <Avatar
-                      size={48}
-                      style={{
-                        background: getRoleColor(role),
-                        fontSize: 24,
-                      }}
-                    >
-                      {getRoleIcon(role)}
-                    </Avatar>
-                    <Dropdown menu={{ items: getMenuItems(role) }} trigger={['click']}>
-                      <Button
-                        type="text"
-                        icon={<MoreOutlined />}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </Dropdown>
-                  </div>
-
-                  {/* Role Name */}
-                  <div style={{ marginBottom: 8 }}>
-                    <Space>
-                      <Title level={4} style={{ margin: 0, fontSize: 18 }}>
-                        {role.name}
-                      </Title>
-                      {role.isSystemRole && (
-                        <Tooltip title="Sistem rolü - değiştirilemez">
-                          <LockOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                        </Tooltip>
-                      )}
-                    </Space>
-                  </div>
-
-                  {/* Description */}
-                  <Paragraph
-                    ellipsis={{ rows: 2 }}
-                    style={{ color: '#8c8c8c', marginBottom: 16, minHeight: 44 }}
+        {filteredRoles && filteredRoles.length > 0 ? (
+          <Card
+            bordered={false}
+            title={
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text strong style={{ fontSize: 16 }}>
+                  Roller ({filteredRoles.length})
+                </Text>
+              </div>
+            }
+          >
+            <div className="space-y-0">
+              {filteredRoles.map((role, index) => (
+                <div key={role.id}>
+                  {index > 0 && <Divider style={{ margin: 0 }} />}
+                  <div
+                    className="hover:bg-gray-50 transition-all duration-200"
+                    style={{
+                      padding: '16px',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleViewDetails(role)}
                   >
-                    {role.description || 'Açıklama bulunmuyor'}
-                  </Paragraph>
-
-                  <Divider style={{ margin: '16px 0' }} />
-
-                  {/* Stats */}
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 8,
-                            background: '#f0f5ff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 8px',
-                          }}
-                        >
-                          <TeamOutlined style={{ fontSize: 20, color: '#1890ff' }} />
-                        </div>
-                        <Text strong style={{ fontSize: 18, display: 'block' }}>
-                          {role.userCount}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          Kullanıcı
-                        </Text>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                      {/* Icon */}
+                      <div
+                        style={{
+                          fontSize: 32,
+                          width: 48,
+                          height: 48,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#f0f5ff',
+                          borderRadius: 8,
+                        }}
+                      >
+                        {getRoleIcon(role)}
                       </div>
-                    </Col>
-                    <Col span={12}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 8,
-                            background: '#f6ffed',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 8px',
-                          }}
-                        >
-                          <SafetyOutlined style={{ fontSize: 20, color: '#52c41a' }} />
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Name + Tags */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                          <Text strong style={{ fontSize: 16 }}>
+                            {role.name}
+                          </Text>
+                          {role.isSystemRole && (
+                            <Tag icon={<LockOutlined />} color="warning">
+                              Sistem Rolü
+                            </Tag>
+                          )}
                         </div>
-                        <Text strong style={{ fontSize: 18, display: 'block' }}>
-                          {role.permissions.length}
+
+                        {/* Description */}
+                        <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>
+                          {role.description || 'Açıklama bulunmuyor'}
                         </Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          Yetki
-                        </Text>
+
+                        {/* Stats */}
+                        <Space size="large">
+                          <Space size="small">
+                            <TeamOutlined style={{ color: '#1890ff' }} />
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              Kullanıcılar: <Text strong>{role.userCount}</Text>
+                            </Text>
+                          </Space>
+                          <Space size="small">
+                            <SafetyOutlined style={{ color: '#52c41a' }} />
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              Yetkiler: <Text strong>{role.permissions.length}</Text>
+                            </Text>
+                          </Space>
+                          <Space size="small">
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                              Oluşturulma: {new Date(role.createdDate).toLocaleDateString('tr-TR')}
+                            </Text>
+                          </Space>
+                        </Space>
                       </div>
-                    </Col>
-                  </Row>
 
-                  <Divider style={{ margin: '16px 0' }} />
-
-                  {/* Date and Actions */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {new Date(role.createdDate).toLocaleDateString('tr-TR')}
-                    </Text>
-                    <Space size="small">
-                      <Tooltip title="Düzenle">
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<EditOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(role);
-                          }}
-                          disabled={role.isSystemRole}
-                        />
-                      </Tooltip>
-                      <Tooltip title="Sil">
-                        <Button
-                          type="text"
-                          size="small"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(role);
-                          }}
-                          disabled={role.isSystemRole}
-                        />
-                      </Tooltip>
-                    </Space>
+                      {/* Actions */}
+                      <Space size="small">
+                        <Tooltip title="Düzenle">
+                          <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(role);
+                            }}
+                            disabled={role.isSystemRole}
+                          />
+                        </Tooltip>
+                        <Tooltip title="Sil">
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(role);
+                            }}
+                            disabled={role.isSystemRole}
+                          />
+                        </Tooltip>
+                        <Dropdown menu={{ items: getMenuItems(role) }} trigger={['click']}>
+                          <Button
+                            type="text"
+                            icon={<MoreOutlined />}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </Dropdown>
+                      </Space>
+                    </div>
                   </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : searchQuery ? (
+          <Card>
+            <Empty
+              image={<SearchOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+              description={
+                <div>
+                  <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                    Sonuç Bulunamadı
+                  </Text>
+                  <Text type="secondary">
+                    "{searchQuery}" için eşleşen rol bulunamadı
+                  </Text>
+                </div>
+              }
+            />
+          </Card>
         ) : (
           <Card>
             <Empty description="Henüz rol oluşturulmamış" />
