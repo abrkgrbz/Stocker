@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Tag, Empty, Badge } from 'antd';
+import { Typography, Space, Tag, Empty, Badge, Button } from 'antd';
 import {
   CalendarOutlined,
   PhoneOutlined,
@@ -9,7 +9,8 @@ import {
   TeamOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import type { Activity } from '@/lib/api/services/crm.service';
@@ -59,15 +60,20 @@ export function TodaysActivities({
     return (
       <AnimatedCard title="Bugünün Aktiviteleri" loading={loading}>
         <Empty
-          image={<CalendarOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />}
-          imageStyle={{ height: 60 }}
+          image={<CalendarOutlined style={{ fontSize: 64, color: '#1890ff' }} />}
+          imageStyle={{ height: 80 }}
           description={
             <div className="text-center">
-              <div className="text-base text-gray-600 mb-2">
-                Bugün için planlanmış aktivite yok
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                Bugün İçin Planlanmış Aktivite Yok
+              </div>
+              <div className="text-sm text-gray-500 mb-4">
+                Gününüzü planlamak için yeni bir görev, toplantı veya arama oluşturun.
               </div>
               <Link href="/crm/activities">
-                Aktivite planla
+                <Button type="primary" icon={<PlusOutlined />}>
+                  Aktivite Planla
+                </Button>
               </Link>
             </div>
           }

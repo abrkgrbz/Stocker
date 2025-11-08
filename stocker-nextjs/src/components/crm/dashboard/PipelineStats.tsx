@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Progress, Tag, Empty } from 'antd';
+import { Typography, Space, Progress, Tag, Empty, Button } from 'antd';
 import {
   FunnelPlotOutlined,
   DollarOutlined,
   TrophyOutlined,
   TeamOutlined,
   StarFilled,
-  ArrowUpOutlined
+  ArrowUpOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import { formatCurrency, formatPercent } from '@/lib/crm';
@@ -36,15 +37,20 @@ export function PipelineStats({
     return (
       <AnimatedCard title="Pipeline İstatistikleri" loading={loading}>
         <Empty
-          image={<FunnelPlotOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />}
-          imageStyle={{ height: 60 }}
+          image={<FunnelPlotOutlined style={{ fontSize: 64, color: '#722ed1' }} />}
+          imageStyle={{ height: 80 }}
           description={
             <div className="text-center">
-              <div className="text-base text-gray-600 mb-2">
-                Aktif pipeline bulunmuyor
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                Aktif Pipeline Bulunmuyor
+              </div>
+              <div className="text-sm text-gray-500 mb-4">
+                Satış sürecinizi yönetmek için pipeline oluşturun ve fırsatlarınızı takip edin.
               </div>
               <Link href="/crm/pipelines">
-                Pipeline oluştur
+                <Button type="primary" icon={<PlusOutlined />}>
+                  Pipeline Oluştur
+                </Button>
               </Link>
             </div>
           }

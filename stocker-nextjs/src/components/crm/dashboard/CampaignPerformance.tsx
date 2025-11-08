@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Tag, Progress, Empty } from 'antd';
+import { Typography, Space, Tag, Progress, Empty, Button } from 'antd';
 import {
   MailOutlined,
   EyeOutlined,
-  ClickOutlined,
+  LinkOutlined,
   DollarOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined
+  ArrowDownOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import { formatCurrency, formatPercent } from '@/lib/crm';
@@ -35,15 +36,20 @@ export function CampaignPerformance({
     return (
       <AnimatedCard title="Kampanya Performansı" loading={loading}>
         <Empty
-          image={<MailOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />}
-          imageStyle={{ height: 60 }}
+          image={<MailOutlined style={{ fontSize: 64, color: '#fa8c16' }} />}
+          imageStyle={{ height: 80 }}
           description={
             <div className="text-center">
-              <div className="text-base text-gray-600 mb-2">
-                Aktif kampanya bulunmuyor
+              <div className="text-lg font-semibold text-gray-900 mb-2">
+                Aktif Kampanya Bulunmuyor
+              </div>
+              <div className="text-sm text-gray-500 mb-4">
+                İlk kampanyanızı oluşturun ve müşterilerinizle etkileşime geçin.
               </div>
               <Link href="/crm/campaigns">
-                Yeni kampanya oluştur
+                <Button type="primary" icon={<PlusOutlined />}>
+                  Yeni Kampanya
+                </Button>
               </Link>
             </div>
           }
@@ -129,7 +135,7 @@ export function CampaignPerformance({
                 <div className="text-center">
                   <div className="text-xs text-gray-500 mb-1">Tıklama</div>
                   <div className="flex items-center justify-center gap-1">
-                    <ClickOutlined className="text-purple-500" />
+                    <LinkOutlined className="text-purple-500" />
                     <Text strong>{campaign.clickedCount}</Text>
                   </div>
                   <Progress

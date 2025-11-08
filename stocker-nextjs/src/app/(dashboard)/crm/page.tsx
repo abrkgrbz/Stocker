@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Button, Row, Col, Card, Table, List, Tag } from 'antd';
-import { TrophyOutlined } from '@ant-design/icons';
+import { Typography, Space, Button, Row, Col, Card, Table, List, Tag, Empty } from 'antd';
+import { TrophyOutlined, PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useCustomers, useLeads, useDeals, useActivities, useCampaigns, usePipelines } from '@/hooks/useCRM';
 import {
@@ -175,26 +175,48 @@ export default function CRMDashboardPage() {
               </Link>
             }
           >
-            <List
-              dataSource={metrics.upcomingDeals}
-              renderItem={(deal) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={<TrophyOutlined style={{ fontSize: 24, color: '#fa8c16' }} />}
-                    title={<Link href={`/crm/deals/${deal.id}`}>{deal.title}</Link>}
-                    description={
-                      deal.expectedCloseDate
-                        ? `Beklenen kapanış: ${formatDate(deal.expectedCloseDate)}`
-                        : 'Tarih belirlenmedi'
-                    }
-                  />
-                  <div className="text-right">
-                    <div className="font-semibold">₺{(deal.amount || 0).toLocaleString('tr-TR')}</div>
-                    <div className="text-xs text-gray-500">{deal.probability || 0}% olasılık</div>
+            {!dealsLoading && metrics.upcomingDeals.length === 0 ? (
+              <Empty
+                image={<TrophyOutlined style={{ fontSize: 64, color: '#fa8c16' }} />}
+                imageStyle={{ height: 80 }}
+                description={
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-gray-900 mb-2">
+                      Yaklaşan Fırsat Bulunmuyor
+                    </div>
+                    <div className="text-sm text-gray-500 mb-4">
+                      Yeni fırsatlar oluşturun ve satış hedeflerinize ulaşın.
+                    </div>
+                    <Link href="/crm/deals">
+                      <Button type="primary" icon={<PlusOutlined />}>
+                        Yeni Fırsat
+                      </Button>
+                    </Link>
                   </div>
-                </List.Item>
-              )}
-            />
+                }
+              />
+            ) : (
+              <List
+                dataSource={metrics.upcomingDeals}
+                renderItem={(deal) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={<TrophyOutlined style={{ fontSize: 24, color: '#fa8c16' }} />}
+                      title={<Link href={`/crm/deals/${deal.id}`}>{deal.title}</Link>}
+                      description={
+                        deal.expectedCloseDate
+                          ? `Beklenen kapanış: ${formatDate(deal.expectedCloseDate)}`
+                          : 'Tarih belirlenmedi'
+                      }
+                    />
+                    <div className="text-right">
+                      <div className="font-semibold">₺{(deal.amount || 0).toLocaleString('tr-TR')}</div>
+                      <div className="text-xs text-gray-500">{deal.probability || 0}% olasılık</div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            )}
           </AnimatedCard>
         </Col>
       </Row>
