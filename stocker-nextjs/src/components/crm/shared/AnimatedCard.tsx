@@ -16,7 +16,15 @@ export function AnimatedCard({ children, delay = 0, ...cardProps }: AnimatedCard
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
     >
-      <Card {...cardProps} className={`hover:shadow-lg transition-shadow duration-300 ${cardProps.className || ''}`}>
+      <Card
+        {...cardProps}
+        bordered={false}
+        className={`shadow-md hover:shadow-xl transition-all duration-300 rounded-lg ${cardProps.className || ''}`}
+        style={{
+          border: '1px solid #f0f0f0',
+          ...cardProps.style
+        }}
+      >
         {children}
       </Card>
     </motion.div>
