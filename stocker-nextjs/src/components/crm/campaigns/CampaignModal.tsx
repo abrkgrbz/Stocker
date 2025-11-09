@@ -194,28 +194,6 @@ export function CampaignModal({
               />
             </Form.Item>
           </div>
-
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Bütçe Özeti</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-              <div>
-                <div className="text-gray-600">Toplam Bütçe</div>
-                <div className="text-lg font-semibold">
-                  ₺{(Form.useWatch('budgetedCost', form) || 0).toLocaleString('tr-TR')}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-600">Beklenen Kar</div>
-                <div className="text-lg font-semibold text-green-600">
-                  ₺
-                  {(
-                    (Form.useWatch('expectedRevenue', form) || 0) -
-                    (Form.useWatch('budgetedCost', form) || 0)
-                  ).toLocaleString('tr-TR')}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       ),
     },
@@ -240,37 +218,6 @@ export function CampaignModal({
           <Form.Item name="convertedLeads" label="Dönüştürülen Lead Sayısı">
             <InputNumber placeholder="0" min={0} className="w-full" size="large" />
           </Form.Item>
-
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="font-medium text-purple-900 mb-2">Performans Göstergeleri</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <div className="text-gray-600">Hedef Lead</div>
-                <div className="text-lg font-semibold text-purple-900">
-                  {Form.useWatch('targetLeads', form) || 0}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-600">Gerçekleşen</div>
-                <div className="text-lg font-semibold text-blue-600">
-                  {Form.useWatch('actualLeads', form) || 0}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-600">Dönüşüm Oranı</div>
-                <div className="text-lg font-semibold text-green-600">
-                  {Form.useWatch('actualLeads', form) > 0
-                    ? (
-                        ((Form.useWatch('convertedLeads', form) || 0) /
-                          Form.useWatch('actualLeads', form)) *
-                        100
-                      ).toFixed(1)
-                    : 0}
-                  %
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       ),
     },
@@ -305,48 +252,6 @@ export function CampaignModal({
               <Select.Option value="Aborted">İptal Edildi</Select.Option>
             </Select>
           </Form.Item>
-
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Kampanya Özeti</h4>
-            <div className="text-sm text-blue-800 space-y-1">
-              <div>
-                <strong>Kampanya Adı:</strong>{' '}
-                {Form.useWatch('name', form) || <span className="text-gray-400">Belirtilmedi</span>}
-              </div>
-              <div>
-                <strong>Tip:</strong>{' '}
-                {campaignTypes.find((t) => t.value === Form.useWatch('type', form))?.label || (
-                  <span className="text-gray-400">Belirtilmedi</span>
-                )}
-              </div>
-              <div>
-                <strong>Bütçe:</strong> ₺{(Form.useWatch('budgetedCost', form) || 0).toLocaleString('tr-TR')}
-              </div>
-              <div>
-                <strong>Hedef Lead:</strong> {Form.useWatch('targetLeads', form) || 0}
-              </div>
-              <div>
-                <strong>Durum:</strong>{' '}
-                <Tag
-                  color={
-                    Form.useWatch('status', form) === 'InProgress'
-                      ? 'processing'
-                      : Form.useWatch('status', form) === 'Completed'
-                      ? 'success'
-                      : 'default'
-                  }
-                >
-                  {Form.useWatch('status', form) === 'Planned'
-                    ? 'Planlandı'
-                    : Form.useWatch('status', form) === 'InProgress'
-                    ? 'Devam Ediyor'
-                    : Form.useWatch('status', form) === 'Completed'
-                    ? 'Tamamlandı'
-                    : Form.useWatch('status', form)}
-                </Tag>
-              </div>
-            </div>
-          </div>
         </div>
       ),
     },
