@@ -123,10 +123,7 @@ export function CampaignModal({
             <Select size="large" placeholder="Kampanya tipini seçin">
               {campaignTypes.map((type) => (
                 <Select.Option key={type.value} value={type.value}>
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: `var(--ant-${type.color}-6)` }}>{type.icon}</span>
-                    <span>{type.label}</span>
-                  </div>
+                  {type.label}
                 </Select.Option>
               ))}
             </Select>
@@ -301,21 +298,11 @@ export function CampaignModal({
             rules={[{ required: true, message: 'Kampanya durumu zorunludur' }]}
           >
             <Select size="large">
-              <Select.Option value="Planned">
-                <Tag color="default">Planlandı</Tag>
-              </Select.Option>
-              <Select.Option value="InProgress">
-                <Tag color="processing">Devam Ediyor</Tag>
-              </Select.Option>
-              <Select.Option value="Completed">
-                <Tag color="success">Tamamlandı</Tag>
-              </Select.Option>
-              <Select.Option value="OnHold">
-                <Tag color="warning">Beklemede</Tag>
-              </Select.Option>
-              <Select.Option value="Aborted">
-                <Tag color="error">İptal Edildi</Tag>
-              </Select.Option>
+              <Select.Option value="Planned">Planlandı</Select.Option>
+              <Select.Option value="InProgress">Devam Ediyor</Select.Option>
+              <Select.Option value="Completed">Tamamlandı</Select.Option>
+              <Select.Option value="OnHold">Beklemede</Select.Option>
+              <Select.Option value="Aborted">İptal Edildi</Select.Option>
             </Select>
           </Form.Item>
 
