@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Drawer, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, Tag } from 'antd';
 import { showError } from '@/lib/utils/sweetalert';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
+import { RuleBuilder } from './RuleBuilder';
 
 interface CustomerSegmentModalProps {
   open: boolean;
@@ -119,48 +120,19 @@ export function CustomerSegmentModal({
           {segmentType === 'Dynamic' ? (
             <>
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
-                <h4 className="font-medium text-blue-900 mb-2">Dinamik Segment</h4>
+                <h4 className="font-medium text-blue-900 mb-2">🎯 Dinamik Segment - Görsel Kural Oluşturucu</h4>
                 <p className="text-sm text-blue-800">
-                  Dinamik segmentler belirlediğiniz kriterlere göre otomatik olarak güncellenir. Örneğin 'Son 30 günde alışveriş yapanlar' veya 'İstanbul'da yaşayan VIP müşteriler' gibi kurallar tanımlayabilirsiniz.
+                  Dinamik segmentler belirlediğiniz kriterlere göre otomatik olarak güncellenir.
+                  Aşağıdaki görsel araçlarla kolayca kurallar oluşturabilirsiniz.
                 </p>
               </div>
 
               <Form.Item
                 name="criteria"
-                label="Segment Kriterleri (JSON)"
-                rules={[{ required: true, message: 'Kriterler zorunludur' }]}
-                help="Örn: {&quot;totalOrders&quot;: {&quot;$gte&quot;: 10}, &quot;totalSpent&quot;: {&quot;$gte&quot;: 1000}}"
+                rules={[{ required: true, message: 'En az bir kriter eklemelisiniz' }]}
               >
-                <Input.TextArea
-                  rows={6}
-                  placeholder='{"totalOrders": {"$gte": 10}, "totalSpent": {"$gte": 1000}}'
-                  className="font-mono text-sm"
-                />
+                <RuleBuilder />
               </Form.Item>
-
-              <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <h4 className="font-medium text-gray-700 mb-2">Örnek Kriterler</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div>
-                    <strong>VIP Müşteriler:</strong>{' '}
-                    <code className="bg-white px-2 py-1 rounded">
-                      {JSON.stringify({ totalSpent: { $gte: 10000 } })}
-                    </code>
-                  </div>
-                  <div>
-                    <strong>Aktif Müşteriler:</strong>{' '}
-                    <code className="bg-white px-2 py-1 rounded">
-                      {JSON.stringify({ lastOrderDate: { $gte: '2024-01-01' } })}
-                    </code>
-                  </div>
-                  <div>
-                    <strong>Yeni Müşteriler:</strong>{' '}
-                    <code className="bg-white px-2 py-1 rounded">
-                      {JSON.stringify({ createdAt: { $gte: '2024-10-01' } })}
-                    </code>
-                  </div>
-                </div>
-              </div>
             </>
           ) : (
             <>
