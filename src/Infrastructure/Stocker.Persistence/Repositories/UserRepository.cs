@@ -252,7 +252,7 @@ public class UserRepository : IUserRepository
         var roles = await _tenantContext.Roles
             .ToListAsync(cancellationToken);
 
-        // Map to DTOs with separate permission query
+        // Map to DTOs with separate permission query and user count
         return roles.Select(r => new RoleDto
         {
             Id = r.Id,
@@ -261,7 +261,11 @@ public class UserRepository : IUserRepository
             Permissions = _tenantContext.RolePermissions
                 .Where(rp => rp.RoleId == r.Id)
                 .Select(rp => $"{rp.Resource}:{rp.PermissionType}")
-                .ToList()
+                .ToList(),
+            UserCount = _tenantContext.UserRoles
+                .Count(ur => ur.RoleId == r.Id),
+            IsSystemRole = r.IsSystemRole,
+            CreatedDate = r.CreatedDate
         }).ToList();
     }
 
