@@ -11,7 +11,6 @@ import {
   Card,
   Tag,
   Space,
-  Modal,
   Tooltip,
   Empty,
   Spin,
@@ -28,7 +27,6 @@ import {
   DeleteOutlined,
   LockOutlined,
   TeamOutlined,
-  ExclamationCircleOutlined,
   SafetyOutlined,
   MoreOutlined,
   CheckCircleOutlined,
@@ -42,8 +40,8 @@ import {
   getPermissionLabel,
   type Role,
 } from '@/lib/api/roles';
+import { confirmDelete } from '@/lib/utils/sweetalert';
 
-const { confirm } = Modal;
 const { Title, Text } = Typography;
 
 export default function RolesPage() {
@@ -85,30 +83,16 @@ export default function RolesPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = (role: Role) => {
-    confirm({
-      title: 'Rolü Sil',
-      icon: <ExclamationCircleOutlined />,
-      content: (
-        <div>
-          <p>
-            <strong>{role.name}</strong> rolünü silmek istediğinizden emin misiniz?
-          </p>
-          {role.userCount > 0 && (
-            <p style={{ color: '#ff4d4f' }}>
-              ⚠️ Bu role <strong>{role.userCount} kullanıcı</strong> atanmış.
-              Rolü silebilmek için önce kullanıcıları başka bir role atamanız gerekiyor.
-            </p>
-          )}
-        </div>
-      ),
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        await deleteRoleMutation.mutateAsync(role.id);
-      },
-    });
+  const handleDelete = async (role: Role) => {
+    const additionalWarning = role.userCount > 0
+      ? `Bu role ${role.userCount} kullanıcı atanmış. Rolü silebilmek için önce kullanıcıları başka bir role atamanız gerekiyor.`
+      : undefined;
+
+    const confirmed = await confirmDelete('Rol', role.name, additionalWarning);
+
+    if (confirmed && role.userCount === 0) {
+      await deleteRoleMutation.mutateAsync(role.id);
+    }
   };
 
   const getRoleIcon = (role: Role) => {

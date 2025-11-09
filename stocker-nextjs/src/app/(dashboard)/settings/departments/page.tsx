@@ -13,8 +13,6 @@ import {
   Button,
   Table,
   Space,
-  message,
-  Popconfirm,
   Tag,
   Typography,
   Row,
@@ -28,7 +26,6 @@ import {
   ApartmentOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import Swal from 'sweetalert2';
 import {
   getDepartments,
   createDepartment,
@@ -39,6 +36,13 @@ import {
   type UpdateDepartmentRequest,
 } from '@/lib/api/departments';
 import { DepartmentDrawer } from '@/features/departments/components';
+import {
+  showCreateSuccess,
+  showUpdateSuccess,
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+} from '@/lib/utils/sweetalert';
 
 const { Title, Text } = Typography;
 
@@ -59,21 +63,11 @@ export default function DepartmentsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       setIsDrawerOpen(false);
-      Swal.fire({
-        icon: 'success',
-        title: 'Başarılı!',
-        text: 'Departman başarıyla oluşturuldu',
-        confirmButtonColor: '#667eea',
-      });
+      showCreateSuccess('departman');
     },
     onError: (error: any) => {
       const errorMessage = error?.message || 'Departman oluşturulurken bir hata oluştu';
-      Swal.fire({
-        icon: 'error',
-        title: 'Hata!',
-        text: errorMessage,
-        confirmButtonColor: '#667eea',
-      });
+      showError(errorMessage);
     },
   });
 
@@ -85,21 +79,11 @@ export default function DepartmentsPage() {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       setIsDrawerOpen(false);
       setEditingDepartment(null);
-      Swal.fire({
-        icon: 'success',
-        title: 'Başarılı!',
-        text: 'Departman başarıyla güncellendi',
-        confirmButtonColor: '#667eea',
-      });
+      showUpdateSuccess('departman');
     },
     onError: (error: any) => {
       const errorMessage = error?.message || 'Departman güncellenirken bir hata oluştu';
-      Swal.fire({
-        icon: 'error',
-        title: 'Hata!',
-        text: errorMessage,
-        confirmButtonColor: '#667eea',
-      });
+      showError(errorMessage);
     },
   });
 
@@ -108,11 +92,11 @@ export default function DepartmentsPage() {
     mutationFn: deleteDepartment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
-      message.success('Departman başarıyla silindi');
+      showDeleteSuccess('departman');
     },
     onError: (error: any) => {
       const errorMessage = error?.message || 'Departman silinirken bir hata oluştu';
-      message.error(errorMessage);
+      showError(errorMessage);
     },
   });
 
@@ -126,8 +110,16 @@ export default function DepartmentsPage() {
     setIsDrawerOpen(true);
   };
 
-  const handleDelete = async (departmentId: string) => {
-    deleteMutation.mutate(departmentId);
+  const handleDelete = async (department: Department) => {
+    const additionalWarning = department.employeeCount > 0
+      ? `Bu departmanda ${department.employeeCount} çalışan var. Silmeden önce çalışanları başka bir departmana atamanız gerekir.`
+      : undefined;
+
+    const confirmed = await confirmDelete('Departman', department.name, additionalWarning);
+
+    if (confirmed && department.employeeCount === 0) {
+      deleteMutation.mutate(department.id);
+    }
   };
 
   const handleSubmit = async (values: any) => {
@@ -192,28 +184,14 @@ export default function DepartmentsPage() {
           >
             Düzenle
           </Button>
-          <Popconfirm
-            title="Departmanı Sil"
-            description={
-              record.employeeCount > 0
-                ? `Bu departmanda ${record.employeeCount} çalışan var. Silmek istediğinize emin misiniz?`
-                : 'Bu departmanı silmek istediğinize emin misiniz?'
-            }
-            onConfirm={() => handleDelete(record.id)}
-            okText="Evet"
-            cancelText="Hayır"
-            okButtonProps={{ danger: true }}
-            disabled={record.employeeCount > 0}
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
           >
-            <Button
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              disabled={record.employeeCount > 0}
-            >
-              Sil
-            </Button>
-          </Popconfirm>
+            Sil
+          </Button>
         </Space>
       ),
     },

@@ -3,7 +3,6 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
 import {
   createRole,
   deleteRole,
@@ -13,6 +12,12 @@ import {
   type Role,
   type UpdateRoleRequest,
 } from '@/lib/api/roles';
+import {
+  showCreateSuccess,
+  showUpdateSuccess,
+  showDeleteSuccess,
+  showError,
+} from '@/lib/utils/sweetalert';
 
 export const ROLES_QUERY_KEY = ['roles'];
 
@@ -36,10 +41,10 @@ export function useCreateRole() {
     mutationFn: (data: CreateRoleRequest) => createRole(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROLES_QUERY_KEY });
-      message.success('Rol başarıyla oluşturuldu');
+      showCreateSuccess('rol');
     },
     onError: (error: any) => {
-      message.error(error.message || 'Rol oluşturulurken bir hata oluştu');
+      showError(error.message || 'Rol oluşturulurken bir hata oluştu');
     },
   });
 }
@@ -55,10 +60,10 @@ export function useUpdateRole() {
       updateRole(roleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROLES_QUERY_KEY });
-      message.success('Rol başarıyla güncellendi');
+      showUpdateSuccess('rol');
     },
     onError: (error: any) => {
-      message.error(error.message || 'Rol güncellenirken bir hata oluştu');
+      showError(error.message || 'Rol güncellenirken bir hata oluştu');
     },
   });
 }
@@ -73,10 +78,10 @@ export function useDeleteRole() {
     mutationFn: (roleId: string) => deleteRole(roleId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROLES_QUERY_KEY });
-      message.success('Rol başarıyla silindi');
+      showDeleteSuccess('rol');
     },
     onError: (error: any) => {
-      message.error(error.message || 'Rol silinirken bir hata oluştu');
+      showError(error.message || 'Rol silinirken bir hata oluştu');
     },
   });
 }
