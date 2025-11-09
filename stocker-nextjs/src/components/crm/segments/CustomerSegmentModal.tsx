@@ -23,6 +23,7 @@ export function CustomerSegmentModal({
 }: CustomerSegmentModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [segmentType, setSegmentType] = useState<'Static' | 'Dynamic'>('Static');
+  const [formValues, setFormValues] = useState<any>({});
   const [form] = Form.useForm();
 
   // Update segment type when initialData changes
@@ -31,6 +32,11 @@ export function CustomerSegmentModal({
       setSegmentType(initialData.type as 'Static' | 'Dynamic');
     }
   }, [initialData]);
+
+  // Update form values on change
+  const handleFormChange = () => {
+    setFormValues(form.getFieldsValue());
+  };
 
   const handleNext = async () => {
     try {
@@ -167,12 +173,21 @@ export function CustomerSegmentModal({
           </Form.Item>
 
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Özet</h4>
-            <div className="text-sm text-blue-800 space-y-1">
+            <h4 className="font-medium text-blue-900 mb-2">📋 Özet</h4>
+            <div className="text-sm text-blue-800 space-y-2">
               <div>
                 <strong>Segment Adı:</strong>{' '}
-                {Form.useWatch('name', form) || <span className="text-gray-400">Belirtilmedi</span>}
+                {formValues.name ? (
+                  <span className="font-medium">{formValues.name}</span>
+                ) : (
+                  <span className="text-gray-400 italic">Belirtilmedi</span>
+                )}
               </div>
+              {formValues.description && (
+                <div>
+                  <strong>Açıklama:</strong> <span>{formValues.description}</span>
+                </div>
+              )}
               <div>
                 <strong>Tip:</strong>{' '}
                 <Tag color={segmentType === 'Dynamic' ? 'processing' : 'default'}>
@@ -183,9 +198,25 @@ export function CustomerSegmentModal({
                 <strong>Renk:</strong>
                 <div
                   className="w-6 h-6 rounded border border-gray-300"
-                  style={{ backgroundColor: Form.useWatch('color', form) || '#1890ff' }}
+                  style={{ backgroundColor: formValues.color || '#1890ff' }}
                 />
               </div>
+              {segmentType === 'Dynamic' && formValues.criteria && formValues.criteria !== '{}' && (
+                <div>
+                  <strong>Kriterler:</strong>{' '}
+                  <Tag color="blue">
+                    {(() => {
+                      try {
+                        const criteria = JSON.parse(formValues.criteria);
+                        const count = Object.keys(criteria).length;
+                        return `${count} kriter tanımlı`;
+                      } catch {
+                        return 'Tanımsız';
+                      }
+                    })()}
+                  </Tag>
+                </div>
+              )}
             </div>
           </div>
 
@@ -236,7 +267,12 @@ export function CustomerSegmentModal({
     >
       <Steps current={currentStep} items={steps} className="mb-6" />
 
-      <Form form={form} layout="vertical" initialValues={initialData || { type: 'Static', color: '#1890ff' }}>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={initialData || { type: 'Static', color: '#1890ff' }}
+        onValuesChange={handleFormChange}
+      >
         <div className="min-h-[400px]">{steps[currentStep].content}</div>
       </Form>
     </Drawer>
