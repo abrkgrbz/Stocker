@@ -59,6 +59,44 @@ export function LeadsTable({
   selectedRowKeys = [],
   onSelectionChange,
 }: LeadsTableProps) {
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="mb-6">
+        <svg
+          className="w-24 h-24 text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Henüz potansiyel müşteri eklenmemiş
+      </h3>
+      <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+        İlk potansiyel müşterinizi ekleyerek satış hunisini oluşturmaya başlayın
+      </p>
+      <Button
+        type="primary"
+        size="large"
+        icon={<UserOutlined />}
+        className="bg-purple-600 hover:bg-purple-700"
+        onClick={() => {
+          // This will be handled by the parent component through context
+          const createButton = document.querySelector('[data-action="create-lead"]') as HTMLElement;
+          createButton?.click();
+        }}
+      >
+        + Yeni Potansiyel Müşteri Ekle
+      </Button>
+    </div>
+  );
   const columns: ColumnsType<Lead> = [
     {
       title: 'İsim',
@@ -244,7 +282,7 @@ export function LeadsTable({
       }}
       loading={loading}
       locale={{
-        emptyText: 'Potansiyel müşteri bulunamadı',
+        emptyText: <EmptyState />,
         filterConfirm: 'Tamam',
         filterReset: 'Sıfırla',
         filterTitle: 'Filtrele',

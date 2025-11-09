@@ -274,7 +274,12 @@ export default function LeadsPage() {
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            data-action="create-lead"
+          >
             Yeni Potansiyel Müşteri
           </Button>
         </Space>
