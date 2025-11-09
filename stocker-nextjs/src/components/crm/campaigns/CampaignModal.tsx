@@ -24,6 +24,8 @@ import {
   TrophyOutlined,
   DollarOutlined,
   PhoneOutlined,
+  CalculatorOutlined,
+  AimOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -102,25 +104,37 @@ export function CampaignModal({
     {
       title: 'Temel Bilgiler',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Form.Item
             name="name"
-            label="Kampanya Adı"
+            label={<span className="text-base font-semibold text-gray-700">Kampanya Adı</span>}
             rules={[{ required: true, message: 'Kampanya adı zorunludur' }]}
           >
-            <Input placeholder="Örn: Yılbaşı İndirimleri" size="large" />
+            <Input
+              placeholder="Örn: Yılbaşı İndirimleri"
+              size="large"
+              className="bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+            />
           </Form.Item>
 
-          <Form.Item name="description" label="Açıklama">
-            <Input.TextArea rows={3} placeholder="Kampanya hakkında detaylı açıklama" />
+          <Form.Item name="description" label={<span className="text-base font-semibold text-gray-700">Açıklama</span>}>
+            <Input.TextArea
+              rows={3}
+              placeholder="Kampanya hakkında detaylı açıklama"
+              className="bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+            />
           </Form.Item>
 
           <Form.Item
             name="type"
-            label="Kampanya Tipi"
+            label={<span className="text-base font-semibold text-gray-700">Kampanya Tipi</span>}
             rules={[{ required: true, message: 'Kampanya tipi zorunludur' }]}
           >
-            <Select size="large" placeholder="Kampanya tipini seçin">
+            <Select
+              size="large"
+              placeholder="Kampanya tipini seçin"
+              className="campaign-select"
+            >
               {campaignTypes.map((type) => (
                 <Select.Option key={type.value} value={type.value}>
                   {type.label}
@@ -129,8 +143,12 @@ export function CampaignModal({
             </Select>
           </Form.Item>
 
-          <Form.Item name="targetAudience" label="Hedef Kitle">
-            <Input.TextArea rows={2} placeholder="Kampanyanın hedef kitlesi (örn: 25-40 yaş arası profesyoneller)" />
+          <Form.Item name="targetAudience" label={<span className="text-base font-semibold text-gray-700">Hedef Kitle</span>}>
+            <Input.TextArea
+              rows={2}
+              placeholder="Kampanyanın hedef kitlesi (örn: 25-40 yaş arası profesyoneller)"
+              className="bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+            />
           </Form.Item>
         </div>
       ),
@@ -138,16 +156,16 @@ export function CampaignModal({
     {
       title: 'Bütçe',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Form.Item
             name="budgetedCost"
-            label="Planlanan Bütçe (₺)"
+            label={<span className="text-base font-semibold text-gray-700">Planlanan Bütçe (₺)</span>}
             rules={[{ required: true, message: 'Planlanan bütçe zorunludur' }]}
           >
             <InputNumber
               placeholder="0.00"
               min={0}
-              className="w-full"
+              className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
@@ -156,13 +174,13 @@ export function CampaignModal({
 
           <Form.Item
             name="expectedRevenue"
-            label="Beklenen Gelir (₺)"
+            label={<span className="text-base font-semibold text-gray-700">Beklenen Gelir (₺)</span>}
             rules={[{ required: true, message: 'Beklenen gelir zorunludur' }]}
           >
             <InputNumber
               placeholder="0.00"
               min={0}
-              className="w-full"
+              className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
@@ -176,20 +194,28 @@ export function CampaignModal({
               const expectedProfit = expectedRevenue - budgetedCost;
               const roi = budgetedCost > 0 ? ((expectedProfit / budgetedCost) * 100).toFixed(0) : 0;
 
+              // Anlamsal renkler: Pozitif = Yeşil, Negatif = Kırmızı
+              const profitColor = expectedProfit >= 0 ? 'text-green-600' : 'text-red-600';
+              const bgColor = expectedProfit >= 0 ? 'bg-green-50' : 'bg-red-50';
+              const borderColor = expectedProfit >= 0 ? 'border-green-200' : 'border-red-200';
+
               return (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-3">Bütçe Analizi</h4>
-                  <div className="space-y-3">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">Beklenen Kar (Net)</div>
-                      <div className="text-3xl font-bold text-green-600">
+                <div className={`p-5 ${bgColor} ${borderColor} border-2 rounded-xl shadow-sm`}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <CalculatorOutlined className="text-xl text-blue-600" />
+                    <h4 className="font-semibold text-lg text-gray-800">Bütçe Analizi</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="text-center py-2">
+                      <div className="text-sm font-medium text-gray-600 mb-2">Beklenen Kar (Net)</div>
+                      <div className={`text-4xl font-bold ${profitColor}`}>
                         ₺{expectedProfit.toLocaleString('tr-TR')}
                       </div>
                     </div>
                     {budgetedCost > 0 && (
-                      <div className="text-center pt-2 border-t border-blue-200">
-                        <p className="text-sm text-blue-800">
-                          Bu, <span className="font-semibold">%{roi} ROI</span> (Yatırım Geri Dönüşü) anlamına gelir.
+                      <div className="text-center pt-3 border-t-2 border-gray-200">
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          Bu, <span className="font-bold text-base">%{roi} ROI</span> (Yatırım Geri Dönüşü) anlamına gelir.
                         </p>
                       </div>
                     )}
@@ -204,21 +230,35 @@ export function CampaignModal({
     {
       title: 'Hedefler',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Form.Item
             name="targetLeads"
-            label="Hedef Lead Sayısı"
+            label={<span className="text-base font-semibold text-gray-700">Hedef Lead Sayısı</span>}
             rules={[{ required: true, message: 'Hedef lead sayısı zorunludur' }]}
           >
-            <InputNumber placeholder="0" min={0} className="w-full" size="large" />
+            <InputNumber
+              placeholder="0"
+              min={0}
+              className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+              size="large"
+            />
           </Form.Item>
 
-          <Form.Item name="targetConversionRate" label="Hedef Dönüşüm Oranı (%) (opsiyonel)">
-            <InputNumber placeholder="0" min={0} max={100} className="w-full" size="large" />
+          <Form.Item name="targetConversionRate" label={<span className="text-base font-semibold text-gray-700">Hedef Dönüşüm Oranı (%) <span className="text-sm font-normal text-gray-500">(opsiyonel)</span></span>}>
+            <InputNumber
+              placeholder="0"
+              min={0}
+              max={100}
+              className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+              size="large"
+            />
           </Form.Item>
 
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="font-medium text-purple-900 mb-3">Tahmini Performans</h4>
+          <div className="p-5 bg-purple-50 border-2 border-purple-200 rounded-xl shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <AimOutlined className="text-xl text-purple-600" />
+              <h4 className="font-semibold text-lg text-gray-800">Tahmini Performans</h4>
+            </div>
             <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.targetLeads !== curr.targetLeads}>
               {({ getFieldValue }) => {
                 const budgetedCost = getFieldValue('budgetedCost') || 0;
@@ -226,18 +266,18 @@ export function CampaignModal({
                 const costPerLead = targetLeads > 0 ? (budgetedCost / targetLeads).toFixed(2) : 0;
 
                 return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Planlanan Bütçe (Adım 2)</span>
-                      <span className="font-semibold text-purple-900">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg">
+                      <span className="text-sm font-medium text-gray-600">Planlanan Bütçe (Adım 2)</span>
+                      <span className="text-base font-bold text-purple-900">
                         ₺{budgetedCost.toLocaleString('tr-TR')}
                       </span>
                     </div>
                     {targetLeads > 0 && (
-                      <div className="text-center pt-3 border-t border-purple-200">
-                        <div className="text-sm text-gray-600 mb-1">Hedef Lead Başı Maliyet</div>
-                        <div className="text-2xl font-bold text-purple-900">₺{costPerLead}</div>
-                        <p className="text-xs text-purple-700 mt-1">
+                      <div className="text-center pt-3 border-t-2 border-purple-200">
+                        <div className="text-sm font-medium text-gray-600 mb-2">Hedef Lead Başı Maliyet</div>
+                        <div className="text-3xl font-bold text-purple-900">₺{costPerLead}</div>
+                        <p className="text-xs text-purple-700 mt-2 font-medium">
                           (Bütçeniz / Hedef Lead Sayınız)
                         </p>
                       </div>
@@ -253,14 +293,14 @@ export function CampaignModal({
     {
       title: 'Zamanlama',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Form.Item
             name="dateRange"
-            label="Kampanya Tarihleri"
+            label={<span className="text-base font-semibold text-gray-700">Kampanya Tarihleri</span>}
             rules={[{ required: true, message: 'Kampanya tarihleri zorunludur' }]}
           >
             <RangePicker
-              className="w-full"
+              className="w-full campaign-date-picker"
               size="large"
               format="DD/MM/YYYY"
               placeholder={['Başlangıç', 'Bitiş']}
@@ -269,11 +309,11 @@ export function CampaignModal({
 
           <Form.Item
             name="status"
-            label="Kampanya Durumu"
+            label={<span className="text-base font-semibold text-gray-700">Kampanya Durumu</span>}
             initialValue="Planned"
             rules={[{ required: true, message: 'Kampanya durumu zorunludur' }]}
           >
-            <Select size="large">
+            <Select size="large" className="campaign-select">
               <Select.Option value="Planned">Planlandı</Select.Option>
               <Select.Option value="InProgress">Devam Ediyor</Select.Option>
               <Select.Option value="Completed">Tamamlandı</Select.Option>
@@ -315,26 +355,35 @@ export function CampaignModal({
               const typeLabel = campaignTypes.find((t) => t.value === type)?.label;
 
               return (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Kampanya Özeti</h4>
-                  <div className="text-sm text-blue-800 space-y-1">
-                    <div>
-                      <strong>Kampanya Adı:</strong>{' '}
-                      {name || <span className="text-gray-400">Belirtilmedi</span>}
+                <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckCircleOutlined className="text-xl text-blue-600" />
+                    <h4 className="font-semibold text-lg text-gray-800">Kampanya Özeti</h4>
+                  </div>
+                  <div className="space-y-3 bg-white p-4 rounded-lg">
+                    <div className="flex justify-between items-start border-b border-gray-100 pb-2">
+                      <span className="text-sm font-medium text-gray-600">Kampanya Adı:</span>
+                      <span className="text-sm font-semibold text-gray-900 text-right max-w-[60%]">
+                        {name || <span className="text-gray-400 font-normal">Belirtilmedi</span>}
+                      </span>
                     </div>
-                    <div>
-                      <strong>Tip:</strong>{' '}
-                      {typeLabel || <span className="text-gray-400">Belirtilmedi</span>}
+                    <div className="flex justify-between items-start border-b border-gray-100 pb-2">
+                      <span className="text-sm font-medium text-gray-600">Tip:</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {typeLabel || <span className="text-gray-400 font-normal">Belirtilmedi</span>}
+                      </span>
                     </div>
-                    <div>
-                      <strong>Bütçe:</strong> ₺{budgetedCost.toLocaleString('tr-TR')}
+                    <div className="flex justify-between items-start border-b border-gray-100 pb-2">
+                      <span className="text-sm font-medium text-gray-600">Bütçe:</span>
+                      <span className="text-sm font-bold text-blue-900">₺{budgetedCost.toLocaleString('tr-TR')}</span>
                     </div>
-                    <div>
-                      <strong>Hedef Lead:</strong> {targetLeads}
+                    <div className="flex justify-between items-start border-b border-gray-100 pb-2">
+                      <span className="text-sm font-medium text-gray-600">Hedef Lead:</span>
+                      <span className="text-sm font-bold text-purple-900">{targetLeads}</span>
                     </div>
-                    <div>
-                      <strong>Durum:</strong>{' '}
-                      <Tag color={statusColors[status]}>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-sm font-medium text-gray-600">Durum:</span>
+                      <Tag color={statusColors[status]} className="font-medium">
                         {statusLabels[status]}
                       </Tag>
                     </div>
@@ -381,6 +430,65 @@ export function CampaignModal({
         </div>
       }
     >
+      <style>{`
+        /* Stepper güçlendirme */
+        .ant-steps-item-active .ant-steps-item-title {
+          font-weight: 700 !important;
+          font-size: 15px !important;
+          color: #1e293b !important;
+        }
+
+        .ant-steps-item-finish .ant-steps-item-title {
+          opacity: 0.6;
+          font-weight: 500 !important;
+        }
+
+        .ant-steps-item-wait .ant-steps-item-title {
+          opacity: 0.45;
+          color: #94a3b8 !important;
+        }
+
+        .ant-steps-item-active .ant-steps-item-icon {
+          background: #667eea !important;
+          border-color: #667eea !important;
+        }
+
+        .ant-steps-item-finish .ant-steps-item-icon {
+          background: #10b981 !important;
+          border-color: #10b981 !important;
+        }
+
+        /* Input focus efekti */
+        .ant-input:focus,
+        .ant-input-number:focus-within,
+        .ant-select:focus-within .ant-select-selector,
+        .ant-picker:focus-within .ant-picker-input {
+          border-color: #667eea !important;
+          box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+        }
+
+        .ant-input:hover,
+        .ant-input-number:hover,
+        .ant-select:hover .ant-select-selector,
+        .ant-picker:hover .ant-picker-input {
+          border-color: #a5b4fc !important;
+        }
+
+        /* Select & DatePicker background */
+        .campaign-select .ant-select-selector,
+        .campaign-date-picker .ant-picker-input {
+          background-color: #f9fafb !important;
+          transition: background-color 0.2s ease;
+        }
+
+        .campaign-select:hover .ant-select-selector,
+        .campaign-select.ant-select-focused .ant-select-selector,
+        .campaign-date-picker:hover .ant-picker-input,
+        .campaign-date-picker.ant-picker-focused .ant-picker-input {
+          background-color: white !important;
+        }
+      `}</style>
+
       <Steps current={currentStep} items={steps} className="mb-6" />
 
       <Form
