@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Drawer, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, message, Tag } from 'antd';
+import { Drawer, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, Tag } from 'antd';
+import { showError } from '@/lib/utils/sweetalert';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 
 interface CustomerSegmentModalProps {
@@ -22,14 +23,14 @@ export function CustomerSegmentModal({
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
 
-  const segmentType = Form.useWatch('type', form);
+  const segmentType = Form.useWatch('type', form) || 'Static';
 
   const handleNext = async () => {
     try {
       await form.validateFields();
       setCurrentStep(currentStep + 1);
     } catch (error) {
-      message.error('Lütfen tüm zorunlu alanları doldurun');
+      showError('Lütfen tüm zorunlu alanları doldurun');
     }
   };
 
@@ -44,7 +45,7 @@ export function CustomerSegmentModal({
       form.resetFields();
       setCurrentStep(0);
     } catch (error) {
-      message.error('Lütfen tüm zorunlu alanları doldurun');
+      showError('Lütfen tüm zorunlu alanları doldurun');
     }
   };
 
