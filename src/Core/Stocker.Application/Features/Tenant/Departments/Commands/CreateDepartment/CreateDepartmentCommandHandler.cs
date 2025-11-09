@@ -29,9 +29,8 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
         if (tenantId == Guid.Empty)
             return Result<Guid>.Failure(DomainErrors.Tenant.TenantNotFound);
 
+        // Get company ID if exists, otherwise use Empty (nullable company support)
         var companyId = await _companyService.GetDefaultCompanyIdAsync(tenantId, cancellationToken);
-        if (companyId == Guid.Empty)
-            return Result<Guid>.Failure(DomainErrors.Tenant.CompanyNotFound);
 
         // Check if department with same name already exists
         var existingDepartment = await _departmentRepository.GetByNameAsync(request.Dto.Name, tenantId, cancellationToken);
