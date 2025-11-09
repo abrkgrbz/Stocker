@@ -22,9 +22,20 @@ public static class MiddlewareExtensions
     public static WebApplication UseApiPipeline(this WebApplication app, IConfiguration configuration)
     {
         var environment = app.Environment;
-        
+
         // Get API Version Description Provider for Swagger
         var apiVersionProvider = app.Services.GetService<IApiVersionDescriptionProvider>();
+
+        // 0. Forwarded Headers (MUST BE FIRST - for reverse proxy support)
+        // This allows the app to work correctly behind nginx/Caddy with HTTPS
+        app.UseForwardedHeaders(new Microsoft.AspNetCore.Builder.ForwardedHeadersOptions
+        {
+            ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
+            // Trust all proxies in production (adjust if needed for specific proxy IPs)
+            KnownNetworks = { },
+            KnownProxies = { }
+        });
 
         // 1. Swagger (Development only)
         if (environment.IsDevelopment())
