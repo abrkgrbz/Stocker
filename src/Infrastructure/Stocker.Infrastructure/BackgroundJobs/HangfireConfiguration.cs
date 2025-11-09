@@ -93,7 +93,8 @@ public static class HangfireConfiguration
         });
 
         // Schedule recurring jobs
-        ScheduleRecurringJobs();
+        // TODO: Re-enable after fixing DI scope issues with Hangfire jobs
+        // ScheduleRecurringJobs();
 
         return app;
     }
@@ -104,6 +105,7 @@ public static class HangfireConfiguration
     private static void ScheduleRecurringJobs()
     {
         // Tenant health check - runs every 15 minutes
-        TenantHealthCheckJob.Schedule();
+        // Temporarily disabled due to DI scope resolution issues
+        // TenantHealthCheckJob.Schedule();
     }
 }
