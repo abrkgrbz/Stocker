@@ -81,6 +81,14 @@ export class ApiClient {
   }
 
   /**
+   * Get tenant ID from localStorage (browser only)
+   */
+  private getTenantId(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('tenantId');
+  }
+
+  /**
    * Generic request method
    */
   private async request<T>(
@@ -97,8 +105,9 @@ export class ApiClient {
 
     const url = `${this.baseUrl}${endpoint}${buildQueryString(params)}`;
 
-    // Add tenant code header if available
+    // Add tenant headers if available
     const tenantCode = this.getTenantCode();
+    const tenantId = this.getTenantId();
     const requestHeaders = {
       ...this.defaultHeaders,
       ...headers,
@@ -106,6 +115,10 @@ export class ApiClient {
 
     if (tenantCode) {
       requestHeaders['X-Tenant-Code'] = tenantCode;
+    }
+
+    if (tenantId) {
+      requestHeaders['X-Tenant-Id'] = tenantId;
     }
 
     const config: RequestInit = {
