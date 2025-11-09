@@ -31,6 +31,8 @@ interface LeadsTableProps {
   onConvert: (lead: Lead) => void;
   onQualify?: (lead: Lead) => void;
   onDisqualify?: (lead: Lead) => void;
+  selectedRowKeys?: React.Key[];
+  onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
 }
 
 // Source colors
@@ -54,6 +56,8 @@ export function LeadsTable({
   onConvert,
   onQualify,
   onDisqualify,
+  selectedRowKeys = [],
+  onSelectionChange,
 }: LeadsTableProps) {
   const columns: ColumnsType<Lead> = [
     {
@@ -216,11 +220,20 @@ export function LeadsTable({
     },
   ];
 
+  const rowSelection = onSelectionChange
+    ? {
+        selectedRowKeys,
+        onChange: onSelectionChange,
+        preserveSelectedRowKeys: true,
+      }
+    : undefined;
+
   return (
     <Table
       columns={columns}
       dataSource={leads}
       rowKey="id"
+      rowSelection={rowSelection}
       pagination={{
         current: currentPage,
         pageSize,

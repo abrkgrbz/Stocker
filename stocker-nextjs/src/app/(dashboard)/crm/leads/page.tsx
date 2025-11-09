@@ -24,6 +24,7 @@ import {
   useUpdateLeadScore,
 } from '@/lib/api/hooks/useCRM';
 import { LeadsStats, LeadsTable, LeadsFilters } from '@/components/crm/leads';
+import BulkActionsToolbar from '@/components/crm/leads/BulkActionsToolbar';
 import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 import { LeadModal, ConvertLeadModal } from '@/features/leads/components';
 
@@ -37,6 +38,7 @@ export default function LeadsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   // API Hooks
   const { data, isLoading, refetch } = useLeads({
@@ -193,6 +195,68 @@ export default function LeadsPage() {
     }
   };
 
+  const handleClearSelection = () => {
+    setSelectedRowKeys([]);
+  };
+
+  const handleBulkDelete = async () => {
+    const confirmed = await confirmDelete(
+      'Seçili Potansiyel Müşteriler',
+      `${selectedRowKeys.length} potansiyel müşteri silinecek`
+    );
+
+    if (confirmed) {
+      try {
+        // Delete each selected lead
+        await Promise.all(
+          selectedRowKeys.map((key) => deleteLead.mutateAsync(Number(key)))
+        );
+        showDeleteSuccess(`${selectedRowKeys.length} potansiyel müşteri`);
+        setSelectedRowKeys([]);
+      } catch (error) {
+        showError('Toplu silme işlemi başarısız');
+      }
+    }
+  };
+
+  const handleBulkStatusChange = async (status: string) => {
+    const confirmed = await confirmAction(
+      'Durum Değiştir',
+      `${selectedRowKeys.length} potansiyel müşterinin durumu değiştirilecek`,
+      'Değiştir'
+    );
+
+    if (confirmed) {
+      try {
+        // Update each selected lead's status
+        await Promise.all(
+          selectedRowKeys.map((key) => {
+            const lead = leads.find((l) => l.id === Number(key));
+            if (lead) {
+              return updateLead.mutateAsync({
+                id: lead.id,
+                data: { ...lead, status: status as any },
+              });
+            }
+            return Promise.resolve();
+          })
+        );
+        showUpdateSuccess(`${selectedRowKeys.length} potansiyel müşteri`, 'durum güncellendi');
+        setSelectedRowKeys([]);
+      } catch (error) {
+        showError('Toplu durum değiştirme işlemi başarısız');
+      }
+    }
+  };
+
+  const handleBulkScoreAssign = async () => {
+    showInfo('Yakında', 'Toplu puan atama özelliği yakında eklenecek');
+  };
+
+  const handleBulkTagAssign = async () => {
+    showInfo('Yakında', 'Toplu etiketleme özelliği yakında eklenecek');
+  };
+
   return (
     <div className="p-6">
       {/* Page Header */}
@@ -218,7 +282,18 @@ export default function LeadsPage() {
       {/* Search and Table */}
       <AnimatedCard>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <LeadsFilters searchText={searchText} onSearchChange={setSearchText} />
+          {selectedRowKeys.length > 0 ? (
+            <BulkActionsToolbar
+              selectedCount={selectedRowKeys.length}
+              onClearSelection={handleClearSelection}
+              onBulkDelete={handleBulkDelete}
+              onBulkStatusChange={handleBulkStatusChange}
+              onBulkScoreAssign={handleBulkScoreAssign}
+              onBulkTagAssign={handleBulkTagAssign}
+            />
+          ) : (
+            <LeadsFilters searchText={searchText} onSearchChange={setSearchText} />
+          )}
           <LeadsTable
             leads={leads}
             loading={
@@ -236,6 +311,8 @@ export default function LeadsPage() {
             onConvert={handleConvert}
             onQualify={handleQualify}
             onDisqualify={handleDisqualify}
+            selectedRowKeys={selectedRowKeys}
+            onSelectionChange={setSelectedRowKeys}
           />
         </Space>
       </AnimatedCard>
