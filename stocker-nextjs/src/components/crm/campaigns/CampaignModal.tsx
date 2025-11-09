@@ -12,9 +12,9 @@ import {
   InputNumber,
   DatePicker,
   Switch,
-  message,
   Tag,
 } from 'antd';
+import { showError } from '@/lib/utils/sweetalert';
 import {
   MailOutlined,
   UserAddOutlined,
@@ -65,7 +65,7 @@ export function CampaignModal({
       await form.validateFields();
       setCurrentStep(currentStep + 1);
     } catch (error) {
-      message.error('Lütfen tüm zorunlu alanları doldurun');
+      showError('Lütfen tüm zorunlu alanları doldurun');
     }
   };
 
@@ -88,7 +88,7 @@ export function CampaignModal({
       form.resetFields();
       setCurrentStep(0);
     } catch (error) {
-      message.error('Lütfen tüm zorunlu alanları doldurun');
+      showError('Lütfen tüm zorunlu alanları doldurun');
     }
   };
 
