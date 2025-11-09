@@ -28,7 +28,7 @@ interface DealModalProps {
   pipelines: Pipeline[];
   onCancel: () => void;
   onSubmit: (values: any) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: number, deal: Deal) => void;
 }
 
 export function DealModal({
@@ -154,7 +154,7 @@ export function DealModal({
 
   const handleDelete = () => {
     if (deal && onDelete) {
-      onDelete(deal.id);
+      onDelete(deal.id, deal);
       setCurrentStep(0);
     }
   };

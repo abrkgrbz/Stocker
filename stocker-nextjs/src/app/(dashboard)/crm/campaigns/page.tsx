@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Progress, Avatar, Dropdown, Empty } from 'antd';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Progress, Avatar, Dropdown, Empty } from 'antd';
+import {
+  showCreateSuccess,
+  showUpdateSuccess,
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+  showInfo,
+} from '@/lib/utils/sweetalert';
 import {
   PlusOutlined,
   EditOutlined,
@@ -78,57 +86,56 @@ export default function CampaignsPage() {
 
     if (createNew === 'true' && targetSegmentId) {
       setIsModalOpen(true);
-      message.info(`Hedef segment: ${targetSegmentName || 'Seçili Segment'}`);
+      showInfo('Hedef Segment', `Hedef segment: ${targetSegmentName || 'Seçili Segment'}`);
       // Note: The modal will need to be updated to accept and display the target segment
     }
   }, [searchParams]);
 
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: 'Kampanya Sil',
-      content: 'Bu kampanyayı silmek istediğinizden emin misiniz?',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteCampaign.mutateAsync(id);
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
-          message.error(errorMessage);
-        }
-      },
-    });
+  const handleDelete = async (id: string, campaign: Campaign) => {
+    const confirmed = await confirmDelete('Kampanya', campaign.name);
+
+    if (confirmed) {
+      try {
+        await deleteCampaign.mutateAsync(id);
+        showDeleteSuccess('kampanya');
+      } catch (error: any) {
+        const apiError = error.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
+        showError(errorMessage);
+      }
+    }
   };
 
   const handleStart = async (id: string) => {
     try {
       await startCampaign.mutateAsync(id);
+      showUpdateSuccess('kampanya', 'başlatıldı');
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
-      message.error(errorMessage);
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      showError(errorMessage);
     }
   };
 
   const handleComplete = async (id: string) => {
     try {
       await completeCampaign.mutateAsync(id);
+      showUpdateSuccess('kampanya', 'tamamlandı');
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
-      message.error(errorMessage);
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      showError(errorMessage);
     }
   };
 
   const handleAbort = async (id: string) => {
     try {
       await abortCampaign.mutateAsync(id);
+      showUpdateSuccess('kampanya', 'iptal edildi');
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
-      message.error(errorMessage);
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      showError(errorMessage);
     }
   };
 
@@ -136,15 +143,17 @@ export default function CampaignsPage() {
     try {
       if (selectedCampaign) {
         await updateCampaign.mutateAsync({ id: selectedCampaign.id, ...values });
+        showUpdateSuccess('kampanya');
       } else {
         await createCampaign.mutateAsync(values);
+        showCreateSuccess('kampanya');
       }
       setIsModalOpen(false);
       setSelectedCampaign(null);
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || '$1';
-      message.error(errorMessage);
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      showError(errorMessage);
     }
   };
 
@@ -171,11 +180,11 @@ export default function CampaignsPage() {
         targetLeads: campaign.targetLeads,
       };
       await createCampaign.mutateAsync(clonedData);
-      message.success('Kampanya başarıyla kopyalandı');
+      showCreateSuccess('kampanya', 'başarıyla kopyalandı');
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Kopyalama işlemi başarısız';
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -381,7 +390,7 @@ export default function CampaignsPage() {
           label: 'Sil',
           icon: <DeleteOutlined />,
           danger: true,
-          onClick: () => handleDelete(record.id),
+          onClick: () => handleDelete(record.id, record),
           disabled: deleteCampaign.isPending,
         });
 

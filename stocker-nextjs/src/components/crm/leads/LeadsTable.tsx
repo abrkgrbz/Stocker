@@ -27,7 +27,7 @@ interface LeadsTableProps {
   totalCount: number;
   onPageChange: (page: number, size: number) => void;
   onEdit: (lead: Lead) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: number, lead: Lead) => void;
   onConvert: (lead: Lead) => void;
   onQualify?: (lead: Lead) => void;
   onDisqualify?: (lead: Lead) => void;
@@ -205,7 +205,7 @@ export function LeadsTable({
                 label: 'Sil',
                 icon: <DeleteOutlined />,
                 danger: true,
-                onClick: () => onDelete(record.id),
+                onClick: () => onDelete(record.id, record),
               },
             ],
           }}

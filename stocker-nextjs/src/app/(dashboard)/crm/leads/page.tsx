@@ -1,8 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Typography, Modal, message } from 'antd';
+import { Button, Space, Typography } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  showCreateSuccess,
+  showUpdateSuccess,
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+  confirmAction,
+  showInfo,
+} from '@/lib/utils/sweetalert';
 import type { Lead } from '@/lib/api/services/crm.service';
 import {
   useLeads,
@@ -65,22 +74,20 @@ export default function LeadsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    Modal.confirm({
-      title: 'Potansiyel Müşteriyi Sil',
-      content: 'Bu potansiyel müşteriyi silmek istediğinizden emin misiniz?',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteLead.mutateAsync(id);
-          message.success('Potansiyel müşteri silindi');
-        } catch (error) {
-          message.error('Silme işlemi başarısız');
-        }
-      },
-    });
+  const handleDelete = async (id: number, lead: Lead) => {
+    const confirmed = await confirmDelete(
+      'Potansiyel Müşteri',
+      `${lead.firstName} ${lead.lastName}`
+    );
+
+    if (confirmed) {
+      try {
+        await deleteLead.mutateAsync(id);
+        showDeleteSuccess('potansiyel müşteri');
+      } catch (error) {
+        showError('Silme işlemi başarısız');
+      }
+    }
   };
 
   const handleConvert = (lead: Lead) => {
@@ -89,56 +96,54 @@ export default function LeadsPage() {
   };
 
   const handleQualify = async (lead: Lead) => {
-    Modal.confirm({
-      title: 'Lead\'i Nitelikli Olarak İşaretle',
-      content: `"${lead.firstName} ${lead.lastName}" lead'ini nitelikli olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Nitelikli İşaretle',
-      okType: 'primary',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await qualifyLead.mutateAsync({ id: lead.id.toString() });
-          message.success('Lead nitelikli olarak işaretlendi');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
-      },
-    });
+    const confirmed = await confirmAction(
+      'Lead\'i Nitelikli Olarak İşaretle',
+      `"${lead.firstName} ${lead.lastName}" lead'ini nitelikli olarak işaretlemek istediğinizden emin misiniz?`,
+      'Nitelikli İşaretle'
+    );
+
+    if (confirmed) {
+      try {
+        await qualifyLead.mutateAsync({ id: lead.id.toString() });
+        showUpdateSuccess('Lead', 'nitelikli olarak işaretlendi');
+      } catch (error: any) {
+        const apiError = error.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+        showError(errorMessage);
+      }
+    }
   };
 
   const handleDisqualify = async (lead: Lead) => {
-    Modal.confirm({
-      title: 'Lead\'i Niteliksiz Olarak İşaretle',
-      content: `"${lead.firstName} ${lead.lastName}" lead'ini niteliksiz olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Niteliksiz İşaretle',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await disqualifyLead.mutateAsync({
-            id: lead.id.toString(),
-            reason: 'Kullanıcı tarafından niteliksiz işaretlendi',
-          });
-          message.info('Lead niteliksiz olarak işaretlendi');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
-      },
-    });
+    const confirmed = await confirmAction(
+      'Lead\'i Niteliksiz Olarak İşaretle',
+      `"${lead.firstName} ${lead.lastName}" lead'ini niteliksiz olarak işaretlemek istediğinizden emin misiniz?`,
+      'Niteliksiz İşaretle'
+    );
+
+    if (confirmed) {
+      try {
+        await disqualifyLead.mutateAsync({
+          id: lead.id.toString(),
+          reason: 'Kullanıcı tarafından niteliksiz işaretlendi',
+        });
+        showInfo('Lead İşaretlendi', 'Lead niteliksiz olarak işaretlendi');
+      } catch (error: any) {
+        const apiError = error.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+        showError(errorMessage);
+      }
+    }
   };
 
   const handleSubmit = async (values: any) => {
     try {
       if (selectedLead) {
         await updateLead.mutateAsync({ id: selectedLead.id, data: values });
-        message.success('Potansiyel müşteri güncellendi');
+        showUpdateSuccess('potansiyel müşteri');
       } else {
         await createLead.mutateAsync(values);
-        message.success('Potansiyel müşteri oluşturuldu');
+        showCreateSuccess('potansiyel müşteri');
       }
       setModalOpen(false);
     } catch (error: any) {
@@ -156,7 +161,7 @@ export default function LeadsPage() {
         errorMessage = error.message;
       }
 
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -168,7 +173,7 @@ export default function LeadsPage() {
         leadId: selectedLead.id,
         customerData: values,
       });
-      message.success('Potansiyel müşteri, müşteriye dönüştürüldü');
+      showUpdateSuccess('potansiyel müşteri', 'müşteriye dönüştürüldü');
       setConvertModalOpen(false);
     } catch (error: any) {
       // Extract API error details
@@ -184,7 +189,7 @@ export default function LeadsPage() {
         errorMessage = error.message;
       }
 
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 

@@ -11,8 +11,6 @@ import {
   Typography,
   Row,
   Col,
-  Modal,
-  message,
   Avatar,
   Tooltip,
 } from 'antd';
@@ -28,7 +26,17 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import {
+  showCreateSuccess,
+  showUpdateSuccess,
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+  confirmAction,
+  showInfo,
+} from '@/lib/utils/sweetalert';
 import type { Deal } from '@/lib/api/services/crm.service';
 import {
   useDeals,
@@ -95,22 +103,17 @@ export default function DealsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    Modal.confirm({
-      title: 'Fırsatı Sil',
-      content: 'Bu fırsatı silmek istediğinizden emin misiniz?',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteDeal.mutateAsync(id);
-          message.success('Fırsat silindi');
-        } catch (error) {
-          message.error('Silme işlemi başarısız');
-        }
-      },
-    });
+  const handleDelete = async (id: number, deal: Deal) => {
+    const confirmed = await confirmDelete('Fırsat', deal.title);
+
+    if (confirmed) {
+      try {
+        await deleteDeal.mutateAsync(id);
+        showDeleteSuccess('fırsat');
+      } catch (error) {
+        showError('Silme işlemi başarısız');
+      }
+    }
   };
 
   const handleMoveStage = async (dealId: number, newStageId: number) => {
@@ -119,73 +122,71 @@ export default function DealsPage() {
         id: dealId.toString(),
         newStageId: newStageId.toString(),
       });
-      message.success('Fırsat aşaması değiştirildi');
+      showUpdateSuccess('fırsat aşaması', 'değiştirildi');
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Aşama değiştirme başarısız';
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 
   const handleCloseWon = async (deal: Deal) => {
-    Modal.confirm({
-      title: 'Fırsatı Kazanıldı Olarak İşaretle',
-      content: `"${deal.title}" fırsatını kazanıldı olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Kazanıldı İşaretle',
-      okType: 'primary',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await closeDealWon.mutateAsync({
-            id: deal.id.toString(),
-            actualAmount: deal.amount,
-            closedDate: new Date().toISOString(),
-          });
-          message.success('🎉 Fırsat kazanıldı olarak işaretlendi!');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
-      },
-    });
+    const confirmed = await confirmAction(
+      'Fırsatı Kazanıldı Olarak İşaretle',
+      `"${deal.title}" fırsatını kazanıldı olarak işaretlemek istediğinizden emin misiniz?`,
+      'Kazanıldı İşaretle'
+    );
+
+    if (confirmed) {
+      try {
+        await closeDealWon.mutateAsync({
+          id: deal.id.toString(),
+          actualAmount: deal.amount,
+          closedDate: new Date().toISOString(),
+        });
+        showUpdateSuccess('fırsat', '🎉 kazanıldı olarak işaretlendi!');
+      } catch (error: any) {
+        const apiError = error.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+        showError(errorMessage);
+      }
+    }
   };
 
   const handleCloseLost = async (deal: Deal) => {
-    Modal.confirm({
-      title: 'Fırsatı Kaybedildi Olarak İşaretle',
-      content: `"${deal.title}" fırsatını kaybedildi olarak işaretlemek istediğinizden emin misiniz?`,
-      okText: 'Kaybedildi İşaretle',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await closeDealLost.mutateAsync({
-            id: deal.id.toString(),
-            lostReason: 'Kullanıcı tarafından kapatıldı',
-            closedDate: new Date().toISOString(),
-          });
-          message.info('Fırsat kaybedildi olarak işaretlendi');
-        } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-          message.error(errorMessage);
-        }
-      },
-    });
+    const confirmed = await confirmAction(
+      'Fırsatı Kaybedildi Olarak İşaretle',
+      `"${deal.title}" fırsatını kaybedildi olarak işaretlemek istediğinizden emin misiniz?`,
+      'Kaybedildi İşaretle'
+    );
+
+    if (confirmed) {
+      try {
+        await closeDealLost.mutateAsync({
+          id: deal.id.toString(),
+          lostReason: 'Kullanıcı tarafından kapatıldı',
+          closedDate: new Date().toISOString(),
+        });
+        showInfo('Fırsat İşaretlendi', 'Fırsat kaybedildi olarak işaretlendi');
+      } catch (error: any) {
+        const apiError = error.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+        showError(errorMessage);
+      }
+    }
   };
 
   const handleSubmit = async (values: any) => {
     try {
       // Validation: CustomerId is required by backend
       if (!values.customerId) {
-        message.error('Müşteri seçimi zorunludur');
+        showError('Müşteri seçimi zorunludur');
         return;
       }
 
       // Validation: ExpectedCloseDate is required and must be in future
       if (!values.expectedCloseDate) {
-        message.error('Tahmini kapanış tarihi zorunludur');
+        showError('Tahmini kapanış tarihi zorunludur');
         return;
       }
 
@@ -193,7 +194,7 @@ export default function DealsPage() {
       const now = new Date();
       const selectedDate = new Date(values.expectedCloseDate);
       if (selectedDate <= now) {
-        message.error('Tahmini kapanış tarihi gelecekte olmalıdır');
+        showError('Tahmini kapanış tarihi gelecekte olmalıdır');
         return;
       }
 
@@ -214,10 +215,10 @@ export default function DealsPage() {
 
       if (selectedDeal) {
         await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
-        message.success('Fırsat güncellendi');
+        showUpdateSuccess('fırsat');
       } else {
         await createDeal.mutateAsync(dealData);
-        message.success('Fırsat oluşturuldu');
+        showCreateSuccess('fırsat');
       }
       setModalOpen(false);
     } catch (error: any) {
@@ -234,14 +235,14 @@ export default function DealsPage() {
         errorMessage = error.message;
       }
 
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 
   const handleDragEnd = async (dealId: number, newStageId: number) => {
     try {
       await updateDeal.mutateAsync({ id: dealId, data: { stageId: newStageId } });
-      message.success('Fırsat aşaması güncellendi');
+      showUpdateSuccess('fırsat aşaması');
     } catch (error: any) {
       // Extract API error details
       const apiError = error.response?.data;
@@ -256,7 +257,7 @@ export default function DealsPage() {
         errorMessage = error.message;
       }
 
-      message.error(errorMessage);
+      showError(errorMessage);
     }
   };
 
