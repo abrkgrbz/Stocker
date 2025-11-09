@@ -257,5 +257,15 @@ export const apiService = {
 // Export system monitoring service
 export { systemMonitoringService } from './api/systemMonitoringService';
 
+// Export system management service
+export { systemManagementService } from './api/systemManagementService';
+
+// Re-export types from systemManagementService
+export type {
+  DockerStats,
+  SystemError,
+  ErrorStatistics,
+} from './api/systemManagementService';
+
 // Export axios instance for custom requests
 export default api;

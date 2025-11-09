@@ -41,7 +41,7 @@ export interface ErrorStatistics {
     warning: number;
     info: number;
   };
-  bySour: {
+  bySource: {
     [key: string]: number;
   };
   last24Hours: number;
