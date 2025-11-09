@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       response.cookies.set('auth-token', loginData.accessToken, {
         httpOnly: true,
         secure: !isDevelopment, // HTTPS in production
-        sameSite: 'lax',
+        sameSite: isDevelopment ? 'lax' : 'none', // 'none' for cross-subdomain in production
         domain: cookieDomain,
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/'
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set('tenant-code', tenantCode, {
       httpOnly: false, // Readable by client
       secure: !isDevelopment,
-      sameSite: 'lax',
+      sameSite: isDevelopment ? 'lax' : 'none', // 'none' for cross-subdomain in production
       domain: cookieDomain,
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/'
