@@ -1,4 +1,5 @@
 using Hangfire;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 
@@ -9,14 +10,14 @@ namespace Stocker.Infrastructure.BackgroundJobs;
 /// </summary>
 public class TenantHealthCheckJob
 {
-    private readonly ITenantHealthCheckService _healthCheckService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TenantHealthCheckJob> _logger;
 
     public TenantHealthCheckJob(
-        ITenantHealthCheckService healthCheckService,
+        IServiceProvider serviceProvider,
         ILogger<TenantHealthCheckJob> logger)
     {
-        _healthCheckService = healthCheckService;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -27,11 +28,14 @@ public class TenantHealthCheckJob
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
     public async Task ExecuteAsync()
     {
+        using var scope = _serviceProvider.CreateScope();
+        var healthCheckService = scope.ServiceProvider.GetRequiredService<ITenantHealthCheckService>();
+
         _logger.LogInformation("Starting tenant health check job");
 
         try
         {
-            var result = await _healthCheckService.PerformAllTenantsHealthCheckAsync();
+            var result = await healthCheckService.PerformAllTenantsHealthCheckAsync();
 
             if (result.IsSuccess)
             {
@@ -60,11 +64,14 @@ public class TenantHealthCheckJob
     [AutomaticRetry(Attempts = 2, DelaysInSeconds = new[] { 30, 120 })]
     public async Task ExecuteForTenantAsync(Guid tenantId)
     {
+        using var scope = _serviceProvider.CreateScope();
+        var healthCheckService = scope.ServiceProvider.GetRequiredService<ITenantHealthCheckService>();
+
         _logger.LogInformation("Starting health check for tenant {TenantId}", tenantId);
 
         try
         {
-            var result = await _healthCheckService.PerformHealthCheckAsync(tenantId);
+            var result = await healthCheckService.PerformHealthCheckAsync(tenantId);
 
             if (result.IsSuccess)
             {
