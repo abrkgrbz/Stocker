@@ -39,6 +39,7 @@ export default function LeadsPage() {
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // API Hooks
   const { data, isLoading, refetch } = useLeads({
@@ -56,6 +57,11 @@ export default function LeadsPage() {
 
   const leads = data?.items || [];
   const totalCount = data?.totalCount || 0;
+
+  // Apply client-side status filter
+  const filteredLeads = statusFilter
+    ? leads.filter((lead) => lead.status === statusFilter)
+    : leads;
 
   // Debounce search input
   useEffect(() => {
@@ -292,10 +298,18 @@ export default function LeadsPage() {
               onBulkTagAssign={handleBulkTagAssign}
             />
           ) : (
-            <LeadsFilters searchText={searchText} onSearchChange={setSearchText} />
+            <LeadsFilters
+              searchText={searchText}
+              onSearchChange={setSearchText}
+              activeStatusFilter={statusFilter || undefined}
+              onStatusFilterChange={(status) => {
+                setStatusFilter(status);
+                setCurrentPage(1); // Reset to first page when filter changes
+              }}
+            />
           )}
           <LeadsTable
-            leads={leads}
+            leads={filteredLeads}
             loading={
               isLoading || createLead.isPending || updateLead.isPending || deleteLead.isPending
             }
