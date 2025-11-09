@@ -25,6 +25,14 @@ public class CustomerSegmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Get current tenant ID from HttpContext
+    /// </summary>
+    private Guid? GetTenantId()
+    {
+        return HttpContext.Items["TenantId"] as Guid?;
+    }
+
+    /// <summary>
     /// Get all customer segments for the current tenant
     /// </summary>
     /// <param name="isActive">Optional filter for active/inactive segments</param>
@@ -34,7 +42,15 @@ public class CustomerSegmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<CustomerSegmentDto>>> GetSegments([FromQuery] bool? isActive = null)
     {
-        var query = new GetCustomerSegmentsQuery { IsActive = isActive };
+        var tenantId = GetTenantId();
+        if (!tenantId.HasValue)
+            return BadRequest(new { message = "Tenant ID could not be resolved" });
+
+        var query = new GetCustomerSegmentsQuery
+        {
+            TenantId = tenantId.Value,
+            IsActive = isActive
+        };
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -52,7 +68,15 @@ public class CustomerSegmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CustomerSegmentDto>> GetSegment(Guid id)
     {
-        var query = new GetCustomerSegmentByIdQuery { Id = id };
+        var tenantId = GetTenantId();
+        if (!tenantId.HasValue)
+            return BadRequest(new { message = "Tenant ID could not be resolved" });
+
+        var query = new GetCustomerSegmentByIdQuery
+        {
+            Id = id,
+            TenantId = tenantId.Value
+        };
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
@@ -75,7 +99,15 @@ public class CustomerSegmentsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<CustomerSegmentMemberDto>>> GetSegmentMembers(Guid id)
     {
-        var query = new GetSegmentMembersQuery { SegmentId = id };
+        var tenantId = GetTenantId();
+        if (!tenantId.HasValue)
+            return BadRequest(new { message = "Tenant ID could not be resolved" });
+
+        var query = new GetSegmentMembersQuery
+        {
+            SegmentId = id,
+            TenantId = tenantId.Value
+        };
         var result = await _mediator.Send(query);
 
         if (result.IsFailure)
