@@ -194,6 +194,34 @@ export function CampaignModal({
               />
             </Form.Item>
           </div>
+
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.expectedRevenue !== curr.expectedRevenue}>
+            {({ getFieldValue }) => {
+              const budgetedCost = getFieldValue('budgetedCost') || 0;
+              const expectedRevenue = getFieldValue('expectedRevenue') || 0;
+              const expectedProfit = expectedRevenue - budgetedCost;
+
+              return (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Bütçe Özeti</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
+                    <div>
+                      <div className="text-gray-600">Toplam Bütçe</div>
+                      <div className="text-lg font-semibold">
+                        ₺{budgetedCost.toLocaleString('tr-TR')}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Beklenen Kar</div>
+                      <div className="text-lg font-semibold text-green-600">
+                        ₺{expectedProfit.toLocaleString('tr-TR')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
+          </Form.Item>
         </div>
       ),
     },
@@ -217,6 +245,35 @@ export function CampaignModal({
 
           <Form.Item name="convertedLeads" label="Dönüştürülen Lead Sayısı">
             <InputNumber placeholder="0" min={0} className="w-full" size="large" />
+          </Form.Item>
+
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.targetLeads !== curr.targetLeads || prev.actualLeads !== curr.actualLeads || prev.convertedLeads !== curr.convertedLeads}>
+            {({ getFieldValue }) => {
+              const targetLeads = getFieldValue('targetLeads') || 0;
+              const actualLeads = getFieldValue('actualLeads') || 0;
+              const convertedLeads = getFieldValue('convertedLeads') || 0;
+              const conversionRate = actualLeads > 0 ? ((convertedLeads / actualLeads) * 100).toFixed(1) : 0;
+
+              return (
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h4 className="font-medium text-purple-900 mb-2">Performans Göstergeleri</h4>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-600">Hedef Lead</div>
+                      <div className="text-lg font-semibold text-purple-900">{targetLeads}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Gerçekleşen</div>
+                      <div className="text-lg font-semibold text-blue-600">{actualLeads}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Dönüşüm Oranı</div>
+                      <div className="text-lg font-semibold text-green-600">{conversionRate}%</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
           </Form.Item>
         </div>
       ),
@@ -251,6 +308,68 @@ export function CampaignModal({
               <Select.Option value="OnHold">Beklemede</Select.Option>
               <Select.Option value="Aborted">İptal Edildi</Select.Option>
             </Select>
+          </Form.Item>
+
+          <Form.Item noStyle shouldUpdate={(prev, curr) =>
+            prev.name !== curr.name ||
+            prev.type !== curr.type ||
+            prev.budgetedCost !== curr.budgetedCost ||
+            prev.targetLeads !== curr.targetLeads ||
+            prev.status !== curr.status
+          }>
+            {({ getFieldValue }) => {
+              const name = getFieldValue('name');
+              const type = getFieldValue('type');
+              const budgetedCost = getFieldValue('budgetedCost') || 0;
+              const targetLeads = getFieldValue('targetLeads') || 0;
+              const status = getFieldValue('status') || 'Planned';
+
+              const statusLabels: Record<string, string> = {
+                Planned: 'Planlandı',
+                InProgress: 'Devam Ediyor',
+                Completed: 'Tamamlandı',
+                OnHold: 'Beklemede',
+                Aborted: 'İptal Edildi',
+              };
+
+              const statusColors: Record<string, string> = {
+                Planned: 'default',
+                InProgress: 'processing',
+                Completed: 'success',
+                OnHold: 'warning',
+                Aborted: 'error',
+              };
+
+              const typeLabel = campaignTypes.find((t) => t.value === type)?.label;
+
+              return (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Kampanya Özeti</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <div>
+                      <strong>Kampanya Adı:</strong>{' '}
+                      {name || <span className="text-gray-400">Belirtilmedi</span>}
+                    </div>
+                    <div>
+                      <strong>Tip:</strong>{' '}
+                      {typeLabel || <span className="text-gray-400">Belirtilmedi</span>}
+                    </div>
+                    <div>
+                      <strong>Bütçe:</strong> ₺{budgetedCost.toLocaleString('tr-TR')}
+                    </div>
+                    <div>
+                      <strong>Hedef Lead:</strong> {targetLeads}
+                    </div>
+                    <div>
+                      <strong>Durum:</strong>{' '}
+                      <Tag color={statusColors[status]}>
+                        {statusLabels[status]}
+                      </Tag>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
           </Form.Item>
         </div>
       ),
