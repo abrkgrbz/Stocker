@@ -630,49 +630,49 @@ export class CRMService {
    * Get all customer segments
    */
   static async getCustomerSegments(): Promise<CustomerSegment[]> {
-    return ApiService.get<CustomerSegment[]>(this.getPath('customersegments'));
+    return ApiService.get<CustomerSegment[]>(this.getPath('CustomerSegments'));
   }
 
   /**
    * Get single customer segment by ID
    */
   static async getCustomerSegment(id: string): Promise<CustomerSegment> {
-    return ApiService.get<CustomerSegment>(this.getPath(`customersegments/${id}`));
+    return ApiService.get<CustomerSegment>(this.getPath(`CustomerSegments/${id}`));
   }
 
   /**
    * Create new customer segment
    */
   static async createCustomerSegment(data: Omit<CustomerSegment, 'id' | 'tenantId' | 'memberCount' | 'createdBy' | 'lastModifiedBy' | 'createdAt' | 'updatedAt'>): Promise<CustomerSegment> {
-    return ApiService.post<CustomerSegment>(this.getPath('customersegments'), data);
+    return ApiService.post<CustomerSegment>(this.getPath('CustomerSegments'), data);
   }
 
   /**
    * Update existing customer segment
    */
   static async updateCustomerSegment(id: string, data: Partial<CustomerSegment>): Promise<CustomerSegment> {
-    return ApiService.put<CustomerSegment>(this.getPath(`customersegments/${id}`), { id, ...data });
+    return ApiService.put<CustomerSegment>(this.getPath(`CustomerSegments/${id}`), { id, ...data });
   }
 
   /**
    * Delete customer segment
    */
   static async deleteCustomerSegment(id: string): Promise<void> {
-    return ApiService.delete<void>(this.getPath(`customersegments/${id}`));
+    return ApiService.delete<void>(this.getPath(`CustomerSegments/${id}`));
   }
 
   /**
    * Activate customer segment
    */
   static async activateCustomerSegment(id: string): Promise<CustomerSegment> {
-    return ApiService.post<CustomerSegment>(this.getPath(`customersegments/${id}/activate`), {});
+    return ApiService.post<CustomerSegment>(this.getPath(`CustomerSegments/${id}/activate`), {});
   }
 
   /**
    * Deactivate customer segment
    */
   static async deactivateCustomerSegment(id: string): Promise<CustomerSegment> {
-    return ApiService.post<CustomerSegment>(this.getPath(`customersegments/${id}/deactivate`), {});
+    return ApiService.post<CustomerSegment>(this.getPath(`CustomerSegments/${id}/deactivate`), {});
   }
 
   // =====================================
