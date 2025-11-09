@@ -139,84 +139,60 @@ export function CampaignModal({
       title: 'Bütçe',
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="budgetedCost"
-              label="Planlanan Bütçe (₺)"
-              rules={[{ required: true, message: 'Planlanan bütçe zorunludur' }]}
-            >
-              <InputNumber
-                placeholder="0.00"
-                min={0}
-                className="w-full"
-                size="large"
-                formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-              />
-            </Form.Item>
+          <Form.Item
+            name="budgetedCost"
+            label="Planlanan Bütçe (₺)"
+            rules={[{ required: true, message: 'Planlanan bütçe zorunludur' }]}
+          >
+            <InputNumber
+              placeholder="0.00"
+              min={0}
+              className="w-full"
+              size="large"
+              formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+            />
+          </Form.Item>
 
-            <Form.Item name="actualCost" label="Gerçekleşen Maliyet (₺)">
-              <InputNumber
-                placeholder="0.00"
-                min={0}
-                className="w-full"
-                size="large"
-                formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-              />
-            </Form.Item>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="expectedRevenue"
-              label="Beklenen Gelir (₺)"
-              rules={[{ required: true, message: 'Beklenen gelir zorunludur' }]}
-            >
-              <InputNumber
-                placeholder="0.00"
-                min={0}
-                className="w-full"
-                size="large"
-                formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-              />
-            </Form.Item>
-
-            <Form.Item name="actualRevenue" label="Gerçekleşen Gelir (₺)">
-              <InputNumber
-                placeholder="0.00"
-                min={0}
-                className="w-full"
-                size="large"
-                formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-              />
-            </Form.Item>
-          </div>
+          <Form.Item
+            name="expectedRevenue"
+            label="Beklenen Gelir (₺)"
+            rules={[{ required: true, message: 'Beklenen gelir zorunludur' }]}
+          >
+            <InputNumber
+              placeholder="0.00"
+              min={0}
+              className="w-full"
+              size="large"
+              formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+            />
+          </Form.Item>
 
           <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.expectedRevenue !== curr.expectedRevenue}>
             {({ getFieldValue }) => {
               const budgetedCost = getFieldValue('budgetedCost') || 0;
               const expectedRevenue = getFieldValue('expectedRevenue') || 0;
               const expectedProfit = expectedRevenue - budgetedCost;
+              const roi = budgetedCost > 0 ? ((expectedProfit / budgetedCost) * 100).toFixed(0) : 0;
 
               return (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Bütçe Özeti</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-                    <div>
-                      <div className="text-gray-600">Toplam Bütçe</div>
-                      <div className="text-lg font-semibold">
-                        ₺{budgetedCost.toLocaleString('tr-TR')}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Beklenen Kar</div>
-                      <div className="text-lg font-semibold text-green-600">
+                  <h4 className="font-medium text-blue-900 mb-3">Bütçe Analizi</h4>
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 mb-1">Beklenen Kar (Net)</div>
+                      <div className="text-3xl font-bold text-green-600">
                         ₺{expectedProfit.toLocaleString('tr-TR')}
                       </div>
                     </div>
+                    {budgetedCost > 0 && (
+                      <div className="text-center pt-2 border-t border-blue-200">
+                        <p className="text-sm text-blue-800">
+                          Bu, <span className="font-semibold">%{roi} ROI</span> (Yatırım Geri Dönüşü) anlamına gelir.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -229,52 +205,48 @@ export function CampaignModal({
       title: 'Hedefler',
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="targetLeads"
-              label="Hedef Lead Sayısı"
-              rules={[{ required: true, message: 'Hedef lead sayısı zorunludur' }]}
-            >
-              <InputNumber placeholder="0" min={0} className="w-full" size="large" />
-            </Form.Item>
-
-            <Form.Item name="actualLeads" label="Gerçekleşen Lead Sayısı">
-              <InputNumber placeholder="0" min={0} className="w-full" size="large" />
-            </Form.Item>
-          </div>
-
-          <Form.Item name="convertedLeads" label="Dönüştürülen Lead Sayısı">
+          <Form.Item
+            name="targetLeads"
+            label="Hedef Lead Sayısı"
+            rules={[{ required: true, message: 'Hedef lead sayısı zorunludur' }]}
+          >
             <InputNumber placeholder="0" min={0} className="w-full" size="large" />
           </Form.Item>
 
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.targetLeads !== curr.targetLeads || prev.actualLeads !== curr.actualLeads || prev.convertedLeads !== curr.convertedLeads}>
-            {({ getFieldValue }) => {
-              const targetLeads = getFieldValue('targetLeads') || 0;
-              const actualLeads = getFieldValue('actualLeads') || 0;
-              const convertedLeads = getFieldValue('convertedLeads') || 0;
-              const conversionRate = actualLeads > 0 ? ((convertedLeads / actualLeads) * 100).toFixed(1) : 0;
-
-              return (
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                  <h4 className="font-medium text-purple-900 mb-2">Performans Göstergeleri</h4>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-600">Hedef Lead</div>
-                      <div className="text-lg font-semibold text-purple-900">{targetLeads}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Gerçekleşen</div>
-                      <div className="text-lg font-semibold text-blue-600">{actualLeads}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Dönüşüm Oranı</div>
-                      <div className="text-lg font-semibold text-green-600">{conversionRate}%</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
+          <Form.Item name="targetConversionRate" label="Hedef Dönüşüm Oranı (%) (opsiyonel)">
+            <InputNumber placeholder="0" min={0} max={100} className="w-full" size="large" />
           </Form.Item>
+
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <h4 className="font-medium text-purple-900 mb-3">Tahmini Performans</h4>
+            <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.targetLeads !== curr.targetLeads}>
+              {({ getFieldValue }) => {
+                const budgetedCost = getFieldValue('budgetedCost') || 0;
+                const targetLeads = getFieldValue('targetLeads') || 0;
+                const costPerLead = targetLeads > 0 ? (budgetedCost / targetLeads).toFixed(2) : 0;
+
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Planlanan Bütçe (Adım 2)</span>
+                      <span className="font-semibold text-purple-900">
+                        ₺{budgetedCost.toLocaleString('tr-TR')}
+                      </span>
+                    </div>
+                    {targetLeads > 0 && (
+                      <div className="text-center pt-3 border-t border-purple-200">
+                        <div className="text-sm text-gray-600 mb-1">Hedef Lead Başı Maliyet</div>
+                        <div className="text-2xl font-bold text-purple-900">₺{costPerLead}</div>
+                        <p className="text-xs text-purple-700 mt-1">
+                          (Bütçeniz / Hedef Lead Sayınız)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
+            </Form.Item>
+          </div>
         </div>
       ),
     },
@@ -391,15 +363,17 @@ export function CampaignModal({
         },
       }}
       footer={
-        <div className="flex justify-between">
-          <Button onClick={handleCancel}>İptal</Button>
-          <Space>
-            {currentStep > 0 && <Button onClick={handlePrev}>Geri</Button>}
+        <div className="flex justify-between items-center py-3 px-6 border-t border-gray-200 bg-white shadow-lg sticky bottom-0 z-10">
+          <Button onClick={handleCancel} size="large">İptal</Button>
+          <Space size="middle">
+            {currentStep > 0 && (
+              <Button onClick={handlePrev} size="large">Geri</Button>
+            )}
             {currentStep < steps.length - 1 && (
-              <Button type="primary" onClick={handleNext}>İleri</Button>
+              <Button type="primary" onClick={handleNext} size="large">İleri</Button>
             )}
             {currentStep === steps.length - 1 && (
-              <Button type="primary" onClick={handleFinish} loading={loading}>
+              <Button type="primary" onClick={handleFinish} loading={loading} size="large">
                 {initialData ? 'Güncelle' : 'Oluştur'}
               </Button>
             )}
