@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, Steps, Form, Input, Select, Button, Space, ColorPicker, Switch, Tag } from 'antd';
 import { showError } from '@/lib/utils/sweetalert';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
@@ -21,9 +21,15 @@ export function CustomerSegmentModal({
   loading = false,
 }: CustomerSegmentModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [segmentType, setSegmentType] = useState<'Static' | 'Dynamic'>('Static');
   const [form] = Form.useForm();
 
-  const segmentType = Form.useWatch('type', form) || 'Static';
+  // Update segment type when initialData changes
+  useEffect(() => {
+    if (initialData?.type) {
+      setSegmentType(initialData.type as 'Static' | 'Dynamic');
+    }
+  }, [initialData]);
 
   const handleNext = async () => {
     try {
@@ -44,6 +50,7 @@ export function CustomerSegmentModal({
       onSubmit(values);
       form.resetFields();
       setCurrentStep(0);
+      setSegmentType('Static');
     } catch (error) {
       showError('Lütfen tüm zorunlu alanları doldurun');
     }
@@ -52,6 +59,7 @@ export function CustomerSegmentModal({
   const handleCancel = () => {
     form.resetFields();
     setCurrentStep(0);
+    setSegmentType('Static');
     onCancel();
   };
 
@@ -78,7 +86,11 @@ export function CustomerSegmentModal({
             rules={[{ required: true, message: 'Segment tipi zorunludur' }]}
             initialValue="Static"
           >
-            <Select size="large" placeholder="Segment tipini seçin">
+            <Select
+              size="large"
+              placeholder="Segment tipini seçin"
+              onChange={(value) => setSegmentType(value as 'Static' | 'Dynamic')}
+            >
               <Select.Option value="Static">
                 <div className="flex items-center justify-between">
                   <span>Statik</span>
