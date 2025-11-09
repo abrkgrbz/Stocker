@@ -39,6 +39,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
   const pathname = usePathname();
+  const [openKeys, setOpenKeys] = React.useState<string[]>([]);
 
   // Initialize SignalR notification hub
   useNotificationHub();
@@ -57,6 +58,21 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       }
     }
   }, [authLoading, isAuthenticated, router]);
+
+  // Update openKeys when pathname changes
+  useEffect(() => {
+    const newOpenKeys: string[] = [];
+
+    if (pathname.startsWith('/crm')) {
+      newOpenKeys.push('crm');
+    }
+
+    if (pathname.startsWith('/settings')) {
+      newOpenKeys.push('settings');
+    }
+
+    setOpenKeys(newOpenKeys);
+  }, [pathname]);
 
   if (authLoading || tenantLoading) {
     return (
@@ -205,24 +221,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return [pathname];
   };
 
-  const getOpenKeys = () => {
-    const openKeys: string[] = [];
-
-    // Open CRM submenu if on any CRM page
-    if (pathname.startsWith('/crm')) {
-      openKeys.push('crm');
-    }
-
-    // Open Settings submenu if on any settings page
-    if (pathname.startsWith('/settings')) {
-      openKeys.push('settings');
-    }
-
-    return openKeys;
-  };
-
   const handleMenuClick = (key: string) => {
     router.push(key);
+  };
+
+  const handleOpenChange = (keys: string[]) => {
+    setOpenKeys(keys);
   };
 
   const userMenuItems = [
@@ -278,7 +282,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          openKeys={getOpenKeys()}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
         />
