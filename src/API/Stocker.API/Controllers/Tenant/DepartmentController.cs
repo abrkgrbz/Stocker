@@ -50,7 +50,6 @@ public class DepartmentController : ControllerBase
     /// Create a new department
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "FirmaYöneticisi,Admin")]
     public async Task<IActionResult> Create([FromBody] CreateDepartmentDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateDepartmentCommand(dto), cancellationToken);
@@ -76,7 +75,6 @@ public class DepartmentController : ControllerBase
     /// Update an existing department
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "FirmaYöneticisi,Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateDepartmentCommand(id, dto), cancellationToken);
@@ -102,7 +100,6 @@ public class DepartmentController : ControllerBase
     /// Delete a department (soft delete)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "FirmaYöneticisi,Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteDepartmentCommand(id), cancellationToken);
