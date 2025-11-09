@@ -81,36 +81,34 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
               transition={{ duration: 0.4, delay: index * 0.1 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
-              <div className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${stat.bgGradient} p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100`}>
-                <div className="absolute top-4 right-4 opacity-10">
-                  <Icon className="text-6xl" />
-                </div>
-
-                <div className="relative z-10">
-                  <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${stat.gradient} mb-4 shadow-md`}>
-                    <Icon className="text-2xl text-white" />
+              <div className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${stat.bgGradient} p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100`}>
+                <div className="flex items-center gap-3">
+                  {/* Compact icon without redundant background icon */}
+                  <div className={`flex-shrink-0 inline-flex p-2.5 rounded-lg bg-gradient-to-br ${stat.gradient} shadow-md`}>
+                    <Icon className="text-xl text-white" />
                   </div>
 
-                  <div className="text-sm font-medium text-gray-600 mb-1">
-                    {stat.title}
-                  </div>
-
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-3xl font-bold text-gray-900">
-                      {stat.value}
+                  {/* Content in horizontal layout */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-gray-600 mb-0.5">
+                      {stat.title}
                     </div>
-                    <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
-                      {stat.change.startsWith('+') && <ArrowUpOutlined className="text-xs" />}
-                      {stat.change}
-                    </span>
-                  </div>
 
-                  <div className="mt-2 text-xs text-gray-500">
-                    {stat.subtitle}
+                    <div className="flex items-baseline gap-2">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {stat.value}
+                      </div>
+                      <span className="text-xs font-semibold text-green-600 flex items-center gap-0.5">
+                        {stat.change.startsWith('+') && <ArrowUpOutlined className="text-[10px]" />}
+                        {stat.change}
+                      </span>
+                    </div>
+
+                    <div className="mt-0.5 text-[11px] text-gray-500">
+                      {stat.subtitle}
+                    </div>
                   </div>
                 </div>
-
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 hover:opacity-5 transition-opacity duration-300`} />
               </div>
             </motion.div>
           </Col>
