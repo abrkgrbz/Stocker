@@ -109,7 +109,7 @@ export function CustomerSegmentModal({
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                 <h4 className="font-medium text-blue-900 mb-2">Dinamik Segment</h4>
                 <p className="text-sm text-blue-800">
-                  Dinamik segmentler, belirlediğiniz kriterlere uyan müşterileri otomatik olarak gruplar.
+                  Dinamik segmentler belirlediğiniz kriterlere göre otomatik olarak güncellenir. Örneğin 'Son 30 günde alışveriş yapanlar' veya 'İstanbul'da yaşayan VIP müşteriler' gibi kurallar tanımlayabilirsiniz.
                 </p>
               </div>
 
