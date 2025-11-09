@@ -4,7 +4,7 @@ namespace Stocker.Domain.Tenant.Entities;
 
 public sealed class Department : TenantEntity
 {
-    public Guid CompanyId { get; private set; }
+    public Guid? CompanyId { get; private set; }
     public string Name { get; private set; }
     public string? Code { get; private set; }
     public string? Description { get; private set; }
@@ -17,7 +17,7 @@ public sealed class Department : TenantEntity
 
     public Department(
         Guid tenantId,
-        Guid companyId,
+        Guid? companyId,
         string name,
         string? code = null,
         string? description = null,

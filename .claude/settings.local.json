@@ -91,7 +91,10 @@
       "Bash(dotnet ef migrations script:*)",
       "Bash(dotnet add package:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(docker ps:*)",
+      "Bash(Örneğin 'Son 30 günde alışveriş yapanlar' veya 'İstanbul'da yaşayan VIP müşteriler ')",
+      "Bash(gibi kurallar tanımlayabilirsiniz.\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

@@ -17,7 +17,7 @@ public class DepartmentConfiguration : BaseEntityTypeConfiguration<Department>
             .IsRequired();
 
         builder.Property(d => d.CompanyId)
-            .IsRequired();
+            .IsRequired(false); // Nullable - departments can exist without company
 
         builder.Property(d => d.Name)
             .IsRequired()
