@@ -3,6 +3,7 @@
 /**
  * Department Management Page
  * Allows administrators to manage organizational departments
+ * Uses Drawer pattern for consistency with User/Role management
  */
 
 import { useState } from 'react';
@@ -12,9 +13,6 @@ import {
   Button,
   Table,
   Space,
-  Modal,
-  Form,
-  Input,
   message,
   Popconfirm,
   Tag,
@@ -40,14 +38,13 @@ import {
   type CreateDepartmentRequest,
   type UpdateDepartmentRequest,
 } from '@/lib/api/departments';
+import { DepartmentDrawer } from '@/features/departments/components';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 export default function DepartmentsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-  const [form] = Form.useForm();
   const queryClient = useQueryClient();
 
   // Fetch departments
@@ -61,8 +58,7 @@ export default function DepartmentsPage() {
     mutationFn: createDepartment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
-      setIsModalOpen(false);
-      form.resetFields();
+      setIsDrawerOpen(false);
       Swal.fire({
         icon: 'success',
         title: 'Başarılı!',
@@ -87,9 +83,8 @@ export default function DepartmentsPage() {
       updateDepartment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
-      setIsModalOpen(false);
+      setIsDrawerOpen(false);
       setEditingDepartment(null);
-      form.resetFields();
       Swal.fire({
         icon: 'success',
         title: 'Başarılı!',
@@ -123,40 +118,28 @@ export default function DepartmentsPage() {
 
   const handleCreate = () => {
     setEditingDepartment(null);
-    form.resetFields();
-    setIsModalOpen(true);
+    setIsDrawerOpen(true);
   };
 
   const handleEdit = (department: Department) => {
     setEditingDepartment(department);
-    form.setFieldsValue({
-      name: department.name,
-      code: department.code,
-      description: department.description,
-    });
-    setIsModalOpen(true);
+    setIsDrawerOpen(true);
   };
 
   const handleDelete = async (departmentId: string) => {
     deleteMutation.mutate(departmentId);
   };
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-
-      if (editingDepartment) {
-        // Update existing department
-        updateMutation.mutate({
-          id: editingDepartment.id,
-          data: values,
-        });
-      } else {
-        // Create new department
-        createMutation.mutate(values);
-      }
-    } catch (error) {
-      console.error('Form validation failed:', error);
+  const handleSubmit = async (values: any) => {
+    if (editingDepartment) {
+      // Update existing department
+      await updateMutation.mutateAsync({
+        id: editingDepartment.id,
+        data: values,
+      });
+    } else {
+      // Create new department
+      await createMutation.mutateAsync(values);
     }
   };
 
@@ -293,87 +276,15 @@ export default function DepartmentsPage() {
         </Col>
       </Row>
 
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: 10,
-                width: 40,
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ApartmentOutlined style={{ fontSize: 20, color: 'white' }} />
-            </div>
-            <span>{editingDepartment ? 'Departman Düzenle' : 'Yeni Departman Oluştur'}</span>
-          </div>
-        }
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
+      <DepartmentDrawer
+        open={isDrawerOpen}
+        department={editingDepartment}
+        onClose={() => {
+          setIsDrawerOpen(false);
           setEditingDepartment(null);
-          form.resetFields();
         }}
-        onOk={handleSubmit}
-        okText={editingDepartment ? 'Güncelle' : 'Oluştur'}
-        cancelText="İptal"
-        width={600}
-        okButtonProps={{
-          loading: createMutation.isPending || updateMutation.isPending,
-          style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            border: 'none',
-          },
-        }}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          requiredMark="optional"
-          style={{ marginTop: 24 }}
-        >
-          <Form.Item
-            name="name"
-            label={<span style={{ fontWeight: 500 }}>Departman Adı</span>}
-            rules={[
-              { required: true, message: 'Departman adı gerekli' },
-              { min: 2, message: 'En az 2 karakter olmalı' },
-            ]}
-          >
-            <Input
-              size="large"
-              placeholder="Satış"
-              style={{ borderRadius: 8 }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="code"
-            label={<span style={{ fontWeight: 500 }}>Departman Kodu</span>}
-          >
-            <Input
-              size="large"
-              placeholder="SALES"
-              style={{ borderRadius: 8 }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label={<span style={{ fontWeight: 500 }}>Açıklama</span>}
-          >
-            <TextArea
-              rows={3}
-              placeholder="Departman hakkında kısa bir açıklama"
-              style={{ borderRadius: 8 }}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
