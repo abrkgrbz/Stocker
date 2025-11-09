@@ -227,11 +227,14 @@ public class PublicController : ControllerBase
         {
             var normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-            // Find MasterUser by email - use EF.Functions.Collate for case-insensitive comparison
-            var masterUser = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
-                .Where(u => EF.Functions.Collate(u.Email.Value, "SQL_Latin1_General_CP1_CI_AS") == normalizedEmail)
+            // Find MasterUser by email
+            // Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
+            var masterUsers = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
                 .Select(u => new { u.Id, Email = u.Email.Value, u.IsActive })
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            var masterUser = masterUsers
+                .FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
 
             if (masterUser == null)
             {
@@ -258,12 +261,17 @@ public class PublicController : ControllerBase
             }
 
             // Get tenant registrations where this email is the admin
-            // Use EF.Functions.Collate for case-insensitive comparison in SQL
-            var tenantRegistrations = await _masterContext.TenantRegistrations
-                .Where(r => r.TenantId.HasValue &&
-                       EF.Functions.Collate(r.AdminEmail.Value, "SQL_Latin1_General_CP1_CI_AS") == normalizedEmail)
-                .Select(r => r.TenantId!.Value)
+            // This ensures users only see tenants they created or have access to
+            // Note: Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
+            var allRegistrations = await _masterContext.TenantRegistrations
+                .Where(r => r.TenantId.HasValue)
+                .Select(r => new { Email = r.AdminEmail.Value, TenantId = r.TenantId!.Value })
                 .ToListAsync();
+
+            var tenantRegistrations = allRegistrations
+                .Where(r => r.Email.ToLowerInvariant() == normalizedEmail)
+                .Select(r => r.TenantId)
+                .ToList();
 
             // Get tenant details for these registrations
             var tenantsData = await _masterContext.Tenants
