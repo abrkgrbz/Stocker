@@ -121,13 +121,12 @@ const HangfireDashboard: React.FC = () => {
         <iframe
           id="hangfire-iframe"
           src={`${hangfireUrl}?access_token=${encodeURIComponent(accessToken || '')}`}
-          style={{ 
-            width: '100%', 
-            height: '800px', 
-            border: 'none' 
+          style={{
+            width: '100%',
+            height: '800px',
+            border: 'none'
           }}
           title="Hangfire Dashboard"
-          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           onLoad={() => {
             console.log('Hangfire iframe loaded');
           }}

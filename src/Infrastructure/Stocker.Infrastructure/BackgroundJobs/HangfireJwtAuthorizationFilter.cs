@@ -47,11 +47,12 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
         if (!string.IsNullOrEmpty(token) && httpContext.Request.Query.ContainsKey("access_token"))
         {
             // Set a secure cookie with the token for subsequent AJAX calls
+            // Use SameSite=Lax to allow cookie in iframe context while maintaining CSRF protection
             httpContext.Response.Cookies.Append("HangfireAuthToken", token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = httpContext.Request.IsHttps,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Lax,  // Changed from Strict to Lax for iframe compatibility
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
         }
