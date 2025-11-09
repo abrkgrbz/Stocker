@@ -220,6 +220,9 @@ public static class ServiceCollectionExtensions
         // Add System Monitoring Service
         services.AddScoped<ISystemMonitoringService, Monitoring.SystemMonitoringService>();
 
+        // Add Tenant Health Check Service
+        services.AddScoped<ITenantHealthCheckService, Services.TenantHealthCheckService>();
+
         return services;
     }
 
