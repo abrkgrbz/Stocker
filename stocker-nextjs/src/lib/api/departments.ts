@@ -36,7 +36,7 @@ export async function getDepartments(): Promise<Department[]> {
   const response = await apiClient.get<{ success: boolean; data: Department[]; message: string }>(
     '/api/tenant/department'
   );
-  return response.data;
+  return response.data.data; // Extract data array from wrapper object
 }
 
 /**
