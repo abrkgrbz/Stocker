@@ -102,13 +102,13 @@ export interface Lead {
 }
 
 export interface Deal {
-  id: number;
+  id: string; // Guid from backend
   title: string;
-  customerId: number | null;
+  customerId: string; // Guid from backend
   customerName?: string;
-  pipelineId: number;
+  pipelineId: string; // Guid from backend
   pipelineName?: string;
-  stageId: number;
+  stageId: string; // Guid from backend
   stageName?: string;
   amount: number;
   probability: number;
@@ -458,7 +458,7 @@ export class CRMService {
   /**
    * Get single deal by ID
    */
-  static async getDeal(id: number): Promise<Deal> {
+  static async getDeal(id: string): Promise<Deal> {
     return ApiService.get<Deal>(this.getPath(`deals/${id}`));
   }
 
@@ -472,14 +472,14 @@ export class CRMService {
   /**
    * Update existing deal
    */
-  static async updateDeal(id: number, data: Partial<Deal>): Promise<Deal> {
+  static async updateDeal(id: string, data: Partial<Deal>): Promise<Deal> {
     return ApiService.put<Deal>(this.getPath(`deals/${id}`), { id, ...data });
   }
 
   /**
    * Delete deal
    */
-  static async deleteDeal(id: number): Promise<void> {
+  static async deleteDeal(id: string): Promise<void> {
     return ApiService.delete<void>(this.getPath(`deals/${id}`));
   }
 
