@@ -80,10 +80,16 @@ services:
       # ==================================
       # RABBITMQ MESSAGE BROKER
       # ==================================
-      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Enabled=true
+      - RabbitMQ__Host=rabbitmq.stoocker.app
       - RabbitMQ__VirtualHost=/
-      - RabbitMQ__Username=${RABBITMQ_USERNAME}
-      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__Username=admin
+      - RabbitMQ__Password=RabbitMQPassword123!
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UseSsl=false
+      - RabbitMQ__Heartbeat=60
+      - RabbitMQ__RequestedConnectionTimeout=30000
+      - RabbitMQ__PrefetchCount=32
       - RabbitMQ__RetryCount=3
       - RabbitMQ__RetryInterval=5
 
