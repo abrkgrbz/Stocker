@@ -111,7 +111,7 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             Title = deal.Name,
             Description = deal.Description,
             CustomerId = deal.CustomerId ?? Guid.Empty,
-            CustomerName = deal.Customer?.Name ?? string.Empty,
+            CustomerName = deal.Customer?.CompanyName ?? string.Empty,
             Amount = deal.Value.Amount,
             Currency = deal.Value.Currency,
             Status = deal.Status,
