@@ -94,6 +94,9 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             query = query.Where(d => d.CreatedAt <= request.ToDate.Value);
         }
 
+        // Apply sorting - newest deals first
+        query = query.OrderByDescending(d => d.CreatedAt);
+
         // Apply pagination at database level
         var skipCount = (request.Page - 1) * request.PageSize;
         query = query.Skip(skipCount).Take(request.PageSize);
