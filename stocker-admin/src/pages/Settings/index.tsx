@@ -326,11 +326,11 @@ const SettingsPage: React.FC = () => {
   const fetchSystemErrors = async () => {
     setErrorsLoading(true);
     try {
-      const [errorsResponse, stats] = await Promise.all([
+      const [errors, stats] = await Promise.all([
         systemManagementService.getSystemErrors({ page: 1, pageSize: 50 }),
         systemManagementService.getErrorStatistics(),
       ]);
-      setSystemErrors(errorsResponse.errors);
+      setSystemErrors(errors);
       setErrorStats(stats);
     } catch (error) {
       console.error('Failed to fetch system errors:', error);

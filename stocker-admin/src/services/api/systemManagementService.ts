@@ -118,8 +118,8 @@ export const systemManagementService = {
     resolved?: boolean;
     page?: number;
     pageSize?: number;
-  }): Promise<{ errors: SystemError[]; total: number }> => {
-    return await apiClient.get<{ errors: SystemError[]; total: number }>('/api/master/system-management/errors', { params });
+  }): Promise<SystemError[]> => {
+    return await apiClient.get<SystemError[]>('/api/master/system-management/errors', { params });
   },
 
   /**
