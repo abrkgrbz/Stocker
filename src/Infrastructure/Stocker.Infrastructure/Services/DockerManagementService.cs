@@ -24,14 +24,20 @@ public class DockerManagementService : IDockerManagementService
     {
         try
         {
+            Console.WriteLine($"[DockerManagement] Connecting to SSH: {_sshHost} as {_sshUser}");
+            Console.WriteLine($"[DockerManagement] Using SSH key: {_sshKeyPath}");
+
             using var client = new SshClient(_sshHost, _sshUser, new PrivateKeyFile(_sshKeyPath));
             client.Connect();
+            Console.WriteLine("[DockerManagement] SSH connection successful");
 
             // Get docker system df output
             var dfCommand = client.RunCommand("docker system df");
             var output = dfCommand.Result;
+            Console.WriteLine($"[DockerManagement] Docker command output length: {output?.Length ?? 0}");
 
             var stats = ParseDockerStats(output);
+            Console.WriteLine($"[DockerManagement] Parsed stats - Containers: {stats.Containers.Total}, Images: {stats.Images.Total}");
 
             client.Disconnect();
 
@@ -39,6 +45,9 @@ public class DockerManagementService : IDockerManagementService
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[DockerManagement] ERROR: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"[DockerManagement] Stack trace: {ex.StackTrace}");
+
             // Fallback to mock data for development
             return new DockerStatsDto
             {
