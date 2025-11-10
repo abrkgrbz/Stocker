@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Deals.Commands;
@@ -19,23 +20,32 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<CreateDealCommandHandler> _logger;
 
     public CreateDealCommandHandler(
         IDealRepository dealRepository,
         IReadRepository<Pipeline> pipelineRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ILogger<CreateDealCommandHandler> logger)
     {
         _dealRepository = dealRepository;
         _pipelineRepository = pipelineRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<Result<DealDto>> Handle(CreateDealCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogWarning("========== CreateDealCommand START ==========");
+        _logger.LogWarning("CreateDeal Request: Title={Title}, Amount={Amount}, CustomerId={CustomerId}, " +
+            "PipelineId={PipelineId}, CurrentStageId={CurrentStageId}, Probability={Probability}, Priority={Priority}",
+            request.Title, request.Amount, request.CustomerId, request.PipelineId, request.CurrentStageId,
+            request.Probability, request.Priority);
+
         // Create Money value object
         var value = Money.Create(request.Amount, request.Currency);
 
@@ -47,9 +57,12 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
         {
             pipelineId = request.PipelineId.Value;
             stageId = request.CurrentStageId.Value;
+            _logger.LogWarning("Using provided PipelineId={PipelineId} and StageId={StageId}", pipelineId, stageId);
         }
         else
         {
+            _logger.LogWarning("PipelineId or CurrentStageId not provided, using default pipeline");
+
             // Query for default pipeline with its stages
             var defaultPipeline = await _pipelineRepository
                 .AsQueryable()
@@ -73,6 +86,7 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             }
 
             stageId = firstStage.Id;
+            _logger.LogWarning("Using default PipelineId={PipelineId} and first StageId={StageId}", pipelineId, stageId);
         }
 
         // Parse OwnerId (default to 1 if not provided or invalid)
@@ -113,6 +127,16 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             deal.SetPriority(request.Priority);
         }
 
+        // Set probability if provided (default is 10 from constructor)
+        if (request.Probability > 0 && request.Probability != 10)
+        {
+            deal.MoveToStage(stageId, request.Probability);
+            _logger.LogWarning("Updated probability from default 10 to {Probability}", request.Probability);
+        }
+
+        _logger.LogWarning("Deal created: Id={DealId}, PipelineId={PipelineId}, StageId={StageId}, Probability={Probability}",
+            deal.Id, deal.PipelineId, deal.StageId, deal.Probability);
+
         // Add to repository
         await _dealRepository.AddAsync(deal, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -144,7 +168,18 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             CreatedBy: _currentUserService.UserId ?? Guid.Empty
         );
 
-        await _publishEndpoint.Publish(opportunityEvent, cancellationToken);
+        try
+        {
+            await _publishEndpoint.Publish(opportunityEvent, cancellationToken);
+            _logger.LogWarning("OpportunityCreatedEvent published successfully to RabbitMQ for DealId={DealId}", deal.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish OpportunityCreatedEvent for DealId={DealId}", deal.Id);
+            // Don't fail the entire operation if event publishing fails
+        }
+
+        _logger.LogWarning("========== CreateDealCommand END ==========");
 
         // Map to DTO with navigation properties
         var dealDto = new DealDto
