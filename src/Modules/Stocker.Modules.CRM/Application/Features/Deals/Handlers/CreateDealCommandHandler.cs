@@ -42,8 +42,8 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
     {
         _logger.LogWarning("========== CreateDealCommand START ==========");
         _logger.LogWarning("CreateDeal Request: Title={Title}, Amount={Amount}, CustomerId={CustomerId}, " +
-            "PipelineId={PipelineId}, CurrentStageId={CurrentStageId}, Probability={Probability}, Priority={Priority}",
-            request.Title, request.Amount, request.CustomerId, request.PipelineId, request.CurrentStageId,
+            "PipelineId={PipelineId}, StageId={StageId}, Probability={Probability}, Priority={Priority}",
+            request.Title, request.Amount, request.CustomerId, request.PipelineId, request.StageId,
             request.Probability, request.Priority);
 
         // Create Money value object
@@ -53,15 +53,15 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
         Guid pipelineId;
         Guid stageId;
 
-        if (request.PipelineId.HasValue && request.CurrentStageId.HasValue)
+        if (request.PipelineId.HasValue && request.StageId.HasValue)
         {
             pipelineId = request.PipelineId.Value;
-            stageId = request.CurrentStageId.Value;
+            stageId = request.StageId.Value;
             _logger.LogWarning("Using provided PipelineId={PipelineId} and StageId={StageId}", pipelineId, stageId);
         }
         else
         {
-            _logger.LogWarning("PipelineId or CurrentStageId not provided, using default pipeline");
+            _logger.LogWarning("PipelineId or StageId not provided, using default pipeline");
 
             // Query for default pipeline with its stages
             var defaultPipeline = await _pipelineRepository

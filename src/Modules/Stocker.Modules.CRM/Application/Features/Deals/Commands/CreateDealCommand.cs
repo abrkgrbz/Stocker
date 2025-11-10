@@ -18,7 +18,7 @@ public class CreateDealCommand : IRequest<Result<DealDto>>, ITenantRequest
     public DealStatus Status { get; set; }
     public DealPriority Priority { get; set; }
     public Guid? PipelineId { get; set; }
-    public Guid? CurrentStageId { get; set; }
+    public Guid? StageId { get; set; }
     public DateTime ExpectedCloseDate { get; set; }
     public decimal Probability { get; set; }
     public string? CompetitorName { get; set; }

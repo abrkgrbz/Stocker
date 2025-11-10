@@ -60,9 +60,11 @@ export function DealModal({
         ...deal,
         expectedCloseDate: deal.expectedCloseDate ? dayjs(deal.expectedCloseDate) : null,
       });
+      setSelectedPipeline(deal.pipelineId || null);
       setCurrentStep(0);
     } else if (open) {
       form.resetFields();
+      setSelectedPipeline(null);
       setCurrentStep(0);
     }
   }, [open, deal, form]);
