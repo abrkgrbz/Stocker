@@ -117,6 +117,18 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
         await _dealRepository.AddAsync(deal, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Reload deal with navigation properties for DTO mapping
+        var createdDeal = await _dealRepository.AsQueryable()
+            .Include(d => d.Customer)
+            .Include(d => d.Pipeline)
+            .Include(d => d.Stage)
+            .FirstOrDefaultAsync(d => d.Id == deal.Id, cancellationToken);
+
+        if (createdDeal == null)
+        {
+            return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", "Deal was created but could not be retrieved."));
+        }
+
         // Publish OpportunityCreatedEvent to RabbitMQ
         var opportunityEvent = new OpportunityCreatedEvent(
             OpportunityId: deal.Id,
@@ -134,25 +146,29 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
 
         await _publishEndpoint.Publish(opportunityEvent, cancellationToken);
 
-        // Map to DTO
+        // Map to DTO with navigation properties
         var dealDto = new DealDto
         {
-            Id = deal.Id,
-            Title = deal.Name,
-            Description = deal.Description,
-            CustomerId = deal.CustomerId ?? Guid.Empty,
-            Amount = deal.Value.Amount,
-            Currency = deal.Value.Currency,
-            Status = deal.Status,
-            Priority = deal.Priority,
-            PipelineId = deal.PipelineId,
-            CurrentStageId = deal.StageId,
-            ExpectedCloseDate = deal.ExpectedCloseDate ?? DateTime.UtcNow,
-            Probability = deal.Probability,
+            Id = createdDeal.Id,
+            Title = createdDeal.Name,
+            Description = createdDeal.Description,
+            CustomerId = createdDeal.CustomerId ?? Guid.Empty,
+            CustomerName = createdDeal.Customer?.CompanyName ?? string.Empty,
+            Amount = createdDeal.Value.Amount,
+            Currency = createdDeal.Value.Currency,
+            Status = createdDeal.Status,
+            Priority = createdDeal.Priority,
+            PipelineId = createdDeal.PipelineId,
+            PipelineName = createdDeal.Pipeline?.Name,
+            CurrentStageId = createdDeal.StageId,
+            CurrentStageName = createdDeal.Stage?.Name,
+            ExpectedCloseDate = createdDeal.ExpectedCloseDate ?? DateTime.UtcNow,
+            Probability = createdDeal.Probability,
             CompetitorName = request.CompetitorName,
             Source = request.Source,
             OwnerId = request.OwnerId,
-            CreatedAt = deal.CreatedAt
+            CreatedAt = createdDeal.CreatedAt,
+            UpdatedAt = createdDeal.UpdatedAt
         };
 
         return Result<DealDto>.Success(dealDto);
