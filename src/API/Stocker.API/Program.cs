@@ -79,6 +79,8 @@ builder.Services.AddMultiTenancy();
 // MASSTRANSIT - CENTRALIZED CONFIGURATION
 // ========================================
 // Configure MassTransit once for all modules
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled");
+
 builder.Services.AddMassTransit(x =>
 {
     var enabledModules = builder.Configuration.GetSection("EnabledModules");
@@ -104,57 +106,73 @@ builder.Services.AddMassTransit(x =>
         Stocker.Modules.Inventory.Infrastructure.DependencyInjection.AddInventoryConsumers(x);
     }
 
-    // Configure RabbitMQ
-    x.UsingRabbitMq((context, cfg) =>
+    // Configure transport based on RabbitMQ availability
+    if (rabbitMqEnabled)
     {
-        var rabbitMqHost = builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost";
-        var rabbitMqVirtualHost = builder.Configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/";
-        var rabbitMqUsername = builder.Configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
-        var rabbitMqPassword = builder.Configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
-        var retryCount = builder.Configuration.GetValue<int>("RabbitMQ:RetryCount");
-        var retryInterval = builder.Configuration.GetValue<int>("RabbitMQ:RetryInterval");
+        Log.Information("Configuring MassTransit with RabbitMQ transport");
 
-        cfg.Host(rabbitMqHost, rabbitMqVirtualHost, h =>
+        // Configure RabbitMQ
+        x.UsingRabbitMq((context, cfg) =>
         {
-            h.Username(rabbitMqUsername);
-            h.Password(rabbitMqPassword);
+            var rabbitMqHost = builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost";
+            var rabbitMqVirtualHost = builder.Configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/";
+            var rabbitMqUsername = builder.Configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
+            var rabbitMqPassword = builder.Configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
+            var retryCount = builder.Configuration.GetValue<int>("RabbitMQ:RetryCount");
+            var retryInterval = builder.Configuration.GetValue<int>("RabbitMQ:RetryInterval");
 
-            // Connection resilience
-            h.RequestedConnectionTimeout(TimeSpan.FromSeconds(30));
-            h.Heartbeat(TimeSpan.FromSeconds(60));
+            cfg.Host(rabbitMqHost, rabbitMqVirtualHost, h =>
+            {
+                h.Username(rabbitMqUsername);
+                h.Password(rabbitMqPassword);
+
+                // Connection resilience
+                h.RequestedConnectionTimeout(TimeSpan.FromSeconds(30));
+                h.Heartbeat(TimeSpan.FromSeconds(60));
+            });
+
+            // Global retry policy with exponential backoff
+            cfg.UseMessageRetry(r =>
+            {
+                r.Exponential(retryCount,
+                    TimeSpan.FromSeconds(retryInterval),
+                    TimeSpan.FromSeconds(retryInterval * 10),
+                    TimeSpan.FromSeconds(retryInterval));
+
+                // Only retry on specific exceptions
+                r.Ignore<ArgumentNullException>();
+                r.Ignore<InvalidOperationException>();
+            });
+
+            // Circuit breaker to prevent cascading failures
+            cfg.UseCircuitBreaker(cb =>
+            {
+                cb.TrackingPeriod = TimeSpan.FromMinutes(1);
+                cb.TripThreshold = 15;
+                cb.ActiveThreshold = 10;
+                cb.ResetInterval = TimeSpan.FromMinutes(5);
+            });
+
+            // Dead letter queue configuration
+            cfg.UseDelayedRedelivery(r => r.Intervals(
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(15),
+                TimeSpan.FromSeconds(30)));
+
+            // Configure endpoints for all modules
+            cfg.ConfigureEndpoints(context);
         });
+    }
+    else
+    {
+        Log.Warning("RabbitMQ is disabled. Using in-memory transport for MassTransit. Events will NOT be persisted or distributed.");
 
-        // Global retry policy with exponential backoff
-        cfg.UseMessageRetry(r =>
+        // Use in-memory transport when RabbitMQ is not available
+        x.UsingInMemory((context, cfg) =>
         {
-            r.Exponential(retryCount,
-                TimeSpan.FromSeconds(retryInterval),
-                TimeSpan.FromSeconds(retryInterval * 10),
-                TimeSpan.FromSeconds(retryInterval));
-
-            // Only retry on specific exceptions
-            r.Ignore<ArgumentNullException>();
-            r.Ignore<InvalidOperationException>();
+            cfg.ConfigureEndpoints(context);
         });
-
-        // Circuit breaker to prevent cascading failures
-        cfg.UseCircuitBreaker(cb =>
-        {
-            cb.TrackingPeriod = TimeSpan.FromMinutes(1);
-            cb.TripThreshold = 15;
-            cb.ActiveThreshold = 10;
-            cb.ResetInterval = TimeSpan.FromMinutes(5);
-        });
-
-        // Dead letter queue configuration
-        cfg.UseDelayedRedelivery(r => r.Intervals(
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(15),
-            TimeSpan.FromSeconds(30)));
-
-        // Configure endpoints for all modules
-        cfg.ConfigureEndpoints(context);
-    });
+    }
 });
 
 // ========================================
