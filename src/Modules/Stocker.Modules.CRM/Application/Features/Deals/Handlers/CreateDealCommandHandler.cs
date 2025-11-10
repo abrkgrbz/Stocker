@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
@@ -5,6 +6,7 @@ using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Deals.Commands;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Shared.Events.CRM;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -15,15 +17,21 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
     private readonly IDealRepository _dealRepository;
     private readonly IReadRepository<Pipeline> _pipelineRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ICurrentUserService _currentUserService;
 
     public CreateDealCommandHandler(
         IDealRepository dealRepository,
         IReadRepository<Pipeline> pipelineRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint,
+        ICurrentUserService currentUserService)
     {
         _dealRepository = dealRepository;
         _pipelineRepository = pipelineRepository;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<DealDto>> Handle(CreateDealCommand request, CancellationToken cancellationToken)
@@ -108,6 +116,23 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
         // Add to repository
         await _dealRepository.AddAsync(deal, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Publish OpportunityCreatedEvent to RabbitMQ
+        var opportunityEvent = new OpportunityCreatedEvent(
+            OpportunityId: deal.Id,
+            LeadId: Guid.Empty, // Deal is not created from Lead in this case
+            TenantId: deal.TenantId,
+            Title: deal.Name,
+            Description: deal.Description,
+            EstimatedValue: deal.Value.Amount,
+            Currency: deal.Value.Currency,
+            Probability: deal.Probability,
+            EstimatedCloseDate: deal.ExpectedCloseDate,
+            CreatedAt: deal.CreatedAt,
+            CreatedBy: _currentUserService.UserId ?? Guid.Empty
+        );
+
+        await _publishEndpoint.Publish(opportunityEvent, cancellationToken);
 
         // Map to DTO
         var dealDto = new DealDto

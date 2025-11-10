@@ -41,8 +41,11 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             .CountAsync(cancellationToken);
         _logger.LogWarning("Total deals for TenantId {TenantId}: {DealsForTenant}", tenantId, dealsForTenant);
 
-        // Start with base query on database
+        // Start with base query on database - Include navigation properties
         var query = _dealRepository.AsQueryable()
+            .Include(d => d.Customer)
+            .Include(d => d.Pipeline)
+            .Include(d => d.Stage)
             .Where(d => d.TenantId == tenantId);
 
         // Apply filters at database level
@@ -108,12 +111,15 @@ public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<D
             Title = deal.Name,
             Description = deal.Description,
             CustomerId = deal.CustomerId ?? Guid.Empty,
+            CustomerName = deal.Customer?.Name ?? string.Empty,
             Amount = deal.Value.Amount,
             Currency = deal.Value.Currency,
             Status = deal.Status,
             Priority = deal.Priority,
             PipelineId = deal.PipelineId,
+            PipelineName = deal.Pipeline?.Name,
             CurrentStageId = deal.StageId,
+            CurrentStageName = deal.Stage?.Name,
             ExpectedCloseDate = deal.ExpectedCloseDate ?? DateTime.UtcNow,
             Probability = deal.Probability,
             CreatedAt = deal.CreatedAt,
