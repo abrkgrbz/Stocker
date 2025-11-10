@@ -153,6 +153,11 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", "Deal was created but could not be retrieved."));
         }
 
+        _logger.LogWarning("Reloaded Deal: StageId={StageId}, Stage.Name={StageName}, PipelineId={PipelineId}, " +
+            "Pipeline.Name={PipelineName}, Customer.CompanyName={CustomerName}",
+            createdDeal.StageId, createdDeal.Stage?.Name, createdDeal.PipelineId,
+            createdDeal.Pipeline?.Name, createdDeal.Customer?.CompanyName);
+
         // Publish OpportunityCreatedEvent to RabbitMQ
         var opportunityEvent = new OpportunityCreatedEvent(
             OpportunityId: deal.Id,
@@ -179,8 +184,6 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             // Don't fail the entire operation if event publishing fails
         }
 
-        _logger.LogWarning("========== CreateDealCommand END ==========");
-
         // Map to DTO with navigation properties
         var dealDto = new DealDto
         {
@@ -205,6 +208,13 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             CreatedAt = createdDeal.CreatedAt,
             UpdatedAt = createdDeal.UpdatedAt
         };
+
+        _logger.LogWarning("CreateDeal Response DTO: CurrentStageId={CurrentStageId}, CurrentStageName={CurrentStageName}, " +
+            "PipelineId={PipelineId}, PipelineName={PipelineName}, CustomerName={CustomerName}, Probability={Probability}",
+            dealDto.CurrentStageId, dealDto.CurrentStageName, dealDto.PipelineId, dealDto.PipelineName,
+            dealDto.CustomerName, dealDto.Probability);
+
+        _logger.LogWarning("========== CreateDealCommand END ==========");
 
         return Result<DealDto>.Success(dealDto);
     }
