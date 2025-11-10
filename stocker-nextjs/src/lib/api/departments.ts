@@ -33,10 +33,20 @@ export interface UpdateDepartmentRequest {
  * Get all departments for current tenant
  */
 export async function getDepartments(): Promise<Department[]> {
-  const response = await apiClient.get<{ success: boolean; data: Department[]; message: string }>(
-    '/api/tenant/department'
+  // Add cache-busting query parameter to prevent 304 responses
+  const response = await apiClient.get<Department[]>(
+    '/api/tenant/department',
+    { _t: Date.now() }
   );
-  return response.data.data; // Extract data array from wrapper object
+
+  // ApiClient already unwraps the response, so response.data contains the array directly
+  // Backend returns: { success: true, data: Department[] }
+  // ApiClient.get returns: { success: true, data: Department[] }
+  // So response.data is the array
+  console.log('🔍 getDepartments response:', response);
+  console.log('🔍 response.data:', response.data);
+
+  return response.data || [];
 }
 
 /**
