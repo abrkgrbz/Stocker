@@ -76,9 +76,13 @@ export function ActivityCalendar({
     const isCompleted = activity.status === 'Completed';
     const isCancelled = activity.status === 'Cancelled';
 
+    // Determine related entity name for display
+    const relatedEntity = activity.customerName || activity.dealTitle || activity.leadName || activity.contactName || activity.opportunityName;
+    const displayTitle = relatedEntity ? `${activity.title}: ${relatedEntity}` : activity.title;
+
     return {
       id: String(activity.id),
-      title: activity.title,
+      title: displayTitle,
       start: activity.startTime,
       end: activity.endTime || activity.startTime,
       backgroundColor: isCompleted ? '#f6ffed' : isCancelled ? '#fff1f0' : config.bgColor,
@@ -89,6 +93,7 @@ export function ActivityCalendar({
         type: activity.type,
         status: activity.status,
         description: activity.description,
+        relatedEntity,
       },
     };
   });

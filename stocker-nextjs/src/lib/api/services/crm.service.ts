@@ -132,8 +132,19 @@ export interface Activity {
   endTime: string | null;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
   customerId: number | null;
+  customerName?: string | null;
   leadId: number | null;
+  leadName?: string | null;
+  contactId?: number | null;
+  contactName?: string | null;
+  opportunityId?: number | null;
+  opportunityName?: string | null;
   dealId: number | null;
+  dealTitle?: string | null;
+  ownerId: number;
+  ownerName?: string | null;
+  assignedToId?: string | null;
+  assignedToName?: string | null;
   createdAt: string;
 }
 

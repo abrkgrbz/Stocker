@@ -19,6 +19,7 @@ import {
   Form,
   Input,
   DatePicker,
+  Radio,
 } from 'antd';
 import {
   PlusOutlined,
@@ -110,9 +111,14 @@ export default function ActivitiesPage() {
   const [drawerActivity, setDrawerActivity] = useState<Activity | null>(null);
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [ownerFilter, setOwnerFilter] = useState<'my' | 'team' | 'all'>('my');
 
   // API Hooks
-  const { data, isLoading, refetch } = useActivities({});
+  // Note: For 'my' we would need the current user's ID, for 'team' we'd need team member IDs
+  // For now, passing null for 'my' and 'all' to get all activities
+  // TODO: Implement proper user context and team member lookup
+  const filterParams = ownerFilter === 'all' ? {} : {};
+  const { data, isLoading, refetch } = useActivities(filterParams);
   const createActivity = useCreateActivity();
   const updateActivity = useUpdateActivity();
   const deleteActivity = useDeleteActivity();
@@ -122,16 +128,19 @@ export default function ActivitiesPage() {
 
   const activities = data?.items || [];
 
-  // Calculate statistics
+  // Calculate statistics with new KPI metrics
   const today = dayjs().format('YYYY-MM-DD');
+  const startOfWeek = dayjs().startOf('week');
+  const endOfWeek = dayjs().endOf('week');
+
   const stats = {
-    total: activities.filter((a) => a.status === 'Scheduled').length,
-    today: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled')
-      .length,
-    completed: activities.filter((a) => a.status === 'Completed').length,
-    overdue: activities.filter(
-      (a) => dayjs(a.startTime).isBefore(dayjs()) && a.status === 'Scheduled'
-    ).length,
+    today: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled').length,
+    overdue: activities.filter((a) => dayjs(a.startTime).isBefore(dayjs()) && a.status === 'Scheduled').length,
+    thisWeek: activities.filter((a) => {
+      const activityDate = dayjs(a.startTime);
+      return activityDate.isAfter(startOfWeek) && activityDate.isBefore(endOfWeek) && a.status === 'Scheduled';
+    }).length,
+    completedToday: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Completed').length,
   };
 
   const handleCreate = (date?: Dayjs) => {
@@ -388,7 +397,31 @@ export default function ActivitiesPage() {
         </div>
       </motion.div>
 
-      {/* Professional Stats Cards */}
+      {/* Owner Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mb-6"
+      >
+        <Card className="shadow-sm border border-gray-200">
+          <div className="flex items-center gap-3">
+            <UserOutlined className="text-lg text-gray-600" />
+            <Text className="text-gray-600 font-medium">Aktivite Sahibi:</Text>
+            <Radio.Group
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              buttonStyle="solid"
+            >
+              <Radio.Button value="my">Benim Aktivitelerim</Radio.Button>
+              <Radio.Button value="team">Satış Ekibi</Radio.Button>
+              <Radio.Button value="all">Tüm Aktiviteler</Radio.Button>
+            </Radio.Group>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Professional Stats Cards - Updated KPIs */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <motion.div
@@ -399,8 +432,8 @@ export default function ActivitiesPage() {
             <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Planlanmış</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.total}</div>
+                  <Text className="text-gray-500 text-sm block mb-1">Bugün</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.today}</div>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
                   <CalendarOutlined className="text-2xl text-blue-600" />
@@ -418,11 +451,11 @@ export default function ActivitiesPage() {
             <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Bugün</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.today}</div>
+                  <Text className="text-gray-500 text-sm block mb-1">Gecikmiş</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.overdue}</div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
-                  <ThunderboltOutlined className="text-2xl text-orange-600" />
+                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                  <FireOutlined className="text-2xl text-red-600" />
                 </div>
               </div>
             </Card>
@@ -437,11 +470,11 @@ export default function ActivitiesPage() {
             <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Tamamlandı</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.completed}</div>
+                  <Text className="text-gray-500 text-sm block mb-1">Bu Hafta</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.thisWeek}</div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-2xl text-green-600" />
+                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                  <ThunderboltOutlined className="text-2xl text-orange-600" />
                 </div>
               </div>
             </Card>
@@ -456,11 +489,11 @@ export default function ActivitiesPage() {
             <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Gecikmiş</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.overdue}</div>
+                  <Text className="text-gray-500 text-sm block mb-1">Bugün Tamamlanan</Text>
+                  <div className="text-3xl font-bold text-gray-800">{stats.completedToday}</div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
-                  <FireOutlined className="text-2xl text-red-600" />
+                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-2xl text-green-600" />
                 </div>
               </div>
             </Card>
