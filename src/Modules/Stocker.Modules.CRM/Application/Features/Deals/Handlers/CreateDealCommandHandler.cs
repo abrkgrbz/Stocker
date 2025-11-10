@@ -198,8 +198,8 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             Priority = createdDeal.Priority,
             PipelineId = createdDeal.PipelineId,
             PipelineName = createdDeal.Pipeline?.Name,
-            CurrentStageId = createdDeal.StageId,
-            CurrentStageName = createdDeal.Stage?.Name,
+            StageId = createdDeal.StageId,
+            StageName = createdDeal.Stage?.Name,
             ExpectedCloseDate = createdDeal.ExpectedCloseDate ?? DateTime.UtcNow,
             Probability = createdDeal.Probability,
             CompetitorName = request.CompetitorName,
@@ -209,9 +209,9 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             UpdatedAt = createdDeal.UpdatedAt
         };
 
-        _logger.LogWarning("CreateDeal Response DTO: CurrentStageId={CurrentStageId}, CurrentStageName={CurrentStageName}, " +
+        _logger.LogWarning("CreateDeal Response DTO: StageId={StageId}, StageName={StageName}, " +
             "PipelineId={PipelineId}, PipelineName={PipelineName}, CustomerName={CustomerName}, Probability={Probability}",
-            dealDto.CurrentStageId, dealDto.CurrentStageName, dealDto.PipelineId, dealDto.PipelineName,
+            dealDto.StageId, dealDto.StageName, dealDto.PipelineId, dealDto.PipelineName,
             dealDto.CustomerName, dealDto.Probability);
 
         _logger.LogWarning("========== CreateDealCommand END ==========");

@@ -53,7 +53,7 @@ public class GetDealByIdQueryHandler : IRequestHandler<GetDealByIdQuery, DealDto
             Status = deal.Status,
             Priority = deal.Priority,
             PipelineId = deal.PipelineId,
-            CurrentStageId = deal.StageId,
+            StageId = deal.StageId,
             ExpectedCloseDate = deal.ExpectedCloseDate ?? DateTime.UtcNow,
             Probability = deal.Probability,
             CreatedAt = deal.CreatedAt,

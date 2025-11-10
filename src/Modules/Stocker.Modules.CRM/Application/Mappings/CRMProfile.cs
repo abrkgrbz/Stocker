@@ -43,10 +43,10 @@ public class CRMProfile : Profile
             .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.OwnerId.ToString()))
             .ForMember(dest => dest.CustomerId, opt => opt.Ignore()) // ID conversion needed
             .ForMember(dest => dest.PipelineId, opt => opt.Ignore()) // ID conversion needed
-            .ForMember(dest => dest.CurrentStageId, opt => opt.Ignore()) // ID conversion needed
+            .ForMember(dest => dest.StageId, opt => opt.Ignore()) // ID conversion needed
             .ForMember(dest => dest.CustomerName, opt => opt.Ignore())
             .ForMember(dest => dest.PipelineName, opt => opt.Ignore())
-            .ForMember(dest => dest.CurrentStageName, opt => opt.Ignore())
+            .ForMember(dest => dest.StageName, opt => opt.Ignore())
             .ForMember(dest => dest.OwnerName, opt => opt.Ignore())
             .ForMember(dest => dest.Products, opt => opt.Ignore())
             .ForMember(dest => dest.Activities, opt => opt.Ignore())

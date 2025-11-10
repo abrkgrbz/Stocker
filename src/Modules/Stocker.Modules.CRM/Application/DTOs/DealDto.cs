@@ -15,8 +15,8 @@ public class DealDto
     public DealPriority Priority { get; set; }
     public Guid? PipelineId { get; set; }
     public string? PipelineName { get; set; }
-    public Guid? CurrentStageId { get; set; }
-    public string? CurrentStageName { get; set; }
+    public Guid? StageId { get; set; }
+    public string? StageName { get; set; }
     public DateTime ExpectedCloseDate { get; set; }
     public DateTime? ActualCloseDate { get; set; }
     public decimal Probability { get; set; }

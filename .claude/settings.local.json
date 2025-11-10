@@ -8,7 +8,9 @@
       "Bash(else echo \"SSH key NOT found\")",
       "Bash(fi)",
       "Bash(cat:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(npm run build:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
