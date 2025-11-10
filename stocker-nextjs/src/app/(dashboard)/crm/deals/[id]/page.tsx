@@ -16,6 +16,7 @@ import {
   Progress,
   Timeline,
   Empty,
+  notification,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -31,10 +32,12 @@ import {
   HomeOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useDeal } from '@/lib/api/hooks/useCRM';
+import { useDeal, useCreateActivity } from '@/lib/api/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
+import { ActivityModal } from '@/features/activities/components';
 import dayjs from 'dayjs';
 import type { Guid } from '@/lib/api/services/crm.types';
+import type { Activity } from '@/lib/api/services/crm.service';
 
 export default function DealDetailPage() {
   const params = useParams();
@@ -42,9 +45,32 @@ export default function DealDetailPage() {
   const dealId = params.id as Guid;
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
 
   // Fetch deal data from API
   const { data: deal, isLoading, error } = useDeal(dealId);
+  const createActivity = useCreateActivity();
+
+  // Handle activity submission
+  const handleActivitySubmit = async (values: any) => {
+    try {
+      await createActivity.mutateAsync({
+        ...values,
+        dealId: Number(dealId),
+      });
+      setActivityModalOpen(false);
+      notification.success({
+        message: 'Başarılı',
+        description: 'Aktivite başarıyla oluşturuldu',
+      });
+    } catch (error) {
+      console.error('Failed to create activity:', error);
+      notification.error({
+        message: 'Hata',
+        description: 'Aktivite oluşturulurken bir hata oluştu',
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -296,7 +322,7 @@ export default function DealDetailPage() {
                               ]}
                             />
                             <div className="mt-4 pt-4 border-t border-gray-200">
-                              <Button type="dashed" block>
+                              <Button type="dashed" block onClick={() => setActivityModalOpen(true)}>
                                 + Yeni Aktivite Ekle
                               </Button>
                             </div>
@@ -345,6 +371,15 @@ export default function DealDetailPage() {
           />
         </Card>
       </motion.div>
+
+      {/* Activity Modal */}
+      <ActivityModal
+        open={activityModalOpen}
+        activity={null}
+        loading={createActivity.isPending}
+        onCancel={() => setActivityModalOpen(false)}
+        onSubmit={handleActivitySubmit}
+      />
     </div>
   );
 }
