@@ -22,7 +22,33 @@ public class DockerManagementService : IDockerManagementService
         _logger = logger;
         _sshHost = configuration["DockerManagement:SshHost"] ?? "95.217.219.4";
         _sshUser = configuration["DockerManagement:SshUser"] ?? "root";
-        _sshKeyPath = configuration["DockerManagement:SshKeyPath"] ?? throw new InvalidOperationException("SSH key path is not configured");
+        _sshKeyPath = configuration["DockerManagement:SshKeyPath"] ?? "/app/keys/ssh_key";
+
+        // If SSH key is provided via environment variable (base64 encoded), decode and save it
+        var sshKeyBase64 = configuration["DockerManagement:SshKeyBase64"];
+        if (!string.IsNullOrEmpty(sshKeyBase64))
+        {
+            try
+            {
+                var keyBytes = Convert.FromBase64String(sshKeyBase64);
+                var keyContent = System.Text.Encoding.UTF8.GetString(keyBytes);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(_sshKeyPath)!);
+                File.WriteAllText(_sshKeyPath, keyContent);
+
+                // Set proper permissions (600) on Linux
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(_sshKeyPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
+
+                _logger.LogInformation("SSH key decoded from environment variable and saved to {Path}", _sshKeyPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to decode SSH key from environment variable");
+            }
+        }
     }
 
     public async Task<DockerStatsDto> GetDockerStatsAsync(CancellationToken cancellationToken = default)

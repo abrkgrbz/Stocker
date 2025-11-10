@@ -60,6 +60,14 @@ COPY --from=build /app/efbundle .
 # Create directory for email templates
 RUN mkdir -p /app/EmailTemplates
 
+# Create directory for SSH keys
+RUN mkdir -p /app/keys
+
+# Copy SSH key for Docker management (will be provided via build arg or volume mount)
+# Note: For production, mount SSH key as volume or use secrets
+# COPY ssh_key /app/keys/ssh_key
+# RUN chmod 600 /app/keys/ssh_key
+
 # Expose port
 EXPOSE 5000
 
