@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Features.SystemManagement.Commands.CleanDocker;
@@ -12,9 +13,13 @@ public class DockerManagementService : IDockerManagementService
     private readonly string _sshHost;
     private readonly string _sshUser;
     private readonly string _sshKeyPath;
+    private readonly ILogger<DockerManagementService> _logger;
 
-    public DockerManagementService(IConfiguration configuration)
+    public DockerManagementService(
+        IConfiguration configuration,
+        ILogger<DockerManagementService> logger)
     {
+        _logger = logger;
         _sshHost = configuration["DockerManagement:SshHost"] ?? "95.217.219.4";
         _sshUser = configuration["DockerManagement:SshUser"] ?? "root";
         _sshKeyPath = configuration["DockerManagement:SshKeyPath"] ?? throw new InvalidOperationException("SSH key path is not configured");
@@ -24,20 +29,22 @@ public class DockerManagementService : IDockerManagementService
     {
         try
         {
-            Console.WriteLine($"[DockerManagement] Connecting to SSH: {_sshHost} as {_sshUser}");
-            Console.WriteLine($"[DockerManagement] Using SSH key: {_sshKeyPath}");
+            _logger.LogInformation("Connecting to SSH: {Host} as {User}", _sshHost, _sshUser);
+            _logger.LogInformation("Using SSH key: {KeyPath}", _sshKeyPath);
 
             using var client = new SshClient(_sshHost, _sshUser, new PrivateKeyFile(_sshKeyPath));
             client.Connect();
-            Console.WriteLine("[DockerManagement] SSH connection successful");
+            _logger.LogInformation("SSH connection successful");
 
             // Get docker system df output
             var dfCommand = client.RunCommand("docker system df");
             var output = dfCommand.Result;
-            Console.WriteLine($"[DockerManagement] Docker command output length: {output?.Length ?? 0}");
+            _logger.LogInformation("Docker command output length: {Length}", output?.Length ?? 0);
+            _logger.LogDebug("Docker command output: {Output}", output);
 
             var stats = ParseDockerStats(output);
-            Console.WriteLine($"[DockerManagement] Parsed stats - Containers: {stats.Containers.Total}, Images: {stats.Images.Total}");
+            _logger.LogInformation("Parsed stats - Containers: {Containers}, Images: {Images}, Volumes: {Volumes}",
+                stats.Containers.Total, stats.Images.Total, stats.Volumes.Total);
 
             client.Disconnect();
 
@@ -45,8 +52,8 @@ public class DockerManagementService : IDockerManagementService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DockerManagement] ERROR: {ex.GetType().Name} - {ex.Message}");
-            Console.WriteLine($"[DockerManagement] Stack trace: {ex.StackTrace}");
+            _logger.LogError(ex, "Failed to get Docker stats from SSH host {Host}. Error: {Message}",
+                _sshHost, ex.Message);
 
             // Fallback to mock data for development
             return new DockerStatsDto
