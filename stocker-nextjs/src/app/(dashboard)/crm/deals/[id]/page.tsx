@@ -61,7 +61,19 @@ export default function DealDetailPage() {
 
   // Fetch deal data from API
   const { data: deal, isLoading, error } = useDeal(dealId);
-  const { data: dealProducts = [], isLoading: productsLoading } = useDealProducts(dealId);
+  const { data: dealProductsRaw, isLoading: productsLoading } = useDealProducts(dealId);
+
+  // Ensure dealProducts is always an array
+  const dealProducts = React.useMemo(() => {
+    if (!dealProductsRaw) return [];
+    // If API returns an object with data property, extract it
+    if (dealProductsRaw && typeof dealProductsRaw === 'object' && 'data' in dealProductsRaw) {
+      return Array.isArray(dealProductsRaw.data) ? dealProductsRaw.data : [];
+    }
+    // If it's already an array, use it
+    return Array.isArray(dealProductsRaw) ? dealProductsRaw : [];
+  }, [dealProductsRaw]);
+
   const addProduct = useAddDealProduct();
   const removeProduct = useRemoveDealProduct();
 
