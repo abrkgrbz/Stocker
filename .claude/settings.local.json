@@ -11,7 +11,9 @@
       "Bash(dotnet build:*)",
       "Bash(npm run build:*)",
       "Bash(git restore:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(Select-String -Pattern \"error|warning\")",
+      "Bash(Select-Object -Last 10)"
     ],
     "deny": [],
     "ask": []

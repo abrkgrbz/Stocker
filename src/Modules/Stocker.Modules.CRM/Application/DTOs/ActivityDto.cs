@@ -24,6 +24,8 @@ public class ActivityDto
     public string? OpportunityName { get; set; }
     public Guid? DealId { get; set; }
     public string? DealTitle { get; set; }
+    public int OwnerId { get; set; }
+    public string? OwnerName { get; set; }
     public string? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
     public string? Outcome { get; set; }
@@ -41,9 +43,12 @@ public class ActivityDto
 public class ActivityStatisticsDto
 {
     public int TotalActivities { get; set; }
+    public int TodayActivities { get; set; }
+    public int OverdueActivities { get; set; }
+    public int ThisWeekActivities { get; set; }
+    public int CompletedTodayActivities { get; set; }
     public int CompletedActivities { get; set; }
     public int PendingActivities { get; set; }
-    public int OverdueActivities { get; set; }
     public decimal CompletionRate { get; set; }
     public Dictionary<ActivityType, int> ActivitiesByType { get; set; } = new();
     public Dictionary<ActivityStatus, int> ActivitiesByStatus { get; set; } = new();

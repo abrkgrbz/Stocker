@@ -15,7 +15,8 @@ public class GetActivitiesQuery : IRequest<PagedResult<ActivityDto>>, ITenantReq
     public Guid? CustomerId { get; set; }
     public Guid? OpportunityId { get; set; }
     public Guid? DealId { get; set; }
-    public Guid? AssignedToId { get; set; }
+    public int? OwnerId { get; set; }
+    public int? AssignedToId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public bool? Overdue { get; set; }

@@ -19,7 +19,13 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
 
     public async Task<PagedResult<ActivityDto>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Activities.AsQueryable();
+        var query = _context.Activities
+            .Include(a => a.Customer)
+            .Include(a => a.Contact)
+            .Include(a => a.Lead)
+            .Include(a => a.Opportunity)
+            .Include(a => a.Deal)
+            .AsQueryable();
 
         // Apply filters
         if (request.Type.HasValue)
@@ -39,6 +45,12 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
 
         if (request.DealId.HasValue)
             query = query.Where(a => a.DealId == request.DealId.Value);
+
+        if (request.OwnerId.HasValue)
+            query = query.Where(a => a.OwnerId == request.OwnerId.Value);
+
+        if (request.AssignedToId.HasValue)
+            query = query.Where(a => a.AssignedToId == request.AssignedToId.Value);
 
         if (request.FromDate.HasValue)
             query = query.Where(a => a.DueDate >= request.FromDate.Value);
@@ -66,7 +78,6 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
         var activityDtos = activities.Select(a => new ActivityDto
         {
             Id = a.Id,
-            // TenantId = a.TenantId,
             Subject = a.Subject,
             Description = a.Description,
             Type = a.Type,
@@ -76,12 +87,21 @@ public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, Pag
             Duration = (int?)a.Duration?.TotalMinutes,
             Location = a.Location,
             LeadId = a.LeadId,
+            LeadName = a.Lead != null ? $"{a.Lead.FirstName} {a.Lead.LastName}" : null,
             CustomerId = a.CustomerId,
+            CustomerName = a.Customer?.CompanyName,
             ContactId = a.ContactId,
+            ContactName = a.Contact != null ? $"{a.Contact.FirstName} {a.Contact.LastName}" : null,
             OpportunityId = a.OpportunityId,
+            OpportunityName = a.Opportunity?.Name,
             DealId = a.DealId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = null
+            DealTitle = a.Deal?.Name,
+            OwnerId = a.OwnerId,
+            OwnerName = null, // TODO: Implement user service lookup
+            AssignedToId = a.AssignedToId?.ToString(),
+            AssignedToName = null, // TODO: Implement user service lookup
+            CreatedAt = DateTime.UtcNow, // TODO: Add CreatedAt to Activity entity
+            UpdatedAt = null // TODO: Add UpdatedAt to Activity entity
         }).ToList();
 
         return PagedResult<ActivityDto>.Create(activityDtos, totalCount, request.Page, request.PageSize);
