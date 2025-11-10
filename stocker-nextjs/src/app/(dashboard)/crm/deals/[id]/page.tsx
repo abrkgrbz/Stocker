@@ -316,7 +316,7 @@ export default function DealDetailPage() {
                         )}
 
                         {/* Products Summary */}
-                        {dealProducts.length > 0 && (
+                        {dealProducts && dealProducts.length > 0 && (
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -411,7 +411,7 @@ export default function DealDetailPage() {
                 label: (
                   <span className="flex items-center gap-2">
                     <ShoppingCartOutlined />
-                    Ürünler ({dealProducts.length})
+                    Ürünler ({dealProducts?.length || 0})
                   </span>
                 ),
                 children: (
