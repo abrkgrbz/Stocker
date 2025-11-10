@@ -287,7 +287,10 @@ function LoginForm() {
       console.log('🌐 Tenant URL:', tenantUrl)
       console.log('🚀 Full redirect URL:', `${tenantUrl}/app`)
 
-      window.location.href = `${tenantUrl}/app`
+      // Wait for cookies to be set before redirecting
+      setTimeout(() => {
+        window.location.href = `${tenantUrl}/app`
+      }, 100)
     } catch (err) {
       trackAuth({ event: 'login_failure', metadata: { step: 'password', errorType: 'exception' } })
       setError('Giriş yapılırken bir hata oluştu')
