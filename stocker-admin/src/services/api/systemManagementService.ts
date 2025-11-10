@@ -33,18 +33,22 @@ export interface SystemError {
   resolvedBy?: string;
 }
 
+export interface ErrorTrend {
+  date: string;
+  count: number;
+}
+
 export interface ErrorStatistics {
-  total: number;
-  unresolved: number;
-  byLevel: {
-    error: number;
-    warning: number;
-    info: number;
-  };
-  bySource: {
+  totalErrors: number;
+  unresolvedErrors: number;
+  criticalErrors: number;
+  errorsBySeverity: {
     [key: string]: number;
   };
-  last24Hours: number;
+  errorsBySource: {
+    [key: string]: number;
+  };
+  last7Days: ErrorTrend[];
 }
 
 export interface DockerStats {

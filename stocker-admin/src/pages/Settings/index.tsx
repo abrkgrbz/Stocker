@@ -1260,8 +1260,8 @@ const SettingsPage: React.FC = () => {
               title={<><ExclamationCircleOutlined /> Hata İzleme</>}
               extra={
                 <Space>
-                  {errorStats && errorStats.unresolved > 0 && (
-                    <Badge count={errorStats.unresolved} overflowCount={999}>
+                  {errorStats && errorStats.unresolvedErrors > 0 && (
+                    <Badge count={errorStats.unresolvedErrors} overflowCount={999}>
                       <Button size="small" icon={<BellOutlined />}>
                         Çözülmemiş Hatalar
                       </Button>
@@ -1271,7 +1271,7 @@ const SettingsPage: React.FC = () => {
                     size="small"
                     icon={<DeleteOutlined />}
                     onClick={handleClearResolvedErrors}
-                    disabled={!errorStats || errorStats.unresolved === errorStats.total}
+                    disabled={!errorStats || errorStats.unresolvedErrors === errorStats.totalErrors}
                   >
                     Çözülmüş Hataları Temizle
                   </Button>
@@ -1290,7 +1290,7 @@ const SettingsPage: React.FC = () => {
                       <Card size="small">
                         <Statistic
                           title="Toplam Hata"
-                          value={errorStats.total}
+                          value={errorStats.totalErrors}
                           prefix={<ExclamationCircleOutlined />}
                         />
                       </Card>
@@ -1299,7 +1299,7 @@ const SettingsPage: React.FC = () => {
                       <Card size="small">
                         <Statistic
                           title="Çözülmemiş"
-                          value={errorStats.unresolved}
+                          value={errorStats.unresolvedErrors}
                           valueStyle={{ color: '#cf1322' }}
                           prefix={<CloseCircleOutlined />}
                         />
@@ -1308,9 +1308,9 @@ const SettingsPage: React.FC = () => {
                     <Col span={6}>
                       <Card size="small">
                         <Statistic
-                          title="Son 24 Saat"
-                          value={errorStats.last24Hours}
-                          valueStyle={{ color: errorStats.last24Hours > 10 ? '#cf1322' : '#3f8600' }}
+                          title="Kritik Hatalar"
+                          value={errorStats.criticalErrors}
+                          valueStyle={{ color: errorStats.criticalErrors > 0 ? '#cf1322' : '#3f8600' }}
                           prefix={<ClockCircleOutlined />}
                         />
                       </Card>
@@ -1319,10 +1319,15 @@ const SettingsPage: React.FC = () => {
                       <Card size="small">
                         <Space direction="vertical" size={0}>
                           <Text type="secondary">Seviyeye Göre</Text>
-                          <Space>
-                            <Tag color="red">Error: {errorStats.byLevel.error}</Tag>
-                            <Tag color="orange">Warning: {errorStats.byLevel.warning}</Tag>
-                            <Tag color="blue">Info: {errorStats.byLevel.info}</Tag>
+                          <Space wrap>
+                            {Object.entries(errorStats.errorsBySeverity).map(([severity, count]) => (
+                              <Tag
+                                key={severity}
+                                color={severity === 'Critical' ? 'red' : severity === 'Error' ? 'orange' : severity === 'Warning' ? 'gold' : 'blue'}
+                              >
+                                {severity}: {count}
+                              </Tag>
+                            ))}
                           </Space>
                         </Space>
                       </Card>
