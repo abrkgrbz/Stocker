@@ -208,6 +208,12 @@ export function ActivityCalendar({
           transition: all 0.2s;
         }
 
+        .activity-calendar-card .fc-event-title {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
         .activity-calendar-card .fc-event:hover {
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           transform: translateY(-1px);
