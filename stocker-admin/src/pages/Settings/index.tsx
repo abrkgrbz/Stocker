@@ -1346,11 +1346,12 @@ const SettingsPage: React.FC = () => {
                         key: 'level',
                         width: 90,
                         render: (level: string) => {
+                          if (!level) return <Tag>-</Tag>;
                           const config = {
                             error: { color: 'red', icon: <CloseCircleOutlined /> },
                             warning: { color: 'orange', icon: <ExclamationCircleOutlined /> },
                             info: { color: 'blue', icon: <InfoCircleOutlined /> },
-                          }[level] || { color: 'default', icon: <InfoCircleOutlined /> };
+                          }[level.toLowerCase()] || { color: 'default', icon: <InfoCircleOutlined /> };
 
                           return <Tag color={config.color} icon={config.icon}>{level.toUpperCase()}</Tag>;
                         },
@@ -1360,20 +1361,21 @@ const SettingsPage: React.FC = () => {
                         dataIndex: 'timestamp',
                         key: 'timestamp',
                         width: 150,
-                        render: (timestamp: string) => dayjs(timestamp).format('DD.MM.YYYY HH:mm:ss'),
+                        render: (timestamp: string) => timestamp ? dayjs(timestamp).format('DD.MM.YYYY HH:mm:ss') : '-',
                       },
                       {
                         title: 'Kaynak',
                         dataIndex: 'source',
                         key: 'source',
                         width: 120,
-                        render: (source: string) => <Tag color="purple">{source}</Tag>,
+                        render: (source: string) => <Tag color="purple">{source || '-'}</Tag>,
                       },
                       {
                         title: 'Mesaj',
                         dataIndex: 'message',
                         key: 'message',
                         ellipsis: true,
+                        render: (message: string) => message || '-',
                       },
                       {
                         title: 'Durum',
