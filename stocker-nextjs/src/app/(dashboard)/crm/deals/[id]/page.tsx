@@ -419,7 +419,7 @@ export default function DealDetailPage() {
                     <ProductSelector
                       entityType="deal"
                       entityId={dealId}
-                      products={dealProducts}
+                      products={dealProducts || []}
                       availableProducts={mockProducts}
                       isLoading={productsLoading}
                       onAdd={handleAddProduct}
