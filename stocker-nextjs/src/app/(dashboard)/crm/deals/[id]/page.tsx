@@ -216,10 +216,10 @@ export default function DealDetailPage() {
             <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
               <Statistic
                 title={<span className="text-gray-500 text-sm">Ürün Sayısı</span>}
-                value={dealProducts.length}
+                value={dealProducts?.length || 0}
                 valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
               />
-              {dealProducts.length > 0 && (
+              {dealProducts && dealProducts.length > 0 && (
                 <div className="text-xs text-gray-400 mt-2">
                   Toplam: ₺{dealProducts.reduce((sum, p) => sum + (p.totalPrice || 0), 0).toLocaleString('tr-TR')}
                 </div>
