@@ -65,8 +65,8 @@ export function ProductSelector({
   const [form] = Form.useForm();
 
   // Calculate totals
-  const subtotal = products.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const totalDiscount = products.reduce((sum, item) => {
+  const subtotal = (products || []).reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  const totalDiscount = (products || []).reduce((sum, item) => {
     const itemTotal = item.quantity * item.unitPrice;
     return sum + (itemTotal * (item.discount / 100));
   }, 0);
