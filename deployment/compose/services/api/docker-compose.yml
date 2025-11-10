@@ -80,8 +80,9 @@ services:
       # ==================================
       # RABBITMQ MESSAGE BROKER
       # ==================================
+      # Using internal Docker network - RabbitMQ container name
       - RabbitMQ__Enabled=true
-      - RabbitMQ__Host=rabbitmq.stoocker.app
+      - RabbitMQ__Host=rabbitmq
       - RabbitMQ__VirtualHost=/
       - RabbitMQ__Username=admin
       - RabbitMQ__Password=RabbitMQPassword123!
