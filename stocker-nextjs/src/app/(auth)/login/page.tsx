@@ -115,12 +115,24 @@ function LoginForm() {
     try {
       // Use Next.js API route proxy on auth domain
       const authDomain = normalizeAuthDomain(process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000')
+
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+      console.log('🔍 Calling check-email API:', `${authDomain}/api/auth/check-email`)
+      console.log('📧 Email:', email)
+
       const response = await fetch(`${authDomain}/api/auth/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
-        credentials: 'include' // Important for CORS cookies
+        credentials: 'include', // Important for CORS cookies
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
+      console.log('✅ Response received, status:', response.status)
 
       const data = await response.json()
 
@@ -159,8 +171,21 @@ function LoginForm() {
 
       setStep('tenant-selection')
     } catch (err) {
-      trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'network_error' } })
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.')
+      console.error('❌ Check-email error:', err)
+
+      // Handle different error types
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'timeout' } })
+          setError('İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.')
+        } else {
+          trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'network_error', message: err.message } })
+          setError(`Bağlantı hatası: ${err.message}`)
+        }
+      } else {
+        trackAuth({ event: 'login_failure', metadata: { step: 'email', errorType: 'unknown_error' } })
+        setError('Bir hata oluştu. Lütfen tekrar deneyin.')
+      }
     } finally {
       setLoading(false)
     }
