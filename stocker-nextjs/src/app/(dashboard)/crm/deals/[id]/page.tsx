@@ -25,32 +25,16 @@ import {
   TrophyOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
-  ShoppingCartOutlined,
   ClockCircleOutlined,
   EditOutlined,
   UserOutlined,
   HomeOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import {
-  useDeal,
-  useDealProducts,
-  useAddDealProduct,
-  useRemoveDealProduct,
-} from '@/lib/api/hooks/useCRM';
-import { ProductSelector } from '@/components/crm/shared';
+import { useDeal } from '@/lib/api/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
 import dayjs from 'dayjs';
 import type { Guid } from '@/lib/api/services/crm.types';
-
-// Mock products - replace with actual API call when available
-const mockProducts = [
-  { id: '1' as Guid, name: 'Ürün A', description: 'Ürün A açıklaması', unitPrice: 100, stockQuantity: 50 },
-  { id: '2' as Guid, name: 'Ürün B', description: 'Ürün B açıklaması', unitPrice: 200, stockQuantity: 30 },
-  { id: '3' as Guid, name: 'Ürün C', description: 'Ürün C açıklaması', unitPrice: 150, stockQuantity: 20 },
-  { id: '4' as Guid, name: 'Ürün D', description: 'Ürün D açıklaması', unitPrice: 300, stockQuantity: 10 },
-  { id: '5' as Guid, name: 'Ürün E', description: 'Ürün E açıklaması', unitPrice: 250, stockQuantity: 0 },
-];
 
 export default function DealDetailPage() {
   const params = useParams();
@@ -61,38 +45,6 @@ export default function DealDetailPage() {
 
   // Fetch deal data from API
   const { data: deal, isLoading, error } = useDeal(dealId);
-  const { data: dealProductsRaw, isLoading: productsLoading } = useDealProducts(dealId);
-
-  // Ensure dealProducts is always an array
-  const dealProducts = React.useMemo(() => {
-    if (!dealProductsRaw) return [];
-    // If API returns an object with data property, extract it
-    if (dealProductsRaw && typeof dealProductsRaw === 'object' && 'data' in dealProductsRaw) {
-      return Array.isArray(dealProductsRaw.data) ? dealProductsRaw.data : [];
-    }
-    // If it's already an array, use it
-    return Array.isArray(dealProductsRaw) ? dealProductsRaw : [];
-  }, [dealProductsRaw]);
-
-  const addProduct = useAddDealProduct();
-  const removeProduct = useRemoveDealProduct();
-
-  const handleAddProduct = async (productId: Guid, quantity: number, unitPrice: number, discount?: number) => {
-    await addProduct.mutateAsync({
-      dealId,
-      productId,
-      quantity,
-      unitPrice,
-      discount,
-    });
-  };
-
-  const handleRemoveProduct = async (productId: Guid) => {
-    await removeProduct.mutateAsync({
-      dealId,
-      productId,
-    });
-  };
 
   if (isLoading) {
     return (
@@ -224,20 +176,6 @@ export default function DealDetailPage() {
               )}
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="h-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <Statistic
-                title={<span className="text-gray-500 text-sm">Ürün Sayısı</span>}
-                value={dealProducts?.length || 0}
-                valueStyle={{ color: '#1f2937', fontWeight: 'bold', fontSize: '2rem' }}
-              />
-              {dealProducts && dealProducts.length > 0 && (
-                <div className="text-xs text-gray-400 mt-2">
-                  Toplam: ₺{dealProducts.reduce((sum, p) => sum + (p.totalPrice || 0), 0).toLocaleString('tr-TR')}
-                </div>
-              )}
-            </Card>
-          </Col>
         </Row>
       </motion.div>
 
@@ -326,40 +264,6 @@ export default function DealDetailPage() {
                             </Card>
                           </motion.div>
                         )}
-
-                        {/* Products Summary */}
-                        {dealProducts && dealProducts.length > 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6 }}
-                            className="mt-6"
-                          >
-                            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                              <ShoppingCartOutlined className="text-blue-500" />
-                              Ürünler Özeti
-                            </h3>
-                            <Card className="border border-gray-200 shadow-sm">
-                              <div className="space-y-2">
-                                {dealProducts.slice(0, 3).map((product) => (
-                                  <div key={product.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                                    <span className="text-gray-700">
-                                      {product.quantity}x {product.productName || 'Ürün'}
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                      ₺{(product.totalPrice || 0).toLocaleString('tr-TR')}
-                                    </span>
-                                  </div>
-                                ))}
-                                {dealProducts.length > 3 && (
-                                  <div className="text-center text-sm text-gray-500 pt-2">
-                                    +{dealProducts.length - 3} daha fazla ürün
-                                  </div>
-                                )}
-                              </div>
-                            </Card>
-                          </motion.div>
-                        )}
                       </Col>
 
                       {/* Right Column - Dynamic Information */}
@@ -415,28 +319,6 @@ export default function DealDetailPage() {
                         </motion.div>
                       </Col>
                     </Row>
-                  </div>
-                ),
-              },
-              {
-                key: 'products',
-                label: (
-                  <span className="flex items-center gap-2">
-                    <ShoppingCartOutlined />
-                    Ürünler ({dealProducts?.length || 0})
-                  </span>
-                ),
-                children: (
-                  <div className="py-4">
-                    <ProductSelector
-                      entityType="deal"
-                      entityId={dealId}
-                      products={dealProducts || []}
-                      availableProducts={mockProducts}
-                      isLoading={productsLoading}
-                      onAdd={handleAddProduct}
-                      onRemove={handleRemoveProduct}
-                    />
                   </div>
                 ),
               },
