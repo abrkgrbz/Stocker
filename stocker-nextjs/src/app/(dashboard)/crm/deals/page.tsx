@@ -103,7 +103,7 @@ export default function DealsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number, deal: Deal) => {
+  const handleDelete = async (id: string, deal: Deal) => {
     const confirmed = await confirmDelete('Fırsat', deal.title);
 
     if (confirmed) {
@@ -116,7 +116,7 @@ export default function DealsPage() {
     }
   };
 
-  const handleMoveStage = async (dealId: number, newStageId: number) => {
+  const handleMoveStage = async (dealId: string, newStageId: string) => {
     try {
       await moveDealStage.mutateAsync({
         id: dealId.toString(),
@@ -239,7 +239,7 @@ export default function DealsPage() {
     }
   };
 
-  const handleDragEnd = async (dealId: number, newStageId: number) => {
+  const handleDragEnd = async (dealId: string, newStageId: string) => {
     try {
       await updateDeal.mutateAsync({ id: dealId, data: { stageId: newStageId } });
       showUpdateSuccess('fırsat aşaması');
@@ -273,7 +273,7 @@ export default function DealsPage() {
       acc[stage.id] = filteredDeals.filter((d) => d.stageId === stage.id && d.status === 'Open');
       return acc;
     },
-    {} as Record<number, Deal[]>
+    {} as Record<string, Deal[]>
   );
 
   // Get deals without a stage (for "Aşamasız" column)
