@@ -2,9 +2,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Force cache bust - Updated: 2025-11-11 13:20
-ARG CACHE_BUST=2025-11-11-13-20
-
 # Copy solution and project files
 COPY Stocker.sln ./
 COPY src/API/Stocker.API/*.csproj ./src/API/Stocker.API/
@@ -30,9 +27,9 @@ RUN dotnet restore
 # Copy all source code
 COPY src/ ./src/
 
-# Install EF Core tools as local tool (more reliable than global)
-RUN dotnet new tool-manifest && \
-    dotnet tool install dotnet-ef --version 9.0.0
+# Install EF Core tools for migration
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Build and publish
 WORKDIR /src
@@ -43,7 +40,7 @@ RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
 
 # Generate migration bundle (self-contained migration executable)
 WORKDIR /src
-RUN dotnet dotnet-ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
