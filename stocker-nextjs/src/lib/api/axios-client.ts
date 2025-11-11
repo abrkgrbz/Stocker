@@ -150,23 +150,16 @@ apiClient.interceptors.response.use(
     // Handle Tenant.Unauthorized (400) - Token tenant mismatch
     if (error.response?.status === 400 && error.response?.data?.code === 'Tenant.Unauthorized') {
       console.error('🔒 Tenant mismatch - access token belongs to different tenant');
-      if (typeof window !== 'undefined') {
-        // Clear all auth data
-        localStorage.clear();
+      console.error('🔍 Debug info:', {
+        'Current tenant-code (from cookie)': document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='))?.split('=')[1],
+        'Subdomain': window.location.hostname.split('.')[0],
+        'Request URL': originalRequest.url,
+        'Error response': error.response.data
+      });
 
-        // Clear auth cookies (but keep tenant-code!)
-        document.cookie.split(";").forEach(c => {
-          const cookieName = c.trim().split('=')[0];
-          // Only clear auth-related cookies, preserve tenant-code
-          if (cookieName !== 'tenant-code') {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.stoocker.app");
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-          }
-        });
+      // TEMPORARILY DISABLED AUTO-LOGOUT FOR DEBUGGING
+      console.warn('⚠️ Auto-logout disabled for debugging. Please check backend token tenant.');
 
-        // Redirect to login
-        window.location.href = '/login';
-      }
       return Promise.reject(error);
     }
 
