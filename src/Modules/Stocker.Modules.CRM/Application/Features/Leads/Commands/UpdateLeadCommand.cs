@@ -11,10 +11,12 @@ public class UpdateLeadCommand : IRequest<LeadDto>
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public string? Company { get; set; }
+    public string? MobilePhone { get; set; }
+    public string? CompanyName { get; set; }
     public string? JobTitle { get; set; }
     public LeadStatus Status { get; set; }
     public LeadRating Rating { get; set; }
+    public int Score { get; set; }
     public string? Source { get; set; }
     public string? Description { get; set; }
     public string? Website { get; set; }
