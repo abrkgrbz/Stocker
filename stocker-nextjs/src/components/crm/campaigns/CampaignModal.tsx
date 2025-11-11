@@ -168,7 +168,7 @@ export function CampaignModal({
               className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+              parser={(value) => value?.replace(/₺\s?|(,*)/g, '') || ''}
             />
           </Form.Item>
 
@@ -183,14 +183,14 @@ export function CampaignModal({
               className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+              parser={(value) => value?.replace(/₺\s?|(,*)/g, '') || ''}
             />
           </Form.Item>
 
           <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.expectedRevenue !== curr.expectedRevenue}>
-            {({ getFieldValue }) => {
-              const budgetedCost = getFieldValue('budgetedCost') || 0;
-              const expectedRevenue = getFieldValue('expectedRevenue') || 0;
+            {() => {
+              const budgetedCost = form.getFieldValue('budgetedCost') || 0;
+              const expectedRevenue = form.getFieldValue('expectedRevenue') || 0;
               const expectedProfit = expectedRevenue - budgetedCost;
               const roi = budgetedCost > 0 ? ((expectedProfit / budgetedCost) * 100).toFixed(0) : 0;
 
@@ -260,9 +260,9 @@ export function CampaignModal({
               <h4 className="font-semibold text-lg text-gray-800">Tahmini Performans</h4>
             </div>
             <Form.Item noStyle shouldUpdate={(prev, curr) => prev.budgetedCost !== curr.budgetedCost || prev.targetLeads !== curr.targetLeads}>
-              {({ getFieldValue }) => {
-                const budgetedCost = getFieldValue('budgetedCost') || 0;
-                const targetLeads = getFieldValue('targetLeads') || 0;
+              {() => {
+                const budgetedCost = form.getFieldValue('budgetedCost') || 0;
+                const targetLeads = form.getFieldValue('targetLeads') || 0;
                 const costPerLead = targetLeads > 0 ? (budgetedCost / targetLeads).toFixed(2) : 0;
 
                 return (
@@ -329,12 +329,12 @@ export function CampaignModal({
             prev.targetLeads !== curr.targetLeads ||
             prev.status !== curr.status
           }>
-            {({ getFieldValue }) => {
-              const name = getFieldValue('name');
-              const type = getFieldValue('type');
-              const budgetedCost = getFieldValue('budgetedCost') || 0;
-              const targetLeads = getFieldValue('targetLeads') || 0;
-              const status = getFieldValue('status') || 'Planned';
+            {() => {
+              const name = form.getFieldValue('name');
+              const type = form.getFieldValue('type');
+              const budgetedCost = form.getFieldValue('budgetedCost') || 0;
+              const targetLeads = form.getFieldValue('targetLeads') || 0;
+              const status = form.getFieldValue('status') || 'Planned';
 
               const statusLabels: Record<string, string> = {
                 Planned: 'Planlandı',
