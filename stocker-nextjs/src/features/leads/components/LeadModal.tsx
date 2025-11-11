@@ -79,7 +79,20 @@ export function LeadModal({ open, lead, loading, onCancel, onSubmit }: LeadModal
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      // Validate ALL fields, not just the current step's visible fields
+      const values = await form.validateFields([
+        'firstName',
+        'lastName',
+        'email',
+        'phone',
+        'company',
+        'jobTitle',
+        'source',
+        'status',
+        'score',
+        'notes'
+      ]);
+      console.log('✅ All form values validated:', values);
       onSubmit(values);
       setCurrentStep(0);
     } catch (error) {

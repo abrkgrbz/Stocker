@@ -279,6 +279,13 @@ export function useCreateLead() {
 
   return useMutation({
     mutationFn: (data: any) => {
+      // DEBUG: Log incoming data from form
+      console.log('🎯 Hook received data:', data);
+      console.log('🎯 Data keys:', Object.keys(data));
+      console.log('🎯 firstName from data:', data.firstName);
+      console.log('🎯 lastName from data:', data.lastName);
+      console.log('🎯 email from data:', data.email);
+
       // Backend expects data wrapped in LeadData property (CreateLeadDto)
       // Map frontend field names to backend DTO property names
       const leadData = {
@@ -293,6 +300,8 @@ export function useCreateLead() {
         rating: 0,  // Default to Unrated (0)
         description: data.notes || null,  // notes → description
       };
+
+      console.log('🎯 Mapped leadData:', leadData);
 
       return CRMService.createLead({ LeadData: leadData });
     },
