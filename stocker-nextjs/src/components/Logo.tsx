@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   showText?: boolean
   className?: string
 }
@@ -12,7 +12,8 @@ export default function Logo({ size = 'md', showText = false, className = '' }: 
     sm: { width: 32, height: 32 },
     md: { width: 48, height: 48 },
     lg: { width: 64, height: 64 },
-    xl: { width: 120, height: 120 }
+    xl: { width: 120, height: 120 },
+    '2xl': { width: 160, height: 160 }
   }
 
   const { width, height } = sizes[size]
