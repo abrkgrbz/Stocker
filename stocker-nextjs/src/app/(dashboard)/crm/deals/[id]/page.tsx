@@ -17,7 +17,7 @@ import {
   Timeline,
   Empty,
 } from 'antd';
-import { showSuccess, showError } from '@/lib/utils/notifications';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   ArrowLeftOutlined,
   DollarOutlined,
@@ -70,7 +70,7 @@ export default function DealDetailPage() {
       showSuccess('Aktivite başarıyla oluşturuldu');
     } catch (error) {
       console.error('Failed to create activity:', error);
-      showError('Aktivite oluşturulurken bir hata oluştu');
+      showApiError(error, 'Aktivite oluşturulurken bir hata oluştu');
     }
   };
 

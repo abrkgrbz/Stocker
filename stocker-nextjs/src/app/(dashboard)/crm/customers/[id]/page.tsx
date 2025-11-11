@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Avatar, Tag, Button, Tabs, Timeline, Progress, Statistic, Row, Col, Badge, Descriptions, Empty, Divider, Tooltip, Space, Alert, FloatButton, Modal, Form, Input, Select, InputNumber, Skeleton } from 'antd';
-import { showSuccess, showError } from '@/lib/utils/notifications';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -88,7 +88,7 @@ export default function CustomerDetailPage() {
       showSuccess('Müşteri bilgileri başarıyla güncellendi!');
       setIsEditModalOpen(false);
     } catch (error) {
-      showError('Müşteri güncellenirken bir hata oluştu');
+      showApiError(error, 'Müşteri güncellenirken bir hata oluştu');
     }
   };
 
@@ -301,8 +301,8 @@ export default function CustomerDetailPage() {
             const url = window.location.href;
             navigator.clipboard.writeText(url).then(() => {
               showSuccess('Link panoya kopyalandı!');
-            }).catch(() => {
-              showError('Link kopyalanamadı');
+            }).catch((error) => {
+              showApiError(error, 'Link kopyalanamadı');
             });
           }}
         />

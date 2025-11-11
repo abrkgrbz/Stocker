@@ -89,3 +89,52 @@ export const showLoading = (message: string = 'İşlem yapılıyor...') => {
 export const closeLoading = () => {
   Swal.close();
 };
+
+/**
+ * Show API error with detailed information
+ * Parses error response and displays in user-friendly format
+ */
+export const showApiError = (error: any, defaultMessage: string = 'İşlem başarısız') => {
+  const apiError = error?.response?.data;
+  let errorMessage = defaultMessage;
+  let errorDetails: string[] = [];
+
+  if (apiError) {
+    // Try to extract main error message
+    errorMessage = apiError.detail || apiError.title || apiError.message || defaultMessage;
+
+    // Collect all error details
+    if (apiError.errors) {
+      if (Array.isArray(apiError.errors)) {
+        // Array format: [{ field, message }]
+        errorDetails = apiError.errors.map((e: any) =>
+          e.field ? `<strong>${e.field}:</strong> ${e.message}` : e.message
+        );
+      } else {
+        // Object format: { field1: ["error1", "error2"], field2: ["error3"] }
+        Object.keys(apiError.errors).forEach(field => {
+          const fieldErrors = apiError.errors[field];
+          if (Array.isArray(fieldErrors)) {
+            fieldErrors.forEach(msg => {
+              errorDetails.push(`<strong>${field}:</strong> ${msg}`);
+            });
+          }
+        });
+      }
+    }
+  } else if (error?.message) {
+    errorMessage = error.message;
+  }
+
+  return Swal.fire({
+    icon: 'error',
+    title: 'Hata!',
+    html: errorDetails.length > 0
+      ? `<p>${errorMessage}</p><hr/><div style="text-align: left; margin-top: 10px;">${errorDetails.join('<br/>')}</div>`
+      : errorMessage,
+    confirmButtonText: 'Tamam',
+    customClass: {
+      htmlContainer: 'swal-html-container'
+    }
+  });
+};

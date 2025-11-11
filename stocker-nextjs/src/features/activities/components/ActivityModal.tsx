@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag, message } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
+import { showError, showApiError } from '@/lib/utils/notifications';
 import {
   PhoneOutlined,
   MailOutlined,
@@ -194,7 +195,7 @@ export function ActivityModal({
       console.error('Validation failed:', error);
       // Show error message to user
       if (error instanceof Error) {
-        message.error(error.message);
+        showError(error.message);
       }
     }
   };
@@ -209,7 +210,7 @@ export function ActivityModal({
 
       // Validate that startTime exists
       if (!values.startTime) {
-        message.error('Başlangıç zamanı gerekli');
+        showError('Başlangıç zamanı gerekli');
         return;
       }
 
@@ -235,7 +236,7 @@ export function ActivityModal({
       setCurrentStep(0);
     } catch (error) {
       console.error('Validation failed:', error);
-      message.error('Lütfen tüm gerekli alanları doldurun');
+      showError('Lütfen tüm gerekli alanları doldurun');
     }
   };
 

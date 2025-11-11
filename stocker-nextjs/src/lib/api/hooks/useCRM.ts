@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CRMService } from '../services/crm.service';
-import { showSuccess, showError, showInfo } from '@/lib/utils/notifications';
+import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import type {
   Guid,
   DateTime,
@@ -150,8 +150,8 @@ export function useCreateActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite başarıyla oluşturuldu');
     },
-    onError: () => {
-      showError('Aktivite oluşturulamadı');
+    onError: (error) => {
+      showApiError(error, 'Aktivite oluşturulamadı');
     },
   });
 }
@@ -167,8 +167,8 @@ export function useUpdateActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite güncellendi');
     },
-    onError: () => {
-      showError('Aktivite güncellenemedi');
+    onError: (error) => {
+      showApiError(error,'Aktivite güncellenemedi');
     },
   });
 }
@@ -183,8 +183,8 @@ export function useCompleteActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite tamamlandı');
     },
-    onError: () => {
-      showError('Aktivite tamamlanamadı');
+    onError: (error) => {
+      showApiError(error,'Aktivite tamamlanamadı');
     },
   });
 }
@@ -199,8 +199,8 @@ export function useCancelActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite iptal edildi');
     },
-    onError: () => {
-      showError('Aktivite iptal edilemedi');
+    onError: (error) => {
+      showApiError(error,'Aktivite iptal edilemedi');
     },
   });
 }
@@ -219,8 +219,8 @@ export function useRescheduleActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite yeniden planlandı');
     },
-    onError: () => {
-      showError('Aktivite yeniden planlanamadı');
+    onError: (error) => {
+      showApiError(error,'Aktivite yeniden planlanamadı');
     },
   });
 }
@@ -234,8 +234,8 @@ export function useDeleteActivity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite silindi');
     },
-    onError: () => {
-      showError('Aktivite silinemedi');
+    onError: (error) => {
+      showApiError(error,'Aktivite silinemedi');
     },
   });
 }
@@ -287,8 +287,8 @@ export function useCreateLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead oluşturuldu');
     },
-    onError: () => {
-      showError('Lead oluşturulamadı');
+    onError: (error) => {
+      showApiError(error,'Lead oluşturulamadı');
     },
   });
 }
@@ -304,8 +304,8 @@ export function useUpdateLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead güncellendi');
     },
-    onError: () => {
-      showError('Lead güncellenemedi');
+    onError: (error) => {
+      showApiError(error,'Lead güncellenemedi');
     },
   });
 }
@@ -319,8 +319,8 @@ export function useDeleteLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead silindi');
     },
-    onError: () => {
-      showError('Lead silinemedi');
+    onError: (error) => {
+      showApiError(error,'Lead silinemedi');
     },
   });
 }
@@ -335,8 +335,8 @@ export function useQualifyLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead nitelikli olarak işaretlendi');
     },
-    onError: () => {
-      showError('Lead niteliklendirilemedi');
+    onError: (error) => {
+      showApiError(error,'Lead niteliklendirilemedi');
     },
   });
 }
@@ -351,8 +351,8 @@ export function useDisqualifyLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead niteliksiz olarak işaretlendi');
     },
-    onError: () => {
-      showError('İşlem başarısız');
+    onError: (error) => {
+      showApiError(error,'İşlem başarısız');
     },
   });
 }
@@ -367,8 +367,8 @@ export function useAssignLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead atandı');
     },
-    onError: () => {
-      showError('Lead atanamadı');
+    onError: (error) => {
+      showApiError(error,'Lead atanamadı');
     },
   });
 }
@@ -386,8 +386,8 @@ export function useUpdateLeadScore() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead skoru güncellendi');
     },
-    onError: () => {
-      showError('Skor güncellenemedi');
+    onError: (error) => {
+      showApiError(error,'Skor güncellenemedi');
     },
   });
 }
@@ -402,8 +402,8 @@ export function useConvertLead() {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead müşteriye dönüştürüldü');
     },
-    onError: () => {
-      showError('Dönüştürme başarısız');
+    onError: (error) => {
+      showApiError(error,'Dönüştürme başarısız');
     },
   });
 }
@@ -459,8 +459,8 @@ export function useAddDealProduct() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
       showSuccess('Ürün eklendi');
     },
-    onError: () => {
-      showError('Ürün eklenemedi');
+    onError: (error) => {
+      showApiError(error,'Ürün eklenemedi');
     },
   });
 }
@@ -476,8 +476,8 @@ export function useRemoveDealProduct() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
       showSuccess('Ürün kaldırıldı');
     },
-    onError: () => {
-      showError('Ürün kaldırılamadı');
+    onError: (error) => {
+      showApiError(error,'Ürün kaldırılamadı');
     },
   });
 }
@@ -524,8 +524,8 @@ export function useUpdateDeal() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       showSuccess('Fırsat güncellendi');
     },
-    onError: () => {
-      showError('Fırsat güncellenemedi');
+    onError: (error) => {
+      showApiError(error,'Fırsat güncellenemedi');
     },
   });
 }
@@ -539,8 +539,8 @@ export function useDeleteDeal() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       showSuccess('Fırsat silindi');
     },
-    onError: () => {
-      showError('Fırsat silinemedi');
+    onError: (error) => {
+      showApiError(error,'Fırsat silinemedi');
     },
   });
 }
@@ -555,8 +555,8 @@ export function useMoveDealStage() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       showSuccess('Deal aşamaya taşındı');
     },
-    onError: () => {
-      showError('Taşıma başarısız');
+    onError: (error) => {
+      showApiError(error,'Taşıma başarısız');
     },
   });
 }
@@ -575,8 +575,8 @@ export function useCloseDealWon() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       showSuccess('🎉 Deal kazanıldı!');
     },
-    onError: () => {
-      showError('İşlem başarısız');
+    onError: (error) => {
+      showApiError(error,'İşlem başarısız');
     },
   });
 }
@@ -596,8 +596,8 @@ export function useCloseDealLost() {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
       showInfo('Deal kaybedildi olarak işaretlendi');
     },
-    onError: () => {
-      showError('İşlem başarısız');
+    onError: (error) => {
+      showApiError(error,'İşlem başarısız');
     },
   });
 }
@@ -630,8 +630,8 @@ export function useCreateOpportunity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       showSuccess('Fırsat oluşturuldu');
     },
-    onError: () => {
-      showError('Fırsat oluşturulamadı');
+    onError: (error) => {
+      showApiError(error,'Fırsat oluşturulamadı');
     },
   });
 }
@@ -650,8 +650,8 @@ export function useWinOpportunity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       showSuccess('🎉 Fırsat kazanıldı!');
     },
-    onError: () => {
-      showError('İşlem başarısız');
+    onError: (error) => {
+      showApiError(error,'İşlem başarısız');
     },
   });
 }
@@ -680,8 +680,8 @@ export function useAddOpportunityProduct() {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
       showSuccess('Ürün eklendi');
     },
-    onError: () => {
-      showError('Ürün eklenemedi');
+    onError: (error) => {
+      showApiError(error,'Ürün eklenemedi');
     },
   });
 }
@@ -697,8 +697,8 @@ export function useRemoveOpportunityProduct() {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
       showSuccess('Ürün kaldırıldı');
     },
-    onError: () => {
-      showError('Ürün kaldırılamadı');
+    onError: (error) => {
+      showApiError(error,'Ürün kaldırılamadı');
     },
   });
 }
@@ -718,8 +718,8 @@ export function useLoseOpportunity() {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
       showInfo('Fırsat kaybedildi olarak işaretlendi');
     },
-    onError: () => {
-      showError('İşlem başarısız');
+    onError: (error) => {
+      showApiError(error,'İşlem başarısız');
     },
   });
 }
@@ -766,8 +766,8 @@ export function useUploadDocument() {
       });
       showSuccess('Döküman yüklendi');
     },
-    onError: () => {
-      showError('Döküman yüklenemedi');
+    onError: (error) => {
+      showApiError(error,'Döküman yüklenemedi');
     },
   });
 }
@@ -795,8 +795,8 @@ export function useDownloadDocument() {
       document.body.removeChild(a);
       showSuccess('Döküman indirildi');
     },
-    onError: () => {
-      showError('Döküman indirilemedi');
+    onError: (error) => {
+      showApiError(error,'Döküman indirilemedi');
     },
   });
 }
@@ -812,8 +812,8 @@ export function useUpdateDocument() {
       queryClient.invalidateQueries({ queryKey: ['crm', 'documents'] });
       showSuccess('Döküman güncellendi');
     },
-    onError: () => {
-      showError('Döküman güncellenemedi');
+    onError: (error) => {
+      showApiError(error,'Döküman güncellenemedi');
     },
   });
 }
@@ -827,8 +827,8 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({ queryKey: ['crm', 'documents'] });
       showSuccess('Döküman silindi');
     },
-    onError: () => {
-      showError('Döküman silinemedi');
+    onError: (error) => {
+      showApiError(error,'Döküman silinemedi');
     },
   });
 }
@@ -866,8 +866,8 @@ export function useAddCustomerTag() {
       queryClient.invalidateQueries({ queryKey: crmKeys.allTags() });
       showSuccess('Etiket eklendi');
     },
-    onError: () => {
-      showError('Etiket eklenemedi');
+    onError: (error) => {
+      showApiError(error,'Etiket eklenemedi');
     },
   });
 }
@@ -883,8 +883,8 @@ export function useRemoveCustomerTag() {
       queryClient.invalidateQueries({ queryKey: crmKeys.allTags() });
       showSuccess('Etiket kaldırıldı');
     },
-    onError: () => {
-      showError('Etiket kaldırılamadı');
+    onError: (error) => {
+      showApiError(error,'Etiket kaldırılamadı');
     },
   });
 }
@@ -964,8 +964,8 @@ export function useRecalculateSegment() {
       queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(id) });
       showSuccess('Segment yeniden hesaplandı');
     },
-    onError: () => {
-      showError('Hesaplama başarısız');
+    onError: (error) => {
+      showApiError(error,'Hesaplama başarısız');
     },
   });
 }

@@ -20,7 +20,7 @@ import {
   DatePicker,
   Radio,
 } from 'antd';
-import { showSuccess, showError } from '@/lib/utils/notifications';
+import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import {
   PlusOutlined,
   ReloadOutlined,
@@ -186,9 +186,7 @@ export default function ActivitiesPage() {
           showSuccess('Aktivite başarıyla silindi');
           setDrawerOpen(false);
         } catch (error: any) {
-          const apiError = error.response?.data;
-          const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
-          showError(errorMessage);
+          showApiError(error, 'Silme işlemi başarısız');
         }
       },
     });
@@ -200,9 +198,7 @@ export default function ActivitiesPage() {
       showSuccess('Aktivite tamamlandı olarak işaretlendi');
       setDrawerOpen(false);
     } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-      showError(errorMessage);
+      showApiError(error, 'İşlem başarısız');
     }
   };
 
@@ -222,9 +218,7 @@ export default function ActivitiesPage() {
       setCancelModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İptal işlemi başarısız';
-      showError(errorMessage);
+      showApiError(error, 'İptal işlemi başarısız');
     }
   };
 
@@ -246,9 +240,7 @@ export default function ActivitiesPage() {
       setRescheduleModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Yeniden planlama başarısız';
-      showError(errorMessage);
+      showApiError(error, 'Yeniden planlama başarısız');
     }
   };
 
@@ -269,19 +261,7 @@ export default function ActivitiesPage() {
       }
       setModalOpen(false);
     } catch (error: any) {
-      const apiError = error.response?.data;
-      let errorMessage = 'İşlem başarısız';
-
-      if (apiError) {
-        errorMessage = apiError.detail ||
-                      apiError.errors?.[0]?.message ||
-                      apiError.title ||
-                      errorMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showError(errorMessage);
+      showApiError(error, 'İşlem başarısız');
     }
   };
 
