@@ -85,10 +85,16 @@ public static class ServiceCollectionExtensions
                 {
                     Console.WriteLine($"JWT Message Received. Authorization Header: {context.Request.Headers["Authorization"]}");
 
-                    // First try to get token from auth-token cookie (httpOnly)
-                    var token = context.Request.Cookies["auth-token"];
+                    // First try to get token from access_token cookie (httpOnly)
+                    var token = context.Request.Cookies["access_token"];
 
-                    // If no auth-token cookie, try query string (for SignalR)
+                    // If no access_token cookie, try auth-token for backward compatibility
+                    if (string.IsNullOrEmpty(token))
+                    {
+                        token = context.Request.Cookies["auth-token"];
+                    }
+
+                    // If no cookies, try query string (for SignalR)
                     if (string.IsNullOrEmpty(token))
                     {
                         token = context.Request.Query["access_token"];
@@ -98,7 +104,7 @@ public static class ServiceCollectionExtensions
                     if (!string.IsNullOrEmpty(token))
                     {
                         context.Token = token;
-                        Console.WriteLine($"Token found and set from {(context.Request.Cookies.ContainsKey("auth-token") ? "cookie" : "query string")}");
+                        Console.WriteLine($"Token found and set from {(context.Request.Cookies.ContainsKey("access_token") ? "access_token cookie" : context.Request.Cookies.ContainsKey("auth-token") ? "auth-token cookie" : "query string")}");
                     }
                     else
                     {
