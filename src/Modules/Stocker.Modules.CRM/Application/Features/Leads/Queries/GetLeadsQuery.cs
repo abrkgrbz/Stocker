@@ -1,11 +1,13 @@
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.SharedKernel.MultiTenancy;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Queries;
 
-public class GetLeadsQuery : IRequest<IEnumerable<LeadDto>>
+public class GetLeadsQuery : IRequest<IEnumerable<LeadDto>>, ITenantRequest
 {
+    public Guid TenantId { get; set; }
     public string? Search { get; set; }
     public LeadStatus? Status { get; set; }
     public LeadRating? Rating { get; set; }

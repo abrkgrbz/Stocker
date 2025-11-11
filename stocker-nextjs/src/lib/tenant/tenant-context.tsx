@@ -103,13 +103,14 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
 
       setTenant(tenantInfo);
 
-      // Store in localStorage for quick access
-      localStorage.setItem('tenantId', tenantInfo.id);
-      localStorage.setItem('tenantIdentifier', tenantInfo.identifier);
+      // ❌ REMOVED: localStorage tenant storage - using cookies instead
+      // Backend uses tenant-code cookie + JWT token for tenant resolution
+      // localStorage.setItem('tenantId', tenantInfo.id);
+      // localStorage.setItem('tenantIdentifier', tenantInfo.identifier);
 
-      console.log('💾 Saved to localStorage:', {
-        tenantId: tenantInfo.id,
-        tenantIdentifier: tenantInfo.identifier,
+      console.log('✅ Tenant loaded:', {
+        id: tenantInfo.id,
+        identifier: tenantInfo.identifier,
       });
 
       return true;
