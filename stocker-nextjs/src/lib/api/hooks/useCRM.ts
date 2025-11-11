@@ -278,7 +278,11 @@ export function useCreateLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => CRMService.createLead(data),
+    mutationFn: (data: any) => {
+      // Backend expects { LeadData: {...} } format
+      const payload = { LeadData: data };
+      return CRMService.createLead(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       message.success('Lead oluşturuldu');
