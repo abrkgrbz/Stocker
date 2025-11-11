@@ -280,21 +280,31 @@ export default function DealsPage() {
   const dealsWithoutStage = filteredDeals.filter((d) => !d.stageId && d.status === 'Open');
 
   // Deal Card Component
-  const DealCard = ({ deal }: { deal: Deal }) => (
-    <Card
-      className="mb-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
-      bodyStyle={{ padding: '12px' }}
-      onClick={() => router.push(`/crm/deals/${deal.id}`)}
-    >
-      {/* Header: Title + Status */}
-      <div className="flex justify-between items-start mb-2">
-        <Text strong className="text-base flex-1">
-          {deal.title}
-        </Text>
-        <Tag color={statusColors[deal.status]} className="ml-2">
-          {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? 'Kazanıldı' : 'Kaybedildi'}
-        </Tag>
-      </div>
+  const DealCard = ({ deal }: { deal: Deal }) => {
+    // Determine card styling based on status
+    const cardClassName = deal.status === 'Won'
+      ? "mb-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-green-400 bg-green-50"
+      : deal.status === 'Lost'
+      ? "mb-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-red-400 bg-red-50 opacity-75"
+      : "mb-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200";
+
+    return (
+      <Card
+        className={cardClassName}
+        bodyStyle={{ padding: '12px' }}
+        onClick={() => router.push(`/crm/deals/${deal.id}`)}
+      >
+        {/* Header: Title + Status */}
+        <div className="flex justify-between items-start mb-2">
+          <Text strong className="text-base flex-1">
+            {deal.status === 'Lost' && <StopOutlined className="text-red-500 mr-1" />}
+            {deal.status === 'Won' && <TrophyOutlined className="text-green-500 mr-1" />}
+            {deal.title}
+          </Text>
+          <Tag color={statusColors[deal.status]} className="ml-2">
+            {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
+          </Tag>
+        </div>
 
       {/* Customer Name */}
       {deal.customerName && (
@@ -350,8 +360,21 @@ export default function DealsPage() {
           </Button>
         </div>
       )}
+
+      {/* Status Message for Closed Deals */}
+      {deal.status === 'Won' && (
+        <div className="text-center text-green-600 font-medium text-sm pt-2">
+          <TrophyOutlined /> Başarıyla tamamlandı!
+        </div>
+      )}
+      {deal.status === 'Lost' && (
+        <div className="text-center text-red-600 font-medium text-sm pt-2">
+          <CloseCircleOutlined /> Kaybedildi
+        </div>
+      )}
     </Card>
-  );
+    );
+  };
 
   // Kanban View
   const KanbanView = () => (
@@ -424,19 +447,31 @@ export default function DealsPage() {
   const ListView = () => (
     <Card>
       <div className="space-y-3">
-        {filteredDeals.map((deal) => (
-          <Card key={deal.id} className="cursor-pointer hover:shadow-md" onClick={() => router.push(`/crm/deals/${deal.id}`)}>
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <Text strong className="text-lg">
-                    {deal.title}
-                  </Text>
-                  <Tag color={stages.find((s) => s.id === deal.stageId)?.color}>
-                    {stages.find((s) => s.id === deal.stageId)?.name}
-                  </Tag>
-                  <Tag color={statusColors[deal.status]}>{deal.status}</Tag>
-                </div>
+        {filteredDeals.map((deal) => {
+          // Determine card styling based on status
+          const listCardClassName = deal.status === 'Won'
+            ? "cursor-pointer hover:shadow-md border-2 border-green-400 bg-green-50"
+            : deal.status === 'Lost'
+            ? "cursor-pointer hover:shadow-md border-2 border-red-400 bg-red-50 opacity-75"
+            : "cursor-pointer hover:shadow-md";
+
+          return (
+            <Card key={deal.id} className={listCardClassName} onClick={() => router.push(`/crm/deals/${deal.id}`)}>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    {deal.status === 'Lost' && <StopOutlined className="text-red-500" />}
+                    {deal.status === 'Won' && <TrophyOutlined className="text-green-500" />}
+                    <Text strong className="text-lg">
+                      {deal.title}
+                    </Text>
+                    <Tag color={stages.find((s) => s.id === deal.stageId)?.color}>
+                      {stages.find((s) => s.id === deal.stageId)?.name}
+                    </Tag>
+                    <Tag color={statusColors[deal.status]}>
+                      {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
+                    </Tag>
+                  </div>
                 {deal.description && <Text type="secondary">{deal.description}</Text>}
                 {deal.customerName && (
                   <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
@@ -458,7 +493,8 @@ export default function DealsPage() {
               </div>
             </div>
           </Card>
-        ))}
+          );
+        })}
         {filteredDeals.length === 0 && (
           <div className="text-center text-gray-400 py-8">Fırsat bulunamadı</div>
         )}
