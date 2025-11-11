@@ -270,7 +270,16 @@ export default function DealsPage() {
   // Group deals by stage for Kanban view
   const dealsByStage = stages.reduce(
     (acc, stage) => {
-      acc[stage.id] = filteredDeals.filter((d) => d.stageId === stage.id && d.status === 'Open');
+      // For "Kazanıldı" stage, show both Open deals in this stage AND all Won deals
+      const isWonStage = stage.name.toLowerCase().includes('kazanıldı') || stage.name.toLowerCase().includes('kazanildi');
+
+      if (isWonStage) {
+        acc[stage.id] = filteredDeals.filter((d) =>
+          (d.stageId === stage.id && d.status === 'Open') || d.status === 'Won'
+        );
+      } else {
+        acc[stage.id] = filteredDeals.filter((d) => d.stageId === stage.id && d.status === 'Open');
+      }
       return acc;
     },
     {} as Record<string, Deal[]>
