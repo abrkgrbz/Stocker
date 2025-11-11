@@ -123,6 +123,21 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Log all errors for debugging
+    if (error.response) {
+      console.error('❌ API Error:', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: {
+          'X-Tenant-Code': originalRequest.headers?.['X-Tenant-Code'],
+          'X-Tenant-Id': originalRequest.headers?.['X-Tenant-Id']
+        }
+      });
+    }
+
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       // Check if token is explicitly expired (from backend header)
