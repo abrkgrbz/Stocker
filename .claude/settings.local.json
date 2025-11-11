@@ -25,7 +25,8 @@
       "Bash(findstr:*)",
       "Bash(dotnet tool search:*)",
       "Bash(Select-Object -Last 20)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dotnet ef migrations add:*)"
     ],
     "deny": [],
     "ask": []

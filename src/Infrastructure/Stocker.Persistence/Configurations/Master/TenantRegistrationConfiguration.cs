@@ -139,5 +139,8 @@ public class TenantRegistrationConfiguration : IEntityTypeConfiguration<TenantRe
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.RegistrationDate);
         builder.HasIndex(x => new { x.Status, x.RegistrationDate });
+
+        // Index on AdminEmail for login email check performance
+        builder.HasIndex(x => x.AdminEmail);
     }
 }

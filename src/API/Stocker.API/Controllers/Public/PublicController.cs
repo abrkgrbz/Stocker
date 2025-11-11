@@ -228,11 +228,12 @@ public class PublicController : ControllerBase
             var normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
             // Find MasterUser by email - optimized query
-            var masterUser = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
+            var masterUsers = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
                 .Where(u => u.IsActive)
                 .Select(u => new { u.Id, Email = u.Email.Value, u.IsActive })
-                .AsEnumerable() // Switch to client evaluation only for final filter
-                .FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
+                .ToListAsync();
+
+            var masterUser = masterUsers.FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
 
             if (masterUser == null)
             {
@@ -259,13 +260,15 @@ public class PublicController : ControllerBase
             }
 
             // Get tenant registrations where this email is the admin - optimized query
-            var tenantRegistrations = await _masterContext.TenantRegistrations
+            var allRegistrations = await _masterContext.TenantRegistrations
                 .Where(r => r.TenantId.HasValue)
                 .Select(r => new { Email = r.AdminEmail.Value, TenantId = r.TenantId!.Value })
-                .AsEnumerable() // Switch to client evaluation only for final filter
+                .ToListAsync();
+
+            var tenantRegistrations = allRegistrations
                 .Where(r => r.Email.ToLowerInvariant() == normalizedEmail)
                 .Select(r => r.TenantId)
-                .ToListAsync();
+                .ToList();
 
             // Get tenant details for these registrations
             var tenantsData = await _masterContext.Tenants
