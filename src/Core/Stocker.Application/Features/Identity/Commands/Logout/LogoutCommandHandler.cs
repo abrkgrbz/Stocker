@@ -1,29 +1,51 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
+using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Application.Features.Identity.Commands.Logout;
 
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result>
 {
     private readonly ILogger<LogoutCommandHandler> _logger;
+    private readonly IMasterDbContext _masterContext;
 
-    public LogoutCommandHandler(ILogger<LogoutCommandHandler> logger)
+    public LogoutCommandHandler(
+        ILogger<LogoutCommandHandler> logger,
+        IMasterDbContext masterContext)
     {
         _logger = logger;
+        _masterContext = masterContext;
     }
 
     public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
-        // TODO: Implement actual logout logic (invalidate tokens, etc.)
-        _logger.LogInformation("User {UserId} logged out", request.UserId);
+        _logger.LogInformation("Processing logout for user {UserId}", request.UserId);
 
-        // In a real implementation, you would:
-        // 1. Invalidate the refresh token in database
-        // 2. Add the access token to a blacklist (if using token blacklisting)
-        // 3. Clear any server-side session data
+        if (!Guid.TryParse(request.UserId, out var userId))
+        {
+            _logger.LogWarning("Invalid user ID format: {UserId}", request.UserId);
+            return Result.Failure(Error.Validation("Logout.InvalidUserId", "Invalid user ID format"));
+        }
 
-        await Task.CompletedTask; // Simulating async operation
+        // Find and revoke refresh tokens
+        var masterUser = await _masterContext.MasterUsers.FindAsync(new object[] { userId }, cancellationToken);
+
+        if (masterUser == null)
+        {
+            _logger.LogWarning("User {UserId} not found during logout", userId);
+            // Return success anyway - user might have been deleted
+            return Result.Success();
+        }
+
+        // Revoke all refresh tokens for this user
+        masterUser.RevokeRefreshToken();
+        await _masterContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("User {UserId} logged out successfully - refresh tokens revoked", userId);
+
+        // Note: Access tokens are JWT and stateless, they will expire naturally
+        // For additional security, consider implementing token blacklisting
 
         return Result.Success();
     }

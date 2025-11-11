@@ -125,24 +125,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      // Call logout endpoint - backend will clear HttpOnly cookies
-      await ApiService.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear tenant-code cookie (not httpOnly, so we must clear it manually)
-      document.cookie = 'tenant-code=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.stoocker.app';
-      document.cookie = 'tenant-code=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; // Also clear without domain
+      console.log('🚪 Logging out...');
 
+      // Call logout endpoint - backend will revoke refresh tokens
+      await ApiService.post('/auth/logout');
+
+      console.log('✅ Logout API call successful');
+    } catch (error) {
+      console.error('❌ Logout API error:', error);
+      // Continue with client-side cleanup even if API fails
+    } finally {
+      // Clear user state
       setUser(null);
 
-      // Redirect to auth subdomain for login
-      const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
-      if (isProduction) {
-        window.location.href = 'https://auth.stoocker.app/login';
-      } else {
-        router.push('/login');
+      // ✅ KEEP tenant-code cookie for easy re-login on same subdomain
+      // Only clear auth-related cookies (HttpOnly cookies cleared by backend)
+
+      // Clear any localStorage auth data
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('tenantId');
+        localStorage.removeItem('tenantIdentifier');
+        console.log('🧹 Cleared localStorage auth data');
       }
+
+      console.log('🍪 Tenant-code cookie preserved for re-login');
+
+      // Stay on same subdomain for re-login
+      router.push('/login');
+
+      console.log('✅ Logout complete - redirecting to /login');
     }
   };
 

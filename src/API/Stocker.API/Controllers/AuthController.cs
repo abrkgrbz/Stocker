@@ -162,7 +162,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Logout current user
+    /// Logout current user and clear HttpOnly cookies
     /// </summary>
     [HttpPost("logout")]
     [Authorize]
@@ -170,20 +170,62 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
             throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
-        
+
+        // Revoke refresh tokens in database
         var command = new LogoutCommand { UserId = userId };
         await _mediator.Send(command);
-        
-        _logger.LogInformation("User {UserId} logged out", userId);
-        
+
+        _logger.LogInformation("User {UserId} logged out - clearing auth cookies", userId);
+
+        // Clear HttpOnly auth cookies (but keep tenant-code!)
+        ClearAuthCookies();
+
         return Ok(new
         {
             success = true,
             message = "Logged out successfully"
         });
+    }
+
+    /// <summary>
+    /// Helper method to clear authentication cookies
+    /// </summary>
+    private void ClearAuthCookies()
+    {
+        // Clear access_token cookie (if exists from SecureAuth)
+        Response.Cookies.Delete("access_token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Domain = ".stoocker.app",
+            Path = "/"
+        });
+
+        // Clear refresh_token cookie (if exists from SecureAuth)
+        Response.Cookies.Delete("refresh_token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Domain = ".stoocker.app",
+            Path = "/"
+        });
+
+        // Clear auth-token cookie (from Next.js login route)
+        Response.Cookies.Delete("auth-token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Domain = ".stoocker.app",
+            Path = "/"
+        });
+
+        _logger.LogDebug("Auth cookies cleared (tenant-code preserved)");
     }
 
     /// <summary>
