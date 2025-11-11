@@ -25,6 +25,12 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
         builder.Property(d => d.Description)
             .HasMaxLength(2000);
 
+        builder.Property(d => d.LostReason)
+            .HasMaxLength(500);
+
+        builder.Property(d => d.CompetitorName)
+            .HasMaxLength(200);
+
         // Money value objects
         builder.OwnsOne(d => d.Value, money =>
         {
