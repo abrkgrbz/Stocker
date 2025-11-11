@@ -153,11 +153,17 @@ apiClient.interceptors.response.use(
       if (typeof window !== 'undefined') {
         // Clear all auth data
         localStorage.clear();
-        // Clear all cookies
+
+        // Clear auth cookies (but keep tenant-code!)
         document.cookie.split(";").forEach(c => {
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.stoocker.app");
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+          const cookieName = c.trim().split('=')[0];
+          // Only clear auth-related cookies, preserve tenant-code
+          if (cookieName !== 'tenant-code') {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.stoocker.app");
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+          }
         });
+
         // Redirect to login
         window.location.href = '/login';
       }
@@ -175,10 +181,16 @@ apiClient.interceptors.response.use(
           // Clear all auth data
           localStorage.removeItem('tenantId');
           localStorage.removeItem('tenantIdentifier');
-          // Clear cookies
+
+          // Clear auth cookies (but keep tenant-code!)
           document.cookie.split(";").forEach(c => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            const cookieName = c.trim().split('=')[0];
+            // Only clear auth-related cookies, preserve tenant-code
+            if (cookieName !== 'tenant-code') {
+              document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            }
           });
+
           window.location.href = '/login';
         }
         return Promise.reject(error);
