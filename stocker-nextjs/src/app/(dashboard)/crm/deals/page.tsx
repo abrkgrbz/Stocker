@@ -376,6 +376,12 @@ export default function DealsPage() {
     );
   };
 
+  // Get won and lost deals
+  const wonDeals = filteredDeals.filter((d) => d.status === 'Won');
+  const lostDeals = filteredDeals.filter((d) => d.status === 'Lost');
+  const wonAmount = wonDeals.reduce((sum, d) => sum + d.amount, 0);
+  const lostAmount = lostDeals.reduce((sum, d) => sum + d.amount, 0);
+
   // Kanban View
   const KanbanView = () => (
     <div className="flex gap-4 overflow-x-auto pb-4">
@@ -440,6 +446,60 @@ export default function DealsPage() {
           </Card>
         </div>
       )}
+
+      {/* Kazanıldı (Won) Column */}
+      <div className="flex-shrink-0" style={{ width: 300 }}>
+        <Card
+          title={
+            <div>
+              <div className="flex items-center gap-2">
+                <TrophyOutlined className="text-green-500" />
+                <span>🎉 Kazanıldı</span>
+                <Tag color="green">{wonDeals.length}</Tag>
+              </div>
+              <div className="text-sm font-normal text-green-600 mt-1">
+                ₺{wonAmount.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          }
+          className="h-full border-2 border-green-400"
+          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#f6ffed' }}
+        >
+          {wonDeals.map((deal) => (
+            <DealCard key={deal.id} deal={deal} />
+          ))}
+          {wonDeals.length === 0 && (
+            <div className="text-center text-gray-400 py-4">Kazanılan fırsat yok</div>
+          )}
+        </Card>
+      </div>
+
+      {/* Kaybedildi (Lost) Column */}
+      <div className="flex-shrink-0" style={{ width: 300 }}>
+        <Card
+          title={
+            <div>
+              <div className="flex items-center gap-2">
+                <StopOutlined className="text-red-500" />
+                <span>❌ Kaybedildi</span>
+                <Tag color="red">{lostDeals.length}</Tag>
+              </div>
+              <div className="text-sm font-normal text-red-600 mt-1">
+                ₺{lostAmount.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          }
+          className="h-full border-2 border-red-400"
+          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#fff1f0' }}
+        >
+          {lostDeals.map((deal) => (
+            <DealCard key={deal.id} deal={deal} />
+          ))}
+          {lostDeals.length === 0 && (
+            <div className="text-center text-gray-400 py-4">Kaybedilen fırsat yok</div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 
