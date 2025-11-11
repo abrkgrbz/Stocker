@@ -306,7 +306,9 @@ export function useCreateLead() {
       return CRMService.createLead({ LeadData: leadData });
     },
     onSuccess: () => {
+      // Force immediate refetch of leads list to show new lead
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
+      queryClient.refetchQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead oluşturuldu');
     },
     onError: (error) => {
