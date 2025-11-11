@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Application.Features.Leads.Queries;
 using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Handlers;
 
-public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, IEnumerable<LeadDto>>
+public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, PagedResult<LeadDto>>
 {
     private readonly ILeadRepository _leadRepository;
     private readonly IMapper _mapper;
@@ -18,13 +19,13 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, IEnumerable<L
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<LeadDto>> Handle(GetLeadsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<LeadDto>> Handle(GetLeadsQuery request, CancellationToken cancellationToken)
     {
         var query = _leadRepository.GetQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            query = query.Where(l => 
+            query = query.Where(l =>
                 l.FirstName.Contains(request.Search) ||
                 l.LastName.Contains(request.Search) ||
                 l.Email.Contains(request.Search) ||
@@ -97,6 +98,6 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, IEnumerable<L
             })
             .ToListAsync(cancellationToken);
 
-        return leads;
+        return PagedResult<LeadDto>.Create(leads, totalCount, request.Page, request.PageSize);
     }
 }

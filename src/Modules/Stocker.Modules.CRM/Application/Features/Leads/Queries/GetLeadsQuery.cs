@@ -2,10 +2,11 @@ using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.SharedKernel.MultiTenancy;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Queries;
 
-public class GetLeadsQuery : IRequest<IEnumerable<LeadDto>>, ITenantRequest
+public class GetLeadsQuery : IRequest<PagedResult<LeadDto>>, ITenantRequest
 {
     public Guid TenantId { get; set; }
     public string? Search { get; set; }
