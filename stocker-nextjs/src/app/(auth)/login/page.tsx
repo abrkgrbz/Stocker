@@ -33,6 +33,15 @@ function LoginForm() {
         const currentPath = window.location.pathname + window.location.search + window.location.hash
         window.location.href = `${authDomain}${currentPath}`
       }
+
+      // Extract tenant-code from subdomain and set cookie
+      const parts = hostname.split('.')
+      if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'auth') {
+        const tenantCode = parts[0]
+        // Set tenant-code cookie for API requests
+        document.cookie = `tenant-code=${tenantCode}; path=/; domain=.stoocker.app; SameSite=Lax`
+        console.log('🍪 Set tenant-code cookie from subdomain:', tenantCode)
+      }
     }
   }, [])
 
