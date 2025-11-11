@@ -90,6 +90,19 @@ apiClient.interceptors.request.use(
       // Backend uses token + X-Tenant-Code for authorization
       // Old tenantId in localStorage was causing "Tenant.Unauthorized" errors
 
+      // Clean up old localStorage data if tenant-code exists in cookie
+      if (tenantCode && typeof window !== 'undefined') {
+        const storedTenantId = localStorage.getItem('tenantId');
+        const storedTenantIdentifier = localStorage.getItem('tenantIdentifier');
+
+        // If we have a different tenant-code in cookie, clear old localStorage data
+        if (storedTenantId || storedTenantIdentifier) {
+          console.warn('🧹 Clearing old localStorage tenant data');
+          localStorage.removeItem('tenantId');
+          localStorage.removeItem('tenantIdentifier');
+        }
+      }
+
       // Set Content-Type based on data type
       // If data is FormData, let axios set multipart/form-data with boundary automatically
       // Otherwise, set application/json as default
@@ -132,6 +145,23 @@ apiClient.interceptors.response.use(
           'X-Tenant-Code': originalRequest.headers?.['X-Tenant-Code']
         }
       });
+    }
+
+    // Handle Tenant.Unauthorized (400) - Token tenant mismatch
+    if (error.response?.status === 400 && error.response?.data?.code === 'Tenant.Unauthorized') {
+      console.error('🔒 Tenant mismatch - access token belongs to different tenant');
+      if (typeof window !== 'undefined') {
+        // Clear all auth data
+        localStorage.clear();
+        // Clear all cookies
+        document.cookie.split(";").forEach(c => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.stoocker.app");
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        // Redirect to login
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
     }
 
     // Handle 401 Unauthorized
