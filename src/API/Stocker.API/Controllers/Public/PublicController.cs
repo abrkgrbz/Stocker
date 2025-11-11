@@ -227,13 +227,11 @@ public class PublicController : ControllerBase
         {
             var normalizedEmail = request.Email.ToLowerInvariant().Trim();
 
-            // Find MasterUser by email
-            // Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
-            var masterUsers = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
+            // Find MasterUser by email - optimized query
+            var masterUser = await _masterContext.Set<Domain.Master.Entities.MasterUser>()
+                .Where(u => u.IsActive)
                 .Select(u => new { u.Id, Email = u.Email.Value, u.IsActive })
-                .ToListAsync();
-
-            var masterUser = masterUsers
+                .AsEnumerable() // Switch to client evaluation only for final filter
                 .FirstOrDefault(u => u.Email.ToLowerInvariant() == normalizedEmail);
 
             if (masterUser == null)
@@ -260,18 +258,14 @@ public class PublicController : ControllerBase
                 });
             }
 
-            // Get tenant registrations where this email is the admin
-            // This ensures users only see tenants they created or have access to
-            // Note: Cannot use .Value.ToLower() in LINQ - fetch all and filter in memory
-            var allRegistrations = await _masterContext.TenantRegistrations
+            // Get tenant registrations where this email is the admin - optimized query
+            var tenantRegistrations = await _masterContext.TenantRegistrations
                 .Where(r => r.TenantId.HasValue)
                 .Select(r => new { Email = r.AdminEmail.Value, TenantId = r.TenantId!.Value })
-                .ToListAsync();
-
-            var tenantRegistrations = allRegistrations
+                .AsEnumerable() // Switch to client evaluation only for final filter
                 .Where(r => r.Email.ToLowerInvariant() == normalizedEmail)
                 .Select(r => r.TenantId)
-                .ToList();
+                .ToListAsync();
 
             // Get tenant details for these registrations
             var tenantsData = await _masterContext.Tenants
