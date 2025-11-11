@@ -254,7 +254,7 @@ export function useLeads(filters?: any) {
 export function useLead(id: Guid) {
   return useQuery({
     queryKey: crmKeys.lead(id),
-    queryFn: () => CRMService.getLead(Number(id)),
+    queryFn: () => CRMService.getLead(id),
     enabled: !!id,
   });
 }
@@ -318,10 +318,10 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Lead> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Lead> }) =>
       CRMService.updateLead(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.lead(variables.id.toString()) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.lead(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead güncellendi');
     },

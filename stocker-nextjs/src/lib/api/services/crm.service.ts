@@ -86,31 +86,31 @@ export interface Customer {
 }
 
 export interface Lead {
-  id: number;
+  id: string; // Guid from backend
   firstName: string;
   lastName: string;
   fullName?: string;
   email: string;
   phone: string | null;
-  mobilePhone: string | null;
+  mobilePhone?: string | null;
   companyName: string | null;
   jobTitle: string | null;
-  industry: string | null;
+  industry?: string | null;
   source: string | null;
-  status: number; // 0=New, 1=Contacted, 2=Working, 3=Qualified, 4=Unqualified, 5=Converted, 6=Lost
-  rating: number; // 0=Unrated, 1=Cold, 2=Warm, 3=Hot
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  postalCode: string | null;
-  website: string | null;
-  annualRevenue: number | null;
-  numberOfEmployees: number | null;
+  status: 'New' | 'Contacted' | 'Working' | 'Qualified' | 'Unqualified' | 'Converted' | 'Lost';
+  rating: 'Unrated' | 'Cold' | 'Warm' | 'Hot';
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  website?: string | null;
+  annualRevenue?: number | null;
+  numberOfEmployees?: number | null;
   description: string | null;
-  assignedToUserId: string | null;
-  convertedDate: string | null;
-  convertedToCustomerId: string | null;
+  assignedToUserId?: string | null;
+  convertedDate?: string | null;
+  convertedToCustomerId?: string | null;
   isConverted: boolean;
   score: number;
   createdAt: string;
@@ -435,7 +435,7 @@ export class CRMService {
   /**
    * Get single lead by ID
    */
-  static async getLead(id: number): Promise<Lead> {
+  static async getLead(id: string): Promise<Lead> {
     return ApiService.get<Lead>(this.getPath(`leads/${id}`));
   }
 
@@ -449,7 +449,7 @@ export class CRMService {
   /**
    * Update existing lead
    */
-  static async updateLead(id: number, data: Partial<Lead>): Promise<Lead> {
+  static async updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
     return ApiService.put<Lead>(this.getPath(`leads/${id}`), { id, ...data });
   }
 

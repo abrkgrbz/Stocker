@@ -27,7 +27,7 @@ interface LeadsTableProps {
   totalCount: number;
   onPageChange: (page: number, size: number) => void;
   onEdit: (lead: Lead) => void;
-  onDelete: (id: number, lead: Lead) => void;
+  onDelete: (id: string, lead: Lead) => void;
   onConvert: (lead: Lead) => void;
   onQualify?: (lead: Lead) => void;
   onDisqualify?: (lead: Lead) => void;
@@ -44,15 +44,15 @@ const sourceColors: Record<string, string> = {
   Other: 'default',
 };
 
-// Lead status mapping (numeric to string)
-const leadStatusMap: Record<number, { label: string; color: string }> = {
-  0: { label: 'Yeni', color: 'blue' },
-  1: { label: 'İletişime Geçildi', color: 'cyan' },
-  2: { label: 'Çalışılıyor', color: 'geekblue' },
-  3: { label: 'Nitelikli', color: 'green' },
-  4: { label: 'Niteliksiz', color: 'red' },
-  5: { label: 'Dönüştürüldü', color: 'purple' },
-  6: { label: 'Kayıp', color: 'default' },
+// Lead status mapping (string enum to Turkish labels)
+const leadStatusMap: Record<string, { label: string; color: string }> = {
+  'New': { label: 'Yeni', color: 'blue' },
+  'Contacted': { label: 'İletişime Geçildi', color: 'cyan' },
+  'Working': { label: 'Çalışılıyor', color: 'geekblue' },
+  'Qualified': { label: 'Nitelikli', color: 'green' },
+  'Unqualified': { label: 'Niteliksiz', color: 'red' },
+  'Converted': { label: 'Dönüştürüldü', color: 'purple' },
+  'Lost': { label: 'Kayıp', color: 'default' },
 };
 
 export function LeadsTable({
@@ -178,15 +178,15 @@ export function LeadsTable({
       dataIndex: 'status',
       key: 'status',
       filters: [
-        { text: 'Yeni', value: 0 },
-        { text: 'İletişime Geçildi', value: 1 },
-        { text: 'Çalışılıyor', value: 2 },
-        { text: 'Nitelikli', value: 3 },
-        { text: 'Niteliksiz', value: 4 },
-        { text: 'Dönüştürüldü', value: 5 },
+        { text: 'Yeni', value: 'New' },
+        { text: 'İletişime Geçildi', value: 'Contacted' },
+        { text: 'Çalışılıyor', value: 'Working' },
+        { text: 'Nitelikli', value: 'Qualified' },
+        { text: 'Niteliksiz', value: 'Unqualified' },
+        { text: 'Dönüştürüldü', value: 'Converted' },
       ],
       onFilter: (value, record) => record.status === value,
-      render: (status: number) => {
+      render: (status: Lead['status']) => {
         const statusInfo = leadStatusMap[status] || { label: 'Bilinmiyor', color: 'default' };
         return <Tag color={statusInfo.color}>{statusInfo.label}</Tag>;
       },
@@ -225,7 +225,7 @@ export function LeadsTable({
                 icon: <EditOutlined />,
                 onClick: () => onEdit(record),
               },
-              ...(record.status !== 3 && record.status !== 5 && onQualify
+              ...(record.status !== 'Qualified' && record.status !== 'Converted' && onQualify
                 ? [
                     {
                       key: 'qualify',
@@ -235,7 +235,7 @@ export function LeadsTable({
                     },
                   ]
                 : []),
-              ...(record.status !== 4 && record.status !== 5 && onDisqualify
+              ...(record.status !== 'Unqualified' && record.status !== 'Converted' && onDisqualify
                 ? [
                     {
                       key: 'disqualify',
@@ -249,7 +249,7 @@ export function LeadsTable({
                 key: 'convert',
                 label: 'Müşteriye Dönüştür',
                 icon: <SwapOutlined />,
-                disabled: record.status === 5,
+                disabled: record.status === 'Converted',
                 onClick: () => onConvert(record),
               },
               {
