@@ -15,7 +15,15 @@
       "Bash(Select-String -Pattern \"error|warning\")",
       "Bash(Select-Object -Last 10)",
       "Bash(git add:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(Select-String -Pattern \"error|warning\" -Context 0,2)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"cd /root/Stocker && git pull origin master && docker-compose down api && docker-compose up -d --build api\")",
+      "Bash(git push:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"find ~ -type d -name ''Stocker*'' 2>/dev/null | head -5\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"cd /root && ls -la\")",
+      "Bash(git checkout:*)",
+      "Bash(findstr:*)",
+      "Bash(dotnet tool search:*)"
     ],
     "deny": [],
     "ask": []
