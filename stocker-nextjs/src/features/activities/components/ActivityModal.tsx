@@ -207,6 +207,12 @@ export function ActivityModal({
     try {
       const values = await form.validateFields();
 
+      // Validate that startTime exists
+      if (!values.startTime) {
+        message.error('Başlangıç zamanı gerekli');
+        return;
+      }
+
       // Map frontend fields to backend CreateActivityCommand
       const mappedValues = {
         subject: values.title, // Map title to subject
@@ -229,6 +235,7 @@ export function ActivityModal({
       setCurrentStep(0);
     } catch (error) {
       console.error('Validation failed:', error);
+      message.error('Lütfen tüm gerekli alanları doldurun');
     }
   };
 
