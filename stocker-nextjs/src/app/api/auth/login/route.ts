@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
     const backendData = await backendResponse.json()
 
     console.log('🔍 Backend response:', JSON.stringify(backendData, null, 2))
+    console.log('🍪 Backend Set-Cookie headers:', backendResponse.headers.get('set-cookie'))
 
     // Validate backend response
     const responseValidation = LoginResponseSchema.safeParse(backendData)
@@ -208,19 +209,29 @@ export async function POST(request: NextRequest) {
     console.log('🍪 Cookie domain:', cookieDomain)
     console.log('🔒 Is development:', isDevelopment)
 
-    // Set auth token cookie (httpOnly, secure, sameSite, domain)
-    if (loginData?.accessToken) {
-      console.log('🍪 Setting auth-token cookie...')
-      response.cookies.set('auth-token', loginData.accessToken, {
-        httpOnly: true,
-        secure: !isDevelopment, // HTTPS in production
-        sameSite: isDevelopment ? 'lax' : 'none', // 'none' for cross-subdomain in production
-        domain: cookieDomain,
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: '/'
+    // Forward cookies from backend response (access_token, refresh_token)
+    const backendCookies = backendResponse.headers.get('set-cookie')
+    if (backendCookies) {
+      console.log('🍪 Forwarding backend cookies:', backendCookies)
+      // Parse and set each cookie from backend
+      const cookies = backendCookies.split(',').map(c => c.trim())
+      cookies.forEach(cookie => {
+        const [cookiePart] = cookie.split(';')
+        const [name, value] = cookiePart.split('=')
+        if (name && value && (name === 'access_token' || name === 'refresh_token')) {
+          console.log(`🍪 Setting ${name} cookie from backend`)
+          response.cookies.set(name, value, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            domain: cookieDomain,
+            maxAge: name === 'access_token' ? 60 * 60 : 60 * 60 * 24 * 7, // 1h for access, 7d for refresh
+            path: '/'
+          })
+        }
       })
     } else {
-      console.error('❌ No accessToken in loginData!')
+      console.warn('⚠️ No Set-Cookie header from backend')
     }
 
     // Set tenant cookie for SSR
