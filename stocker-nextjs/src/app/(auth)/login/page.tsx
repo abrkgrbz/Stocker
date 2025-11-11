@@ -483,6 +483,7 @@ function LoginForm() {
                   aria-label="E-posta adresi"
                   aria-describedby={error ? "email-error" : undefined}
                   aria-invalid={!!error}
+                  suppressHydrationWarning
                 />
               </div>
 
@@ -598,6 +599,7 @@ function LoginForm() {
                   aria-label="Şifre"
                   aria-describedby={error ? "email-error" : undefined}
                   aria-invalid={!!error}
+                  suppressHydrationWarning
                 />
               </div>
 
