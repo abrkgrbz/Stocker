@@ -223,11 +223,11 @@ export function ActivityModal({
         dueDate: values.startTime.toISOString(), // Map startTime to dueDate
         duration: values.endTime ? Math.round((values.endTime.valueOf() - values.startTime.valueOf()) / 60000) : null, // Calculate duration in minutes
         location: values.location || null,
-        leadId: values.leadId || null,
-        customerId: values.customerId || null,
-        contactId: values.contactId || null,
-        opportunityId: values.opportunityId || null,
-        dealId: values.dealId || null,
+        leadId: values.leadId ? String(values.leadId) : null, // Convert to string for Guid
+        customerId: values.customerId ? String(values.customerId) : null, // Convert to string for Guid
+        contactId: values.contactId ? String(values.contactId) : null, // Convert to string for Guid
+        opportunityId: values.opportunityId ? String(values.opportunityId) : null, // Convert to string for Guid
+        dealId: values.dealId ? String(values.dealId) : null, // Convert to string for Guid
         notes: values.notes || null,
       };
 

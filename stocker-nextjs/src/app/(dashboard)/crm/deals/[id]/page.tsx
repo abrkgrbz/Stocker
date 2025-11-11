@@ -54,10 +54,18 @@ export default function DealDetailPage() {
   // Handle activity submission
   const handleActivitySubmit = async (values: any) => {
     try {
-      await createActivity.mutateAsync({
+      console.log('Submitting activity with values:', values);
+      console.log('DealId from params:', dealId);
+
+      // If dealId is not in values, add it from route params
+      const activityData = {
         ...values,
-        dealId: Number(dealId),
-      });
+        dealId: values.dealId || dealId, // Use dealId from values if exists, otherwise from route params
+      };
+
+      console.log('Final activity data:', activityData);
+
+      await createActivity.mutateAsync(activityData);
       setActivityModalOpen(false);
       notification.success({
         message: 'Başarılı',
