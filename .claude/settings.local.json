@@ -13,7 +13,9 @@
       "Bash(git restore:*)",
       "Bash(ls:*)",
       "Bash(Select-String -Pattern \"error|warning\")",
-      "Bash(Select-Object -Last 10)"
+      "Bash(Select-Object -Last 10)",
+      "Bash(git add:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

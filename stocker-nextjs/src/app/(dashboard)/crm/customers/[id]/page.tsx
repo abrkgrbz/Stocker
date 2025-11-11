@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, Avatar, Tag, Button, Tabs, Timeline, Progress, Statistic, Row, Col, Badge, Descriptions, Empty, Divider, Tooltip, Space, Alert, FloatButton, Modal, Form, Input, Select, InputNumber, notification, Skeleton } from 'antd';
+import { Card, Avatar, Tag, Button, Tabs, Timeline, Progress, Statistic, Row, Col, Badge, Descriptions, Empty, Divider, Tooltip, Space, Alert, FloatButton, Modal, Form, Input, Select, InputNumber, Skeleton } from 'antd';
+import { showSuccess, showError } from '@/lib/utils/notifications';
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -84,18 +85,10 @@ export default function CustomerDetailPage() {
         id: customerId,
         data: values,
       });
-      notification.success({
-        message: 'Başarılı',
-        description: 'Müşteri bilgileri başarıyla güncellendi!',
-        placement: 'bottomRight',
-      });
+      showSuccess('Müşteri bilgileri başarıyla güncellendi!');
       setIsEditModalOpen(false);
     } catch (error) {
-      notification.error({
-        message: 'Hata',
-        description: 'Müşteri güncellenirken bir hata oluştu',
-        placement: 'bottomRight',
-      });
+      showError('Müşteri güncellenirken bir hata oluştu');
     }
   };
 
@@ -307,17 +300,9 @@ export default function CustomerDetailPage() {
           onClick={() => {
             const url = window.location.href;
             navigator.clipboard.writeText(url).then(() => {
-              notification.success({
-                message: 'Başarılı',
-                description: 'Link panoya kopyalandı!',
-                placement: 'bottomRight',
-              });
+              showSuccess('Link panoya kopyalandı!');
             }).catch(() => {
-              notification.error({
-                message: 'Hata',
-                description: 'Link kopyalanamadı',
-                placement: 'bottomRight',
-              });
+              showError('Link kopyalanamadı');
             });
           }}
         />

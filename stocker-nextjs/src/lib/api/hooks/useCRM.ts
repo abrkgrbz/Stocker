@@ -4,8 +4,8 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
 import { CRMService } from '../services/crm.service';
+import { showSuccess, showError, showInfo } from '@/lib/utils/notifications';
 import type {
   Guid,
   DateTime,
@@ -148,10 +148,10 @@ export function useCreateActivity() {
     mutationFn: CRMService.createActivity,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite başarıyla oluşturuldu');
+      showSuccess('Aktivite başarıyla oluşturuldu');
     },
     onError: () => {
-      message.error('Aktivite oluşturulamadı');
+      showError('Aktivite oluşturulamadı');
     },
   });
 }
@@ -165,10 +165,10 @@ export function useUpdateActivity() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id.toString()) });
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite güncellendi');
+      showSuccess('Aktivite güncellendi');
     },
     onError: () => {
-      message.error('Aktivite güncellenemedi');
+      showError('Aktivite güncellenemedi');
     },
   });
 }
@@ -181,10 +181,10 @@ export function useCompleteActivity() {
       CRMService.completeActivity(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite tamamlandı');
+      showSuccess('Aktivite tamamlandı');
     },
     onError: () => {
-      message.error('Aktivite tamamlanamadı');
+      showError('Aktivite tamamlanamadı');
     },
   });
 }
@@ -197,10 +197,10 @@ export function useCancelActivity() {
       CRMService.cancelActivity(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite iptal edildi');
+      showSuccess('Aktivite iptal edildi');
     },
     onError: () => {
-      message.error('Aktivite iptal edilemedi');
+      showError('Aktivite iptal edilemedi');
     },
   });
 }
@@ -217,10 +217,10 @@ export function useRescheduleActivity() {
     }) => CRMService.rescheduleActivity(id, newStartDate, newEndDate, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite yeniden planlandı');
+      showSuccess('Aktivite yeniden planlandı');
     },
     onError: () => {
-      message.error('Aktivite yeniden planlanamadı');
+      showError('Aktivite yeniden planlanamadı');
     },
   });
 }
@@ -232,10 +232,10 @@ export function useDeleteActivity() {
     mutationFn: (id: number) => CRMService.deleteActivity(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
-      message.success('Aktivite silindi');
+      showSuccess('Aktivite silindi');
     },
     onError: () => {
-      message.error('Aktivite silinemedi');
+      showError('Aktivite silinemedi');
     },
   });
 }
@@ -285,10 +285,10 @@ export function useCreateLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead oluşturuldu');
+      showSuccess('Lead oluşturuldu');
     },
     onError: () => {
-      message.error('Lead oluşturulamadı');
+      showError('Lead oluşturulamadı');
     },
   });
 }
@@ -302,10 +302,10 @@ export function useUpdateLead() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.lead(variables.id.toString()) });
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead güncellendi');
+      showSuccess('Lead güncellendi');
     },
     onError: () => {
-      message.error('Lead güncellenemedi');
+      showError('Lead güncellenemedi');
     },
   });
 }
@@ -317,10 +317,10 @@ export function useDeleteLead() {
     mutationFn: (id: number) => CRMService.deleteLead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead silindi');
+      showSuccess('Lead silindi');
     },
     onError: () => {
-      message.error('Lead silinemedi');
+      showError('Lead silinemedi');
     },
   });
 }
@@ -333,10 +333,10 @@ export function useQualifyLead() {
       CRMService.qualifyLead(id, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead nitelikli olarak işaretlendi');
+      showSuccess('Lead nitelikli olarak işaretlendi');
     },
     onError: () => {
-      message.error('Lead niteliklendirilemedi');
+      showError('Lead niteliklendirilemedi');
     },
   });
 }
@@ -349,10 +349,10 @@ export function useDisqualifyLead() {
       CRMService.disqualifyLead(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead niteliksiz olarak işaretlendi');
+      showSuccess('Lead niteliksiz olarak işaretlendi');
     },
     onError: () => {
-      message.error('İşlem başarısız');
+      showError('İşlem başarısız');
     },
   });
 }
@@ -365,10 +365,10 @@ export function useAssignLead() {
       CRMService.assignLead(id, assignedToId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead atandı');
+      showSuccess('Lead atandı');
     },
     onError: () => {
-      message.error('Lead atanamadı');
+      showError('Lead atanamadı');
     },
   });
 }
@@ -384,10 +384,10 @@ export function useUpdateLeadScore() {
     }) => CRMService.updateLeadScore(id, score, criteria),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead skoru güncellendi');
+      showSuccess('Lead skoru güncellendi');
     },
     onError: () => {
-      message.error('Skor güncellenemedi');
+      showError('Skor güncellenemedi');
     },
   });
 }
@@ -400,10 +400,10 @@ export function useConvertLead() {
       CRMService.convertLeadToCustomer(leadId, customerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
-      message.success('Lead müşteriye dönüştürüldü');
+      showSuccess('Lead müşteriye dönüştürüldü');
     },
     onError: () => {
-      message.error('Dönüştürme başarısız');
+      showError('Dönüştürme başarısız');
     },
   });
 }
@@ -457,10 +457,10 @@ export function useAddDealProduct() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
-      message.success('Ürün eklendi');
+      showSuccess('Ürün eklendi');
     },
     onError: () => {
-      message.error('Ürün eklenemedi');
+      showError('Ürün eklenemedi');
     },
   });
 }
@@ -474,10 +474,10 @@ export function useRemoveDealProduct() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.dealProducts(variables.dealId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.dealId) });
-      message.success('Ürün kaldırıldı');
+      showSuccess('Ürün kaldırıldı');
     },
     onError: () => {
-      message.error('Ürün kaldırılamadı');
+      showError('Ürün kaldırılamadı');
     },
   });
 }
@@ -522,10 +522,10 @@ export function useUpdateDeal() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deal(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.success('Fırsat güncellendi');
+      showSuccess('Fırsat güncellendi');
     },
     onError: () => {
-      message.error('Fırsat güncellenemedi');
+      showError('Fırsat güncellenemedi');
     },
   });
 }
@@ -537,10 +537,10 @@ export function useDeleteDeal() {
     mutationFn: (id: Guid) => CRMService.deleteDeal(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.success('Fırsat silindi');
+      showSuccess('Fırsat silindi');
     },
     onError: () => {
-      message.error('Fırsat silinemedi');
+      showError('Fırsat silinemedi');
     },
   });
 }
@@ -553,10 +553,10 @@ export function useMoveDealStage() {
       CRMService.moveDealStage(id, newStageId, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.success('Deal aşamaya taşındı');
+      showSuccess('Deal aşamaya taşındı');
     },
     onError: () => {
-      message.error('Taşıma başarısız');
+      showError('Taşıma başarısız');
     },
   });
 }
@@ -573,10 +573,10 @@ export function useCloseDealWon() {
     }) => CRMService.closeDealWon(id, actualAmount, closedDate, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.success('🎉 Deal kazanıldı!');
+      showSuccess('🎉 Deal kazanıldı!');
     },
     onError: () => {
-      message.error('İşlem başarısız');
+      showError('İşlem başarısız');
     },
   });
 }
@@ -594,10 +594,10 @@ export function useCloseDealLost() {
     }) => CRMService.closeDealLost(id, lostReason, competitorName, closedDate, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals });
-      message.info('Deal kaybedildi olarak işaretlendi');
+      showInfo('Deal kaybedildi olarak işaretlendi');
     },
     onError: () => {
-      message.error('İşlem başarısız');
+      showError('İşlem başarısız');
     },
   });
 }
@@ -628,10 +628,10 @@ export function useCreateOpportunity() {
     mutationFn: (data: CreateOpportunityCommand) => CRMService.createOpportunity(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
-      message.success('Fırsat oluşturuldu');
+      showSuccess('Fırsat oluşturuldu');
     },
     onError: () => {
-      message.error('Fırsat oluşturulamadı');
+      showError('Fırsat oluşturulamadı');
     },
   });
 }
@@ -648,10 +648,10 @@ export function useWinOpportunity() {
     }) => CRMService.winOpportunity(id, actualAmount, closedDate, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
-      message.success('🎉 Fırsat kazanıldı!');
+      showSuccess('🎉 Fırsat kazanıldı!');
     },
     onError: () => {
-      message.error('İşlem başarısız');
+      showError('İşlem başarısız');
     },
   });
 }
@@ -678,10 +678,10 @@ export function useAddOpportunityProduct() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunityProducts(variables.opportunityId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
-      message.success('Ürün eklendi');
+      showSuccess('Ürün eklendi');
     },
     onError: () => {
-      message.error('Ürün eklenemedi');
+      showError('Ürün eklenemedi');
     },
   });
 }
@@ -695,10 +695,10 @@ export function useRemoveOpportunityProduct() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunityProducts(variables.opportunityId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.opportunityId) });
-      message.success('Ürün kaldırıldı');
+      showSuccess('Ürün kaldırıldı');
     },
     onError: () => {
-      message.error('Ürün kaldırılamadı');
+      showError('Ürün kaldırılamadı');
     },
   });
 }
@@ -716,10 +716,10 @@ export function useLoseOpportunity() {
     }) => CRMService.loseOpportunity(id, lostReason, competitorName, closedDate, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.opportunities, exact: false });
-      message.info('Fırsat kaybedildi olarak işaretlendi');
+      showInfo('Fırsat kaybedildi olarak işaretlendi');
     },
     onError: () => {
-      message.error('İşlem başarısız');
+      showError('İşlem başarısız');
     },
   });
 }
@@ -764,10 +764,10 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({
         queryKey: crmKeys.documents(variables.entityId, variables.entityType)
       });
-      message.success('Döküman yüklendi');
+      showSuccess('Döküman yüklendi');
     },
     onError: () => {
-      message.error('Döküman yüklenemedi');
+      showError('Döküman yüklenemedi');
     },
   });
 }
@@ -793,10 +793,10 @@ export function useDownloadDocument() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      message.success('Döküman indirildi');
+      showSuccess('Döküman indirildi');
     },
     onError: () => {
-      message.error('Döküman indirilemedi');
+      showError('Döküman indirilemedi');
     },
   });
 }
@@ -810,10 +810,10 @@ export function useUpdateDocument() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.document(variables.id) });
       queryClient.invalidateQueries({ queryKey: ['crm', 'documents'] });
-      message.success('Döküman güncellendi');
+      showSuccess('Döküman güncellendi');
     },
     onError: () => {
-      message.error('Döküman güncellenemedi');
+      showError('Döküman güncellenemedi');
     },
   });
 }
@@ -825,10 +825,10 @@ export function useDeleteDocument() {
     mutationFn: (id: number) => CRMService.deleteDocument(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm', 'documents'] });
-      message.success('Döküman silindi');
+      showSuccess('Döküman silindi');
     },
     onError: () => {
-      message.error('Döküman silinemedi');
+      showError('Döküman silinemedi');
     },
   });
 }
@@ -864,10 +864,10 @@ export function useAddCustomerTag() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.customerTags(variables.customerId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.allTags() });
-      message.success('Etiket eklendi');
+      showSuccess('Etiket eklendi');
     },
     onError: () => {
-      message.error('Etiket eklenemedi');
+      showError('Etiket eklenemedi');
     },
   });
 }
@@ -881,10 +881,10 @@ export function useRemoveCustomerTag() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.customerTags(variables.customerId) });
       queryClient.invalidateQueries({ queryKey: crmKeys.allTags() });
-      message.success('Etiket kaldırıldı');
+      showSuccess('Etiket kaldırıldı');
     },
     onError: () => {
-      message.error('Etiket kaldırılamadı');
+      showError('Etiket kaldırılamadı');
     },
   });
 }
@@ -962,10 +962,10 @@ export function useRecalculateSegment() {
     mutationFn: (id: string) => CRMService.recalculateSegmentMembers(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(id) });
-      message.success('Segment yeniden hesaplandı');
+      showSuccess('Segment yeniden hesaplandı');
     },
     onError: () => {
-      message.error('Hesaplama başarısız');
+      showError('Hesaplama başarısız');
     },
   });
 }

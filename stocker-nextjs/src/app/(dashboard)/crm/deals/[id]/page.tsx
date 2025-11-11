@@ -16,8 +16,8 @@ import {
   Progress,
   Timeline,
   Empty,
-  notification,
 } from 'antd';
+import { showSuccess, showError } from '@/lib/utils/notifications';
 import {
   ArrowLeftOutlined,
   DollarOutlined,
@@ -67,16 +67,10 @@ export default function DealDetailPage() {
 
       await createActivity.mutateAsync(activityData);
       setActivityModalOpen(false);
-      notification.success({
-        message: 'Başarılı',
-        description: 'Aktivite başarıyla oluşturuldu',
-      });
+      showSuccess('Aktivite başarıyla oluşturuldu');
     } catch (error) {
       console.error('Failed to create activity:', error);
-      notification.error({
-        message: 'Hata',
-        description: 'Aktivite oluşturulurken bir hata oluştu',
-      });
+      showError('Aktivite oluşturulurken bir hata oluştu');
     }
   };
 

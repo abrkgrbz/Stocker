@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   Modal,
-  notification,
   Statistic,
   Badge,
   Drawer,
@@ -21,6 +20,7 @@ import {
   DatePicker,
   Radio,
 } from 'antd';
+import { showSuccess, showError } from '@/lib/utils/notifications';
 import {
   PlusOutlined,
   ReloadOutlined,
@@ -183,20 +183,12 @@ export default function ActivitiesPage() {
       onOk: async () => {
         try {
           await deleteActivity.mutateAsync(id);
-          notification.success({
-            message: 'Başarılı',
-            description: 'Aktivite başarıyla silindi',
-            placement: 'bottomRight',
-          });
+          showSuccess('Aktivite başarıyla silindi');
           setDrawerOpen(false);
         } catch (error: any) {
           const apiError = error.response?.data;
           const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Silme işlemi başarısız';
-          notification.error({
-            message: 'Hata',
-            description: errorMessage,
-            placement: 'bottomRight',
-          });
+          showError(errorMessage);
         }
       },
     });
@@ -205,20 +197,12 @@ export default function ActivitiesPage() {
   const handleComplete = async (id: number) => {
     try {
       await completeActivity.mutateAsync({ id: id.toString() });
-      notification.success({
-        message: 'Başarılı',
-        description: 'Aktivite tamamlandı olarak işaretlendi',
-        placement: 'bottomRight',
-      });
+      showSuccess('Aktivite tamamlandı olarak işaretlendi');
       setDrawerOpen(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-      notification.error({
-        message: 'Hata',
-        description: errorMessage,
-        placement: 'bottomRight',
-      });
+      showError(errorMessage);
     }
   };
 
@@ -234,21 +218,13 @@ export default function ActivitiesPage() {
         id: drawerActivity.id.toString(), 
         reason: values.reason 
       });
-      notification.success({
-        message: 'Başarılı',
-        description: 'Aktivite iptal edildi',
-        placement: 'bottomRight',
-      });
+      showSuccess('Aktivite iptal edildi');
       setCancelModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İptal işlemi başarısız';
-      notification.error({
-        message: 'Hata',
-        description: errorMessage,
-        placement: 'bottomRight',
-      });
+      showError(errorMessage);
     }
   };
 
@@ -266,21 +242,13 @@ export default function ActivitiesPage() {
         newEndDate: values.endTime?.toISOString(),
         reason: values.reason,
       });
-      notification.success({
-        message: 'Başarılı',
-        description: 'Aktivite yeniden planlandı',
-        placement: 'bottomRight',
-      });
+      showSuccess('Aktivite yeniden planlandı');
       setRescheduleModalOpen(false);
       setDrawerOpen(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Yeniden planlama başarısız';
-      notification.error({
-        message: 'Hata',
-        description: errorMessage,
-        placement: 'bottomRight',
-      });
+      showError(errorMessage);
     }
   };
 
@@ -294,18 +262,10 @@ export default function ActivitiesPage() {
 
       if (selectedActivity) {
         await updateActivity.mutateAsync({ id: selectedActivity.id, data: activityData });
-        notification.success({
-          message: 'Başarılı',
-          description: 'Aktivite başarıyla güncellendi',
-          placement: 'bottomRight',
-        });
+        showSuccess('Aktivite başarıyla güncellendi');
       } else {
         await createActivity.mutateAsync(activityData);
-        notification.success({
-          message: 'Başarılı',
-          description: 'Yeni aktivite oluşturuldu',
-          placement: 'bottomRight',
-        });
+        showSuccess('Yeni aktivite oluşturuldu');
       }
       setModalOpen(false);
     } catch (error: any) {
@@ -321,11 +281,7 @@ export default function ActivitiesPage() {
         errorMessage = error.message;
       }
 
-      notification.error({
-        message: 'Hata',
-        description: errorMessage,
-        placement: 'bottomRight',
-      });
+      showError(errorMessage);
     }
   };
 
