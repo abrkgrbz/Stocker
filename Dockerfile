@@ -27,11 +27,9 @@ RUN dotnet restore
 # Copy all source code
 COPY src/ ./src/
 
-# Install EF Core tools for migration
-# Clear NuGet cache and install with specific version to avoid package corruption
-RUN dotnet nuget locals all --clear && \
-    dotnet tool install --global dotnet-ef --version 9.0.0
-ENV PATH="$PATH:/root/.dotnet/tools"
+# Install EF Core tools as local tool (more reliable than global)
+RUN dotnet new tool-manifest && \
+    dotnet tool install dotnet-ef --version 9.0.0
 
 # Build and publish
 WORKDIR /src
@@ -42,7 +40,7 @@ RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
 
 # Generate migration bundle (self-contained migration executable)
 WORKDIR /src
-RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
+RUN dotnet dotnet-ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
