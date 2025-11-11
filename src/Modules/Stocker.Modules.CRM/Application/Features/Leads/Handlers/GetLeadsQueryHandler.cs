@@ -57,13 +57,46 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, IEnumerable<L
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
+        // Use manual LINQ projection instead of AutoMapper to avoid mapping issues
         var leads = await query
             .OrderByDescending(l => l.CreatedAt)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
+            .Select(l => new LeadDto
+            {
+                Id = l.Id,
+                CompanyName = l.CompanyName,
+                FirstName = l.FirstName,
+                LastName = l.LastName,
+                FullName = l.FirstName + " " + l.LastName,
+                Email = l.Email,
+                Phone = l.Phone,
+                MobilePhone = l.MobilePhone,
+                JobTitle = l.JobTitle,
+                Industry = l.Industry,
+                Source = l.Source,
+                Status = l.Status,
+                Rating = l.Rating,
+                Address = l.Address,
+                City = l.City,
+                State = l.State,
+                Country = l.Country,
+                PostalCode = l.PostalCode,
+                Website = l.Website,
+                AnnualRevenue = l.AnnualRevenue,
+                NumberOfEmployees = l.NumberOfEmployees,
+                Description = l.Description,
+                AssignedToUserId = l.AssignedToUserId,
+                ConvertedDate = l.ConvertedDate,
+                ConvertedToCustomerId = l.ConvertedToCustomerId,
+                IsConverted = l.IsConverted,
+                Score = l.Score,
+                CreatedAt = l.CreatedAt,
+                UpdatedAt = l.UpdatedAt
+            })
             .ToListAsync(cancellationToken);
 
-        return _mapper.Map<IEnumerable<LeadDto>>(leads);
+        return leads;
     }
 }
