@@ -282,23 +282,20 @@ export function useCreateLead() {
       // DEBUG: Log incoming data from form
       console.log('🎯 Hook received data:', data);
       console.log('🎯 Data keys:', Object.keys(data));
-      console.log('🎯 firstName from data:', data.firstName);
-      console.log('🎯 lastName from data:', data.lastName);
-      console.log('🎯 email from data:', data.email);
 
       // Backend expects data wrapped in LeadData property (CreateLeadDto)
-      // Map frontend field names to backend DTO property names
+      // Form now uses correct field names matching backend DTO
       const leadData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         phone: data.phone || null,
-        companyName: data.company || null,  // company → companyName
+        companyName: data.companyName || null,
         jobTitle: data.jobTitle || null,
-        source: data.source || null,  // String value like "Website", "Referral"
-        status: data.status || 0,  // Numeric enum: 0=New, 1=Contacted, 2=Qualified, 3=Unqualified, 4=Converted
+        source: data.source || null,
+        status: data.status || 0,  // Numeric enum: 0=New, 1=Contacted, 2=Working, 3=Qualified, 4=Unqualified, 5=Converted
         rating: 0,  // Default to Unrated (0)
-        description: data.notes || null,  // notes → description
+        description: data.description || null,
       };
 
       console.log('🎯 Mapped leadData:', leadData);

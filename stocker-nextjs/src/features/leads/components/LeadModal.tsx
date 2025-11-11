@@ -85,12 +85,12 @@ export function LeadModal({ open, lead, loading, onCancel, onSubmit }: LeadModal
         'lastName',
         'email',
         'phone',
-        'company',
+        'companyName',
         'jobTitle',
         'source',
         'status',
         'score',
-        'notes'
+        'description'
       ]);
       console.log('✅ All form values validated:', values);
       onSubmit(values);
@@ -266,7 +266,7 @@ export function LeadModal({ open, lead, loading, onCancel, onSubmit }: LeadModal
                 <Col span={12}>
                   <Form.Item
                     label={<span className="text-gray-700 font-medium">Firma</span>}
-                    name="company"
+                    name="companyName"
                   >
                     <Input
                       prefix={<BankOutlined className="text-gray-400" />}
@@ -381,7 +381,7 @@ export function LeadModal({ open, lead, loading, onCancel, onSubmit }: LeadModal
             <Card className="shadow-sm border-gray-200">
               <Form.Item
                 label={<span className="text-gray-700 font-medium">Notlar</span>}
-                name="notes"
+                name="description"
               >
                 <TextArea
                   rows={6}

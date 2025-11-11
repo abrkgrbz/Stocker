@@ -35,13 +35,24 @@ interface LeadsTableProps {
   onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
 }
 
-// Source colors
-const sourceColors: Record<Lead['source'], string> = {
+// Source colors mapping
+const sourceColors: Record<string, string> = {
   Website: 'blue',
   Referral: 'green',
   SocialMedia: 'cyan',
   Event: 'orange',
   Other: 'default',
+};
+
+// Lead status mapping (numeric to string)
+const leadStatusMap: Record<number, { label: string; color: string }> = {
+  0: { label: 'Yeni', color: 'blue' },
+  1: { label: 'İletişime Geçildi', color: 'cyan' },
+  2: { label: 'Çalışılıyor', color: 'geekblue' },
+  3: { label: 'Nitelikli', color: 'green' },
+  4: { label: 'Niteliksiz', color: 'red' },
+  5: { label: 'Dönüştürüldü', color: 'purple' },
+  6: { label: 'Kayıp', color: 'default' },
 };
 
 export function LeadsTable({
@@ -116,8 +127,8 @@ export function LeadsTable({
             <div className="font-semibold text-gray-900 truncate">
               {`${record.firstName} ${record.lastName}`}
             </div>
-            {record.company && (
-              <div className="text-xs text-gray-500 truncate">{record.company}</div>
+            {record.companyName && (
+              <div className="text-xs text-gray-500 truncate">{record.companyName}</div>
             )}
           </div>
         </div>
@@ -153,29 +164,31 @@ export function LeadsTable({
         { text: 'Diğer', value: 'Other' },
       ],
       onFilter: (value, record) => record.source === value,
-      render: (source: Lead['source']) => (
-        <Tag className="rounded-full px-3 py-1 font-medium border-0" color={sourceColors[source]}>
-          {source}
-        </Tag>
-      ),
+      render: (source: string | null) => {
+        if (!source) return <Tag color="default">-</Tag>;
+        return (
+          <Tag className="rounded-full px-3 py-1 font-medium border-0" color={sourceColors[source] || 'default'}>
+            {source}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       filters: [
-        { text: 'Yeni', value: 'New' },
-        { text: 'İletişime Geçildi', value: 'Contacted' },
-        { text: 'Nitelikli', value: 'Qualified' },
-        { text: 'Niteliksiz', value: 'Unqualified' },
-        { text: 'Dönüştürüldü', value: 'Converted' },
+        { text: 'Yeni', value: 0 },
+        { text: 'İletişime Geçildi', value: 1 },
+        { text: 'Çalışılıyor', value: 2 },
+        { text: 'Nitelikli', value: 3 },
+        { text: 'Niteliksiz', value: 4 },
+        { text: 'Dönüştürüldü', value: 5 },
       ],
       onFilter: (value, record) => record.status === value,
-      render: (status: Lead['status']) => {
-        const color = CRM_COLORS.leads[status as keyof typeof CRM_COLORS.leads] || 'default';
-        const label =
-          CRM_STATUS_LABELS.leads[status as keyof typeof CRM_STATUS_LABELS.leads] || status;
-        return <Tag color={color}>{label}</Tag>;
+      render: (status: number) => {
+        const statusInfo = leadStatusMap[status] || { label: 'Bilinmiyor', color: 'default' };
+        return <Tag color={statusInfo.color}>{statusInfo.label}</Tag>;
       },
     },
     {
@@ -212,7 +225,7 @@ export function LeadsTable({
                 icon: <EditOutlined />,
                 onClick: () => onEdit(record),
               },
-              ...(record.status !== 'Qualified' && record.status !== 'Converted' && onQualify
+              ...(record.status !== 3 && record.status !== 5 && onQualify
                 ? [
                     {
                       key: 'qualify',
@@ -222,7 +235,7 @@ export function LeadsTable({
                     },
                   ]
                 : []),
-              ...(record.status !== 'Unqualified' && record.status !== 'Converted' && onDisqualify
+              ...(record.status !== 4 && record.status !== 5 && onDisqualify
                 ? [
                     {
                       key: 'disqualify',
@@ -236,7 +249,7 @@ export function LeadsTable({
                 key: 'convert',
                 label: 'Müşteriye Dönüştür',
                 icon: <SwapOutlined />,
-                disabled: record.status === 'Converted',
+                disabled: record.status === 5,
                 onClick: () => onConvert(record),
               },
               {

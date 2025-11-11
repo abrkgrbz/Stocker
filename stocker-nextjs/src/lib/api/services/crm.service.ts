@@ -89,14 +89,30 @@ export interface Lead {
   id: number;
   firstName: string;
   lastName: string;
+  fullName?: string;
   email: string;
   phone: string | null;
-  company: string | null;
+  mobilePhone: string | null;
+  companyName: string | null;
   jobTitle: string | null;
-  source: 'Website' | 'Referral' | 'SocialMedia' | 'Event' | 'Other';
-  status: 'New' | 'Contacted' | 'Qualified' | 'Unqualified' | 'Converted';
+  industry: string | null;
+  source: string | null;
+  status: number; // 0=New, 1=Contacted, 2=Working, 3=Qualified, 4=Unqualified, 5=Converted, 6=Lost
+  rating: number; // 0=Unrated, 1=Cold, 2=Warm, 3=Hot
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+  website: string | null;
+  annualRevenue: number | null;
+  numberOfEmployees: number | null;
+  description: string | null;
+  assignedToUserId: string | null;
+  convertedDate: string | null;
+  convertedToCustomerId: string | null;
+  isConverted: boolean;
   score: number;
-  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
