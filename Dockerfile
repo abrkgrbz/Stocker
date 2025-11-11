@@ -27,8 +27,8 @@ RUN dotnet restore
 # Copy all source code
 COPY src/ ./src/
 
-# Install EF Core tools for migration
-RUN dotnet tool install --global dotnet-ef
+# Install EF Core tools for migration (use specific stable version to avoid corrupted NuGet package)
+RUN dotnet tool install --global dotnet-ef --version 9.0.8
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Build and publish
