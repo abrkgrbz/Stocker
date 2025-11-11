@@ -26,7 +26,10 @@
       "Bash(dotnet tool search:*)",
       "Bash(Select-Object -Last 20)",
       "Bash(find:*)",
-      "Bash(dotnet ef migrations add:*)"
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"docker-compose -f /root/Stocker/docker-compose.yml logs --tail=100 api | grep -E ''TenantEnrichment|Tenant\\.Unauthorized|/crm/leads''\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"cd /root && find . -name ''Stocker'' -type d 2>/dev/null | head -5\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"ls -la /root/\")"
     ],
     "deny": [],
     "ask": []

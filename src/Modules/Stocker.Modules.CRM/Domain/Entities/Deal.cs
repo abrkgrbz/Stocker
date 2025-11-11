@@ -25,6 +25,7 @@ public class Deal : TenantAggregateRoot
     public DateTime? ActualCloseDate { get; private set; }
     public DealStatus Status { get; private set; }
     public string? LostReason { get; private set; }
+    public string? CompetitorName { get; private set; }
     public int OwnerId { get; private set; }
     public DealPriority Priority { get; private set; }
     public string? Currency { get; private set; }
@@ -114,11 +115,12 @@ public class Deal : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void MarkAsLost(DateTime closedDate, string lostReason)
+    public void MarkAsLost(DateTime closedDate, string lostReason, string? competitorName = null)
     {
         Status = DealStatus.Lost;
         ActualCloseDate = closedDate;
         LostReason = lostReason;
+        CompetitorName = competitorName;
         Probability = 0;
         UpdatedAt = DateTime.UtcNow;
     }
