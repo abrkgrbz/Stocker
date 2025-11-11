@@ -40,9 +40,10 @@ RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
     -o /app/publish \
     --no-restore
 
-# Generate migration bundle (self-contained migration executable)
+# Generate migration bundles (self-contained migration executables)
 WORKDIR /src
-RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle || echo "Migration bundle creation skipped"
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle-master || echo "Master migration bundle creation skipped"
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c TenantDbContext --self-contained -o /app/efbundle-tenant || echo "Tenant migration bundle creation skipped"
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
@@ -54,8 +55,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy published output
 COPY --from=build /app/publish .
 
-# Copy migration bundle
-COPY --from=build /app/efbundle .
+# Copy migration bundles
+COPY --from=build /app/efbundle-master .
+COPY --from=build /app/efbundle-tenant .
 
 # Create directory for email templates
 RUN mkdir -p /app/EmailTemplates
@@ -89,19 +91,34 @@ if [ -n "$SA_PASSWORD" ] && [ -n "$DB_SERVER" ]; then\n\
     export ConnectionStrings__HangfireConnection="Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
     echo "Connection strings set from environment variables"\n\
 fi\n\
-echo "Running database migrations..."\n\
+echo "Running Master database migrations..."\n\
 if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
-    echo "Using MasterConnection for migrations"\n\
-    ./efbundle --connection "$ConnectionStrings__MasterConnection"\n\
+    echo "Using MasterConnection for Master migrations"\n\
+    ./efbundle-master --connection "$ConnectionStrings__MasterConnection"\n\
 else\n\
-    echo "Building connection string from environment variables"\n\
-    CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    echo "Using constructed connection string for migrations"\n\
-    ./efbundle --connection "$CONNECTION_STRING"\n\
+    echo "Building Master connection string from environment variables"\n\
+    MASTER_CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    echo "Using constructed connection string for Master migrations"\n\
+    ./efbundle-master --connection "$MASTER_CONNECTION_STRING"\n\
 fi\n\
-MIGRATION_EXIT_CODE=$?\n\
-if [ $MIGRATION_EXIT_CODE -ne 0 ]; then\n\
-    echo "Migration failed with exit code $MIGRATION_EXIT_CODE"\n\
+MASTER_MIGRATION_EXIT_CODE=$?\n\
+if [ $MASTER_MIGRATION_EXIT_CODE -ne 0 ]; then\n\
+    echo "Master migration failed with exit code $MASTER_MIGRATION_EXIT_CODE"\n\
+    echo "Continuing anyway - database might already be up to date"\n\
+fi\n\
+echo "Running Tenant database migrations..."\n\
+if [ -n "$ConnectionStrings__TenantConnection" ]; then\n\
+    echo "Using TenantConnection for Tenant migrations"\n\
+    ./efbundle-tenant --connection "$ConnectionStrings__TenantConnection"\n\
+else\n\
+    echo "Building Tenant connection string from environment variables"\n\
+    TENANT_CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    echo "Using constructed connection string for Tenant migrations"\n\
+    ./efbundle-tenant --connection "$TENANT_CONNECTION_STRING"\n\
+fi\n\
+TENANT_MIGRATION_EXIT_CODE=$?\n\
+if [ $TENANT_MIGRATION_EXIT_CODE -ne 0 ]; then\n\
+    echo "Tenant migration failed with exit code $TENANT_MIGRATION_EXIT_CODE"\n\
     echo "Continuing anyway - database might already be up to date"\n\
 fi\n\
 echo "Starting application..."\n\
