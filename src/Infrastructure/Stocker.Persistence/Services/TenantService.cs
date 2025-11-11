@@ -206,40 +206,89 @@ public class TenantService : ITenantService
 
     private Guid? ResolveTenantId(HttpContext httpContext)
     {
-        // 1. Check header first (X-Tenant-Id)
+        // 1. Check X-Tenant-Code header first (most explicit for API requests)
+        if (httpContext.Request.Headers.TryGetValue("X-Tenant-Code", out var tenantCodeHeader))
+        {
+            var tenantCode = tenantCodeHeader.ToString();
+            if (!string.IsNullOrEmpty(tenantCode))
+            {
+                var tenant = _masterDbContext.Tenants
+                    .AsNoTracking()
+                    .FirstOrDefault(t => t.Code == tenantCode && t.IsActive);
+
+                if (tenant != null)
+                {
+                    _logger.LogInformation("Tenant {TenantId} ({TenantCode}) resolved from X-Tenant-Code header", tenant.Id, tenantCode);
+                    return tenant.Id;
+                }
+                else
+                {
+                    _logger.LogWarning("Tenant with code {TenantCode} not found or inactive in X-Tenant-Code header", tenantCode);
+                }
+            }
+        }
+
+        // 2. Check X-Tenant-Id header (for backward compatibility)
         if (httpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdHeader))
         {
             if (Guid.TryParse(tenantIdHeader.ToString(), out var tenantId))
             {
-                _logger.LogDebug("Tenant {TenantId} resolved from header", tenantId);
+                _logger.LogDebug("Tenant {TenantId} resolved from X-Tenant-Id header", tenantId);
                 return tenantId;
             }
         }
 
-        // 2. Check claims (from JWT)
+        // 3. Check claims (from JWT) - Try TenantCode first, then TenantId
+        var tenantCodeClaim = httpContext.User?.FindFirst("TenantCode");
+        if (tenantCodeClaim != null && !string.IsNullOrEmpty(tenantCodeClaim.Value))
+        {
+            var tenant = _masterDbContext.Tenants
+                .AsNoTracking()
+                .FirstOrDefault(t => t.Code == tenantCodeClaim.Value && t.IsActive);
+
+            if (tenant != null)
+            {
+                _logger.LogDebug("Tenant {TenantId} ({TenantCode}) resolved from TenantCode claim", tenant.Id, tenantCodeClaim.Value);
+                return tenant.Id;
+            }
+        }
+
         var tenantClaim = httpContext.User?.FindFirst("TenantId");
         if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var claimTenantId))
         {
-            _logger.LogDebug("Tenant {TenantId} resolved from claim", claimTenantId);
+            _logger.LogDebug("Tenant {TenantId} resolved from TenantId claim", claimTenantId);
             return claimTenantId;
         }
 
-        // 3. Check subdomain
+        // 4. Check subdomain
         var host = httpContext.Request.Host.Host;
         var subdomain = ExtractSubdomain(host);
         if (!string.IsNullOrEmpty(subdomain))
         {
-            // Use synchronous method to avoid blocking issues
-            var tenant = _masterDbContext.Tenants
+            // First try tenant Code (subdomain usually matches tenant code)
+            var tenantByCode = _masterDbContext.Tenants
+                .AsNoTracking()
+                .FirstOrDefault(t => t.Code == subdomain && t.IsActive);
+
+            if (tenantByCode != null)
+            {
+                _logger.LogInformation("Tenant {TenantId} ({TenantCode}) resolved from subdomain matching tenant code", tenantByCode.Id, subdomain);
+                return tenantByCode.Id;
+            }
+
+            // Fallback: Check Domains table
+            var tenantByDomain = _masterDbContext.Tenants
                 .AsNoTracking()
                 .Include(t => t.Domains)
-                .FirstOrDefault(t => t.Domains.Any(d => d.DomainName == subdomain));
-            
-            if (tenant != null)
+                .FirstOrDefault(t => t.Domains.Any(d => d.DomainName == subdomain) && t.IsActive);
+
+            if (tenantByDomain != null)
             {
-                _logger.LogDebug("Tenant {TenantId} resolved from subdomain {Subdomain}", tenant.Id, subdomain);
-                return tenant.Id;
+                _logger.LogDebug("Tenant {TenantId} resolved from subdomain via Domains table", tenantByDomain.Id);
+                return tenantByDomain.Id;
             }
+
+            _logger.LogWarning("Subdomain {Subdomain} found but no matching tenant in Code or Domains", subdomain);
         }
 
         _logger.LogDebug("No tenant could be resolved from request");

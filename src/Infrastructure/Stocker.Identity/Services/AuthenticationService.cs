@@ -498,11 +498,18 @@ public class AuthenticationService : IAuthenticationService
         if (tenantId.HasValue)
         {
             claims.Add(new Claim("TenantId", tenantId.Value.ToString()));
-            
+
             var tenant = await _masterContext.Tenants.FindAsync(tenantId.Value);
             if (tenant != null)
             {
                 claims.Add(new Claim("TenantName", tenant.Name));
+                claims.Add(new Claim("TenantCode", tenant.Code));
+                _logger.LogInformation("Adding tenant claims to token - TenantId: {TenantId}, TenantCode: {TenantCode}, TenantName: {TenantName}",
+                    tenantId.Value, tenant.Code, tenant.Name);
+            }
+            else
+            {
+                _logger.LogWarning("Tenant {TenantId} not found when generating token", tenantId.Value);
             }
         }
 
