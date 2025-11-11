@@ -131,17 +131,17 @@ export function ActivityCalendar({
           </div>
         }
       >
-        <div className="fc-event-main-frame px-1">
-          <div className="flex items-center gap-1">
-            <span className="text-xs">{config.icon}</span>
-            <span className="fc-event-title text-xs font-medium truncate">
+        <div className="fc-event-main-frame px-1 overflow-hidden max-w-full">
+          <div className="flex items-center gap-1 overflow-hidden max-w-full">
+            <span className="text-xs flex-shrink-0">{config.icon}</span>
+            <span className="fc-event-title text-xs font-medium truncate flex-1 min-w-0">
               {eventInfo.event.title}
             </span>
-            {isCompleted && <Badge status="success" />}
-            {isCancelled && <Badge status="error" />}
+            {isCompleted && <Badge status="success" className="flex-shrink-0" />}
+            {isCancelled && <Badge status="error" className="flex-shrink-0" />}
           </div>
           {!eventInfo.view.type.includes('list') && eventInfo.event.start && (
-            <div className="fc-event-time text-xs opacity-75">
+            <div className="fc-event-time text-xs opacity-75 truncate">
               <ClockCircleOutlined className="mr-1" />
               {dayjs(eventInfo.event.start).format('HH:mm')}
             </div>
@@ -206,12 +206,36 @@ export function ActivityCalendar({
           font-size: 12px;
           cursor: pointer;
           transition: all 0.2s;
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .activity-calendar-card .fc-event-main {
+          overflow: hidden;
+          max-width: 100%;
+        }
+
+        .activity-calendar-card .fc-event-main-frame {
+          overflow: hidden;
+          max-width: 100%;
         }
 
         .activity-calendar-card .fc-event-title {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          max-width: 100%;
+          display: block;
+        }
+
+        .activity-calendar-card .fc-daygrid-event-harness {
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .activity-calendar-card .fc-daygrid-event {
+          max-width: 100%;
+          overflow: hidden;
         }
 
         .activity-calendar-card .fc-event:hover {
