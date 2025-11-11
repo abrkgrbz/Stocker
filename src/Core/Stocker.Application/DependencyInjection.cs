@@ -52,15 +52,16 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(assembly);
             
             // Register behaviors in the correct order - they execute in reverse order of registration
+            // Execution order (reverse of registration):
             // 1. Logging (outermost - logs the entire request/response)
             // 2. Performance monitoring
-            // 3. Tenant enrichment (sets TenantId from current user)
-            // 4. Tenant validation (validates tenant authorization)
+            // 3. Tenant validation (validates tenant authorization)
+            // 4. Tenant enrichment (sets TenantId from current user) - MUST RUN BEFORE VALIDATION
             // 5. Validation (innermost - validates before handler execution)
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantEnrichmentBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         });
 
