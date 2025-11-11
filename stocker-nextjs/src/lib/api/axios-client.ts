@@ -112,10 +112,20 @@ apiClient.interceptors.request.use(
     }
 
     // Debug logging for POST requests
-    if (config.method === 'post' && (config.url?.includes('/opportunities') || config.url?.includes('/deals'))) {
+    if (config.method === 'post' && (config.url?.includes('/opportunities') || config.url?.includes('/deals') || config.url?.includes('/leads'))) {
       console.log('📤 POST Request to:', config.url);
       console.log('📦 Request payload:', JSON.stringify(config.data, null, 2));
       console.log('📋 Payload keys:', Object.keys(config.data || {}));
+
+      // Special logging for leads to debug validation errors
+      if (config.url?.includes('/leads')) {
+        const leadData = (config.data as any)?.LeadData;
+        console.log('🔍 LeadData object:', leadData);
+        console.log('🔍 LeadData keys:', leadData ? Object.keys(leadData) : 'LeadData is null/undefined');
+        console.log('🔍 firstName:', leadData?.firstName);
+        console.log('🔍 lastName:', leadData?.lastName);
+        console.log('🔍 email:', leadData?.email);
+      }
     }
 
     return config;
