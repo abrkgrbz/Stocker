@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 
@@ -12,10 +13,14 @@ public class TenantEnrichmentBehavior<TRequest, TResponse> : IPipelineBehavior<T
     where TRequest : notnull
 {
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<TenantEnrichmentBehavior<TRequest, TResponse>> _logger;
 
-    public TenantEnrichmentBehavior(ICurrentUserService currentUserService)
+    public TenantEnrichmentBehavior(
+        ICurrentUserService currentUserService,
+        ILogger<TenantEnrichmentBehavior<TRequest, TResponse>> logger)
     {
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -29,15 +34,15 @@ public class TenantEnrichmentBehavior<TRequest, TResponse> : IPipelineBehavior<T
             if (tenantRequest.TenantId == Guid.Empty && currentTenantId.HasValue)
             {
                 tenantRequest.TenantId = currentTenantId.Value;
-                Console.WriteLine($"✅ TenantEnrichmentBehavior: Set TenantId={currentTenantId.Value} on {typeof(TRequest).Name}");
+                _logger.LogInformation($"✅ TenantEnrichmentBehavior: Set TenantId={currentTenantId.Value} on {typeof(TRequest).Name}");
             }
             else if (tenantRequest.TenantId != Guid.Empty)
             {
-                Console.WriteLine($"ℹ️ TenantEnrichmentBehavior: TenantId already set on {typeof(TRequest).Name}");
+                _logger.LogInformation($"ℹ️ TenantEnrichmentBehavior: TenantId already set on {typeof(TRequest).Name}");
             }
             else
             {
-                Console.WriteLine($"⚠️ TenantEnrichmentBehavior: No TenantId available for {typeof(TRequest).Name}");
+               _logger.LogWarning($"⚠️ TenantEnrichmentBehavior: No TenantId available for {typeof(TRequest).Name}");
             }
         }
 
