@@ -23,7 +23,9 @@
       "Bash(ssh -o StrictHostKeyChecking=no root@95.217.219.4 \"cd /root && ls -la\")",
       "Bash(git checkout:*)",
       "Bash(findstr:*)",
-      "Bash(dotnet tool search:*)"
+      "Bash(dotnet tool search:*)",
+      "Bash(Select-Object -Last 20)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

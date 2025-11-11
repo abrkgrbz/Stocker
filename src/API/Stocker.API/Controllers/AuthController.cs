@@ -95,10 +95,10 @@ public class AuthController : ControllerBase
                 SameSite = SameSiteMode.None,
                 Domain = ".stoocker.app",
                 Path = "/",
-                Expires = result.Value.AccessTokenExpiration
+                Expires = result.Value.ExpiresAt
             });
 
-            // Set refresh_token as HttpOnly cookie
+            // Set refresh_token as HttpOnly cookie (7 days expiration)
             Response.Cookies.Append("refresh_token", result.Value.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
@@ -106,7 +106,7 @@ public class AuthController : ControllerBase
                 SameSite = SameSiteMode.None,
                 Domain = ".stoocker.app",
                 Path = "/",
-                Expires = result.Value.RefreshTokenExpiration
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
 
             _logger.LogInformation("User {Email} logged in successfully", command.Email);
