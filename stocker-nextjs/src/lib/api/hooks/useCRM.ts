@@ -279,9 +279,22 @@ export function useCreateLead() {
 
   return useMutation({
     mutationFn: (data: any) => {
-      // Backend expects { LeadData: {...} } format
-      const payload = { LeadData: data };
-      return CRMService.createLead(payload);
+      // Backend expects data wrapped in LeadData property
+      // Ensure all required fields are present with correct casing
+      const leadData = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone || null,
+        company: data.company || null,
+        jobTitle: data.jobTitle || null,
+        source: data.source,
+        status: data.status,
+        score: data.score || 50,
+        notes: data.notes || null,
+      };
+
+      return CRMService.createLead({ LeadData: leadData });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
