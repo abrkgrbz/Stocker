@@ -76,7 +76,6 @@ apiClient.interceptors.request.use(
         console.log('✅ Tenant Code set:', tenantCode, 'for', config.url);
         console.log('📋 Request headers:', {
           'X-Tenant-Code': config.headers['X-Tenant-Code'],
-          'X-Tenant-Id': config.headers['X-Tenant-Id'],
           'Content-Type': config.headers['Content-Type']
         });
       } else {
@@ -87,11 +86,9 @@ apiClient.interceptors.request.use(
         console.warn('⚠️ No tenant code found for request:', config.url);
       }
 
-      // Fallback to localStorage for backward compatibility
-      const tenantId = localStorage.getItem('tenantId');
-      if (tenantId) {
-        config.headers['X-Tenant-Id'] = tenantId;
-      }
+      // ❌ REMOVED: X-Tenant-Id from localStorage causes conflicts
+      // Backend uses token + X-Tenant-Code for authorization
+      // Old tenantId in localStorage was causing "Tenant.Unauthorized" errors
 
       // Set Content-Type based on data type
       // If data is FormData, let axios set multipart/form-data with boundary automatically
@@ -132,8 +129,7 @@ apiClient.interceptors.response.use(
         statusText: error.response.statusText,
         data: error.response.data,
         headers: {
-          'X-Tenant-Code': originalRequest.headers?.['X-Tenant-Code'],
-          'X-Tenant-Id': originalRequest.headers?.['X-Tenant-Id']
+          'X-Tenant-Code': originalRequest.headers?.['X-Tenant-Code']
         }
       });
     }
