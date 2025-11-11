@@ -2,6 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Force cache bust - Updated: 2025-11-11 13:20
+ARG CACHE_BUST=2025-11-11-13-20
+
 # Copy solution and project files
 COPY Stocker.sln ./
 COPY src/API/Stocker.API/*.csproj ./src/API/Stocker.API/
