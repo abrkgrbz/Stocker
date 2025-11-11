@@ -279,19 +279,19 @@ export function useCreateLead() {
 
   return useMutation({
     mutationFn: (data: any) => {
-      // Backend expects data wrapped in LeadData property
-      // Ensure all required fields are present with correct casing
+      // Backend expects data wrapped in LeadData property (CreateLeadDto)
+      // Map frontend field names to backend DTO property names
       const leadData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         phone: data.phone || null,
-        company: data.company || null,
+        companyName: data.company || null,  // company → companyName
         jobTitle: data.jobTitle || null,
-        source: data.source,
-        status: data.status,
-        score: data.score || 50,
-        notes: data.notes || null,
+        source: data.source || null,  // String value like "Website", "Referral"
+        status: data.status || 0,  // Numeric enum: 0=New, 1=Contacted, 2=Qualified, 3=Unqualified, 4=Converted
+        rating: 0,  // Default to Unrated (0)
+        description: data.notes || null,  // notes → description
       };
 
       return CRMService.createLead({ LeadData: leadData });

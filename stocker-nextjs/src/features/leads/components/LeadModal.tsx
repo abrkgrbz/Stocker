@@ -324,13 +324,15 @@ export function LeadModal({ open, lead, loading, onCancel, onSubmit }: LeadModal
                     label={<span className="text-gray-700 font-medium">Durum</span>}
                     name="status"
                     rules={[{ required: true, message: 'Durum gerekli' }]}
+                    initialValue={0}
                   >
                     <Select placeholder="Durum seçiniz" className="rounded-lg" size="large">
-                      <Select.Option value="New">Yeni</Select.Option>
-                      <Select.Option value="Contacted">İletişime Geçildi</Select.Option>
-                      <Select.Option value="Qualified">Nitelikli</Select.Option>
-                      <Select.Option value="Unqualified">Niteliksiz</Select.Option>
-                      <Select.Option value="Converted">Dönüştürüldü</Select.Option>
+                      <Select.Option value={0}>Yeni</Select.Option>
+                      <Select.Option value={1}>İletişime Geçildi</Select.Option>
+                      <Select.Option value={2}>Çalışılıyor</Select.Option>
+                      <Select.Option value={3}>Nitelikli</Select.Option>
+                      <Select.Option value={4}>Niteliksiz</Select.Option>
+                      <Select.Option value={5}>Dönüştürüldü</Select.Option>
                     </Select>
                   </Form.Item>
                 </Col>
