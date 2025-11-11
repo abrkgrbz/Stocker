@@ -40,28 +40,30 @@ apiClient.interceptors.request.use(
     // Add tenant code from cookie or subdomain
     if (typeof window !== 'undefined' && config.headers) {
       let tenantCode: string | null = null;
+      const hostname = window.location.hostname;
 
       // 1. Try to get tenant-code from cookie (primary source)
       const cookies = document.cookie.split(';');
       const tenantCodeCookie = cookies.find(c => c.trim().startsWith('tenant-code='));
 
       if (tenantCodeCookie) {
-        tenantCode = tenantCodeCookie.split('=')[1];
+        tenantCode = tenantCodeCookie.split('=')[1]?.trim();
+        console.log('🍪 Found tenant-code in cookie:', tenantCode);
       }
 
       // 2. Fallback: Extract tenant code from subdomain
       if (!tenantCode) {
-        const hostname = window.location.hostname;
         const parts = hostname.split('.');
 
         // If subdomain exists (e.g., abg-tech.stoocker.app)
         if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'auth') {
           tenantCode = parts[0]; // Extract subdomain as tenant code
+          console.log('🌐 Extracted tenant-code from subdomain:', tenantCode);
         }
       }
 
       // 3. Development fallback: Use env variable if localhost
-      if (!tenantCode && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      if (!tenantCode && (hostname === 'localhost' || hostname === '127.0.0.1')) {
         tenantCode = process.env.NEXT_PUBLIC_DEV_TENANT_CODE || null;
         if (tenantCode) {
           console.log('🔧 Using development tenant:', tenantCode);
@@ -71,8 +73,17 @@ apiClient.interceptors.request.use(
       // Set tenant code header
       if (tenantCode) {
         config.headers['X-Tenant-Code'] = tenantCode;
-        console.log('🏢 Tenant Code:', tenantCode, 'for', config.url);
+        console.log('✅ Tenant Code set:', tenantCode, 'for', config.url);
+        console.log('📋 Request headers:', {
+          'X-Tenant-Code': config.headers['X-Tenant-Code'],
+          'X-Tenant-Id': config.headers['X-Tenant-Id'],
+          'Content-Type': config.headers['Content-Type']
+        });
       } else {
+        console.error('❌ NO TENANT CODE FOUND!');
+        console.log('🌐 Hostname:', hostname);
+        console.log('🍪 All cookies:', document.cookie);
+        console.log('🔍 Cookie array:', cookies);
         console.warn('⚠️ No tenant code found for request:', config.url);
       }
 
