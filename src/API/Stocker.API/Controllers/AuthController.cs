@@ -87,6 +87,28 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
+            // Set access_token as HttpOnly cookie
+            Response.Cookies.Append("access_token", result.Value.AccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Domain = ".stoocker.app",
+                Path = "/",
+                Expires = result.Value.AccessTokenExpiration
+            });
+
+            // Set refresh_token as HttpOnly cookie
+            Response.Cookies.Append("refresh_token", result.Value.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Domain = ".stoocker.app",
+                Path = "/",
+                Expires = result.Value.RefreshTokenExpiration
+            });
+
             _logger.LogInformation("User {Email} logged in successfully", command.Email);
             return Ok(new
             {
