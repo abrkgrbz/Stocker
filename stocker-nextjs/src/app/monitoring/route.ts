@@ -43,8 +43,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Log for debugging
-    console.log('[Sentry Tunnel] Forwarded event, status:', response.status);
 
     // Return Sentry's response with CORS headers
     return new NextResponse(

@@ -11,7 +11,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry
-  debug: true,
+  debug: false,
 
   // Session Replay
   replaysOnErrorSampleRate: 1.0,
@@ -24,11 +24,4 @@ Sentry.init({
     }),
   ],
 
-  // Additional options to help with debugging
-  beforeSend(event, hint) {
-    // Log events to console in debug mode
-    console.log('Sentry Event being sent:', event);
-    console.log('Sentry Hint:', hint);
-    return event;
-  },
 });
