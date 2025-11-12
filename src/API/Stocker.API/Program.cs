@@ -28,7 +28,8 @@ builder.WebHost.ConfigureKestrelServer();
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+    .AddEnvironmentVariables()
+    .AddAzureKeyVault(builder.Environment); // Add Azure Key Vault support
 
 if (builder.Environment.IsDevelopment())
 {

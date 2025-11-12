@@ -5,7 +5,14 @@
       "Bash(Select-String -Pattern \"error|warning|succeeded\")",
       "Bash(npm install:*)",
       "Bash(curl:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(npx dotenv-vault@latest new)",
+      "Bash(az:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(set:*)",
+      "Bash(dotnet run:*)",
+      "Bash(Select-Object -First 30)",
+      "Bash(export AZURE_KEY_VAULT_URI=https://stocker-kv-prod.vault.azure.net/)"
     ],
     "deny": [],
     "ask": []

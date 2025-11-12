@@ -36,7 +36,7 @@ services:
       # ==================================
       # JWT AUTHENTICATION
       # ==================================
-      - JwtSettings__Secret=${JWT_SECRET}
+      # JWT Secret is now managed by Azure Key Vault
       - JwtSettings__Issuer=Stocker
       - JwtSettings__Audience=Stocker
       - JwtSettings__AccessTokenExpirationMinutes=60
@@ -45,10 +45,11 @@ services:
       # ==================================
       # EMAIL SETTINGS
       # ==================================
+      # SMTP credentials are now managed by Azure Key Vault
       - EmailSettings__SmtpHost=mail.privateemail.com
       - EmailSettings__SmtpPort=465
       - EmailSettings__SmtpUsername=${SMTP_USERNAME}
-      - EmailSettings__SmtpPassword=${SMTP_PASSWORD}
+      # SMTP Password is managed by Azure Key Vault
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
       - EmailSettings__EnableSsl=true
@@ -81,11 +82,12 @@ services:
       # RABBITMQ MESSAGE BROKER
       # ==================================
       # Using internal Docker network - RabbitMQ container name
+      # RabbitMQ Password is now managed by Azure Key Vault
       - RabbitMQ__Enabled=true
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__VirtualHost=/
       - RabbitMQ__Username=admin
-      - RabbitMQ__Password=RabbitMQPassword123!
+      # RabbitMQ Password is managed by Azure Key Vault
       - RabbitMQ__Port=5672
       - RabbitMQ__UseSsl=false
       - RabbitMQ__Heartbeat=60
@@ -149,7 +151,15 @@ services:
       - TenantRateLimiting__SegmentsPerWindow=4
       - TenantRateLimiting__TokensPerPeriod=10
       - TenantRateLimiting__ReplenishmentPeriodSeconds=1
-      
+            
+      # ==================================
+      # AZURE KEY VAULT INTEGRATION
+      # ==================================
+      - AZURE_KEY_VAULT_URI=${AZURE_KEY_VAULT_URI}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+
     networks:
       - coolify
     labels:
