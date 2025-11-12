@@ -4,6 +4,9 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
+  // Use tunnel to bypass ad blockers
+  tunnel: "/monitoring",
+
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 1.0,
 
@@ -20,4 +23,12 @@ Sentry.init({
       blockAllMedia: true,
     }),
   ],
+
+  // Additional options to help with debugging
+  beforeSend(event, hint) {
+    // Log events to console in debug mode
+    console.log('Sentry Event being sent:', event);
+    console.log('Sentry Hint:', hint);
+    return event;
+  },
 });

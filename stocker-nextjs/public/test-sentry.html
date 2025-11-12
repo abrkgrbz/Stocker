@@ -4,6 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentry Test - Direct HTML</title>
+    <!-- Load Sentry SDK -->
+    <script
+        src="https://browser.sentry-cdn.com/7.119.2/bundle.min.js"
+        integrity="sha384-1k9m+VEwRNAFqNqwsR1RGiqsGGQWRPGW0vpoYTi+VRHwbIoBUxLuLr9gQGwsm9Wj"
+        crossorigin="anonymous"
+    ></script>
+    <script>
+        // Initialize Sentry
+        Sentry.init({
+            dsn: 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888',
+            tunnel: '/monitoring', // Use tunnel to bypass ad blockers
+            debug: true,
+            environment: 'production',
+            integrations: [
+                Sentry.replayIntegration(),
+            ],
+            tracesSampleRate: 1.0,
+            replaysSessionSampleRate: 0.1,
+            replaysOnErrorSampleRate: 1.0,
+            beforeSend(event, hint) {
+                console.log('Sentry Event:', event);
+                return event;
+            }
+        });
+    </script>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
