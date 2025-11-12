@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (dsn.hostname !== SENTRY_HOST) {
       return NextResponse.json(
         { error: 'Invalid DSN hostname' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders() }
       );
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (projectId !== SENTRY_PROJECT_ID) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders() }
       );
     }
 
@@ -43,18 +43,41 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Return Sentry's response
-    return NextResponse.json(
-      { success: true },
-      { status: response.status }
+    // Log for debugging
+    console.log('[Sentry Tunnel] Forwarded event, status:', response.status);
+
+    // Return Sentry's response with CORS headers
+    return new NextResponse(
+      JSON.stringify({ success: true, sentryStatus: response.status }),
+      {
+        status: 200,
+        headers: getCorsHeaders()
+      }
     );
   } catch (error) {
     console.error('Sentry tunnel error:', error);
     return NextResponse.json(
       { error: 'Failed to proxy request to Sentry' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders() }
     );
   }
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: getCorsHeaders(),
+  });
+}
+
+function getCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Sentry-Auth',
+    'Access-Control-Max-Age': '86400',
+  };
 }
 
 // Also handle GET requests for testing
