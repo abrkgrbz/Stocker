@@ -88,12 +88,15 @@ public class CustomKeyVaultSecretManager : KeyVaultSecretManager
         var replacements = new Dictionary<string, string>
         {
             { "connectionstrings-", "ConnectionStrings:" },
-            { "jwt-", "JwtSettings:" },
-            { "email-", "EmailSettings:" },
-            { "smtp-", "EmailSettings:Smtp" },
-            { "minio-", "MinioSettings:" },
-            { "rabbitmq-", "RabbitMQ:" },
-            { "redis-", "Redis:" }
+            { "jwt-secret", "JwtSettings:Secret" },
+            { "smtp-password", "EmailSettings:SmtpPassword" },
+            { "sa-password", "SA_PASSWORD" },
+            { "redis-password", "Redis:Password" },
+            { "rabbitmq-password", "RabbitMQ:Password" },
+            { "minio-root-password", "Storage:MinIO:RootPassword" },
+            { "minio-secret-key", "Storage:MinIO:SecretKey" },
+            { "seq-api-key", "Logging:Seq:ApiKey" },
+            { "db-password", "DatabasePassword" }
         };
 
         var result = keyVaultKey.ToLower();
