@@ -1,5 +1,6 @@
 import { env } from '@/lib/env'
 
+import logger from '../utils/logger';
 /**
  * Multi-layer Rate Limiting
  * - In-memory for development/fallback
@@ -90,7 +91,7 @@ class RedisRateLimiter {
       this.redisClient = createClient({ url: env.REDIS_URL })
       await this.redisClient.connect()
     } catch (error) {
-      console.error('Redis connection failed, falling back to memory:', error)
+      logger.error('Redis connection failed, falling back to memory:', error);
     }
   }
 
@@ -148,7 +149,7 @@ class RedisRateLimiter {
         resetAt
       }
     } catch (error) {
-      console.error('Redis rate limit error, falling back to memory:', error)
+      logger.error('Redis rate limit error, falling back to memory:', error);
       return memoryLimiter.check(key, config)
     }
   }
@@ -161,7 +162,7 @@ class RedisRateLimiter {
     try {
       await this.redisClient.del(`count:${key}`, `block:${key}`)
     } catch (error) {
-      console.error('Redis reset error:', error)
+      logger.error('Redis reset error:', error);
     }
   }
 }

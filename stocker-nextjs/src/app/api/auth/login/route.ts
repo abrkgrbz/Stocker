@@ -4,6 +4,7 @@ import { validateSignedTenant } from '@/lib/auth/hmac'
 import { checkRateLimit, resetRateLimit, getClientIP, RATE_LIMITS } from '@/lib/auth/rate-limit'
 import { getApiUrl, getCookieDomain } from '@/lib/env'
 
+import logger from '../../../../lib/utils/logger';
 /**
  * POST /api/auth/login
  *
@@ -133,15 +134,15 @@ export async function POST(request: NextRequest) {
 
     const backendData = await backendResponse.json()
 
-    console.log('🔍 Backend response:', JSON.stringify(backendData, null, 2))
-    console.log('🍪 Backend Set-Cookie headers:', backendResponse.headers.get('set-cookie'))
+    logger.info('🔍 Backend response:', JSON.stringify(backendData, null, 2));
+    logger.info('🍪 Backend Set-Cookie headers:', backendResponse.headers.get('set-cookie'));
 
     // Validate backend response
     const responseValidation = LoginResponseSchema.safeParse(backendData)
 
     if (!responseValidation.success) {
-      console.error('❌ Invalid login response:', responseValidation.error)
-      console.error('📋 Backend data:', backendData)
+      logger.error('❌ Invalid login response:', responseValidation.error);
+      logger.error('📋 Backend data:', backendData);
       auditData.event = 'login_invalid_backend_response'
       await logAudit(auditData)
 
@@ -195,8 +196,8 @@ export async function POST(request: NextRequest) {
     await logAudit(auditData)
 
     // Create response with secure cookies
-    console.log('✅ Login successful! Token:', loginData?.accessToken ? 'EXISTS' : 'MISSING')
-    console.log('👤 User:', loginData?.user?.id)
+    logger.info('✅ Login successful! Token:', loginData?.accessToken ? 'EXISTS' : 'MISSING');
+    logger.info('👤 User:', loginData?.user?.id);
 
     const response = NextResponse.json(loginResult, {
       status: 200
@@ -206,20 +207,20 @@ export async function POST(request: NextRequest) {
     const isDevelopment = process.env.NODE_ENV === 'development'
     const cookieDomain = getCookieDomain()
 
-    console.log('🍪 Cookie domain:', cookieDomain)
-    console.log('🔒 Is development:', isDevelopment)
+    logger.info('🍪 Cookie domain:', cookieDomain);
+    logger.info('🔒 Is development:', isDevelopment);
 
     // Forward cookies from backend response (access_token, refresh_token)
     const backendCookies = backendResponse.headers.get('set-cookie')
     if (backendCookies) {
-      console.log('🍪 Forwarding backend cookies:', backendCookies)
+      logger.info('🍪 Forwarding backend cookies:', backendCookies);
       // Parse and set each cookie from backend
       const cookies = backendCookies.split(',').map(c => c.trim())
       cookies.forEach(cookie => {
         const [cookiePart] = cookie.split(';')
         const [name, value] = cookiePart.split('=')
         if (name && value && (name === 'access_token' || name === 'refresh_token')) {
-          console.log(`🍪 Setting ${name} cookie from backend`)
+          logger.info(`🍪 Setting ${name} cookie from backend`);
           response.cookies.set(name, value, {
             httpOnly: true,
             secure: true,
@@ -231,7 +232,7 @@ export async function POST(request: NextRequest) {
         }
       })
     } else {
-      console.warn('⚠️ No Set-Cookie header from backend')
+      logger.warn('⚠️ No Set-Cookie header from backend');
     }
 
     // Set tenant cookie for SSR
@@ -246,7 +247,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Login route error:', error)
+    logger.error('Login route error:', error);
 
     auditData.event = 'login_error'
     auditData.error = error instanceof Error ? error.message : 'Unknown error'
@@ -270,7 +271,7 @@ export async function POST(request: NextRequest) {
 async function logAudit(data: Record<string, any>): Promise<void> {
   // For now, just console log in development
   if (process.env.NODE_ENV === 'development') {
-    console.log('[AUDIT]', JSON.stringify(data, null, 2))
+    logger.info('[AUDIT]', JSON.stringify(data, null, 2));
   }
 
   // TODO: Send to audit logging service

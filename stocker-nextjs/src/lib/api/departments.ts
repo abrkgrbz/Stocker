@@ -5,6 +5,7 @@
 
 import { apiClient } from './client';
 
+import logger from '../utils/logger';
 export interface Department {
   id: string;
   name: string;
@@ -43,8 +44,8 @@ export async function getDepartments(): Promise<Department[]> {
   // Backend returns: { success: true, data: Department[] }
   // ApiClient.get returns: { success: true, data: Department[] }
   // So response.data is the array
-  console.log('🔍 getDepartments response:', response);
-  console.log('🔍 response.data:', response.data);
+  logger.info('🔍 getDepartments response:', response);
+  logger.info('🔍 response.data:', response.data);
 
   return response.data || [];
 }

@@ -1,5 +1,6 @@
 import * as signalR from '@microsoft/signalr';
 
+import logger from '../utils/logger';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5249';
 
 export class SignalRClient {
@@ -12,7 +13,7 @@ export class SignalRClient {
 
   async start(accessToken?: string): Promise<void> {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.log('SignalR already connected');
+      logger.info('SignalR already connected');
       return;
     }
 
@@ -42,17 +43,17 @@ export class SignalRClient {
 
     // Connection event handlers
     this.connection.onreconnecting((error) => {
-      console.warn('SignalR reconnecting...', error);
+      logger.warn('SignalR reconnecting...', error);
       this.reconnectAttempts++;
     });
 
     this.connection.onreconnected((connectionId) => {
-      console.log('SignalR reconnected:', connectionId);
+      logger.info('SignalR reconnected:', connectionId);
       this.reconnectAttempts = 0;
     });
 
     this.connection.onclose(async (error) => {
-      console.error('SignalR connection closed:', error);
+      logger.error('SignalR connection closed:', error);
 
       // Attempt manual reconnection if automatic reconnect fails
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -64,10 +65,10 @@ export class SignalRClient {
 
     try {
       await this.connection.start();
-      console.log('SignalR connected successfully');
+      logger.info('SignalR connected successfully');
       this.reconnectAttempts = 0;
     } catch (error) {
-      console.error('SignalR connection failed:', error);
+      logger.error('SignalR connection failed:', error);
       throw error;
     }
   }
@@ -75,7 +76,7 @@ export class SignalRClient {
   async stop(): Promise<void> {
     if (this.connection) {
       await this.connection.stop();
-      console.log('SignalR disconnected');
+      logger.info('SignalR disconnected');
     }
   }
 

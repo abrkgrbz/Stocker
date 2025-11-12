@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { Notification, NotificationFilter } from '../types/notification.types';
 import { notificationsApi } from '../api/notifications-api';
 
+import logger from '../../../lib/utils/logger';
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
@@ -117,7 +118,7 @@ export const useNotifications = create<NotificationState>((set, get) => ({
       set({ unreadCount: count });
     } catch (error) {
       // Silently fail - notifications are optional feature
-      console.warn('⚠️ Notification service unavailable:', error);
+      logger.warn('⚠️ Notification service unavailable:', error);
     }
   },
 }));

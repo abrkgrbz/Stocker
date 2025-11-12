@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
+import logger from '../utils/logger';
 // Determine API URL based on environment and domain
 function getApiUrl(): string {
   // Server-side: always use internal API URL
@@ -48,7 +49,7 @@ apiClient.interceptors.request.use(
 
       if (tenantCodeCookie) {
         tenantCode = tenantCodeCookie.split('=')[1]?.trim();
-        console.log('🍪 Found tenant-code in cookie:', tenantCode);
+        logger.info('🍪 Found tenant-code in cookie:', tenantCode);
       }
 
       // 2. Fallback: Extract tenant code from subdomain
@@ -58,7 +59,7 @@ apiClient.interceptors.request.use(
         // If subdomain exists (e.g., abg-tech.stoocker.app)
         if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'auth') {
           tenantCode = parts[0]; // Extract subdomain as tenant code
-          console.log('🌐 Extracted tenant-code from subdomain:', tenantCode);
+          logger.info('🌐 Extracted tenant-code from subdomain:', tenantCode);
         }
       }
 
@@ -66,24 +67,24 @@ apiClient.interceptors.request.use(
       if (!tenantCode && (hostname === 'localhost' || hostname === '127.0.0.1')) {
         tenantCode = process.env.NEXT_PUBLIC_DEV_TENANT_CODE || null;
         if (tenantCode) {
-          console.log('🔧 Using development tenant:', tenantCode);
+          logger.info('🔧 Using development tenant:', tenantCode);
         }
       }
 
       // Set tenant code header
       if (tenantCode) {
         config.headers['X-Tenant-Code'] = tenantCode;
-        console.log('✅ Tenant Code set:', tenantCode, 'for', config.url);
+        logger.info('✅ Tenant Code set:', tenantCode, 'for', config.url);
         console.log('📋 Request headers:', {
           'X-Tenant-Code': config.headers['X-Tenant-Code'],
           'Content-Type': config.headers['Content-Type']
         });
       } else {
-        console.error('❌ NO TENANT CODE FOUND!');
-        console.log('🌐 Hostname:', hostname);
-        console.log('🍪 All cookies:', document.cookie);
-        console.log('🔍 Cookie array:', cookies);
-        console.warn('⚠️ No tenant code found for request:', config.url);
+        logger.error('❌ NO TENANT CODE FOUND!');
+        logger.info('🌐 Hostname:', hostname);
+        logger.info('🍪 All cookies:', document.cookie);
+        logger.info('🔍 Cookie array:', cookies);
+        logger.warn('⚠️ No tenant code found for request:', config.url);
       }
 
       // ❌ REMOVED: X-Tenant-Id from localStorage causes conflicts
@@ -97,7 +98,7 @@ apiClient.interceptors.request.use(
 
         // If we have a different tenant-code in cookie, clear old localStorage data
         if (storedTenantId || storedTenantIdentifier) {
-          console.warn('🧹 Clearing old localStorage tenant data');
+          logger.warn('🧹 Clearing old localStorage tenant data');
           localStorage.removeItem('tenantId');
           localStorage.removeItem('tenantIdentifier');
         }
@@ -113,18 +114,18 @@ apiClient.interceptors.request.use(
 
     // Debug logging for POST requests
     if (config.method === 'post' && (config.url?.includes('/opportunities') || config.url?.includes('/deals') || config.url?.includes('/leads'))) {
-      console.log('📤 POST Request to:', config.url);
-      console.log('📦 Request payload:', JSON.stringify(config.data, null, 2));
-      console.log('📋 Payload keys:', Object.keys(config.data || {}));
+      logger.info('📤 POST Request to:', config.url);
+      logger.info('📦 Request payload:', JSON.stringify(config.data, null, 2));
+      logger.info('📋 Payload keys:', Object.keys(config.data || {}));
 
       // Special logging for leads to debug validation errors
       if (config.url?.includes('/leads')) {
         const leadData = (config.data as any)?.LeadData;
-        console.log('🔍 LeadData object:', leadData);
-        console.log('🔍 LeadData keys:', leadData ? Object.keys(leadData) : 'LeadData is null/undefined');
-        console.log('🔍 firstName:', leadData?.firstName);
-        console.log('🔍 lastName:', leadData?.lastName);
-        console.log('🔍 email:', leadData?.email);
+        logger.info('🔍 LeadData object:', leadData);
+        logger.info('🔍 LeadData keys:', leadData ? Object.keys(leadData) : 'LeadData is null/undefined');
+        logger.info('🔍 firstName:', leadData?.firstName);
+        logger.info('🔍 lastName:', leadData?.lastName);
+        logger.info('🔍 email:', leadData?.email);
       }
     }
 
@@ -159,7 +160,7 @@ apiClient.interceptors.response.use(
 
     // Handle Tenant.Unauthorized (400) - Token tenant mismatch
     if (error.response?.status === 400 && error.response?.data?.code === 'Tenant.Unauthorized') {
-      console.error('🔒 Tenant mismatch - access token belongs to different tenant');
+      logger.error('🔒 Tenant mismatch - access token belongs to different tenant');
       console.error('🔍 Debug info:', {
         'Current tenant-code (from cookie)': document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='))?.split('=')[1],
         'Subdomain': window.location.hostname.split('.')[0],
@@ -168,7 +169,7 @@ apiClient.interceptors.response.use(
       });
 
       // TEMPORARILY DISABLED AUTO-LOGOUT FOR DEBUGGING
-      console.warn('⚠️ Auto-logout disabled for debugging. Please check backend token tenant.');
+      logger.warn('⚠️ Auto-logout disabled for debugging. Please check backend token tenant.');
 
       return Promise.reject(error);
     }
@@ -179,7 +180,7 @@ apiClient.interceptors.response.use(
       const tokenExpired = error.response.headers['token-expired'] === 'true';
 
       if (tokenExpired) {
-        console.warn('🔒 Token expired - forcing logout');
+        logger.warn('🔒 Token expired - forcing logout');
         if (typeof window !== 'undefined') {
           // Clear all auth data
           localStorage.removeItem('tenantId');

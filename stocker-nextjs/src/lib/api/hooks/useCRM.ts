@@ -29,6 +29,7 @@ import type {
 } from '../services/crm.types';
 import type { Activity, Lead, Deal, Customer } from '../services/crm.service';
 
+import logger from '../../utils/logger';
 // =====================================
 // QUERY KEYS
 // =====================================
@@ -280,8 +281,8 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: (data: any) => {
       // DEBUG: Log incoming data from form
-      console.log('🎯 Hook received data:', data);
-      console.log('🎯 Data keys:', Object.keys(data));
+      logger.info('🎯 Hook received data:', data);
+      logger.info('🎯 Data keys:', Object.keys(data));
 
       // Backend expects data wrapped in LeadData property (CreateLeadDto)
       // Form now uses correct field names matching backend DTO
@@ -299,7 +300,7 @@ export function useCreateLead() {
         description: data.description || null,
       };
 
-      console.log('🎯 Mapped leadData:', leadData);
+      logger.info('🎯 Mapped leadData:', leadData);
 
       return CRMService.createLead({ LeadData: leadData });
     },
@@ -530,7 +531,7 @@ export function useCreateDeal() {
     },
     onError: (error: any) => {
       // Don't show message here - let the calling component handle it
-      console.error('Deal creation error:', error.response?.data);
+      logger.error('Deal creation error:', error.response?.data);
     },
   });
 }

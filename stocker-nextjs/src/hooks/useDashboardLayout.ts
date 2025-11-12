@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Layout, Layouts } from 'react-grid-layout';
 
+import logger from '../lib/utils/logger';
 const STORAGE_KEY = 'dashboard-layout';
 
 export interface DashboardLayoutState {
@@ -56,7 +57,7 @@ export function useDashboardLayout(): DashboardLayoutState {
           const parsed = JSON.parse(savedLayouts);
           setLayoutsState(parsed);
         } catch (error) {
-          console.error('Failed to parse saved layouts:', error);
+          logger.error('Failed to parse saved layouts:', error);
         }
       }
     }

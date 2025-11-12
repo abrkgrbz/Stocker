@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 
+import logger from '../lib/utils/logger';
 interface ValidationResult {
   isValid: boolean
   message: string
@@ -53,29 +54,29 @@ export function useSignalRValidation() {
     if (connection) {
       connection.start()
         .then(() => {
-          console.log('[SignalR] Connected successfully!')
+          logger.info('[SignalR] Connected successfully!');
           setIsConnected(true)
         })
         .catch(err => {
-          console.error('[SignalR] Connection Error:', err)
-          console.error('[SignalR] Error details:', err.message)
+          logger.error('[SignalR] Connection Error:', err);
+          logger.error('[SignalR] Error details:', err.message);
           // Still mark as "connected" to allow form to work
           // Validation functions will gracefully fail
           setIsConnected(true)
         })
 
       connection.onclose((error) => {
-        console.log('[SignalR] Disconnected', error)
+        logger.info('[SignalR] Disconnected', error);
         setIsConnected(false)
       })
 
       connection.onreconnecting((error) => {
-        console.log('[SignalR] Reconnecting...', error)
+        logger.info('[SignalR] Reconnecting...', error);
         setIsConnected(false)
       })
 
       connection.onreconnected((connectionId) => {
-        console.log('[SignalR] Reconnected! ID:', connectionId)
+        logger.info('[SignalR] Reconnected! ID:', connectionId);
         setIsConnected(true)
       })
 
@@ -106,7 +107,7 @@ export function useSignalRValidation() {
 
       connection.on('EmailValidated', handler)
       connection.invoke('ValidateEmail', email)
-        .catch(err => console.error('[SignalR] Email validation error:', err))
+        .catch(err => logger.error('[SignalR] Email validation error:', err));
     })
   }, [connection, isConnected])
 
@@ -125,7 +126,7 @@ export function useSignalRValidation() {
 
       connection.on('PhoneValidated', handler)
       connection.invoke('ValidatePhone', phoneNumber, countryCode)
-        .catch(err => console.error('[SignalR] Phone validation error:', err))
+        .catch(err => logger.error('[SignalR] Phone validation error:', err));
     })
   }, [connection, isConnected])
 
@@ -143,7 +144,7 @@ export function useSignalRValidation() {
 
       connection.on('PasswordStrengthChecked', handler)
       connection.invoke('CheckPasswordStrength', password)
-        .catch(err => console.error('[SignalR] Password strength check error:', err))
+        .catch(err => logger.error('[SignalR] Password strength check error:', err));
     }, 300)
   }, [connection, isConnected])
 
@@ -161,7 +162,7 @@ export function useSignalRValidation() {
 
       connection.on('TenantCodeValidated', handler)
       connection.invoke('ValidateTenantCode', code)
-        .catch(err => console.error('[SignalR] Tenant code validation error:', err))
+        .catch(err => logger.error('[SignalR] Tenant code validation error:', err));
     })
   }, [connection, isConnected])
 
@@ -170,7 +171,7 @@ export function useSignalRValidation() {
     onResult: (result: ValidationResult) => void
   ) => {
     if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) {
-      console.log('[SignalR] Skipping company name check - connection not ready')
+      logger.info('[SignalR] Skipping company name check - connection not ready');
       return
     }
 
@@ -182,7 +183,7 @@ export function useSignalRValidation() {
 
       connection.on('CompanyNameChecked', handler)
       connection.invoke('CheckCompanyName', companyName)
-        .catch(err => console.error('[SignalR] Company name check error:', err))
+        .catch(err => logger.error('[SignalR] Company name check error:', err));
     })
   }, [connection, isConnected])
 
@@ -191,7 +192,7 @@ export function useSignalRValidation() {
     onResult: (result: IdentityValidationResult) => void
   ) => {
     if (!connection || !isConnected || connection.state !== signalR.HubConnectionState.Connected) {
-      console.log('[SignalR] Skipping identity validation - connection not ready')
+      logger.info('[SignalR] Skipping identity validation - connection not ready');
       return
     }
 
@@ -203,7 +204,7 @@ export function useSignalRValidation() {
 
       connection.on('IdentityValidated', handler)
       connection.invoke('ValidateIdentity', identityNumber)
-        .catch(err => console.error('[SignalR] Identity validation error:', err))
+        .catch(err => logger.error('[SignalR] Identity validation error:', err));
     })
   }, [connection, isConnected])
 

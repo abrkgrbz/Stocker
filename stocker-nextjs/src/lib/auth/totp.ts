@@ -1,6 +1,7 @@
 import { TOTP, Secret } from 'otpauth';
 import QRCode from 'qrcode';
 
+import logger from '../utils/logger';
 /**
  * TOTP (Time-based One-Time Password) utility functions
  * Used for Google Authenticator, Microsoft Authenticator, etc.
@@ -61,7 +62,7 @@ export async function generateQRCode(otpauthUrl: string): Promise<string> {
     });
     return qrCodeDataUrl;
   } catch (error) {
-    console.error('QR code generation failed:', error);
+    logger.error('QR code generation failed:', error);
     throw new Error('Failed to generate QR code');
   }
 }
@@ -83,7 +84,7 @@ export function verifyTOTPToken(secret: string, token: string): boolean {
 
     return delta !== null;
   } catch (error) {
-    console.error('TOTP verification failed:', error);
+    logger.error('TOTP verification failed:', error);
     return false;
   }
 }

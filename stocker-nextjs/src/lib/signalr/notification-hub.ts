@@ -6,6 +6,7 @@ import { useNotifications } from '@/features/notifications/hooks/useNotification
 import { Notification } from '@/features/notifications/types/notification.types';
 import { toast } from 'sonner';
 
+import logger from '../utils/logger';
 export function useNotificationHub() {
   const { addNotification, fetchUnreadCount } = useNotifications();
 
@@ -14,7 +15,7 @@ export function useNotificationHub() {
     events: {
       // Receive new notification
       ReceiveNotification: (notification: Notification) => {
-        console.log('Received notification:', notification);
+        logger.info('Received notification:', notification);
         addNotification(notification);
 
         // Show toast for important notifications
@@ -27,7 +28,7 @@ export function useNotificationHub() {
 
       // Inventory update notification
       UpdateInventory: (data: { productId: string; stockLevel: number; message: string }) => {
-        console.log('Inventory updated:', data);
+        logger.info('Inventory updated:', data);
         addNotification({
           id: `inventory-${Date.now()}`,
           title: 'Stok Güncellendi',
@@ -49,7 +50,7 @@ export function useNotificationHub() {
 
       // Order status changed notification
       OrderStatusChanged: (data: { orderId: string; status: string; message: string }) => {
-        console.log('Order status changed:', data);
+        logger.info('Order status changed:', data);
         addNotification({
           id: `order-${Date.now()}`,
           title: 'Sipariş Durumu Değişti',
@@ -76,7 +77,7 @@ export function useNotificationHub() {
 
       // System alert notification
       SystemAlert: (data: { severity: 'info' | 'warning' | 'error'; message: string }) => {
-        console.log('System alert:', data);
+        logger.info('System alert:', data);
         addNotification({
           id: `system-${Date.now()}`,
           title: 'Sistem Bildirimi',

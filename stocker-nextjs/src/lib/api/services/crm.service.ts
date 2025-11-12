@@ -1,4 +1,5 @@
 import { ApiService } from '../api-service';
+import logger from '../../utils/logger';
 import type {
   // Statistics
   ActivityStatisticsDto,
@@ -371,7 +372,7 @@ export class CRMService {
       }
     };
 
-    console.log('📤 Sending CreateCustomerCommand to CRM module:', command);
+    logger.info('📤 Sending CreateCustomerCommand to CRM module:', command);
     return ApiService.post<Customer>(this.getPath('customers'), command);
   }
 
@@ -402,7 +403,7 @@ export class CRMService {
       }
     };
 
-    console.log('📤 Sending UpdateCustomerCommand to CRM module:', command);
+    logger.info('📤 Sending UpdateCustomerCommand to CRM module:', command);
     return ApiService.put<Customer>(
       this.getPath(`customers/${id}`),
       command
@@ -413,7 +414,7 @@ export class CRMService {
    * Delete customer using CRM module's DeleteCustomerCommand
    */
   static async deleteCustomer(id: string): Promise<void> {
-    console.log('📤 Sending DeleteCustomerCommand to CRM module:', { customerId: id });
+    logger.info('📤 Sending DeleteCustomerCommand to CRM module:', { customerId: id });
     return ApiService.delete<void>(this.getPath(`customers/${id}`));
   }
 

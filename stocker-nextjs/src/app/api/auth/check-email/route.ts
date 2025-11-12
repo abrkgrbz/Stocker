@@ -4,6 +4,7 @@ import { generateTenantSignature } from '@/lib/auth/hmac'
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/auth/rate-limit'
 import { env, getApiUrl } from '@/lib/env'
 
+import logger from '../../../../lib/utils/logger';
 /**
  * POST /api/auth/check-email
  *
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     if (!backendResponse.ok) {
       const errorText = await backendResponse.text()
-      console.error('Backend check-email error:', errorText)
+      logger.error('Backend check-email error:', errorText);
 
       return NextResponse.json(
         {
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     const responseValidation = CheckEmailResponseSchema.safeParse(backendData)
 
     if (!responseValidation.success) {
-      console.error('Invalid backend response:', responseValidation.error)
+      logger.error('Invalid backend response:', responseValidation.error);
       return NextResponse.json(
         {
           success: false,
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Check-email route error:', error)
+    logger.error('Check-email route error:', error);
 
     return NextResponse.json(
       {

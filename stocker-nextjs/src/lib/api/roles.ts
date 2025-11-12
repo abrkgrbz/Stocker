@@ -5,6 +5,7 @@
 
 import { apiClient } from './client';
 
+import logger from '../utils/logger';
 export interface Permission {
   resource: string;
   permissionType: number;
@@ -166,7 +167,7 @@ export function parsePermission(permissionStr: string): Permission {
   const permissionType = permissionTypeMap[permissionTypeStr];
 
   if (permissionType === undefined) {
-    console.warn(`Unknown permission type: ${permissionTypeStr}`);
+    logger.warn(`Unknown permission type: ${permissionTypeStr}`);
     return {
       resource,
       permissionType: 0, // Default to View
