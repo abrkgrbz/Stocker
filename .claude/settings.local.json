@@ -15,7 +15,9 @@
       "Bash(export AZURE_KEY_VAULT_URI=https://stocker-kv-prod.vault.azure.net/)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(dir:*)",
+      "Bash(node scripts/check-sentry.js:*)"
     ],
     "deny": [],
     "ask": []
