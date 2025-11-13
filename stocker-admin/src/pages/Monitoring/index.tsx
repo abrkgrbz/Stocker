@@ -74,7 +74,7 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined
 } from '@ant-design/icons';
-import { Line, Area, Column, Gauge, RingProgress, Pie } from '@ant-design/plots';
+import { Line, Area, Column, RingProgress, Pie } from '@ant-design/plots';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -457,65 +457,6 @@ const MonitoringPage: React.FC = () => {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-  };
-
-  const createGaugeConfig = (value: number | undefined, title: string) => {
-    // Ensure value is a valid number between 0-100
-    const safeValue = typeof value === 'number' && !isNaN(value) ? Math.max(0, Math.min(100, value)) : 0;
-    const safePercent = safeValue / 100;
-
-    return {
-      percent: safePercent,
-      radius: 0.75,
-      innerRadius: 0.65,
-      type: 'meter' as const,
-      range: {
-        ticks: [0, 0.25, 0.5, 0.75, 1],
-        color: ['#52c41a', '#52c41a', '#faad14', '#faad14', '#f5222d'],
-      },
-      axis: {
-        label: {
-          formatter: (v: string) => `${(Number(v) * 100).toFixed(0)}%`,
-        },
-        subTickLine: {
-          count: 3,
-        },
-      },
-      indicator: {
-        pointer: {
-          style: {
-            stroke: '#D0D0D0',
-            lineWidth: 2,
-          },
-        },
-        pin: {
-          style: {
-            stroke: '#D0D0D0',
-            r: 8,
-            lineWidth: 2,
-          },
-        },
-      },
-      statistic: {
-        title: {
-          formatter: () => title,
-          style: {
-            fontSize: '14px',
-            lineHeight: '14px',
-            color: '#000',
-          },
-        },
-        content: {
-          formatter: () => `${safeValue.toFixed(1)}%`,
-          style: {
-            fontSize: '24px',
-            lineHeight: '24px',
-            color: '#000',
-            fontWeight: 'bold',
-          },
-        },
-      },
-    };
   };
 
   const cpuChartConfig = {
@@ -939,24 +880,6 @@ const MonitoringPage: React.FC = () => {
                   </Col>
                 </Row>
 
-                {/* Gauge Meters */}
-                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                  <Col xs={24} sm={8}>
-                    <Card title="CPU" bordered={false}>
-                      <Gauge {...createGaugeConfig(systemMetrics.cpu.usage, 'CPU')} height={200} />
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Card title="Memory" bordered={false}>
-                      <Gauge {...createGaugeConfig(systemMetrics.memory.usagePercentage, 'Memory')} height={200} />
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Card title="Disk" bordered={false}>
-                      <Gauge {...createGaugeConfig(systemMetrics.disk.usagePercentage, 'Disk')} height={200} />
-                    </Card>
-                  </Col>
-                </Row>
               </>
             )}
 
