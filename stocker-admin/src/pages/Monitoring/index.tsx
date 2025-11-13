@@ -444,41 +444,44 @@ const MonitoringPage: React.FC = () => {
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
-  const createGaugeConfig = (value: number, title: string) => ({
-    percent: value / 100,
-    range: {
-      ticks: [0, 1],
-      color: ['#52c41a', '#faad14', '#f5222d'],
-    },
-    indicator: {
-      pointer: {
-        style: {
-          stroke: '#D0D0D0',
+  const createGaugeConfig = (value: number | undefined, title: string) => {
+    const safeValue = value ?? 0;
+    return {
+      percent: safeValue / 100,
+      range: {
+        ticks: [0, 1],
+        color: ['#52c41a', '#faad14', '#f5222d'],
+      },
+      indicator: {
+        pointer: {
+          style: {
+            stroke: '#D0D0D0',
+          },
+        },
+        pin: {
+          style: {
+            stroke: '#D0D0D0',
+          },
         },
       },
-      pin: {
-        style: {
-          stroke: '#D0D0D0',
+      statistic: {
+        title: {
+          formatter: () => title,
+          style: {
+            fontSize: '14px',
+            lineHeight: '14px',
+          },
+        },
+        content: {
+          formatter: () => `${safeValue.toFixed(1)}%`,
+          style: {
+            fontSize: '24px',
+            lineHeight: '24px',
+          },
         },
       },
-    },
-    statistic: {
-      title: {
-        formatter: () => title,
-        style: {
-          fontSize: '14px',
-          lineHeight: '14px',
-        },
-      },
-      content: {
-        formatter: () => `${value.toFixed(1)}%`,
-        style: {
-          fontSize: '24px',
-          lineHeight: '24px',
-        },
-      },
-    },
-  });
+    };
+  };
 
   const cpuChartConfig = {
     data: cpuHistory,
