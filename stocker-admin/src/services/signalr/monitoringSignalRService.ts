@@ -69,7 +69,7 @@ class MonitoringSignalRService {
     }
 
     // Get the API base URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7091';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.stoocker.app';
     const hubUrl = `${baseUrl}/hubs/monitoring`;
 
     console.log('Initializing SignalR monitoring connection to:', hubUrl);

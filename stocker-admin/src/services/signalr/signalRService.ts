@@ -64,7 +64,7 @@ class SignalRService {
   }
 
   private getBaseUrl(): string {
-    return import.meta.env.VITE_API_URL || 'http://localhost:5104';
+    return import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
   }
 
   private initializeHubs() {
