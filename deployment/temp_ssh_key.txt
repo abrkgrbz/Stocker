@@ -1,0 +1,4 @@
+[SSH_KEY_ICERIGI_BURAYA_YAPISTIRILACAK]
+Sunucudan aldığınız SSH key'i buraya yapıştırın.
+-----BEGIN OPENSSH PRIVATE KEY----- ile başlayıp
+-----END OPENSSH PRIVATE KEY----- ile biten içerik.
