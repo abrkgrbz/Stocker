@@ -447,12 +447,15 @@ const MonitoringPage: React.FC = () => {
   };
 
   const createGaugeConfig = (value: number | undefined, title: string) => {
-    const safeValue = value ?? 0;
+    // Ensure value is a valid number between 0-100
+    const safeValue = typeof value === 'number' && !isNaN(value) ? Math.max(0, Math.min(100, value)) : 0;
+    const safePercent = safeValue / 100;
+
     return {
-      percent: safeValue / 100,
+      percent: safePercent,
       range: {
-        ticks: [0, 1],
-        color: ['#52c41a', '#faad14', '#f5222d'],
+        ticks: [0, 0.25, 0.5, 0.75, 1],
+        color: ['#52c41a', '#52c41a', '#faad14', '#faad14', '#f5222d'],
       },
       indicator: {
         pointer: {
@@ -482,6 +485,7 @@ const MonitoringPage: React.FC = () => {
           },
         },
       },
+      animation: false, // Disable animation to prevent rendering issues
     };
   };
 
