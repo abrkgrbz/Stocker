@@ -75,13 +75,17 @@ class MonitoringSignalRService {
     console.log('Initializing SignalR monitoring connection to:', hubUrl);
 
     // Create the connection with fallback transports
+    // NOTE: Using LongPolling as primary transport due to browser extension blocking issues
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => token,
-        // Try transports in order: WebSockets -> ServerSentEvents -> LongPolling
-        transport: signalR.HttpTransportType.WebSockets |
-                   signalR.HttpTransportType.ServerSentEvents |
-                   signalR.HttpTransportType.LongPolling,
+        // Force LongPolling to bypass ad blocker/extension issues
+        // Comment out the line below to re-enable WebSockets when extensions are disabled
+        transport: signalR.HttpTransportType.LongPolling,
+        // Uncomment below for all transports (when ad blockers are disabled):
+        // transport: signalR.HttpTransportType.WebSockets |
+        //            signalR.HttpTransportType.ServerSentEvents |
+        //            signalR.HttpTransportType.LongPolling,
         // Skip negotiation for direct WebSocket connection (optional, can help with blocked negotiate)
         skipNegotiation: false,
         // Add custom headers if needed

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalR Connection Test - Long Polling</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7/dist/browser/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .connected { background: #4CAF50; color: white; }
+        .disconnected { background: #f44336; color: white; }
+        .connecting { background: #ff9800; color: white; }
+        .log {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #2196F3;
+        }
+        .error { border-left-color: #f44336; color: #f44336; }
+        .success { border-left-color: #4CAF50; color: #4CAF50; }
+        .warning { border-left-color: #ff9800; color: #ff9800; }
+        .info { border-left-color: #2196F3; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .transport-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>SignalR Monitoring Hub Test</h1>
+
+    <div class="transport-info">
+        <strong>Transport Mode:</strong> Long Polling (Ad Blocker Bypass Mode)
+        <br>
+        <small>This mode uses HTTP Long Polling instead of WebSockets to bypass browser extensions</small>
+    </div>
+
+    <div id="status" class="status disconnected">Disconnected</div>
+
+    <div>
+        <button id="connectBtn" class="btn-primary" onclick="connectToHub()">Connect</button>
+        <button id="disconnectBtn" class="btn-danger" onclick="disconnectFromHub()" disabled>Disconnect</button>
+        <button id="requestMetricsBtn" class="btn-success" onclick="requestMetrics()" disabled>Request Metrics</button>
+        <button id="clearLogBtn" class="btn-danger" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <h3>Connection Log:</h3>
+    <div id="log" class="log"></div>
+
+    <script>
+        let connection = null;
+        const logDiv = document.getElementById('log');
+        const statusDiv = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const requestMetricsBtn = document.getElementById('requestMetricsBtn');
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function updateStatus(status, text) {
+            statusDiv.className = `status ${status}`;
+            statusDiv.textContent = text;
+        }
+
+        async function connectToHub() {
+            try {
+                addLog('Starting connection process...', 'info');
+
+                // Get auth token from localStorage if available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    addLog('No auth token found in localStorage. You may need to login first.', 'warning');
+                }
+
+                const hubUrl = 'https://localhost:7091/hubs/monitoring';
+                addLog(`Connecting to: ${hubUrl}`, 'info');
+
+                // Create connection with Long Polling transport only
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(hubUrl, {
+                        accessTokenFactory: () => token || '',
+                        // Force Long Polling to bypass ad blocker issues
+                        transport: signalR.HttpTransportType.LongPolling,
+                        skipNegotiation: false,
+                        headers: {
+                            'X-SignalR-User-Agent': 'Stocker-Test/1.0'
+                        }
+                    })
+                    .withAutomaticReconnect()
+                    .configureLogging(signalR.LogLevel.Debug)
+                    .build();
+
+                // Setup event handlers
+                connection.onreconnecting((error) => {
+                    updateStatus('connecting', 'Reconnecting...');
+                    addLog(`Connection lost, attempting to reconnect: ${error?.message || 'Unknown error'}`, 'warning');
+                });
+
+                connection.onreconnected((connectionId) => {
+                    updateStatus('connected', `Connected (ID: ${connectionId})`);
+                    addLog(`Reconnected successfully. Connection ID: ${connectionId}`, 'success');
+                    subscribeToUpdates();
+                });
+
+                connection.onclose((error) => {
+                    updateStatus('disconnected', 'Disconnected');
+                    addLog(`Connection closed: ${error?.message || 'Connection closed'}`, 'error');
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    requestMetricsBtn.disabled = true;
+                });
+
+                // Message handlers
+                connection.on('MonitoringConnected', (data) => {
+                    addLog(`Monitoring connection confirmed: ${JSON.stringify(data)}`, 'success');
+                    subscribeToUpdates();
+                });
+
+                connection.on('ReceiveMetricsUpdate', (data) => {
+                    addLog('Received metrics update:', 'success');
+                    addLog(JSON.stringify(data, null, 2), 'info');
+                });
+
+                connection.on('SystemMetricsUpdate', (metrics) => {
+                    addLog('Received system metrics:', 'success');
+                    addLog(JSON.stringify(metrics, null, 2), 'info');
+                });
+
+                connection.on('ServiceHealthUpdate', (health) => {
+                    addLog('Received service health:', 'success');
+                    addLog(JSON.stringify(health, null, 2), 'info');
+                });
+
+                connection.on('MonitoringAlert', (alert) => {
+                    addLog('⚠️ Received monitoring alert:', 'warning');
+                    addLog(JSON.stringify(alert, null, 2), 'warning');
+                });
+
+                connection.on('DockerStatsUpdate', (stats) => {
+                    addLog('Received Docker stats:', 'success');
+                    addLog(JSON.stringify(stats, null, 2), 'info');
+                });
+
+                // Start the connection
+                addLog('Attempting to start connection...', 'info');
+                await connection.start();
+
+                updateStatus('connected', `Connected (Transport: Long Polling)`);
+                addLog('✅ Connection established successfully using Long Polling!', 'success');
+                addLog('Transport type: Long Polling (HTTP-based, ad blocker resistant)', 'info');
+
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                requestMetricsBtn.disabled = false;
+
+            } catch (error) {
+                updateStatus('disconnected', 'Connection Failed');
+
+                if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+                    error.message?.includes('Failed to fetch')) {
+                    addLog('❌ Connection blocked by browser extension!', 'error');
+                    addLog('Even Long Polling is being blocked. Please try:', 'warning');
+                    addLog('1. Disable ad blockers and privacy extensions', 'warning');
+                    addLog('2. Add localhost:7091 to your ad blocker whitelist', 'warning');
+                    addLog('3. Try in an incognito/private window', 'warning');
+                } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+                    addLog('❌ Authentication failed!', 'error');
+                    addLog('Please login to the admin panel first to get a valid token', 'warning');
+                } else {
+                    addLog(`❌ Connection failed: ${error.message}`, 'error');
+                    addLog('Full error details:', 'error');
+                    addLog(JSON.stringify(error, null, 2), 'error');
+                }
+
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                requestMetricsBtn.disabled = true;
+            }
+        }
+
+        async function subscribeToUpdates() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                addLog('Cannot subscribe - connection not ready', 'warning');
+                return;
+            }
+
+            try {
+                addLog('Subscribing to monitoring updates...', 'info');
+                await connection.invoke('SubscribeToSystemMetrics');
+                await connection.invoke('SubscribeToServiceHealth');
+                await connection.invoke('SubscribeToAlerts');
+                addLog('✅ Subscribed to all monitoring updates', 'success');
+            } catch (error) {
+                addLog(`Failed to subscribe: ${error.message}`, 'error');
+            }
+        }
+
+        async function requestMetrics() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                addLog('Cannot request metrics - not connected', 'warning');
+                return;
+            }
+
+            try {
+                addLog('Requesting immediate metrics update...', 'info');
+                await connection.invoke('RequestMetricsUpdate');
+                addLog('✅ Metrics request sent', 'success');
+            } catch (error) {
+                addLog(`Failed to request metrics: ${error.message}`, 'error');
+            }
+        }
+
+        async function disconnectFromHub() {
+            if (connection) {
+                try {
+                    addLog('Disconnecting...', 'info');
+                    await connection.stop();
+                    updateStatus('disconnected', 'Disconnected');
+                    addLog('Disconnected successfully', 'success');
+                } catch (error) {
+                    addLog(`Error during disconnect: ${error.message}`, 'error');
+                }
+
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                requestMetricsBtn.disabled = true;
+            }
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = '';
+            addLog('Log cleared', 'info');
+        }
+
+        // Auto-connect on page load for testing
+        window.addEventListener('load', () => {
+            addLog('Page loaded. Click "Connect" to test SignalR connection.', 'info');
+            addLog('Using Long Polling transport to bypass ad blocker issues.', 'info');
+        });
+    </script>
+</body>
+</html>
