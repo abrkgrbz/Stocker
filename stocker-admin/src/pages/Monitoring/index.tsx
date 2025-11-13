@@ -146,6 +146,7 @@ const MonitoringPage: React.FC = () => {
   // Chart data states
   const [cpuHistory, setCpuHistory] = useState<any[]>([]);
   const [memoryHistory, setMemoryHistory] = useState<any[]>([]);
+  const [diskHistory, setDiskHistory] = useState<any[]>([]);
 
   // Keep mock data for alerts and logs (will be replaced in Phase 2)
   const [alertRules, setAlertRules] = useState<AlertRule[]>([
@@ -303,6 +304,7 @@ const MonitoringPage: React.FC = () => {
           const timestamp = dayjs(data.collectedAt).format('HH:mm:ss');
           setCpuHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.cpu.usage }]);
           setMemoryHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.memory.usagePercentage }]);
+          setDiskHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.disk.usagePercentage }]);
 
           // Check alert rules
           checkAlerts(data.metrics);
@@ -532,6 +534,33 @@ const MonitoringPage: React.FC = () => {
       max: 100,
       title: {
         text: 'Memory Usage (%)',
+      },
+    },
+  };
+
+  const diskChartConfig = {
+    data: diskHistory,
+    xField: 'time',
+    yField: 'value',
+    smooth: true,
+    lineStyle: {
+      lineWidth: 2,
+      stroke: '#f5222d',
+    },
+    point: {
+      size: 3,
+    },
+    tooltip: {
+      formatter: (datum: any) => ({
+        name: 'Disk',
+        value: `${datum.value.toFixed(1)}%`,
+      }),
+    },
+    yAxis: {
+      min: 0,
+      max: 100,
+      title: {
+        text: 'Disk Usage (%)',
       },
     },
   };
@@ -853,6 +882,21 @@ const MonitoringPage: React.FC = () => {
                     <Card title="Bellek Kullanım Geçmişi" bordered={false}>
                       {memoryHistory.length > 1 ? (
                         <Line {...memoryChartConfig} height={200} />
+                      ) : (
+                        <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Text type="secondary">Veri toplanıyor...</Text>
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Disk Usage History Chart */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24}>
+                    <Card title="Disk Kullanım Geçmişi" bordered={false}>
+                      {diskHistory.length > 1 ? (
+                        <Line {...diskChartConfig} height={200} />
                       ) : (
                         <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Text type="secondary">Veri toplanıyor...</Text>
