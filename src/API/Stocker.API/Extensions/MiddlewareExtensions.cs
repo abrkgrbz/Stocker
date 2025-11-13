@@ -234,6 +234,15 @@ public static class MiddlewareExtensions
         .RequireCors(corsPolicy)
         .RequireAuthorization(); // ✅ Authentication required
 
+        app.MapHub<MonitoringHub>("/hubs/monitoring", options =>
+        {
+            options.Transports = HttpTransportType.WebSockets |
+                                 HttpTransportType.ServerSentEvents |
+                                 HttpTransportType.LongPolling;
+        })
+        .RequireCors(corsPolicy)
+        .RequireAuthorization(); // ✅ Authentication required - System Admin role checked in Hub
+
         // 21. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")

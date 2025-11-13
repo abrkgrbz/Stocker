@@ -83,6 +83,7 @@ import systemMonitoringService, {
   SystemHealth,
   ServiceStatus
 } from '../../services/api/systemMonitoringService';
+import monitoringSignalRService from '../../services/signalr/monitoringSignalRService';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -137,6 +138,10 @@ const MonitoringPage: React.FC = () => {
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // SignalR connection state
+  const [signalRConnected, setSignalRConnected] = useState(false);
+  const [signalRStatus, setSignalRStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'reconnecting'>('disconnected');
 
   // Chart data states
   const [cpuHistory, setCpuHistory] = useState<any[]>([]);
@@ -273,23 +278,98 @@ const MonitoringPage: React.FC = () => {
     });
   };
 
-  // Auto refresh
+  // SignalR initialization and auto refresh
   useEffect(() => {
-    // Initial fetch
+    // Initial fetch - always get initial data from API
     fetchMonitoringData();
 
-    // Set up auto refresh
+    // Initialize SignalR connection
+    const initializeSignalR = async () => {
+      try {
+        setSignalRStatus('connecting');
+
+        // Initialize connection
+        await monitoringSignalRService.initialize();
+
+        // Register event handlers
+        monitoringSignalRService.onMetricsUpdate((data) => {
+          // Update all metrics from SignalR push
+          setSystemMetrics(data.metrics);
+          setSystemHealth(data.health);
+          setServices(data.services);
+          setLastUpdate(new Date(data.collectedAt));
+
+          // Update history charts
+          const timestamp = dayjs(data.collectedAt).format('HH:mm:ss');
+          setCpuHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.cpu.usage }]);
+          setMemoryHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.memory.usagePercentage }]);
+
+          // Check alert rules
+          checkAlertRules(data.metrics);
+        });
+
+        monitoringSignalRService.onAlert((alertData) => {
+          // Handle alert notifications
+          alertData.alerts.forEach(alert => {
+            const notifyMethod = alert.severity === 'critical' ? notification.error :
+                               alert.severity === 'warning' ? notification.warning :
+                               notification.info;
+
+            notifyMethod({
+              message: `${alert.severity.toUpperCase()}: ${alert.metric.toUpperCase()}`,
+              description: alert.message,
+              placement: 'topRight',
+              duration: alert.severity === 'critical' ? 0 : 10
+            });
+          });
+        });
+
+        monitoringSignalRService.onDockerStatsUpdate((dockerData) => {
+          // Handle Docker stats updates if needed
+          console.log('Docker stats received:', dockerData);
+        });
+
+        monitoringSignalRService.onConnectionStateChange((state) => {
+          setSignalRStatus(state as any);
+          setSignalRConnected(state === 'connected');
+
+          // Show connection status notifications
+          if (state === 'connected') {
+            message.success('Real-time monitoring bağlantısı kuruldu');
+          } else if (state === 'disconnected') {
+            message.warning('Real-time monitoring bağlantısı koptu');
+          }
+        });
+
+        // Request immediate update after connection
+        await monitoringSignalRService.requestMetricsUpdate();
+
+      } catch (error) {
+        console.error('SignalR initialization error:', error);
+        setSignalRStatus('disconnected');
+        setSignalRConnected(false);
+      }
+    };
+
+    // Initialize SignalR
+    initializeSignalR();
+
+    // Set up fallback polling if SignalR is not connected
     let interval: NodeJS.Timeout | null = null;
-    if (autoRefresh) {
+    if (autoRefresh && !signalRConnected) {
       interval = setInterval(() => {
-        fetchMonitoringData();
+        if (!signalRConnected) {
+          fetchMonitoringData();
+        }
       }, refreshInterval);
     }
 
     return () => {
+      // Cleanup
       if (interval) clearInterval(interval);
+      monitoringSignalRService.dispose();
     };
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, signalRConnected]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -585,6 +665,22 @@ const MonitoringPage: React.FC = () => {
           </Col>
           <Col span={12} style={{ textAlign: 'right' }}>
             <Space>
+              {/* SignalR Connection Status */}
+              <Badge
+                status={
+                  signalRStatus === 'connected' ? 'success' :
+                  signalRStatus === 'connecting' ? 'processing' :
+                  signalRStatus === 'reconnecting' ? 'warning' :
+                  'error'
+                }
+                text={
+                  signalRStatus === 'connected' ? 'Real-time Bağlantı Aktif' :
+                  signalRStatus === 'connecting' ? 'Bağlanıyor...' :
+                  signalRStatus === 'reconnecting' ? 'Yeniden Bağlanıyor...' :
+                  'Bağlantı Yok (Polling Modu)'
+                }
+              />
+              <Divider type="vertical" />
               <Text>Otomatik Yenileme:</Text>
               <Switch
                 checked={autoRefresh}
@@ -596,20 +692,29 @@ const MonitoringPage: React.FC = () => {
                 value={refreshInterval}
                 onChange={setRefreshInterval}
                 style={{ width: 120 }}
-                disabled={!autoRefresh}
+                disabled={!autoRefresh || signalRConnected}
               >
                 <Option value={10000}>10 saniye</Option>
                 <Option value={30000}>30 saniye</Option>
                 <Option value={60000}>1 dakika</Option>
                 <Option value={300000}>5 dakika</Option>
               </Select>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={fetchMonitoringData}
-                loading={loading}
-              >
-                Yenile
-              </Button>
+              <Tooltip title={signalRConnected ? 'Real-time güncellemeler aktif, manuel yenileme gerekmiyor' : 'Manuel yenileme'}>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    if (signalRConnected) {
+                      monitoringSignalRService.requestMetricsUpdate();
+                    } else {
+                      fetchMonitoringData();
+                    }
+                  }}
+                  loading={loading}
+                  type={!signalRConnected ? 'primary' : 'default'}
+                >
+                  Yenile
+                </Button>
+              </Tooltip>
             </Space>
           </Col>
         </Row>

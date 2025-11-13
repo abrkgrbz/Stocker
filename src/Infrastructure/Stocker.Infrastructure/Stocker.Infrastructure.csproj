@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Stocker.Application\Stocker.Application.csproj" />
     <ProjectReference Include="..\Stocker.Identity\Stocker.Identity.csproj" />
+    <ProjectReference Include="..\Stocker.SignalR\Stocker.SignalR.csproj" />
   </ItemGroup>
 
   <ItemGroup>

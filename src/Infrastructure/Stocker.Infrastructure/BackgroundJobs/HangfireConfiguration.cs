@@ -105,5 +105,25 @@ public static class HangfireConfiguration
     {
         // Tenant health check - runs every 15 minutes
         TenantHealthCheckJob.Schedule();
+
+        // System monitoring metrics - runs every 15 seconds
+        RecurringJob.AddOrUpdate<MonitoringMetricsJob>(
+            "monitoring-metrics",
+            job => job.CollectAndPushMetrics(),
+            "*/15 * * * * *", // Every 15 seconds
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+
+        // Docker stats collection - runs every 30 seconds
+        RecurringJob.AddOrUpdate<MonitoringMetricsJob>(
+            "docker-stats-monitoring",
+            job => job.CollectAndPushDockerStats(),
+            "*/30 * * * * *", // Every 30 seconds
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
     }
 }

@@ -28,7 +28,8 @@
       "Bash(ssh -i C:Tempdocker_key.txt -o StrictHostKeyChecking=no root@95.217.219.4 \"df -h / && echo && docker system df\")",
       "Bash(ssh -i C:Tempdocker_ssh_key.txt -o StrictHostKeyChecking=no root@95.217.219.4 \"echo ''Connected!'' && df -h /\")",
       "Bash(ssh:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dotnet build:*)"
     ],
     "deny": [],
     "ask": []
