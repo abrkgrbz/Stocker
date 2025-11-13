@@ -19,14 +19,19 @@ public static class CorsExtensions
                         "http://localhost:3000",
                         "http://localhost:3001",
                         "http://localhost:5173",
+                        "http://localhost:7091",
+                        "https://localhost:7091",
                         "http://127.0.0.1:3000",
-                        "http://127.0.0.1:5173"
+                        "http://127.0.0.1:5173",
+                        "http://127.0.0.1:7091",
+                        "https://127.0.0.1:7091"
                       )
                       .AllowAnyMethod()
                       .WithHeaders(
                           "Content-Type", "Authorization", "Accept",
                           "X-Request-ID", "X-Tenant-Code", "X-Tenant-Id", "X-Correlation-ID",
-                          "Cache-Control", "Pragma"
+                          "Cache-Control", "Pragma",
+                          "X-Requested-With", "X-SignalR-User-Agent" // SignalR headers
                       )
                       .AllowCredentials()
                       .WithExposedHeaders(

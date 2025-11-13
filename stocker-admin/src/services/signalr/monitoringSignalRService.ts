@@ -74,13 +74,20 @@ class MonitoringSignalRService {
 
     console.log('Initializing SignalR monitoring connection to:', hubUrl);
 
-    // Create the connection
+    // Create the connection with fallback transports
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => token,
+        // Try transports in order: WebSockets -> ServerSentEvents -> LongPolling
         transport: signalR.HttpTransportType.WebSockets |
                    signalR.HttpTransportType.ServerSentEvents |
-                   signalR.HttpTransportType.LongPolling
+                   signalR.HttpTransportType.LongPolling,
+        // Skip negotiation for direct WebSocket connection (optional, can help with blocked negotiate)
+        skipNegotiation: false,
+        // Add custom headers if needed
+        headers: {
+          'X-SignalR-User-Agent': 'Stocker-Monitoring/1.0'
+        }
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
@@ -95,7 +102,7 @@ class MonitoringSignalRService {
           }
         }
       })
-      .configureLogging(signalR.LogLevel.Information)
+      .configureLogging(signalR.LogLevel.Debug) // More verbose logging for debugging
       .build();
 
     // Configure event handlers
@@ -254,9 +261,30 @@ class MonitoringSignalRService {
       this.reconnectAttempts = 0;
       this.reconnectInterval = 5000;
       this.notifyConnectionState('connected');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start SignalR monitoring connection:', error);
       this.notifyConnectionState('disconnected');
+
+      // Check for specific error types
+      const errorMessage = error?.message || error?.toString() || '';
+
+      // Check for CORS/Blocked errors
+      if (errorMessage.includes('ERR_BLOCKED_BY_CLIENT') ||
+          errorMessage.includes('Failed to fetch') ||
+          errorMessage.includes('negotiate')) {
+        console.error('⚠️ SignalR Connection Blocked - Possible causes:');
+        console.error('1. Ad blocker or browser extension blocking the connection');
+        console.error('2. CORS policy blocking the request');
+        console.error('3. SSL certificate issues in development');
+        console.error('4. API server not running or unreachable');
+
+        notification.warning({
+          message: 'Bağlantı Engellendi',
+          description: 'Ad blocker veya güvenlik uzantıları bağlantıyı engelliyor olabilir. Lütfen uzantıları devre dışı bırakıp tekrar deneyin.',
+          placement: 'topRight',
+          duration: 10
+        });
+      }
 
       // Schedule reconnection
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
