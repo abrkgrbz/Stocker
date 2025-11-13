@@ -304,6 +304,7 @@ const MonitoringPage: React.FC = () => {
           setSystemHealth(data.health);
           setServices(data.services);
           setLastUpdate(new Date(data.collectedAt));
+          setLoading(false); // Stop loading when SignalR data arrives
 
           // Update history charts with validation
           const timestamp = dayjs(data.collectedAt).format('HH:mm:ss');
@@ -465,19 +466,33 @@ const MonitoringPage: React.FC = () => {
 
     return {
       percent: safePercent,
+      radius: 0.75,
+      innerRadius: 0.65,
+      type: 'meter' as const,
       range: {
         ticks: [0, 0.25, 0.5, 0.75, 1],
         color: ['#52c41a', '#52c41a', '#faad14', '#faad14', '#f5222d'],
+      },
+      axis: {
+        label: {
+          formatter: (v: string) => `${(Number(v) * 100).toFixed(0)}%`,
+        },
+        subTickLine: {
+          count: 3,
+        },
       },
       indicator: {
         pointer: {
           style: {
             stroke: '#D0D0D0',
+            lineWidth: 2,
           },
         },
         pin: {
           style: {
             stroke: '#D0D0D0',
+            r: 8,
+            lineWidth: 2,
           },
         },
       },
@@ -487,6 +502,7 @@ const MonitoringPage: React.FC = () => {
           style: {
             fontSize: '14px',
             lineHeight: '14px',
+            color: '#000',
           },
         },
         content: {
@@ -494,10 +510,11 @@ const MonitoringPage: React.FC = () => {
           style: {
             fontSize: '24px',
             lineHeight: '24px',
+            color: '#000',
+            fontWeight: 'bold',
           },
         },
       },
-      animation: false, // Disable animation to prevent rendering issues
     };
   };
 
