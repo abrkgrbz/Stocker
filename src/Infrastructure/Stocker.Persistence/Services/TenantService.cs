@@ -114,31 +114,44 @@ public class TenantService : ITenantService
 
         // Try to get from cache first
         var cacheKey = $"{TenantCacheKeyPrefix}{tenantId}";
-        var tenantInfo = await _cache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            entry.SlidingExpiration = TimeSpan.FromMinutes(5);
-            
-            var tenant = await _masterDbContext.Tenants
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Id == tenantId);
-                
-            if (tenant == null || !tenant.IsActive)
-                return null;
-                
-            return new TenantInfo
-            {
-                Id = tenant.Id,
-                Name = tenant.Name,
-                ConnectionString = tenant.ConnectionString.Value,
-                IsActive = tenant.IsActive
-            };
-        });
 
-        if (tenantInfo == null)
+        // Check if already in cache
+        if (_cache.TryGetValue<TenantInfo>(cacheKey, out var cachedTenantInfo))
+        {
+
+            // Store in HttpContext.Items
+            httpContext.Items[TenantIdKey] = cachedTenantInfo.Id;
+            httpContext.Items[TenantNameKey] = cachedTenantInfo.Name;
+            httpContext.Items[TenantConnectionStringKey] = cachedTenantInfo.ConnectionString;
+
+            _logger.LogInformation("Tenant {TenantId} ({TenantName}) set successfully from cache", cachedTenantInfo.Id, cachedTenantInfo.Name);
+            return true;
+        }
+
+        // Not in cache, fetch from database
+        var tenant = await _masterDbContext.Tenants
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == tenantId);
+
+        if (tenant == null || !tenant.IsActive)
         {
             _logger.LogWarning("Tenant {TenantId} not found or inactive", tenantId);
             return false;
         }
+
+        var tenantInfo = new TenantInfo
+        {
+            Id = tenant.Id,
+            Name = tenant.Name,
+            ConnectionString = tenant.ConnectionString.Value,
+            IsActive = tenant.IsActive
+        };
+
+        // Add to cache
+        _cache.Set(cacheKey, tenantInfo, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(5)
+        });
 
         // Store in HttpContext.Items
         httpContext.Items[TenantIdKey] = tenantInfo.Id;
