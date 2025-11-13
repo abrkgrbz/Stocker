@@ -18,7 +18,9 @@
       "Bash(git push:*)",
       "Bash(dir:*)",
       "Bash(node scripts/check-sentry.js:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(ssh root@95.217.219.4 \"ls -la ~/.ssh/ | grep -E ''(id_rsa|id_ed25519|docker)'' | head -5\")",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
