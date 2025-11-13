@@ -7,14 +7,43 @@ namespace Stocker.Persistence.Monitoring;
 public class SystemMonitoringService : ISystemMonitoringService
 {
     private static readonly DateTime _startTime = DateTime.UtcNow;
+    private static DateTime _lastCpuCheck = DateTime.UtcNow;
+    private static TimeSpan _lastTotalProcessorTime = TimeSpan.Zero;
+    private static double _lastCpuUsage = 0.0;
 
     public Task<SystemMetricsDto> GetSystemMetricsAsync(CancellationToken cancellationToken = default)
     {
         var process = Process.GetCurrentProcess();
-        
-        // CPU metrics (approximate)
+
+        // CPU metrics - Calculate based on delta time
+        var currentTime = DateTime.UtcNow;
+        var currentTotalProcessorTime = process.TotalProcessorTime;
+
+        double cpuUsagePercent = 0.0;
+
+        // Calculate CPU usage based on time delta
+        if (_lastTotalProcessorTime != TimeSpan.Zero)
+        {
+            var timeDelta = (currentTime - _lastCpuCheck).TotalMilliseconds;
+            var cpuDelta = (currentTotalProcessorTime - _lastTotalProcessorTime).TotalMilliseconds;
+
+            if (timeDelta > 0)
+            {
+                // CPU usage as percentage of one core
+                cpuUsagePercent = (cpuDelta / timeDelta) * 100.0;
+
+                // Ensure it's within valid range (0-100%)
+                cpuUsagePercent = Math.Max(0, Math.Min(100, cpuUsagePercent));
+            }
+        }
+
+        // Update last values for next calculation
+        _lastCpuCheck = currentTime;
+        _lastTotalProcessorTime = currentTotalProcessorTime;
+        _lastCpuUsage = cpuUsagePercent;
+
         var cpuMetrics = new CpuMetricsDto(
-            Usage: process.TotalProcessorTime.TotalMilliseconds / (Environment.ProcessorCount * 1000.0) * 100.0,
+            Usage: cpuUsagePercent,
             Cores: Environment.ProcessorCount,
             Frequency: 0 // Not easily available in .NET
         );

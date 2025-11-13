@@ -499,7 +499,7 @@ const MonitoringPage: React.FC = () => {
     tooltip: {
       formatter: (datum: any) => ({
         name: 'CPU',
-        value: `${datum.value.toFixed(1)}%`,
+        value: `${(datum?.value ?? 0).toFixed(1)}%`,
       }),
     },
     yAxis: {
@@ -526,7 +526,7 @@ const MonitoringPage: React.FC = () => {
     tooltip: {
       formatter: (datum: any) => ({
         name: 'Memory',
-        value: `${datum.value.toFixed(1)}%`,
+        value: `${(datum?.value ?? 0).toFixed(1)}%`,
       }),
     },
     yAxis: {
@@ -553,7 +553,7 @@ const MonitoringPage: React.FC = () => {
     tooltip: {
       formatter: (datum: any) => ({
         name: 'Disk',
-        value: `${datum.value.toFixed(1)}%`,
+        value: `${(datum?.value ?? 0).toFixed(1)}%`,
       }),
     },
     yAxis: {
