@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Progress, 
-  Badge, 
-  Alert, 
-  Table, 
-  Tag, 
-  Space, 
-  Typography, 
-  Button, 
-  Select, 
-  Tabs, 
-  List, 
-  Timeline, 
-  Tooltip, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Progress,
+  Badge,
+  Alert,
+  Table,
+  Tag,
+  Space,
+  Typography,
+  Button,
+  Select,
+  Tabs,
+  List,
+  Timeline,
+  Tooltip,
   Divider,
   Switch,
   Modal,
@@ -26,7 +26,8 @@ import {
   Radio,
   Checkbox,
   notification,
-  message 
+  message,
+  Spin
 } from 'antd';
 import {
   MonitorOutlined,
@@ -77,6 +78,11 @@ import { Line, Area, Column, Gauge, RingProgress, Pie } from '@ant-design/plots'
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import systemMonitoringService, {
+  SystemMetrics,
+  SystemHealth,
+  ServiceStatus
+} from '../../services/api/systemMonitoringService';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -92,28 +98,6 @@ interface SystemMetric {
   status: 'normal' | 'warning' | 'critical';
   trend: 'up' | 'down' | 'stable';
   change: number;
-}
-
-interface ServiceStatus {
-  id: string;
-  name: string;
-  status: 'online' | 'offline' | 'degraded' | 'maintenance';
-  uptime: number;
-  responseTime: number;
-  errorRate: number;
-  lastCheck: string;
-  incidents: number;
-}
-
-interface ServerMetric {
-  id: string;
-  name: string;
-  type: 'web' | 'database' | 'cache' | 'queue';
-  cpu: number;
-  memory: number;
-  disk: number;
-  network: { in: number; out: number };
-  status: 'healthy' | 'warning' | 'critical';
 }
 
 interface AlertRule {
@@ -139,155 +123,26 @@ interface LogEntry {
 }
 
 const MonitoringPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30000);
+  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
   const [timeRange, setTimeRange] = useState('1h');
   const [alertModalVisible, setAlertModalVisible] = useState(false);
   const [alertForm] = Form.useForm();
 
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
-    {
-      name: 'CPU Kullanımı',
-      value: 65.4,
-      unit: '%',
-      status: 'normal',
-      trend: 'up',
-      change: 5.2
-    },
-    {
-      name: 'Bellek Kullanımı',
-      value: 72.8,
-      unit: '%',
-      status: 'warning',
-      trend: 'up',
-      change: 8.3
-    },
-    {
-      name: 'Disk Kullanımı',
-      value: 45.2,
-      unit: '%',
-      status: 'normal',
-      trend: 'stable',
-      change: 0.5
-    },
-    {
-      name: 'Ağ Trafiği',
-      value: 125.6,
-      unit: 'Mbps',
-      status: 'normal',
-      trend: 'down',
-      change: -12.4
-    }
-  ]);
+  // Real data states
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+  const [services, setServices] = useState<ServiceStatus[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [services, setServices] = useState<ServiceStatus[]>([
-    {
-      id: '1',
-      name: 'Web Application',
-      status: 'online',
-      uptime: 99.98,
-      responseTime: 124,
-      errorRate: 0.02,
-      lastCheck: dayjs().toISOString(),
-      incidents: 0
-    },
-    {
-      id: '2',
-      name: 'API Gateway',
-      status: 'online',
-      uptime: 99.95,
-      responseTime: 89,
-      errorRate: 0.05,
-      lastCheck: dayjs().toISOString(),
-      incidents: 0
-    },
-    {
-      id: '3',
-      name: 'Database',
-      status: 'online',
-      uptime: 99.99,
-      responseTime: 12,
-      errorRate: 0.01,
-      lastCheck: dayjs().toISOString(),
-      incidents: 0
-    },
-    {
-      id: '4',
-      name: 'Cache Server',
-      status: 'degraded',
-      uptime: 98.5,
-      responseTime: 245,
-      errorRate: 1.5,
-      lastCheck: dayjs().toISOString(),
-      incidents: 2
-    },
-    {
-      id: '5',
-      name: 'Message Queue',
-      status: 'online',
-      uptime: 99.9,
-      responseTime: 34,
-      errorRate: 0.1,
-      lastCheck: dayjs().toISOString(),
-      incidents: 0
-    },
-    {
-      id: '6',
-      name: 'Storage Service',
-      status: 'maintenance',
-      uptime: 99.7,
-      responseTime: 156,
-      errorRate: 0.3,
-      lastCheck: dayjs().toISOString(),
-      incidents: 1
-    }
-  ]);
+  // Chart data states
+  const [cpuHistory, setCpuHistory] = useState<any[]>([]);
+  const [memoryHistory, setMemoryHistory] = useState<any[]>([]);
 
-  const [servers, setServers] = useState<ServerMetric[]>([
-    {
-      id: '1',
-      name: 'web-server-01',
-      type: 'web',
-      cpu: 45,
-      memory: 62,
-      disk: 38,
-      network: { in: 85, out: 92 },
-      status: 'healthy'
-    },
-    {
-      id: '2',
-      name: 'web-server-02',
-      type: 'web',
-      cpu: 52,
-      memory: 68,
-      disk: 41,
-      network: { in: 78, out: 85 },
-      status: 'healthy'
-    },
-    {
-      id: '3',
-      name: 'db-master-01',
-      type: 'database',
-      cpu: 78,
-      memory: 85,
-      disk: 72,
-      network: { in: 125, out: 98 },
-      status: 'warning'
-    },
-    {
-      id: '4',
-      name: 'cache-01',
-      type: 'cache',
-      cpu: 25,
-      memory: 45,
-      disk: 15,
-      network: { in: 45, out: 52 },
-      status: 'healthy'
-    }
-  ]);
-
+  // Keep mock data for alerts and logs (will be replaced in Phase 2)
   const [alertRules, setAlertRules] = useState<AlertRule[]>([
     {
       id: '1',
@@ -311,29 +166,6 @@ const MonitoringPage: React.FC = () => {
       enabled: true,
       notifications: ['email', 'sms'],
       triggerCount: 2
-    },
-    {
-      id: '3',
-      name: 'Disk Alanı Kritik',
-      metric: 'disk',
-      condition: '>',
-      threshold: 95,
-      severity: 'critical',
-      enabled: true,
-      notifications: ['email', 'slack', 'sms'],
-      triggerCount: 0
-    },
-    {
-      id: '4',
-      name: 'Yüksek Hata Oranı',
-      metric: 'error_rate',
-      condition: '>',
-      threshold: 1,
-      severity: 'error',
-      enabled: true,
-      notifications: ['email'],
-      lastTriggered: '2024-01-14 10:15',
-      triggerCount: 8
     }
   ]);
 
@@ -351,52 +183,120 @@ const MonitoringPage: React.FC = () => {
       level: 'warning',
       service: 'Cache Server',
       message: 'High memory usage detected: 85%'
-    },
-    {
-      id: '3',
-      timestamp: dayjs().subtract(30, 'minutes').toISOString(),
-      level: 'error',
-      service: 'API Gateway',
-      message: 'Connection timeout to database',
-      details: { duration: 5000, retries: 3 }
-    },
-    {
-      id: '4',
-      timestamp: dayjs().subtract(1, 'hour').toISOString(),
-      level: 'info',
-      service: 'Database',
-      message: 'Backup completed successfully'
     }
   ]);
 
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(() => {
-        refreshMetrics();
-      }, refreshInterval);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, refreshInterval]);
+  // Fetch real data from API
+  const fetchMonitoringData = async () => {
+    try {
+      setLoading(true);
+      setFetchError(null);
 
-  const refreshMetrics = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      // Update metrics with random variations
-      setSystemMetrics(prev => prev.map(metric => ({
-        ...metric,
-        value: Math.max(0, Math.min(100, metric.value + (Math.random() - 0.5) * 10)),
-        change: (Math.random() - 0.5) * 20
-      })));
+      // Fetch all data in parallel
+      const [metrics, health, serviceStatus] = await Promise.all([
+        systemMonitoringService.getSystemMetrics(),
+        systemMonitoringService.getSystemHealth(),
+        systemMonitoringService.getServiceStatus()
+      ]);
+
+      setSystemMetrics(metrics);
+      setSystemHealth(health);
+      setServices(serviceStatus);
+      setLastUpdate(new Date());
+
+      // Update history for charts (keep last 20 data points)
+      const timestamp = dayjs().format('HH:mm:ss');
+      setCpuHistory(prev => [...prev.slice(-19), { time: timestamp, value: metrics.cpu.usage }]);
+      setMemoryHistory(prev => [...prev.slice(-19), { time: timestamp, value: metrics.memory.usagePercentage }]);
+
+      // Check for alerts based on real metrics
+      checkAlerts(metrics);
+
+    } catch (error) {
+      console.error('Failed to fetch monitoring data:', error);
+      setFetchError('Monitoring verileri alınamadı. Lütfen daha sonra tekrar deneyin.');
+      notification.error({
+        message: 'Veri Alınamadı',
+        description: 'Monitoring verileri yüklenirken bir hata oluştu.',
+        placement: 'topRight'
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
+
+  // Check alerts based on real metrics
+  const checkAlerts = (metrics: SystemMetrics) => {
+    alertRules.forEach(rule => {
+      if (!rule.enabled) return;
+
+      let shouldTrigger = false;
+      let currentValue = 0;
+
+      switch (rule.metric) {
+        case 'cpu':
+          currentValue = metrics.cpu.usage;
+          break;
+        case 'memory':
+          currentValue = metrics.memory.usagePercentage;
+          break;
+        case 'disk':
+          currentValue = metrics.disk.usagePercentage;
+          break;
+      }
+
+      if (rule.condition === '>' && currentValue > rule.threshold) {
+        shouldTrigger = true;
+      } else if (rule.condition === '<' && currentValue < rule.threshold) {
+        shouldTrigger = true;
+      }
+
+      if (shouldTrigger) {
+        notification.warning({
+          message: `Uyarı: ${rule.name}`,
+          description: `${rule.metric.toUpperCase()} değeri ${currentValue.toFixed(1)}% - Eşik değer: ${rule.threshold}%`,
+          placement: 'topRight',
+          duration: 10
+        });
+
+        // Add to logs
+        const newLog: LogEntry = {
+          id: Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          level: rule.severity as any,
+          service: 'Monitoring Alert',
+          message: `${rule.name}: ${currentValue.toFixed(1)}%`,
+          details: { metric: rule.metric, value: currentValue, threshold: rule.threshold }
+        };
+        setLogs(prev => [newLog, ...prev.slice(0, 99)]); // Keep last 100 logs
+      }
+    });
+  };
+
+  // Auto refresh
+  useEffect(() => {
+    // Initial fetch
+    fetchMonitoringData();
+
+    // Set up auto refresh
+    let interval: NodeJS.Timeout | null = null;
+    if (autoRefresh) {
+      interval = setInterval(() => {
+        fetchMonitoringData();
+      }, refreshInterval);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [autoRefresh, refreshInterval]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online':
       case 'healthy':
       case 'normal':
+      case 'success':
         return '#52c41a';
       case 'degraded':
       case 'warning':
@@ -404,9 +304,7 @@ const MonitoringPage: React.FC = () => {
       case 'offline':
       case 'critical':
       case 'error':
-        return '#ff4d4f';
-      case 'maintenance':
-        return '#1890ff';
+        return '#f5222d';
       default:
         return '#d9d9d9';
     }
@@ -415,20 +313,23 @@ const MonitoringPage: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'online':
-      case 'healthy':
-      case 'normal':
         return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
       case 'degraded':
-      case 'warning':
-        return <ExclamationCircleOutlined style={{ color: '#faad14' }} />;
+        return <WarningOutlined style={{ color: '#faad14' }} />;
       case 'offline':
-      case 'critical':
-      case 'error':
-        return <CloseCircleOutlined style={{ color: '#ff4d4f' }} />;
-      case 'maintenance':
-        return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+        return <CloseCircleOutlined style={{ color: '#f5222d' }} />;
       default:
-        return <InfoCircleOutlined />;
+        return <InfoCircleOutlined style={{ color: '#d9d9d9' }} />;
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'info': return 'blue';
+      case 'warning': return 'orange';
+      case 'error': return 'red';
+      case 'critical': return 'magenta';
+      default: return 'default';
     }
   };
 
@@ -437,78 +338,124 @@ const MonitoringPage: React.FC = () => {
       case 'info': return 'blue';
       case 'warning': return 'orange';
       case 'error': return 'red';
-      case 'debug': return 'default';
+      case 'debug': return 'purple';
       default: return 'default';
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'red';
-      case 'error': return 'orange';
-      case 'warning': return 'gold';
-      case 'info': return 'blue';
-      default: return 'default';
+  const getMetricStatus = (value: number, type: string): 'normal' | 'warning' | 'critical' => {
+    switch (type) {
+      case 'cpu':
+      case 'memory':
+      case 'disk':
+        if (value > 90) return 'critical';
+        if (value > 75) return 'warning';
+        return 'normal';
+      default:
+        return 'normal';
     }
   };
 
-  // Chart data
-  const cpuTrendData = Array.from({ length: 20 }, (_, i) => ({
-    time: dayjs().subtract(20 - i, 'minutes').format('HH:mm'),
-    value: 45 + Math.random() * 30
-  }));
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  };
 
-  const memoryTrendData = Array.from({ length: 20 }, (_, i) => ({
-    time: dayjs().subtract(20 - i, 'minutes').format('HH:mm'),
-    value: 60 + Math.random() * 25
-  }));
+  const createGaugeConfig = (value: number, title: string) => ({
+    percent: value / 100,
+    type: 'meter',
+    meter: {
+      steps: 50,
+      stepRatio: 0.6,
+    },
+    range: {
+      ticks: [0, 1],
+      color: ['#52c41a', '#faad14', '#f5222d'],
+    },
+    indicator: {
+      pointer: {
+        style: {
+          stroke: '#D0D0D0',
+        },
+      },
+      pin: {
+        style: {
+          stroke: '#D0D0D0',
+        },
+      },
+    },
+    statistic: {
+      title: {
+        formatter: () => title,
+        style: {
+          fontSize: '14px',
+          lineHeight: '14px',
+        },
+      },
+      content: {
+        formatter: () => `${value.toFixed(1)}%`,
+        style: {
+          fontSize: '24px',
+          lineHeight: '24px',
+        },
+      },
+    },
+  });
 
-  const networkData = Array.from({ length: 20 }, (_, i) => ({
-    time: dayjs().subtract(20 - i, 'minutes').format('HH:mm'),
-    in: 80 + Math.random() * 40,
-    out: 70 + Math.random() * 35
-  }));
-
-  const lineConfig = {
-    data: cpuTrendData,
+  const cpuChartConfig = {
+    data: cpuHistory,
     xField: 'time',
     yField: 'value',
     smooth: true,
+    lineStyle: {
+      lineWidth: 2,
+    },
     point: {
       size: 3,
     },
-    yAxis: {
-      max: 100,
-      min: 0,
+    tooltip: {
+      formatter: (datum: any) => ({
+        name: 'CPU',
+        value: `${datum.value.toFixed(1)}%`,
+      }),
     },
-  };
-
-  const areaConfig = {
-    data: networkData,
-    xField: 'time',
-    yField: ['in', 'out'],
-    smooth: true,
-    animation: {
-      appear: {
-        animation: 'path-in',
-        duration: 1000,
+    yAxis: {
+      min: 0,
+      max: 100,
+      title: {
+        text: 'CPU Usage (%)',
       },
     },
   };
 
-  const handleCreateAlert = () => {
-    alertForm.validateFields().then(values => {
-      const newAlert: AlertRule = {
-        id: Date.now().toString(),
-        ...values,
-        enabled: true,
-        triggerCount: 0
-      };
-      setAlertRules([...alertRules, newAlert]);
-      message.success('Uyarı kuralı oluşturuldu');
-      setAlertModalVisible(false);
-      alertForm.resetFields();
-    });
+  const memoryChartConfig = {
+    data: memoryHistory,
+    xField: 'time',
+    yField: 'value',
+    smooth: true,
+    lineStyle: {
+      lineWidth: 2,
+      stroke: '#faad14',
+    },
+    point: {
+      size: 3,
+    },
+    tooltip: {
+      formatter: (datum: any) => ({
+        name: 'Memory',
+        value: `${datum.value.toFixed(1)}%`,
+      }),
+    },
+    yAxis: {
+      min: 0,
+      max: 100,
+      title: {
+        text: 'Memory Usage (%)',
+      },
+    },
   };
 
   const serviceColumns = [
@@ -579,74 +526,6 @@ const MonitoringPage: React.FC = () => {
     }
   ];
 
-  const alertColumns = [
-    {
-      title: 'Kural',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <Text strong>{text}</Text>
-    },
-    {
-      title: 'Metrik',
-      dataIndex: 'metric',
-      key: 'metric',
-      render: (metric: string) => <Tag>{metric.toUpperCase()}</Tag>
-    },
-    {
-      title: 'Koşul',
-      key: 'condition',
-      render: (_: any, record: AlertRule) => (
-        <Text code>{`${record.condition} ${record.threshold}`}</Text>
-      )
-    },
-    {
-      title: 'Önem',
-      dataIndex: 'severity',
-      key: 'severity',
-      render: (severity: string) => (
-        <Tag color={getSeverityColor(severity)}>
-          {severity.toUpperCase()}
-        </Tag>
-      )
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'enabled',
-      key: 'enabled',
-      render: (enabled: boolean) => (
-        <Switch
-          checked={enabled}
-          checkedChildren="Aktif"
-          unCheckedChildren="Pasif"
-        />
-      )
-    },
-    {
-      title: 'Tetiklenme',
-      key: 'triggers',
-      render: (_: any, record: AlertRule) => (
-        <Space direction="vertical" size={0}>
-          <Text>{record.triggerCount} kez</Text>
-          {record.lastTriggered && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Son: {dayjs(record.lastTriggered).fromNow()}
-            </Text>
-          )}
-        </Space>
-      )
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      render: () => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />}>Düzenle</Button>
-          <Button size="small" icon={<DeleteOutlined />} danger>Sil</Button>
-        </Space>
-      )
-    }
-  ];
-
   const logColumns = [
     {
       title: 'Zaman',
@@ -678,7 +557,7 @@ const MonitoringPage: React.FC = () => {
     {
       title: 'Detay',
       key: 'details',
-      render: (_: any, record: LogEntry) => 
+      render: (_: any, record: LogEntry) =>
         record.details && (
           <Tooltip title={JSON.stringify(record.details, null, 2)}>
             <Button size="small" icon={<EyeOutlined />} />
@@ -698,31 +577,37 @@ const MonitoringPage: React.FC = () => {
                 <Title level={4} style={{ margin: 0 }}>
                   Sistem İzleme
                 </Title>
-                <Space>
-                  <Badge status="processing" />
-                  <Text type="secondary">
-                    {services.filter(s => s.status === 'online').length}/{services.length} servis aktif
-                  </Text>
-                </Space>
+                <Text type="secondary">
+                  Son güncelleme: {dayjs(lastUpdate).format('HH:mm:ss')}
+                </Text>
               </div>
             </Space>
           </Col>
           <Col span={12} style={{ textAlign: 'right' }}>
             <Space>
-              <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }}>
-                <Option value="1h">Son 1 Saat</Option>
-                <Option value="6h">Son 6 Saat</Option>
-                <Option value="24h">Son 24 Saat</Option>
-                <Option value="7d">Son 7 Gün</Option>
+              <Text>Otomatik Yenileme:</Text>
+              <Switch
+                checked={autoRefresh}
+                onChange={setAutoRefresh}
+                checkedChildren="Açık"
+                unCheckedChildren="Kapalı"
+              />
+              <Select
+                value={refreshInterval}
+                onChange={setRefreshInterval}
+                style={{ width: 120 }}
+                disabled={!autoRefresh}
+              >
+                <Option value={10000}>10 saniye</Option>
+                <Option value={30000}>30 saniye</Option>
+                <Option value={60000}>1 dakika</Option>
+                <Option value={300000}>5 dakika</Option>
               </Select>
               <Button
-                type={autoRefresh ? 'primary' : 'default'}
-                icon={<SyncOutlined spin={autoRefresh} />}
-                onClick={() => setAutoRefresh(!autoRefresh)}
+                icon={<ReloadOutlined />}
+                onClick={fetchMonitoringData}
+                loading={loading}
               >
-                {autoRefresh ? 'Otomatik Yenileme' : 'Durduruldu'}
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={refreshMetrics}>
                 Yenile
               </Button>
             </Space>
@@ -730,407 +615,233 @@ const MonitoringPage: React.FC = () => {
         </Row>
       </Card>
 
-      {/* System Metrics Overview */}
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        {systemMetrics.map((metric, index) => (
-          <Col span={6} key={index}>
-            <Card bordered={false}>
-              <Statistic
-                title={metric.name}
-                value={metric.value}
-                precision={1}
-                suffix={metric.unit}
-                valueStyle={{
-                  color: metric.status === 'warning' ? '#faad14' :
-                        metric.status === 'critical' ? '#ff4d4f' : undefined
-                }}
-                prefix={
-                  metric.trend === 'up' ? <ArrowUpOutlined /> :
-                  metric.trend === 'down' ? <ArrowDownOutlined /> : null
-                }
-              />
-              <div style={{ marginTop: 8 }}>
-                <Text type={metric.change > 0 ? 'danger' : 'success'}>
-                  {metric.change > 0 ? '+' : ''}{metric.change.toFixed(1)}%
-                </Text>
-                <Text type="secondary" style={{ marginLeft: 8 }}>
-                  son 1 saatte
-                </Text>
-              </div>
-              <Line
-                data={Array.from({ length: 10 }, (_, i) => ({ x: i, y: Math.random() * 100 }))}
-                xField="x"
-                yField="y"
-                height={40}
-                smooth
-                color={getStatusColor(metric.status)}
-                axis={false}
-                point={false}
-              />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {fetchError && (
+        <Alert
+          message="Bağlantı Hatası"
+          description={fetchError}
+          type="error"
+          showIcon
+          closable
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
-      <Card bordered={false}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="Genel Bakış" key="overview">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card title="CPU Kullanımı" size="small">
-                  <Line {...lineConfig} height={200} />
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="Bellek Kullanımı" size="small">
-                  <Line {...{ ...lineConfig, data: memoryTrendData }} height={200} />
-                </Card>
-              </Col>
-            </Row>
-
-            <Divider />
-
-            <Row gutter={16}>
-              <Col span={24}>
-                <Card title="Ağ Trafiği (Mbps)" size="small">
-                  <Area {...areaConfig} height={200} />
-                </Card>
-              </Col>
-            </Row>
-
-            <Divider />
-
-            <Card title="Servis Durumları" size="small">
-              <Table
-                columns={serviceColumns}
-                dataSource={services}
-                rowKey="id"
-                pagination={false}
-                size="small"
-              />
-            </Card>
-          </TabPane>
-
-          <TabPane tab="Sunucular" key="servers">
-            <Row gutter={[16, 16]}>
-              {servers.map(server => (
-                <Col span={12} key={server.id}>
-                  <Card
-                    title={
-                      <Space>
-                        {getStatusIcon(server.status)}
-                        <Text strong>{server.name}</Text>
-                        <Tag>{server.type}</Tag>
-                      </Space>
-                    }
-                    extra={
-                      <Badge
-                        status={server.status === 'healthy' ? 'success' :
-                               server.status === 'warning' ? 'warning' : 'error'}
-                        text={server.status === 'healthy' ? 'Sağlıklı' :
-                             server.status === 'warning' ? 'Uyarı' : 'Kritik'}
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane
+          tab={
+            <span>
+              <DashboardOutlined />
+              Genel Bakış
+            </span>
+          }
+          key="overview"
+        >
+          <Spin spinning={loading}>
+            {systemMetrics && (
+              <>
+                {/* System Metrics Cards */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                      <Statistic
+                        title="CPU Kullanımı"
+                        value={systemMetrics.cpu.usage}
+                        precision={1}
+                        suffix="%"
+                        valueStyle={{
+                          color: getStatusColor(getMetricStatus(systemMetrics.cpu.usage, 'cpu'))
+                        }}
+                        prefix={<ThunderboltOutlined />}
                       />
-                    }
-                  >
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <div style={{ marginBottom: 16 }}>
-                          <Text type="secondary">CPU</Text>
-                          <Progress
-                            percent={server.cpu}
-                            status={server.cpu > 80 ? 'exception' : 'normal'}
-                            strokeColor={{
-                              '0%': '#108ee9',
-                              '100%': server.cpu > 80 ? '#ff4d4f' : '#87d068',
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Text type="secondary">Bellek</Text>
-                          <Progress
-                            percent={server.memory}
-                            status={server.memory > 85 ? 'exception' : 'normal'}
-                            strokeColor={{
-                              '0%': '#108ee9',
-                              '100%': server.memory > 85 ? '#ff4d4f' : '#87d068',
-                            }}
-                          />
-                        </div>
-                      </Col>
-                      <Col span={12}>
-                        <div style={{ marginBottom: 16 }}>
-                          <Text type="secondary">Disk</Text>
-                          <Progress
-                            percent={server.disk}
-                            status={server.disk > 90 ? 'exception' : 'normal'}
-                          />
-                        </div>
-                        <div>
-                          <Text type="secondary">Ağ (In/Out)</Text>
-                          <Space>
-                            <Tag color="blue">↓ {server.network.in} Mbps</Tag>
-                            <Tag color="green">↑ {server.network.out} Mbps</Tag>
-                          </Space>
-                        </div>
-                      </Col>
-                    </Row>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </TabPane>
+                      <Progress
+                        percent={systemMetrics.cpu.usage}
+                        strokeColor={getStatusColor(getMetricStatus(systemMetrics.cpu.usage, 'cpu'))}
+                        showInfo={false}
+                      />
+                      <Text type="secondary">{systemMetrics.cpu.cores} çekirdek</Text>
+                    </Card>
+                  </Col>
 
-          <TabPane tab="Uyarılar" key="alerts">
-            <Alert
-              message="Uyarı Sistemi"
-              description="Sistem metriklerini izleyin ve kritik durumlar için otomatik uyarılar alın."
-              type="info"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
+                  <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                      <Statistic
+                        title="Bellek Kullanımı"
+                        value={systemMetrics.memory.usagePercentage}
+                        precision={1}
+                        suffix="%"
+                        valueStyle={{
+                          color: getStatusColor(getMetricStatus(systemMetrics.memory.usagePercentage, 'memory'))
+                        }}
+                        prefix={<DatabaseOutlined />}
+                      />
+                      <Progress
+                        percent={systemMetrics.memory.usagePercentage}
+                        strokeColor={getStatusColor(getMetricStatus(systemMetrics.memory.usagePercentage, 'memory'))}
+                        showInfo={false}
+                      />
+                      <Text type="secondary">
+                        {formatBytes(systemMetrics.memory.used)} / {formatBytes(systemMetrics.memory.total)}
+                      </Text>
+                    </Card>
+                  </Col>
 
-            <Space style={{ marginBottom: 16 }}>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setAlertModalVisible(true)}>
-                Yeni Uyarı Kuralı
-              </Button>
-              <Button icon={<BellOutlined />}>Test Uyarısı</Button>
-            </Space>
+                  <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                      <Statistic
+                        title="Disk Kullanımı"
+                        value={systemMetrics.disk.usagePercentage}
+                        precision={1}
+                        suffix="%"
+                        valueStyle={{
+                          color: getStatusColor(getMetricStatus(systemMetrics.disk.usagePercentage, 'disk'))
+                        }}
+                        prefix={<CloudServerOutlined />}
+                      />
+                      <Progress
+                        percent={systemMetrics.disk.usagePercentage}
+                        strokeColor={getStatusColor(getMetricStatus(systemMetrics.disk.usagePercentage, 'disk'))}
+                        showInfo={false}
+                      />
+                      <Text type="secondary">
+                        {formatBytes(systemMetrics.disk.used)} / {formatBytes(systemMetrics.disk.total)}
+                      </Text>
+                    </Card>
+                  </Col>
 
+                  <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                      <Statistic
+                        title="Network I/O"
+                        value={systemMetrics.network.speed}
+                        suffix="Mbps"
+                        valueStyle={{ color: '#1890ff' }}
+                        prefix={<WifiOutlined />}
+                      />
+                      <Row>
+                        <Col span={12}>
+                          <Text type="secondary">
+                            <ArrowUpOutlined /> {formatBytes(systemMetrics.network.bytesSent)}
+                          </Text>
+                        </Col>
+                        <Col span={12}>
+                          <Text type="secondary">
+                            <ArrowDownOutlined /> {formatBytes(systemMetrics.network.bytesReceived)}
+                          </Text>
+                        </Col>
+                      </Row>
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Performance Charts */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} lg={12}>
+                    <Card title="CPU Kullanım Geçmişi" bordered={false}>
+                      {cpuHistory.length > 1 ? (
+                        <Line {...cpuChartConfig} height={200} />
+                      ) : (
+                        <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Text type="secondary">Veri toplanıyor...</Text>
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <Card title="Bellek Kullanım Geçmişi" bordered={false}>
+                      {memoryHistory.length > 1 ? (
+                        <Line {...memoryChartConfig} height={200} />
+                      ) : (
+                        <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Text type="secondary">Veri toplanıyor...</Text>
+                        </div>
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Gauge Meters */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} sm={8}>
+                    <Card title="CPU" bordered={false}>
+                      <Gauge {...createGaugeConfig(systemMetrics.cpu.usage, 'CPU')} height={200} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Card title="Memory" bordered={false}>
+                      <Gauge {...createGaugeConfig(systemMetrics.memory.usagePercentage, 'Memory')} height={200} />
+                    </Card>
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Card title="Disk" bordered={false}>
+                      <Gauge {...createGaugeConfig(systemMetrics.disk.usagePercentage, 'Disk')} height={200} />
+                    </Card>
+                  </Col>
+                </Row>
+              </>
+            )}
+
+            {/* System Health */}
+            {systemHealth && (
+              <Card
+                title="Sistem Sağlığı"
+                bordered={false}
+                extra={
+                  <Tag color={getStatusColor(systemHealth.overallStatus)}>
+                    {systemHealth.overallStatus.toUpperCase()}
+                  </Tag>
+                }
+                style={{ marginBottom: 16 }}
+              >
+                <Row gutter={[16, 16]}>
+                  <Col span={24}>
+                    <Text>Uptime: {Math.floor(systemHealth.uptime / 3600)} saat</Text>
+                  </Col>
+                </Row>
+              </Card>
+            )}
+          </Spin>
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <ApiOutlined />
+              Servisler
+            </span>
+          }
+          key="services"
+        >
+          <Card bordered={false}>
             <Table
-              columns={alertColumns}
-              dataSource={alertRules}
+              dataSource={services}
+              columns={serviceColumns}
               rowKey="id"
-              pagination={false}
+              loading={loading}
+              pagination={{ pageSize: 10 }}
             />
+          </Card>
+        </TabPane>
 
-            <Divider />
-
-            <Title level={5}>Son Uyarılar</Title>
-            <Timeline>
-              <Timeline.Item color="red">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Yüksek CPU Kullanımı</Text>
-                  <Text type="secondary">db-master-01 sunucusunda CPU %92</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {dayjs().subtract(10, 'minutes').fromNow()}
-                  </Text>
-                </Space>
-              </Timeline.Item>
-              <Timeline.Item color="orange">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Bellek Uyarısı</Text>
-                  <Text type="secondary">web-server-02 bellek kullanımı %85</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {dayjs().subtract(30, 'minutes').fromNow()}
-                  </Text>
-                </Space>
-              </Timeline.Item>
-              <Timeline.Item color="green">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Servis Yeniden Başlatıldı</Text>
-                  <Text type="secondary">Cache Server otomatik olarak yeniden başlatıldı</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {dayjs().subtract(1, 'hour').fromNow()}
-                  </Text>
-                </Space>
-              </Timeline.Item>
-            </Timeline>
-          </TabPane>
-
-          <TabPane tab="Loglar" key="logs">
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={6}>
-                <Select placeholder="Seviye" style={{ width: '100%' }}>
-                  <Option value="all">Tümü</Option>
-                  <Option value="info">Info</Option>
-                  <Option value="warning">Warning</Option>
-                  <Option value="error">Error</Option>
-                  <Option value="debug">Debug</Option>
-                </Select>
-              </Col>
-              <Col span={6}>
-                <Select placeholder="Servis" style={{ width: '100%' }}>
-                  <Option value="all">Tüm Servisler</Option>
-                  {services.map(s => (
-                    <Option key={s.id} value={s.name}>{s.name}</Option>
-                  ))}
-                </Select>
-              </Col>
-              <Col span={6}>
-                <Input.Search placeholder="Log ara..." />
-              </Col>
-              <Col span={6}>
-                <Button icon={<DownloadOutlined />}>Logları İndir</Button>
-              </Col>
-            </Row>
-
+        <TabPane
+          tab={
+            <span>
+              <BugOutlined />
+              Loglar
+            </span>
+          }
+          key="logs"
+        >
+          <Card bordered={false}>
             <Table
-              columns={logColumns}
               dataSource={logs}
+              columns={logColumns}
               rowKey="id"
               pagination={{ pageSize: 20 }}
               size="small"
             />
-          </TabPane>
-
-          <TabPane tab="Performans" key="performance">
-            <Row gutter={16}>
-              <Col span={8}>
-                <Card bordered={false}>
-                  <Statistic
-                    title="Ortalama Yanıt Süresi"
-                    value={156}
-                    suffix="ms"
-                    prefix={<ThunderboltOutlined />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card bordered={false}>
-                  <Statistic
-                    title="İstek/Saniye"
-                    value={2456}
-                    prefix={<ApiOutlined />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card bordered={false}>
-                  <Statistic
-                    title="Aktif Bağlantı"
-                    value={1234}
-                    prefix={<WifiOutlined />}
-                  />
-                </Card>
-              </Col>
-            </Row>
-
-            <Divider />
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card title="İstek Dağılımı" size="small">
-                  <Column
-                    data={[
-                      { type: 'GET', count: 5234 },
-                      { type: 'POST', count: 2341 },
-                      { type: 'PUT', count: 876 },
-                      { type: 'DELETE', count: 234 }
-                    ]}
-                    xField="type"
-                    yField="count"
-                    height={200}
-                  />
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="Yanıt Kodu Dağılımı" size="small">
-                  <Pie
-                    data={[
-                      { type: '2xx', value: 8765 },
-                      { type: '3xx', value: 1234 },
-                      { type: '4xx', value: 456 },
-                      { type: '5xx', value: 89 }
-                    ]}
-                    angleField="value"
-                    colorField="type"
-                    height={200}
-                  />
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-        </Tabs>
-      </Card>
-
-      {/* Alert Rule Modal */}
-      <Modal
-        title="Yeni Uyarı Kuralı"
-        visible={alertModalVisible}
-        onOk={handleCreateAlert}
-        onCancel={() => setAlertModalVisible(false)}
-        width={600}
-      >
-        <Form form={alertForm} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Kural Adı"
-            rules={[{ required: true, message: 'Kural adı gereklidir' }]}
-          >
-            <Input placeholder="Örn: Yüksek CPU Kullanımı" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="metric"
-                label="Metrik"
-                rules={[{ required: true, message: 'Metrik seçiniz' }]}
-              >
-                <Select placeholder="Metrik seçiniz">
-                  <Option value="cpu">CPU</Option>
-                  <Option value="memory">Bellek</Option>
-                  <Option value="disk">Disk</Option>
-                  <Option value="network">Ağ</Option>
-                  <Option value="error_rate">Hata Oranı</Option>
-                  <Option value="response_time">Yanıt Süresi</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="severity"
-                label="Önem Derecesi"
-                rules={[{ required: true, message: 'Önem derecesi seçiniz' }]}
-              >
-                <Select placeholder="Önem seçiniz">
-                  <Option value="info">Bilgi</Option>
-                  <Option value="warning">Uyarı</Option>
-                  <Option value="error">Hata</Option>
-                  <Option value="critical">Kritik</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="condition"
-                label="Koşul"
-                rules={[{ required: true, message: 'Koşul seçiniz' }]}
-              >
-                <Select placeholder="Koşul seçiniz">
-                  <Option value=">">Büyüktür</Option>
-                  <Option value="<">Küçüktür</Option>
-                  <Option value="=">Eşittir</Option>
-                  <Option value=">=">Büyük Eşit</Option>
-                  <Option value="<=">Küçük Eşit</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="threshold"
-                label="Eşik Değeri"
-                rules={[{ required: true, message: 'Eşik değeri giriniz' }]}
-              >
-                <InputNumber min={0} max={100} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item
-            name="notifications"
-            label="Bildirim Kanalları"
-            rules={[{ required: true, message: 'En az bir kanal seçiniz' }]}
-          >
-            <Checkbox.Group>
-              <Checkbox value="email">E-posta</Checkbox>
-              <Checkbox value="sms">SMS</Checkbox>
-              <Checkbox value="slack">Slack</Checkbox>
-              <Checkbox value="webhook">Webhook</Checkbox>
-            </Checkbox.Group>
-          </Form.Item>
-        </Form>
-      </Modal>
+          </Card>
+        </TabPane>
+      </Tabs>
     </div>
   );
 };
