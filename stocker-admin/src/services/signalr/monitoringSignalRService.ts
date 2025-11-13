@@ -95,14 +95,17 @@ class MonitoringSignalRService {
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
+          // Aggressive exponential backoff to prevent rate limiting
           if (retryContext.previousRetryCount === 0) {
-            return 2000; // First retry after 2 seconds
-          } else if (retryContext.previousRetryCount < 5) {
-            return 5000; // Next retries after 5 seconds
+            return 5000; // First retry after 5 seconds
+          } else if (retryContext.previousRetryCount < 3) {
+            return 10000; // Next retries after 10 seconds
+          } else if (retryContext.previousRetryCount < 6) {
+            return 30000; // Then 30 seconds
           } else if (retryContext.previousRetryCount < 10) {
-            return 10000; // Then 10 seconds
+            return 60000; // Then 60 seconds
           } else {
-            return 30000; // Finally 30 seconds
+            return null; // Stop auto-reconnecting after 10 attempts
           }
         }
       })
@@ -155,14 +158,31 @@ class MonitoringSignalRService {
       console.error('SignalR monitoring connection closed', error);
       this.notifyConnectionState('disconnected');
 
-      // Attempt manual reconnection
+      // Check if this was a rate limit error
+      const errorMessage = error?.message || error?.toString() || '';
+      const isRateLimited = errorMessage.includes('429') || errorMessage.includes('Rate limit');
+
+      if (isRateLimited) {
+        console.warn('⚠️ Rate limited - automatic reconnect will handle retry with backoff');
+        notification.warning({
+          message: 'Bağlantı Geçici Olarak Kısıtlandı',
+          description: 'Sunucu yoğunluğu nedeniyle bağlantı kısıtlandı. Otomatik olarak yeniden bağlanılacak...',
+          placement: 'bottomRight',
+          duration: 5
+        });
+        return; // Let withAutomaticReconnect handle it with exponential backoff
+      }
+
+      // For non-rate-limit errors, attempt manual reconnection with backoff
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        const delay = Math.min(this.reconnectInterval * Math.pow(2, this.reconnectAttempts), 60000);
+        console.log(`Manual reconnect scheduled in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+
         setTimeout(() => {
           this.reconnect();
-        }, this.reconnectInterval);
+        }, delay);
 
-        // Exponential backoff
-        this.reconnectInterval = Math.min(this.reconnectInterval * 2, 30000);
+        this.reconnectAttempts++;
       } else {
         notification.error({
           message: 'Bağlantı Hatası',

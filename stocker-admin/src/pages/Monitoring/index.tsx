@@ -210,10 +210,15 @@ const MonitoringPage: React.FC = () => {
       setServices(serviceStatus);
       setLastUpdate(new Date());
 
-      // Update history for charts (keep last 20 data points)
+      // Update history for charts (keep last 20 data points) with validation
       const timestamp = dayjs().format('HH:mm:ss');
-      setCpuHistory(prev => [...prev.slice(-19), { time: timestamp, value: metrics.cpu.usage }]);
-      setMemoryHistory(prev => [...prev.slice(-19), { time: timestamp, value: metrics.memory.usagePercentage }]);
+      const cpuValue = typeof metrics.cpu.usage === 'number' && !isNaN(metrics.cpu.usage)
+        ? metrics.cpu.usage : 0;
+      const memoryValue = typeof metrics.memory.usagePercentage === 'number' && !isNaN(metrics.memory.usagePercentage)
+        ? metrics.memory.usagePercentage : 0;
+
+      setCpuHistory(prev => [...prev.slice(-19), { time: timestamp, value: cpuValue }]);
+      setMemoryHistory(prev => [...prev.slice(-19), { time: timestamp, value: memoryValue }]);
 
       // Check for alerts based on real metrics
       checkAlerts(metrics);
@@ -300,11 +305,18 @@ const MonitoringPage: React.FC = () => {
           setServices(data.services);
           setLastUpdate(new Date(data.collectedAt));
 
-          // Update history charts
+          // Update history charts with validation
           const timestamp = dayjs(data.collectedAt).format('HH:mm:ss');
-          setCpuHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.cpu.usage }]);
-          setMemoryHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.memory.usagePercentage }]);
-          setDiskHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.disk.usagePercentage }]);
+          const cpuValue = typeof data.metrics.cpu.usage === 'number' && !isNaN(data.metrics.cpu.usage)
+            ? data.metrics.cpu.usage : 0;
+          const memoryValue = typeof data.metrics.memory.usagePercentage === 'number' && !isNaN(data.metrics.memory.usagePercentage)
+            ? data.metrics.memory.usagePercentage : 0;
+          const diskValue = typeof data.metrics.disk.usagePercentage === 'number' && !isNaN(data.metrics.disk.usagePercentage)
+            ? data.metrics.disk.usagePercentage : 0;
+
+          setCpuHistory(prev => [...prev.slice(-29), { time: timestamp, value: cpuValue }]);
+          setMemoryHistory(prev => [...prev.slice(-29), { time: timestamp, value: memoryValue }]);
+          setDiskHistory(prev => [...prev.slice(-29), { time: timestamp, value: diskValue }]);
 
           // Check alert rules
           checkAlerts(data.metrics);
