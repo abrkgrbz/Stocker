@@ -305,7 +305,7 @@ const MonitoringPage: React.FC = () => {
           setMemoryHistory(prev => [...prev.slice(-29), { time: timestamp, value: data.metrics.memory.usagePercentage }]);
 
           // Check alert rules
-          checkAlertRules(data.metrics);
+          checkAlerts(data.metrics);
         });
 
         monitoringSignalRService.onAlert((alertData) => {
