@@ -446,11 +446,6 @@ const MonitoringPage: React.FC = () => {
 
   const createGaugeConfig = (value: number, title: string) => ({
     percent: value / 100,
-    type: 'meter',
-    meter: {
-      steps: 50,
-      stepRatio: 0.6,
-    },
     range: {
       ticks: [0, 1],
       color: ['#52c41a', '#faad14', '#f5222d'],
