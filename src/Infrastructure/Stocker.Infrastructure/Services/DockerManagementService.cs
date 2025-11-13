@@ -24,17 +24,17 @@ public class DockerManagementService : IDockerManagementService
         _sshUser = configuration["DockerManagement:SshUser"] ?? "root";
         _sshKeyPath = configuration["DockerManagement:SshKeyPath"] ?? "/app/keys/ssh_key";
 
-        // If SSH key is provided via environment variable (base64 encoded), decode and save it
-        var sshKeyBase64 = configuration["DockerManagement:SshKeyBase64"];
-        if (!string.IsNullOrEmpty(sshKeyBase64))
+        // Priority 1: Check Azure Key Vault (via configuration)
+        // The SSH key should be stored in Azure Key Vault with the name "docker-management-ssh-key"
+        var sshKeyFromVault = configuration["docker-management-ssh-key"];
+
+        if (!string.IsNullOrEmpty(sshKeyFromVault))
         {
             try
             {
-                var keyBytes = Convert.FromBase64String(sshKeyBase64);
-                var keyContent = System.Text.Encoding.UTF8.GetString(keyBytes);
-
+                // The key from Azure Key Vault is already in plain text (not base64)
                 Directory.CreateDirectory(Path.GetDirectoryName(_sshKeyPath)!);
-                File.WriteAllText(_sshKeyPath, keyContent);
+                File.WriteAllText(_sshKeyPath, sshKeyFromVault);
 
                 // Set proper permissions (600) on Linux
                 if (!OperatingSystem.IsWindows())
@@ -42,11 +42,43 @@ public class DockerManagementService : IDockerManagementService
                     File.SetUnixFileMode(_sshKeyPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
                 }
 
-                _logger.LogInformation("SSH key decoded from environment variable and saved to {Path}", _sshKeyPath);
+                _logger.LogInformation("SSH key loaded from Azure Key Vault and saved to {Path}", _sshKeyPath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to decode SSH key from environment variable");
+                _logger.LogError(ex, "Failed to process SSH key from Azure Key Vault");
+            }
+        }
+        // Priority 2: Fallback to environment variable (base64 encoded) - for local development
+        else
+        {
+            var sshKeyBase64 = configuration["DockerManagement:SshKeyBase64"];
+            if (!string.IsNullOrEmpty(sshKeyBase64))
+            {
+                try
+                {
+                    var keyBytes = Convert.FromBase64String(sshKeyBase64);
+                    var keyContent = System.Text.Encoding.UTF8.GetString(keyBytes);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(_sshKeyPath)!);
+                    File.WriteAllText(_sshKeyPath, keyContent);
+
+                    // Set proper permissions (600) on Linux
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        File.SetUnixFileMode(_sshKeyPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                    }
+
+                    _logger.LogInformation("SSH key decoded from environment variable and saved to {Path}", _sshKeyPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to decode SSH key from environment variable");
+                }
+            }
+            else
+            {
+                _logger.LogWarning("No SSH key found in Azure Key Vault or environment variables. Docker management may not work.");
             }
         }
     }
