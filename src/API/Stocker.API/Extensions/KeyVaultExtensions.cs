@@ -96,7 +96,8 @@ public class CustomKeyVaultSecretManager : KeyVaultSecretManager
             { "minio-root-password", "Storage:MinIO:RootPassword" },
             { "minio-secret-key", "Storage:MinIO:SecretKey" },
             { "seq-api-key", "Logging:Seq:ApiKey" },
-            { "db-password", "DatabasePassword" }
+            { "db-password", "DatabasePassword" },
+            { "docker-management-ssh-key", "DockerManagement:SshKey" }
         };
 
         var result = keyVaultKey.ToLower();

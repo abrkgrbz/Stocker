@@ -26,7 +26,8 @@ public class DockerManagementService : IDockerManagementService
 
         // Priority 1: Check Azure Key Vault (via configuration)
         // The SSH key should be stored in Azure Key Vault with the name "docker-management-ssh-key"
-        var sshKeyFromVault = configuration["docker-management-ssh-key"];
+        // The KeyVault secret name "docker-management-ssh-key" is mapped to "DockerManagement:SshKey" by the configuration system
+        var sshKeyFromVault = configuration["DockerManagement:SshKey"];
 
         if (!string.IsNullOrEmpty(sshKeyFromVault))
         {
