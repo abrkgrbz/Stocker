@@ -26,6 +26,10 @@ import type {
   CampaignRoiDto,
   CampaignStatisticsDto,
   ScoringCriteria,
+  WorkflowDto,
+  CreateWorkflowCommand,
+  ExecuteWorkflowCommand,
+  WorkflowExecutionResponse,
 } from '../services/crm.types';
 import type { Activity, Lead, Deal, Customer } from '../services/crm.service';
 
@@ -92,6 +96,10 @@ export const crmKeys = {
   // Customer Tags
   customerTags: (customerId: Guid) => ['crm', 'tags', customerId] as const,
   allTags: () => ['crm', 'tags', 'all'] as const,
+
+  // Workflows
+  workflows: ['crm', 'workflows'] as const,
+  workflow: (id: number) => ['crm', 'workflows', id] as const,
 };
 
 // =====================================
@@ -989,6 +997,140 @@ export function useRecalculateSegment() {
     },
     onError: (error) => {
       showApiError(error,'Hesaplama başarısız');
+    },
+  });
+}
+
+// =====================================
+// WORKFLOWS HOOKS
+// =====================================
+
+/**
+ * Get all workflows
+ */
+export function useWorkflows() {
+  return useQuery({
+    queryKey: crmKeys.workflows,
+    queryFn: () => CRMService.getWorkflows(),
+  });
+}
+
+/**
+ * Get single workflow by ID
+ */
+export function useWorkflow(id: number) {
+  return useQuery({
+    queryKey: crmKeys.workflow(id),
+    queryFn: () => CRMService.getWorkflow(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Create workflow mutation
+ */
+export function useCreateWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createWorkflow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
+      showSuccess('Workflow başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Update workflow mutation
+ */
+export function useUpdateWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      CRMService.updateWorkflow(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflow(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
+      showSuccess('Workflow güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Delete workflow mutation
+ */
+export function useDeleteWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteWorkflow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
+      showSuccess('Workflow silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow silinemedi');
+    },
+  });
+}
+
+/**
+ * Execute workflow mutation
+ */
+export function useExecuteWorkflow() {
+  return useMutation({
+    mutationFn: CRMService.executeWorkflow,
+    onSuccess: (result) => {
+      showSuccess(`Workflow çalıştırıldı: ${result.message}`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow çalıştırılamadı');
+    },
+  });
+}
+
+/**
+ * Activate workflow mutation
+ */
+export function useActivateWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.activateWorkflow,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflow(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
+      showSuccess('Workflow aktif hale getirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow aktifleştirilemedi');
+    },
+  });
+}
+
+/**
+ * Deactivate workflow mutation
+ */
+export function useDeactivateWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deactivateWorkflow,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflow(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
+      showInfo('Workflow devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Workflow devre dışı bırakılamadı');
     },
   });
 }

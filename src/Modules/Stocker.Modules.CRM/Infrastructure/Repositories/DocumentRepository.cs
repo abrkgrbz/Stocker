@@ -43,6 +43,14 @@ public class DocumentRepository : IDocumentRepository
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<Document>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(d => !d.IsArchived)
+            .OrderByDescending(d => d.UploadedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Document>> GetByEntityAsync(
         string entityId,
         string entityType,

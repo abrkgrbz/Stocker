@@ -10,6 +10,7 @@ public interface IDocumentRepository
     System.Threading.Tasks.Task UpdateAsync(Document entity, CancellationToken cancellationToken = default);
     System.Threading.Tasks.Task DeleteAsync(Document entity, CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<Document>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<Document>> GetByEntityAsync(string entityId, string entityType, CancellationToken cancellationToken = default);
     Task<IEnumerable<Document>> GetByCategoryAsync(DocumentCategory category, CancellationToken cancellationToken = default);
     Task<IEnumerable<Document>> GetByUploadedUserAsync(Guid userId, CancellationToken cancellationToken = default);

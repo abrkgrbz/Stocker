@@ -50,6 +50,21 @@ public class WorkflowRepository : IWorkflowRepository
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<Workflow>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .OrderBy(w => w.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Workflow>> GetAllWithStepsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(w => w.Steps.OrderBy(s => s.StepOrder))
+            .OrderBy(w => w.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Workflow>> GetActiveWorkflowsAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet

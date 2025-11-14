@@ -387,15 +387,44 @@ export interface AddDealProductCommand {
 // WORKFLOW
 // =====================================
 
+export type WorkflowTriggerType =
+  | 'Manual'
+  | 'OnCreate'
+  | 'OnUpdate'
+  | 'OnDelete'
+  | 'OnStatusChange'
+  | 'Scheduled';
+
+export type WorkflowActionType =
+  | 'SendEmail'
+  | 'SendSMS'
+  | 'CreateTask'
+  | 'UpdateField'
+  | 'SendNotification'
+  | 'CallWebhook'
+  | 'CreateActivity'
+  | 'AssignToUser';
+
 export interface WorkflowDto {
   id: number;
   name: string;
-  description?: string;
-  trigger: WorkflowTrigger;
-  actions: WorkflowAction[];
+  description: string;
+  triggerType: WorkflowTriggerType;
+  entityType: string;
   isActive: boolean;
-  createdAt: DateTime;
-  updatedAt?: DateTime;
+  executionCount: number;
+  lastExecutedAt: DateTime | null;
+  steps: WorkflowStepDto[];
+}
+
+export interface WorkflowStepDto {
+  id: number;
+  name: string;
+  description: string;
+  actionType: WorkflowActionType;
+  stepOrder: number;
+  delayMinutes: number;
+  isEnabled: boolean;
 }
 
 export interface WorkflowTrigger {

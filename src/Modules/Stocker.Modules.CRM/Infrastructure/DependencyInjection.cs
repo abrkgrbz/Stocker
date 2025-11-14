@@ -11,6 +11,15 @@ using Stocker.Modules.CRM.Infrastructure.Services;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
 using Stocker.Modules.CRM.Infrastructure.Configuration;
 using Stocker.Modules.CRM.Application.Contracts;
+using Stocker.Modules.CRM.Application.Services.Email;
+using Stocker.Modules.CRM.Application.Services.Workflows;
+using Stocker.Modules.CRM.Application.Services.Templates;
+using Stocker.Modules.CRM.Application.Services.Reminders;
+using Stocker.Modules.CRM.Application.Features.Workflows.ActionHandlers;
+using Stocker.Modules.CRM.Infrastructure.Services.Email;
+using Stocker.Modules.CRM.Infrastructure.Services.Workflows;
+using Stocker.Modules.CRM.Infrastructure.Services.Templates;
+using Stocker.Modules.CRM.Infrastructure.Services.Reminders;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CRM.Infrastructure;
@@ -98,6 +107,21 @@ public static class DependencyInjection
 
         // Register Document Storage Service (MinIO)
         services.AddScoped<IDocumentStorageService, MinioDocumentStorageService>();
+
+        // Register Email Service (SMTP)
+        services.AddScoped<IEmailService, SmtpEmailService>();
+
+        // Register Template Service (Liquid)
+        services.AddSingleton<ITemplateService, LiquidTemplateService>();
+
+        // Register Workflow Execution Services
+        services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
+
+        // Register Workflow Action Handlers
+        services.AddScoped<IWorkflowActionHandler, SendEmailActionHandler>();
+
+        // Register Reminder Service
+        services.AddScoped<IReminderService, ReminderService>();
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.CRM.ICrmCustomerService, Application.Services.CrmCustomerService>();

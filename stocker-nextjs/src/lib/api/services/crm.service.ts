@@ -55,6 +55,11 @@ import type {
   ReorderPipelineStagesCommand,
   ScoringCriteria,
   ActivityFilters,
+  // Workflows
+  WorkflowDto,
+  CreateWorkflowCommand,
+  ExecuteWorkflowCommand,
+  WorkflowExecutionResponse,
   Guid,
   DateTime,
 } from './crm.types';
@@ -1368,6 +1373,13 @@ export class CRMService {
   }
 
   /**
+   * Get all documents
+   */
+  static async getAllDocuments(): Promise<DocumentDto[]> {
+    return ApiService.get<DocumentDto[]>(this.getPath('documents'));
+  }
+
+  /**
    * Get documents by entity
    */
   static async getDocumentsByEntity(
@@ -1451,6 +1463,69 @@ export class CRMService {
    */
   static async removeCustomerTag(id: Guid): Promise<void> {
     return ApiService.delete<void>(this.getPath(`customertags/${id}`));
+  }
+
+  // =====================================
+  // WORKFLOWS
+  // =====================================
+
+  /**
+   * Get all workflows
+   */
+  static async getWorkflows(): Promise<WorkflowDto[]> {
+    return ApiService.get<WorkflowDto[]>(this.getPath('workflows'));
+  }
+
+  /**
+   * Get workflow by ID
+   */
+  static async getWorkflow(id: number): Promise<WorkflowDto> {
+    return ApiService.get<WorkflowDto>(this.getPath(`workflows/${id}`));
+  }
+
+  /**
+   * Create a new workflow
+   */
+  static async createWorkflow(data: CreateWorkflowCommand): Promise<number> {
+    return ApiService.post<number>(this.getPath('workflows'), data);
+  }
+
+  /**
+   * Update workflow
+   */
+  static async updateWorkflow(id: number, data: Partial<WorkflowDto>): Promise<void> {
+    return ApiService.put<void>(this.getPath(`workflows/${id}`), data);
+  }
+
+  /**
+   * Delete workflow
+   */
+  static async deleteWorkflow(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`workflows/${id}`));
+  }
+
+  /**
+   * Execute workflow
+   */
+  static async executeWorkflow(data: ExecuteWorkflowCommand): Promise<WorkflowExecutionResponse> {
+    return ApiService.post<WorkflowExecutionResponse>(
+      this.getPath(`workflows/${data.workflowId}/execute`),
+      data
+    );
+  }
+
+  /**
+   * Activate workflow
+   */
+  static async activateWorkflow(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`workflows/${id}/activate`), {});
+  }
+
+  /**
+   * Deactivate workflow
+   */
+  static async deactivateWorkflow(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`workflows/${id}/deactivate`), {});
   }
 }
 

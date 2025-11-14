@@ -7,7 +7,10 @@ using Stocker.Modules.CRM.Application.Features.Workflows.Commands.CreateWorkflow
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.ActivateWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.DeactivateWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Commands.ExecuteWorkflow;
+using Stocker.Modules.CRM.Application.Features.Workflows.Commands.UpdateWorkflow;
+using Stocker.Modules.CRM.Application.Features.Workflows.Commands.DeleteWorkflow;
 using Stocker.Modules.CRM.Application.Features.Workflows.Queries.GetWorkflow;
+using Stocker.Modules.CRM.Application.Features.Workflows.Queries.GetAllWorkflows;
 
 namespace Stocker.Modules.CRM.API.Controllers;
 
@@ -22,6 +25,21 @@ public class WorkflowsController : ControllerBase
     public WorkflowsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Get all workflows
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<WorkflowResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllWorkflows()
+    {
+        var result = await _mediator.Send(new GetAllWorkflowsQuery());
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -54,6 +72,42 @@ public class WorkflowsController : ControllerBase
             return NotFound(result.Error);
 
         return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Update a workflow
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateWorkflow(int id, [FromBody] UpdateWorkflowCommand command)
+    {
+        if (id != command.WorkflowId)
+            return BadRequest("Workflow ID mismatch");
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Delete a workflow
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteWorkflow(int id)
+    {
+        var result = await _mediator.Send(new DeleteWorkflowCommand(id));
+
+        if (!result.IsSuccess)
+            return NotFound(result.Error);
+
+        return NoContent();
     }
 
     /// <summary>

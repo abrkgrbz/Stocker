@@ -12,6 +12,8 @@ public interface IWorkflowRepository
     System.Threading.Tasks.Task DeleteAsync(Workflow entity, CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
+    Task<IEnumerable<Workflow>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<Workflow>> GetAllWithStepsAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<Workflow>> GetActiveWorkflowsAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<Workflow>> GetWorkflowsByEntityTypeAsync(string entityType, CancellationToken cancellationToken = default);
     Task<IEnumerable<Workflow>> GetWorkflowsByTriggerTypeAsync(WorkflowTriggerType triggerType, CancellationToken cancellationToken = default);

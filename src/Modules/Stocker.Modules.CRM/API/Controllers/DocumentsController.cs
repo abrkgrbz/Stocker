@@ -8,6 +8,7 @@ using Stocker.Modules.CRM.Application.Features.Documents.Commands.DeleteDocument
 using Stocker.Modules.CRM.Application.Features.Documents.Commands.UpdateDocument;
 using Stocker.Modules.CRM.Application.Features.Documents.Commands.UploadDocument;
 using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentById;
+using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetAllDocuments;
 using Stocker.Modules.Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentsByEntity;
 using Stocker.SharedKernel.Common;
 
@@ -64,6 +65,22 @@ public class DocumentsController : ControllerBase
             return BadRequest(new { Error = result.Error });
 
         return CreatedAtAction(nameof(GetDocumentById), new { id = result.Value.DocumentId }, result.Value);
+    }
+
+    /// <summary>
+    /// Get all documents
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<DocumentDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllDocuments()
+    {
+        var query = new GetAllDocumentsQuery();
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { Error = result.Error });
+
+        return Ok(result.Value);
     }
 
     /// <summary>

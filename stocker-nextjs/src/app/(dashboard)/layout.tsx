@@ -18,11 +18,15 @@ import {
   FunnelPlotOutlined,
   GroupOutlined,
   NotificationOutlined,
+  FileOutlined,
   LockOutlined,
   SafetyOutlined,
   SafetyCertificateOutlined,
   ControlOutlined,
   ApartmentOutlined,
+  ThunderboltOutlined,
+  BellOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -65,6 +69,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
     if (pathname.startsWith('/crm')) {
       newOpenKeys.push('crm');
+    }
+
+    if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) {
+      newOpenKeys.push('communication');
     }
 
     if (pathname.startsWith('/settings')) {
@@ -142,6 +150,33 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           icon: <NotificationOutlined />,
           label: 'Kampanyalar',
         },
+        {
+          key: '/crm/documents',
+          icon: <FileOutlined />,
+          label: 'Dökümanlar',
+        },
+        {
+          key: '/crm/workflows',
+          icon: <ThunderboltOutlined />,
+          label: 'Workflows',
+        },
+      ],
+    },
+    {
+      key: 'communication',
+      icon: <BellOutlined />,
+      label: 'İletişim',
+      children: [
+        {
+          key: '/notifications',
+          icon: <BellOutlined />,
+          label: 'Bildirimler',
+        },
+        {
+          key: '/reminders',
+          icon: <ClockCircleOutlined />,
+          label: 'Hatırlatıcılar',
+        },
       ],
     },
     {
@@ -214,6 +249,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
     // CRM routes
     if (pathname.startsWith('/crm')) return [pathname];
+
+    // Communication routes
+    if (pathname.startsWith('/notifications')) return [pathname];
+    if (pathname.startsWith('/reminders')) return [pathname];
 
     // Settings routes
     if (pathname.startsWith('/settings')) return [pathname];

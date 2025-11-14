@@ -55,6 +55,10 @@ public class CRMDbContext : DbContext
     public DbSet<WorkflowExecution> WorkflowExecutions { get; set; } = null!;
     public DbSet<WorkflowStepExecution> WorkflowStepExecutions { get; set; } = null!;
 
+    // Communication Hub
+    public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<Reminder> Reminders { get; set; } = null!;
+
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
         ITenantService tenantService)

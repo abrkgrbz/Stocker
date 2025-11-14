@@ -90,6 +90,9 @@ export default function CRMDashboardPage() {
           <Link href="/crm/deals">
             <Button>Fırsatlar</Button>
           </Link>
+          <Link href="/crm/documents">
+            <Button>Dökümanlar</Button>
+          </Link>
         </Space>
       </div>
 

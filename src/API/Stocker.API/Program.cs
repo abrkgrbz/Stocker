@@ -14,6 +14,7 @@ using Stocker.Modules.Finance.Infrastructure;
 using Stocker.Modules.Inventory.Infrastructure;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
+using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -243,6 +244,13 @@ app.UseApiPipeline(builder.Configuration);
 // DATABASE MIGRATION
 // ========================================
 await app.MigrateDatabaseAsync();
+
+// ========================================
+// HANGFIRE RECURRING JOBS
+// ========================================
+// Register reminder processing job (runs every minute)
+ReminderJob.RegisterRecurringJob();
+Log.Information("Hangfire recurring jobs registered successfully");
 
 // ========================================
 // RUN APPLICATION
