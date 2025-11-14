@@ -136,7 +136,7 @@ export default function DocumentsPage() {
       dataIndex: 'category',
       key: 'category',
       render: (category: DocumentCategory) => {
-        const config = categoryLabels[category];
+        const config = categoryLabels[category] || { label: category, color: 'default' };
         return <Tag color={config.color}>{config.label}</Tag>;
       },
       filters: Object.keys(categoryLabels).map(key => ({
@@ -165,7 +165,7 @@ export default function DocumentsPage() {
       dataIndex: 'accessLevel',
       key: 'accessLevel',
       render: (level: AccessLevel) => {
-        const config = accessLevelLabels[level];
+        const config = accessLevelLabels[level] || { label: level, color: 'default' };
         return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
