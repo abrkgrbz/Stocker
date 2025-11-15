@@ -136,12 +136,15 @@ public class LocalDocumentStorageService : IDocumentStorageService
     public Task<Result<string>> GetDownloadUrlAsync(
         string storagePath,
         TimeSpan expiresIn,
+        bool inline = false,
         CancellationToken cancellationToken = default)
     {
         try
         {
             // For local storage, return direct URL (no expiration)
             // In production with Azure/AWS, generate signed URL with expiration
+            // Note: inline parameter is ignored for local storage as Content-Disposition
+            // is handled by the API controller when serving the file
             var url = $"{_baseUrl}/{storagePath.Replace("\\", "/")}";
 
             return Task.FromResult(Result<string>.Success(url));
