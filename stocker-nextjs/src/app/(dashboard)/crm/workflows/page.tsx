@@ -242,7 +242,7 @@ export default function WorkflowsPage() {
                   <Button icon={<ReloadOutlined />} onClick={loadWorkflows}>
                     Yenile
                   </Button>
-                  <Button type="primary" icon={<PlusOutlined />}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/crm/workflows/new')}>
                     Yeni Workflow
                   </Button>
                 </Space>
@@ -265,7 +265,7 @@ export default function WorkflowsPage() {
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Henüz workflow bulunmuyor"
                   >
-                    <Button type="primary" icon={<PlusOutlined />}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/crm/workflows/new')}>
                       İlk Workflow'u Oluştur
                     </Button>
                   </Empty>
