@@ -22,9 +22,26 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_BASE_DOMAIN
 ARG NEXT_PUBLIC_AUTH_DOMAIN
 
+# Sentry build arguments (required for build-time bundle embedding)
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_DSN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_ENVIRONMENT
+ARG SENTRY_AUTH_TOKEN
+
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+
+# Pass Sentry variables to build (NEXT_PUBLIC_* must be set at build time)
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ENV SENTRY_DSN=$SENTRY_DSN
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+
 # Note: NEXT_PUBLIC_* variables are now dynamically determined at runtime
 # See src/lib/env.ts getAuthUrl() for runtime domain detection
 
