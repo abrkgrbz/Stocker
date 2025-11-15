@@ -1,4 +1,5 @@
-import { withSentryConfig } from '@sentry/nextjs';
+// Sentry import removed - using manual initialization in sentry.*.config.ts files
+// import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -78,21 +79,10 @@ const nextConfig = {
   },
 };
 
-// Wrap with Sentry configuration
-export default withSentryConfig(
-  nextConfig,
-  {
-    // Sentry Webpack Plugin options
-    silent: true, // Suppresses source map uploading logs during build
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-  },
-  {
-    // Sentry SDK options
-    widenClientFileUpload: true, // Upload a larger set of source maps
-    transpileClientSDK: true, // Transpile SDK to be IE11 compatible
-    tunnelRoute: "/monitoring", // Route to tunnel Sentry requests through your server
-    hideSourceMaps: true, // Hides source maps from generated client bundles
-    disableLogger: true, // Automatically tree-shake Sentry logger statements to reduce bundle size
-  }
-);
+// Export without Sentry wrapper - using manual initialization in sentry.*.config.ts files
+// This prevents duplicate Sentry.init() calls and ensures tunnel configuration works correctly
+export default nextConfig;
+
+// NOTE: Source maps will NOT be automatically uploaded to Sentry
+// To upload source maps manually, use: npx @sentry/wizard@latest
+// Or configure Sentry CLI in CI/CD pipeline
