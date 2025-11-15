@@ -146,22 +146,33 @@ public class MinioDocumentStorageService : IDocumentStorageService
                 .WithObject(storagePath)
                 .WithExpiry((int)expiresIn.TotalSeconds);
 
-            var url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
+            string url;
 
-            // Replace internal endpoint with public endpoint if configured
+            // Use public endpoint client for presigned URLs if configured
             if (!string.IsNullOrEmpty(_settings.PublicEndpoint) &&
                 !string.Equals(_settings.Endpoint, _settings.PublicEndpoint, StringComparison.OrdinalIgnoreCase))
             {
-                // Parse the generated URL to extract protocol and host
-                var uri = new Uri(url);
-                var internalProtocolAndHost = $"{uri.Scheme}://{_settings.Endpoint}";
+                // Create a separate MinIO client with public endpoint for presigned URLs
+                // This ensures the signature is calculated for the correct hostname
+                var publicEndpoint = _settings.PublicEndpoint.Replace("https://", "").Replace("http://", "");
+                var useSSL = _settings.PublicEndpoint.StartsWith("https://");
 
-                // Replace the entire protocol + host with the public endpoint
-                url = url.Replace(internalProtocolAndHost, _settings.PublicEndpoint);
+                var publicMinioClient = new MinioClient()
+                    .WithEndpoint(publicEndpoint)
+                    .WithCredentials(_settings.AccessKey, _settings.SecretKey)
+                    .WithSSL(useSSL)
+                    .Build();
+
+                url = await publicMinioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
 
                 _logger.LogInformation(
-                    "Replaced internal endpoint with public endpoint. Internal: {Internal}, Public: {Public}",
-                    internalProtocolAndHost, _settings.PublicEndpoint);
+                    "Generated presigned URL with public endpoint. Endpoint: {Endpoint}, SSL: {SSL}",
+                    publicEndpoint, useSSL);
+            }
+            else
+            {
+                // Use the default internal client
+                url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
             }
 
             _logger.LogInformation(
