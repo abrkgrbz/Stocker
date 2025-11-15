@@ -41,16 +41,17 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry
   debug: true,
 
-  // Session Replay
-  replaysOnErrorSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
+  // Session Replay - DISABLED temporarily to fix "Multiple instances" error
+  // TODO: Re-enable after verifying single initialization
+  // replaysOnErrorSampleRate: 1.0,
+  // replaysSessionSampleRate: 0.1,
 
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-  ],
+  // integrations: [
+  //   Sentry.replayIntegration({
+  //     maskAllText: true,
+  //     blockAllMedia: true,
+  //   }),
+  // ],
 
   // Add subdomain as initial scope
   initialScope: {
