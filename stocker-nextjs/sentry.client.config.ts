@@ -29,8 +29,8 @@ Sentry.init({
   // Fallback to hardcoded DSN if env vars not available (Coolify build compatibility)
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888',
 
-  // TEMPORARY: Disable tunnel for testing (bypass our server)
-  // tunnel: "/monitoring",
+  // Use tunnel to bypass ad blockers and privacy tools
+  tunnel: "/monitoring",
 
   // Dynamically set environment based on subdomain
   environment: process.env.NODE_ENV === 'production' ? `production-${getSubdomain()}` : 'development',

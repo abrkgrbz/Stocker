@@ -15,11 +15,13 @@ export async function POST(request: NextRequest) {
     const pieces = envelope.split('\n');
     const header = JSON.parse(pieces[0]);
 
-    // Extract DSN from header
-    const { dsn } = header;
+    // Extract DSN from header or use default
+    let dsn = header.dsn;
+
+    // If no DSN in envelope, use our hardcoded DSN (fallback for client config issues)
     if (!dsn) {
-      console.error('No DSN found in Sentry envelope');
-      return NextResponse.json({ error: 'No DSN found' }, { status: 400 });
+      console.warn('No DSN in envelope, using default DSN');
+      dsn = 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888';
     }
 
     // Parse DSN
