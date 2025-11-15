@@ -1,7 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Tag, Typography, Row, Col, Empty, Tooltip, Modal } from 'antd';
+import {
+  Card,
+  Table,
+  Button,
+  Space,
+  Tag,
+  Typography,
+  Row,
+  Col,
+  Empty,
+  Tooltip,
+  Modal,
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Switch,
+} from 'antd';
 import {
   ThunderboltOutlined,
   PlusOutlined,
@@ -11,11 +28,18 @@ import {
   PauseCircleOutlined,
   ReloadOutlined,
   EyeOutlined,
+  SaveOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
-import type { WorkflowDto, WorkflowTriggerType, WorkflowActionType } from '@/lib/api/services/crm.types';
+import type {
+  WorkflowDto,
+  WorkflowTriggerType,
+  WorkflowActionType,
+  CreateWorkflowCommand,
+  WorkflowAction,
+} from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -26,6 +50,8 @@ dayjs.locale('tr');
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
+const { TextArea } = Input;
+const { Option } = Select;
 
 // Trigger type labels
 const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
@@ -53,6 +79,9 @@ export default function WorkflowsPage() {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<WorkflowDto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [actions, setActions] = useState<WorkflowAction[]>([]);
 
   // Load all workflows
   const loadWorkflows = async () => {
@@ -117,6 +146,76 @@ export default function WorkflowsPage() {
   // Handle view workflow details
   const handleView = (id: number) => {
     router.push(`/crm/workflows/${id}`);
+  };
+
+  // Handle open drawer
+  const handleOpenDrawer = () => {
+    form.resetFields();
+    setActions([]);
+    setDrawerOpen(true);
+  };
+
+  // Handle close drawer
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    form.resetFields();
+    setActions([]);
+  };
+
+  // Handle add action
+  const handleAddAction = () => {
+    setActions([
+      ...actions,
+      {
+        type: 'SendEmail',
+        parameters: {},
+      },
+    ]);
+  };
+
+  // Handle remove action
+  const handleRemoveAction = (index: number) => {
+    setActions(actions.filter((_, i) => i !== index));
+  };
+
+  // Handle action change
+  const handleActionChange = (index: number, field: 'type' | 'parameters', value: any) => {
+    const newActions = [...actions];
+    if (field === 'type') {
+      newActions[index].type = value;
+    } else {
+      newActions[index].parameters = value;
+    }
+    setActions(newActions);
+  };
+
+  // Handle submit workflow
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
+    try {
+      const command: CreateWorkflowCommand = {
+        name: values.name,
+        description: values.description,
+        trigger: {
+          type: values.triggerType,
+          entityType: values.entityType,
+          field: values.field,
+          value: values.value,
+        },
+        actions: actions,
+        isActive: values.isActive ?? false,
+      };
+
+      const workflowId = await CRMService.createWorkflow(command);
+      showSuccess('Workflow başarıyla oluşturuldu');
+      handleCloseDrawer();
+      loadWorkflows();
+      router.push(`/crm/workflows/${workflowId}`);
+    } catch (error) {
+      showApiError(error, 'Workflow oluşturulamadı');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Table columns
@@ -242,7 +341,7 @@ export default function WorkflowsPage() {
                   <Button icon={<ReloadOutlined />} onClick={loadWorkflows}>
                     Yenile
                   </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/crm/workflows/new')}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenDrawer}>
                     Yeni Workflow
                   </Button>
                 </Space>
@@ -265,7 +364,7 @@ export default function WorkflowsPage() {
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Henüz workflow bulunmuyor"
                   >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/crm/workflows/new')}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenDrawer}>
                       İlk Workflow'u Oluştur
                     </Button>
                   </Empty>
@@ -275,6 +374,156 @@ export default function WorkflowsPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* Workflow Creation Drawer */}
+      <Drawer
+        title={
+          <Space>
+            <ThunderboltOutlined />
+            <span>Yeni Workflow Oluştur</span>
+          </Space>
+        }
+        width={720}
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        footer={
+          <div style={{ textAlign: 'right' }}>
+            <Space>
+              <Button onClick={handleCloseDrawer}>İptal</Button>
+              <Button type="primary" onClick={() => form.submit()} loading={loading} icon={<SaveOutlined />}>
+                Workflow Oluştur
+              </Button>
+            </Space>
+          </div>
+        }
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            triggerType: 'Manual',
+            isActive: false,
+          }}
+        >
+          {/* Basic Info */}
+          <Card size="small" title="Temel Bilgiler" style={{ marginBottom: 16 }}>
+            <Form.Item
+              name="name"
+              label="Workflow Adı"
+              rules={[{ required: true, message: 'Workflow adı zorunludur' }]}
+            >
+              <Input placeholder="Örn: Müşteri hoş geldin e-postası" />
+            </Form.Item>
+
+            <Form.Item name="description" label="Açıklama">
+              <TextArea rows={3} placeholder="Workflow'un ne yaptığını açıklayın" />
+            </Form.Item>
+
+            <Form.Item name="isActive" label="Durum" valuePropName="checked">
+              <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
+            </Form.Item>
+          </Card>
+
+          {/* Trigger Configuration */}
+          <Card size="small" title="Tetikleyici (Trigger)" style={{ marginBottom: 16 }}>
+            <Form.Item
+              name="triggerType"
+              label="Tetikleyici Tipi"
+              rules={[{ required: true, message: 'Tetikleyici tipi zorunludur' }]}
+            >
+              <Select placeholder="Trigger tipini seçin">
+                <Option value="Manual">Manuel</Option>
+                <Option value="Scheduled">Zamanlanmış</Option>
+                <Option value="EntityCreated">Oluşturulduğunda</Option>
+                <Option value="EntityUpdated">Güncellendiğinde</Option>
+                <Option value="FieldChanged">Alan Değiştiğinde</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item name="entityType" label="Entity Tipi">
+              <Input placeholder="Örn: Customer, Lead" />
+            </Form.Item>
+
+            <Form.Item name="field" label="Alan Adı (İsteğe Bağlı)">
+              <Input placeholder="Hangi alan değiştiğinde" />
+            </Form.Item>
+
+            <Form.Item name="value" label="Değer (İsteğe Bağlı)">
+              <Input placeholder="Belirli bir değer için" />
+            </Form.Item>
+          </Card>
+
+          {/* Actions */}
+          <Card
+            size="small"
+            title="Aksiyonlar"
+            extra={
+              <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddAction} size="small">
+                Aksiyon Ekle
+              </Button>
+            }
+            style={{ marginBottom: 16 }}
+          >
+            {actions.length === 0 ? (
+              <Text type="secondary">
+                Henüz aksiyon eklenmedi. Aksiyon eklemek için yukarıdaki butonu kullanın.
+              </Text>
+            ) : (
+              <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                {actions.map((action, index) => (
+                  <Card
+                    key={index}
+                    size="small"
+                    title={`Aksiyon ${index + 1}`}
+                    extra={
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleRemoveAction(index)}
+                        size="small"
+                      />
+                    }
+                  >
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>Aksiyon Tipi:</Text>
+                    </div>
+                    <Select
+                      value={action.type}
+                      onChange={(value) => handleActionChange(index, 'type', value)}
+                      style={{ width: '100%', marginBottom: 16 }}
+                    >
+                      <Option value="SendEmail">E-posta Gönder</Option>
+                      <Option value="CreateTask">Görev Oluştur</Option>
+                      <Option value="UpdateField">Alan Güncelle</Option>
+                      <Option value="SendNotification">Bildirim Gönder</Option>
+                      <Option value="CallWebhook">Webhook Çağır</Option>
+                    </Select>
+
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>Parametreler (JSON):</Text>
+                    </div>
+                    <TextArea
+                      rows={4}
+                      placeholder='{"to": "user@example.com", "subject": "Hoş geldiniz"}'
+                      value={JSON.stringify(action.parameters, null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const params = JSON.parse(e.target.value);
+                          handleActionChange(index, 'parameters', params);
+                        } catch {
+                          // Invalid JSON, ignore
+                        }
+                      }}
+                    />
+                  </Card>
+                ))}
+              </Space>
+            )}
+          </Card>
+        </Form>
+      </Drawer>
     </div>
   );
 }
