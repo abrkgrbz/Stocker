@@ -81,12 +81,15 @@ Logging__Seq__ServerUrl=https://seq.stoocker.app
 # ==================================
 MinioStorage__Endpoint=minio:9000
 MinioStorage__PublicEndpoint=https://s3.stoocker.app
-MinioStorage__AccessKey=stocker-minio-admin
+MinioStorage__AccessKey=stoocker-minio
 MinioStorage__BucketName=stocker-documents
 MinioStorage__UseSSL=false
 MinioStorage__Region=us-east-1
 MINIO_ROOT_USER=stoocker-minio
 MINIO_HOST=minio
+
+# IMPORTANT: Add these SECRETS in Coolify
+# MINIO_ROOT_PASSWORD=B.erkay04011967!  (Add as SECRET in Coolify)
 
 # ==================================
 # REDIS SETTINGS (NON-SECRET)
