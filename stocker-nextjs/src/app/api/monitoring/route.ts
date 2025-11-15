@@ -53,9 +53,15 @@ export async function POST(request: NextRequest) {
       console.error(`❌ Sentry forwarding failed: ${sentryResponse.status} ${sentryResponse.statusText}`);
     }
 
+    // Return response with CORS headers
     return new NextResponse(null, {
       status: sentryResponse.status,
       statusText: sentryResponse.statusText,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
     });
   } catch (error) {
     console.error('Sentry tunnel error:', error);
