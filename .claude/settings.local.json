@@ -34,7 +34,14 @@
       "Bash(npm run type-check:*)",
       "Bash(npx tsc:*)",
       "Bash(dotnet ef migrations add:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(Select-String -Pattern \"error\")",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(del next.config.ts)",
+      "Bash(node:*)",
+      "Bash(git rm:*)",
+      "Bash(cmd /c \"dir C:\\Temp\\ | findstr key\")"
     ],
     "deny": [],
     "ask": []

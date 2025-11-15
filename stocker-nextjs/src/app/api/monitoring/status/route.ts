@@ -38,12 +38,8 @@ export async function GET() {
       nextPublicApiUrl: process.env.NEXT_PUBLIC_API_URL || 'NOT SET',
     },
 
-    // Status summary
-    ready: !!(
-      process.env.NEXT_PUBLIC_SENTRY_DSN &&
-      process.env.SENTRY_ORG &&
-      process.env.SENTRY_PROJECT
-    ),
+    // Status summary - simplified check (ORG and PROJECT only needed for source maps)
+    ready: !!(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN),
 
     // Troubleshooting tips
     troubleshooting: !process.env.NEXT_PUBLIC_SENTRY_DSN ? [

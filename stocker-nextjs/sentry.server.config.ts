@@ -25,7 +25,8 @@ const getSubdomainFromHost = (host: string) => {
 };
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
+  // Fallback to hardcoded DSN if env vars not available (Coolify build compatibility)
+  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN || 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888',
 
   // Set environment
   environment: process.env.NODE_ENV === 'production' ? 'production-server' : 'development-server',
