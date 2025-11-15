@@ -53,34 +53,98 @@ const { confirm } = Modal;
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Entity types from backend RelatedEntityType enum
+// Entity types from backend RelatedEntityType enum with Turkish labels
 const entityTypes = [
-  'Account',
-  'Contact',
-  'Lead',
-  'Opportunity',
-  'Deal',
-  'Quote',
-  'Invoice',
-  'Contract',
-  'Ticket',
-  'Campaign',
-  'Product',
+  { value: 'Account', label: 'Hesap' },
+  { value: 'Contact', label: 'İletişim' },
+  { value: 'Lead', label: 'Potansiyel Müşteri' },
+  { value: 'Opportunity', label: 'Fırsat' },
+  { value: 'Deal', label: 'Anlaşma' },
+  { value: 'Quote', label: 'Teklif' },
+  { value: 'Invoice', label: 'Fatura' },
+  { value: 'Contract', label: 'Sözleşme' },
+  { value: 'Ticket', label: 'Destek Talebi' },
+  { value: 'Campaign', label: 'Kampanya' },
+  { value: 'Product', label: 'Ürün' },
 ];
 
-// Common fields for entities
-const entityFields: Record<string, string[]> = {
-  Account: ['Status', 'Type', 'Rating', 'Industry', 'Revenue'],
-  Contact: ['FirstName', 'LastName', 'Email', 'Phone', 'Title', 'Department'],
-  Lead: ['Status', 'Source', 'Score', 'Industry', 'Budget'],
-  Opportunity: ['Stage', 'Amount', 'Probability', 'CloseDate', 'Source'],
-  Deal: ['Status', 'Value', 'Stage', 'CloseDate', 'Priority'],
-  Quote: ['Status', 'TotalAmount', 'ValidUntil', 'ApprovalStatus'],
-  Invoice: ['Status', 'TotalAmount', 'DueDate', 'PaidDate'],
-  Contract: ['Status', 'StartDate', 'EndDate', 'Value'],
-  Ticket: ['Status', 'Priority', 'Type', 'Category', 'AssignedTo'],
-  Campaign: ['Status', 'Type', 'Budget', 'StartDate', 'EndDate'],
-  Product: ['Status', 'Type', 'Price', 'Category', 'Stock'],
+// Common fields for entities with Turkish labels
+const entityFields: Record<string, Array<{ value: string; label: string }>> = {
+  Account: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Type', label: 'Tip' },
+    { value: 'Rating', label: 'Değerlendirme' },
+    { value: 'Industry', label: 'Sektör' },
+    { value: 'Revenue', label: 'Gelir' },
+  ],
+  Contact: [
+    { value: 'FirstName', label: 'Ad' },
+    { value: 'LastName', label: 'Soyad' },
+    { value: 'Email', label: 'E-posta' },
+    { value: 'Phone', label: 'Telefon' },
+    { value: 'Title', label: 'Ünvan' },
+    { value: 'Department', label: 'Departman' },
+  ],
+  Lead: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Source', label: 'Kaynak' },
+    { value: 'Score', label: 'Puan' },
+    { value: 'Industry', label: 'Sektör' },
+    { value: 'Budget', label: 'Bütçe' },
+  ],
+  Opportunity: [
+    { value: 'Stage', label: 'Aşama' },
+    { value: 'Amount', label: 'Tutar' },
+    { value: 'Probability', label: 'Olasılık' },
+    { value: 'CloseDate', label: 'Kapanış Tarihi' },
+    { value: 'Source', label: 'Kaynak' },
+  ],
+  Deal: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Value', label: 'Değer' },
+    { value: 'Stage', label: 'Aşama' },
+    { value: 'CloseDate', label: 'Kapanış Tarihi' },
+    { value: 'Priority', label: 'Öncelik' },
+  ],
+  Quote: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'TotalAmount', label: 'Toplam Tutar' },
+    { value: 'ValidUntil', label: 'Geçerlilik Tarihi' },
+    { value: 'ApprovalStatus', label: 'Onay Durumu' },
+  ],
+  Invoice: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'TotalAmount', label: 'Toplam Tutar' },
+    { value: 'DueDate', label: 'Vade Tarihi' },
+    { value: 'PaidDate', label: 'Ödeme Tarihi' },
+  ],
+  Contract: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'StartDate', label: 'Başlangıç Tarihi' },
+    { value: 'EndDate', label: 'Bitiş Tarihi' },
+    { value: 'Value', label: 'Değer' },
+  ],
+  Ticket: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Priority', label: 'Öncelik' },
+    { value: 'Type', label: 'Tip' },
+    { value: 'Category', label: 'Kategori' },
+    { value: 'AssignedTo', label: 'Atanan Kişi' },
+  ],
+  Campaign: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Type', label: 'Tip' },
+    { value: 'Budget', label: 'Bütçe' },
+    { value: 'StartDate', label: 'Başlangıç Tarihi' },
+    { value: 'EndDate', label: 'Bitiş Tarihi' },
+  ],
+  Product: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Type', label: 'Tip' },
+    { value: 'Price', label: 'Fiyat' },
+    { value: 'Category', label: 'Kategori' },
+    { value: 'Stock', label: 'Stok' },
+  ],
 };
 
 // Trigger type labels
@@ -485,10 +549,12 @@ export default function WorkflowsPage() {
                 placeholder="Entity tipi seçin"
                 onChange={handleEntityTypeChange}
                 allowClear
+                showSearch
+                optionFilterProp="children"
               >
                 {entityTypes.map((type) => (
-                  <Option key={type} value={type}>
-                    {type}
+                  <Option key={type.value} value={type.value}>
+                    {type.label}
                   </Option>
                 ))}
               </Select>
@@ -499,11 +565,13 @@ export default function WorkflowsPage() {
                 placeholder="Alan seçin"
                 disabled={!selectedEntityType}
                 allowClear
+                showSearch
+                optionFilterProp="children"
               >
                 {selectedEntityType &&
                   entityFields[selectedEntityType]?.map((field) => (
-                    <Option key={field} value={field}>
-                      {field}
+                    <Option key={field.value} value={field.value}>
+                      {field.label}
                     </Option>
                   ))}
               </Select>
