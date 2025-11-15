@@ -35,6 +35,9 @@ const nextConfig = {
   // Environment variables
   env: {
     API_URL: process.env.NEXT_PUBLIC_API_URL,
+    // Sentry DSN (public key, safe to hardcode)
+    // Falls back to environment variable if not set
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888',
   },
 
   // Redirects and rewrites
