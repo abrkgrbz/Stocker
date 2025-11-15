@@ -9,15 +9,14 @@ services:
     container_name: minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
-    # ports kısmını kaldırabilirsiniz, Traefik üzerinden erişim sağlanacak
-    # ports:
-    #   - "9000:9000"  # API port
-    #   - "9001:9001"  # Console port
+    ports:
+      - "9000:9000"  # API port (for localhost development)
+      - "9001:9001"  # Console port (for localhost development)
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_BROWSER=on
-      - MINIO_SERVER_URL=https://minio.stoocker.app
+      - MINIO_SERVER_URL=https://s3.stoocker.app
       - MINIO_BROWSER_REDIRECT_URL=https://minio-console.stoocker.app
     volumes:
       - minio_data:/data
