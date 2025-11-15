@@ -46,12 +46,13 @@ services:
       - EmailSettings__UseStartTls=false
       
       # MinIO - Internal network üzerinden erişim
-      - Storage__Provider=MinIO
-      - Storage__MinIO__Endpoint=minio:9000
-      - Storage__MinIO__AccessKey=${MINIO_ROOT_USER:-admin}
-      - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD:-MinioPassword123!}
-      - Storage__MinIO__BucketName=stocker-files
-      - Storage__MinIO__UseSSL=false
+      - MinioStorage__Endpoint=minio:9000
+      - MinioStorage__PublicEndpoint=https://s3.stoocker.app
+      - MinioStorage__AccessKey=${MINIO_ROOT_USER:-admin}
+      - MinioStorage__SecretKey=${MINIO_ROOT_PASSWORD:-MinioPassword123!}
+      - MinioStorage__BucketName=stocker-documents
+      - MinioStorage__UseSSL=false
+      - MinioStorage__Region=us-east-1
       
     networks:
       - coolify

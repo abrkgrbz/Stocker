@@ -60,13 +60,13 @@ services:
       # ==================================
       # STORAGE (MINIO)
       # ==================================
-      - Storage__Provider=MinIO
-      - Storage__MinIO__Endpoint=minio:9000
-      - Storage__MinIO__AccessKey=${MINIO_ROOT_USER}
-      - Storage__MinIO__SecretKey=${MINIO_ROOT_PASSWORD}
-      - Storage__MinIO__BucketName=stocker-files
-      - Storage__MinIO__UseSSL=false
-      - Storage__MinIO__PublicEndpoint=https://s3.stoocker.app
+      - MinioStorage__Endpoint=minio:9000
+      - MinioStorage__PublicEndpoint=https://s3.stoocker.app
+      - MinioStorage__AccessKey=${MINIO_ROOT_USER}
+      - MinioStorage__SecretKey=${MINIO_ROOT_PASSWORD}
+      - MinioStorage__BucketName=stocker-documents
+      - MinioStorage__UseSSL=false
+      - MinioStorage__Region=us-east-1
       
       # ==================================
       # REDIS CACHE

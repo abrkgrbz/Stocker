@@ -79,12 +79,12 @@ Logging__Seq__ServerUrl=https://seq.stoocker.app
 # ==================================
 # STORAGE SETTINGS (NON-SECRET)
 # ==================================
-Storage__Provider=MinIO
-Storage__MinIO__AccessKey=stocker-minio-admin
-Storage__MinIO__BucketName=stocker-files
-Storage__MinIO__Endpoint=minio:9000
-Storage__MinIO__PublicEndpoint=https://s3.stoocker.app
-Storage__MinIO__UseSSL=false
+MinioStorage__Endpoint=minio:9000
+MinioStorage__PublicEndpoint=https://s3.stoocker.app
+MinioStorage__AccessKey=stocker-minio-admin
+MinioStorage__BucketName=stocker-documents
+MinioStorage__UseSSL=false
+MinioStorage__Region=us-east-1
 MINIO_ROOT_USER=stoocker-minio
 MINIO_HOST=minio
 
@@ -183,7 +183,7 @@ Redis__Password=...
 MINIO_ROOT_PASSWORD=...
 
 # REMOVE - Managed by Key Vault as 'minio-secret-key'
-Storage__MinIO__SecretKey=...
+MinioStorage__SecretKey=...
 
 # REMOVE - Managed by Key Vault as 'seq-api-key'
 SEQ_API_KEY=...
