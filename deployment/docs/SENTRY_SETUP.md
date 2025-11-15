@@ -70,12 +70,25 @@ curl https://stoocker.app/api/monitoring/status
 # - Deploy yapıldı mı kontrol et
 # - Container'ı restart et
 
-# 3. Test error gönder
+# 3. Detaylı environment check (geçici debug endpoint)
+# Coolify'da bu flag'i ekle: ALLOW_ENV_DEBUG=true
+# Deploy yap, sonra:
+curl https://stoocker.app/api/debug/env
+# Environment variable'ların yüklenip yüklenmediğini gösterir
+# ⚠️ Test sonrası ALLOW_ENV_DEBUG flag'ini SİL (güvenlik riski)
+
+# 4. Test error gönder
 curl https://stoocker.app/api/test-sentry-error
 
-# 4. Sentry dashboard'u kontrol et
+# 5. Sentry dashboard'u kontrol et
 # https://stocker-0p.sentry.io/issues/
 ```
+
+**Yaygın Nedenler**:
+- Environment variable'lar Coolify'da eklenmemiş
+- Deploy sonrası container restart edilmemiş
+- Variable ismi yanlış (NEXT_PUBLIC_ prefix'i eksik)
+- Variable value'da whitespace/yeni satır var
 
 ### Problem 2: Debug Logları Göremiyorum
 
