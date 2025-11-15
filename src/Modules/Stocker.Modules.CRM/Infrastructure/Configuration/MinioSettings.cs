@@ -9,8 +9,16 @@ public class MinioSettings
 
     /// <summary>
     /// MinIO server endpoint (e.g., "minio:9000" or "minio.example.com")
+    /// Used for internal backend connections
     /// </summary>
     public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Public endpoint for presigned URLs accessible from browser
+    /// (e.g., "localhost:9000" or "minio.example.com")
+    /// If not set, will use Endpoint value
+    /// </summary>
+    public string? PublicEndpoint { get; set; }
 
     /// <summary>
     /// Access key for MinIO authentication

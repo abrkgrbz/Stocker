@@ -148,6 +148,17 @@ public class MinioDocumentStorageService : IDocumentStorageService
 
             var url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
 
+            // Replace internal endpoint with public endpoint if configured
+            if (!string.IsNullOrEmpty(_settings.PublicEndpoint) &&
+                !string.Equals(_settings.Endpoint, _settings.PublicEndpoint, StringComparison.OrdinalIgnoreCase))
+            {
+                url = url.Replace(_settings.Endpoint, _settings.PublicEndpoint);
+
+                _logger.LogInformation(
+                    "Replaced internal endpoint with public endpoint. Internal: {Internal}, Public: {Public}",
+                    _settings.Endpoint, _settings.PublicEndpoint);
+            }
+
             _logger.LogInformation(
                 "Presigned URL generated for MinIO object. Bucket: {Bucket}, Object: {Object}, Expires: {Expires}",
                 _settings.BucketName, storagePath, expiresIn);
