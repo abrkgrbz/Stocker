@@ -35,7 +35,7 @@ public class CreateWorkflowCommandHandler : IRequestHandler<CreateWorkflowComman
             if (!tenantId.HasValue)
                 return Result<int>.Failure(Error.Validation("Workflow", "Tenant context is required"));
 
-            var userId = _currentUserService.GetUserId();
+            var userId = _currentUserService.UserId;
             if (!userId.HasValue)
                 return Result<int>.Failure(Error.Validation("Workflow", "User context is required"));
 
