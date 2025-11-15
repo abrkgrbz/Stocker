@@ -1,18 +1,24 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentById;
-using Stocker.SharedKernel.Results;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
 using Stocker.SharedKernel.Common;
+using Stocker.SharedKernel.Results;
 
-namespace Stocker.Modules.Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentsByEntity;
+namespace Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentsByEntity;
 
 public class GetDocumentsByEntityQueryHandler : IRequestHandler<GetDocumentsByEntityQuery, Result<List<DocumentDto>>>
 {
     private readonly IDocumentRepository _documentRepository;
+    private readonly CRMDbContext _context;
 
-    public GetDocumentsByEntityQueryHandler(IDocumentRepository documentRepository)
+    public GetDocumentsByEntityQueryHandler(
+        IDocumentRepository documentRepository,
+        CRMDbContext context)
     {
         _documentRepository = documentRepository;
+        _context = context;
     }
 
     public async Task<Result<List<DocumentDto>>> Handle(GetDocumentsByEntityQuery request, CancellationToken cancellationToken)
@@ -21,6 +27,19 @@ public class GetDocumentsByEntityQueryHandler : IRequestHandler<GetDocumentsByEn
             request.EntityId,
             request.EntityType,
             cancellationToken);
+
+        // Get user IDs
+        var userIds = documents.Select(d => d.UploadedBy).Distinct().ToList();
+
+        // Join with UserTenants to get user names
+        var users = await _context.Set<Stocker.Domain.Tenant.Entities.UserTenant>()
+            .Where(u => userIds.Contains(u.UserId))
+            .Select(u => new { u.UserId, u.FirstName, u.LastName })
+            .ToListAsync(cancellationToken);
+
+        var userDict = users.ToDictionary(
+            u => u.UserId,
+            u => $"{u.FirstName} {u.LastName}".Trim());
 
         var dtos = documents.Select(d => new DocumentDto(
             Id: d.Id,
@@ -37,7 +56,7 @@ public class GetDocumentsByEntityQueryHandler : IRequestHandler<GetDocumentsByEn
             Version: d.Version,
             UploadedAt: d.UploadedAt,
             UploadedBy: d.UploadedBy,
-            UploadedByName: null, // TODO: Join with user table
+            UploadedByName: userDict.TryGetValue(d.UploadedBy, out var name) ? name : null,
             ExpiresAt: d.ExpiresAt,
             AccessLevel: d.AccessLevel,
             IsArchived: d.IsArchived

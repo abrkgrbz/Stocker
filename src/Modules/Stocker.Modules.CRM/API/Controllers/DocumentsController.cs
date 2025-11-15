@@ -9,7 +9,7 @@ using Stocker.Modules.CRM.Application.Features.Documents.Commands.UpdateDocument
 using Stocker.Modules.CRM.Application.Features.Documents.Commands.UploadDocument;
 using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentById;
 using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetAllDocuments;
-using Stocker.Modules.Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentsByEntity;
+using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentsByEntity;
 using Stocker.SharedKernel.Common;
 
 namespace Stocker.Modules.CRM.API.Controllers;
