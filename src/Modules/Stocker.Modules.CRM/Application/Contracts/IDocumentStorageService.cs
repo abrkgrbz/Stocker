@@ -36,9 +36,11 @@ public interface IDocumentStorageService
     /// <summary>
     /// Get temporary download URL (for direct client access)
     /// </summary>
+    /// <param name="inline">If true, browser will display the file inline (view). If false, browser will download the file (attachment).</param>
     Task<Result<string>> GetDownloadUrlAsync(
         string storagePath,
         TimeSpan expiresIn,
+        bool inline = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>

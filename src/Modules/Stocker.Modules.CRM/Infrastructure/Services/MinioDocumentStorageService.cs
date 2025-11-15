@@ -137,6 +137,7 @@ public class MinioDocumentStorageService : IDocumentStorageService
     public async Task<Result<string>> GetDownloadUrlAsync(
         string storagePath,
         TimeSpan expiresIn,
+        bool inline = false,
         CancellationToken cancellationToken = default)
     {
         try
@@ -152,13 +153,16 @@ public class MinioDocumentStorageService : IDocumentStorageService
                 fileName = string.Join("_", fileNameParts.Skip(2));
             }
 
+            // Set Content-Disposition: inline for viewing in browser, attachment for downloading
+            var disposition = inline ? "inline" : "attachment";
+
             var presignedGetObjectArgs = new PresignedGetObjectArgs()
                 .WithBucket(_settings.BucketName)
                 .WithObject(storagePath)
                 .WithExpiry((int)expiresIn.TotalSeconds)
                 .WithHeaders(new Dictionary<string, string>
                 {
-                    ["response-content-disposition"] = $"attachment; filename=\"{fileName}\""
+                    ["response-content-disposition"] = $"{disposition}; filename=\"{fileName}\""
                 });
 
             string url;

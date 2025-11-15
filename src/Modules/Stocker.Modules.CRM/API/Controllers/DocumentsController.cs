@@ -142,10 +142,11 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Get temporary download URL
     /// </summary>
+    /// <param name="inline">If true, browser will display the file inline (view). If false, browser will download the file.</param>
     [HttpGet("{id}/url")]
     [ProducesResponseType(typeof(DownloadUrlResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDownloadUrl(int id, [FromQuery] int expiresInMinutes = 60)
+    public async Task<IActionResult> GetDownloadUrl(int id, [FromQuery] int expiresInMinutes = 60, [FromQuery] bool inline = false)
     {
         var query = new GetDocumentByIdQuery(id);
         var result = await _mediator.Send(query);
@@ -157,7 +158,8 @@ public class DocumentsController : ControllerBase
 
         var urlResult = await _storageService.GetDownloadUrlAsync(
             document.StoragePath,
-            TimeSpan.FromMinutes(expiresInMinutes));
+            TimeSpan.FromMinutes(expiresInMinutes),
+            inline);
 
         if (!urlResult.IsSuccess)
             return BadRequest(new { Error = urlResult.Error });
