@@ -87,9 +87,18 @@ export default function DocumentsPage() {
     loadDocuments();
   }, []);
 
+  const handleView = async (document: DocumentDto) => {
+    try {
+      const downloadUrl = await CRMService.getDownloadUrl(document.id, 60, true); // inline=true
+      window.open(downloadUrl.url, '_blank');
+    } catch (error) {
+      showApiError(error, 'Görüntüleme başarısız');
+    }
+  };
+
   const handleDownload = async (document: DocumentDto) => {
     try {
-      const downloadUrl = await CRMService.getDownloadUrl(document.id);
+      const downloadUrl = await CRMService.getDownloadUrl(document.id, 60, false); // inline=false
       window.open(downloadUrl.url, '_blank');
       showSuccess('Döküman indiriliyor');
     } catch (error) {
@@ -212,7 +221,7 @@ export default function DocumentsPage() {
               type="text"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => handleDownload(record)}
+              onClick={() => handleView(record)}
             />
           </Tooltip>
           <Tooltip title="İndir">

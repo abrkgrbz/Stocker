@@ -1405,10 +1405,11 @@ export class CRMService {
    */
   static async getDownloadUrl(
     id: number,
-    expiresInMinutes: number = 60
+    expiresInMinutes: number = 60,
+    inline: boolean = false
   ): Promise<DownloadUrlResponse> {
     return ApiService.get<DownloadUrlResponse>(this.getPath(`documents/${id}/url`), {
-      params: { expiresInMinutes },
+      params: { expiresInMinutes, inline },
     });
   }
 
