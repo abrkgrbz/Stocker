@@ -12,15 +12,18 @@ public class CreateWorkflowCommandHandler : IRequestHandler<CreateWorkflowComman
 {
     private readonly IWorkflowRepository _workflowRepository;
     private readonly ITenantService _tenantService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<CreateWorkflowCommandHandler> _logger;
 
     public CreateWorkflowCommandHandler(
         IWorkflowRepository workflowRepository,
         ITenantService tenantService,
+        ICurrentUserService currentUserService,
         ILogger<CreateWorkflowCommandHandler> logger)
     {
         _workflowRepository = workflowRepository;
         _tenantService = tenantService;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -32,8 +35,8 @@ public class CreateWorkflowCommandHandler : IRequestHandler<CreateWorkflowComman
             if (!tenantId.HasValue)
                 return Result<int>.Failure(Error.Validation("Workflow", "Tenant context is required"));
 
-            var userId = Guid.Empty; // TODO: Get from auth context
-            if (userId == Guid.Empty)
+            var userId = _currentUserService.GetUserId();
+            if (!userId.HasValue)
                 return Result<int>.Failure(Error.Validation("Workflow", "User context is required"));
 
             var workflowResult = Workflow.Create(
@@ -43,7 +46,7 @@ public class CreateWorkflowCommandHandler : IRequestHandler<CreateWorkflowComman
                 request.EntityType,
                 request.TriggerConditions,
                 tenantId.Value,
-                userId);
+                userId.Value);
 
             if (!workflowResult.IsSuccess)
                 return Result<int>.Failure(workflowResult.Error);
