@@ -53,19 +53,18 @@ const { confirm } = Modal;
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Entity types from backend RelatedEntityType enum with Turkish labels
+// Entity types from backend - only entities that exist in the system
 const entityTypes = [
   { value: 'Account', label: 'Hesap' },
   { value: 'Contact', label: 'İletişim' },
+  { value: 'Customer', label: 'Müşteri' },
   { value: 'Lead', label: 'Potansiyel Müşteri' },
   { value: 'Opportunity', label: 'Fırsat' },
   { value: 'Deal', label: 'Anlaşma' },
   { value: 'Quote', label: 'Teklif' },
-  { value: 'Invoice', label: 'Fatura' },
   { value: 'Contract', label: 'Sözleşme' },
   { value: 'Ticket', label: 'Destek Talebi' },
   { value: 'Campaign', label: 'Kampanya' },
-  { value: 'Product', label: 'Ürün' },
 ];
 
 // Common fields for entities with Turkish labels
@@ -106,17 +105,18 @@ const entityFields: Record<string, Array<{ value: string; label: string }>> = {
     { value: 'CloseDate', label: 'Kapanış Tarihi' },
     { value: 'Priority', label: 'Öncelik' },
   ],
+  Customer: [
+    { value: 'Status', label: 'Durum' },
+    { value: 'Type', label: 'Tip' },
+    { value: 'Email', label: 'E-posta' },
+    { value: 'Phone', label: 'Telefon' },
+    { value: 'CompanyName', label: 'Şirket Adı' },
+  ],
   Quote: [
     { value: 'Status', label: 'Durum' },
     { value: 'TotalAmount', label: 'Toplam Tutar' },
     { value: 'ValidUntil', label: 'Geçerlilik Tarihi' },
     { value: 'ApprovalStatus', label: 'Onay Durumu' },
-  ],
-  Invoice: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'TotalAmount', label: 'Toplam Tutar' },
-    { value: 'DueDate', label: 'Vade Tarihi' },
-    { value: 'PaidDate', label: 'Ödeme Tarihi' },
   ],
   Contract: [
     { value: 'Status', label: 'Durum' },
@@ -137,13 +137,6 @@ const entityFields: Record<string, Array<{ value: string; label: string }>> = {
     { value: 'Budget', label: 'Bütçe' },
     { value: 'StartDate', label: 'Başlangıç Tarihi' },
     { value: 'EndDate', label: 'Bitiş Tarihi' },
-  ],
-  Product: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Price', label: 'Fiyat' },
-    { value: 'Category', label: 'Kategori' },
-    { value: 'Stock', label: 'Stok' },
   ],
 };
 
