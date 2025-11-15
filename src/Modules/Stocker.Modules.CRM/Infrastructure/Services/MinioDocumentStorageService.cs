@@ -152,11 +152,16 @@ public class MinioDocumentStorageService : IDocumentStorageService
             if (!string.IsNullOrEmpty(_settings.PublicEndpoint) &&
                 !string.Equals(_settings.Endpoint, _settings.PublicEndpoint, StringComparison.OrdinalIgnoreCase))
             {
-                url = url.Replace(_settings.Endpoint, _settings.PublicEndpoint);
+                // Parse the generated URL to extract protocol and host
+                var uri = new Uri(url);
+                var internalProtocolAndHost = $"{uri.Scheme}://{_settings.Endpoint}";
+
+                // Replace the entire protocol + host with the public endpoint
+                url = url.Replace(internalProtocolAndHost, _settings.PublicEndpoint);
 
                 _logger.LogInformation(
                     "Replaced internal endpoint with public endpoint. Internal: {Internal}, Public: {Public}",
-                    _settings.Endpoint, _settings.PublicEndpoint);
+                    internalProtocolAndHost, _settings.PublicEndpoint);
             }
 
             _logger.LogInformation(
