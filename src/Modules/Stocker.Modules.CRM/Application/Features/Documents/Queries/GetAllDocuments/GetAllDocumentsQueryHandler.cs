@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentById;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
 using Stocker.SharedKernel.Results;
 
@@ -10,14 +10,14 @@ namespace Stocker.Modules.CRM.Application.Features.Documents.Queries.GetAllDocum
 public class GetAllDocumentsQueryHandler : IRequestHandler<GetAllDocumentsQuery, Result<List<DocumentDto>>>
 {
     private readonly IDocumentRepository _documentRepository;
-    private readonly CRMDbContext _context;
+    private readonly ITenantDbContext _tenantContext;
 
     public GetAllDocumentsQueryHandler(
         IDocumentRepository documentRepository,
-        CRMDbContext context)
+        ITenantDbContext tenantContext)
     {
         _documentRepository = documentRepository;
-        _context = context;
+        _tenantContext = tenantContext;
     }
 
     public async Task<Result<List<DocumentDto>>> Handle(GetAllDocumentsQuery request, CancellationToken cancellationToken)
@@ -28,7 +28,7 @@ public class GetAllDocumentsQueryHandler : IRequestHandler<GetAllDocumentsQuery,
         var userIds = documents.Select(d => d.UploadedBy).Distinct().ToList();
 
         // Join with UserTenants to get user names
-        var users = await _context.Set<Stocker.Domain.Tenant.Entities.UserTenant>()
+        var users = await _tenantContext.UserTenants
             .Where(u => userIds.Contains(u.UserId))
             .Select(u => new { u.UserId, u.FirstName, u.LastName })
             .ToListAsync(cancellationToken);
