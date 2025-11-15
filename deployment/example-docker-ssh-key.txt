@@ -1,7 +1,0 @@
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACAPLKdP8vEXAMPLE_KEY_FOR_TESTING_ONLY_REPLACE_WITH_REAL
-AAAAoExamplePrivateKeyContentThisIsNotRealPleaseReplaceWithActualKey
-FromYourServer95217219_4_ThisIsJustForTestingPurposesSoAzureKeyVault
-CanBeConfiguredProperlyWithTheRightSecretName_docker_management_key==
------END OPENSSH PRIVATE KEY-----

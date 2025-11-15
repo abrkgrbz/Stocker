@@ -34,7 +34,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry
-  debug: false,
+  debug: true,
 
   // Before sending event, add subdomain context from request headers
   beforeSend(event, hint) {
