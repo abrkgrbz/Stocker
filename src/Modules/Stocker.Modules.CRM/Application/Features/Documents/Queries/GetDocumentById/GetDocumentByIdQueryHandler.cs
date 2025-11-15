@@ -21,23 +21,24 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             return Result<DocumentDto>.Failure(Error.Validation("Document", "Document not found"));
 
         var dto = new DocumentDto(
-            document.Id,
-            document.FileName,
-            document.OriginalFileName,
-            document.ContentType,
-            document.FileSize,
-            document.StoragePath,
-            document.EntityId,
-            document.EntityType,
-            document.Category,
-            document.Description,
-            document.Tags,
-            document.Version,
-            document.UploadedAt,
-            document.UploadedBy,
-            document.ExpiresAt,
-            document.AccessLevel,
-            document.IsArchived
+            Id: document.Id,
+            FileName: document.FileName,
+            OriginalFileName: document.OriginalFileName,
+            ContentType: document.ContentType,
+            Size: document.FileSize,
+            StoragePath: document.StoragePath,
+            EntityId: document.EntityId,
+            EntityType: document.EntityType,
+            Category: document.Category,
+            Description: document.Description,
+            Tags: document.Tags,
+            Version: document.Version,
+            UploadedAt: document.UploadedAt,
+            UploadedBy: document.UploadedBy,
+            UploadedByName: null, // TODO: Join with user table
+            ExpiresAt: document.ExpiresAt,
+            AccessLevel: document.AccessLevel,
+            IsArchived: document.IsArchived
         );
 
         return Result<DocumentDto>.Success(dto);

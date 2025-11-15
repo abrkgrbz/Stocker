@@ -121,12 +121,18 @@ export default function DocumentsPage() {
       title: 'Dosya',
       dataIndex: 'fileName',
       key: 'fileName',
+      width: 300,
+      ellipsis: true,
       render: (text, record) => (
         <Space>
           {getFileIcon(record.contentType)}
-          <div>
-            <div className="font-medium">{text}</div>
-            <Text className="text-xs text-gray-500">{record.originalFileName}</Text>
+          <div style={{ maxWidth: 250, overflow: 'hidden' }}>
+            <Tooltip title={text}>
+              <div className="font-medium truncate">{text}</div>
+            </Tooltip>
+            <Tooltip title={record.originalFileName}>
+              <Text className="text-xs text-gray-500 truncate block">{record.originalFileName}</Text>
+            </Tooltip>
           </div>
         </Space>
       ),
@@ -135,6 +141,7 @@ export default function DocumentsPage() {
       title: 'Kategori',
       dataIndex: 'category',
       key: 'category',
+      width: 120,
       render: (category: DocumentCategory) => {
         const config = categoryLabels[category] || { label: category, color: 'default' };
         return <Tag color={config.color}>{config.label}</Tag>;
@@ -149,6 +156,7 @@ export default function DocumentsPage() {
       title: 'Varlık',
       dataIndex: 'entityType',
       key: 'entityType',
+      width: 110,
       render: (entityType: string) => (
         <Tag>{entityType === 'Customer' ? 'Müşteri' : entityType === 'Lead' ? 'Potansiyel' : entityType}</Tag>
       ),
@@ -157,6 +165,7 @@ export default function DocumentsPage() {
       title: 'Boyut',
       dataIndex: 'size',
       key: 'size',
+      width: 100,
       render: (size: number) => formatFileSize(size),
       sorter: (a, b) => a.size - b.size,
     },
@@ -164,6 +173,7 @@ export default function DocumentsPage() {
       title: 'Erişim',
       dataIndex: 'accessLevel',
       key: 'accessLevel',
+      width: 130,
       render: (level: AccessLevel) => {
         const config = accessLevelLabels[level] || { label: level, color: 'default' };
         return <Tag color={config.color}>{config.label}</Tag>;
@@ -173,12 +183,15 @@ export default function DocumentsPage() {
       title: 'Yükleyen',
       dataIndex: 'uploadedByName',
       key: 'uploadedByName',
+      width: 140,
+      ellipsis: true,
       render: (name?: string) => name || 'Bilinmiyor',
     },
     {
       title: 'Tarih',
       dataIndex: 'uploadedAt',
       key: 'uploadedAt',
+      width: 150,
       render: (date: string) => (
         <Tooltip title={dayjs(date).format('DD MMMM YYYY HH:mm')}>
           {dayjs(date).fromNow()}

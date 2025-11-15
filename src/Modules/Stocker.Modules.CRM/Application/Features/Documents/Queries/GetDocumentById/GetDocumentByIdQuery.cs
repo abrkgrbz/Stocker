@@ -11,7 +11,7 @@ public record DocumentDto(
     string FileName,
     string OriginalFileName,
     string ContentType,
-    long FileSize,
+    long Size,
     string StoragePath,
     string EntityId,
     string EntityType,
@@ -21,6 +21,7 @@ public record DocumentDto(
     int Version,
     DateTime UploadedAt,
     Guid UploadedBy,
+    string? UploadedByName,
     DateTime? ExpiresAt,
     AccessLevel AccessLevel,
     bool IsArchived
