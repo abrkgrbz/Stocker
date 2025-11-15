@@ -53,6 +53,36 @@ const { confirm } = Modal;
 const { TextArea } = Input;
 const { Option } = Select;
 
+// Entity types from backend RelatedEntityType enum
+const entityTypes = [
+  'Account',
+  'Contact',
+  'Lead',
+  'Opportunity',
+  'Deal',
+  'Quote',
+  'Invoice',
+  'Contract',
+  'Ticket',
+  'Campaign',
+  'Product',
+];
+
+// Common fields for entities
+const entityFields: Record<string, string[]> = {
+  Account: ['Status', 'Type', 'Rating', 'Industry', 'Revenue'],
+  Contact: ['FirstName', 'LastName', 'Email', 'Phone', 'Title', 'Department'],
+  Lead: ['Status', 'Source', 'Score', 'Industry', 'Budget'],
+  Opportunity: ['Stage', 'Amount', 'Probability', 'CloseDate', 'Source'],
+  Deal: ['Status', 'Value', 'Stage', 'CloseDate', 'Priority'],
+  Quote: ['Status', 'TotalAmount', 'ValidUntil', 'ApprovalStatus'],
+  Invoice: ['Status', 'TotalAmount', 'DueDate', 'PaidDate'],
+  Contract: ['Status', 'StartDate', 'EndDate', 'Value'],
+  Ticket: ['Status', 'Priority', 'Type', 'Category', 'AssignedTo'],
+  Campaign: ['Status', 'Type', 'Budget', 'StartDate', 'EndDate'],
+  Product: ['Status', 'Type', 'Price', 'Category', 'Stock'],
+};
+
 // Trigger type labels
 const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
   Manual: { label: 'Manuel', color: 'default' },
@@ -82,6 +112,7 @@ export default function WorkflowsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [form] = Form.useForm();
   const [actions, setActions] = useState<WorkflowAction[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<string>('');
 
   // Load all workflows
   const loadWorkflows = async () => {
@@ -160,6 +191,14 @@ export default function WorkflowsPage() {
     setDrawerOpen(false);
     form.resetFields();
     setActions([]);
+    setSelectedEntityType('');
+  };
+
+  // Handle entity type change
+  const handleEntityTypeChange = (value: string) => {
+    setSelectedEntityType(value);
+    // Reset field when entity type changes
+    form.setFieldsValue({ field: undefined, value: undefined });
   };
 
   // Handle add action
@@ -442,11 +481,32 @@ export default function WorkflowsPage() {
             </Form.Item>
 
             <Form.Item name="entityType" label="Entity Tipi">
-              <Input placeholder="Örn: Customer, Lead" />
+              <Select
+                placeholder="Entity tipi seçin"
+                onChange={handleEntityTypeChange}
+                allowClear
+              >
+                {entityTypes.map((type) => (
+                  <Option key={type} value={type}>
+                    {type}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item name="field" label="Alan Adı (İsteğe Bağlı)">
-              <Input placeholder="Hangi alan değiştiğinde" />
+              <Select
+                placeholder="Alan seçin"
+                disabled={!selectedEntityType}
+                allowClear
+              >
+                {selectedEntityType &&
+                  entityFields[selectedEntityType]?.map((field) => (
+                    <Option key={field} value={field}>
+                      {field}
+                    </Option>
+                  ))}
+              </Select>
             </Form.Item>
 
             <Form.Item name="value" label="Değer (İsteğe Bağlı)">
