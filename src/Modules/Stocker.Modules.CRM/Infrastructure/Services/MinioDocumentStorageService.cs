@@ -141,10 +141,25 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
+            // Extract original filename from storage path for Content-Disposition header
+            var fileName = Path.GetFileName(storagePath);
+
+            // Extract the original filename (after the timestamp_guid_ prefix)
+            var fileNameParts = fileName.Split('_');
+            if (fileNameParts.Length >= 3)
+            {
+                // Format: yyyyMMdd_HHmmss_guid_originalfilename
+                fileName = string.Join("_", fileNameParts.Skip(2));
+            }
+
             var presignedGetObjectArgs = new PresignedGetObjectArgs()
                 .WithBucket(_settings.BucketName)
                 .WithObject(storagePath)
-                .WithExpiry((int)expiresIn.TotalSeconds);
+                .WithExpiry((int)expiresIn.TotalSeconds)
+                .WithHeaders(new Dictionary<string, string>
+                {
+                    ["response-content-disposition"] = $"attachment; filename=\"{fileName}\""
+                });
 
             string url;
 
