@@ -12,6 +12,13 @@ services:
         - NEXT_PUBLIC_API_URL=https://api.stoocker.app
         - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
         - NEXT_PUBLIC_AUTH_DOMAIN=https://auth.stoocker.app
+        # Sentry build args (required for build-time embedding)
+        - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+        - SENTRY_DSN=${SENTRY_DSN}
+        - SENTRY_ORG=${SENTRY_ORG}
+        - SENTRY_PROJECT=${SENTRY_PROJECT}
+        - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+        - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
     container_name: stocker-web
     restart: unless-stopped
     # ports:  # Traefik üzerinden erişim, port açmaya gerek yok
@@ -21,6 +28,14 @@ services:
       - NEXT_PUBLIC_API_URL=https://api.stoocker.app
       - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
       - NEXT_PUBLIC_AUTH_DOMAIN=https://auth.stoocker.app
+
+      # Sentry configuration (monitoring & error tracking)
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_ORG=${SENTRY_ORG}
+      - SENTRY_PROJECT=${SENTRY_PROJECT}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 
       # Server-side only environment variables
       - API_INTERNAL_URL=http://api:5000

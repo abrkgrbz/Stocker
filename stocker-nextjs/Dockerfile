@@ -22,7 +22,7 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_BASE_DOMAIN
 ARG NEXT_PUBLIC_AUTH_DOMAIN
 
-# Sentry build arguments (required for build-time bundle embedding)
+# Sentry build arguments (passed from docker-compose.yml)
 ARG NEXT_PUBLIC_SENTRY_DSN
 ARG SENTRY_DSN
 ARG SENTRY_ORG
@@ -34,7 +34,7 @@ ARG SENTRY_AUTH_TOKEN
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Pass Sentry variables to build (NEXT_PUBLIC_* must be set at build time)
+# Set Sentry env vars for build (NEXT_PUBLIC_* must be available at build time)
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV SENTRY_DSN=$SENTRY_DSN
 ENV SENTRY_ORG=$SENTRY_ORG
