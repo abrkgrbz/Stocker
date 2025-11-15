@@ -296,19 +296,42 @@ export default function WorkflowsPage() {
 
   // Handle submit workflow
   const handleSubmit = async (values: any) => {
+    // Validate at least one action
+    if (actions.length === 0) {
+      showError('En az bir aksiyon eklemelisiniz');
+      return;
+    }
+
     setLoading(true);
     try {
-      const command: CreateWorkflowCommand = {
+      // Build trigger conditions JSON
+      const triggerConditions: any = {};
+      if (values.field) {
+        triggerConditions.field = values.field;
+      }
+      if (values.value) {
+        triggerConditions.value = values.value;
+      }
+
+      // Convert actions to Steps format
+      const steps = actions.map((action, index) => ({
+        name: `${action.type} Step`,
+        description: `Perform ${action.type} action`,
+        actionType: action.type,
+        stepOrder: index + 1,
+        actionConfiguration: JSON.stringify(action.parameters),
+        conditions: '{}',
+        delayMinutes: 0,
+        continueOnError: false,
+      }));
+
+      const command = {
         name: values.name,
-        description: values.description,
-        trigger: {
-          type: values.triggerType,
-          entityType: values.entityType,
-          field: values.field,
-          value: values.value,
-        },
-        actions: actions,
-        isActive: values.isActive ?? false,
+        description: values.description || 'Workflow created from UI',
+        triggerType: values.triggerType,
+        entityType: values.entityType || 'Lead',
+        triggerConditions: JSON.stringify(triggerConditions),
+        steps: steps,
       };
 
       const workflowId = await CRMService.createWorkflow(command);
@@ -535,7 +558,11 @@ export default function WorkflowsPage() {
               <Input placeholder="Örn: Müşteri hoş geldin e-postası" />
             </Form.Item>
 
-            <Form.Item name="description" label="Açıklama">
+            <Form.Item
+              name="description"
+              label="Açıklama"
+              rules={[{ required: true, message: 'Açıklama zorunludur' }]}
+            >
               <TextArea rows={3} placeholder="Workflow'un ne yaptığını açıklayın" />
             </Form.Item>
 
