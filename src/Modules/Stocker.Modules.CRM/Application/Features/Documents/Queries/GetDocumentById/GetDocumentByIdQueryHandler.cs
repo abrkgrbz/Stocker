@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.Common;
 
 namespace Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocumentById;
@@ -10,14 +10,14 @@ namespace Stocker.Modules.CRM.Application.Features.Documents.Queries.GetDocument
 public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery, Result<DocumentDto>>
 {
     private readonly IDocumentRepository _documentRepository;
-    private readonly CRMDbContext _context;
+    private readonly ITenantDbContext _tenantContext;
 
     public GetDocumentByIdQueryHandler(
         IDocumentRepository documentRepository,
-        CRMDbContext context)
+        ITenantDbContext tenantContext)
     {
         _documentRepository = documentRepository;
-        _context = context;
+        _tenantContext = tenantContext;
     }
 
     public async Task<Result<DocumentDto>> Handle(GetDocumentByIdQuery request, CancellationToken cancellationToken)
@@ -27,7 +27,7 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             return Result<DocumentDto>.Failure(Error.Validation("Document", "Document not found"));
 
         // Fetch user name
-        var user = await _context.Set<Stocker.Domain.Tenant.Entities.UserTenant>()
+        var user = await _tenantContext.UserTenants
             .Where(u => u.UserId == document.UploadedBy)
             .Select(u => new { u.FirstName, u.LastName })
             .FirstOrDefaultAsync(cancellationToken);
