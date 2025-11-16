@@ -9,25 +9,32 @@ import {
   Typography,
   Row,
   Col,
-  Descriptions,
-  Timeline,
   Empty,
   Spin,
-  Tooltip,
+  Divider,
+  message,
+  Modal,
+  Statistic,
 } from 'antd';
 import {
   ThunderboltOutlined,
   ArrowLeftOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
+  PlusOutlined,
+  SaveOutlined,
 } from '@ant-design/icons';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
-import type { WorkflowDto, WorkflowTriggerType, WorkflowActionType } from '@/lib/api/services/crm.types';
+import type { WorkflowDto, WorkflowActionType } from '@/lib/api/services/crm.types';
+import type { TriggerConfiguration } from '@/components/crm/workflows/ConfigureTriggerDrawer';
+import type { WorkflowActionConfig } from '@/components/crm/workflows/ActionBlock';
+import TriggerBlock from '@/components/crm/workflows/TriggerBlock';
+import ActionBlock from '@/components/crm/workflows/ActionBlock';
+import ActionSelectorDrawer from '@/components/crm/workflows/ActionSelectorDrawer';
+import ActionConfigDrawer from '@/components/crm/workflows/ActionConfigDrawer';
+import ConfigureTriggerDrawer from '@/components/crm/workflows/ConfigureTriggerDrawer';
+import { type Step1FormData } from '@/components/crm/workflows/CreateWorkflowDrawer';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -36,29 +43,8 @@ import { useRouter } from 'next/navigation';
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text, Paragraph } = Typography;
-
-// Trigger type labels
-const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
-  Manual: { label: 'Manuel', color: 'default' },
-  OnCreate: { label: 'Oluşturulduğunda', color: 'blue' },
-  OnUpdate: { label: 'Güncellendiğinde', color: 'cyan' },
-  OnDelete: { label: 'Silindiğinde', color: 'red' },
-  OnStatusChange: { label: 'Durum Değiştiğinde', color: 'purple' },
-  Scheduled: { label: 'Zamanlanmış', color: 'orange' },
-};
-
-// Action type labels
-const actionTypeLabels: Record<WorkflowActionType, string> = {
-  SendEmail: 'E-posta Gönder',
-  SendSMS: 'SMS Gönder',
-  CreateTask: 'Görev Oluştur',
-  UpdateField: 'Alan Güncelle',
-  SendNotification: 'Bildirim Gönder',
-  CallWebhook: 'Webhook Çağır',
-  CreateActivity: 'Aktivite Oluştur',
-  AssignToUser: 'Kullanıcıya Ata',
-};
+const { Title, Text } = Typography;
+const { confirm } = Modal;
 
 interface WorkflowDetailPageProps {
   params: {
@@ -71,6 +57,18 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
   const workflowId = parseInt(params.id);
   const [workflow, setWorkflow] = useState<WorkflowDto | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Builder state
+  const [actions, setActions] = useState<WorkflowActionConfig[]>([]);
+  const [triggerConfig, setTriggerConfig] = useState<TriggerConfiguration | null>(null);
+
+  // Drawer states
+  const [actionSelectorOpen, setActionSelectorOpen] = useState(false);
+  const [actionConfigOpen, setActionConfigOpen] = useState(false);
+  const [triggerConfigOpen, setTriggerConfigOpen] = useState(false);
+  const [selectedActionType, setSelectedActionType] = useState<WorkflowActionType | null>(null);
+  const [editingActionIndex, setEditingActionIndex] = useState<number | null>(null);
 
   // Load workflow details
   const loadWorkflow = async () => {
@@ -78,6 +76,36 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
     try {
       const data = await CRMService.getWorkflow(workflowId);
       setWorkflow(data);
+
+      // Parse trigger configuration
+      if (data.triggerConditions) {
+        try {
+          const config = JSON.parse(data.triggerConditions);
+          setTriggerConfig({
+            type: data.triggerType,
+            entityType: data.entityType,
+            config: config,
+          });
+        } catch (e) {
+          console.error('Failed to parse trigger config', e);
+        }
+      }
+
+      // Convert steps to actions
+      if (data.steps && data.steps.length > 0) {
+        const convertedActions: WorkflowActionConfig[] = data.steps.map((step) => ({
+          id: step.id?.toString(),
+          type: step.actionType,
+          name: step.name,
+          description: step.description,
+          parameters: step.actionData ? JSON.parse(step.actionData) : {},
+          delayMinutes: step.delayMinutes,
+          isEnabled: step.isEnabled,
+          stepOrder: step.stepOrder,
+        }));
+        setActions(convertedActions);
+      }
+
       setLoading(false);
     } catch (error) {
       showApiError(error, 'Workflow detayları yüklenemedi');
@@ -90,38 +118,139 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
     loadWorkflow();
   }, [workflowId]);
 
-  // Handle activate workflow
-  const handleActivate = async () => {
+  // Handle activate/deactivate
+  const handleToggleActive = async () => {
+    if (!workflow) return;
+
     try {
-      await CRMService.activateWorkflow(workflowId);
-      showSuccess('Workflow aktif edildi');
+      if (workflow.isActive) {
+        await CRMService.deactivateWorkflow(workflowId);
+        showSuccess('Workflow deaktif edildi');
+      } else {
+        await CRMService.activateWorkflow(workflowId);
+        showSuccess('Workflow aktif edildi');
+      }
       loadWorkflow();
     } catch (error) {
-      showApiError(error, 'Workflow aktif edilemedi');
+      showApiError(error, 'Workflow durumu değiştirilemedi');
     }
   };
 
-  // Handle deactivate workflow
-  const handleDeactivate = async () => {
+  // Handle save workflow
+  const handleSave = async () => {
+    if (!workflow) return;
+
+    setSaving(true);
     try {
-      await CRMService.deactivateWorkflow(workflowId);
-      showSuccess('Workflow deaktif edildi');
+      // Convert actions to steps
+      const steps = actions.map((action, index) => ({
+        id: action.id ? parseInt(action.id) : undefined,
+        name: action.name,
+        description: action.description || '',
+        actionType: action.type,
+        actionData: JSON.stringify(action.parameters),
+        stepOrder: index + 1,
+        delayMinutes: action.delayMinutes || 0,
+        isEnabled: action.isEnabled !== false,
+      }));
+
+      await CRMService.updateWorkflow(workflowId, {
+        name: workflow.name,
+        description: workflow.description,
+        triggerType: workflow.triggerType,
+        entityType: workflow.entityType,
+        triggerConditions: triggerConfig ? JSON.stringify(triggerConfig.config) : workflow.triggerConditions,
+        steps: steps,
+      });
+
+      showSuccess('Workflow kaydedildi');
       loadWorkflow();
     } catch (error) {
-      showApiError(error, 'Workflow deaktif edilemedi');
+      showApiError(error, 'Workflow kaydedilemedi');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Handle execute workflow
-  const handleExecute = async () => {
-    try {
-      // For manual workflows, we would need entity context
-      // This is a placeholder for now
-      showSuccess('Workflow çalıştırıldı');
-      loadWorkflow();
-    } catch (error) {
-      showApiError(error, 'Workflow çalıştırılamadı');
+  // Action handlers
+  const handleSelectActionType = (actionType: WorkflowActionType) => {
+    setSelectedActionType(actionType);
+    setActionConfigOpen(true);
+  };
+
+  const handleSaveAction = (actionData: Partial<WorkflowActionConfig>) => {
+    if (editingActionIndex !== null) {
+      // Update existing action
+      const updatedActions = [...actions];
+      updatedActions[editingActionIndex] = {
+        ...updatedActions[editingActionIndex],
+        ...actionData,
+      };
+      setActions(updatedActions);
+      message.success('Aksiyon güncellendi');
+    } else {
+      // Add new action
+      const newAction: WorkflowActionConfig = {
+        ...actionData,
+        type: actionData.type!,
+        name: actionData.name!,
+        stepOrder: actions.length + 1,
+        parameters: actionData.parameters || {},
+      };
+      setActions([...actions, newAction]);
+      message.success('Aksiyon eklendi');
     }
+
+    setActionConfigOpen(false);
+    setSelectedActionType(null);
+    setEditingActionIndex(null);
+  };
+
+  const handleEditAction = (index: number) => {
+    setEditingActionIndex(index);
+    setSelectedActionType(actions[index].type);
+    setActionConfigOpen(true);
+  };
+
+  const handleDeleteAction = (index: number) => {
+    confirm({
+      title: 'Aksiyonu Sil',
+      content: 'Bu aksiyonu silmek istediğinize emin misiniz?',
+      okText: 'Sil',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk() {
+        const updatedActions = actions.filter((_, i) => i !== index);
+        // Reorder
+        updatedActions.forEach((action, i) => {
+          action.stepOrder = i + 1;
+        });
+        setActions(updatedActions);
+        message.success('Aksiyon silindi');
+      },
+    });
+  };
+
+  const handleDuplicateAction = (index: number) => {
+    const actionToDuplicate = actions[index];
+    const newAction: WorkflowActionConfig = {
+      ...actionToDuplicate,
+      id: undefined,
+      name: `${actionToDuplicate.name} (Kopya)`,
+      stepOrder: actions.length + 1,
+    };
+    setActions([...actions, newAction]);
+    message.success('Aksiyon kopyalandı');
+  };
+
+  const handleEditTrigger = () => {
+    setTriggerConfigOpen(true);
+  };
+
+  const handleSaveTriggerConfig = (config: TriggerConfiguration) => {
+    setTriggerConfig(config);
+    setTriggerConfigOpen(false);
+    message.success('Tetikleyici güncellendi');
   };
 
   if (loading && !workflow) {
@@ -144,14 +273,18 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
     );
   }
 
-  const { label: triggerLabel, color: triggerColor } = triggerTypeLabels[workflow.triggerType] || {
-    label: workflow.triggerType,
-    color: 'default',
+  // Dummy step1Data for trigger config drawer
+  const step1Data: Step1FormData = {
+    name: workflow.name,
+    description: workflow.description,
+    status: workflow.isActive ? 'active' : 'inactive',
+    triggerType: workflow.triggerType,
+    entityType: workflow.entityType,
   };
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Row gutter={[16, 16]}>
+    <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+      <Row gutter={[24, 24]}>
         {/* Header */}
         <Col span={24}>
           <Card>
@@ -180,16 +313,12 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
               </Col>
               <Col>
                 <Space>
-                  <Button icon={<EditOutlined />}>Düzenle</Button>
-                  {workflow.triggerType === 'Manual' && workflow.isActive && (
-                    <Button type="primary" icon={<PlayCircleOutlined />} onClick={handleExecute}>
-                      Çalıştır
-                    </Button>
-                  )}
+                  <Button icon={<SaveOutlined />} onClick={handleSave} loading={saving} type="primary">
+                    Kaydet
+                  </Button>
                   <Button
-                    type={workflow.isActive ? 'default' : 'primary'}
                     icon={workflow.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-                    onClick={workflow.isActive ? handleDeactivate : handleActivate}
+                    onClick={handleToggleActive}
                   >
                     {workflow.isActive ? 'Deaktif Et' : 'Aktif Et'}
                   </Button>
@@ -199,129 +328,108 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
           </Card>
         </Col>
 
-        {/* Workflow Info */}
-        <Col span={24} lg={12}>
-          <Card title="Workflow Bilgileri">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Entity Tipi">
-                <Tag color="blue">{workflow.entityType}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Trigger Tipi">
-                <Tag color={triggerColor}>{triggerLabel}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag
-                  color={workflow.isActive ? 'success' : 'default'}
-                  icon={workflow.isActive ? <ThunderboltOutlined /> : undefined}
-                >
-                  {workflow.isActive ? 'Aktif' : 'Pasif'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Çalıştırma Sayısı">
-                {workflow.executionCount} kez
-              </Descriptions.Item>
-              <Descriptions.Item label="Son Çalıştırma">
+        {/* Workflow Builder */}
+        <Col span={18}>
+          <Card title="Workflow Builder" style={{ minHeight: 600 }}>
+            <div style={{ maxWidth: 800, margin: '0 auto' }}>
+              {/* Trigger Block */}
+              {triggerConfig && <TriggerBlock trigger={triggerConfig} onEdit={handleEditTrigger} />}
+
+              <Divider style={{ margin: '24px 0' }}>
+                <Text type="secondary">↓</Text>
+              </Divider>
+
+              {/* Action Blocks */}
+              {actions.map((action, index) => (
+                <React.Fragment key={index}>
+                  <ActionBlock
+                    action={action}
+                    index={index}
+                    onEdit={() => handleEditAction(index)}
+                    onDelete={() => handleDeleteAction(index)}
+                    onDuplicate={() => handleDuplicateAction(index)}
+                  />
+
+                  <Divider style={{ margin: '24px 0' }}>
+                    <Text type="secondary">↓</Text>
+                  </Divider>
+                </React.Fragment>
+              ))}
+
+              {/* Add Action Button */}
+              <Button
+                type="dashed"
+                block
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={() => setActionSelectorOpen(true)}
+                style={{ height: 80 }}
+              >
+                Aksiyon Ekle
+              </Button>
+
+              {actions.length === 0 && (
+                <Empty
+                  description="Henüz aksiyon eklenmedi"
+                  style={{ marginTop: 40 }}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              )}
+            </div>
+          </Card>
+        </Col>
+
+        {/* Sidebar: Stats */}
+        <Col span={6}>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Card title="İstatistikler" size="small">
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Statistic title="Toplam Adım" value={actions.length} />
+                <Statistic
+                  title="Aktif Adım"
+                  value={actions.filter((a) => a.isEnabled !== false).length}
+                />
+                <Statistic title="Çalıştırma" value={workflow.executionCount} />
+              </Space>
+            </Card>
+
+            <Card title="Son Çalıştırma" size="small">
+              <Text type="secondary">
                 {workflow.lastExecutedAt
                   ? dayjs(workflow.lastExecutedAt).format('DD.MM.YYYY HH:mm')
                   : 'Hiç çalıştırılmadı'}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Execution Stats */}
-        <Col span={24} lg={12}>
-          <Card title="İstatistikler">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Card size="small">
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary">Toplam Adım</Text>
-                    <Title level={3} style={{ margin: 0 }}>
-                      {workflow.steps?.length || 0}
-                    </Title>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small">
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary">Aktif Adım</Text>
-                    <Title level={3} style={{ margin: 0 }}>
-                      {workflow.steps?.filter((s) => s.isEnabled).length || 0}
-                    </Title>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small">
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary">Çalıştırma</Text>
-                    <Title level={3} style={{ margin: 0 }}>
-                      {workflow.executionCount}
-                    </Title>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small">
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary">Son Çalıştırma</Text>
-                    <Title level={4} style={{ margin: 0 }}>
-                      {workflow.lastExecutedAt ? dayjs(workflow.lastExecutedAt).fromNow() : '-'}
-                    </Title>
-                  </Space>
-                </Card>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-
-        {/* Workflow Steps */}
-        <Col span={24}>
-          <Card title="Workflow Adımları">
-            {workflow.steps && workflow.steps.length > 0 ? (
-              <Timeline
-                mode="left"
-                items={workflow.steps
-                  .sort((a, b) => a.stepOrder - b.stepOrder)
-                  .map((step, index) => ({
-                    color: step.isEnabled ? 'blue' : 'gray',
-                    dot: step.isEnabled ? (
-                      <CheckCircleOutlined style={{ fontSize: 16 }} />
-                    ) : (
-                      <CloseCircleOutlined style={{ fontSize: 16 }} />
-                    ),
-                    label: (
-                      <Space>
-                        <Tag color="blue">Adım {step.stepOrder}</Tag>
-                        {!step.isEnabled && <Tag color="red">Deaktif</Tag>}
-                        {step.delayMinutes > 0 && (
-                          <Tag color="orange">{step.delayMinutes} dk gecikme</Tag>
-                        )}
-                      </Space>
-                    ),
-                    children: (
-                      <Card size="small" style={{ marginBottom: 16 }}>
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          <Space>
-                            <Text strong>{step.name}</Text>
-                            <Tag color="purple">
-                              {actionTypeLabels[step.actionType] || step.actionType}
-                            </Tag>
-                          </Space>
-                          {step.description && <Text type="secondary">{step.description}</Text>}
-                        </Space>
-                      </Card>
-                    ),
-                  }))}
-              />
-            ) : (
-              <Empty description="Henüz adım eklenmemiş" />
-            )}
-          </Card>
+              </Text>
+            </Card>
+          </Space>
         </Col>
       </Row>
+
+      {/* Drawers */}
+      <ActionSelectorDrawer
+        open={actionSelectorOpen}
+        onClose={() => setActionSelectorOpen(false)}
+        onSelect={handleSelectActionType}
+      />
+
+      <ActionConfigDrawer
+        open={actionConfigOpen}
+        actionType={selectedActionType}
+        initialData={editingActionIndex !== null ? actions[editingActionIndex] : undefined}
+        onClose={() => {
+          setActionConfigOpen(false);
+          setSelectedActionType(null);
+          setEditingActionIndex(null);
+        }}
+        onSave={handleSaveAction}
+      />
+
+      <ConfigureTriggerDrawer
+        open={triggerConfigOpen}
+        step1Data={step1Data}
+        onClose={() => setTriggerConfigOpen(false)}
+        onBack={() => setTriggerConfigOpen(false)}
+        onNext={handleSaveTriggerConfig}
+      />
     </div>
   );
 }
