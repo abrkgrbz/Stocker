@@ -44,10 +44,21 @@ public class ReminderJob
     /// </summary>
     public static void RegisterRecurringJob()
     {
-        // Run every minute to check for due reminders
+        // TODO: Implement multi-tenant support for background jobs
+        // Currently disabled because job runs without tenant context
+        // causing "Tenant connection string is not available" error
+
+        // SOLUTION OPTIONS:
+        // 1. Create separate job per tenant: RecurringJob.AddOrUpdate($"reminders-{tenantId}", ...)
+        // 2. Iterate through all tenants in job: foreach(tenant) ProcessDueReminders(tenant.Id)
+        // 3. Use ITenantService.SetCurrentTenant() before CRM operations
+
+        // TEMPORARILY DISABLED until proper multi-tenant job architecture is implemented
+        /*
         RecurringJob.AddOrUpdate<ReminderJob>(
             "process-due-reminders",
             job => job.ProcessDueReminders(),
             Cron.Minutely);
+        */
     }
 }
