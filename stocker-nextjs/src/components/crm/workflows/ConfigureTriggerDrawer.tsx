@@ -25,6 +25,10 @@ import {
 } from '@ant-design/icons';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 import type { Step1FormData } from './CreateWorkflowDrawer';
+import ConditionBuilder, {
+  type ConditionGroup,
+  type FieldDefinition
+} from '@/components/common/ConditionBuilder';
 import dayjs from 'dayjs';
 
 const { Text } = Typography;
@@ -76,43 +80,49 @@ export interface ManualConfig {
   type: 'manual';
 }
 
-export interface ConditionGroup {
-  logicalOperator: 'AND' | 'OR';
-  conditions: Condition[];
-}
-
-export interface Condition {
-  field: string;
-  operator: ComparisonOperator;
-  value: any;
-}
-
-type ComparisonOperator =
-  | 'equals'
-  | 'notEquals'
-  | 'greater'
-  | 'greaterOrEquals'
-  | 'less'
-  | 'lessOrEquals'
-  | 'contains'
-  | 'isEmpty';
-
-// Entity fields for different types
-const entityFields: Record<string, Array<{ value: string; label: string }>> = {
+// Entity fields for different types with proper typing
+const entityFieldDefinitions: Record<string, FieldDefinition[]> = {
   Account: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Revenue', label: 'Gelir' },
+    { value: 'Status', label: 'Durum', type: 'select', options: [
+      { value: 'Active', label: 'Aktif' },
+      { value: 'Inactive', label: 'Pasif' },
+      { value: 'Pending', label: 'Beklemede' },
+    ]},
+    { value: 'Type', label: 'Tip', type: 'select', options: [
+      { value: 'Customer', label: 'Müşteri' },
+      { value: 'Partner', label: 'Partner' },
+      { value: 'Supplier', label: 'Tedarikçi' },
+    ]},
+    { value: 'Revenue', label: 'Gelir', type: 'number' },
+    { value: 'CreatedDate', label: 'Oluşturma Tarihi', type: 'date' },
   ],
   Lead: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Source', label: 'Kaynak' },
-    { value: 'Score', label: 'Puan' },
+    { value: 'Status', label: 'Durum', type: 'select', options: [
+      { value: 'New', label: 'Yeni' },
+      { value: 'Qualified', label: 'Nitelikli' },
+      { value: 'Unqualified', label: 'Niteliksiz' },
+    ]},
+    { value: 'Source', label: 'Kaynak', type: 'select', options: [
+      { value: 'Website', label: 'Web Sitesi' },
+      { value: 'Referral', label: 'Tavsiye' },
+      { value: 'Campaign', label: 'Kampanya' },
+    ]},
+    { value: 'Score', label: 'Puan', type: 'number' },
+    { value: 'Budget', label: 'Bütçe', type: 'number' },
+    { value: 'Email', label: 'E-posta', type: 'text' },
   ],
   Opportunity: [
-    { value: 'Stage', label: 'Aşama' },
-    { value: 'Amount', label: 'Tutar' },
-    { value: 'Probability', label: 'Olasılık' },
+    { value: 'Stage', label: 'Aşama', type: 'select', options: [
+      { value: 'Prospecting', label: 'Arama' },
+      { value: 'Qualification', label: 'Nitelendirme' },
+      { value: 'Proposal', label: 'Teklif' },
+      { value: 'Negotiation', label: 'Müzakere' },
+      { value: 'Closed Won', label: 'Kazanıldı' },
+      { value: 'Closed Lost', label: 'Kaybedildi' },
+    ]},
+    { value: 'Amount', label: 'Tutar', type: 'number' },
+    { value: 'Probability', label: 'Olasılık', type: 'number' },
+    { value: 'CloseDate', label: 'Kapanış Tarihi', type: 'date' },
   ],
   // Add more as needed
 };
@@ -127,6 +137,11 @@ export default function ConfigureTriggerDrawer({
   const [form] = Form.useForm();
   const [scheduleType, setScheduleType] = useState<'once' | 'recurring' | 'cron'>('recurring');
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [conditionGroup, setConditionGroup] = useState<ConditionGroup>({
+    logicalOperator: 'AND',
+    conditions: [],
+    groups: [],
+  });
 
   const handleFinish = (values: any) => {
     const triggerConfig: TriggerConfiguration = {
@@ -173,11 +188,9 @@ export default function ConfigureTriggerDrawer({
       type: 'event',
     };
 
-    if (values.conditions && values.conditions.length > 0) {
-      eventConfig.conditions = {
-        logicalOperator: values.logicalOperator || 'AND',
-        conditions: values.conditions,
-      };
+    // Use conditionGroup state instead of form values
+    if (conditionGroup.conditions.length > 0 || (conditionGroup.groups && conditionGroup.groups.length > 0)) {
+      eventConfig.conditions = conditionGroup;
     }
 
     return eventConfig;
@@ -334,83 +347,30 @@ export default function ConfigureTriggerDrawer({
     </Card>
   );
 
-  const renderEventConfig = () => (
-    <Card size="small" title="Koşullar (Opsiyonel)">
-      <Alert
-        type="info"
-        message="Koşul Ekleme"
-        description="İsterseniz workflow'un sadece belirli koşullara uyan kayıtlar için çalışmasını sağlayabilirsiniz. Örneğin: 'Amount > 1000' veya 'Status = Qualified'"
-        style={{ marginBottom: 16 }}
-      />
+  const renderEventConfig = () => {
+    // Get field definitions for the selected entity type
+    const fields = step1Data.entityType
+      ? (entityFieldDefinitions[step1Data.entityType] || [])
+      : [];
 
-      <Form.List name="conditions">
-        {(fields, { add, remove }) => (
-          <>
-            {fields.map((field, index) => (
-              <Card key={field.key} size="small" style={{ marginBottom: 8 }}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Form.Item
-                    {...field}
-                    name={[field.name, 'field']}
-                    label="Alan"
-                    rules={[{ required: true }]}
-                  >
-                    <Select placeholder="Alan seçin">
-                      {step1Data.entityType &&
-                        entityFields[step1Data.entityType]?.map((f) => (
-                          <Option key={f.value} value={f.value}>
-                            {f.label}
-                          </Option>
-                        ))}
-                    </Select>
-                  </Form.Item>
+    return (
+      <Card size="small" title="Koşullar (Opsiyonel)">
+        <Alert
+          type="info"
+          message="Gelişmiş Koşul Oluşturucu"
+          description="Karmaşık koşullar oluşturabilir, gruplar ekleyebilir ve AND/OR mantığı kullanabilirsiniz. Örneğin: 'Amount > 1000 AND (Status = Qualified OR Source IN [Website, Referral])'"
+          style={{ marginBottom: 16 }}
+        />
 
-                  <Form.Item
-                    {...field}
-                    name={[field.name, 'operator']}
-                    label="Operatör"
-                    rules={[{ required: true }]}
-                  >
-                    <Select placeholder="Operatör seçin">
-                      <Option value="equals">Eşittir (=)</Option>
-                      <Option value="notEquals">Eşit Değil (≠)</Option>
-                      <Option value="greater">Büyüktür (&gt;)</Option>
-                      <Option value="greaterOrEquals">Büyük veya Eşit (≥)</Option>
-                      <Option value="less">Küçüktür (&lt;)</Option>
-                      <Option value="lessOrEquals">Küçük veya Eşit (≤)</Option>
-                      <Option value="contains">İçerir</Option>
-                      <Option value="isEmpty">Boş</Option>
-                    </Select>
-                  </Form.Item>
-
-                  <Form.Item {...field} name={[field.name, 'value']} label="Değer">
-                    <Input placeholder="Karşılaştırma değeri" />
-                  </Form.Item>
-
-                  <Button type="dashed" danger onClick={() => remove(field.name)} block>
-                    Koşulu Kaldır
-                  </Button>
-                </Space>
-              </Card>
-            ))}
-
-            <Button type="dashed" onClick={() => add()} block>
-              + Koşul Ekle
-            </Button>
-
-            {fields.length > 1 && (
-              <Form.Item name="logicalOperator" label="Koşullar Arası İlişki" initialValue="AND">
-                <Radio.Group>
-                  <Radio value="AND">VE (AND) - Tüm koşullar sağlanmalı</Radio>
-                  <Radio value="OR">VEYA (OR) - En az bir koşul sağlanmalı</Radio>
-                </Radio.Group>
-              </Form.Item>
-            )}
-          </>
-        )}
-      </Form.List>
-    </Card>
-  );
+        <ConditionBuilder
+          value={conditionGroup}
+          onChange={setConditionGroup}
+          fields={fields}
+          maxDepth={3}
+        />
+      </Card>
+    );
+  };
 
   const renderManualConfig = () => (
     <Alert

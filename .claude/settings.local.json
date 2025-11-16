@@ -41,7 +41,8 @@
       "Bash(del next.config.ts)",
       "Bash(node:*)",
       "Bash(git rm:*)",
-      "Bash(cmd /c \"dir C:\\Temp\\ | findstr key\")"
+      "Bash(cmd /c \"dir C:\\Temp\\ | findstr key\")",
+      "Bash(Select-Object -First 50)"
     ],
     "deny": [],
     "ask": []
