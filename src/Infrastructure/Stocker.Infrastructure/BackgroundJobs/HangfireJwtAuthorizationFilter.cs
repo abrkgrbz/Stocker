@@ -27,6 +27,7 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
     {
         var httpContext = context.GetHttpContext();
         var path = httpContext.Request.Path.ToString().ToLower();
+        var host = httpContext.Request.Host.Host.ToLower();
 
         // Allow static resources without authentication
         // Hangfire serves CSS and JS with specific numeric patterns in the URL
@@ -185,7 +186,14 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
             return false;
         }
 
-        // Check for required role - only SistemYoneticisi
+        // In non-production environments, allow all authenticated users
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+        if (environment != "Production")
+        {
+            return true; // Allow all authenticated users in dev/staging
+        }
+
+        // Production: Check for required role
         var hasRequiredRole = user.IsInRole("SistemYoneticisi");
 
         // Also check for role claims in JWT
@@ -193,6 +201,17 @@ public class HangfireJwtAuthorizationFilter : IDashboardAuthorizationFilter
         {
             var roleClaims = user.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role");
             hasRequiredRole = roleClaims.Any(c => c.Value == "SistemYoneticisi");
+        }
+
+        // FALLBACK: If user has any admin-related role claim, allow access
+        // This handles cases where tenant admins need access to Hangfire
+        if (!hasRequiredRole)
+        {
+            var adminRoleClaims = user.Claims.Where(c =>
+                (c.Type == ClaimTypes.Role || c.Type == "role") &&
+                (c.Value.Contains("Admin", StringComparison.OrdinalIgnoreCase) ||
+                 c.Value.Contains("Yonetici", StringComparison.OrdinalIgnoreCase)));
+            hasRequiredRole = adminRoleClaims.Any();
         }
 
         return hasRequiredRole;
