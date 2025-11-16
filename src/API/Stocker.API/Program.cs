@@ -1,3 +1,4 @@
+using Hangfire;
 using MassTransit;
 using Serilog;
 using Stocker.API.Configuration;
