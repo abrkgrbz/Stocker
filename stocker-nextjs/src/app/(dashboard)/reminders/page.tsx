@@ -63,15 +63,15 @@ const getReminderTypeColor = (type: ReminderType): string => {
 
 const getReminderTypeLabel = (type: ReminderType): string => {
   const labels: Record<number, string> = {
-    0: 'General',
-    1: 'Task',
-    2: 'Meeting',
-    3: 'Follow Up',
-    4: 'Birthday',
-    5: 'Contract Renewal',
-    6: 'Payment Due',
+    0: 'Genel',
+    1: 'Görev',
+    2: 'Toplantı',
+    3: 'Takip',
+    4: 'Doğum Günü',
+    5: 'Sözleşme Yenileme',
+    6: 'Ödeme Vadesi',
   };
-  return labels[type] || 'Unknown';
+  return labels[type] || 'Bilinmiyor';
 };
 
 const getReminderStatusColor = (status: ReminderStatus): string => {
@@ -87,22 +87,22 @@ const getReminderStatusColor = (status: ReminderStatus): string => {
 
 const getReminderStatusLabel = (status: ReminderStatus): string => {
   const labels: Record<number, string> = {
-    0: 'Pending',
-    1: 'Snoozed',
-    2: 'Triggered',
-    3: 'Completed',
-    4: 'Dismissed',
+    0: 'Beklemede',
+    1: 'Ertelendi',
+    2: 'Tetiklendi',
+    3: 'Tamamlandı',
+    4: 'Kapatıldı',
   };
-  return labels[status] || 'Unknown';
+  return labels[status] || 'Bilinmiyor';
 };
 
 const getRecurrenceLabel = (recurrenceType: RecurrenceType): string | null => {
   const labels: Record<number, string> = {
     0: null,
-    1: 'Daily',
-    2: 'Weekly',
-    3: 'Monthly',
-    4: 'Yearly',
+    1: 'Günlük',
+    2: 'Haftalık',
+    3: 'Aylık',
+    4: 'Yıllık',
   };
   return labels[recurrenceType] || null;
 };
@@ -133,7 +133,7 @@ export default function RemindersPage() {
 
       setReminders(filteredReminders);
     } catch (error) {
-      message.error('Failed to load reminders');
+      message.error('Hatırlatıcılar yüklenemedi');
       console.error(error);
     } finally {
       setLoading(false);
@@ -156,43 +156,45 @@ export default function RemindersPage() {
     try {
       if (drawerMode === 'create') {
         await remindersApi.createReminder(data as CreateReminderRequest);
-        message.success('Reminder created successfully');
+        message.success('Hatırlatıcı başarıyla oluşturuldu');
       } else if (selectedReminder) {
         await remindersApi.updateReminder(selectedReminder.id, data as UpdateReminderRequest);
-        message.success('Reminder updated successfully');
+        message.success('Hatırlatıcı başarıyla güncellendi');
       }
       await loadReminders();
     } catch (error) {
-      message.error(`Failed to ${drawerMode} reminder`);
+      message.error(`Hatırlatıcı ${drawerMode === 'create' ? 'oluşturulamadı' : 'güncellenemedi'}`);
       throw error;
     }
   };
 
   const handleSnooze = (reminder: Reminder) => {
     Modal.confirm({
-      title: 'Snooze Reminder',
+      title: 'Hatırlatıcıyı Ertele',
       content: (
         <div>
-          <p>Snooze for how many minutes?</p>
+          <p>Kaç dakika ertelemek istersiniz?</p>
           <InputNumber
             id="snooze-minutes"
             min={5}
             max={1440}
             defaultValue={30}
-            addonAfter="minutes"
+            addonAfter="dakika"
             style={{ width: '100%' }}
           />
         </div>
       ),
+      okText: 'Ertele',
+      cancelText: 'İptal',
       onOk: async () => {
         const input = document.getElementById('snooze-minutes') as HTMLInputElement;
         const minutes = parseInt(input?.value || '30');
         try {
           await remindersApi.snoozeReminder(reminder.id, minutes);
-          message.success(`Reminder snoozed for ${minutes} minutes`);
+          message.success(`Hatırlatıcı ${minutes} dakika ertelendi`);
           await loadReminders();
         } catch (error) {
-          message.error('Failed to snooze reminder');
+          message.error('Hatırlatıcı ertelenemedi');
         }
       },
     });
@@ -201,26 +203,27 @@ export default function RemindersPage() {
   const handleComplete = async (reminder: Reminder) => {
     try {
       await remindersApi.completeReminder(reminder.id);
-      message.success('Reminder completed');
+      message.success('Hatırlatıcı tamamlandı');
       await loadReminders();
     } catch (error) {
-      message.error('Failed to complete reminder');
+      message.error('Hatırlatıcı tamamlanamadı');
     }
   };
 
   const handleDelete = (reminder: Reminder) => {
     Modal.confirm({
-      title: 'Delete Reminder',
-      content: 'Are you sure you want to delete this reminder?',
-      okText: 'Delete',
+      title: 'Hatırlatıcıyı Sil',
+      content: 'Bu hatırlatıcıyı silmek istediğinizden emin misiniz?',
+      okText: 'Sil',
       okType: 'danger',
+      cancelText: 'İptal',
       onOk: async () => {
         try {
           await remindersApi.deleteReminder(reminder.id);
-          message.success('Reminder deleted');
+          message.success('Hatırlatıcı silindi');
           await loadReminders();
         } catch (error) {
-          message.error('Failed to delete reminder');
+          message.error('Hatırlatıcı silinemedi');
         }
       },
     });
@@ -240,24 +243,24 @@ export default function RemindersPage() {
               items: [
                 {
                   key: 'edit',
-                  label: 'Edit',
+                  label: 'Düzenle',
                   onClick: () => handleEdit(reminder),
                 },
                 {
                   key: 'snooze',
-                  label: 'Snooze',
+                  label: 'Ertele',
                   onClick: () => handleSnooze(reminder),
                   disabled: reminder.status === 3 || reminder.status === 4, // Completed or Dismissed
                 },
                 {
                   key: 'complete',
-                  label: 'Complete',
+                  label: 'Tamamla',
                   onClick: () => handleComplete(reminder),
                   disabled: reminder.status === 3, // Already completed
                 },
                 {
                   key: 'delete',
-                  label: 'Delete',
+                  label: 'Sil',
                   danger: true,
                   onClick: () => handleDelete(reminder),
                 },
@@ -305,21 +308,21 @@ export default function RemindersPage() {
                 <Space>
                   <ClockCircleOutlined />
                   <Text type="warning">
-                    Snoozed until {dayjs(reminder.snoozedUntil).format('HH:mm')}
+                    {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
                   </Text>
                 </Space>
               )}
               {reminder.dueDate && (
                 <Space>
                   <SnippetsOutlined />
-                  <Text type="secondary">Due: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
+                  <Text type="secondary">Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
                 </Space>
               )}
               {(reminder.meetingStartTime || reminder.meetingEndTime) && (
                 <Space>
                   <SnippetsOutlined />
                   <Text type="secondary">
-                    Meeting: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
+                    Toplantı: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
                     {dayjs(reminder.meetingEndTime).format('HH:mm')}
                   </Text>
                 </Space>
@@ -327,17 +330,17 @@ export default function RemindersPage() {
               <Space size="small">
                 {reminder.sendEmail && (
                   <Tag icon={<MailOutlined />} color="blue">
-                    Email
+                    E-posta
                   </Tag>
                 )}
                 {reminder.sendPush && (
                   <Tag icon={<MobileOutlined />} color="green">
-                    Push
+                    Bildirim
                   </Tag>
                 )}
                 {reminder.sendInApp && (
                   <Tag icon={<BellOutlined />} color="purple">
-                    In-App
+                    Uygulama
                   </Tag>
                 )}
               </Space>
@@ -356,14 +359,14 @@ export default function RemindersPage() {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
           <Title level={2}>
-            <BellOutlined /> Reminders
+            <BellOutlined /> Hatırlatıcılar
           </Title>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={loadReminders} loading={loading}>
-              Refresh
+              Yenile
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              New Reminder
+              Yeni Hatırlatıcı
             </Button>
           </Space>
         </div>
@@ -375,7 +378,7 @@ export default function RemindersPage() {
           <Tabs.TabPane
             tab={
               <span>
-                All <Badge count={reminders.length} showZero style={{ marginLeft: 8 }} />
+                Tümü <Badge count={reminders.length} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="all"
@@ -388,10 +391,10 @@ export default function RemindersPage() {
                 emptyText: (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No reminders yet"
+                    description="Henüz hatırlatıcı yok"
                   >
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                      Create First Reminder
+                      İlk Hatırlatıcıyı Oluştur
                     </Button>
                   </Empty>
                 ),
@@ -402,7 +405,7 @@ export default function RemindersPage() {
           <Tabs.TabPane
             tab={
               <span>
-                Pending <Badge count={pendingCount} showZero style={{ marginLeft: 8 }} />
+                Bekleyenler <Badge count={pendingCount} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="pending"
@@ -415,7 +418,7 @@ export default function RemindersPage() {
                 emptyText: (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No pending reminders"
+                    description="Bekleyen hatırlatıcı yok"
                   />
                 ),
               }}
@@ -425,7 +428,7 @@ export default function RemindersPage() {
           <Tabs.TabPane
             tab={
               <span>
-                Completed <Badge count={completedCount} showZero style={{ marginLeft: 8 }} />
+                Tamamlananlar <Badge count={completedCount} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="completed"
@@ -438,7 +441,7 @@ export default function RemindersPage() {
                 emptyText: (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No completed reminders"
+                    description="Tamamlanan hatırlatıcı yok"
                   />
                 ),
               }}

@@ -40,13 +40,13 @@ interface ReminderDrawerProps {
 }
 
 const weekDayOptions = [
-  { label: 'Sunday', value: 0 },
-  { label: 'Monday', value: 1 },
-  { label: 'Tuesday', value: 2 },
-  { label: 'Wednesday', value: 3 },
-  { label: 'Thursday', value: 4 },
-  { label: 'Friday', value: 5 },
-  { label: 'Saturday', value: 6 },
+  { label: 'Pazar', value: 0 },
+  { label: 'Pazartesi', value: 1 },
+  { label: 'Salı', value: 2 },
+  { label: 'Çarşamba', value: 3 },
+  { label: 'Perşembe', value: 4 },
+  { label: 'Cuma', value: 5 },
+  { label: 'Cumartesi', value: 6 },
 ];
 
 export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
@@ -156,9 +156,9 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
     return (
       <>
         <Form.Item
-          label="Repeat Interval"
+          label="Tekrar Aralığı"
           name="recurrenceInterval"
-          rules={[{ required: true, message: 'Please enter interval' }]}
+          rules={[{ required: true, message: 'Lütfen aralık giriniz' }]}
           initialValue={1}
         >
           <InputNumber
@@ -166,12 +166,12 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
             max={100}
             addonAfter={
               recurrenceType === RecurrenceType.Daily
-                ? 'day(s)'
+                ? 'gün'
                 : recurrenceType === RecurrenceType.Weekly
-                ? 'week(s)'
+                ? 'hafta'
                 : recurrenceType === RecurrenceType.Monthly
-                ? 'month(s)'
-                : 'year(s)'
+                ? 'ay'
+                : 'yıl'
             }
             style={{ width: '100%' }}
           />
@@ -179,9 +179,9 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
 
         {recurrenceType === RecurrenceType.Weekly && (
           <Form.Item
-            label="Repeat On"
+            label="Tekrar Günleri"
             name="weekDays"
-            rules={[{ required: true, message: 'Please select at least one day' }]}
+            rules={[{ required: true, message: 'Lütfen en az bir gün seçiniz' }]}
           >
             <Checkbox.Group options={weekDayOptions} />
           </Form.Item>
@@ -189,17 +189,17 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
 
         {recurrenceType === RecurrenceType.Monthly && (
           <Form.Item
-            label="Day of Month"
+            label="Ayın Günü"
             name="dayOfMonth"
-            rules={[{ required: true, message: 'Please select day' }]}
+            rules={[{ required: true, message: 'Lütfen gün seçiniz' }]}
             initialValue={1}
           >
             <InputNumber min={1} max={31} style={{ width: '100%' }} />
           </Form.Item>
         )}
 
-        <Form.Item label="End Date" name="recurrenceEndDate">
-          <DatePicker style={{ width: '100%' }} showTime />
+        <Form.Item label="Bitiş Tarihi" name="recurrenceEndDate">
+          <DatePicker style={{ width: '100%' }} showTime placeholder="Bitiş tarihi seçiniz" />
         </Form.Item>
       </>
     );
@@ -208,8 +208,8 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
   const renderTypeSpecificFields = () => {
     if (reminderType === ReminderType.Task) {
       return (
-        <Form.Item label="Due Date" name="dueDate">
-          <DatePicker style={{ width: '100%' }} showTime />
+        <Form.Item label="Teslim Tarihi" name="dueDate">
+          <DatePicker style={{ width: '100%' }} showTime placeholder="Teslim tarihi seçiniz" />
         </Form.Item>
       );
     }
@@ -220,20 +220,20 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="Meeting Start"
+                label="Toplantı Başlangıç"
                 name="meetingStartTime"
-                rules={[{ required: true, message: 'Please select start time' }]}
+                rules={[{ required: true, message: 'Lütfen başlangıç saati seçiniz' }]}
               >
-                <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" />
+                <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" placeholder="Başlangıç" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="Meeting End"
+                label="Toplantı Bitiş"
                 name="meetingEndTime"
-                rules={[{ required: true, message: 'Please select end time' }]}
+                rules={[{ required: true, message: 'Lütfen bitiş saati seçiniz' }]}
               >
-                <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" />
+                <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" placeholder="Bitiş" />
               </Form.Item>
             </Col>
           </Row>
@@ -246,90 +246,90 @@ export const ReminderDrawer: React.FC<ReminderDrawerProps> = ({
 
   return (
     <Drawer
-      title={mode === 'create' ? 'Create Reminder' : 'Edit Reminder'}
+      title={mode === 'create' ? 'Hatırlatıcı Oluştur' : 'Hatırlatıcı Düzenle'}
       placement="right"
       width={600}
       onClose={onClose}
       open={open}
       extra={
         <Space>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>İptal</Button>
           <Button type="primary" onClick={handleSubmit} loading={loading}>
-            {mode === 'create' ? 'Create' : 'Update'}
+            {mode === 'create' ? 'Oluştur' : 'Güncelle'}
           </Button>
         </Space>
       }
     >
       <Form form={form} layout="vertical">
         <Form.Item
-          label="Title"
+          label="Başlık"
           name="title"
-          rules={[{ required: true, message: 'Please enter title' }]}
+          rules={[{ required: true, message: 'Lütfen başlık giriniz' }]}
         >
-          <Input placeholder="Enter reminder title" />
+          <Input placeholder="Hatırlatıcı başlığı giriniz" />
         </Form.Item>
 
-        <Form.Item label="Description" name="description">
-          <TextArea rows={3} placeholder="Enter description (optional)" />
+        <Form.Item label="Açıklama" name="description">
+          <TextArea rows={3} placeholder="Açıklama giriniz (isteğe bağlı)" />
         </Form.Item>
 
         <Form.Item
-          label="Type"
+          label="Tür"
           name="type"
-          rules={[{ required: true, message: 'Please select type' }]}
+          rules={[{ required: true, message: 'Lütfen tür seçiniz' }]}
           initialValue={ReminderType.General}
         >
-          <Select onChange={(value) => setReminderType(value)}>
-            <Option value={ReminderType.General}>General</Option>
-            <Option value={ReminderType.Task}>Task</Option>
-            <Option value={ReminderType.Meeting}>Meeting</Option>
-            <Option value={ReminderType.FollowUp}>Follow Up</Option>
-            <Option value={ReminderType.Birthday}>Birthday</Option>
-            <Option value={ReminderType.ContractRenewal}>Contract Renewal</Option>
-            <Option value={ReminderType.PaymentDue}>Payment Due</Option>
+          <Select onChange={(value) => setReminderType(value)} placeholder="Tür seçiniz">
+            <Option value={ReminderType.General}>Genel</Option>
+            <Option value={ReminderType.Task}>Görev</Option>
+            <Option value={ReminderType.Meeting}>Toplantı</Option>
+            <Option value={ReminderType.FollowUp}>Takip</Option>
+            <Option value={ReminderType.Birthday}>Doğum Günü</Option>
+            <Option value={ReminderType.ContractRenewal}>Sözleşme Yenileme</Option>
+            <Option value={ReminderType.PaymentDue}>Ödeme Vadesi</Option>
           </Select>
         </Form.Item>
 
         <Form.Item
-          label="Remind At"
+          label="Hatırlatma Zamanı"
           name="remindAt"
-          rules={[{ required: true, message: 'Please select remind time' }]}
+          rules={[{ required: true, message: 'Lütfen hatırlatma zamanı seçiniz' }]}
         >
-          <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" />
+          <DatePicker style={{ width: '100%' }} showTime format="YYYY-MM-DD HH:mm" placeholder="Tarih ve saat seçiniz" />
         </Form.Item>
 
         {renderTypeSpecificFields()}
 
-        <Divider>Recurrence Settings</Divider>
+        <Divider>Tekrarlama Ayarları</Divider>
 
         <Form.Item
-          label="Recurrence"
+          label="Tekrarlama"
           name="recurrenceType"
           initialValue={RecurrenceType.None}
         >
-          <Select onChange={(value) => setRecurrenceType(value)}>
-            <Option value={RecurrenceType.None}>None (One-time)</Option>
-            <Option value={RecurrenceType.Daily}>Daily</Option>
-            <Option value={RecurrenceType.Weekly}>Weekly</Option>
-            <Option value={RecurrenceType.Monthly}>Monthly</Option>
-            <Option value={RecurrenceType.Yearly}>Yearly</Option>
+          <Select onChange={(value) => setRecurrenceType(value)} placeholder="Tekrarlama seçiniz">
+            <Option value={RecurrenceType.None}>Yok (Tek seferlik)</Option>
+            <Option value={RecurrenceType.Daily}>Günlük</Option>
+            <Option value={RecurrenceType.Weekly}>Haftalık</Option>
+            <Option value={RecurrenceType.Monthly}>Aylık</Option>
+            <Option value={RecurrenceType.Yearly}>Yıllık</Option>
           </Select>
         </Form.Item>
 
         {renderRecurrenceFields()}
 
-        <Divider>Notification Settings</Divider>
+        <Divider>Bildirim Ayarları</Divider>
 
         <Form.Item name="sendEmail" valuePropName="checked">
-          <Checkbox>Send Email</Checkbox>
+          <Checkbox>E-posta Gönder</Checkbox>
         </Form.Item>
 
         <Form.Item name="sendPush" valuePropName="checked" initialValue={true}>
-          <Checkbox>Send Push Notification</Checkbox>
+          <Checkbox>Mobil Bildirim Gönder</Checkbox>
         </Form.Item>
 
         <Form.Item name="sendInApp" valuePropName="checked" initialValue={true}>
-          <Checkbox>Send In-App Notification</Checkbox>
+          <Checkbox>Uygulama İçi Bildirim Gönder</Checkbox>
         </Form.Item>
       </Form>
     </Drawer>
