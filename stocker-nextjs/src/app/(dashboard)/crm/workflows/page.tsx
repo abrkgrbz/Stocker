@@ -13,11 +13,6 @@ import {
   Empty,
   Tooltip,
   Modal,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Switch,
 } from 'antd';
 import {
   ThunderboltOutlined,
@@ -28,7 +23,6 @@ import {
   PauseCircleOutlined,
   ReloadOutlined,
   EyeOutlined,
-  SaveOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
@@ -36,15 +30,14 @@ import { CRMService } from '@/lib/api/services/crm.service';
 import type {
   WorkflowDto,
   WorkflowTriggerType,
-  WorkflowActionType,
   CreateWorkflowCommand,
-  WorkflowAction,
 } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { useRouter } from 'next/navigation';
-import WorkflowActionBuilder from '@/components/crm/workflows/WorkflowActionBuilder';
+import CreateWorkflowDrawer, { type Step1FormData } from '@/components/crm/workflows/CreateWorkflowDrawer';
+import ConfigureTriggerDrawer, { type TriggerConfiguration } from '@/components/crm/workflows/ConfigureTriggerDrawer';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -167,11 +160,12 @@ export default function WorkflowsPage() {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<WorkflowDto[]>([]);
   const [loading, setLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [form] = Form.useForm();
-  const [actions, setActions] = useState<WorkflowAction[]>([]);
-  const [selectedEntityType, setSelectedEntityType] = useState<string>('');
-  const [selectedTriggerType, setSelectedTriggerType] = useState<string>('Manual');
+
+  // Wizard state
+  const [step1DrawerOpen, setStep1DrawerOpen] = useState(false);
+  const [step2DrawerOpen, setStep2DrawerOpen] = useState(false);
+  const [step1Data, setStep1Data] = useState<Step1FormData | null>(null);
+  const [triggerConfig, setTriggerConfig] = useState<TriggerConfiguration | null>(null);
 
   // Load all workflows
   const loadWorkflows = async () => {
@@ -238,106 +232,63 @@ export default function WorkflowsPage() {
     router.push(`/crm/workflows/${id}`);
   };
 
-  // Handle open drawer
-  const handleOpenDrawer = () => {
-    form.resetFields();
-    setActions([]);
-    setDrawerOpen(true);
+  // Wizard navigation handlers
+  const handleOpenStep1 = () => {
+    setStep1DrawerOpen(true);
   };
 
-  // Handle close drawer
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    form.resetFields();
-    setActions([]);
-    setSelectedEntityType('');
-    setSelectedTriggerType('Manual');
+  const handleStep1Next = (data: Step1FormData) => {
+    setStep1Data(data);
+    setStep1DrawerOpen(false);
+    setStep2DrawerOpen(true);
   };
 
-  // Handle trigger type change
-  const handleTriggerTypeChange = (value: string) => {
-    setSelectedTriggerType(value);
-    // Reset entity fields when trigger type changes
-    if (value === 'Manual') {
-      form.setFieldsValue({ entityType: undefined, field: undefined, value: undefined });
-      setSelectedEntityType('');
-    }
+  const handleStep2Back = () => {
+    setStep2DrawerOpen(false);
+    setStep1DrawerOpen(true);
   };
 
-  // Handle entity type change
-  const handleEntityTypeChange = (value: string) => {
-    setSelectedEntityType(value);
-    // Reset field when entity type changes
-    form.setFieldsValue({ field: undefined, value: undefined });
+  const handleStep2Next = (config: TriggerConfiguration) => {
+    setTriggerConfig(config);
+    setStep2DrawerOpen(false);
+
+    // Navigate to builder page (Adım 3)
+    // For now, we'll create a draft workflow and redirect to builder
+    handleCreateDraftWorkflow(config);
   };
 
-  // Handle add action
-  const handleAddAction = () => {
-    setActions([
-      ...actions,
-      {
-        type: 'SendEmail',
-        parameters: { to: '', subject: '', body: '' },
-      },
-    ]);
+  const handleCloseAllDrawers = () => {
+    setStep1DrawerOpen(false);
+    setStep2DrawerOpen(false);
+    setStep1Data(null);
+    setTriggerConfig(null);
   };
 
-  // Handle remove action
-  const handleRemoveAction = (index: number) => {
-    setActions(actions.filter((_, i) => i !== index));
-  };
-
-  // Handle action change
-  const handleActionChange = (index: number, action: WorkflowAction) => {
-    const newActions = [...actions];
-    newActions[index] = action;
-    setActions(newActions);
-  };
-
-  // Handle submit workflow
-  const handleSubmit = async (values: any) => {
-    // Validate at least one action
-    if (actions.length === 0) {
-      showError('En az bir aksiyon eklemelisiniz');
-      return;
-    }
+  // Create draft workflow and redirect to builder
+  const handleCreateDraftWorkflow = async (config: TriggerConfiguration) => {
+    if (!step1Data) return;
 
     setLoading(true);
     try {
-      // Build trigger conditions JSON
-      const triggerConditions: any = {};
-      if (values.field) {
-        triggerConditions.field = values.field;
-      }
-      if (values.value) {
-        triggerConditions.value = values.value;
-      }
+      // Build trigger conditions JSON with new structure
+      const triggerConditions = JSON.stringify(config.config);
 
-      // Convert actions to Steps format
-      const steps = actions.map((action, index) => ({
-        name: `${action.type} Step`,
-        description: `Perform ${action.type} action`,
-        actionType: action.type,
-        stepOrder: index + 1,
-        actionConfiguration: JSON.stringify(action.parameters),
-        conditions: '{}',
-        delayMinutes: 0,
-        continueOnError: false,
-      }));
-
-      const command = {
-        name: values.name,
-        description: values.description || 'Workflow created from UI',
-        triggerType: values.triggerType,
-        entityType: values.entityType || 'Lead',
-        triggerConditions: JSON.stringify(triggerConditions),
-        steps: steps,
+      // Create workflow without actions (will be added in builder)
+      const command: CreateWorkflowCommand = {
+        name: step1Data.name,
+        description: step1Data.description,
+        triggerType: step1Data.triggerType,
+        entityType: step1Data.entityType || 'Lead',
+        triggerConditions: triggerConditions,
+        steps: [], // Empty for now, will be added in builder
       };
 
       const workflowId = await CRMService.createWorkflow(command);
-      showSuccess('Workflow başarıyla oluşturuldu');
-      handleCloseDrawer();
+      showSuccess('Workflow taslak olarak oluşturuldu. Şimdi aksiyonları ekleyebilirsiniz.');
+      handleCloseAllDrawers();
       loadWorkflows();
+
+      // Navigate to workflow detail page where user can add actions
       router.push(`/crm/workflows/${workflowId}`);
     } catch (error) {
       showApiError(error, 'Workflow oluşturulamadı');
@@ -469,7 +420,7 @@ export default function WorkflowsPage() {
                   <Button icon={<ReloadOutlined />} onClick={loadWorkflows}>
                     Yenile
                   </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenDrawer}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenStep1}>
                     Yeni Workflow
                   </Button>
                 </Space>
@@ -492,7 +443,7 @@ export default function WorkflowsPage() {
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Henüz workflow bulunmuyor"
                   >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenDrawer}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenStep1}>
                       İlk Workflow'u Oluştur
                     </Button>
                   </Empty>
@@ -503,201 +454,22 @@ export default function WorkflowsPage() {
         </Col>
       </Row>
 
-      {/* Workflow Creation Drawer */}
-      <Drawer
-        title={
-          <Space>
-            <ThunderboltOutlined />
-            <span>Yeni Workflow Oluştur</span>
-          </Space>
-        }
-        width={720}
-        open={drawerOpen}
-        onClose={handleCloseDrawer}
-        styles={{
-          body: { paddingBottom: 80 },
-        }}
-        footer={
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: '16px',
-              background: '#fff',
-              borderTop: '1px solid #f0f0f0',
-              textAlign: 'right',
-            }}
-          >
-            <Space>
-              <Button onClick={handleCloseDrawer}>İptal</Button>
-              <Button type="primary" onClick={() => form.submit()} loading={loading} icon={<SaveOutlined />}>
-                Workflow Oluştur
-              </Button>
-            </Space>
-          </div>
-        }
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            triggerType: 'Manual',
-            isActive: false,
-          }}
-        >
-          {/* Basic Info */}
-          <Card size="small" title="Temel Bilgiler" style={{ marginBottom: 16 }}>
-            <Form.Item
-              name="name"
-              label="Workflow Adı"
-              rules={[{ required: true, message: 'Workflow adı zorunludur' }]}
-            >
-              <Input placeholder="Örn: Müşteri hoş geldin e-postası" />
-            </Form.Item>
+      {/* Wizard Drawers */}
+      <CreateWorkflowDrawer
+        open={step1DrawerOpen}
+        onClose={handleCloseAllDrawers}
+        onNext={handleStep1Next}
+      />
 
-            <Form.Item
-              name="description"
-              label="Açıklama"
-              rules={[{ required: true, message: 'Açıklama zorunludur' }]}
-            >
-              <TextArea rows={3} placeholder="Workflow'un ne yaptığını açıklayın" />
-            </Form.Item>
-
-            <Form.Item name="isActive" label="Durum" valuePropName="checked">
-              <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-            </Form.Item>
-          </Card>
-
-          {/* Trigger Configuration */}
-          <Card size="small" title="Tetikleyici (Trigger)" style={{ marginBottom: 16 }}>
-            <Form.Item
-              name="triggerType"
-              label="Tetikleyici Tipi"
-              rules={[{ required: true, message: 'Tetikleyici tipi zorunludur' }]}
-            >
-              <Select placeholder="Trigger tipini seçin" onChange={handleTriggerTypeChange}>
-                <Option value="Manual">🖱️ Manuel (Elle Başlatılır)</Option>
-                <Option value="Scheduled">⏰ Zamanlanmış</Option>
-                <Option value="EntityCreated">➕ Kayıt Oluşturulduğunda</Option>
-                <Option value="EntityUpdated">✏️ Kayıt Güncellendiğinde</Option>
-                <Option value="FieldChanged">🔄 Alan Değiştiğinde</Option>
-              </Select>
-            </Form.Item>
-
-            {selectedTriggerType !== 'Manual' && (
-              <>
-                <Form.Item
-                  name="entityType"
-                  label="Entity Tipi"
-                  rules={[{ required: true, message: 'Entity tipi zorunludur' }]}
-                >
-                  <Select
-                    placeholder="Entity tipi seçin"
-                    onChange={handleEntityTypeChange}
-                    allowClear
-                    showSearch
-                    optionFilterProp="children"
-                  >
-                    {entityTypes.map((type) => (
-                      <Option key={type.value} value={type.value}>
-                        {type.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-
-                {selectedTriggerType === 'FieldChanged' && (
-                  <>
-                    <Form.Item
-                      name="field"
-                      label="Değişecek Alan"
-                      rules={[{ required: true, message: 'Alan adı zorunludur' }]}
-                    >
-                      <Select
-                        placeholder="Alan seçin"
-                        disabled={!selectedEntityType}
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {selectedEntityType &&
-                          entityFields[selectedEntityType]?.map((field) => (
-                            <Option key={field.value} value={field.value}>
-                              {field.label}
-                            </Option>
-                          ))}
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item name="value" label="Yeni Değer (Opsiyonel)">
-                      <Input placeholder="Belirli bir değere değişirse (opsiyonel)" />
-                    </Form.Item>
-                  </>
-                )}
-              </>
-            )}
-
-            {selectedTriggerType === 'Manual' && (
-              <div
-                style={{
-                  padding: '12px',
-                  background: '#f0f5ff',
-                  border: '1px solid #adc6ff',
-                  borderRadius: '4px',
-                }}
-              >
-                <Text type="secondary">
-                  💡 Manuel workflow'lar otomatik çalışmaz. Kullanıcı tarafından manuel olarak başlatılır.
-                </Text>
-              </div>
-            )}
-          </Card>
-
-          {/* Actions */}
-          <Card
-            size="small"
-            title="Aksiyonlar"
-            extra={
-              <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddAction} size="small">
-                Aksiyon Ekle
-              </Button>
-            }
-            style={{ marginBottom: 16 }}
-          >
-            {actions.length === 0 ? (
-              <div
-                style={{
-                  padding: '20px',
-                  textAlign: 'center',
-                  background: '#fafafa',
-                  border: '1px dashed #d9d9d9',
-                  borderRadius: '4px',
-                }}
-              >
-                <Text type="secondary">
-                  Henüz aksiyon eklenmedi. Workflow çalıştığında yapılacak işlemleri eklemek için yukarıdaki
-                  butonu kullanın.
-                </Text>
-              </div>
-            ) : (
-              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                {actions.map((action, index) => (
-                  <WorkflowActionBuilder
-                    key={index}
-                    action={action}
-                    index={index}
-                    onChange={handleActionChange}
-                    onRemove={handleRemoveAction}
-                  />
-                ))}
-              </Space>
-            )}
-          </Card>
-        </Form>
-      </Drawer>
+      {step1Data && (
+        <ConfigureTriggerDrawer
+          open={step2DrawerOpen}
+          step1Data={step1Data}
+          onClose={handleCloseAllDrawers}
+          onBack={handleStep2Back}
+          onNext={handleStep2Next}
+        />
+      )}
     </div>
   );
 }
