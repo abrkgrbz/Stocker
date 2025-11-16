@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   List,
@@ -13,6 +13,7 @@ import {
   Empty,
   Dropdown,
   Menu,
+  Spin,
 } from 'antd';
 import {
   BellOutlined,
@@ -24,6 +25,9 @@ import {
   InfoCircleOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
+import { CRMService } from '@/lib/api/services/crm.service';
+import type { NotificationDto } from '@/lib/api/services/crm.types';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -34,73 +38,69 @@ dayjs.locale('tr');
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
-// Mock data - Bu gerçek API'den gelecek
-const mockNotifications = [
-  {
-    id: 1,
-    type: 'Deal',
-    title: '🎉 Yeni Fırsat Kazanıldı!',
-    message: 'Acme Corp ile 50.000 TL değerindeki anlaşma kazanıldı.',
-    channel: 'InApp',
-    status: 'Sent',
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 dakika önce
-    relatedEntityType: 'Deal',
-    relatedEntityId: 123,
-  },
-  {
-    id: 2,
-    type: 'Task',
-    title: '⏰ Hatırlatıcı: Müşteri Görüşmesi',
-    message: 'Beta Inc ile toplantı 1 saat sonra başlayacak.',
-    channel: 'InApp',
-    status: 'Sent',
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 dakika önce
-    relatedEntityType: 'Activity',
-    relatedEntityId: 456,
-  },
-  {
-    id: 3,
-    type: 'Customer',
-    title: '👤 Yeni Müşteri Eklendi',
-    message: 'Gamma Ltd müşteri olarak sisteme eklendi.',
-    channel: 'InApp',
-    status: 'Sent',
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 saat önce
-    relatedEntityType: 'Customer',
-    relatedEntityId: 789,
-  },
-  {
-    id: 4,
-    type: 'Workflow',
-    title: '⚙️ Workflow Tamamlandı',
-    message: 'Deal approval workflow başarıyla tamamlandı.',
-    channel: 'InApp',
-    status: 'Sent',
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 gün önce
-    relatedEntityType: 'Workflow',
-    relatedEntityId: 321,
-  },
-  {
-    id: 5,
-    type: 'Alert',
-    title: '⚠️ Düşük Stok Uyarısı',
-    message: 'Product X için stok seviyesi kritik seviyede.',
-    channel: 'InApp',
-    status: 'Sent',
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 gün önce
-    relatedEntityType: 'Product',
-    relatedEntityId: 654,
-  },
-];
-
+// Removed mock data - now using real API
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState('all');
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const unreadOnly = activeTab === 'unread' ? true : activeTab === 'read' ? false : undefined;
+
+      const response = await CRMService.getNotifications({
+        unreadOnly,
+        skip: 0,
+        take: 50,
+      });
+
+      setNotifications(response.notifications);
+      setTotalCount(response.totalCount);
+      setUnreadCount(response.unreadCount);
+    } catch (error) {
+      showApiError(error, 'Bildirimler yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [activeTab]);
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await CRMService.markNotificationAsRead(id);
+      showSuccess('Bildirim okundu olarak işaretlendi');
+      loadNotifications();
+    } catch (error) {
+      showApiError(error, 'Bildirim güncellenemedi');
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await CRMService.markAllNotificationsAsRead();
+      showSuccess('Tüm bildirimler okundu olarak işaretlendi');
+      loadNotifications();
+    } catch (error) {
+      showApiError(error, 'Bildirimler güncellenemedi');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await CRMService.deleteNotification(id);
+      showSuccess('Bildirim silindi');
+      loadNotifications();
+    } catch (error) {
+      showApiError(error, 'Bildirim silinemedi');
+    }
+  };
+
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -134,20 +134,6 @@ const NotificationsPage = () => {
     }
   };
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif))
-    );
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
-  };
-
-  const handleDelete = (id: number) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-  };
-
   const getFilteredNotifications = () => {
     switch (activeTab) {
       case 'unread':
@@ -158,8 +144,6 @@ const NotificationsPage = () => {
         return notifications;
     }
   };
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const filteredNotifications = getFilteredNotifications();
 
@@ -222,7 +206,11 @@ const NotificationsPage = () => {
           />
         </Tabs>
 
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <Spin size="large" />
+          </div>
+        ) : filteredNotifications.length === 0 ? (
           <Empty
             description={
               activeTab === 'unread'

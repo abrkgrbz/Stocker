@@ -79,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IWorkflowRepository, WorkflowRepository>();
         services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();

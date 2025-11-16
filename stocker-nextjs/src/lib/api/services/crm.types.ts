@@ -441,6 +441,40 @@ export interface WorkflowAction {
   parameters: { [key: string]: any };
 }
 
+// =====================================
+// NOTIFICATIONS
+// =====================================
+
+export type NotificationType = 'System' | 'Deal' | 'Customer' | 'Task' | 'Workflow' | 'Meeting' | 'Alert' | 'Success';
+export type NotificationChannel = 'InApp' | 'Email' | 'SMS' | 'Push';
+export type NotificationStatus = 'Pending' | 'Sent' | 'Failed';
+
+export interface NotificationDto {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  channel: NotificationChannel;
+  status: NotificationStatus;
+  relatedEntityId?: number;
+  relatedEntityType?: string;
+  isRead: boolean;
+  createdAt: DateTime;
+  readAt?: DateTime;
+}
+
+export interface GetNotificationsResponse {
+  notifications: NotificationDto[];
+  totalCount: number;
+  unreadCount: number;
+}
+
+export interface NotificationFilterParams {
+  unreadOnly?: boolean;
+  skip?: number;
+  take?: number;
+}
+
 export interface CreateWorkflowCommand {
   name: string;
   description?: string;

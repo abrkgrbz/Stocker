@@ -1528,6 +1528,52 @@ export class CRMService {
   static async deactivateWorkflow(id: number): Promise<void> {
     return ApiService.post<void>(this.getPath(`workflows/${id}/deactivate`), {});
   }
+
+  // =====================================
+  // NOTIFICATIONS
+  // =====================================
+
+  /**
+   * Get notifications for current user
+   */
+  static async getNotifications(params?: NotificationFilterParams): Promise<GetNotificationsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.unreadOnly !== undefined) {
+      queryParams.append('unreadOnly', params.unreadOnly.toString());
+    }
+    if (params?.skip !== undefined) {
+      queryParams.append('skip', params.skip.toString());
+    }
+    if (params?.take !== undefined) {
+      queryParams.append('take', params.take.toString());
+    }
+
+    const queryString = queryParams.toString();
+    return ApiService.get<GetNotificationsResponse>(
+      this.getPath(`notifications${queryString ? `?${queryString}` : ''}`)
+    );
+  }
+
+  /**
+   * Mark notification as read
+   */
+  static async markNotificationAsRead(id: number): Promise<void> {
+    return ApiService.put<void>(this.getPath(`notifications/${id}/read`), {});
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  static async markAllNotificationsAsRead(): Promise<void> {
+    return ApiService.put<void>(this.getPath(`notifications/read-all`), {});
+  }
+
+  /**
+   * Delete notification
+   */
+  static async deleteNotification(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`notifications/${id}`));
+  }
 }
 
 export default CRMService;
