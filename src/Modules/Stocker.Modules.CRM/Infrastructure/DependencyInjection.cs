@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowRepository, WorkflowRepository>();
         services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IReminderRepository, ReminderRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   List,
@@ -12,15 +12,9 @@ import {
   Tabs,
   Empty,
   Dropdown,
-  Menu,
+  message,
   Modal,
-  Form,
-  Input,
-  DatePicker,
-  Select,
-  Switch,
-  Row,
-  Col,
+  InputNumber,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -32,491 +26,434 @@ import {
   MailOutlined,
   MobileOutlined,
   SnippetsOutlined,
+  ReloadOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
+import { remindersApi } from '@/lib/api/reminders';
+import { ReminderDrawer } from '@/components/reminders/ReminderDrawer';
+import type {
+  Reminder,
+  ReminderType,
+  ReminderStatus,
+  RecurrenceType,
+  CreateReminderRequest,
+  UpdateReminderRequest,
+} from '@/types/reminder';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
-const { TextArea } = Input;
-const { Option } = Select;
 
-// Mock data - Bu gerçek API'den gelecek
-const mockReminders = [
-  {
-    id: 1,
-    title: 'Müşteri Görüşmesi',
-    description: 'Acme Corp ile aylık değerlendirme toplantısı',
-    remindAt: new Date(Date.now() + 1000 * 60 * 60 * 2), // 2 saat sonra
-    type: 'Meeting',
-    status: 'Pending',
-    sendEmail: true,
-    sendInApp: true,
-    sendPush: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-  },
-  {
-    id: 2,
-    title: 'Teklif Gönder',
-    description: 'Beta Inc için revize teklifi hazırla ve gönder',
-    remindAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 gün sonra
-    type: 'Task',
-    status: 'Pending',
-    sendEmail: true,
-    sendInApp: true,
-    sendPush: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-  },
-  {
-    id: 3,
-    title: 'Sözleşme Yenileme',
-    description: 'Gamma Ltd sözleşmesi yenileme tarihi yaklaşıyor',
-    remindAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 1 hafta sonra
-    type: 'ContractRenewal',
-    status: 'Pending',
-    sendEmail: true,
-    sendInApp: true,
-    sendPush: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
-  },
-  {
-    id: 4,
-    title: 'Ödeme Takibi',
-    description: 'Delta Corp fatura ödemesi vade tarihi',
-    remindAt: new Date(Date.now() - 1000 * 60 * 60), // 1 saat önce (geçmiş)
-    type: 'PaymentDue',
-    status: 'Snoozed',
-    snoozedUntil: new Date(Date.now() + 1000 * 60 * 30), // 30 dakika sonra
-    sendEmail: true,
-    sendInApp: true,
-    sendPush: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72),
-  },
-  {
-    id: 5,
-    title: 'Müşteri Takip',
-    description: 'Epsilon Inc ile takip görüşmesi yap',
-    remindAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 gün önce (geçmiş)
-    type: 'FollowUp',
-    status: 'Completed',
-    completedAt: new Date(Date.now() - 1000 * 60 * 30),
-    sendEmail: false,
-    sendInApp: true,
-    sendPush: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 96),
-  },
-];
+const getReminderTypeColor = (type: ReminderType): string => {
+  const colors: Record<number, string> = {
+    0: 'default', // General
+    1: 'blue', // Task
+    2: 'purple', // Meeting
+    3: 'cyan', // FollowUp
+    4: 'magenta', // Birthday
+    5: 'orange', // ContractRenewal
+    6: 'red', // PaymentDue
+  };
+  return colors[type] || 'default';
+};
 
-const RemindersPage = () => {
-  const [reminders, setReminders] = useState(mockReminders);
-  const [activeTab, setActiveTab] = useState('pending');
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
+const getReminderTypeLabel = (type: ReminderType): string => {
+  const labels: Record<number, string> = {
+    0: 'General',
+    1: 'Task',
+    2: 'Meeting',
+    3: 'Follow Up',
+    4: 'Birthday',
+    5: 'Contract Renewal',
+    6: 'Payment Due',
+  };
+  return labels[type] || 'Unknown';
+};
 
-  const getReminderIcon = (type: string) => {
-    switch (type) {
-      case 'Meeting':
-        return '📅';
-      case 'Task':
-        return '✅';
-      case 'ContractRenewal':
-        return '📄';
-      case 'PaymentDue':
-        return '💰';
-      case 'FollowUp':
-        return '📞';
-      case 'Birthday':
-        return '🎂';
-      default:
-        return '⏰';
+const getReminderStatusColor = (status: ReminderStatus): string => {
+  const colors: Record<number, string> = {
+    0: 'processing', // Pending
+    1: 'warning', // Snoozed
+    2: 'error', // Triggered
+    3: 'success', // Completed
+    4: 'default', // Dismissed
+  };
+  return colors[status] || 'default';
+};
+
+const getReminderStatusLabel = (status: ReminderStatus): string => {
+  const labels: Record<number, string> = {
+    0: 'Pending',
+    1: 'Snoozed',
+    2: 'Triggered',
+    3: 'Completed',
+    4: 'Dismissed',
+  };
+  return labels[status] || 'Unknown';
+};
+
+const getRecurrenceLabel = (recurrenceType: RecurrenceType): string | null => {
+  const labels: Record<number, string> = {
+    0: null,
+    1: 'Daily',
+    2: 'Weekly',
+    3: 'Monthly',
+    4: 'Yearly',
+  };
+  return labels[recurrenceType] || null;
+};
+
+export default function RemindersPage() {
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
+  const [selectedReminder, setSelectedReminder] = useState<Reminder | undefined>();
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'completed'>('all');
+
+  useEffect(() => {
+    loadReminders();
+  }, [activeTab]);
+
+  const loadReminders = async () => {
+    setLoading(true);
+    try {
+      const pendingOnly = activeTab === 'pending' ? true : activeTab === 'completed' ? false : undefined;
+      const response = await remindersApi.getReminders({ pendingOnly });
+
+      // Filter by status for completed tab
+      let filteredReminders = response.reminders;
+      if (activeTab === 'completed') {
+        filteredReminders = response.reminders.filter((r) => r.status === 3); // Completed
+      }
+
+      setReminders(filteredReminders);
+    } catch (error) {
+      message.error('Failed to load reminders');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getReminderColor = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return 'blue';
-      case 'Snoozed':
-        return 'orange';
-      case 'Triggered':
-        return 'purple';
-      case 'Completed':
-        return 'green';
-      case 'Dismissed':
-        return 'default';
-      default:
-        return 'default';
+  const handleCreate = () => {
+    setDrawerMode('create');
+    setSelectedReminder(undefined);
+    setDrawerOpen(true);
+  };
+
+  const handleEdit = (reminder: Reminder) => {
+    setDrawerMode('edit');
+    setSelectedReminder(reminder);
+    setDrawerOpen(true);
+  };
+
+  const handleSubmit = async (data: CreateReminderRequest | UpdateReminderRequest) => {
+    try {
+      if (drawerMode === 'create') {
+        await remindersApi.createReminder(data as CreateReminderRequest);
+        message.success('Reminder created successfully');
+      } else if (selectedReminder) {
+        await remindersApi.updateReminder(selectedReminder.id, data as UpdateReminderRequest);
+        message.success('Reminder updated successfully');
+      }
+      await loadReminders();
+    } catch (error) {
+      message.error(`Failed to ${drawerMode} reminder`);
+      throw error;
     }
   };
 
-  const getReminderTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      General: 'Genel',
-      Task: 'Görev',
-      Meeting: 'Toplantı',
-      FollowUp: 'Takip',
-      Birthday: 'Doğum Günü',
-      ContractRenewal: 'Sözleşme Yenileme',
-      PaymentDue: 'Ödeme Vadesi',
-    };
-    return labels[type] || type;
+  const handleSnooze = (reminder: Reminder) => {
+    Modal.confirm({
+      title: 'Snooze Reminder',
+      content: (
+        <div>
+          <p>Snooze for how many minutes?</p>
+          <InputNumber
+            id="snooze-minutes"
+            min={5}
+            max={1440}
+            defaultValue={30}
+            addonAfter="minutes"
+            style={{ width: '100%' }}
+          />
+        </div>
+      ),
+      onOk: async () => {
+        const input = document.getElementById('snooze-minutes') as HTMLInputElement;
+        const minutes = parseInt(input?.value || '30');
+        try {
+          await remindersApi.snoozeReminder(reminder.id, minutes);
+          message.success(`Reminder snoozed for ${minutes} minutes`);
+          await loadReminders();
+        } catch (error) {
+          message.error('Failed to snooze reminder');
+        }
+      },
+    });
   };
 
-  const handleSnooze = (id: number, minutes: number) => {
-    setReminders((prev) =>
-      prev.map((reminder) =>
-        reminder.id === id
-          ? {
-              ...reminder,
-              status: 'Snoozed',
-              snoozedUntil: new Date(Date.now() + minutes * 60 * 1000),
-            }
-          : reminder
-      )
-    );
-  };
-
-  const handleComplete = (id: number) => {
-    setReminders((prev) =>
-      prev.map((reminder) =>
-        reminder.id === id
-          ? { ...reminder, status: 'Completed', completedAt: new Date() }
-          : reminder
-      )
-    );
-  };
-
-  const handleDismiss = (id: number) => {
-    setReminders((prev) =>
-      prev.map((reminder) =>
-        reminder.id === id ? { ...reminder, status: 'Dismissed' } : reminder
-      )
-    );
-  };
-
-  const handleDelete = (id: number) => {
-    setReminders((prev) => prev.filter((reminder) => reminder.id !== id));
-  };
-
-  const handleCreateReminder = async (values: any) => {
-    console.log('Creating reminder:', values);
-    // API call yapılacak
-    setIsModalVisible(false);
-    form.resetFields();
-  };
-
-  const getFilteredReminders = () => {
-    switch (activeTab) {
-      case 'pending':
-        return reminders.filter((r) => r.status === 'Pending');
-      case 'snoozed':
-        return reminders.filter((r) => r.status === 'Snoozed');
-      case 'completed':
-        return reminders.filter((r) => r.status === 'Completed');
-      default:
-        return reminders;
+  const handleComplete = async (reminder: Reminder) => {
+    try {
+      await remindersApi.completeReminder(reminder.id);
+      message.success('Reminder completed');
+      await loadReminders();
+    } catch (error) {
+      message.error('Failed to complete reminder');
     }
   };
 
-  const pendingCount = reminders.filter((r) => r.status === 'Pending').length;
-  const snoozedCount = reminders.filter((r) => r.status === 'Snoozed').length;
-  const completedCount = reminders.filter((r) => r.status === 'Completed').length;
+  const handleDelete = (reminder: Reminder) => {
+    Modal.confirm({
+      title: 'Delete Reminder',
+      content: 'Are you sure you want to delete this reminder?',
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await remindersApi.deleteReminder(reminder.id);
+          message.success('Reminder deleted');
+          await loadReminders();
+        } catch (error) {
+          message.error('Failed to delete reminder');
+        }
+      },
+    });
+  };
 
-  const filteredReminders = getFilteredReminders();
+  const renderReminderItem = (reminder: Reminder) => {
+    const isPast = dayjs(reminder.remindAt).isBefore(dayjs());
+    const recurrenceLabel = getRecurrenceLabel(reminder.recurrenceType);
+
+    return (
+      <List.Item
+        key={reminder.id}
+        actions={[
+          <Dropdown
+            key="actions"
+            menu={{
+              items: [
+                {
+                  key: 'edit',
+                  label: 'Edit',
+                  onClick: () => handleEdit(reminder),
+                },
+                {
+                  key: 'snooze',
+                  label: 'Snooze',
+                  onClick: () => handleSnooze(reminder),
+                  disabled: reminder.status === 3 || reminder.status === 4, // Completed or Dismissed
+                },
+                {
+                  key: 'complete',
+                  label: 'Complete',
+                  onClick: () => handleComplete(reminder),
+                  disabled: reminder.status === 3, // Already completed
+                },
+                {
+                  key: 'delete',
+                  label: 'Delete',
+                  danger: true,
+                  onClick: () => handleDelete(reminder),
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>,
+        ]}
+      >
+        <List.Item.Meta
+          avatar={
+            <Badge dot={isPast && reminder.status === 0} status="error">
+              <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+            </Badge>
+          }
+          title={
+            <Space>
+              <Text strong>{reminder.title}</Text>
+              <Tag color={getReminderTypeColor(reminder.type)}>
+                {getReminderTypeLabel(reminder.type)}
+              </Tag>
+              <Tag color={getReminderStatusColor(reminder.status)}>
+                {getReminderStatusLabel(reminder.status)}
+              </Tag>
+              {recurrenceLabel && (
+                <Tag icon={<SyncOutlined />} color="blue">
+                  {recurrenceLabel}
+                </Tag>
+              )}
+            </Space>
+          }
+          description={
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              {reminder.description && <Text type="secondary">{reminder.description}</Text>}
+              <Space>
+                <ClockCircleOutlined />
+                <Text type={isPast ? 'danger' : 'secondary'}>
+                  {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
+                  <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
+                </Text>
+              </Space>
+              {reminder.status === 1 && reminder.snoozedUntil && (
+                <Space>
+                  <ClockCircleOutlined />
+                  <Text type="warning">
+                    Snoozed until {dayjs(reminder.snoozedUntil).format('HH:mm')}
+                  </Text>
+                </Space>
+              )}
+              {reminder.dueDate && (
+                <Space>
+                  <SnippetsOutlined />
+                  <Text type="secondary">Due: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
+                </Space>
+              )}
+              {(reminder.meetingStartTime || reminder.meetingEndTime) && (
+                <Space>
+                  <SnippetsOutlined />
+                  <Text type="secondary">
+                    Meeting: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
+                    {dayjs(reminder.meetingEndTime).format('HH:mm')}
+                  </Text>
+                </Space>
+              )}
+              <Space size="small">
+                {reminder.sendEmail && (
+                  <Tag icon={<MailOutlined />} color="blue">
+                    Email
+                  </Tag>
+                )}
+                {reminder.sendPush && (
+                  <Tag icon={<MobileOutlined />} color="green">
+                    Push
+                  </Tag>
+                )}
+                {reminder.sendInApp && (
+                  <Tag icon={<BellOutlined />} color="purple">
+                    In-App
+                  </Tag>
+                )}
+              </Space>
+            </Space>
+          }
+        />
+      </List.Item>
+    );
+  };
+
+  const pendingCount = reminders.filter((r) => r.status === 0 || r.status === 1).length;
+  const completedCount = reminders.filter((r) => r.status === 3).length;
 
   return (
-    <div>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={2} style={{ margin: 0 }}>
-          <ClockCircleOutlined /> Hatırlatıcılar
-          {pendingCount > 0 && (
-            <Badge count={pendingCount} style={{ marginLeft: 12 }} />
-          )}
-        </Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalVisible(true)}
-        >
-          Yeni Hatırlatıcı
-        </Button>
-      </div>
-
+    <div style={{ padding: 24 }}>
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+          <Title level={2}>
+            <BellOutlined /> Reminders
+          </Title>
+          <Space>
+            <Button icon={<ReloadOutlined />} onClick={loadReminders} loading={loading}>
+              Refresh
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+              New Reminder
+            </Button>
+          </Space>
+        </div>
+
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as 'all' | 'pending' | 'completed')}
+        >
+          <Tabs.TabPane
             tab={
               <span>
-                Bekleyen
-                <Badge count={pendingCount} style={{ marginLeft: 8 }} showZero />
+                All <Badge count={reminders.length} showZero style={{ marginLeft: 8 }} />
+              </span>
+            }
+            key="all"
+          >
+            <List
+              loading={loading}
+              dataSource={reminders}
+              renderItem={renderReminderItem}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No reminders yet"
+                  >
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                      Create First Reminder
+                    </Button>
+                  </Empty>
+                ),
+              }}
+            />
+          </Tabs.TabPane>
+
+          <Tabs.TabPane
+            tab={
+              <span>
+                Pending <Badge count={pendingCount} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="pending"
-          />
-          <TabPane
+          >
+            <List
+              loading={loading}
+              dataSource={reminders}
+              renderItem={renderReminderItem}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No pending reminders"
+                  />
+                ),
+              }}
+            />
+          </Tabs.TabPane>
+
+          <Tabs.TabPane
             tab={
               <span>
-                Ertelenen
-                <Badge count={snoozedCount} style={{ marginLeft: 8, backgroundColor: '#fa8c16' }} showZero />
-              </span>
-            }
-            key="snoozed"
-          />
-          <TabPane
-            tab={
-              <span>
-                Tamamlanan
-                <Badge count={completedCount} style={{ marginLeft: 8, backgroundColor: '#52c41a' }} showZero />
+                Completed <Badge count={completedCount} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="completed"
-          />
-        </Tabs>
-
-        {filteredReminders.length === 0 ? (
-          <Empty
-            description={
-              activeTab === 'pending'
-                ? 'Bekleyen hatırlatıcı yok'
-                : activeTab === 'snoozed'
-                ? 'Ertelenen hatırlatıcı yok'
-                : 'Tamamlanan hatırlatıcı yok'
-            }
-            style={{ padding: '60px 0' }}
-          />
-        ) : (
-          <List
-            itemLayout="horizontal"
-            dataSource={filteredReminders}
-            renderItem={(item) => {
-              const isOverdue = item.status === 'Pending' && new Date(item.remindAt) < new Date();
-
-              return (
-                <List.Item
-                  style={{
-                    backgroundColor: isOverdue ? '#fff2e8' : 'transparent',
-                    padding: '16px',
-                    borderRadius: 8,
-                    marginBottom: 8,
-                    borderLeft: isOverdue ? '4px solid #ff7a45' : 'none',
-                  }}
-                  actions={[
-                    item.status === 'Pending' && (
-                      <Button
-                        key="complete"
-                        type="primary"
-                        size="small"
-                        icon={<CheckOutlined />}
-                        onClick={() => handleComplete(item.id)}
-                      >
-                        Tamamla
-                      </Button>
-                    ),
-                    item.status === 'Pending' && (
-                      <Dropdown
-                        key="snooze"
-                        overlay={
-                          <Menu>
-                            <Menu.Item onClick={() => handleSnooze(item.id, 5)}>5 dakika ertele</Menu.Item>
-                            <Menu.Item onClick={() => handleSnooze(item.id, 15)}>15 dakika ertele</Menu.Item>
-                            <Menu.Item onClick={() => handleSnooze(item.id, 30)}>30 dakika ertele</Menu.Item>
-                            <Menu.Item onClick={() => handleSnooze(item.id, 60)}>1 saat ertele</Menu.Item>
-                          </Menu>
-                        }
-                        trigger={['click']}
-                      >
-                        <Button size="small">Ertele</Button>
-                      </Dropdown>
-                    ),
-                    <Dropdown
-                      key="actions"
-                      overlay={
-                        <Menu>
-                          {item.status === 'Pending' && (
-                            <Menu.Item
-                              key="dismiss"
-                              icon={<CloseOutlined />}
-                              onClick={() => handleDismiss(item.id)}
-                            >
-                              Kapat
-                            </Menu.Item>
-                          )}
-                          <Menu.Item
-                            key="delete"
-                            icon={<CloseOutlined />}
-                            danger
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            Sil
-                          </Menu.Item>
-                        </Menu>
-                      }
-                      trigger={['click']}
-                    >
-                      <Button type="text" icon={<MoreOutlined />} />
-                    </Dropdown>,
-                  ].filter(Boolean)}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <div style={{ fontSize: 32 }}>{getReminderIcon(item.type)}</div>
-                    }
-                    title={
-                      <Space>
-                        <Text strong>{item.title}</Text>
-                        <Tag color={getReminderColor(item.status)}>{item.status}</Tag>
-                        <Tag>{getReminderTypeLabel(item.type)}</Tag>
-                      </Space>
-                    }
-                    description={
-                      <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                        {item.description && <Text>{item.description}</Text>}
-                        <Space size={16}>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            <ClockCircleOutlined /> {dayjs(item.remindAt).format('DD.MM.YYYY HH:mm')}
-                            {isOverdue && <Text type="danger"> (Geçti!)</Text>}
-                          </Text>
-                          {item.status === 'Snoozed' && item.snoozedUntil && (
-                            <Text type="warning" style={{ fontSize: 12 }}>
-                              Ertelendi: {dayjs(item.snoozedUntil).fromNow()}
-                            </Text>
-                          )}
-                          {item.status === 'Completed' && item.completedAt && (
-                            <Text type="success" style={{ fontSize: 12 }}>
-                              Tamamlandı: {dayjs(item.completedAt).fromNow()}
-                            </Text>
-                          )}
-                        </Space>
-                        <Space size={8}>
-                          {item.sendInApp && (
-                            <Tag icon={<BellOutlined />} color="blue">
-                              Uygulama İçi
-                            </Tag>
-                          )}
-                          {item.sendEmail && (
-                            <Tag icon={<MailOutlined />} color="green">
-                              Email
-                            </Tag>
-                          )}
-                          {item.sendPush && (
-                            <Tag icon={<MobileOutlined />} color="purple">
-                              Push
-                            </Tag>
-                          )}
-                        </Space>
-                      </Space>
-                    }
+          >
+            <List
+              loading={loading}
+              dataSource={reminders}
+              renderItem={renderReminderItem}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No completed reminders"
                   />
-                </List.Item>
-              );
-            }}
-          />
-        )}
+                ),
+              }}
+            />
+          </Tabs.TabPane>
+        </Tabs>
       </Card>
 
-      <Modal
-        title={
-          <span>
-            <PlusOutlined /> Yeni Hatırlatıcı Oluştur
-          </span>
-        }
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        okText="Oluştur"
-        cancelText="İptal"
-        width={600}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateReminder}
-          initialValues={{
-            type: 'General',
-            sendInApp: true,
-            sendEmail: false,
-            sendPush: false,
-          }}
-        >
-          <Form.Item
-            name="title"
-            label="Başlık"
-            rules={[{ required: true, message: 'Lütfen bir başlık girin' }]}
-          >
-            <Input placeholder="Hatırlatıcı başlığı" />
-          </Form.Item>
-
-          <Form.Item name="description" label="Açıklama">
-            <TextArea rows={3} placeholder="Hatırlatıcı detayları (opsiyonel)" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="remindAt"
-                label="Hatırlatma Zamanı"
-                rules={[{ required: true, message: 'Lütfen bir tarih seçin' }]}
-              >
-                <DatePicker
-                  showTime
-                  format="DD.MM.YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder="Tarih ve saat seçin"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="type"
-                label="Hatırlatıcı Tipi"
-                rules={[{ required: true }]}
-              >
-                <Select>
-                  <Option value="General">⏰ Genel</Option>
-                  <Option value="Task">✅ Görev</Option>
-                  <Option value="Meeting">📅 Toplantı</Option>
-                  <Option value="FollowUp">📞 Takip</Option>
-                  <Option value="Birthday">🎂 Doğum Günü</Option>
-                  <Option value="ContractRenewal">📄 Sözleşme Yenileme</Option>
-                  <Option value="PaymentDue">💰 Ödeme Vadesi</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item label="Bildirim Kanalları">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Form.Item name="sendInApp" valuePropName="checked" style={{ margin: 0 }}>
-                <Space>
-                  <Switch />
-                  <BellOutlined /> Uygulama İçi Bildirim
-                </Space>
-              </Form.Item>
-              <Form.Item name="sendEmail" valuePropName="checked" style={{ margin: 0 }}>
-                <Space>
-                  <Switch />
-                  <MailOutlined /> Email Bildirimi
-                </Space>
-              </Form.Item>
-              <Form.Item name="sendPush" valuePropName="checked" style={{ margin: 0 }}>
-                <Space>
-                  <Switch />
-                  <MobileOutlined /> Push Bildirimi
-                </Space>
-              </Form.Item>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+      <ReminderDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSubmit={handleSubmit}
+        reminder={selectedReminder}
+        mode={drawerMode}
+      />
     </div>
   );
-};
-
-export default RemindersPage;
+}

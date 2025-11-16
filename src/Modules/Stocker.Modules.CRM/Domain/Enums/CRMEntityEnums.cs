@@ -69,10 +69,11 @@ public enum RelatedEntityType
 /// </summary>
 public enum RecurrenceType
 {
-    Daily,
-    Weekly,
-    Monthly,
-    Yearly
+    None = 0,
+    Daily = 1,
+    Weekly = 2,
+    Monthly = 3,
+    Yearly = 4
 }
 
 /// <summary>
