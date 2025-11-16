@@ -29,7 +29,8 @@ Sentry.init({
   // Fallback to hardcoded DSN if env vars not available (Coolify build compatibility)
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || 'https://a70b942af7e82a02c637a852f0782226@o4510349217431552.ingest.de.sentry.io/4510349218807888',
 
-  // Use tunnel to bypass ad blockers and privacy tools
+  // CRITICAL: Use tunnel to bypass ad blockers and privacy tools
+  // This MUST be an absolute path from document root, not relative
   tunnel: "/monitoring",
 
   // Dynamically set environment based on subdomain
@@ -40,6 +41,14 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry
   debug: true,
+
+  // CRITICAL: Explicitly set transport options to ensure tunnel is used
+  transportOptions: {
+    // Force using fetch transport (not XHR) for better tunnel compatibility
+    fetchParameters: {
+      keepalive: true,
+    },
+  },
 
   // Session Replay - DISABLED temporarily to fix "Multiple instances" error
   // TODO: Re-enable after verifying single initialization
