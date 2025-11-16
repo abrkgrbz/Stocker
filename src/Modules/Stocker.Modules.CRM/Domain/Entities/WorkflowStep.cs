@@ -62,8 +62,9 @@ public class WorkflowStep : BaseEntity
         if (name.Length > 200)
             return Result<WorkflowStep>.Failure(Error.Validation("WorkflowStep", "Name cannot exceed 200 characters"));
 
-        if (workflowId <= 0)
-            return Result<WorkflowStep>.Failure(Error.Validation("WorkflowStep", "Valid workflow ID is required"));
+        // Allow workflowId = 0 for new workflows (ID will be set when workflow is saved)
+        if (workflowId < 0)
+            return Result<WorkflowStep>.Failure(Error.Validation("WorkflowStep", "Workflow ID cannot be negative"));
 
         if (stepOrder < 0)
             return Result<WorkflowStep>.Failure(Error.Validation("WorkflowStep", "Step order cannot be negative"));
