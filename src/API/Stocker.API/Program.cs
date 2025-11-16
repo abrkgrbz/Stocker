@@ -248,7 +248,12 @@ await app.MigrateDatabaseAsync();
 // ========================================
 // HANGFIRE RECURRING JOBS
 // ========================================
-// Register reminder processing job (runs every minute)
+// CRITICAL: Remove old reminder job from queue if it exists
+// This job was causing tenant context errors in multi-tenant environment
+RecurringJob.RemoveIfExists("process-due-reminders");
+Log.Information("Removed legacy reminder job (multi-tenant context issue)");
+
+// Register reminder processing job (currently disabled - see ReminderJob.cs for details)
 ReminderJob.RegisterRecurringJob();
 Log.Information("Hangfire recurring jobs registered successfully");
 
