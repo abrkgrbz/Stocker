@@ -10,7 +10,7 @@ using Stocker.Modules.CRM.Application.Features.Reminders.Queries.GetReminders;
 using Stocker.SharedKernel.Results;
 using System.Security.Claims;
 
-namespace Stocker.Modules.CRM.Presentation.Controllers;
+namespace Stocker.Modules.CRM.API.Controllers;
 
 [Authorize]
 [ApiController]
