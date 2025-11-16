@@ -14,7 +14,7 @@ namespace Stocker.Modules.CRM.API.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/crm/[controller]")]
 public class RemindersController : ControllerBase
 {
     private readonly IMediator _mediator;
