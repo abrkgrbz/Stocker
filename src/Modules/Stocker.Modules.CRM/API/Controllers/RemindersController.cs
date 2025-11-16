@@ -7,14 +7,16 @@ using Stocker.Modules.CRM.Application.Features.Reminders.Commands.DeleteReminder
 using Stocker.Modules.CRM.Application.Features.Reminders.Commands.SnoozeReminder;
 using Stocker.Modules.CRM.Application.Features.Reminders.Commands.UpdateReminder;
 using Stocker.Modules.CRM.Application.Features.Reminders.Queries.GetReminders;
+using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Results;
 using System.Security.Claims;
 
 namespace Stocker.Modules.CRM.API.Controllers;
 
-[Authorize]
 [ApiController]
+[Authorize]
 [Route("api/crm/[controller]")]
+[RequireModule("CRM")]
 public class RemindersController : ControllerBase
 {
     private readonly IMediator _mediator;
