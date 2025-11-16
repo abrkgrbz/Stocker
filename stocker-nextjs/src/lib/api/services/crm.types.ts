@@ -411,6 +411,7 @@ export interface WorkflowDto {
   description: string;
   triggerType: WorkflowTriggerType;
   entityType: string;
+  triggerConditions: string;
   isActive: boolean;
   executionCount: number;
   lastExecutedAt: DateTime | null;
@@ -423,6 +424,7 @@ export interface WorkflowStepDto {
   description: string;
   actionType: WorkflowActionType;
   stepOrder: number;
+  actionConfiguration: string;
   delayMinutes: number;
   isEnabled: boolean;
 }

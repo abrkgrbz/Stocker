@@ -98,7 +98,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
           type: step.actionType,
           name: step.name,
           description: step.description,
-          parameters: step.actionData ? JSON.parse(step.actionData) : {},
+          parameters: step.actionConfiguration ? JSON.parse(step.actionConfiguration) : {},
           delayMinutes: step.delayMinutes,
           isEnabled: step.isEnabled,
           stepOrder: step.stepOrder,
@@ -142,24 +142,28 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
 
     setSaving(true);
     try {
-      // Convert actions to steps
+      // Convert actions to steps with correct backend format
       const steps = actions.map((action, index) => ({
-        id: action.id ? parseInt(action.id) : undefined,
+        id: action.id ? parseInt(action.id) : null,
         name: action.name,
         description: action.description || '',
         actionType: action.type,
-        actionData: JSON.stringify(action.parameters),
+        actionConfiguration: JSON.stringify(action.parameters), // Backend expects this field name
+        conditions: '', // Backend expects this field
         stepOrder: index + 1,
         delayMinutes: action.delayMinutes || 0,
         isEnabled: action.isEnabled !== false,
+        continueOnError: false,
       }));
 
       await CRMService.updateWorkflow(workflowId, {
+        workflowId: workflowId, // Backend expects this
         name: workflow.name,
-        description: workflow.description,
+        description: workflow.description || '',
         triggerType: workflow.triggerType,
         entityType: workflow.entityType,
-        triggerConditions: triggerConfig ? JSON.stringify(triggerConfig.config) : workflow.triggerConditions,
+        triggerConditions: triggerConfig ? JSON.stringify(triggerConfig.config) : workflow.triggerConditions || '{}',
+        isActive: workflow.isActive, // Backend expects this
         steps: steps,
       });
 

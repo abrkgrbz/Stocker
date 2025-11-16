@@ -8,6 +8,7 @@ public record WorkflowResponse(
     string Description,
     WorkflowTriggerType TriggerType,
     string EntityType,
+    string TriggerConditions,
     bool IsActive,
     int ExecutionCount,
     DateTime? LastExecutedAt,
@@ -20,6 +21,7 @@ public record WorkflowStepResponse(
     string Description,
     WorkflowActionType ActionType,
     int StepOrder,
+    string ActionConfiguration,
     int DelayMinutes,
     bool IsEnabled
 );
