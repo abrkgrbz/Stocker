@@ -13,6 +13,7 @@ public static class KeyVaultExtensions
         // Development'ta User Secrets kullan
         if (environment.IsDevelopment())
         {
+            Console.WriteLine("🔧 Development mode: Skipping Azure Key Vault, using User Secrets");
             return configuration;
         }
 
@@ -20,14 +21,20 @@ public static class KeyVaultExtensions
 
         if (string.IsNullOrEmpty(keyVaultUri))
         {
-            Console.WriteLine("⚠️ Azure Key Vault URI not configured. Using environment variables.");
+            Console.WriteLine("⚠️ AZURE_KEY_VAULT_URI not configured. Using environment variables only.");
+            Console.WriteLine("💡 Set AZURE_KEY_VAULT_URI to enable Azure Key Vault integration.");
             return configuration;
         }
+
+        Console.WriteLine($"🔑 Attempting to configure Azure Key Vault: {keyVaultUri}");
 
         try
         {
             var credential = GetAzureCredential();
             var secretClient = new SecretClient(new Uri(keyVaultUri), credential);
+
+            // Test connection by getting client info (non-blocking)
+            Console.WriteLine("🔄 Testing Azure Key Vault connection...");
 
             configuration.AddAzureKeyVault(secretClient, new AzureKeyVaultConfigurationOptions
             {
@@ -35,12 +42,18 @@ public static class KeyVaultExtensions
                 ReloadInterval = TimeSpan.FromMinutes(5) // Secrets'ları 5 dakikada bir yenile
             });
 
-            Console.WriteLine($"✅ Azure Key Vault configured: {keyVaultUri}");
+            Console.WriteLine($"✅ Azure Key Vault configured successfully: {keyVaultUri}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Failed to configure Azure Key Vault: {ex.Message}");
-            Console.WriteLine("⚠️ Falling back to environment variables.");
+            Console.WriteLine($"❌ Failed to configure Azure Key Vault: {ex.GetType().Name}");
+            Console.WriteLine($"   Error: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"   Inner: {ex.InnerException.Message}");
+            }
+            Console.WriteLine("⚠️ Continuing with environment variables only.");
+            Console.WriteLine("💡 Check: AZURE_KEY_VAULT_URI, AZURE_TENANT_ID, AZURE_CLIENT_ID");
         }
 
         return configuration;

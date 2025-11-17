@@ -82,14 +82,23 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Create startup script that runs migrations then starts the app
 RUN echo '#!/bin/bash\n\
+echo "=== Stocker API Startup Script ==="\n\
 echo "Setting up environment variables for Coolify..."\n\
+echo ""\n\
+echo "Environment Check:"\n\
+echo "  SA_PASSWORD: $([ -n \"$SA_PASSWORD\" ] && echo \"✓ Set\" || echo \"✗ Not set\")"\n\
+echo "  DB_SERVER: ${DB_SERVER:-✗ Not set (will default to mssql)}"\n\
+echo "  AZURE_KEY_VAULT_URI: $([ -n \"$AZURE_KEY_VAULT_URI\" ] && echo \"✓ $AZURE_KEY_VAULT_URI\" || echo \"✗ Not set (using env vars)\")"\n\
+echo ""\n\
 # Export connection strings if environment variables are present\n\
 if [ -n "$SA_PASSWORD" ] && [ -n "$DB_SERVER" ]; then\n\
     export ConnectionStrings__MasterConnection="Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
     export ConnectionStrings__TenantConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
     export ConnectionStrings__DefaultConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
     export ConnectionStrings__HangfireConnection="Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    echo "Connection strings set from environment variables"\n\
+    echo "✅ Connection strings constructed from SA_PASSWORD and DB_SERVER"\n\
+else\n\
+    echo "⚠️  SA_PASSWORD or DB_SERVER not set - will use Azure Key Vault or appsettings"\n\
 fi\n\
 echo "Running Master database migrations..."\n\
 if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
