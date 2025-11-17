@@ -11,17 +11,14 @@ export function useSignalRStatus(hubName: 'notifications' | 'inventory' | 'order
   // Select the right hub based on hubName
   const connection = hubName === 'notifications'
     ? context.notificationHub
-    : hubName === 'inventory'
-    ? context.inventoryHub
-    : context.orderHub;
+    : undefined; // Only notifications hub is currently implemented
 
   const isConnected = hubName === 'notifications'
     ? context.isNotificationConnected
-    : hubName === 'inventory'
-    ? context.isInventoryConnected
-    : context.isOrderConnected;
+    : false;
 
   useEffect(() => {
+    // If hub doesn't exist or is not implemented, show as disconnected
     if (!connection) {
       setConnectionState('disconnected');
       return;
@@ -29,6 +26,12 @@ export function useSignalRStatus(hubName: 'notifications' | 'inventory' | 'order
 
     const updateState = () => {
       const state = connection.state;
+
+      // If state is null/undefined, check isConnected flag
+      if (!state) {
+        setConnectionState(isConnected ? 'connected' : 'disconnected');
+        return;
+      }
 
       if (state === 'Connected') {
         setConnectionState('connected');
@@ -39,18 +42,19 @@ export function useSignalRStatus(hubName: 'notifications' | 'inventory' | 'order
       } else if (state === 'Reconnecting') {
         setConnectionState('reconnecting');
       } else {
-        setConnectionState('error');
+        // Unknown state - use isConnected flag as fallback
+        setConnectionState(isConnected ? 'connected' : 'disconnected');
       }
     };
 
     // Initial state
     updateState();
 
-    // Poll for state changes
-    const interval = setInterval(updateState, 1000);
+    // Poll for state changes - reduced frequency
+    const interval = setInterval(updateState, 3000);
 
     return () => clearInterval(interval);
-  }, [connection]);
+  }, [connection, isConnected]);
 
   return connectionState;
 }
