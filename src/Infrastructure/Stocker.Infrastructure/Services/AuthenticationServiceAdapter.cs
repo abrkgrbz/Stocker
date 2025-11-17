@@ -55,6 +55,18 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 
             if (result.Success && result.User != null)
             {
+                // Check if onboarding is required
+                bool requiresOnboarding = false;
+                if (result.User.TenantId.HasValue)
+                {
+                    var wizard = await _masterContext.SetupWizards
+                        .Where(w => w.WizardType == Domain.Tenant.Entities.WizardType.InitialSetup)
+                        .OrderByDescending(w => w.StartedAt)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    requiresOnboarding = wizard == null || wizard.Status != Domain.Tenant.Entities.WizardStatus.Completed;
+                }
+
                 var response = new AuthResponse
                 {
                     AccessToken = result.AccessToken ?? string.Empty,
@@ -70,7 +82,8 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                         Roles = result.User.Roles ?? new List<string>(),
                         TenantId = result.User.TenantId,
                         TenantName = result.User.TenantName
-                    }
+                    },
+                    RequiresOnboarding = requiresOnboarding
                 };
 
                 return Result.Success(response);

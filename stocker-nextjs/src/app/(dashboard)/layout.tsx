@@ -35,6 +35,9 @@ import { NotificationCenter } from '@/features/notifications/components';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
 import { ConnectionStatus } from '@/components/status';
 import { useSignalRStatus } from '@/lib/signalr/use-signalr-status';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/use-onboarding';
+import { message } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 
@@ -50,6 +53,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   // Get SignalR connection status
   const connectionState = useSignalRStatus('notifications');
+
+  // Check onboarding status
+  const {
+    wizardData,
+    requiresOnboarding,
+    loading: onboardingLoading,
+    completeOnboarding
+  } = useOnboarding();
+
+  const handleOnboardingComplete = async (data: any) => {
+    try {
+      await completeOnboarding(data);
+      message.success('Kurulum başarıyla tamamlandı! Hoş geldiniz! 🎉');
+    } catch (error) {
+      message.error('Kurulum sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -291,8 +312,15 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
+    <>
+      <OnboardingModal
+        visible={requiresOnboarding && !onboardingLoading}
+        wizardData={wizardData || { currentStepIndex: 0, totalSteps: 4, progressPercentage: 0 }}
+        onComplete={handleOnboardingComplete}
+      />
+
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sider
         theme="light"
         breakpoint="lg"
         collapsedWidth="0"
@@ -363,7 +391,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </div>
         </Content>
       </Layout>
-    </Layout>
+    </>
   );
 }
 

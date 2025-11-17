@@ -21,6 +21,7 @@ public class AuthResponse
     public UserInfo User { get; set; } = new();
     public bool Requires2FA { get; set; }
     public string? TempToken { get; set; }
+    public bool RequiresOnboarding { get; set; }
 }
 
 public class UserInfo
