@@ -55,17 +55,8 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 
             if (result.Success && result.User != null)
             {
-                // Check if onboarding is required
-                bool requiresOnboarding = false;
-                if (result.User.TenantId.HasValue)
-                {
-                    var wizard = await _masterContext.SetupWizards
-                        .Where(w => w.WizardType == Domain.Tenant.Entities.WizardType.InitialSetup)
-                        .OrderByDescending(w => w.StartedAt)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    requiresOnboarding = wizard == null || wizard.Status != Domain.Tenant.Entities.WizardStatus.Completed;
-                }
+                // Note: Onboarding status is checked separately by frontend after login
+                // via /api/onboarding/status endpoint, as it requires tenant-specific context
 
                 var response = new AuthResponse
                 {
@@ -83,7 +74,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                         TenantId = result.User.TenantId,
                         TenantName = result.User.TenantName
                     },
-                    RequiresOnboarding = requiresOnboarding
+                    RequiresOnboarding = false // Will be checked by frontend separately
                 };
 
                 return Result.Success(response);

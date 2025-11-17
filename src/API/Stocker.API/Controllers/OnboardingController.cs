@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stocker.Api.Attributes;
+using Stocker.SharedKernel.Authorization;
 using Stocker.Application.Features.Onboarding.Commands.CompleteOnboarding;
 using Stocker.Application.Features.Onboarding.Queries.GetOnboardingStatus;
 using System.Security.Claims;

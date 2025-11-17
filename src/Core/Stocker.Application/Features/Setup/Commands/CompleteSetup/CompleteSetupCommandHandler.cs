@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
+using Stocker.SharedKernel.MultiTenancy;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Master.Entities;
 
@@ -40,7 +41,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
             }
 
             // Verify package exists
-            var package = await _masterUnitOfWork.Packages()
+            var package = await _masterUnitOfWork.Repository<Package>()
                 .GetByIdAsync(request.PackageId, cancellationToken);
 
             if (package == null)
@@ -97,10 +98,18 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     }
 
                     // Create address
-                    var address = Domain.Tenant.ValueObjects.CompanyAddress.Create(
-                        street: request.Address ?? "Adres belirtilmemiş",
+                    var addressResult = Domain.Common.ValueObjects.CompanyAddress.Create(
+                        country: "Türkiye",
                         city: "İstanbul", // Default
-                        country: "Türkiye");
+                        district: "Merkez", // Default
+                        postalCode: null,
+                        addressLine: request.Address ?? "Adres belirtilmemiş");
+
+                    if (addressResult.IsFailure)
+                    {
+                        return Result<CompleteSetupResponse>.Failure(
+                            Error.Validation("Setup.InvalidAddress", "Geçersiz adres bilgisi"));
+                    }
 
                     var company = Company.Create(
                         tenantId: request.TenantId,
@@ -108,7 +117,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         code: request.CompanyCode,
                         taxNumber: request.TaxNumber ?? "0000000000", // Default if not provided
                         email: emailResult.Value,
-                        address: address,
+                        address: addressResult.Value,
                         phone: phone,
                         taxOffice: request.TaxOffice,
                         sector: request.Sector,

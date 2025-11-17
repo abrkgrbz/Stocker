@@ -9,9 +9,9 @@ namespace Stocker.Application.Features.Onboarding.Queries.GetOnboardingStatus;
 public sealed class GetOnboardingStatusQueryHandler
     : IRequestHandler<GetOnboardingStatusQuery, Result<OnboardingStatusResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public GetOnboardingStatusQueryHandler(IMasterDbContext context)
+    public GetOnboardingStatusQueryHandler(ITenantDbContext context)
     {
         _context = context;
     }
@@ -57,3 +57,4 @@ public sealed class GetOnboardingStatusQueryHandler
         });
     }
 }
+

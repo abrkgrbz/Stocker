@@ -10,9 +10,9 @@ namespace Stocker.Application.Features.Onboarding.Commands.CompleteOnboarding;
 public sealed class CompleteOnboardingCommandHandler
     : IRequestHandler<CompleteOnboardingCommand, Result<CompleteOnboardingResponse>>
 {
-    private readonly IMasterDbContext _context;
+    private readonly ITenantDbContext _context;
 
-    public CompleteOnboardingCommandHandler(IMasterDbContext context)
+    public CompleteOnboardingCommandHandler(ITenantDbContext context)
     {
         _context = context;
     }
@@ -176,3 +176,4 @@ public sealed class CompleteOnboardingCommandHandler
         });
     }
 }
+
