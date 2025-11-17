@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
-  List,
+  Row,
+  Col,
   Tag,
   Button,
   Space,
@@ -18,12 +19,11 @@ import {
   Checkbox,
   Input,
   Select,
+  Divider,
 } from 'antd';
 import {
   ClockCircleOutlined,
   PlusOutlined,
-  CheckOutlined,
-  CloseOutlined,
   MoreOutlined,
   BellOutlined,
   MailOutlined,
@@ -33,6 +33,8 @@ import {
   SyncOutlined,
   SearchOutlined,
   FilterOutlined,
+  UserOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -51,17 +53,17 @@ import type {
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const getReminderTypeColor = (type: ReminderType): string => {
   const colors: Record<number, string> = {
-    0: 'default', // General
-    1: 'blue', // Task
-    2: 'purple', // Meeting
-    3: 'cyan', // FollowUp
-    4: 'magenta', // Birthday
-    5: 'orange', // ContractRenewal
-    6: 'red', // PaymentDue
+    0: 'default',
+    1: 'blue',
+    2: 'purple',
+    3: 'cyan',
+    4: 'magenta',
+    5: 'orange',
+    6: 'red',
   };
   return colors[type] || 'default';
 };
@@ -81,11 +83,11 @@ const getReminderTypeLabel = (type: ReminderType): string => {
 
 const getReminderStatusColor = (status: ReminderStatus): string => {
   const colors: Record<number, string> = {
-    0: 'processing', // Pending
-    1: 'warning', // Snoozed
-    2: 'error', // Triggered
-    3: 'success', // Completed
-    4: 'default', // Dismissed
+    0: 'processing',
+    1: 'warning',
+    2: 'error',
+    3: 'success',
+    4: 'default',
   };
   return colors[status] || 'default';
 };
@@ -133,10 +135,9 @@ export default function RemindersPage() {
       const pendingOnly = activeTab === 'pending' ? true : activeTab === 'completed' ? false : undefined;
       const response = await remindersApi.getReminders({ pendingOnly });
 
-      // Filter by status for completed tab
       let filteredReminders = response.reminders;
       if (activeTab === 'completed') {
-        filteredReminders = response.reminders.filter((r) => r.status === 3); // Completed
+        filteredReminders = response.reminders.filter((r) => r.status === 3);
       }
 
       setReminders(filteredReminders);
@@ -238,162 +239,175 @@ export default function RemindersPage() {
     });
   };
 
-  const renderReminderItem = (reminder: Reminder) => {
+  const renderReminderCard = (reminder: Reminder) => {
     const isPast = dayjs(reminder.remindAt).isBefore(dayjs());
     const recurrenceLabel = getRecurrenceLabel(reminder.recurrenceType);
+    const isCompleted = reminder.status === 3;
 
     return (
-      <List.Item
-        key={reminder.id}
-        actions={[
-          <Dropdown
-            key="actions"
-            menu={{
-              items: [
-                {
-                  key: 'edit',
-                  label: 'Düzenle',
-                  onClick: () => handleEdit(reminder),
-                },
-                {
-                  key: 'snooze',
-                  label: 'Ertele',
-                  onClick: () => handleSnooze(reminder),
-                  disabled: reminder.status === 3 || reminder.status === 4, // Completed or Dismissed
-                },
-                {
-                  key: 'complete',
-                  label: 'Tamamla',
-                  onClick: () => handleComplete(reminder),
-                  disabled: reminder.status === 3, // Already completed
-                },
-                {
-                  key: 'delete',
-                  label: 'Sil',
-                  danger: true,
-                  onClick: () => handleDelete(reminder),
-                },
-              ],
-            }}
-            trigger={['click']}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>,
-        ]}
-      >
-        <List.Item.Meta
-          avatar={
-            <Space direction="vertical" align="center">
-              <Checkbox
-                checked={reminder.status === 3}
-                disabled={reminder.status === 3}
-                onChange={() => handleComplete(reminder)}
-              />
-              <Badge dot={isPast && reminder.status === 0} status="error">
-                <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
-              </Badge>
-            </Space>
-          }
-          title={
-                <Space>
-                  <Text strong>{reminder.title}</Text>
-                  <Tag color={getReminderTypeColor(reminder.type)}>
-                    {getReminderTypeLabel(reminder.type)}
+      <Col xs={24} sm={24} md={12} lg={8} xl={6} key={reminder.id}>
+        <Card
+          hoverable
+          style={{
+            marginBottom: 16,
+            opacity: isCompleted ? 0.7 : 1,
+            borderColor: isPast && !isCompleted ? '#ff4d4f' : undefined,
+          }}
+          bodyStyle={{ padding: 16 }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Checkbox
+              checked={isCompleted}
+              disabled={isCompleted}
+              onChange={() => handleComplete(reminder)}
+              style={{ marginRight: 12 }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                <Text strong style={{ fontSize: 16, textDecoration: isCompleted ? 'line-through' : 'none' }}>
+                  {reminder.title}
+                </Text>
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: 'edit',
+                        label: 'Düzenle',
+                        onClick: () => handleEdit(reminder),
+                      },
+                      {
+                        key: 'snooze',
+                        label: 'Ertele',
+                        onClick: () => handleSnooze(reminder),
+                        disabled: isCompleted || reminder.status === 4,
+                      },
+                      {
+                        key: 'complete',
+                        label: 'Tamamla',
+                        onClick: () => handleComplete(reminder),
+                        disabled: isCompleted,
+                      },
+                      {
+                        key: 'delete',
+                        label: 'Sil',
+                        danger: true,
+                        onClick: () => handleDelete(reminder),
+                      },
+                    ],
+                  }}
+                  trigger={['click']}
+                >
+                  <Button type="text" size="small" icon={<MoreOutlined />} />
+                </Dropdown>
+              </div>
+
+              <Space size={4} wrap style={{ marginBottom: 8 }}>
+                <Tag color={getReminderTypeColor(reminder.type)}>{getReminderTypeLabel(reminder.type)}</Tag>
+                <Tag color={getReminderStatusColor(reminder.status)}>{getReminderStatusLabel(reminder.status)}</Tag>
+                {recurrenceLabel && (
+                  <Tag icon={<SyncOutlined />} color="blue">
+                    {recurrenceLabel}
                   </Tag>
-                  <Tag color={getReminderStatusColor(reminder.status)}>
-                    {getReminderStatusLabel(reminder.status)}
-                  </Tag>
-                  {recurrenceLabel && (
-                    <Tag icon={<SyncOutlined />} color="blue">
-                      {recurrenceLabel}
-                    </Tag>
-                  )}
-                </Space>
-              }
-              description={
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                  {reminder.description && <Text type="secondary">{reminder.description}</Text>}
-                  {reminder.relatedEntityType && reminder.relatedEntityId && (
+                )}
+              </Space>
+
+              {reminder.description && (
+                <Paragraph
+                  ellipsis={{ rows: 2 }}
+                  type="secondary"
+                  style={{ marginBottom: 8, fontSize: 13 }}
+                >
+                  {reminder.description}
+                </Paragraph>
+              )}
+
+              <Divider style={{ margin: '8px 0' }} />
+
+              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <ClockCircleOutlined style={{ marginRight: 6, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+                  <Text type={isPast && !isCompleted ? 'danger' : 'secondary'} style={{ fontSize: 12 }}>
+                    {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
+                    <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
+                  </Text>
+                </div>
+
+                {reminder.relatedEntityType && reminder.relatedEntityId && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <LinkOutlined style={{ marginRight: 6 }} />
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      İlgili: {reminder.relatedEntityType} #{reminder.relatedEntityId}
+                      {reminder.relatedEntityType} #{reminder.relatedEntityId}
                     </Text>
-                  )}
-                  {reminder.assignedToUserId && (
+                  </div>
+                )}
+
+                {reminder.assignedToUserId && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <UserOutlined style={{ marginRight: 6 }} />
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      Atanan: {reminder.assignedToUserId}
+                      {reminder.assignedToUserId}
                     </Text>
-                  )}
-                  <Space>
-                    <ClockCircleOutlined />
-                    <Text type={isPast ? 'danger' : 'secondary'}>
-                      {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
-                      <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
+                  </div>
+                )}
+
+                {reminder.status === 1 && reminder.snoozedUntil && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <ClockCircleOutlined style={{ marginRight: 6 }} />
+                    <Text type="warning" style={{ fontSize: 12 }}>
+                      {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
                     </Text>
+                  </div>
+                )}
+
+                {reminder.dueDate && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <SnippetsOutlined style={{ marginRight: 6 }} />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}
+                    </Text>
+                  </div>
+                )}
+
+                {(reminder.meetingStartTime || reminder.meetingEndTime) && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <SnippetsOutlined style={{ marginRight: 6 }} />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {dayjs(reminder.meetingStartTime).format('HH:mm')} - {dayjs(reminder.meetingEndTime).format('HH:mm')}
+                    </Text>
+                  </div>
+                )}
+              </Space>
+
+              {(reminder.sendEmail || reminder.sendPush || reminder.sendInApp) && (
+                <>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <Space size={4} wrap>
+                    {reminder.sendEmail && <Tag icon={<MailOutlined />} color="blue">E-posta</Tag>}
+                    {reminder.sendPush && <Tag icon={<MobileOutlined />} color="green">Bildirim</Tag>}
+                    {reminder.sendInApp && <Tag icon={<BellOutlined />} color="purple">Uygulama</Tag>}
                   </Space>
-                  {reminder.status === 1 && reminder.snoozedUntil && (
-                    <Space>
-                      <ClockCircleOutlined />
-                      <Text type="warning">
-                        {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
-                      </Text>
-                    </Space>
-                  )}
-                  {reminder.dueDate && (
-                    <Space>
-                      <SnippetsOutlined />
-                      <Text type="secondary">Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
-                    </Space>
-                  )}
-                  {(reminder.meetingStartTime || reminder.meetingEndTime) && (
-                    <Space>
-                      <SnippetsOutlined />
-                      <Text type="secondary">
-                        Toplantı: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
-                        {dayjs(reminder.meetingEndTime).format('HH:mm')}
-                      </Text>
-                    </Space>
-                  )}
-                  <Space size="small">
-                    {reminder.sendEmail && (
-                      <Tag icon={<MailOutlined />} color="blue">
-                        E-posta
-                      </Tag>
-                    )}
-                    {reminder.sendPush && (
-                      <Tag icon={<MobileOutlined />} color="green">
-                        Bildirim
-                      </Tag>
-                    )}
-                    {reminder.sendInApp && (
-                      <Tag icon={<BellOutlined />} color="purple">
-                        Uygulama
-                      </Tag>
-                    )}
-                  </Space>
-                </Space>
-              }
-        />
-      </List.Item>
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+      </Col>
     );
   };
 
-  // Client-side filtering for search and type filter
   const filteredReminders = useMemo(() => {
     return reminders.filter((reminder) => {
-      // Search filter
       const matchesSearch =
         !searchText ||
         reminder.title.toLowerCase().includes(searchText.toLowerCase()) ||
         reminder.description?.toLowerCase().includes(searchText.toLowerCase());
 
-      // Type filter
       const matchesType = filterType === 'all' || reminder.type === filterType;
 
       return matchesSearch && matchesType;
     });
   }, [reminders, searchText, filterType]);
 
-  // Badge counts - use filtered array length for current tab
   const allCount = activeTab === 'all' ? filteredReminders.length : totalCount;
   const pendingCount = activeTab === 'pending' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 0 || r.status === 1).length;
   const completedCount = activeTab === 'completed' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 3).length;
@@ -401,8 +415,8 @@ export default function RemindersPage() {
   return (
     <div style={{ padding: 24 }}>
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-          <Title level={2}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+          <Title level={2} style={{ margin: 0 }}>
             <BellOutlined /> Hatırlatıcılar
           </Title>
           <Space>
@@ -415,7 +429,7 @@ export default function RemindersPage() {
           </Space>
         </div>
 
-        <Space style={{ marginBottom: 16, width: '100%' }} size="middle">
+        <Space style={{ marginBottom: 16, width: '100%', flexWrap: 'wrap' }} size="middle">
           <Input
             placeholder="Hatırlatıcı ara..."
             prefix={<SearchOutlined />}
@@ -453,23 +467,24 @@ export default function RemindersPage() {
             }
             key="all"
           >
-            <List
-              loading={loading}
-              dataSource={filteredReminders}
-              renderItem={renderReminderItem}
-              locale={{
-                emptyText: (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Henüz hatırlatıcı yok"
-                  >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                      İlk Hatırlatıcıyı Oluştur
-                    </Button>
-                  </Empty>
-                ),
-              }}
-            />
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <ReloadOutlined spin style={{ fontSize: 32 }} />
+              </div>
+            ) : filteredReminders.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Henüz hatırlatıcı yok"
+              >
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                  İlk Hatırlatıcıyı Oluştur
+                </Button>
+              </Empty>
+            ) : (
+              <Row gutter={[16, 0]}>
+                {filteredReminders.map(renderReminderCard)}
+              </Row>
+            )}
           </Tabs.TabPane>
 
           <Tabs.TabPane
@@ -480,19 +495,20 @@ export default function RemindersPage() {
             }
             key="pending"
           >
-            <List
-              loading={loading}
-              dataSource={filteredReminders}
-              renderItem={renderReminderItem}
-              locale={{
-                emptyText: (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Bekleyen hatırlatıcı yok"
-                  />
-                ),
-              }}
-            />
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <ReloadOutlined spin style={{ fontSize: 32 }} />
+              </div>
+            ) : filteredReminders.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Bekleyen hatırlatıcı yok"
+              />
+            ) : (
+              <Row gutter={[16, 0]}>
+                {filteredReminders.map(renderReminderCard)}
+              </Row>
+            )}
           </Tabs.TabPane>
 
           <Tabs.TabPane
@@ -503,19 +519,20 @@ export default function RemindersPage() {
             }
             key="completed"
           >
-            <List
-              loading={loading}
-              dataSource={filteredReminders}
-              renderItem={renderReminderItem}
-              locale={{
-                emptyText: (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Tamamlanan hatırlatıcı yok"
-                  />
-                ),
-              }}
-            />
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <ReloadOutlined spin style={{ fontSize: 32 }} />
+              </div>
+            ) : filteredReminders.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Tamamlanan hatırlatıcı yok"
+              />
+            ) : (
+              <Row gutter={[16, 0]}>
+                {filteredReminders.map(renderReminderCard)}
+              </Row>
+            )}
           </Tabs.TabPane>
         </Tabs>
       </Card>
