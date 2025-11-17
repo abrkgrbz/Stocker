@@ -21,5 +21,6 @@ public sealed class RegisterResponse
     
     // Flow control fields
     public bool RequiresEmailVerification { get; set; }
+    public bool RequiresSetup { get; set; }
     public string RedirectUrl { get; set; } = string.Empty;
 }

@@ -216,8 +216,19 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        // Registration successful
+        // Save token for authenticated setup
+        if (data.data.token) {
+          localStorage.setItem('token', data.data.token)
+          localStorage.setItem('refreshToken', data.data.refreshToken)
+        }
+
+        // Registration successful - redirect to setup
         setCurrentStep('complete')
+
+        // Redirect to setup after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/setup'
+        }, 2000)
       } else {
         // Registration failed - handle specific errors
         const errorMessage = data.message || 'Kayıt işlemi başarısız oldu'

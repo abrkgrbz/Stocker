@@ -216,7 +216,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 Message = "Kayıt başarıyla tamamlandı",
                 UserId = masterUser.Id,
                 TenantId = tenant.Id,
-                CompanyId = Guid.Empty, // Company will be created after tenant setup
+                CompanyId = Guid.Empty, // Company will be created during setup
                 Token = token,
                 RefreshToken = refreshToken,
                 Email = masterUser.Email.Value,
@@ -225,7 +225,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 SubdomainUrl = $"https://{tenant.Code}.stoocker.app",
                 CompanyName = companyName,
                 RequiresEmailVerification = true,
-                RedirectUrl = $"/welcome?tenant={tenant.Id}"
+                RequiresSetup = true, // User needs to complete setup wizard
+                RedirectUrl = "/setup"
             });
         }
         catch (Exception ex)
