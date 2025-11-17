@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Input, Button } from 'antd'
 import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
 import Logo from '@/components/Logo'
+import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
 
@@ -13,6 +14,14 @@ export default function RegisterPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<Step>('email')
   const [isLoading, setIsLoading] = useState(false)
+
+  // SignalR validation hook
+  const {
+    isConnected,
+    validateEmail: signalRValidateEmail,
+    checkPasswordStrength: signalRCheckPasswordStrength,
+    validateTenantCode: signalRValidateTenantCode
+  } = useSignalRValidation()
 
   // Form data
   const [email, setEmail] = useState('')
@@ -26,6 +35,7 @@ export default function RegisterPage() {
   const [emailError, setEmailError] = useState('')
   const [passwordValid, setPasswordValid] = useState(false)
   const [passwordError, setPasswordError] = useState('')
+  const [passwordStrength, setPasswordStrength] = useState<number>(0)
   const [teamNameValid, setTeamNameValid] = useState(false)
   const [teamNameError, setTeamNameError] = useState('')
 
@@ -49,7 +59,7 @@ export default function RegisterPage() {
     }
   }, [])
 
-  // Email validation
+  // Email validation with SignalR
   useEffect(() => {
     if (!email) {
       setEmailValid(false)
@@ -57,6 +67,7 @@ export default function RegisterPage() {
       return
     }
 
+    // Basic client-side validation first
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setEmailValid(false)
@@ -64,48 +75,69 @@ export default function RegisterPage() {
       return
     }
 
-    // TODO: Real-time backend check
-    setEmailValid(true)
-    setEmailError('')
-  }, [email])
+    // Real-time backend validation via SignalR
+    if (isConnected) {
+      signalRValidateEmail(email, (result) => {
+        setEmailValid(result.isValid)
+        setEmailError(result.isValid ? '' : result.message)
+      })
+    } else {
+      // Fallback when SignalR not connected
+      setEmailValid(true)
+      setEmailError('')
+    }
+  }, [email, isConnected, signalRValidateEmail])
 
-  // Password validation
+  // Password validation with SignalR
   useEffect(() => {
     if (!password) {
       setPasswordValid(false)
       setPasswordError('')
+      setPasswordStrength(0)
       return
     }
 
-    if (password.length < 8) {
-      setPasswordValid(false)
-      setPasswordError('Şifre en az 8 karakter olmalı')
-      return
+    // Real-time backend strength check via SignalR
+    if (isConnected) {
+      signalRCheckPasswordStrength(password, (result) => {
+        setPasswordStrength(result.score)
+        // Score >= 3 means strong enough (out of 5)
+        setPasswordValid(result.score >= 3)
+        setPasswordError(result.score >= 3 ? '' : (result.suggestions[0] || 'Şifre güçlendirilmeli'))
+      })
+    } else {
+      // Fallback client-side validation when SignalR not connected
+      if (password.length < 8) {
+        setPasswordValid(false)
+        setPasswordError('Şifre en az 8 karakter olmalı')
+        return
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        setPasswordValid(false)
+        setPasswordError('En az bir büyük harf içermeli')
+        return
+      }
+
+      if (!/[a-z]/.test(password)) {
+        setPasswordValid(false)
+        setPasswordError('En az bir küçük harf içermeli')
+        return
+      }
+
+      if (!/[0-9]/.test(password)) {
+        setPasswordValid(false)
+        setPasswordError('En az bir rakam içermeli')
+        return
+      }
+
+      setPasswordValid(true)
+      setPasswordError('')
+      setPasswordStrength(4)
     }
+  }, [password, isConnected, signalRCheckPasswordStrength])
 
-    if (!/[A-Z]/.test(password)) {
-      setPasswordValid(false)
-      setPasswordError('En az bir büyük harf içermeli')
-      return
-    }
-
-    if (!/[a-z]/.test(password)) {
-      setPasswordValid(false)
-      setPasswordError('En az bir küçük harf içermeli')
-      return
-    }
-
-    if (!/[0-9]/.test(password)) {
-      setPasswordValid(false)
-      setPasswordError('En az bir rakam içermeli')
-      return
-    }
-
-    setPasswordValid(true)
-    setPasswordError('')
-  }, [password])
-
-  // Team name validation
+  // Team name validation with SignalR
   useEffect(() => {
     if (!teamName) {
       setTeamNameValid(false)
@@ -113,7 +145,7 @@ export default function RegisterPage() {
       return
     }
 
-    // Only lowercase, numbers, and hyphens
+    // Basic client-side validation first
     const teamNameRegex = /^[a-z0-9-]+$/
     if (!teamNameRegex.test(teamName)) {
       setTeamNameValid(false)
@@ -127,10 +159,18 @@ export default function RegisterPage() {
       return
     }
 
-    // TODO: Real-time backend check for availability
-    setTeamNameValid(true)
-    setTeamNameError('')
-  }, [teamName])
+    // Real-time backend availability check via SignalR
+    if (isConnected) {
+      signalRValidateTenantCode(teamName, (result) => {
+        setTeamNameValid(result.isAvailable)
+        setTeamNameError(result.isAvailable ? '' : result.message)
+      })
+    } else {
+      // Fallback when SignalR not connected
+      setTeamNameValid(true)
+      setTeamNameError('')
+    }
+  }, [teamName, isConnected, signalRValidateTenantCode])
 
   const handleEmailContinue = () => {
     if (emailValid) {
@@ -157,19 +197,55 @@ export default function RegisterPage() {
 
     setIsLoading(true)
 
-    // TODO: Call backend API
-    console.log({
-      email,
-      password,
-      teamName,
-      firstName,
-      lastName,
-    })
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          teamName,
+          firstName,
+          lastName,
+        }),
+      })
 
-    await new Promise(resolve => setTimeout(resolve, 1000))
+      const data = await response.json()
 
-    setCurrentStep('complete')
-    setIsLoading(false)
+      if (response.ok && data.success) {
+        // Registration successful
+        setCurrentStep('complete')
+      } else {
+        // Registration failed - handle specific errors
+        const errorMessage = data.message || 'Kayıt işlemi başarısız oldu'
+
+        // Check if it's an email duplicate error
+        if (errorMessage.includes('e-posta') || errorMessage.toLowerCase().includes('email')) {
+          setEmailError(errorMessage)
+          setEmailValid(false)
+          setCurrentStep('email')
+        }
+        // Check if it's a team name duplicate error
+        else if (errorMessage.includes('takım') || errorMessage.includes('team')) {
+          setTeamNameError(errorMessage)
+          setTeamNameValid(false)
+          setCurrentStep('teamName')
+        }
+        // Generic error
+        else {
+          alert(errorMessage)
+        }
+
+        setIsLoading(false)
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      alert('Kayıt işlemi sırasında bir hata oluştu')
+      setIsLoading(false)
+    }
   }
 
   const renderStep = () => {

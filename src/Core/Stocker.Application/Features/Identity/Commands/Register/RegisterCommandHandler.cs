@@ -39,14 +39,41 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     {
         try
         {
-            _logger.LogWarning("REGISTER START - Company: {Company}, Username: {Username}, Email: {Email}", 
-                request.CompanyName, request.Username, request.Email);
-            _logger.LogInformation("Starting registration for company: {CompanyName}", request.CompanyName);
+            _logger.LogInformation("REGISTER START (Minimal Flow) - Email: {Email}, TeamName: {TeamName}, Name: {FirstName} {LastName}",
+                request.Email, request.TeamName, request.FirstName, request.LastName);
 
-            // Create tenant - use provided domain or generate from company name
-            var subdomain = !string.IsNullOrWhiteSpace(request.Domain) 
-                ? request.Domain.ToLower().Trim() 
-                : GenerateSubdomain(request.CompanyName);
+            // Validate essential fields
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Password) ||
+                string.IsNullOrWhiteSpace(request.TeamName) ||
+                string.IsNullOrWhiteSpace(request.FirstName) ||
+                string.IsNullOrWhiteSpace(request.LastName))
+            {
+                return Result<RegisterResponse>.Failure(Error.Validation("Register.MissingFields", "Tüm alanları doldurmanız gerekiyor"));
+            }
+
+            // Use TeamName as subdomain
+            var subdomain = request.TeamName.ToLower().Trim();
+
+            // Check if email already exists
+            var existingUserByEmail = await _masterUnitOfWork.Repository<MasterUser>()
+                .SingleOrDefaultAsync(u => u.Email.Value.ToLower() == request.Email.ToLower(), cancellationToken);
+
+            if (existingUserByEmail != null)
+            {
+                _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
+                return Result<RegisterResponse>.Failure(Error.Conflict("Register.EmailExists", "Bu e-posta adresi zaten kullanılıyor"));
+            }
+
+            // Check if tenant code (team name) already exists
+            var existingTenant = await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>()
+                .SingleOrDefaultAsync(t => t.Code.ToLower() == subdomain, cancellationToken);
+
+            if (existingTenant != null)
+            {
+                _logger.LogWarning("Registration failed - Team name already exists: {TeamName}", request.TeamName);
+                return Result<RegisterResponse>.Failure(Error.Conflict("Register.TeamNameExists", "Bu takım adı zaten kullanılıyor"));
+            }
                 
             // Use a placeholder SQLite connection string during registration
             // The actual connection string will be set during tenant provisioning
@@ -58,14 +85,17 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 return Result<RegisterResponse>.Failure(Error.Validation("Register.InvalidData", "Geçersiz veri"));
             }
             
+            // Use TeamName as company name initially (can be updated later)
+            var companyName = $"{request.FirstName} {request.LastName}'s Team";
+
             var tenant = Domain.Master.Entities.Tenant.Create(
-                name: request.CompanyName,
+                name: companyName,
                 code: subdomain,
                 databaseName: $"StockerTenant_{subdomain}",
                 connectionString: connectionStringResult.Value,
                 contactEmail: emailResult.Value,
                 contactPhone: null,
-                description: $"Identity: {request.IdentityType}-{request.IdentityNumber}, Sector: {request.Sector}, Employees: {request.EmployeeCount}",
+                description: $"Minimal registration - {DateTime.UtcNow:yyyy-MM-dd}",
                 logoUrl: null);
 
             await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant, cancellationToken);
@@ -73,9 +103,9 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
 
       
             
-            // Create master user
+            // Create master user - use email as username
             var masterUser = MasterUser.Create(
-                username: request.Username,
+                username: request.Email.Split('@')[0], // Use email prefix as username
                 email: emailResult.Value,
                 plainPassword: request.Password,
                 firstName: request.FirstName,
@@ -178,7 +208,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             
             _logger.LogInformation("Tenant provisioning queued for {TenantId}", tenant.Id);
 
-            _logger.LogInformation("Registration completed successfully for company: {CompanyName}", request.CompanyName);
+            _logger.LogInformation("Registration completed successfully for team: {TeamName}", request.TeamName);
 
             return Result<RegisterResponse>.Success(new RegisterResponse
             {
@@ -192,36 +222,17 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 Email = masterUser.Email.Value,
                 FullName = $"{masterUser.FirstName} {masterUser.LastName}",
                 Subdomain = tenant.Code,
-                SubdomainUrl = $"https://{tenant.Code}.stocker.app",
-                CompanyName = request.CompanyName,
+                SubdomainUrl = $"https://{tenant.Code}.stoocker.app",
+                CompanyName = companyName,
                 RequiresEmailVerification = true,
                 RedirectUrl = $"/welcome?tenant={tenant.Id}"
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "REGISTER ERROR - Company: {CompanyName}, Error: {Error}", 
-                request.CompanyName, ex.Message);
-            _logger.LogError(ex, "Error during registration for company: {CompanyName}", request.CompanyName);
+            _logger.LogError(ex, "REGISTER ERROR - TeamName: {TeamName}, Email: {Email}, Error: {Error}",
+                request.TeamName, request.Email, ex.Message);
             return Result<RegisterResponse>.Failure(Error.Failure("Register.Failed", "Kayıt işlemi sırasında bir hata oluştu"));
         }
-    }
-
-    private string GenerateSubdomain(string companyName)
-    {
-        // Generate a URL-safe subdomain from company name
-        var subdomain = companyName.ToLower()
-            .Replace(" ", "-")
-            .Replace("ş", "s")
-            .Replace("ç", "c")
-            .Replace("ğ", "g")
-            .Replace("ı", "i")
-            .Replace("ö", "o")
-            .Replace("ü", "u")
-            .Replace(".", "")
-            .Replace(",", "");
-
-        // Ensure uniqueness by adding a suffix if needed
-        return $"{subdomain}-{Guid.NewGuid().ToString("N").Substring(0, 6)}";
     }
 }
