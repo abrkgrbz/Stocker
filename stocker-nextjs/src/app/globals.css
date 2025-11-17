@@ -42,3 +42,44 @@ body {
 .dropzone-modern.dz-drag-hover {
   background-color: rgba(59, 130, 246, 0.05);
 }
+
+/* Landing Page Neon Green CTA Button */
+.btn-neon-green.ant-btn {
+  background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%) !important;
+  color: #0a1f2e !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+.btn-neon-green.ant-btn:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6) !important;
+  transform: scale(1.05);
+}
+
+/* Landing Page Ghost Button */
+.btn-ghost-white.ant-btn {
+  background: transparent !important;
+  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px);
+}
+
+.btn-ghost-white.ant-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: white !important;
+  color: white !important;
+  transform: scale(1.05);
+}
+
+/* Pricing Section Buttons */
+.btn-pricing-ghost.ant-btn {
+  background: transparent !important;
+  border: 2px solid rgb(209, 213, 219) !important;
+  color: rgb(17, 24, 39) !important;
+}
+
+.btn-pricing-ghost.ant-btn:hover {
+  border-color: rgb(17, 24, 39) !important;
+  color: rgb(17, 24, 39) !important;
+  transform: scale(1.05);
+}

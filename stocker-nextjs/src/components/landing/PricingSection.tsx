@@ -141,19 +141,13 @@ export default function PricingSection() {
                 {/* CTA Button */}
                 <Link href="/register">
                   <Button
-                    type={plan.popular ? 'primary' : 'default'}
                     size="large"
                     block
-                    className={`h-12 font-semibold text-base transition-all duration-300 hover:scale-105 ${
+                    className={`h-12 font-semibold text-base ${
                       plan.popular
-                        ? 'border-0 shadow-xl hover:shadow-[0_0_25px_rgba(0,255,136,0.5)]'
-                        : 'border-2 border-gray-300 hover:border-gray-900 hover:text-gray-900 bg-transparent'
+                        ? 'btn-neon-green shadow-xl'
+                        : 'btn-pricing-ghost'
                     }`}
-                    style={plan.popular ? {
-                      background: 'linear-gradient(135deg, #00ff88 0%, #00dd77 100%)',
-                      color: '#0a1f2e',
-                      fontWeight: '700'
-                    } : undefined}
                   >
                     {plan.cta}
                   </Button>

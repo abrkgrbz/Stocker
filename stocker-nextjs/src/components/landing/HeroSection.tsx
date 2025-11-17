@@ -45,15 +45,9 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Link href="/register">
               <Button
-                type="primary"
                 size="large"
                 icon={<RocketOutlined />}
-                className="h-14 px-8 text-lg font-semibold border-0 shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all duration-300 hover:scale-105"
-                style={{
-                  background: 'linear-gradient(135deg, #00ff88 0%, #00dd77 100%)',
-                  color: '#0a1f2e',
-                  fontWeight: '700'
-                }}
+                className="btn-neon-green h-14 px-8 text-lg shadow-2xl"
               >
                 Ücretsiz Başla
               </Button>
@@ -61,10 +55,7 @@ export default function HeroSection() {
             <Button
               size="large"
               icon={<PlayCircleOutlined />}
-              className="h-14 px-8 text-lg font-semibold bg-transparent text-white hover:bg-white/10 border-2 border-white/80 hover:border-white transition-all duration-300 hover:scale-105"
-              style={{
-                backdropFilter: 'blur(4px)'
-              }}
+              className="btn-ghost-white h-14 px-8 text-lg"
             >
               Demo İzle
             </Button>
