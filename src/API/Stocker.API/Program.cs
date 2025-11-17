@@ -237,14 +237,16 @@ builder.Services.AddTenantRateLimiting(builder.Configuration);
 var app = builder.Build();
 
 // ========================================
+// DATABASE MIGRATION (MUST BE BEFORE MIDDLEWARE)
+// ========================================
+// IMPORTANT: Database migration must run BEFORE UseApiPipeline because
+// Hangfire initialization (inside UseApiPipeline) requires Hangfire database to exist
+await app.MigrateDatabaseAsync();
+
+// ========================================
 // MIDDLEWARE PIPELINE
 // ========================================
 app.UseApiPipeline(builder.Configuration);
-
-// ========================================
-// DATABASE MIGRATION
-// ========================================
-await app.MigrateDatabaseAsync();
 
 // ========================================
 // HANGFIRE RECURRING JOBS
