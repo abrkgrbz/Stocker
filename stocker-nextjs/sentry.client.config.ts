@@ -36,8 +36,8 @@ Sentry.init({
   // Dynamically set environment based on subdomain
   environment: process.env.NODE_ENV === 'production' ? `production-${getSubdomain()}` : 'development',
 
-  tracesSampleRate: 1.0,
-  debug: true,
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  debug: process.env.NODE_ENV !== 'production',
 
   // CRITICAL: Override transport to force tunnel usage
   transport: makeFetchTransport,

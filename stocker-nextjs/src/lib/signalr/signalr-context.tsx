@@ -37,14 +37,20 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const connectAll = useCallback(async () => {
     const token = getAccessToken();
 
+    if (!token) {
+      console.warn('SignalR: No access token available, skipping connection');
+      return;
+    }
+
     try {
       // Connect to notification hub
       if (!notificationHub.isConnected) {
         await notificationHub.start(token);
-        setIsNotificationConnected(true);
+        setIsNotificationConnected(notificationHub.isConnected);
       }
     } catch (error) {
-      console.error('Failed to connect to SignalR hub:', error);
+      // Error already logged in signalr-client.ts
+      setIsNotificationConnected(false);
     }
   }, [getAccessToken]);
 
@@ -67,11 +73,12 @@ export function SignalRProvider({ children }: { children: React.ReactNode }) {
     };
   }, [connectAll, disconnectAll]);
 
-  // Monitor connection state
+  // Monitor connection state - reduced frequency to avoid performance impact
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsNotificationConnected(notificationHub.state === HubConnectionState.Connected);
-    }, 1000);
+      const isConnected = notificationHub.state === HubConnectionState.Connected;
+      setIsNotificationConnected(isConnected);
+    }, 5000); // Check every 5 seconds instead of every second
 
     return () => clearInterval(interval);
   }, []);

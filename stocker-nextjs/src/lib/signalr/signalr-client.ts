@@ -17,33 +17,42 @@ export class SignalRClient {
       return;
     }
 
+    // Validate token before attempting connection
+    if (!accessToken || accessToken.trim() === '') {
+      logger.warn('SignalR connection skipped: No access token available');
+      return; // Don't attempt connection without token
+    }
+
     const connectionBuilder = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}${this.hubUrl}`, {
-        accessTokenFactory: () => accessToken || '', // ✅ Send JWT token for authentication
+        accessTokenFactory: () => accessToken, // Send JWT token for authentication
         withCredentials: true, // Also send cookies
         skipNegotiation: false,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
-          // Exponential backoff: 0s, 2s, 10s, 30s, then 30s...
+          // Exponential backoff with max attempts: 0s, 2s, 10s, 30s, 60s
           if (retryContext.previousRetryCount === 0) return 0;
           if (retryContext.previousRetryCount === 1) return 2000;
           if (retryContext.previousRetryCount === 2) return 10000;
-          return 30000;
+          if (retryContext.previousRetryCount === 3) return 30000;
+          if (retryContext.previousRetryCount === 4) return 60000;
+          // Stop reconnecting after 5 attempts
+          return null;
         },
       })
       .configureLogging(
         process.env.NODE_ENV === 'development'
-          ? signalR.LogLevel.Information
-          : signalR.LogLevel.Warning
+          ? signalR.LogLevel.Warning // Reduced from Information to Warning
+          : signalR.LogLevel.Error
       );
 
     this.connection = connectionBuilder.build();
 
     // Connection event handlers
     this.connection.onreconnecting((error) => {
-      logger.warn('SignalR reconnecting...', error);
+      logger.warn('SignalR reconnecting...', error?.message || 'Unknown error');
       this.reconnectAttempts++;
     });
 
@@ -53,13 +62,23 @@ export class SignalRClient {
     });
 
     this.connection.onclose(async (error) => {
-      logger.error('SignalR connection closed:', error);
+      // Only log as warning if it's not a deliberate disconnect
+      if (error) {
+        logger.warn('SignalR connection closed:', error?.message || 'Unknown error');
+      } else {
+        logger.info('SignalR disconnected gracefully');
+      }
 
-      // Attempt manual reconnection if automatic reconnect fails
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      // Attempt manual reconnection with backoff
+      if (error && this.reconnectAttempts < this.maxReconnectAttempts) {
+        const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts), 60000);
+        logger.info(`Attempting manual reconnect in ${delay}ms...`);
+
         setTimeout(() => {
           this.start(accessToken);
-        }, this.reconnectDelay);
+        }, delay);
+      } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        logger.error('SignalR max reconnection attempts reached. Giving up.');
       }
     });
 
@@ -67,9 +86,22 @@ export class SignalRClient {
       await this.connection.start();
       logger.info('SignalR connected successfully');
       this.reconnectAttempts = 0;
-    } catch (error) {
-      logger.error('SignalR connection failed:', error);
-      throw error;
+    } catch (error: any) {
+      this.reconnectAttempts++;
+
+      // More graceful error handling based on error type
+      if (error?.message?.includes('429')) {
+        logger.error('SignalR rate limited (429). Please wait before reconnecting.');
+      } else if (error?.message?.includes('401') || error?.message?.includes('403')) {
+        logger.error('SignalR authentication failed. Token may be invalid or expired.');
+      } else if (error?.message?.includes('connect')) {
+        logger.warn('SignalR connection failed. Will retry automatically.');
+      } else {
+        logger.error('SignalR connection failed:', error?.message || 'Unknown error');
+      }
+
+      // Don't throw - let it reconnect automatically
+      // throw error;
     }
   }
 
