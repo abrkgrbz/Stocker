@@ -126,8 +126,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         const values = await form.validateFields(['companyName', 'companyCode', 'contactPhone']);
         setFormData({ ...formData, ...values });
         setCurrentStep(currentStep + 1);
-      } catch (error) {
-        // Form validation failed
+      } catch (error: any) {
+        // Form validation failed - show errors
+        console.error('Form validation error:', error);
+        message.error('Lütfen tüm zorunlu alanları doldurun');
       }
     } else if (currentStep === 3) {
       // Paket seçimi required
@@ -137,9 +139,21 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setLoading(true);
         await onComplete(finalData);
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         // Form validation failed or API error
         setLoading(false);
+        console.error('Onboarding error:', error);
+        if (error?.response?.data?.errors) {
+          // Backend validation errors
+          const backendErrors = error.response.data.errors;
+          const errorMessage = Object.values(backendErrors).flat().join('; ');
+          message.error(errorMessage || 'Kurulum sırasında bir hata oluştu');
+        } else if (error?.errorFields) {
+          // Form validation errors
+          message.error('Lütfen tüm zorunlu alanları doldurun');
+        } else {
+          message.error(error?.message || 'Kurulum sırasında bir hata oluştu');
+        }
       }
     } else {
       setCurrentStep(currentStep + 1);
