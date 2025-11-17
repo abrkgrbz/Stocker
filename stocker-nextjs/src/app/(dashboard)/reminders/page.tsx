@@ -15,6 +15,7 @@ import {
   message,
   Modal,
   InputNumber,
+  Checkbox,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -109,6 +110,7 @@ const getRecurrenceLabel = (recurrenceType: RecurrenceType): string | null => {
 
 export default function RemindersPage() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
@@ -135,6 +137,7 @@ export default function RemindersPage() {
       }
 
       setReminders(filteredReminders);
+      setTotalCount(response.totalCount);
     } catch (error) {
       message.error('Hatırlatıcılar yüklenemedi');
       console.error(error);
@@ -275,12 +278,19 @@ export default function RemindersPage() {
           </Dropdown>,
         ]}
       >
-        <List.Item.Meta
-          avatar={
-            <Badge dot={isPast && reminder.status === 0} status="error">
-              <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
-            </Badge>
-          }
+        <Space align="start" style={{ width: '100%' }}>
+          <Checkbox
+            checked={reminder.status === 3}
+            disabled={reminder.status === 3}
+            onChange={() => handleComplete(reminder)}
+            style={{ marginTop: 8 }}
+          />
+          <List.Item.Meta
+            avatar={
+              <Badge dot={isPast && reminder.status === 0} status="error">
+                <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+              </Badge>
+            }
           title={
             <Space>
               <Text strong>{reminder.title}</Text>
@@ -300,6 +310,16 @@ export default function RemindersPage() {
           description={
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               {reminder.description && <Text type="secondary">{reminder.description}</Text>}
+              {reminder.relatedEntityType && reminder.relatedEntityId && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  İlgili: {reminder.relatedEntityType} #{reminder.relatedEntityId}
+                </Text>
+              )}
+              {reminder.assignedToUserId && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Atanan: {reminder.assignedToUserId}
+                </Text>
+              )}
               <Space>
                 <ClockCircleOutlined />
                 <Text type={isPast ? 'danger' : 'secondary'}>
@@ -349,13 +369,16 @@ export default function RemindersPage() {
               </Space>
             </Space>
           }
-        />
+          />
+        </Space>
       </List.Item>
     );
   };
 
-  const pendingCount = reminders.filter((r) => r.status === 0 || r.status === 1).length;
-  const completedCount = reminders.filter((r) => r.status === 3).length;
+  // Badge counts - use filtered array length for current tab
+  const allCount = activeTab === 'all' ? reminders.length : totalCount;
+  const pendingCount = activeTab === 'pending' ? reminders.length : reminders.filter((r) => r.status === 0 || r.status === 1).length;
+  const completedCount = activeTab === 'completed' ? reminders.length : reminders.filter((r) => r.status === 3).length;
 
   return (
     <div style={{ padding: 24 }}>
@@ -381,7 +404,7 @@ export default function RemindersPage() {
           <Tabs.TabPane
             tab={
               <span>
-                Tümü <Badge count={reminders.length} showZero style={{ marginLeft: 8 }} />
+                Tümü <Badge count={allCount} showZero style={{ marginLeft: 8 }} />
               </span>
             }
             key="all"
