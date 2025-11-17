@@ -1,10 +1,33 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Input, Button } from 'antd'
+import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
 import Logo from '@/components/Logo'
 
+type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
+
 export default function RegisterPage() {
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState<Step>('email')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Form data
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [teamName, setTeamName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+
+  // Validation states
+  const [emailValid, setEmailValid] = useState(false)
+  const [emailError, setEmailError] = useState('')
+  const [passwordValid, setPasswordValid] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [teamNameValid, setTeamNameValid] = useState(false)
+  const [teamNameError, setTeamNameError] = useState('')
 
   // Redirect to auth domain if on root domain
   useEffect(() => {
@@ -25,6 +48,397 @@ export default function RegisterPage() {
       }
     }
   }, [])
+
+  // Email validation
+  useEffect(() => {
+    if (!email) {
+      setEmailValid(false)
+      setEmailError('')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setEmailValid(false)
+      setEmailError('Geçerli bir e-posta adresi girin')
+      return
+    }
+
+    // TODO: Real-time backend check
+    setEmailValid(true)
+    setEmailError('')
+  }, [email])
+
+  // Password validation
+  useEffect(() => {
+    if (!password) {
+      setPasswordValid(false)
+      setPasswordError('')
+      return
+    }
+
+    if (password.length < 8) {
+      setPasswordValid(false)
+      setPasswordError('Şifre en az 8 karakter olmalı')
+      return
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setPasswordValid(false)
+      setPasswordError('En az bir büyük harf içermeli')
+      return
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setPasswordValid(false)
+      setPasswordError('En az bir küçük harf içermeli')
+      return
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setPasswordValid(false)
+      setPasswordError('En az bir rakam içermeli')
+      return
+    }
+
+    setPasswordValid(true)
+    setPasswordError('')
+  }, [password])
+
+  // Team name validation
+  useEffect(() => {
+    if (!teamName) {
+      setTeamNameValid(false)
+      setTeamNameError('')
+      return
+    }
+
+    // Only lowercase, numbers, and hyphens
+    const teamNameRegex = /^[a-z0-9-]+$/
+    if (!teamNameRegex.test(teamName)) {
+      setTeamNameValid(false)
+      setTeamNameError('Sadece küçük harf, rakam ve tire (-) kullanın')
+      return
+    }
+
+    if (teamName.length < 3) {
+      setTeamNameValid(false)
+      setTeamNameError('En az 3 karakter olmalı')
+      return
+    }
+
+    // TODO: Real-time backend check for availability
+    setTeamNameValid(true)
+    setTeamNameError('')
+  }, [teamName])
+
+  const handleEmailContinue = () => {
+    if (emailValid) {
+      setCurrentStep('password')
+    }
+  }
+
+  const handlePasswordContinue = () => {
+    if (passwordValid) {
+      setCurrentStep('teamName')
+    }
+  }
+
+  const handleTeamNameContinue = () => {
+    if (teamNameValid) {
+      setCurrentStep('fullName')
+    }
+  }
+
+  const handleComplete = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      return
+    }
+
+    setIsLoading(true)
+
+    // TODO: Call backend API
+    console.log({
+      email,
+      password,
+      teamName,
+      firstName,
+      lastName,
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    setCurrentStep('complete')
+    setIsLoading(false)
+  }
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 'email':
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                İş e-postanızı girin
+              </h2>
+              <p className="text-gray-600">
+                Hesabınız bu e-posta ile oluşturulacak
+              </p>
+            </div>
+
+            <div>
+              <Input
+                size="large"
+                type="email"
+                prefix={<MailOutlined className="text-gray-400" />}
+                placeholder="ornek@sirket.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                onPressEnter={handleEmailContinue}
+                status={email && !emailValid ? 'error' : ''}
+                className="h-14 text-lg"
+                autoFocus
+              />
+              {emailError && (
+                <p className="mt-2 text-sm text-red-600">{emailError}</p>
+              )}
+              {emailValid && (
+                <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircleFilled /> E-posta geçerli
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              block
+              disabled={!emailValid}
+              onClick={handleEmailContinue}
+              icon={<ArrowRightOutlined />}
+              className="h-14 text-lg font-semibold"
+            >
+              E-posta ile Devam Et
+            </Button>
+
+            <p className="text-center text-sm text-gray-500">
+              Zaten hesabınız var mı?{' '}
+              <Link href="/signin" className="text-violet-600 hover:text-violet-700 font-medium">
+                Giriş Yapın
+              </Link>
+            </p>
+          </div>
+        )
+
+      case 'password':
+        return (
+          <div className="space-y-6">
+            <button
+              onClick={() => setCurrentStep('email')}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              ← Geri
+            </button>
+
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Şifrenizi belirleyin
+              </h2>
+              <p className="text-gray-600">
+                Güçlü bir şifre oluşturun
+              </p>
+            </div>
+
+            <div>
+              <Input.Password
+                size="large"
+                prefix={<LockOutlined className="text-gray-400" />}
+                placeholder="En az 8 karakter"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onPressEnter={handlePasswordContinue}
+                status={password && !passwordValid ? 'error' : ''}
+                className="h-14 text-lg"
+                autoFocus
+              />
+              {passwordError && (
+                <p className="mt-2 text-sm text-red-600">{passwordError}</p>
+              )}
+              {passwordValid && (
+                <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircleFilled /> Şifre güçlü
+                </p>
+              )}
+              {!passwordError && password && (
+                <div className="mt-3 text-xs text-gray-500 space-y-1">
+                  <p className={password.length >= 8 ? 'text-green-600' : ''}>• En az 8 karakter</p>
+                  <p className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>• Bir büyük harf</p>
+                  <p className={/[a-z]/.test(password) ? 'text-green-600' : ''}>• Bir küçük harf</p>
+                  <p className={/[0-9]/.test(password) ? 'text-green-600' : ''}>• Bir rakam</p>
+                </div>
+              )}
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              block
+              disabled={!passwordValid}
+              onClick={handlePasswordContinue}
+              icon={<ArrowRightOutlined />}
+              className="h-14 text-lg font-semibold"
+            >
+              Şifreyi Onayla
+            </Button>
+          </div>
+        )
+
+      case 'teamName':
+        return (
+          <div className="space-y-6">
+            <button
+              onClick={() => setCurrentStep('password')}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              ← Geri
+            </button>
+
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Takım adınızı seçin
+              </h2>
+              <p className="text-gray-600">
+                Bu, sizin Stoocker adresiniz olacak
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Input
+                  size="large"
+                  prefix={<TeamOutlined className="text-gray-400" />}
+                  placeholder="sirketiniz"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  onPressEnter={handleTeamNameContinue}
+                  status={teamName && !teamNameValid ? 'error' : ''}
+                  className="h-14 text-lg flex-1"
+                  autoFocus
+                />
+                <span className="text-gray-500 text-sm whitespace-nowrap">.stoocker.app</span>
+              </div>
+
+              <p className="text-sm text-gray-500 mb-2">
+                Adresiniz: <span className="font-medium text-violet-600">{teamName || 'sirketiniz'}.stoocker.app</span>
+              </p>
+
+              {teamNameError && (
+                <p className="mt-2 text-sm text-red-600">{teamNameError}</p>
+              )}
+              {teamNameValid && (
+                <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircleFilled /> Takım adı kullanılabilir
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              block
+              disabled={!teamNameValid}
+              onClick={handleTeamNameContinue}
+              icon={<ArrowRightOutlined />}
+              className="h-14 text-lg font-semibold"
+            >
+              Takım Adını Onayla
+            </Button>
+          </div>
+        )
+
+      case 'fullName':
+        return (
+          <div className="space-y-6">
+            <button
+              onClick={() => setCurrentStep('teamName')}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              ← Geri
+            </button>
+
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Adınız ve soyadınız
+              </h2>
+              <p className="text-gray-600">
+                Son adım! Hemen tamamlayın
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <Input
+                size="large"
+                prefix={<UserOutlined className="text-gray-400" />}
+                placeholder="Adınız"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="h-14 text-lg"
+                autoFocus
+              />
+
+              <Input
+                size="large"
+                prefix={<UserOutlined className="text-gray-400" />}
+                placeholder="Soyadınız"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                onPressEnter={handleComplete}
+                className="h-14 text-lg"
+              />
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              block
+              disabled={!firstName.trim() || !lastName.trim()}
+              onClick={handleComplete}
+              loading={isLoading}
+              className="h-14 text-lg font-semibold btn-neon-green"
+            >
+              Tamamla ve Kullanmaya Başla
+            </Button>
+          </div>
+        )
+
+      case 'complete':
+        return (
+          <div className="text-center space-y-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircleFilled className="text-5xl text-green-600" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900">
+              Hoş geldiniz, {firstName}!
+            </h2>
+
+            <p className="text-lg text-gray-600">
+              Hesabınız başarıyla oluşturuldu.<br />
+              <span className="font-medium text-violet-600">{teamName}.stoocker.app</span> adresiniz hazır.
+            </p>
+
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => router.push('/app/dashboard')}
+              className="h-14 px-12 text-lg font-semibold btn-neon-green"
+            >
+              Panele Git
+            </Button>
+          </div>
+        )
+    }
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -119,23 +533,28 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* RIGHT - Form Area (Empty for now) */}
+      {/* RIGHT - Form */}
       <div className="flex-1 flex items-center justify-center p-6 bg-white overflow-y-auto">
-        <div className="w-full max-w-2xl py-8">
+        <div className="w-full max-w-md py-8">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden mb-8 inline-block">
             <Logo variant="gradient" size="md" />
           </Link>
 
-          {/* Form will be built here */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Kayıt Formu
-            </h2>
-            <p className="text-gray-600">
-              Form yapısı sıfırdan oluşturulacak
-            </p>
-          </div>
+          {/* Progress Indicator */}
+          {currentStep !== 'complete' && (
+            <div className="mb-8">
+              <div className="flex items-center justify-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${currentStep === 'email' || currentStep === 'password' || currentStep === 'teamName' || currentStep === 'fullName' ? 'bg-violet-600' : 'bg-gray-200'}`} />
+                <div className={`h-2 w-2 rounded-full ${currentStep === 'password' || currentStep === 'teamName' || currentStep === 'fullName' ? 'bg-violet-600' : 'bg-gray-200'}`} />
+                <div className={`h-2 w-2 rounded-full ${currentStep === 'teamName' || currentStep === 'fullName' ? 'bg-violet-600' : 'bg-gray-200'}`} />
+                <div className={`h-2 w-2 rounded-full ${currentStep === 'fullName' ? 'bg-violet-600' : 'bg-gray-200'}`} />
+              </div>
+            </div>
+          )}
+
+          {/* Step Content */}
+          {renderStep()}
         </div>
       </div>
     </div>
