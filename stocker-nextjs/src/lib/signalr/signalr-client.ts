@@ -17,16 +17,12 @@ export class SignalRClient {
       return;
     }
 
-    // Validate token before attempting connection
-    if (!accessToken || accessToken.trim() === '') {
-      logger.warn('SignalR connection skipped: No access token available');
-      return; // Don't attempt connection without token
-    }
-
+    // Note: Authentication uses HttpOnly cookies, not access tokens
+    // Backend validates authentication via Context.User from cookies
     const connectionBuilder = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}${this.hubUrl}`, {
-        accessTokenFactory: () => accessToken, // Send JWT token for authentication
-        withCredentials: true, // Also send cookies
+        // No accessTokenFactory needed - authentication via HttpOnly cookies
+        withCredentials: true, // Send cookies for authentication
         skipNegotiation: false,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
       })
@@ -75,7 +71,7 @@ export class SignalRClient {
         logger.info(`Attempting manual reconnect in ${delay}ms...`);
 
         setTimeout(() => {
-          this.start(accessToken);
+          this.start(); // No token needed - uses cookies
         }, delay);
       } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         logger.error('SignalR max reconnection attempts reached. Giving up.');

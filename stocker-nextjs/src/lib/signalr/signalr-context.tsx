@@ -19,40 +19,19 @@ const SignalRContext = createContext<SignalRContextValue | undefined>(undefined)
 export function SignalRProvider({ children }: { children: React.ReactNode }) {
   const [isNotificationConnected, setIsNotificationConnected] = useState(false);
 
-  // Get access token from cookie or localStorage
-  const getAccessToken = useCallback(() => {
-    if (typeof window === 'undefined') return undefined;
-
-    // Try to get from cookie
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(c => c.trim().startsWith('access_token='));
-    if (tokenCookie) {
-      return tokenCookie.split('=')[1];
-    }
-
-    // Try to get from localStorage
-    return localStorage.getItem('access_token') || undefined;
-  }, []);
-
   const connectAll = useCallback(async () => {
-    const token = getAccessToken();
-
-    if (!token) {
-      console.warn('SignalR: No access token available, skipping connection');
-      return;
-    }
-
+    // Note: No token needed - authentication via HttpOnly cookies
     try {
       // Connect to notification hub
       if (!notificationHub.isConnected) {
-        await notificationHub.start(token);
+        await notificationHub.start(); // No token parameter needed
         setIsNotificationConnected(notificationHub.isConnected);
       }
     } catch (error) {
       // Error already logged in signalr-client.ts
       setIsNotificationConnected(false);
     }
-  }, [getAccessToken]);
+  }, []); // Removed getAccessToken dependency
 
   const disconnectAll = useCallback(async () => {
     try {
