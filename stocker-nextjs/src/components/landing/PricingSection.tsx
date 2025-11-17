@@ -144,11 +144,16 @@ export default function PricingSection() {
                     type={plan.popular ? 'primary' : 'default'}
                     size="large"
                     block
-                    className={`h-12 font-semibold text-base ${
+                    className={`h-12 font-semibold text-base transition-all duration-300 hover:scale-105 ${
                       plan.popular
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 shadow-lg'
-                        : 'border-2 border-gray-300 hover:border-purple-500 hover:text-purple-600'
+                        ? 'border-0 shadow-xl hover:shadow-[0_0_25px_rgba(0,255,136,0.5)]'
+                        : 'border-2 border-gray-300 hover:border-gray-900 hover:text-gray-900 bg-transparent'
                     }`}
+                    style={plan.popular ? {
+                      background: 'linear-gradient(135deg, #00ff88 0%, #00dd77 100%)',
+                      color: '#0a1f2e',
+                      fontWeight: '700'
+                    } : undefined}
                   >
                     {plan.cta}
                   </Button>

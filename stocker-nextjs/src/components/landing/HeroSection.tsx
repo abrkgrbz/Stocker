@@ -48,7 +48,12 @@ export default function HeroSection() {
                 type="primary"
                 size="large"
                 icon={<RocketOutlined />}
-                className="h-14 px-8 text-lg font-semibold bg-white text-purple-600 hover:bg-gray-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                className="h-14 px-8 text-lg font-semibold border-0 shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #00ff88 0%, #00dd77 100%)',
+                  color: '#0a1f2e',
+                  fontWeight: '700'
+                }}
               >
                 Ücretsiz Başla
               </Button>
@@ -56,7 +61,10 @@ export default function HeroSection() {
             <Button
               size="large"
               icon={<PlayCircleOutlined />}
-              className="h-14 px-8 text-lg font-semibold bg-white/10 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300"
+              className="h-14 px-8 text-lg font-semibold bg-transparent text-white hover:bg-white/10 border-2 border-white/80 hover:border-white transition-all duration-300 hover:scale-105"
+              style={{
+                backdropFilter: 'blur(4px)'
+              }}
             >
               Demo İzle
             </Button>

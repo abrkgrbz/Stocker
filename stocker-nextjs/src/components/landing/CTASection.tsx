@@ -57,7 +57,12 @@ export default function CTASection() {
                 type="primary"
                 size="large"
                 icon={<RocketOutlined />}
-                className="h-16 px-10 text-lg font-semibold bg-white text-purple-600 hover:bg-gray-100 border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 rounded-xl"
+                className="h-16 px-10 text-lg font-semibold border-0 shadow-2xl hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all duration-300 hover:scale-105 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #00ff88 0%, #00dd77 100%)',
+                  color: '#0a1f2e',
+                  fontWeight: '700'
+                }}
               >
                 Ücretsiz Hesap Oluştur
               </Button>
@@ -66,7 +71,10 @@ export default function CTASection() {
               <Button
                 size="large"
                 icon={<ArrowRightOutlined />}
-                className="h-16 px-10 text-lg font-semibold bg-white/10 text-white hover:bg-white/20 border-2 border-white/30 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl"
+                className="h-16 px-10 text-lg font-semibold bg-transparent text-white hover:bg-white/10 border-2 border-white/80 hover:border-white transition-all duration-300 hover:scale-105 rounded-xl"
+                style={{
+                  backdropFilter: 'blur(4px)'
+                }}
               >
                 Canlı Demo İzle
               </Button>
