@@ -25,13 +25,11 @@ export const remindersApi = {
     const query = queryParams.toString();
     const url = query ? `/api/crm/Reminders?${query}` : '/api/crm/Reminders';
 
-    const response = await apiClient.get<GetRemindersResponse>(url);
-    return response.data;
+    return await apiClient.get<GetRemindersResponse>(url);
   },
 
   createReminder: async (data: CreateReminderRequest): Promise<number> => {
-    const response = await apiClient.post<number>('/api/crm/Reminders', data);
-    return response.data;
+    return await apiClient.post<number>('/api/crm/Reminders', data);
   },
 
   updateReminder: async (id: number, data: UpdateReminderRequest): Promise<void> => {
