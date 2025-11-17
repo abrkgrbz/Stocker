@@ -38,8 +38,31 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
     return phoneRegex.test(cleanedPhone);
   };
 
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-numeric characters
+    const cleaned = value.replace(/\D/g, '');
+
+    // Apply Turkish phone format: 5XX XXX XX XX
+    if (cleaned.length <= 3) {
+      return cleaned;
+    } else if (cleaned.length <= 6) {
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+    } else if (cleaned.length <= 8) {
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
+    } else {
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
+    }
+  };
+
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Auto-format phone number
+    if (field === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
