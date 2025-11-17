@@ -125,6 +125,9 @@ export default function RemindersPage() {
       const pendingOnly = activeTab === 'pending' ? true : activeTab === 'completed' ? false : undefined;
       const response = await remindersApi.getReminders({ pendingOnly });
 
+      console.log('API Response:', response);
+      console.log('Reminders:', response.reminders);
+
       // Filter by status for completed tab
       let filteredReminders = response.reminders;
       if (activeTab === 'completed') {
