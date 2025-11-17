@@ -56,16 +56,17 @@ export default function CTASection() {
               <Button
                 size="large"
                 icon={<RocketOutlined />}
-                className="btn-neon-green h-16 px-10 text-lg shadow-2xl rounded-xl"
+                className="btn-neon-green h-20 px-12 text-lg shadow-2xl rounded-xl flex flex-col items-center"
               >
-                Ücretsiz Hesap Oluştur
+                <span className="font-bold text-xl">14 Gün Ücretsiz Deneyin</span>
+                <span className="text-sm opacity-90 mt-1">Kredi kartı gerekmez • İstediğiniz zaman iptal</span>
               </Button>
             </Link>
             <Link href="/demo">
               <Button
                 size="large"
                 icon={<ArrowRightOutlined />}
-                className="btn-ghost-white h-16 px-10 text-lg rounded-xl"
+                className="btn-ghost-white h-20 px-12 text-lg rounded-xl"
               >
                 Canlı Demo İzle
               </Button>
