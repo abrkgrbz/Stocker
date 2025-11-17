@@ -445,3 +445,6 @@ claudedocs/
 # Debug scripts output
 scripts/debug-output/
 scripts/.env
+
+# EF Core Migration Bundles (built in Dockerfile)
+efbundle-*
