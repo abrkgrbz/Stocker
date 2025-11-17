@@ -321,18 +321,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       <Layout style={{ minHeight: '100vh' }}>
         <Sider
-        theme="light"
-        breakpoint="lg"
-        collapsedWidth="0"
-        style={{
-          overflow: 'auto',
-          height: '100vh',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
-        }}
-      >
+          theme="light"
+          breakpoint="lg"
+          collapsedWidth="0"
+          style={{
+            overflow: 'auto',
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+          }}
+        >
         <div
           style={{
             height: 64,

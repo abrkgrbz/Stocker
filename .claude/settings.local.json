@@ -44,7 +44,9 @@
       "Bash(cmd /c \"dir C:\\Temp\\ | findstr key\")",
       "Bash(Select-Object -First 50)",
       "Bash(dotnet ef database:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(Select-Object -First 100)",
+      "Bash(git status:*)"
     ],
     "deny": [],
     "ask": []

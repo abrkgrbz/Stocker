@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Application.Interfaces;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Results;
 using System.Text.Json;
@@ -10,9 +10,9 @@ namespace Stocker.Application.Features.Onboarding.Commands.CompleteOnboarding;
 public sealed class CompleteOnboardingCommandHandler
     : IRequestHandler<CompleteOnboardingCommand, Result<CompleteOnboardingResponse>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public CompleteOnboardingCommandHandler(IApplicationDbContext context)
+    public CompleteOnboardingCommandHandler(IMasterDbContext context)
     {
         _context = context;
     }

@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Application.Interfaces;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Results;
 
@@ -9,9 +9,9 @@ namespace Stocker.Application.Features.Onboarding.Queries.GetOnboardingStatus;
 public sealed class GetOnboardingStatusQueryHandler
     : IRequestHandler<GetOnboardingStatusQuery, Result<OnboardingStatusResponse>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IMasterDbContext _context;
 
-    public GetOnboardingStatusQueryHandler(IApplicationDbContext context)
+    public GetOnboardingStatusQueryHandler(IMasterDbContext context)
     {
         _context = context;
     }
