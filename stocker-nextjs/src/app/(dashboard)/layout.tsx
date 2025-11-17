@@ -346,50 +346,51 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         >
           {tenant?.name || 'Stocker'}
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={getSelectedKeys()}
-          openKeys={openKeys}
-          onOpenChange={handleOpenChange}
-          items={menuItems}
-          onClick={({ key }) => handleMenuClick(key)}
-        />
-      </Sider>
+          <Menu
+            mode="inline"
+            selectedKeys={getSelectedKeys()}
+            openKeys={openKeys}
+            onOpenChange={handleOpenChange}
+            items={menuItems}
+            onClick={({ key }) => handleMenuClick(key)}
+          />
+        </Sider>
 
-      <Layout style={{ marginLeft: 200 }}>
-        <Header
-          style={{
-            padding: '0 24px',
-            background: '#fff',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: '16px',
-          }}
-        >
-          <ConnectionStatus state={connectionState} size="small" />
-          <NotificationCenter />
-
-          <Dropdown
-            menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
-            placement="bottomRight"
+        <Layout style={{ marginLeft: 200 }}>
+          <Header
+            style={{
+              padding: '0 24px',
+              background: '#fff',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              gap: '16px',
+            }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} />
-              <span style={{ marginLeft: 8 }}>
-                {user?.firstName} {user?.lastName}
-              </span>
-            </div>
-          </Dropdown>
-        </Header>
+            <ConnectionStatus state={connectionState} size="small" />
+            <NotificationCenter />
 
-        <Content style={{ overflow: 'initial' }}>
-          <div style={{ margin: '24px 16px 0' }}>
-            <div style={{ padding: 24, background: '#fff', minHeight: 360, borderRadius: 8 }}>
-              {children}
+            <Dropdown
+              menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
+              placement="bottomRight"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                <span style={{ marginLeft: 8 }}>
+                  {user?.firstName} {user?.lastName}
+                </span>
+              </div>
+            </Dropdown>
+          </Header>
+
+          <Content style={{ overflow: 'initial' }}>
+            <div style={{ margin: '24px 16px 0' }}>
+              <div style={{ padding: 24, background: '#fff', minHeight: 360, borderRadius: 8 }}>
+                {children}
+              </div>
             </div>
-          </div>
-        </Content>
+          </Content>
+        </Layout>
       </Layout>
     </>
   );
