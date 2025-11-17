@@ -281,21 +281,20 @@ export default function RemindersPage() {
           </Dropdown>,
         ]}
       >
-        <Space align="start" style={{ width: '100%' }}>
-          <Checkbox
-            checked={reminder.status === 3}
-            disabled={reminder.status === 3}
-            onChange={() => handleComplete(reminder)}
-            style={{ marginTop: 8 }}
-          />
-          <div style={{ flex: 1 }}>
-            <List.Item.Meta
-              avatar={
-                <Badge dot={isPast && reminder.status === 0} status="error">
-                  <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
-                </Badge>
-              }
-              title={
+        <List.Item.Meta
+          avatar={
+            <Space direction="vertical" align="center">
+              <Checkbox
+                checked={reminder.status === 3}
+                disabled={reminder.status === 3}
+                onChange={() => handleComplete(reminder)}
+              />
+              <Badge dot={isPast && reminder.status === 0} status="error">
+                <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+              </Badge>
+            </Space>
+          }
+          title={
                 <Space>
                   <Text strong>{reminder.title}</Text>
                   <Tag color={getReminderTypeColor(reminder.type)}>
@@ -373,9 +372,7 @@ export default function RemindersPage() {
                   </Space>
                 </Space>
               }
-            />
-          </div>
-        </Space>
+        />
       </List.Item>
     );
   };
