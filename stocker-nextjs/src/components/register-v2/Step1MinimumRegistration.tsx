@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { Input, Button } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined, RocketOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, LockOutlined, RocketOutlined, PhoneOutlined } from '@ant-design/icons';
 
 interface Step1Props {
-  onComplete: (data: { fullName: string; email: string; password: string }) => void;
-  initialData?: { fullName?: string; email?: string; password?: string };
+  onComplete: (data: { fullName: string; email: string; password: string; phone?: string }) => void;
+  initialData?: { fullName?: string; email?: string; password?: string; phone?: string };
 }
 
 export default function Step1MinimumRegistration({ onComplete, initialData }: Step1Props) {
@@ -14,12 +14,14 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
     fullName: initialData?.fullName || '',
     email: initialData?.email || '',
     password: initialData?.password || '',
+    phone: initialData?.phone || '',
   });
 
   const [errors, setErrors] = useState({
     fullName: '',
     email: '',
     password: '',
+    phone: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +29,13 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    // Turkish phone format: 5XX XXX XX XX (10 digits without 0)
+    const phoneRegex = /^5\d{9}$/;
+    const cleanedPhone = phone.replace(/\s/g, '');
+    return phoneRegex.test(cleanedPhone);
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
@@ -42,6 +51,7 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
       fullName: '',
       email: '',
       password: '',
+      phone: '',
     };
 
     let isValid = true;
@@ -67,6 +77,12 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
       isValid = false;
     } else if (formData.password.length < 6) {
       newErrors.password = 'Şifre en az 6 karakter olmalıdır';
+      isValid = false;
+    }
+
+    // Phone is optional, but if provided, must be valid
+    if (formData.phone && !validatePhone(formData.phone)) {
+      newErrors.phone = 'Geçerli bir telefon numarası girin (5XX XXX XX XX)';
       isValid = false;
     }
 
@@ -99,7 +115,7 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
           Hemen Başlayın
         </h2>
         <p className="text-lg text-gray-600">
-          Sadece 3 bilgi ile 30 saniyede başlayın
+          Sadece 3 zorunlu bilgi ile 30 saniyede başlayın
         </p>
       </div>
 
@@ -163,6 +179,32 @@ export default function Step1MinimumRegistration({ onComplete, initialData }: St
           />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+          )}
+        </div>
+
+        {/* Phone (Optional) */}
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            Telefon <span className="text-gray-400 text-xs">(İsteğe bağlı)</span>
+          </label>
+          <Input
+            id="phone"
+            size="large"
+            prefix={<PhoneOutlined className="text-gray-400" />}
+            placeholder="5XX XXX XX XX"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            status={errors.phone ? 'error' : ''}
+            className="h-12"
+            maxLength={15}
+          />
+          {errors.phone && (
+            <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+          )}
+          {!errors.phone && formData.phone && (
+            <p className="mt-1 text-xs text-gray-500">
+              💡 Destek ekibimizle daha hızlı iletişim kurabilirsiniz
+            </p>
           )}
         </div>
 

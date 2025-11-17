@@ -12,6 +12,7 @@ interface RegistrationData {
   fullName: string;
   email: string;
   password: string;
+  phone?: string;
   // Step 2
   useCases: string[];
   // Auto-generated
@@ -26,10 +27,11 @@ export default function RegisterV2Page() {
     fullName: '',
     email: '',
     password: '',
+    phone: '',
     useCases: [],
   });
 
-  const handleStep1Complete = (data: { fullName: string; email: string; password: string }) => {
+  const handleStep1Complete = (data: { fullName: string; email: string; password: string; phone?: string }) => {
     // Auto-generate company code from email
     const emailPrefix = data.email.split('@')[0];
     const companyCode = emailPrefix.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -118,6 +120,7 @@ export default function RegisterV2Page() {
                   fullName: registrationData.fullName,
                   email: registrationData.email,
                   password: registrationData.password,
+                  phone: registrationData.phone,
                 }}
               />
             )}
