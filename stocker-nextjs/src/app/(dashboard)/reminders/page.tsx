@@ -133,9 +133,6 @@ export default function RemindersPage() {
       const pendingOnly = activeTab === 'pending' ? true : activeTab === 'completed' ? false : undefined;
       const response = await remindersApi.getReminders({ pendingOnly });
 
-      console.log('API Response:', response);
-      console.log('Reminders:', response.reminders);
-
       // Filter by status for completed tab
       let filteredReminders = response.reminders;
       if (activeTab === 'completed') {
@@ -291,91 +288,93 @@ export default function RemindersPage() {
             onChange={() => handleComplete(reminder)}
             style={{ marginTop: 8 }}
           />
-          <List.Item.Meta
-            avatar={
-              <Badge dot={isPast && reminder.status === 0} status="error">
-                <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
-              </Badge>
-            }
-          title={
-            <Space>
-              <Text strong>{reminder.title}</Text>
-              <Tag color={getReminderTypeColor(reminder.type)}>
-                {getReminderTypeLabel(reminder.type)}
-              </Tag>
-              <Tag color={getReminderStatusColor(reminder.status)}>
-                {getReminderStatusLabel(reminder.status)}
-              </Tag>
-              {recurrenceLabel && (
-                <Tag icon={<SyncOutlined />} color="blue">
-                  {recurrenceLabel}
-                </Tag>
-              )}
-            </Space>
-          }
-          description={
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              {reminder.description && <Text type="secondary">{reminder.description}</Text>}
-              {reminder.relatedEntityType && reminder.relatedEntityId && (
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  İlgili: {reminder.relatedEntityType} #{reminder.relatedEntityId}
-                </Text>
-              )}
-              {reminder.assignedToUserId && (
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Atanan: {reminder.assignedToUserId}
-                </Text>
-              )}
-              <Space>
-                <ClockCircleOutlined />
-                <Text type={isPast ? 'danger' : 'secondary'}>
-                  {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
-                  <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
-                </Text>
-              </Space>
-              {reminder.status === 1 && reminder.snoozedUntil && (
+          <div style={{ flex: 1 }}>
+            <List.Item.Meta
+              avatar={
+                <Badge dot={isPast && reminder.status === 0} status="error">
+                  <ClockCircleOutlined style={{ fontSize: 24, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+                </Badge>
+              }
+              title={
                 <Space>
-                  <ClockCircleOutlined />
-                  <Text type="warning">
-                    {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
-                  </Text>
-                </Space>
-              )}
-              {reminder.dueDate && (
-                <Space>
-                  <SnippetsOutlined />
-                  <Text type="secondary">Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
-                </Space>
-              )}
-              {(reminder.meetingStartTime || reminder.meetingEndTime) && (
-                <Space>
-                  <SnippetsOutlined />
-                  <Text type="secondary">
-                    Toplantı: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
-                    {dayjs(reminder.meetingEndTime).format('HH:mm')}
-                  </Text>
-                </Space>
-              )}
-              <Space size="small">
-                {reminder.sendEmail && (
-                  <Tag icon={<MailOutlined />} color="blue">
-                    E-posta
+                  <Text strong>{reminder.title}</Text>
+                  <Tag color={getReminderTypeColor(reminder.type)}>
+                    {getReminderTypeLabel(reminder.type)}
                   </Tag>
-                )}
-                {reminder.sendPush && (
-                  <Tag icon={<MobileOutlined />} color="green">
-                    Bildirim
+                  <Tag color={getReminderStatusColor(reminder.status)}>
+                    {getReminderStatusLabel(reminder.status)}
                   </Tag>
-                )}
-                {reminder.sendInApp && (
-                  <Tag icon={<BellOutlined />} color="purple">
-                    Uygulama
-                  </Tag>
-                )}
-              </Space>
-            </Space>
-          }
-          />
+                  {recurrenceLabel && (
+                    <Tag icon={<SyncOutlined />} color="blue">
+                      {recurrenceLabel}
+                    </Tag>
+                  )}
+                </Space>
+              }
+              description={
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  {reminder.description && <Text type="secondary">{reminder.description}</Text>}
+                  {reminder.relatedEntityType && reminder.relatedEntityId && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      İlgili: {reminder.relatedEntityType} #{reminder.relatedEntityId}
+                    </Text>
+                  )}
+                  {reminder.assignedToUserId && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Atanan: {reminder.assignedToUserId}
+                    </Text>
+                  )}
+                  <Space>
+                    <ClockCircleOutlined />
+                    <Text type={isPast ? 'danger' : 'secondary'}>
+                      {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
+                      <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
+                    </Text>
+                  </Space>
+                  {reminder.status === 1 && reminder.snoozedUntil && (
+                    <Space>
+                      <ClockCircleOutlined />
+                      <Text type="warning">
+                        {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
+                      </Text>
+                    </Space>
+                  )}
+                  {reminder.dueDate && (
+                    <Space>
+                      <SnippetsOutlined />
+                      <Text type="secondary">Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}</Text>
+                    </Space>
+                  )}
+                  {(reminder.meetingStartTime || reminder.meetingEndTime) && (
+                    <Space>
+                      <SnippetsOutlined />
+                      <Text type="secondary">
+                        Toplantı: {dayjs(reminder.meetingStartTime).format('HH:mm')} -{' '}
+                        {dayjs(reminder.meetingEndTime).format('HH:mm')}
+                      </Text>
+                    </Space>
+                  )}
+                  <Space size="small">
+                    {reminder.sendEmail && (
+                      <Tag icon={<MailOutlined />} color="blue">
+                        E-posta
+                      </Tag>
+                    )}
+                    {reminder.sendPush && (
+                      <Tag icon={<MobileOutlined />} color="green">
+                        Bildirim
+                      </Tag>
+                    )}
+                    {reminder.sendInApp && (
+                      <Tag icon={<BellOutlined />} color="purple">
+                        Uygulama
+                      </Tag>
+                    )}
+                  </Space>
+                </Space>
+              }
+            />
+          </div>
         </Space>
       </List.Item>
     );
