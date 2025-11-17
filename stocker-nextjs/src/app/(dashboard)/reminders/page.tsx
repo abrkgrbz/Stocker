@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   List,
@@ -16,6 +16,8 @@ import {
   Modal,
   InputNumber,
   Checkbox,
+  Input,
+  Select,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -29,6 +31,8 @@ import {
   SnippetsOutlined,
   ReloadOutlined,
   SyncOutlined,
+  SearchOutlined,
+  FilterOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -116,6 +120,8 @@ export default function RemindersPage() {
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
   const [selectedReminder, setSelectedReminder] = useState<Reminder | undefined>();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'completed'>('all');
+  const [searchText, setSearchText] = useState('');
+  const [filterType, setFilterType] = useState<ReminderType | 'all'>('all');
 
   useEffect(() => {
     loadReminders();
@@ -375,10 +381,26 @@ export default function RemindersPage() {
     );
   };
 
+  // Client-side filtering for search and type filter
+  const filteredReminders = useMemo(() => {
+    return reminders.filter((reminder) => {
+      // Search filter
+      const matchesSearch =
+        !searchText ||
+        reminder.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        reminder.description?.toLowerCase().includes(searchText.toLowerCase());
+
+      // Type filter
+      const matchesType = filterType === 'all' || reminder.type === filterType;
+
+      return matchesSearch && matchesType;
+    });
+  }, [reminders, searchText, filterType]);
+
   // Badge counts - use filtered array length for current tab
-  const allCount = activeTab === 'all' ? reminders.length : totalCount;
-  const pendingCount = activeTab === 'pending' ? reminders.length : reminders.filter((r) => r.status === 0 || r.status === 1).length;
-  const completedCount = activeTab === 'completed' ? reminders.length : reminders.filter((r) => r.status === 3).length;
+  const allCount = activeTab === 'all' ? filteredReminders.length : totalCount;
+  const pendingCount = activeTab === 'pending' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 0 || r.status === 1).length;
+  const completedCount = activeTab === 'completed' ? filteredReminders.length : filteredReminders.filter((r) => r.status === 3).length;
 
   return (
     <div style={{ padding: 24 }}>
@@ -397,6 +419,32 @@ export default function RemindersPage() {
           </Space>
         </div>
 
+        <Space style={{ marginBottom: 16, width: '100%' }} size="middle">
+          <Input
+            placeholder="Hatırlatıcı ara..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 300 }}
+            allowClear
+          />
+          <Select
+            value={filterType}
+            onChange={setFilterType}
+            style={{ width: 200 }}
+            suffixIcon={<FilterOutlined />}
+          >
+            <Select.Option value="all">Tüm Tipler</Select.Option>
+            <Select.Option value={0}>Genel</Select.Option>
+            <Select.Option value={1}>Görev</Select.Option>
+            <Select.Option value={2}>Toplantı</Select.Option>
+            <Select.Option value={3}>Takip</Select.Option>
+            <Select.Option value={4}>Doğum Günü</Select.Option>
+            <Select.Option value={5}>Sözleşme Yenileme</Select.Option>
+            <Select.Option value={6}>Ödeme Vadesi</Select.Option>
+          </Select>
+        </Space>
+
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as 'all' | 'pending' | 'completed')}
@@ -411,7 +459,7 @@ export default function RemindersPage() {
           >
             <List
               loading={loading}
-              dataSource={reminders}
+              dataSource={filteredReminders}
               renderItem={renderReminderItem}
               locale={{
                 emptyText: (
@@ -438,7 +486,7 @@ export default function RemindersPage() {
           >
             <List
               loading={loading}
-              dataSource={reminders}
+              dataSource={filteredReminders}
               renderItem={renderReminderItem}
               locale={{
                 emptyText: (
@@ -461,7 +509,7 @@ export default function RemindersPage() {
           >
             <List
               loading={loading}
-              dataSource={reminders}
+              dataSource={filteredReminders}
               renderItem={renderReminderItem}
               locale={{
                 emptyText: (
