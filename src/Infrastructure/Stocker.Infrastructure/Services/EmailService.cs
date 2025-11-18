@@ -37,8 +37,9 @@ public class EmailService : IEmailService
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
-        // Get email settings from database
-        var emailSettings = await GetEmailSettingsFromDatabaseAsync(cancellationToken);
+        // Use injected EmailSettings (from appsettings.json + Azure Key Vault)
+        // This ensures we use the correct password from Key Vault without database decryption issues
+        var emailSettings = _emailSettings;
         
         if (!emailSettings.EnableEmail)
         {
