@@ -10,6 +10,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get('email');
+  const token = searchParams.get('token');
 
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
@@ -20,6 +21,15 @@ function VerifyEmailContent() {
   const [resendError, setResendError] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
 
+  // Auto-verify if token is provided in URL (from email link)
+  useEffect(() => {
+    if (token && email && !verifySuccess && !verifyError) {
+      // Automatically verify with token from email link
+      handleVerifyToken(token);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
+
   // Countdown timer for resend button
   useEffect(() => {
     if (resendCountdown > 0) {
@@ -27,6 +37,42 @@ function VerifyEmailContent() {
       return () => clearTimeout(timer);
     }
   }, [resendCountdown]);
+
+  const handleVerifyToken = async (verificationToken: string) => {
+    setVerifying(true);
+    setVerifyError('');
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/auth/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email || '', // Email might be in token or we need to extract
+          token: verificationToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setVerifySuccess(true);
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        setVerifyError(data.message || 'Token geçersiz veya süresi dolmuş. Lütfen yeni kod isteyin.');
+      }
+    } catch (err) {
+      setVerifyError('Doğrulama yapılamadı. Lütfen tekrar deneyin.');
+      console.error('Token verification error:', err);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const handleVerifyCode = async (code: string) => {
     if (!email) {
