@@ -8,7 +8,7 @@ import {
   CrownOutlined,
   RocketOutlined
 } from '@ant-design/icons';
-import Swal from 'sweetalert2';
+import { showAlert } from '@/lib/sweetalert-config';
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
@@ -153,13 +153,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         // Check for frontend form validation errors
         if (error?.errorFields) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Eksik Bilgiler',
-            text: 'Lütfen tüm zorunlu alanları doldurun',
-            confirmButtonText: 'Tamam',
-            confirmButtonColor: '#1890ff'
-          });
+          await showAlert.error('Eksik Bilgiler', 'Lütfen tüm zorunlu alanları doldurun');
           return;
         }
 
@@ -182,25 +176,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             errorMessage = String(backendErrors);
           }
 
-          await Swal.fire({
-            icon: 'error',
-            title: 'Doğrulama Hataları',
-            html: errorMessage || 'Kurulum sırasında bir hata oluştu',
-            confirmButtonText: 'Tamam',
-            confirmButtonColor: '#1890ff',
-            width: '600px'
-          });
+          await showAlert.error(
+            'Doğrulama Hataları',
+            errorList || 'Kurulum sırasında bir hata oluştu',
+            { width: '600px' }
+          );
           return;
         }
 
         // Generic error message
-        await Swal.fire({
-          icon: 'error',
-          title: 'Hata',
-          text: error?.message || 'Kurulum sırasında bir hata oluştu',
-          confirmButtonText: 'Tamam',
-          confirmButtonColor: '#1890ff'
-        });
+        await showAlert.error('Hata', error?.message || 'Kurulum sırasında bir hata oluştu');
       }
     } else {
       setCurrentStep(currentStep + 1);

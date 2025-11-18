@@ -66,19 +66,37 @@ const LoginPage: React.FC = () => {
       // Use validated and sanitized data
       await login(formData.email, formData.password);
 
-      // Don't show any success message here
-      // If 2FA required: modal will be shown via useEffect
-      // If 2FA not required: user is already authenticated, just navigate
-      // Success messages handled by 2FA verification or dashboard
-
       // Check the current state after login completes
       const currentState = useAuthStore.getState();
 
       if (!currentState.requires2FA && currentState.isAuthenticated) {
-        // Only navigate if fully authenticated without 2FA
+        // Show success message for login without 2FA
+        await Swal.fire({
+          icon: 'success',
+          title: 'Giriş Başarılı!',
+          text: 'Yönetim paneline yönlendiriliyorsunuz...',
+          timer: 1500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top',
+          background: '#1a1f36',
+          color: '#fff',
+          customClass: {
+            popup: 'colored-toast',
+            title: 'swal-title',
+            timerProgressBar: 'swal-progress-bar'
+          },
+          didOpen: (toast) => {
+            toast.style.border = '2px solid #10b981';
+            toast.style.boxShadow = '0 10px 40px rgba(16, 185, 129, 0.3)';
+          }
+        });
+
+        // Navigate after showing success message
         setTimeout(() => {
           navigate('/dashboard');
-        }, 500);
+        }, 1500);
       }
       // Otherwise, 2FA modal will be shown via useEffect
       
