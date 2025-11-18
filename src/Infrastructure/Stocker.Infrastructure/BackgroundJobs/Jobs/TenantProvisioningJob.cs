@@ -1,4 +1,5 @@
 using Hangfire;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
@@ -41,6 +42,34 @@ public class TenantProvisioningJob : ITenantProvisioningJob
                 _logger.LogError("Tenant not found: {TenantId}", tenantId);
                 throw new InvalidOperationException($"Tenant {tenantId} not found");
             }
+
+            // CRITICAL: Update connection string to real SQL Server connection string
+            // Get master connection string template from configuration
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var masterConnectionString = configuration.GetConnectionString("MasterConnection");
+
+            if (string.IsNullOrEmpty(masterConnectionString))
+            {
+                _logger.LogError("MasterConnection string not found in configuration");
+                throw new InvalidOperationException("MasterConnection string not configured");
+            }
+
+            // Build tenant connection string based on master connection but with tenant database name
+            var tenantDatabaseName = $"Stocker_{tenantId:N}";
+            var tenantConnectionString = masterConnectionString.Replace("StockerMasterDb", tenantDatabaseName);
+
+            // Update tenant connection string
+            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create(tenantConnectionString);
+            if (connectionStringResult.IsFailure)
+            {
+                _logger.LogError("Failed to create connection string for tenant {TenantId}: {Error}", tenantId, connectionStringResult.Error);
+                throw new InvalidOperationException($"Invalid connection string: {connectionStringResult.Error}");
+            }
+
+            tenant.UpdateConnectionString(connectionStringResult.Value);
+            await masterUnitOfWork.SaveChangesAsync(CancellationToken.None);
+
+            _logger.LogInformation("Updated connection string for tenant {TenantId} to use database {DatabaseName}", tenantId, tenantDatabaseName);
 
             // Database migration
             _logger.LogInformation("Creating database for tenant: {TenantName}", tenant.Name);
