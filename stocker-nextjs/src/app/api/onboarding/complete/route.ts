@@ -26,8 +26,12 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Backend onboarding error:', errorData);
       return NextResponse.json(
-        { message: errorData.message || 'Failed to complete onboarding' },
+        {
+          message: errorData.message || 'Failed to complete onboarding',
+          errors: errorData.errors || errorData.error || null
+        },
         { status: response.status }
       );
     }

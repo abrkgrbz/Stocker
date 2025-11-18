@@ -73,7 +73,10 @@ export function useOnboarding() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to complete onboarding');
+        // Preserve errors object for detailed validation messages
+        const error: any = new Error(errorData.message || 'Failed to complete onboarding');
+        error.errors = errorData.errors;
+        throw error;
       }
 
       const result = await response.json();

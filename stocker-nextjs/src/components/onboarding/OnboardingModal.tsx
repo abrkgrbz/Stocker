@@ -143,17 +143,27 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         // Form validation failed or API error
         setLoading(false);
         console.error('Onboarding error:', error);
-        if (error?.response?.data?.errors) {
-          // Backend validation errors
-          const backendErrors = error.response.data.errors;
-          const errorMessage = Object.values(backendErrors).flat().join('; ');
-          message.error(errorMessage || 'Kurulum sırasında bir hata oluştu');
-        } else if (error?.errorFields) {
-          // Form validation errors
+
+        // Check for frontend form validation errors
+        if (error?.errorFields) {
           message.error('Lütfen tüm zorunlu alanları doldurun');
-        } else {
-          message.error(error?.message || 'Kurulum sırasında bir hata oluştu');
+          return;
         }
+
+        // Check for backend validation errors (from Next.js API route)
+        if (error?.errors) {
+          const backendErrors = error.errors;
+          if (typeof backendErrors === 'object') {
+            const errorMessages = Object.values(backendErrors).flat().join('; ');
+            message.error(errorMessages || 'Kurulum sırasında bir hata oluştu');
+          } else {
+            message.error(String(backendErrors));
+          }
+          return;
+        }
+
+        // Generic error message
+        message.error(error?.message || 'Kurulum sırasında bir hata oluştu');
       }
     } else {
       setCurrentStep(currentStep + 1);
