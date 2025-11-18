@@ -718,14 +718,15 @@ const PackagesPage: React.FC = () => {
                 <Paragraph type="secondary">
                   Müşterileriniz için yeni bir paket oluşturun
                 </Paragraph>
-                <Button 
-                  type="primary" 
-                  icon={<PlusOutlined />} 
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
                   size="large"
                   onClick={() => {
                     setEditingPackage(null);
                     form.resetFields();
-                    setIsModalVisible(true);
+                    setFormTab('basic');
+                    setIsDrawerVisible(true);
                   }}
                 >
                   Paket Oluştur
