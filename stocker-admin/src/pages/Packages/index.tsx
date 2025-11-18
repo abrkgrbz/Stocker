@@ -33,6 +33,7 @@ import {
   Spin,
   notification,
   Dropdown,
+  Drawer,
 } from 'antd';
 import type { MenuProps } from 'antd';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
@@ -117,10 +118,18 @@ interface Package {
 const PackagesPage: React.FC = () => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('overview');
+  const [formTab, setFormTab] = useState('basic');
+
+  // Unlimited checkbox states
+  const [unlimitedUsers, setUnlimitedUsers] = useState(false);
+  const [unlimitedStorage, setUnlimitedStorage] = useState(false);
+  const [unlimitedApiCalls, setUnlimitedApiCalls] = useState(false);
+  const [unlimitedProjects, setUnlimitedProjects] = useState(false);
+  const [unlimitedDomains, setUnlimitedDomains] = useState(false);
 
   // Load packages from API on component mount
   useEffect(() => {
@@ -185,20 +194,35 @@ const PackagesPage: React.FC = () => {
 
   const handleEdit = (pkg: Package) => {
     setEditingPackage(pkg);
+
+    // Check for unlimited values
+    const isUnlimitedUsers = pkg.limits.users === 2147483647 || pkg.limits.users === 99999;
+    const isUnlimitedStorage = pkg.limits.storage === 2147483647 || pkg.limits.storage === 99999;
+    const isUnlimitedApiCalls = pkg.limits.apiCalls === 2147483647 || pkg.limits.apiCalls === 99999999;
+    const isUnlimitedProjects = pkg.limits.projects === 2147483647 || pkg.limits.projects === 99999;
+    const isUnlimitedDomains = pkg.limits.customDomains === 2147483647 || pkg.limits.customDomains === 99999;
+
+    setUnlimitedUsers(isUnlimitedUsers);
+    setUnlimitedStorage(isUnlimitedStorage);
+    setUnlimitedApiCalls(isUnlimitedApiCalls);
+    setUnlimitedProjects(isUnlimitedProjects);
+    setUnlimitedDomains(isUnlimitedDomains);
+
     form.setFieldsValue({
       ...pkg,
       features: pkg.features,
-      'limits.users': pkg.limits.users,
-      'limits.storage': pkg.limits.storage,
-      'limits.apiCalls': pkg.limits.apiCalls,
-      'limits.projects': pkg.limits.projects,
-      'limits.customDomains': pkg.limits.customDomains,
+      'limits.users': isUnlimitedUsers ? 0 : pkg.limits.users,
+      'limits.storage': isUnlimitedStorage ? 0 : pkg.limits.storage,
+      'limits.apiCalls': isUnlimitedApiCalls ? 0 : pkg.limits.apiCalls,
+      'limits.projects': isUnlimitedProjects ? 0 : pkg.limits.projects,
+      'limits.customDomains': isUnlimitedDomains ? 0 : pkg.limits.customDomains,
       'limits.emailSupport': pkg.limits.emailSupport,
       'limits.phoneSupport': pkg.limits.phoneSupport,
       'limits.prioritySupport': pkg.limits.prioritySupport,
       'limits.sla': pkg.limits.sla,
     });
-    setIsModalVisible(true);
+    setFormTab('basic');
+    setIsDrawerVisible(true);
   };
 
   const handleDelete = (pkg: Package) => {
@@ -249,19 +273,19 @@ const PackagesPage: React.FC = () => {
     });
   };
 
-  const handleModalOk = async () => {
+  const handleDrawerOk = async () => {
     try {
       const values = await form.validateFields();
-      
+
       const packageData: Package = {
         ...values,
         id: editingPackage?.id || '',
         limits: {
-          users: values['limits.users'],
-          storage: values['limits.storage'],
-          apiCalls: values['limits.apiCalls'],
-          projects: values['limits.projects'],
-          customDomains: values['limits.customDomains'],
+          users: unlimitedUsers ? 2147483647 : values['limits.users'],
+          storage: unlimitedStorage ? 2147483647 : values['limits.storage'],
+          apiCalls: unlimitedApiCalls ? 2147483647 : values['limits.apiCalls'],
+          projects: unlimitedProjects ? 2147483647 : values['limits.projects'],
+          customDomains: unlimitedDomains ? 2147483647 : values['limits.customDomains'],
           emailSupport: values['limits.emailSupport'],
           phoneSupport: values['limits.phoneSupport'],
           prioritySupport: values['limits.prioritySupport'],
@@ -311,9 +335,15 @@ const PackagesPage: React.FC = () => {
         }
       }
 
-      setIsModalVisible(false);
+      setIsDrawerVisible(false);
       form.resetFields();
       setEditingPackage(null);
+      setFormTab('basic');
+      setUnlimitedUsers(false);
+      setUnlimitedStorage(false);
+      setUnlimitedApiCalls(false);
+      setUnlimitedProjects(false);
+      setUnlimitedDomains(false);
     } catch (error) {
       console.error('Validation failed:', error);
     }
@@ -851,19 +881,39 @@ const PackagesPage: React.FC = () => {
         </Row>
       )}
 
-      {/* Create/Edit Package Modal */}
-      <Modal
+      {/* Create/Edit Package Drawer */}
+      <Drawer
         title={editingPackage ? 'Paketi Düzenle' : 'Yeni Paket Oluştur'}
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={() => {
-          setIsModalVisible(false);
+        open={isDrawerVisible}
+        onClose={() => {
+          setIsDrawerVisible(false);
           form.resetFields();
           setEditingPackage(null);
+          setFormTab('basic');
+          setUnlimitedUsers(false);
+          setUnlimitedStorage(false);
+          setUnlimitedApiCalls(false);
+          setUnlimitedProjects(false);
+          setUnlimitedDomains(false);
         }}
-        width={900}
-        okText={editingPackage ? 'Güncelle' : 'Oluştur'}
-        cancelText="İptal"
+        width={720}
+        footer={
+          <div style={{ textAlign: 'right' }}>
+            <Space>
+              <Button onClick={() => {
+                setIsDrawerVisible(false);
+                form.resetFields();
+                setEditingPackage(null);
+                setFormTab('basic');
+              }}>
+                İptal
+              </Button>
+              <Button type="primary" onClick={handleDrawerOk}>
+                {editingPackage ? 'Güncelle' : 'Oluştur'}
+              </Button>
+            </Space>
+          </div>
+        }
       >
         <Form
           form={form}
@@ -882,199 +932,362 @@ const PackagesPage: React.FC = () => {
             'limits.sla': 95,
           }}
         >
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name="name"
-                label="Paket Kodu"
-                rules={[{ required: true, message: 'Paket kodu zorunludur' }]}
-              >
-                <Input placeholder="starter, professional, enterprise" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="displayName"
-                label="Görünen Ad"
-                rules={[{ required: true, message: 'Görünen ad zorunludur' }]}
-              >
-                <Input placeholder="Starter, Professional, Enterprise" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="tier"
-                label="Seviye"
-                rules={[{ required: true, message: 'Seviye seçimi zorunludur' }]}
-              >
-                <Select>
-                  <Option value="starter">Starter</Option>
-                  <Option value="professional">Professional</Option>
-                  <Option value="enterprise">Enterprise</Option>
-                  <Option value="custom">Custom</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Tabs
+            activeKey={formTab}
+            onChange={setFormTab}
+            items={[
+              {
+                key: 'basic',
+                label: 'Temel Bilgiler',
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="name"
+                          label="Paket Kodu"
+                          rules={[{ required: true, message: 'Paket kodu zorunludur' }]}
+                        >
+                          <Input placeholder="starter, professional, enterprise" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="displayName"
+                          label="Görünen Ad"
+                          rules={[{ required: true, message: 'Görünen ad zorunludur' }]}
+                        >
+                          <Input placeholder="Starter, Professional, Enterprise" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Form.Item
-            name="description"
-            label="Açıklama"
-            rules={[{ required: true, message: 'Açıklama zorunludur' }]}
-          >
-            <TextArea rows={2} placeholder="Paketin kısa açıklaması" />
-          </Form.Item>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="tier"
+                          label="Seviye"
+                          rules={[{ required: true, message: 'Seviye seçimi zorunludur' }]}
+                        >
+                          <Select>
+                            <Option value="starter">Starter</Option>
+                            <Option value="professional">Professional</Option>
+                            <Option value="enterprise">Enterprise</Option>
+                            <Option value="custom">Custom</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="trialDays" label="Deneme Süresi (Gün)">
+                          <InputNumber min={0} max={90} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item
-                name="price"
-                label="Fiyat"
-                rules={[{ required: true, message: 'Fiyat zorunludur' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="originalPrice" label="Orijinal Fiyat (Opsiyonel)">
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="billingCycle"
-                label="Faturalama Periyodu"
-                rules={[{ required: true }]}
-              >
-                <Select>
-                  <Option value="monthly">Aylık</Option>
-                  <Option value="yearly">Yıllık</Option>
-                  <Option value="one-time">Tek Seferlik</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="trialDays" label="Deneme Süresi (Gün)">
-                <InputNumber min={0} max={90} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
+                    <Form.Item
+                      name="description"
+                      label="Açıklama"
+                      rules={[{ required: true, message: 'Açıklama zorunludur' }]}
+                    >
+                      <TextArea rows={3} placeholder="Paketin kısa açıklaması" />
+                    </Form.Item>
 
-          <Divider>Limitler</Divider>
+                    <Divider orientation="left">Fiyatlandırma</Divider>
 
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item
-                name="limits.users"
-                label="Kullanıcı Sayısı"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1} max={99999} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="limits.storage"
-                label="Depolama (GB)"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1} max={99999} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="limits.apiCalls"
-                label="API Çağrısı"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1000} max={99999999} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="limits.projects"
-                label="Proje Sayısı"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1} max={99999} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="price"
+                          label="Fiyat"
+                          rules={[{ required: true, message: 'Fiyat zorunludur' }]}
+                        >
+                          <InputNumber
+                            min={0}
+                            style={{ width: '100%' }}
+                            addonBefore="₺"
+                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="billingCycle"
+                          label="Faturalama Periyodu"
+                          rules={[{ required: true }]}
+                        >
+                          <Select>
+                            <Option value="monthly">Aylık</Option>
+                            <Option value="yearly">Yıllık</Option>
+                            <Option value="one-time">Tek Seferlik</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item
-                name="limits.customDomains"
-                label="Özel Domain"
-              >
-                <InputNumber min={0} max={99999} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="limits.sla"
-                label="SLA (%)"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={90} max={99.99} step={0.1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Destek Seçenekleri">
-                <Space>
-                  <Form.Item name="limits.emailSupport" valuePropName="checked" noStyle>
-                    <Checkbox>E-posta</Checkbox>
-                  </Form.Item>
-                  <Form.Item name="limits.phoneSupport" valuePropName="checked" noStyle>
-                    <Checkbox>Telefon</Checkbox>
-                  </Form.Item>
-                  <Form.Item name="limits.prioritySupport" valuePropName="checked" noStyle>
-                    <Checkbox>Öncelikli</Checkbox>
-                  </Form.Item>
-                </Space>
-              </Form.Item>
-            </Col>
-          </Row>
+                    <Form.Item name="originalPrice" label="Orijinal Fiyat (İndirim göstermek için)">
+                      <InputNumber
+                        min={0}
+                        style={{ width: '100%' }}
+                        addonBefore="₺"
+                        placeholder="Opsiyonel"
+                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                      />
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                key: 'limits',
+                label: 'Limitler & Kotalar',
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="Kullanıcı Sayısı">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              name="limits.users"
+                              noStyle
+                              rules={[{ required: !unlimitedUsers, message: 'Zorunlu' }]}
+                            >
+                              <InputNumber
+                                min={1}
+                                max={99999}
+                                style={{ width: 'calc(100% - 100px)' }}
+                                disabled={unlimitedUsers}
+                              />
+                            </Form.Item>
+                            <Checkbox
+                              checked={unlimitedUsers}
+                              onChange={(e) => setUnlimitedUsers(e.target.checked)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Sınırsız
+                            </Checkbox>
+                          </Space.Compact>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Depolama (GB)">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              name="limits.storage"
+                              noStyle
+                              rules={[{ required: !unlimitedStorage, message: 'Zorunlu' }]}
+                            >
+                              <InputNumber
+                                min={1}
+                                max={99999}
+                                style={{ width: 'calc(100% - 100px)' }}
+                                disabled={unlimitedStorage}
+                              />
+                            </Form.Item>
+                            <Checkbox
+                              checked={unlimitedStorage}
+                              onChange={(e) => setUnlimitedStorage(e.target.checked)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Sınırsız
+                            </Checkbox>
+                          </Space.Compact>
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Divider>Özellikler</Divider>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="API Çağrısı">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              name="limits.apiCalls"
+                              noStyle
+                              rules={[{ required: !unlimitedApiCalls, message: 'Zorunlu' }]}
+                            >
+                              <InputNumber
+                                min={1000}
+                                max={99999999}
+                                style={{ width: 'calc(100% - 100px)' }}
+                                disabled={unlimitedApiCalls}
+                              />
+                            </Form.Item>
+                            <Checkbox
+                              checked={unlimitedApiCalls}
+                              onChange={(e) => setUnlimitedApiCalls(e.target.checked)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Sınırsız
+                            </Checkbox>
+                          </Space.Compact>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Proje Sayısı">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              name="limits.projects"
+                              noStyle
+                              rules={[{ required: !unlimitedProjects, message: 'Zorunlu' }]}
+                            >
+                              <InputNumber
+                                min={1}
+                                max={99999}
+                                style={{ width: 'calc(100% - 100px)' }}
+                                disabled={unlimitedProjects}
+                              />
+                            </Form.Item>
+                            <Checkbox
+                              checked={unlimitedProjects}
+                              onChange={(e) => setUnlimitedProjects(e.target.checked)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Sınırsız
+                            </Checkbox>
+                          </Space.Compact>
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Form.Item name="features" label="Paket Özellikleri">
-            <CheckboxGroup options={allFeatures} />
-          </Form.Item>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="Özel Domain">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              name="limits.customDomains"
+                              noStyle
+                            >
+                              <InputNumber
+                                min={0}
+                                max={99999}
+                                style={{ width: 'calc(100% - 100px)' }}
+                                disabled={unlimitedDomains}
+                              />
+                            </Form.Item>
+                            <Checkbox
+                              checked={unlimitedDomains}
+                              onChange={(e) => setUnlimitedDomains(e.target.checked)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Sınırsız
+                            </Checkbox>
+                          </Space.Compact>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="limits.sla"
+                          label="SLA (%)"
+                          rules={[{ required: true }]}
+                        >
+                          <InputNumber min={90} max={99.99} step={0.1} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="status" label="Durum">
-                <Radio.Group>
-                  <Radio value="active">Aktif</Radio>
-                  <Radio value="inactive">İnaktif</Radio>
-                  <Radio value="deprecated">Kullanımdan Kaldırıldı</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="isPopular" valuePropName="checked">
-                <Checkbox>Popüler Paket</Checkbox>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="isBestValue" valuePropName="checked">
-                <Checkbox>En İyi Değer</Checkbox>
-              </Form.Item>
-            </Col>
-          </Row>
+                    <Divider orientation="left">Destek Seçenekleri</Divider>
+
+                    <Form.Item label=" " colon={false}>
+                      <Space size="large">
+                        <Form.Item name="limits.emailSupport" valuePropName="checked" noStyle>
+                          <Checkbox>E-posta Desteği</Checkbox>
+                        </Form.Item>
+                        <Form.Item name="limits.phoneSupport" valuePropName="checked" noStyle>
+                          <Checkbox>Telefon Desteği</Checkbox>
+                        </Form.Item>
+                        <Form.Item name="limits.prioritySupport" valuePropName="checked" noStyle>
+                          <Checkbox>Öncelikli Destek</Checkbox>
+                        </Form.Item>
+                      </Space>
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                key: 'features',
+                label: 'Özellikler',
+                children: (
+                  <>
+                    <Divider orientation="left">Destek Özellikleri</Divider>
+                    <Form.Item name="features">
+                      <CheckboxGroup>
+                        <Row>
+                          <Col span={12}><Checkbox value="email-support">E-posta Desteği</Checkbox></Col>
+                          <Col span={12}><Checkbox value="phone-support">Telefon Desteği</Checkbox></Col>
+                          <Col span={12}><Checkbox value="priority-support">Öncelikli Destek</Checkbox></Col>
+                          <Col span={12}><Checkbox value="dedicated-manager">Özel Hesap Yöneticisi</Checkbox></Col>
+                        </Row>
+                      </CheckboxGroup>
+                    </Form.Item>
+
+                    <Divider orientation="left">Teknik Özellikler</Divider>
+                    <Form.Item name="features">
+                      <CheckboxGroup>
+                        <Row>
+                          <Col span={12}><Checkbox value="api-access">API Erişimi</Checkbox></Col>
+                          <Col span={12}><Checkbox value="webhooks">Webhook Desteği</Checkbox></Col>
+                          <Col span={12}><Checkbox value="custom-integrations">Özel Entegrasyonlar</Checkbox></Col>
+                          <Col span={12}><Checkbox value="advanced-analytics">Gelişmiş Analitik</Checkbox></Col>
+                          <Col span={12}><Checkbox value="custom-reports">Özel Raporlar</Checkbox></Col>
+                          <Col span={12}><Checkbox value="export-data">Veri Dışa Aktarma</Checkbox></Col>
+                        </Row>
+                      </CheckboxGroup>
+                    </Form.Item>
+
+                    <Divider orientation="left">Güvenlik Özellikleri</Divider>
+                    <Form.Item name="features">
+                      <CheckboxGroup>
+                        <Row>
+                          <Col span={12}><Checkbox value="sso">Single Sign-On (SSO)</Checkbox></Col>
+                          <Col span={12}><Checkbox value="two-factor-auth">İki Faktörlü Doğrulama</Checkbox></Col>
+                          <Col span={12}><Checkbox value="ip-whitelist">IP Beyaz Listesi</Checkbox></Col>
+                          <Col span={12}><Checkbox value="audit-logs">Denetim Günlükleri</Checkbox></Col>
+                          <Col span={12}><Checkbox value="custom-permissions">Özel İzinler</Checkbox></Col>
+                          <Col span={12}><Checkbox value="data-encryption">Veri Şifreleme</Checkbox></Col>
+                        </Row>
+                      </CheckboxGroup>
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                key: 'settings',
+                label: 'Görünüm & Ayarlar',
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Form.Item name="status" label="Durum">
+                          <Radio.Group>
+                            <Radio value="active">Aktif</Radio>
+                            <Radio value="inactive">İnaktif</Radio>
+                            <Radio value="deprecated">Kullanımdan Kaldırıldı</Radio>
+                          </Radio.Group>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Divider orientation="left">Etiketler</Divider>
+
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item name="isPopular" valuePropName="checked">
+                          <Checkbox>Popüler Paket</Checkbox>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="isBestValue" valuePropName="checked">
+                          <Checkbox>En İyi Değer</Checkbox>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </>
+                ),
+              },
+            ]}
+          />
         </Form>
-      </Modal>
+      </Drawer>
     </PageContainer>
   );
 };
