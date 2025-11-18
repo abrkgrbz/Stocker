@@ -511,6 +511,208 @@ public class TenantsController : MasterControllerBase
             Message = "Activities retrieved successfully"
         });
     }
+
+    /// <summary>
+    /// Get detailed activity logs for a tenant with filtering and pagination
+    /// </summary>
+    [HttpGet("{id}/activity-logs")]
+    [ProducesResponseType(typeof(ApiResponse<ActivityLogsResponse>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetActivityLogs(
+        Guid id,
+        [FromQuery] string? category = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? searchTerm = null)
+    {
+        _logger.LogInformation(
+            "Getting activity logs for tenant {TenantId} with filters - Category: {Category}, Severity: {Severity}, Page: {Page}/{Size}",
+            id, category, severity, pageNumber, pageSize);
+
+        // Mock data for now - this would typically come from AuditLog table
+        var allLogs = new List<ActivityLogDto>
+        {
+            new ActivityLogDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTime.UtcNow.AddHours(-1),
+                Action = "User Login",
+                Category = "auth",
+                Severity = "info",
+                User = new ActivityLogUserDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Admin User",
+                    Email = "admin@example.com",
+                    Role = "Admin"
+                },
+                Target = "System",
+                Description = "Admin user logged in successfully",
+                IpAddress = "192.168.1.100",
+                UserAgent = "Mozilla/5.0",
+                Location = "Istanbul, Turkey"
+            },
+            new ActivityLogDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTime.UtcNow.AddHours(-2),
+                Action = "User Created",
+                Category = "user",
+                Severity = "success",
+                User = new ActivityLogUserDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Admin User",
+                    Email = "admin@example.com",
+                    Role = "Admin"
+                },
+                Target = "New User",
+                Description = "New user account created",
+                IpAddress = "192.168.1.100",
+                UserAgent = "Mozilla/5.0",
+                Location = "Istanbul, Turkey"
+            },
+            new ActivityLogDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTime.UtcNow.AddHours(-3),
+                Action = "Data Export",
+                Category = "data",
+                Severity = "warning",
+                User = new ActivityLogUserDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "Manager User",
+                    Email = "manager@example.com",
+                    Role = "Manager"
+                },
+                Target = "Reports",
+                Description = "Large dataset exported",
+                IpAddress = "192.168.1.101",
+                UserAgent = "Mozilla/5.0",
+                Location = "Ankara, Turkey"
+            }
+        };
+
+        // Apply filters
+        var filteredLogs = allLogs.AsQueryable();
+
+        if (!string.IsNullOrEmpty(category) && category != "all")
+            filteredLogs = filteredLogs.Where(l => l.Category == category);
+
+        if (!string.IsNullOrEmpty(severity) && severity != "all")
+            filteredLogs = filteredLogs.Where(l => l.Severity == severity);
+
+        if (startDate.HasValue)
+            filteredLogs = filteredLogs.Where(l => l.Timestamp >= startDate.Value);
+
+        if (endDate.HasValue)
+            filteredLogs = filteredLogs.Where(l => l.Timestamp <= endDate.Value);
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            var search = searchTerm.ToLower();
+            filteredLogs = filteredLogs.Where(l =>
+                l.Action.ToLower().Contains(search) ||
+                l.Description.ToLower().Contains(search) ||
+                l.User.Name.ToLower().Contains(search));
+        }
+
+        var totalCount = filteredLogs.Count();
+        var logs = filteredLogs
+            .OrderByDescending(l => l.Timestamp)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var response = new ActivityLogsResponse
+        {
+            Logs = logs,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return Ok(new ApiResponse<ActivityLogsResponse>
+        {
+            Success = true,
+            Data = response,
+            Message = "Activity logs retrieved successfully"
+        });
+    }
+
+    /// <summary>
+    /// Get security events for a tenant
+    /// </summary>
+    [HttpGet("{id}/security-events")]
+    [ProducesResponseType(typeof(ApiResponse<List<ActivityLogDto>>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetSecurityEvents(Guid id)
+    {
+        _logger.LogInformation("Getting security events for tenant {TenantId}", id);
+
+        // Mock security events
+        var securityEvents = new List<ActivityLogDto>
+        {
+            new ActivityLogDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Timestamp = DateTime.UtcNow.AddHours(-1),
+                Action = "Failed Login Attempt",
+                Category = "security",
+                Severity = "warning",
+                User = new ActivityLogUserDto
+                {
+                    Id = "unknown",
+                    Name = "Unknown",
+                    Email = "unknown@example.com",
+                    Role = "Unknown"
+                },
+                Target = "Login System",
+                Description = "Multiple failed login attempts detected",
+                IpAddress = "192.168.1.200",
+                UserAgent = "Mozilla/5.0",
+                Location = "Unknown"
+            }
+        };
+
+        return Ok(new ApiResponse<List<ActivityLogDto>>
+        {
+            Success = true,
+            Data = securityEvents,
+            Message = "Security events retrieved successfully"
+        });
+    }
+
+    /// <summary>
+    /// Export activity logs to file
+    /// </summary>
+    [HttpGet("{id}/activity-logs/export")]
+    [ProducesResponseType(typeof(FileResult), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ExportActivityLogs(
+        Guid id,
+        [FromQuery] string? category = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
+    {
+        _logger.LogInformation("Exporting activity logs for tenant {TenantId}", id);
+
+        // This would typically generate CSV or Excel file
+        // For now, returning a simple text file
+        var content = "Activity Logs Export\n";
+        content += $"Tenant ID: {id}\n";
+        content += $"Export Date: {DateTime.UtcNow}\n";
+        content += "---\n";
+        content += "Mock export data";
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        return File(bytes, "text/plain", $"activity-logs-{id}-{DateTime.UtcNow:yyyyMMdd}.txt");
+    }
 }
 
 // DTOs
@@ -535,6 +737,40 @@ public class SuspendTenantRequest
 public class ActivateTenantRequest
 {
     public string? Notes { get; set; }
+}
+
+// Activity Log DTOs
+public class ActivityLogDto
+{
+    public string Id { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty; // auth, user, data, system, billing, security, api
+    public string Severity { get; set; } = string.Empty; // info, warning, error, success
+    public ActivityLogUserDto User { get; set; } = new();
+    public string? Target { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public object? Details { get; set; }
+    public string IpAddress { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = string.Empty;
+    public string? Location { get; set; }
+    public string? SessionId { get; set; }
+}
+
+public class ActivityLogUserDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+}
+
+public class ActivityLogsResponse
+{
+    public List<ActivityLogDto> Logs { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int PageNumber { get; set; }
+    public int PageSize { get; set; }
 }
 
 public class StartMigrationRequest

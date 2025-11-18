@@ -68,34 +68,14 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
+import { activityLogService, type ActivityLog } from '../../services/api/activityLogService';
+import { useEffect } from 'react';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
-
-interface ActivityLog {
-  id: string;
-  timestamp: string;
-  action: string;
-  category: 'auth' | 'user' | 'data' | 'system' | 'billing' | 'security' | 'api';
-  severity: 'info' | 'warning' | 'error' | 'success';
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    avatar?: string;
-  };
-  target?: string;
-  description: string;
-  details?: any;
-  ipAddress: string;
-  userAgent: string;
-  location?: string;
-  sessionId?: string;
-}
 
 interface SecurityEvent {
   id: string;
@@ -119,8 +99,85 @@ const TenantActivityLogs: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<any>([]);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
-  // Mock data
+  // Fetch logs from API
+  useEffect(() => {
+    fetchLogs();
+  }, [id, categoryFilter, severityFilter, dateRange, pageNumber, pageSize]);
+
+  const fetchLogs = async () => {
+    if (!id) {
+      message.error('Tenant ID bulunamadı');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await activityLogService.getTenantLogs(id, {
+        category: categoryFilter,
+        severity: severityFilter,
+        startDate: dateRange[0] ? dayjs(dateRange[0]).toISOString() : undefined,
+        endDate: dateRange[1] ? dayjs(dateRange[1]).toISOString() : undefined,
+        pageNumber,
+        pageSize,
+        searchTerm: searchText || undefined,
+      });
+
+      setLogs(response.logs);
+      setTotalCount(response.totalCount);
+
+      if (response.logs.length === 0) {
+        message.info('Bu kriterlere uygun activity log bulunamadı');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch activity logs:', error);
+      message.error(error.response?.data?.message || 'Activity logs yüklenirken hata oluştu');
+      setLogs([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchLogs();
+  };
+
+  const handleExport = async () => {
+    if (!id) return;
+
+    try {
+      setLoading(true);
+      const blob = await activityLogService.exportLogs(id, {
+        category: categoryFilter,
+        severity: severityFilter,
+        startDate: dateRange[0] ? dayjs(dateRange[0]).toISOString() : undefined,
+        endDate: dateRange[1] ? dayjs(dateRange[1]).toISOString() : undefined,
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `activity-logs-${id}-${dayjs().format('YYYY-MM-DD')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('Activity logs exported successfully');
+    } catch (error: any) {
+      message.error('Export failed: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock security events (will be replaced later)
   const mockLogs: ActivityLog[] = [
     {
       id: '1',
@@ -431,22 +488,14 @@ const TenantActivityLogs: React.FC = () => {
     }
   };
 
-  const filteredLogs = mockLogs.filter(log => {
-    const matchesSearch = searchText === '' || 
+  // Client-side search filter (backend handles category, severity, date filters)
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = searchText === '' ||
       log.action.toLowerCase().includes(searchText.toLowerCase()) ||
       log.description.toLowerCase().includes(searchText.toLowerCase()) ||
       log.user.name.toLowerCase().includes(searchText.toLowerCase());
-    
-    const matchesCategory = categoryFilter === 'all' || log.category === categoryFilter;
-    const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter;
-    
-    let matchesDateRange = true;
-    if (dateRange.length === 2) {
-      const logDate = dayjs(log.timestamp);
-      matchesDateRange = logDate.isAfter(dateRange[0]) && logDate.isBefore(dateRange[1]);
-    }
 
-    return matchesSearch && matchesCategory && matchesSeverity && matchesDateRange;
+    return matchesSearch;
   });
 
   const LogDetailDrawer = () => (
@@ -762,12 +811,19 @@ const TenantActivityLogs: React.FC = () => {
               dataSource={filteredLogs}
               rowKey="id"
               search={false}
+              loading={loading}
               pagination={{
-                pageSize: 20,
+                current: pageNumber,
+                pageSize: pageSize,
+                total: totalCount,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => 
+                showTotal: (total, range) =>
                   `${range[0]}-${range[1]} / ${total} log`,
+                onChange: (page, size) => {
+                  setPageNumber(page);
+                  setPageSize(size || 50);
+                },
               }}
               scroll={{ x: 1200 }}
             />

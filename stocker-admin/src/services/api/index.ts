@@ -9,6 +9,8 @@ export { moduleService } from './moduleService';
 export { migrationService } from './migrationService';
 export { systemMonitoringService } from './systemMonitoringService';
 export { systemManagementService } from './systemManagementService';
+export { activityLogService } from './activityLogService';
+export { roleService } from './roleService';
 
 // Re-export types
 export type {
@@ -95,3 +97,14 @@ export type {
   SystemError,
   ErrorStatistics,
 } from './systemManagementService';
+
+export type {
+  ActivityLog,
+  GetActivityLogsQuery,
+  ActivityLogsResponse,
+} from './activityLogService';
+
+export type {
+  Role,
+  Permission,
+} from './roleService';

@@ -62,7 +62,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
-import { userService } from '../../../services/api';
+import { userService, roleService, type Role } from '../../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -193,36 +193,14 @@ const TenantUsers: React.FC = () => {
   };
 
   const fetchRoles = async () => {
-    // Simulated data
-    setRoles([
-      {
-        id: '1',
-        name: 'Admin',
-        description: 'Tam yetki',
-        permissions: ['*'],
-        userCount: 2,
-        isSystem: true,
-        color: 'red'
-      },
-      {
-        id: '2',
-        name: 'Manager',
-        description: 'Yönetici yetkisi',
-        permissions: ['users.read', 'reports.*', 'settings.read'],
-        userCount: 5,
-        isSystem: false,
-        color: 'orange'
-      },
-      {
-        id: '3',
-        name: 'User',
-        description: 'Standart kullanıcı',
-        permissions: ['profile.*', 'reports.read'],
-        userCount: 15,
-        isSystem: false,
-        color: 'blue'
-      }
-    ]);
+    try {
+      const rolesData = await roleService.getAll();
+      setRoles(rolesData);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Roller yüklenirken hata oluştu');
+      // Fallback to empty array on error
+      setRoles([]);
+    }
   };
 
   const handleCreateUser = () => {
