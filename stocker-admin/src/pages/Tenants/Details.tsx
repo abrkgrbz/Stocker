@@ -246,7 +246,7 @@ const TenantDetails: React.FC = () => {
           items: [
             { title: 'Ana Sayfa', path: '/' },
             { title: 'Tenants', path: '/tenants' },
-            { title: tenant.name },
+            { title: tenant?.name || 'Tenant' },
           ],
         },
         onBack: () => navigate('/tenants'),
