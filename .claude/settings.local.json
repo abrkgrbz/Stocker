@@ -48,7 +48,9 @@
       "Bash(Select-Object -First 100)",
       "Bash(git status:*)",
       "Bash(wc:*)",
-      "Bash(New-Item -Path \"C:\\Users\\PC\\source\\repos\\Stocker\\stocker-nextjs\\src\\styles\\sweetalert-custom.css\" -ItemType File -Force)"
+      "Bash(New-Item -Path \"C:\\Users\\PC\\source\\repos\\Stocker\\stocker-nextjs\\src\\styles\\sweetalert-custom.css\" -ItemType File -Force)",
+      "Bash(timeout 10 powershell:*)",
+      "Bash(timeout 15 powershell:*)"
     ],
     "deny": [],
     "ask": []

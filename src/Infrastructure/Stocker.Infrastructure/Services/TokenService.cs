@@ -19,10 +19,10 @@ public class TokenService : ITokenService
     public TokenService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT Secret Key is not configured");
-        _issuer = _configuration["Jwt:Issuer"] ?? "Stocker";
-        _audience = _configuration["Jwt:Audience"] ?? "Stocker";
-        _accessTokenExpirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+        _secretKey = _configuration["JwtSettings:Secret"] ?? throw new InvalidOperationException("JWT Secret Key is not configured");
+        _issuer = _configuration["JwtSettings:Issuer"] ?? "Stocker";
+        _audience = _configuration["JwtSettings:Audience"] ?? "Stocker";
+        _accessTokenExpirationMinutes = int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60");
     }
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
