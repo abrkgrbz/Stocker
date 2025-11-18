@@ -32,7 +32,9 @@ import {
   Progress,
   Spin,
   notification,
+  Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import {
   PlusOutlined,
@@ -69,6 +71,7 @@ import {
   FireOutlined,
   BulbOutlined,
   ExperimentOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import { packageService } from '../../services/api/packageService';
 
@@ -199,23 +202,36 @@ const PackagesPage: React.FC = () => {
   };
 
   const handleDelete = (pkg: Package) => {
+    const hasSubscribers = pkg.subscriberCount > 0;
+
     Modal.confirm({
       title: 'Paket Sil',
+      icon: <ExclamationCircleOutlined />,
       content: (
         <div>
           <Alert
             message="Dikkat!"
-            description={`${pkg.subscriberCount} aktif aboneye sahip bu paketi silmek istediğinize emin misiniz?`}
-            type="warning"
+            description={
+              hasSubscribers
+                ? `Bu pakette ${pkg.subscriberCount} aktif abone bulunmaktadır. Paketi silerseniz bu aboneler etkilenecektir!`
+                : "Bu işlem geri alınamaz."
+            }
+            type={hasSubscribers ? "error" : "warning"}
             showIcon
           />
           <p style={{ marginTop: 16 }}>
             <strong>{pkg.displayName}</strong> paketi silinecek.
           </p>
+          {hasSubscribers && (
+            <p style={{ color: '#ff4d4f', marginTop: 8, fontWeight: 'bold' }}>
+              ⚠️ {pkg.subscriberCount} abone etkilenecek!
+            </p>
+          )}
         </div>
       ),
-      okText: 'Sil',
+      okText: hasSubscribers ? `Evet, ${pkg.subscriberCount} Aboneyi Etkileyerek Sil` : 'Sil',
       okType: 'danger',
+      cancelText: 'İptal',
       onOk: async () => {
         try {
           const success = await packageService.delete(pkg.id);
@@ -338,14 +354,14 @@ const PackagesPage: React.FC = () => {
         <div style={{ marginBottom: 24 }}>
           <Space align="baseline">
             {pkg.originalPrice && (
-              <Text delete type="secondary" style={{ fontSize: 18 }}>
+              <Text delete type="secondary" style={{ fontSize: 20 }}>
                 ₺{pkg.originalPrice}
               </Text>
             )}
-            <Text strong style={{ fontSize: 32 }}>
+            <Text strong style={{ fontSize: 40, fontWeight: 700 }}>
               ₺{pkg.price}
             </Text>
-            <Text type="secondary">
+            <Text type="secondary" style={{ fontSize: 16 }}>
               / {pkg.billingCycle === 'monthly' ? 'ay' : pkg.billingCycle === 'yearly' ? 'yıl' : 'tek seferlik'}
             </Text>
           </Space>
@@ -367,10 +383,22 @@ const PackagesPage: React.FC = () => {
               size="small"
               style={{ marginTop: 8 }}
               dataSource={[
-                { icon: <TeamOutlined />, text: `${pkg.limits.users === 99999 ? 'Sınırsız' : pkg.limits.users} Kullanıcı` },
-                { icon: <CloudServerOutlined />, text: `${pkg.limits.storage === 99999 ? 'Sınırsız' : pkg.limits.storage + ' GB'} Depolama` },
-                { icon: <ApiOutlined />, text: `${pkg.limits.apiCalls === 99999999 ? 'Sınırsız' : pkg.limits.apiCalls.toLocaleString()} API Çağrısı` },
-                { icon: <AppstoreOutlined />, text: `${pkg.limits.projects === 99999 ? 'Sınırsız' : pkg.limits.projects} Proje` },
+                {
+                  icon: <TeamOutlined style={{ color: '#595959' }} />,
+                  text: `${pkg.limits.users === 2147483647 || pkg.limits.users === 99999 ? '∞ Sınırsız' : pkg.limits.users} Kullanıcı`
+                },
+                {
+                  icon: <CloudServerOutlined style={{ color: '#595959' }} />,
+                  text: `${pkg.limits.storage === 2147483647 || pkg.limits.storage === 99999 ? '∞ Sınırsız' : pkg.limits.storage + ' GB'} Depolama`
+                },
+                {
+                  icon: <ApiOutlined style={{ color: '#595959' }} />,
+                  text: `${pkg.limits.apiCalls === 2147483647 || pkg.limits.apiCalls === 99999999 ? '∞ Sınırsız' : pkg.limits.apiCalls.toLocaleString()} API Çağrısı`
+                },
+                {
+                  icon: <AppstoreOutlined style={{ color: '#595959' }} />,
+                  text: `${pkg.limits.projects === 2147483647 || pkg.limits.projects === 99999 ? '∞ Sınırsız' : pkg.limits.projects} Proje`
+                },
               ]}
               renderItem={(item) => (
                 <List.Item style={{ padding: '4px 0', border: 'none' }}>
@@ -446,17 +474,25 @@ const PackagesPage: React.FC = () => {
         <Divider />
 
         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-          <Button type="primary" onClick={() => handleEdit(pkg)}>
+          <Button type="primary" onClick={() => handleEdit(pkg)} icon={<EditOutlined />}>
             Düzenle
           </Button>
-          <Popconfirm
-            title="Bu paketi silmek istediğinize emin misiniz?"
-            onConfirm={() => handleDelete(pkg)}
-            okText="Evet"
-            cancelText="Hayır"
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'delete',
+                  label: 'Sil',
+                  danger: true,
+                  icon: <DeleteOutlined />,
+                  onClick: () => handleDelete(pkg),
+                },
+              ],
+            }}
+            placement="bottomRight"
           >
-            <Button danger>Sil</Button>
-          </Popconfirm>
+            <Button icon={<MoreOutlined />} />
+          </Dropdown>
         </Space>
       </div>
     </ProCard>
@@ -498,21 +534,21 @@ const PackagesPage: React.FC = () => {
           if (typeof value === 'boolean') {
             return value ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : <CloseCircleOutlined style={{ color: '#ff4d4f' }} />;
           }
-          
+
           if (record.key === 'users' || record.key === 'projects') {
-            return value === 99999 ? 'Sınırsız' : value;
+            return value === 2147483647 || value === 99999 ? '∞ Sınırsız' : value;
           }
-          
+
           if (record.key === 'storage') {
-            return value === 99999 ? 'Sınırsız' : `${value} GB`;
+            return value === 2147483647 || value === 99999 ? '∞ Sınırsız' : `${value} GB`;
           }
-          
+
           if (record.key === 'apiCalls') {
-            return value === 99999999 ? 'Sınırsız' : value.toLocaleString();
+            return value === 2147483647 || value === 99999999 ? '∞ Sınırsız' : value.toLocaleString();
           }
-          
+
           if (record.key === 'customDomains') {
-            return value === 99999 ? 'Sınırsız' : value === 0 ? '-' : value;
+            return value === 2147483647 || value === 99999 ? '∞ Sınırsız' : value === 0 ? '-' : value;
           }
           
           if (record.key === 'sla') {
@@ -632,11 +668,17 @@ const PackagesPage: React.FC = () => {
               <ProCard
                 hoverable
                 bordered
-                style={{ height: '100%', minHeight: 400 }}
-                bodyStyle={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
+                style={{
+                  height: '100%',
+                  minHeight: 400,
+                  borderStyle: 'dashed',
+                  borderWidth: 2,
+                  borderColor: '#d9d9d9'
+                }}
+                bodyStyle={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   textAlign: 'center'
                 }}
