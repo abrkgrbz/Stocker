@@ -110,27 +110,85 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
                 _logger.LogInformation("User was already active: {UserId}", user.Id);
             }
 
-            // Get tenant information
-            // UserTenant has been moved to Tenant domain
-            // Tenant association should be retrieved from Tenant context
-            Domain.Master.Entities.Tenant? tenant = null;
-            string? tenantName = null;
-            Guid? tenantId = null;
-            
-            // For now, we'll skip tenant lookup since UserTenant is in Tenant domain
-            // This should be handled through a service that can access both contexts
+            // Get tenant information - Find tenant by contact email
+            var tenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
+                .AsQueryable()
+                .FirstOrDefaultAsync(t => t.ContactEmail.Value == emailValue, cancellationToken);
+
+            if (tenant == null)
+            {
+                _logger.LogWarning("No tenant found for user email: {Email}", emailValue);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                return Result<VerifyEmailResponse>.Success(new VerifyEmailResponse
+                {
+                    Success = true,
+                    Message = "Email adresiniz başarıyla doğrulandı! Giriş yapabilirsiniz.",
+                    RedirectUrl = "/login",
+                    TenantId = null,
+                    TenantName = null
+                });
+            }
+
+            // Create TenantRegistration record
+            var contactEmailVo = Domain.Common.ValueObjects.Email.Create(emailValue);
+            var contactPhoneVo = user.PhoneNumber ?? Domain.Common.ValueObjects.PhoneNumber.Create("+90");
+            var adminEmailVo = Domain.Common.ValueObjects.Email.Create(emailValue);
+
+            if (contactEmailVo.IsFailure || contactPhoneVo.IsFailure || adminEmailVo.IsFailure)
+            {
+                _logger.LogError("Failed to create value objects for TenantRegistration");
+            }
+            else
+            {
+                var tenantRegistration = Domain.Master.Entities.TenantRegistration.Create(
+                    companyName: tenant.Name,
+                    companyCode: tenant.Code,
+                    contactPersonName: user.FirstName,
+                    contactPersonSurname: user.LastName,
+                    contactEmail: contactEmailVo.Value,
+                    contactPhone: contactPhoneVo.Value,
+                    addressLine1: "",
+                    city: "Istanbul",
+                    postalCode: "34000",
+                    country: "Turkey",
+                    adminEmail: adminEmailVo.Value,
+                    adminUsername: user.Username,
+                    adminFirstName: user.FirstName,
+                    adminLastName: user.LastName);
+
+                // Auto-approve since email is verified
+                tenantRegistration.Approve("System", tenant.Id);
+
+                await _unitOfWork.Repository<Domain.Master.Entities.TenantRegistration>()
+                    .AddAsync(tenantRegistration, cancellationToken);
+
+                _logger.LogInformation("Created TenantRegistration for tenant: {TenantId}", tenant.Id);
+            }
+
+            // Create TenantDomain record for subdomain
+            var tenantDomain = Domain.Master.Entities.TenantDomain.Create(
+                tenantId: tenant.Id,
+                domainName: $"{tenant.Code}.stoocker.app",
+                isPrimary: true);
+
+            tenantDomain.Verify(); // Auto-verify the subdomain
+
+            await _unitOfWork.Repository<Domain.Master.Entities.TenantDomain>()
+                .AddAsync(tenantDomain, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Email verified successfully for user: {UserId}", user.Id);
+            _logger.LogInformation("Email verified successfully for user: {UserId}, Tenant: {TenantId}", user.Id, tenant.Id);
+            _logger.LogInformation("Created TenantRegistration and TenantDomain for tenant: {TenantId}", tenant.Id);
 
             return Result<VerifyEmailResponse>.Success(new VerifyEmailResponse
             {
                 Success = true,
-                Message = "Email adresiniz başarıyla doğrulandı! Şirket bilgilerinizi tamamlayarak başlayabilirsiniz.",
-                RedirectUrl = "/company-setup",
-                TenantId = tenantId,
-                TenantName = tenantName
+                Message = "Email adresiniz başarıyla doğrulandı! Giriş yapabilirsiniz.",
+                RedirectUrl = "/login",
+                TenantId = tenant.Id,
+                TenantName = tenant.Name
             });
         }
         catch (Exception ex)

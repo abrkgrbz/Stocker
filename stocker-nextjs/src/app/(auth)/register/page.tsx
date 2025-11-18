@@ -229,12 +229,13 @@ export default function RegisterPage() {
           data.message || 'Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın.'
         )
 
-        // Registration successful - redirect to setup
+        // Registration successful - redirect to email verification
         setCurrentStep('complete')
 
-        // Redirect to setup after showing the alert
+        // Redirect to the URL specified by backend (email verification page)
+        const redirectUrl = data.redirectUrl || `/register/verify-email?email=${encodeURIComponent(email)}`
         setTimeout(() => {
-          window.location.href = '/setup'
+          window.location.href = redirectUrl
         }, 1000)
       } else {
         // Registration failed - handle specific errors

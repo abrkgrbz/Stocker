@@ -252,8 +252,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 SubdomainUrl = $"https://{tenant.Code}.stoocker.app",
                 CompanyName = companyName,
                 RequiresEmailVerification = true,
-                RequiresSetup = true, // User needs to complete setup wizard
-                RedirectUrl = "/setup"
+                RequiresSetup = false, // Setup will be done after email verification
+                RedirectUrl = $"/register/verify-email?email={Uri.EscapeDataString(request.Email)}"
             });
         }
         catch (Exception ex)

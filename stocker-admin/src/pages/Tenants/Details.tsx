@@ -65,6 +65,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
+import { tenantService, type Tenant } from '../../services/tenantService';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -75,97 +76,67 @@ const TenantDetails: React.FC = () => {
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [form] = Form.useForm();
 
-  // Mock tenant data
-  const tenant = {
-    id: id || '1',
-    name: 'ABC Corporation',
-    subdomain: 'abc-corp',
-    customDomain: 'app.abc-corp.com',
-    status: 'active',
-    package: 'enterprise',
-    users: 425,
-    maxUsers: 500,
-    storage: 85.4,
-    maxStorage: 100,
-    createdAt: '2024-01-15',
-    expiresAt: '2025-01-15',
-    lastActive: '5 dakika önce',
-    owner: {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@abc-corp.com',
-      phone: '+90 555 123 4567',
-      title: 'CEO',
-    },
-    company: {
-      name: 'ABC Corporation Ltd.',
-      taxNumber: '1234567890',
-      address: 'Levent, Büyükdere Cad. No:123',
-      city: 'İstanbul',
-      country: 'Türkiye',
-      postalCode: '34394',
-    },
-    billing: {
-      plan: 'Enterprise',
-      amount: 9999,
-      cycle: 'yearly',
-      nextBilling: '2025-01-15',
-      paymentMethod: 'Kredi Kartı',
-      autoRenew: true,
-    },
-    database: {
-      name: 'abc_corp_db',
-      status: 'active',
-      size: 4.8,
-      region: 'eu-west-1',
-      backupEnabled: true,
-      lastBackup: '2024-12-07 03:00',
-    },
-    features: [
-      'advanced-analytics',
-      'api-access',
-      'custom-branding',
-      'priority-support',
-      'white-label',
-      'sla-guarantee',
-    ],
-    limits: {
-      apiCalls: { used: 850000, max: 1000000 },
-      bandwidth: { used: 450, max: 1000 }, // GB
-      emailsSent: { used: 12500, max: 50000 },
-      customDomains: { used: 3, max: 10 },
-    },
+  // Fetch tenant data on component mount
+  React.useEffect(() => {
+    if (id) {
+      fetchTenantData();
+    }
+  }, [id]);
+
+  const fetchTenantData = async () => {
+    try {
+      setLoading(true);
+      const data = await tenantService.getTenantById(id!);
+      setTenant(data);
+    } catch (error: any) {
+      message.error(error?.message || 'Tenant bilgileri yüklenemedi');
+      navigate('/tenants');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = () => {
+    if (!tenant) return;
+
     form.setFieldsValue({
       ...tenant,
-      expiresAt: dayjs(tenant.expiresAt),
+      subscriptionEndDate: tenant.subscriptionEndDate ? dayjs(tenant.subscriptionEndDate) : null,
     });
     setEditMode(true);
   };
 
   const handleSave = async () => {
+    if (!tenant) return;
+
     try {
       const values = await form.validateFields();
       setLoading(true);
 
-      // Simulate API call
-      setTimeout(async () => {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Başarılı!',
-          text: 'Tenant bilgileri güncellendi.',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        setEditMode(false);
-        setLoading(false);
-      }, 1500);
-    } catch (error) {
-      message.error('Lütfen gerekli alanları doldurun');
+      // Call real API
+      await tenantService.updateTenant(tenant.id, {
+        ...values,
+        subscriptionEndDate: values.subscriptionEndDate?.format('YYYY-MM-DD'),
+      });
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Başarılı!',
+        text: 'Tenant bilgileri güncellendi.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      // Refresh tenant data
+      await fetchTenantData();
+      setEditMode(false);
+    } catch (error: any) {
+      message.error(error?.message || 'Tenant güncellenemedi');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,13 +146,15 @@ const TenantDetails: React.FC = () => {
   };
 
   const handleStatusChange = async (status: string) => {
+    if (!tenant) return;
+
     const statusMessages = {
       active: 'aktifleştirmek',
       suspended: 'askıya almak',
       inactive: 'devre dışı bırakmak',
     };
 
-    await Swal.fire({
+    const result = await Swal.fire({
       title: 'Durum Değişikliği',
       text: `${tenant.name} tenant'ını ${statusMessages[status as keyof typeof statusMessages]} istediğinize emin misiniz?`,
       icon: 'warning',
@@ -189,11 +162,26 @@ const TenantDetails: React.FC = () => {
       confirmButtonText: 'Evet',
       cancelButtonText: 'İptal',
       confirmButtonColor: '#667eea',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        message.success('Tenant durumu güncellendi');
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        setLoading(true);
+
+        if (status === 'active') {
+          await tenantService.activateTenant(tenant.id);
+        } else if (status === 'suspended') {
+          await tenantService.suspendTenant(tenant.id);
+        }
+
+        message.success('Tenant durumu güncellendi');
+        await fetchTenantData();
+      } catch (error: any) {
+        message.error(error?.message || 'Durum değiştirilemedi');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const InfoCard = ({ title, value, icon, color }: any) => (
@@ -224,6 +212,31 @@ const TenantDetails: React.FC = () => {
       </Card>
     );
   };
+
+  // Show loading state
+  if (loading && !tenant) {
+    return (
+      <PageContainer>
+        <Card loading={true} style={{ minHeight: 400 }} />
+      </PageContainer>
+    );
+  }
+
+  // Show error state if tenant not found
+  if (!tenant) {
+    return (
+      <PageContainer>
+        <Empty
+          description="Tenant bulunamadı"
+          extra={
+            <Button type="primary" onClick={() => navigate('/tenants')}>
+              Tenant Listesine Dön
+            </Button>
+          }
+        />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer

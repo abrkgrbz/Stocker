@@ -263,37 +263,97 @@ export const tenantService = {
 
   // Get single tenant by ID
   async getTenantById(id: string): Promise<Tenant> {
-    const response = await apiClient.get<Tenant>(`/tenants/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.get<ApiResponse<Tenant>>(`/master/tenants/${id}`);
+
+      if (response.data.success) {
+        // Map API response to extended tenant format
+        return mapApiTenantToExtended(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch tenant');
+      }
+    } catch (error) {
+      console.error('Error fetching tenant by ID:', error);
+      throw error;
+    }
   },
 
   // Create new tenant
   async createTenant(data: Partial<Tenant>): Promise<Tenant> {
-    const response = await apiClient.post<Tenant>('/tenants', data);
-    return response.data;
+    try {
+      const response = await apiClient.post<ApiResponse<Tenant>>('/master/tenants', data);
+
+      if (response.data.success) {
+        return mapApiTenantToExtended(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to create tenant');
+      }
+    } catch (error) {
+      console.error('Error creating tenant:', error);
+      throw error;
+    }
   },
 
   // Update tenant
   async updateTenant(id: string, data: Partial<Tenant>): Promise<Tenant> {
-    const response = await apiClient.put<Tenant>(`/tenants/${id}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.put<ApiResponse<Tenant>>(`/master/tenants/${id}`, data);
+
+      if (response.data.success) {
+        return mapApiTenantToExtended(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to update tenant');
+      }
+    } catch (error) {
+      console.error('Error updating tenant:', error);
+      throw error;
+    }
   },
 
   // Delete tenant
   async deleteTenant(id: string): Promise<void> {
-    await apiClient.delete(`/tenants/${id}`);
+    try {
+      const response = await apiClient.delete<ApiResponse<void>>(`/master/tenants/${id}`);
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to delete tenant');
+      }
+    } catch (error) {
+      console.error('Error deleting tenant:', error);
+      throw error;
+    }
   },
 
   // Suspend tenant
   async suspendTenant(id: string): Promise<Tenant> {
-    const response = await apiClient.post<Tenant>(`/tenants/${id}/suspend`);
-    return response.data;
+    try {
+      const response = await apiClient.post<ApiResponse<Tenant>>(`/master/tenants/${id}/suspend`);
+
+      if (response.data.success) {
+        return mapApiTenantToExtended(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to suspend tenant');
+      }
+    } catch (error) {
+      console.error('Error suspending tenant:', error);
+      throw error;
+    }
   },
 
   // Activate tenant
   async activateTenant(id: string): Promise<Tenant> {
-    const response = await apiClient.post<Tenant>(`/tenants/${id}/activate`);
-    return response.data;
+    try {
+      const response = await apiClient.post<ApiResponse<Tenant>>(`/master/tenants/${id}/activate`);
+
+      if (response.data.success) {
+        return mapApiTenantToExtended(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to activate tenant');
+      }
+    } catch (error) {
+      console.error('Error activating tenant:', error);
+      throw error;
+    }
   },
 
   // Login to tenant
