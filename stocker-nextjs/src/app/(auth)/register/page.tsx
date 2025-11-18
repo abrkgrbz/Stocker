@@ -223,13 +223,19 @@ export default function RegisterPage() {
           localStorage.setItem('refreshToken', data.data.refreshToken)
         }
 
+        // Show email verification success message
+        await showAlert.success(
+          'Kayıt Başarılı! 📧',
+          data.message || 'Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın.'
+        )
+
         // Registration successful - redirect to setup
         setCurrentStep('complete')
 
-        // Redirect to setup after 2 seconds
+        // Redirect to setup after showing the alert
         setTimeout(() => {
           window.location.href = '/setup'
-        }, 2000)
+        }, 1000)
       } else {
         // Registration failed - handle specific errors
         const errorMessage = data.message || 'Kayıt işlemi başarısız oldu'

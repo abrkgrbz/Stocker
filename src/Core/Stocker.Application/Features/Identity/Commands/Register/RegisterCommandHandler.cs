@@ -183,29 +183,37 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             masterUser.SetRefreshToken(refreshToken, DateTime.UtcNow.AddDays(7));
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Queue verification email as background job
-            _backgroundJobService.Enqueue<IEmailBackgroundJob>(job => 
-                job.SendVerificationEmailAsync(
-                    request.Email,
-                    emailVerificationToken.Token,
-                    $"{request.FirstName} {request.LastName}"));
-            
-            _logger.LogInformation("Verification email queued for {Email}", request.Email);
+            // CRITICAL: Queue verification email - if this fails, rollback the entire registration
+            // This ensures users don't get "stuck" in a state where they're registered but can't verify
+            try
+            {
+                _logger.LogInformation("Queuing verification email for {Email}", request.Email);
+                _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
+                    job.SendVerificationEmailAsync(
+                        request.Email,
+                        emailVerificationToken.Token,
+                        $"{request.FirstName} {request.LastName}"));
+                _logger.LogInformation("Verification email queued successfully for {Email}", request.Email);
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogError(emailEx, "CRITICAL: Failed to queue verification email for {Email}. Rolling back registration.", request.Email);
 
-            // Queue welcome email as background job with 5 second delay
-            _backgroundJobService.Schedule<IEmailBackgroundJob>(job => 
-                job.SendWelcomeEmailAsync(
-                    request.Email,
-                    $"{request.FirstName} {request.LastName}",
-                    request.CompanyName),
-                TimeSpan.FromSeconds(5));
-            
-            _logger.LogInformation("Welcome email queued for {Email}", request.Email);
+                // Rollback: Remove the user and tenant from database
+                _masterUnitOfWork.Repository<MasterUser>().Remove(masterUser);
+                _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>().Remove(tenant);
+                await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Queue tenant provisioning as background job
-            _backgroundJobService.Enqueue<ITenantProvisioningJob>(job => 
+                return Result<RegisterResponse>.Failure(
+                    Error.Failure("Register.EmailQueueFailed",
+                    "Kayıt işlemi tamamlanamadı. Lütfen daha sonra tekrar deneyin."));
+            }
+
+            // NOTE: Tenant provisioning will be done via background job
+            // This keeps registration fast and responsive
+            _backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
                 job.ProvisionNewTenantAsync(tenant.Id));
-            
+
             _logger.LogInformation("Tenant provisioning queued for {TenantId}", tenant.Id);
 
             _logger.LogInformation("Registration completed successfully for team: {TeamName}", request.TeamName);
@@ -213,7 +221,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             return Result<RegisterResponse>.Success(new RegisterResponse
             {
                 Success = true,
-                Message = "Kayıt başarıyla tamamlandı",
+                Message = "Kayıt başarıyla tamamlandı! Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın.",
                 UserId = masterUser.Id,
                 TenantId = tenant.Id,
                 CompanyId = Guid.Empty, // Company will be created during setup

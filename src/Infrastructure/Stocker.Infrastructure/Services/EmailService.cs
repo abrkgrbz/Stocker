@@ -335,16 +335,22 @@ public class EmailService : IEmailService
             var passwordSetting = settings.FirstOrDefault(s => s.Key == "Smtp.Password");
             if (passwordSetting != null && !string.IsNullOrEmpty(passwordSetting.Value))
             {
-                try
+                if (passwordSetting.IsEncrypted)
                 {
-                    emailSettings.SmtpPassword = passwordSetting.IsEncrypted 
-                        ? _encryptionService.Decrypt(passwordSetting.Value)
-                        : passwordSetting.Value;
+                    var decryptedPassword = _encryptionService.Decrypt(passwordSetting.Value);
+
+                    // If decryption failed (returned empty string), this is a critical error
+                    if (string.IsNullOrEmpty(decryptedPassword))
+                    {
+                        _logger.LogError("CRITICAL: Failed to decrypt SMTP password. IsEncrypted=true but decryption returned empty. Using fallback.");
+                        return GetFallbackEmailSettings();
+                    }
+
+                    emailSettings.SmtpPassword = decryptedPassword;
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Failed to decrypt SMTP password");
-                    return GetFallbackEmailSettings();
+                    emailSettings.SmtpPassword = passwordSetting.Value;
                 }
             }
             else
