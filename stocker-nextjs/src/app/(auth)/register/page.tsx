@@ -7,6 +7,7 @@ import { Input, Button } from 'antd'
 import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
 import Logo from '@/components/Logo'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
+import Swal from 'sweetalert2'
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
 
@@ -247,14 +248,26 @@ export default function RegisterPage() {
         }
         // Generic error
         else {
-          alert(errorMessage)
+          await Swal.fire({
+            icon: 'error',
+            title: 'Kayıt Başarısız',
+            text: errorMessage,
+            confirmButtonText: 'Tamam',
+            confirmButtonColor: '#1890ff'
+          })
         }
 
         setIsLoading(false)
       }
     } catch (error) {
       console.error('Registration error:', error)
-      alert('Kayıt işlemi sırasında bir hata oluştu')
+      await Swal.fire({
+        icon: 'error',
+        title: 'Hata',
+        text: 'Kayıt işlemi sırasında bir hata oluştu',
+        confirmButtonText: 'Tamam',
+        confirmButtonColor: '#1890ff'
+      })
       setIsLoading(false)
     }
   }
