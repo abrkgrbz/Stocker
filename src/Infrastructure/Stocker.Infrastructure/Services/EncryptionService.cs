@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,13 +14,18 @@ public class EncryptionService : IEncryptionService
 {
     private readonly IDataProtector _dataProtector;
     private readonly string _encryptionKey;
+    private readonly ILogger<EncryptionService> _logger;
 
-    public EncryptionService(IDataProtectionProvider dataProtectionProvider, IConfiguration configuration)
+    public EncryptionService(
+        IDataProtectionProvider dataProtectionProvider,
+        IConfiguration configuration,
+        ILogger<EncryptionService> logger)
     {
         _dataProtector = dataProtectionProvider.CreateProtector("Stocker.Encryption.v1");
-        _encryptionKey = configuration["DATA_PROTECTION_KEY"] ?? 
-                         Environment.GetEnvironmentVariable("DATA_PROTECTION_KEY") ?? 
+        _encryptionKey = configuration["DATA_PROTECTION_KEY"] ??
+                         Environment.GetEnvironmentVariable("DATA_PROTECTION_KEY") ??
                          throw new InvalidOperationException("DATA_PROTECTION_KEY is not configured");
+        _logger = logger;
     }
 
     /// <summary>
@@ -46,6 +52,7 @@ public class EncryptionService : IEncryptionService
 
     /// <summary>
     /// Decrypts sensitive data
+    /// Returns empty string if decryption fails (allows graceful fallback)
     /// </summary>
     public string Decrypt(string cipherText)
     {
@@ -58,11 +65,13 @@ public class EncryptionService : IEncryptionService
         }
         catch (CryptographicException ex)
         {
-            throw new InfrastructureException("Decryption.Failed", "Failed to decrypt data - data may be corrupted or key mismatch", ex);
+            _logger.LogWarning(ex, "Failed to decrypt data - data may be corrupted or key mismatch. Returning empty string for graceful fallback.");
+            return string.Empty;
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("Decryption.UnexpectedError", "Unexpected error during decryption", ex);
+            _logger.LogError(ex, "Unexpected error during decryption. Returning empty string for graceful fallback.");
+            return string.Empty;
         }
     }
 
