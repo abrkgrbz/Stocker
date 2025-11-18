@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Modal, Steps, Button, Form, Input, Select, Typography, Space, Card } from 'antd';
+import { Modal, Steps, Button, Form, Input, Select, Typography, Space, Card, message } from 'antd';
 import {
   CheckCircleOutlined,
   ShopOutlined,
   CrownOutlined,
   RocketOutlined
 } from '@ant-design/icons';
+import Swal from 'sweetalert2';
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
@@ -127,9 +128,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setFormData({ ...formData, ...values });
         setCurrentStep(currentStep + 1);
       } catch (error: any) {
-        // Form validation failed - show errors
+        // Form validation failed - show errors with SweetAlert2
         console.error('Form validation error:', error);
-        message.error('Lütfen tüm zorunlu alanları doldurun');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Eksik Bilgiler',
+          text: 'Lütfen tüm zorunlu alanları doldurun',
+          confirmButtonText: 'Tamam',
+          confirmButtonColor: '#1890ff'
+        });
       }
     } else if (currentStep === 3) {
       // Paket seçimi required
@@ -146,24 +153,54 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
         // Check for frontend form validation errors
         if (error?.errorFields) {
-          message.error('Lütfen tüm zorunlu alanları doldurun');
+          await Swal.fire({
+            icon: 'error',
+            title: 'Eksik Bilgiler',
+            text: 'Lütfen tüm zorunlu alanları doldurun',
+            confirmButtonText: 'Tamam',
+            confirmButtonColor: '#1890ff'
+          });
           return;
         }
 
         // Check for backend validation errors (from Next.js API route)
         if (error?.errors) {
           const backendErrors = error.errors;
+          let errorMessage = '';
+
           if (typeof backendErrors === 'object') {
-            const errorMessages = Object.values(backendErrors).flat().join('; ');
-            message.error(errorMessages || 'Kurulum sırasında bir hata oluştu');
+            // Convert validation errors to HTML list
+            const errorList = Object.entries(backendErrors)
+              .map(([field, messages]: [string, any]) => {
+                const messageArray = Array.isArray(messages) ? messages : [messages];
+                return messageArray.map(msg => `• ${msg}`).join('<br>');
+              })
+              .join('<br>');
+
+            errorMessage = errorList;
           } else {
-            message.error(String(backendErrors));
+            errorMessage = String(backendErrors);
           }
+
+          await Swal.fire({
+            icon: 'error',
+            title: 'Doğrulama Hataları',
+            html: errorMessage || 'Kurulum sırasında bir hata oluştu',
+            confirmButtonText: 'Tamam',
+            confirmButtonColor: '#1890ff',
+            width: '600px'
+          });
           return;
         }
 
         // Generic error message
-        message.error(error?.message || 'Kurulum sırasında bir hata oluştu');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Hata',
+          text: error?.message || 'Kurulum sırasında bir hata oluştu',
+          confirmButtonText: 'Tamam',
+          confirmButtonColor: '#1890ff'
+        });
       }
     } else {
       setCurrentStep(currentStep + 1);
