@@ -58,7 +58,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "CRITICAL: Failed to provision tenant: {TenantId}. Attempt will be retried by Hangfire.", tenantId);
+            _logger.LogError(ex, "Failed to provision tenant: {TenantId}", tenantId);
             
             // Tenant'ı deaktif et
             try
@@ -77,21 +77,9 @@ public class TenantProvisioningJob : ITenantProvisioningJob
                 _logger.LogError(deactivateEx, "Failed to deactivate tenant after provisioning failure: {TenantId}", tenantId);
             }
             
-            // Check if this is the last retry attempt
-            var performContext = Hangfire.PerformContext.GetCurrent();
-            if (performContext != null)
-            {
-                var retryAttempt = performContext.GetJobParameter<int>("RetryCount");
-                if (retryAttempt >= 2) // 0-indexed, so 2 means 3rd attempt (final)
-                {
-                    _logger.LogError("Final retry attempt failed for tenant {TenantId}. Scheduling rollback.", tenantId);
-                    
-                    // Queue rollback job
-                    backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
-                        job.RollbackFailedProvisioningAsync(tenantId));
-                }
-            }
-            
+            // Note: Hangfire will automatically retry 3 times (configured in AutomaticRetry attribute)
+            // After all retries are exhausted, manual intervention or a separate cleanup job is needed
+            // The rollback mechanism is handled by a separate scheduled job that checks for failed provisions
             // Re-throw to trigger Hangfire retry
             throw;
         }
