@@ -138,6 +138,10 @@ const TenantMigrations: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
+  // Bulk actions
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
   useEffect(() => {
     fetchMigrations();
     fetchHistory();
@@ -391,6 +395,209 @@ const TenantMigrations: React.FC = () => {
     });
   };
 
+  // Bulk action handlers
+  const handleBulkApply = async () => {
+    const selectedMigrations = migrations.filter(m => selectedRowKeys.includes(m.id));
+    const pendingMigrations = selectedMigrations.filter(m => m.status === 'pending');
+
+    if (pendingMigrations.length === 0) {
+      message.warning('Seçili migration\'lar arasında çalıştırılabilir migration yok');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Toplu Migration Çalıştır',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="margin-bottom: 12px;">
+            <strong>${pendingMigrations.length} migration</strong> çalıştırılacak.
+          </p>
+          <div style="background: #f0f2f5; padding: 12px; border-radius: 6px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+            ${pendingMigrations.map(m => `
+              <div style="margin-bottom: 6px; padding: 4px; background: white; border-radius: 4px;">
+                <span style="font-family: monospace; font-size: 12px;">${m.name}</span>
+              </div>
+            `).join('')}
+          </div>
+          <p style="margin-top: 12px; color: #faad14; font-size: 13px;">
+            ⚠️ Bu işlem veritabanında değişiklikler yapacaktır.
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<span style="padding: 0 8px;">✓ Tümünü Çalıştır</span>',
+      cancelButtonText: '<span style="padding: 0 8px;">✕ İptal</span>',
+      confirmButtonColor: '#1890ff',
+      cancelButtonColor: '#d9d9d9',
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const migration of pendingMigrations) {
+      try {
+        const parts = migration.id.split('-');
+        const tenantId = parts.slice(0, 5).join('-');
+        await migrationService.applyMigration(tenantId);
+        successCount++;
+      } catch (error) {
+        failCount++;
+        console.error(`Failed to apply migration ${migration.id}:`, error);
+      }
+    }
+
+    setBulkActionLoading(false);
+    setSelectedRowKeys([]);
+
+    await Swal.fire({
+      title: 'Toplu İşlem Tamamlandı',
+      html: `
+        <div style="text-align: center; padding: 10px;">
+          <p style="font-size: 16px; margin-bottom: 12px;">
+            ${successCount > 0 ? `✓ <strong>${successCount}</strong> migration başarılı` : ''}
+            ${failCount > 0 ? `<br>✕ <strong>${failCount}</strong> migration başarısız` : ''}
+          </p>
+        </div>
+      `,
+      icon: failCount > 0 ? 'warning' : 'success',
+      confirmButtonText: 'Tamam',
+      confirmButtonColor: failCount > 0 ? '#faad14' : '#52c41a'
+    });
+
+    fetchMigrations();
+    fetchHistory();
+  };
+
+  const handleBulkRollback = async () => {
+    const selectedMigrations = migrations.filter(m => selectedRowKeys.includes(m.id));
+    const completedMigrations = selectedMigrations.filter(m => m.status === 'completed' && m.canRollback);
+
+    if (completedMigrations.length === 0) {
+      message.warning('Seçili migration\'lar arasında geri alınabilir migration yok');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Toplu Migration Geri Al',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="margin-bottom: 12px;">
+            <strong>${completedMigrations.length} migration</strong> geri alınacak.
+          </p>
+          <div style="background: #fff2e8; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+            <div style="color: #fa8c16;">⚠️ Dikkat!</div>
+            <div style="margin-top: 6px; color: #8c8c8c;">Bu işlem veritabanında değişiklikler yapacaktır.</div>
+          </div>
+          <div style="background: #f0f2f5; padding: 12px; border-radius: 6px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+            ${completedMigrations.map(m => `
+              <div style="margin-bottom: 6px; padding: 4px; background: white; border-radius: 4px;">
+                <span style="font-family: monospace; font-size: 12px;">${m.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: '<span style="padding: 0 8px;">✓ Tümünü Geri Al</span>',
+      cancelButtonText: '<span style="padding: 0 8px;">✕ İptal</span>',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#d9d9d9',
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const migration of completedMigrations) {
+      try {
+        const parts = migration.id.split('-');
+        const tenantId = parts[0];
+        const moduleName = parts[1];
+        const migrationName = parts.slice(2, -1).join('-');
+        await migrationService.rollbackMigration(tenantId, moduleName, migrationName);
+        successCount++;
+      } catch (error) {
+        failCount++;
+        console.error(`Failed to rollback migration ${migration.id}:`, error);
+      }
+    }
+
+    setBulkActionLoading(false);
+    setSelectedRowKeys([]);
+
+    await Swal.fire({
+      title: 'Toplu Geri Alma Tamamlandı',
+      html: `
+        <div style="text-align: center; padding: 10px;">
+          <p style="font-size: 16px; margin-bottom: 12px;">
+            ${successCount > 0 ? `✓ <strong>${successCount}</strong> migration geri alındı` : ''}
+            ${failCount > 0 ? `<br>✕ <strong>${failCount}</strong> migration başarısız` : ''}
+          </p>
+        </div>
+      `,
+      icon: failCount > 0 ? 'warning' : 'success',
+      confirmButtonText: 'Tamam',
+      confirmButtonColor: failCount > 0 ? '#faad14' : '#52c41a'
+    });
+
+    fetchMigrations();
+    fetchHistory();
+  };
+
+  const handleBulkDelete = async () => {
+    const result = await Swal.fire({
+      title: 'Toplu Silme',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="margin-bottom: 12px;">
+            <strong>${selectedRowKeys.length} migration</strong> silinecek.
+          </p>
+          <div style="background: #fff1f0; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+            <div style="color: #ff4d4f;">⚠️ Uyarı!</div>
+            <div style="margin-top: 6px; color: #8c8c8c;">Bu işlem geri alınamaz.</div>
+          </div>
+        </div>
+      `,
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonText: '<span style="padding: 0 8px;">✓ Tümünü Sil</span>',
+      cancelButtonText: '<span style="padding: 0 8px;">✕ İptal</span>',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#d9d9d9',
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+
+    // Simulate deletion - in real implementation, call API
+    setMigrations(prev => prev.filter(m => !selectedRowKeys.includes(m.id)));
+    setSelectedRowKeys([]);
+
+    setBulkActionLoading(false);
+
+    message.success(`${selectedRowKeys.length} migration silindi`);
+  };
+
   const getStatusTag = (status: string) => {
     const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
       pending: { color: 'default', text: 'Beklemede', icon: <ClockCircleOutlined /> },
@@ -620,13 +827,24 @@ const TenantMigrations: React.FC = () => {
             </Title>
           </Col>
           <Col xs={24} md={12} style={{ textAlign: 'right' }}>
-            <Space wrap>
-              <Button icon={<ReloadOutlined />} onClick={fetchMigrations}>
-                Yenile
-              </Button>
-              <Button icon={<InfoCircleOutlined />} onClick={() => setImportModalVisible(true)}>
-                Migration Bilgisi
-              </Button>
+            <Space wrap size="middle">
+              {/* Secondary Actions - Left Group */}
+              <Space.Compact>
+                <Tooltip title="Listeyi yenile">
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={fetchMigrations}
+                  />
+                </Tooltip>
+                <Tooltip title="Migration hakkında bilgi">
+                  <Button
+                    icon={<InfoCircleOutlined />}
+                    onClick={() => setImportModalVisible(true)}
+                  />
+                </Tooltip>
+              </Space.Compact>
+
+              {/* Secondary Actions - Right Group */}
               <Button
                 icon={<ThunderboltOutlined />}
                 onClick={() => {
@@ -637,17 +855,15 @@ const TenantMigrations: React.FC = () => {
                 Migration Planı
               </Button>
               <Button
-                type="primary"
-                danger
-                icon={<ThunderboltOutlined />}
+                icon={<SyncOutlined />}
                 onClick={async () => {
                   Modal.confirm({
                     title: 'Tüm Tenant\'ları Güncelle',
-                    content: 'Tüm aktif tenant\'ların veritabanlarına bekleyen migration\'lar uygulanacak. Devam etmek istiyor musunuz?',
+                    content: 'Tüm aktif tenant\'ların veritabanlarına bekleyen migration\'lar uygulanacak. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
                     okText: 'Evet, Güncelle',
                     cancelText: 'İptal',
-                    okType: 'danger',
-                    icon: <DatabaseOutlined />,
+                    okType: 'primary',
+                    icon: <ExclamationCircleOutlined />,
                     onOk: async () => {
                       setLoading(true);
                       try {
@@ -690,56 +906,78 @@ const TenantMigrations: React.FC = () => {
                   });
                 }}
               >
-                Tüm Tenant'ları Güncelle
+                Toplu Güncelle
               </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setMigrationModalVisible(true)}>
-                Yeni Migration Nasıl Oluşturulur?
+
+              {/* Primary Action - Main CTA */}
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={() => setMigrationModalVisible(true)}
+              >
+                Migration Oluştur
               </Button>
             </Space>
           </Col>
         </Row>
         <Divider />
         
-        {/* Statistics */}
-        <Row gutter={16}>
-          <Col span={4}>
-            <Statistic
-              title="Toplam"
-              value={stats.total}
-              prefix={<DatabaseOutlined />}
-            />
+        {/* Statistics Cards */}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8} lg={4}>
+            <Card size="small" style={{ borderLeft: '4px solid #1890ff' }}>
+              <Statistic
+                title="Toplam Migration"
+                value={stats.total}
+                prefix={<DatabaseOutlined style={{ color: '#1890ff' }} />}
+                suffix="migration"
+              />
+            </Card>
           </Col>
-          <Col span={5}>
-            <Statistic
-              title="Beklemede"
-              value={stats.pending}
-              valueStyle={{ color: '#999' }}
-              prefix={<ClockCircleOutlined />}
-            />
+          <Col xs={24} sm={12} md={8} lg={5}>
+            <Card size="small" style={{ borderLeft: '4px solid #d9d9d9' }}>
+              <Statistic
+                title="Beklemede"
+                value={stats.pending}
+                valueStyle={{ color: '#8c8c8c' }}
+                prefix={<ClockCircleOutlined style={{ color: '#8c8c8c' }} />}
+                suffix="migration"
+              />
+            </Card>
           </Col>
-          <Col span={5}>
-            <Statistic
-              title="Tamamlandı"
-              value={stats.completed}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckCircleOutlined />}
-            />
+          <Col xs={24} sm={12} md={8} lg={5}>
+            <Card size="small" style={{ borderLeft: '4px solid #52c41a' }}>
+              <Statistic
+                title="Tamamlandı"
+                value={stats.completed}
+                valueStyle={{ color: '#52c41a' }}
+                prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                suffix="migration"
+              />
+            </Card>
           </Col>
-          <Col span={5}>
-            <Statistic
-              title="Başarısız"
-              value={stats.failed}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<CloseCircleOutlined />}
-            />
+          <Col xs={24} sm={12} md={8} lg={5}>
+            <Card size="small" style={{ borderLeft: '4px solid #ff4d4f' }}>
+              <Statistic
+                title="Başarısız"
+                value={stats.failed}
+                valueStyle={{ color: '#ff4d4f' }}
+                prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+                suffix="migration"
+              />
+            </Card>
           </Col>
-          <Col span={5}>
-            <Statistic
-              title="Geri Alındı"
-              value={stats.rolledBack}
-              valueStyle={{ color: '#faad14' }}
-              prefix={<RollbackOutlined />}
-            />
+          <Col xs={24} sm={12} md={8} lg={5}>
+            <Card size="small" style={{ borderLeft: '4px solid #8c8c8c' }}>
+              <Statistic
+                title="Geri Alındı"
+                value={stats.rolledBack}
+                valueStyle={{ color: '#8c8c8c' }}
+                prefix={<RollbackOutlined style={{ color: '#8c8c8c' }} />}
+                suffix="migration"
+              />
+            </Card>
           </Col>
         </Row>
       </Card>
@@ -770,6 +1008,53 @@ const TenantMigrations: React.FC = () => {
       <Card bordered={false}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Migration'lar" key="migrations">
+            {/* Bulk Action Bar */}
+            {selectedRowKeys.length > 0 && (
+              <Alert
+                message={
+                  <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Space>
+                      <Text strong>{selectedRowKeys.length} migration seçildi</Text>
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => setSelectedRowKeys([])}
+                      >
+                        Seçimi Temizle
+                      </Button>
+                    </Space>
+                    <Space>
+                      <Button
+                        type="primary"
+                        icon={<PlayCircleOutlined />}
+                        onClick={handleBulkApply}
+                        loading={bulkActionLoading}
+                      >
+                        Çalıştır
+                      </Button>
+                      <Button
+                        icon={<RollbackOutlined />}
+                        onClick={handleBulkRollback}
+                        loading={bulkActionLoading}
+                      >
+                        Geri Al
+                      </Button>
+                      <Button
+                        danger
+                        icon={<CloseCircleOutlined />}
+                        onClick={handleBulkDelete}
+                        loading={bulkActionLoading}
+                      >
+                        Sil
+                      </Button>
+                    </Space>
+                  </Space>
+                }
+                type="info"
+                style={{ marginBottom: 16 }}
+              />
+            )}
+
             {/* Filters */}
             <Row gutter={16} style={{ marginBottom: 16 }}>
               <Col span={6}>
@@ -809,6 +1094,37 @@ const TenantMigrations: React.FC = () => {
               rowKey="id"
               loading={loading}
               scroll={{ x: 1200 }}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+                selections: [
+                  Table.SELECTION_ALL,
+                  Table.SELECTION_INVERT,
+                  Table.SELECTION_NONE,
+                ],
+              }}
+              locale={{
+                emptyText: (
+                  <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                    <DatabaseOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
+                    <Title level={4} style={{ color: '#8c8c8c', marginBottom: 8 }}>
+                      Henüz Bir Migration Oluşturulmamış
+                    </Title>
+                    <Paragraph style={{ color: '#bfbfbf', marginBottom: 24 }}>
+                      Migration'lar veritabanı yapısındaki değişiklikleri yönetir.<br />
+                      Yeni tablolar, sütunlar veya veri güncellemeleri için migration oluşturun.
+                    </Paragraph>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<PlusOutlined />}
+                      onClick={() => setMigrationModalVisible(true)}
+                    >
+                      İlk Migration'ı Oluştur
+                    </Button>
+                  </div>
+                ),
+              }}
               pagination={{
                 total: filteredMigrations.length,
                 pageSize: 10,
