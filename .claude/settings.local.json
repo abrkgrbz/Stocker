@@ -52,7 +52,10 @@
       "Bash(timeout 10 powershell:*)",
       "Bash(timeout 15 powershell:*)",
       "Bash(Out-File -Encoding ASCII -NoNewline C:Tempdocker_ssh_key.txt)",
-      "Bash(icacls C:Tempdocker_ssh_key.txt /inheritance:r /grant:r \"$env:USERNAME:R\")"
+      "Bash(icacls C:Tempdocker_ssh_key.txt /inheritance:r /grant:r \"$env:USERNAME:R\")",
+      "Bash(Get-Process -Name \"Stocker.API\" -ErrorAction SilentlyContinue)",
+      "Bash(Stop-Process -Force)",
+      "Bash(Get-ChildItem -Path \"C:\\Users\\PC\\source\\repos\\Stocker\" -Filter \"*VerifyEmail*.html\" -Recurse)"
     ],
     "deny": [],
     "ask": []

@@ -218,9 +218,9 @@ export default function RegisterPage() {
 
       if (response.ok && data.success) {
         // Save token for authenticated setup
-        if (data.data.token) {
-          localStorage.setItem('token', data.data.token)
-          localStorage.setItem('refreshToken', data.data.refreshToken)
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+          localStorage.setItem('refreshToken', data.refreshToken)
         }
 
         // Show email verification success message

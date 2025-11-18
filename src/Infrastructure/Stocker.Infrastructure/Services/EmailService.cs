@@ -411,7 +411,7 @@ public class EmailService : IEmailService
         var templateBody = GetDefaultTemplate("EmailVerification");
         var subject = GetDefaultSubject("EmailVerification");
 
-        var verificationUrl = $"https://stoocker.app/verify-email?token={token}";
+        var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?token={token}";
 
         // Replace placeholders
         templateBody = templateBody
@@ -434,7 +434,7 @@ public class EmailService : IEmailService
         var templateBody = GetDefaultTemplate("TenantEmailVerification");
         var subject = GetDefaultSubject("TenantEmailVerification");
 
-        var verificationUrl = $"https://stoocker.app/verify-email?token={token}";
+        var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?token={token}";
 
         // Replace placeholders - includes both code and link
         templateBody = templateBody
