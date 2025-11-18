@@ -464,13 +464,6 @@ const TenantActivityLogs: React.FC = () => {
     },
   ];
 
-  const handleExport = async () => {
-    message.loading('Loglar dışa aktarılıyor...');
-    setTimeout(() => {
-      message.success('Loglar başarıyla dışa aktarıldı');
-    }, 2000);
-  };
-
   const handleClearLogs = async () => {
     const result = await Swal.fire({
       title: 'Logları Temizle',
