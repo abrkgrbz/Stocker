@@ -45,15 +45,12 @@ services:
       # ==================================
       # EMAIL SETTINGS
       # ==================================
-      # SMTP credentials are now managed by Azure Key Vault
-      - EmailSettings__SmtpHost=mail.privateemail.com
-      - EmailSettings__SmtpPort=465
-      - EmailSettings__SmtpUsername=${SMTP_USERNAME}
-      # SMTP Password is managed by Azure Key Vault
+      # SMTP Host, Port, Username, Password are now managed by Azure Key Vault
+      # Only configuration settings remain in environment variables
       - EmailSettings__FromEmail=info@stoocker.app
       - EmailSettings__FromName=Stoocker
       - EmailSettings__EnableSsl=true
-      - EmailSettings__UseStartTls=false
+      - EmailSettings__UseStartTls=true
       - EmailSettings__EnableEmail=true
       - EmailSettings__BaseUrl=https://stoocker.app
       - EmailSettings__TemplatesPath=EmailTemplates
