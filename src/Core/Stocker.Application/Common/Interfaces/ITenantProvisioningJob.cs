@@ -6,4 +6,5 @@ public interface ITenantProvisioningJob
     Task MigrateTenantDatabaseAsync(Guid tenantId);
     Task SeedTenantDataAsync(Guid tenantId);
     Task MigrateAllTenantsAsync();
+    Task RollbackFailedProvisioningAsync(Guid tenantId);
 }

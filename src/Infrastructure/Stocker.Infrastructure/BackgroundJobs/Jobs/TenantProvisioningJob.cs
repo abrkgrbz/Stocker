@@ -28,6 +28,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
         using var scope = _serviceProvider.CreateScope();
         var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
         var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<IMasterUnitOfWork>();
+        var backgroundJobService = scope.ServiceProvider.GetRequiredService<IBackgroundJobService>();
 
         try
         {
@@ -57,7 +58,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to provision tenant: {TenantId}", tenantId);
+            _logger.LogError(ex, "CRITICAL: Failed to provision tenant: {TenantId}. Attempt will be retried by Hangfire.", tenantId);
             
             // Tenant'ı deaktif et
             try
@@ -67,6 +68,8 @@ public class TenantProvisioningJob : ITenantProvisioningJob
                 {
                     tenant.Deactivate();
                     await masterUnitOfWork.SaveChangesAsync();
+                    
+                    _logger.LogWarning("Tenant {TenantId} marked as inactive. Will retry provisioning.", tenantId);
                 }
             }
             catch (Exception deactivateEx)
@@ -74,6 +77,22 @@ public class TenantProvisioningJob : ITenantProvisioningJob
                 _logger.LogError(deactivateEx, "Failed to deactivate tenant after provisioning failure: {TenantId}", tenantId);
             }
             
+            // Check if this is the last retry attempt
+            var performContext = Hangfire.PerformContext.GetCurrent();
+            if (performContext != null)
+            {
+                var retryAttempt = performContext.GetJobParameter<int>("RetryCount");
+                if (retryAttempt >= 2) // 0-indexed, so 2 means 3rd attempt (final)
+                {
+                    _logger.LogError("Final retry attempt failed for tenant {TenantId}. Scheduling rollback.", tenantId);
+                    
+                    // Queue rollback job
+                    backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
+                        job.RollbackFailedProvisioningAsync(tenantId));
+                }
+            }
+            
+            // Re-throw to trigger Hangfire retry
             throw;
         }
     }
@@ -136,6 +155,50 @@ public class TenantProvisioningJob : ITenantProvisioningJob
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to migrate all tenants");
+            throw;
+        }
+    }
+
+    [Queue("critical")]
+    [AutomaticRetry(Attempts = 1)] // Only try once for rollback
+    public async Task RollbackFailedProvisioningAsync(Guid tenantId)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<IMasterUnitOfWork>();
+
+        try
+        {
+            _logger.LogWarning("Starting rollback for failed tenant provisioning: {TenantId}", tenantId);
+
+            // Get tenant
+            var tenant = await masterUnitOfWork.Repository<Tenant>().GetByIdAsync(tenantId);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant {TenantId} not found for rollback - may have been already deleted", tenantId);
+                return;
+            }
+
+            // Get associated master user by tenant's contact email
+            var masterUser = await masterUnitOfWork.Repository<MasterUser>()
+                .SingleOrDefaultAsync(u => u.Email.Value == tenant.ContactEmail.Value);
+
+            // Delete tenant
+            masterUnitOfWork.Repository<Tenant>().Remove(tenant);
+            
+            // Delete master user if found
+            if (masterUser != null)
+            {
+                masterUnitOfWork.Repository<MasterUser>().Remove(masterUser);
+                _logger.LogInformation("Deleted MasterUser {UserId} during tenant provisioning rollback", masterUser.Id);
+            }
+
+            await masterUnitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Rollback completed for failed tenant provisioning: {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rollback tenant provisioning for: {TenantId}", tenantId);
             throw;
         }
     }
