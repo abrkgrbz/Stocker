@@ -60,8 +60,7 @@ import {
   EditOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { ColumnsType } from 'antd/es/table';
-import moment from 'moment';
+import type { ColumnsType } from 'antd/es/table'; 
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { tenantService } from '../../../services/tenantService';
