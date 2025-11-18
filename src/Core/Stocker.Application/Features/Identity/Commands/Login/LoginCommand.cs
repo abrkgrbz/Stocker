@@ -22,6 +22,7 @@ public class AuthResponse
     public bool Requires2FA { get; set; }
     public string? TempToken { get; set; }
     public bool RequiresOnboarding { get; set; }
+    public bool RequiresSetup { get; set; }
 }
 
 public class UserInfo

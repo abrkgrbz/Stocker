@@ -16,19 +16,22 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
     private readonly IPasswordService _passwordService;
     private readonly ILogger<AuthenticationServiceAdapter> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
     public AuthenticationServiceAdapter(
         Identity.Services.IAuthenticationService authenticationService,
         IMasterDbContext masterContext,
         IPasswordService passwordService,
         ILogger<AuthenticationServiceAdapter> logger,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ITenantDbContextFactory tenantDbContextFactory)
     {
         _authenticationService = authenticationService;
         _masterContext = masterContext;
         _passwordService = passwordService;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<AuthResponse>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default)
@@ -58,6 +61,13 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                 // Note: Onboarding status is checked separately by frontend after login
                 // via /api/onboarding/status endpoint, as it requires tenant-specific context
 
+                // Check if setup is required (if user has TenantId)
+                bool requiresSetup = false;
+                if (result.User.TenantId.HasValue)
+                {
+                    requiresSetup = await CheckSetupRequiredAsync(result.User.TenantId.Value, cancellationToken);
+                }
+
                 var response = new AuthResponse
                 {
                     AccessToken = result.AccessToken ?? string.Empty,
@@ -74,7 +84,8 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
                         TenantId = result.User.TenantId,
                         TenantName = result.User.TenantName
                     },
-                    RequiresOnboarding = false // Will be checked by frontend separately
+                    RequiresOnboarding = false, // Will be checked by frontend separately
+                    RequiresSetup = requiresSetup
                 };
 
                 return Result.Success(response);
@@ -347,6 +358,30 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         {
             _logger.LogError(ex, "Error validating token");
             return Task.FromResult(Result.Failure<bool>(Error.Failure("Auth.ValidationError", "An error occurred while validating the token")));
+        }
+    }
+
+    private async Task<bool> CheckSetupRequiredAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if tenant has completed setup wizard
+            using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+
+            // Check if there's a completed InitialSetup wizard
+            var hasCompletedSetup = await tenantContext.SetupWizards
+                .AnyAsync(w => w.WizardType == Domain.Tenant.Entities.WizardType.InitialSetup &&
+                              w.Status == Domain.Tenant.Entities.WizardStatus.Completed,
+                         cancellationToken);
+
+            // If no completed setup found, setup is required
+            return !hasCompletedSetup;
+        }
+        catch (Exception ex)
+        {
+            // If there's an error checking setup status, assume setup is required
+            _logger.LogWarning(ex, "Error checking setup status for tenant {TenantId}, assuming setup required", tenantId);
+            return true;
         }
     }
 }

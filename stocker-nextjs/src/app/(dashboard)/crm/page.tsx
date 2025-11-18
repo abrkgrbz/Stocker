@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography, Space, Button, Row, Col, Card, Table, List, Tag, Empty } from 'antd';
 import { TrophyOutlined, PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -18,10 +18,36 @@ import { calculateDashboardMetrics } from '@/lib/crm';
 import { AnimatedCard } from '@/components/crm/shared';
 import { formatDate } from '@/lib/crm';
 import type { ColumnsType } from 'antd/es/table';
+import SetupWizardModal from '@/components/setup/SetupWizardModal';
 
 const { Title, Text } = Typography;
 
 export default function CRMDashboardPage() {
+  // Setup modal state
+  const [setupModalOpen, setSetupModalOpen] = useState(false);
+
+  // Check if setup is required on mount
+  useEffect(() => {
+    const checkSetupRequired = () => {
+      // Get requiresSetup from localStorage (set during login)
+      const requiresSetup = localStorage.getItem('requiresSetup') === 'true';
+
+      if (requiresSetup) {
+        setSetupModalOpen(true);
+      }
+    };
+
+    checkSetupRequired();
+  }, []);
+
+  const handleSetupComplete = () => {
+    // Remove requiresSetup flag from localStorage
+    localStorage.removeItem('requiresSetup');
+    setSetupModalOpen(false);
+
+    // Reload the page to refresh dashboard with new data
+    window.location.reload();
+  };
   // Fetch CRM data
   const { data: customersData, isLoading: customersLoading } = useCustomers({ pageSize: 10 });
   const { data: leadsData, isLoading: leadsLoading } = useLeads({ pageSize: 5 });
@@ -223,6 +249,9 @@ export default function CRMDashboardPage() {
           </AnimatedCard>
         </Col>
       </Row>
+
+      {/* Setup Modal */}
+      <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />
     </div>
   );
 }
