@@ -41,6 +41,7 @@ export interface CreatePackageCommand {
   name: string;
   description?: string;
   basePrice: number;
+  type: string;
   billingCycle: string;
   maxUsers: number;
   maxStorage: number;
@@ -54,6 +55,7 @@ export interface UpdatePackageCommand {
   name: string;
   description?: string;
   basePrice: number;
+  type: string;
   billingCycle: string;
   maxUsers: number;
   maxStorage: number;
@@ -262,10 +264,19 @@ class PackageService {
       'one-time': 'OneTime'
     };
 
+    // Map frontend tier to backend type
+    const typeMap: { [key: string]: string } = {
+      'starter': 'Starter',
+      'professional': 'Professional',
+      'enterprise': 'Enterprise',
+      'custom': 'Custom'
+    };
+
     return {
       name: pkg.displayName,
       description: pkg.description,
       basePrice: pkg.price,
+      type: typeMap[pkg.tier] || 'Starter',
       billingCycle: billingCycleMap[pkg.billingCycle] || 'Monthly',
       maxUsers: pkg.limits.users,
       maxStorage: pkg.limits.storage,

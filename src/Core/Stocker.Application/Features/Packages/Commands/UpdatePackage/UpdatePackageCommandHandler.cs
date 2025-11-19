@@ -5,6 +5,7 @@ using Stocker.SharedKernel.Results;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Domain.Master.ValueObjects;
+using Stocker.Domain.Master.Enums;
 
 namespace Stocker.Application.Features.Packages.Commands.UpdatePackage;
 
@@ -70,11 +71,21 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
             // Decode HTML entities that might come from proxy/WAF
             var decodedName = System.Net.WebUtility.HtmlDecode(request.Name);
             var decodedDescription = System.Net.WebUtility.HtmlDecode(request.Description);
-            
+
+            // Map Type string to PackageType enum
+            var packageType = request.Type?.ToLower() switch
+            {
+                "professional" or "profesyonel" => PackageType.Profesyonel,
+                "business" or "isletme" => PackageType.Isletme,
+                "enterprise" or "kurumsal" => PackageType.Kurumsal,
+                "custom" or "ozel" => PackageType.Ozel,
+                _ => package.Type // Keep existing type if not specified or invalid
+            };
+
             // Log before update
-            _logger.LogInformation("Updating package entity with Name: {Name}, Description: {Description}", 
-                decodedName, decodedDescription);
-            
+            _logger.LogInformation("Updating package entity with Name: {Name}, Description: {Description}, Type: {Type}",
+                decodedName, decodedDescription, packageType);
+
             // Use domain method to update
             package.Update(
                 name: decodedName,
@@ -85,10 +96,16 @@ public class UpdatePackageCommandHandler : IRequestHandler<UpdatePackageCommand,
                 displayOrder: package.DisplayOrder, // Keep existing display order
                 isPublic: package.IsPublic // Keep existing public status
             );
-            
+
+            // Update package type if it changed
+            if (package.Type != packageType)
+            {
+                package.ChangeType(packageType);
+            }
+
             // Log after update
-            _logger.LogInformation("Package entity updated. New Name: {Name}, New Description: {Description}", 
-                package.Name, package.Description);
+            _logger.LogInformation("Package entity updated. New Name: {Name}, New Description: {Description}, New Type: {Type}",
+                package.Name, package.Description, package.Type);
 
             // Update activation status if changed
             if (request.IsActive && !package.IsActive)

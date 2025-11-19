@@ -108,6 +108,12 @@ public sealed class Package : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ChangeType(PackageType type)
+    {
+        Type = type;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void AddFeature(string featureCode, string featureName, string? description = null, bool isHighlighted = false)
     {
         if (_features.Any(f => f.FeatureCode == featureCode))

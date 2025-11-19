@@ -9,6 +9,7 @@ public class UpdatePackageCommand : IRequest<Result<bool>>
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public decimal BasePrice { get; set; }
+    public string Type { get; set; } = "Starter";
     public string BillingCycle { get; set; } = "Monthly";
     public int MaxUsers { get; set; }
     public int MaxStorage { get; set; }

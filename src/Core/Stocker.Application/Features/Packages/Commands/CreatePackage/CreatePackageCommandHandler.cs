@@ -51,11 +51,21 @@ public class CreatePackageCommandHandler : IRequestHandler<CreatePackageCommand,
             // Decode HTML entities that might come from proxy/WAF
             var decodedName = System.Net.WebUtility.HtmlDecode(request.Name);
             var decodedDescription = System.Net.WebUtility.HtmlDecode(request.Description);
-            
+
+            // Map Type string to PackageType enum
+            var packageType = request.Type?.ToLower() switch
+            {
+                "professional" or "profesyonel" => PackageType.Profesyonel,
+                "business" or "isletme" => PackageType.Isletme,
+                "enterprise" or "kurumsal" => PackageType.Kurumsal,
+                "custom" or "ozel" => PackageType.Ozel,
+                _ => PackageType.Baslangic // Default to Baslangic (Starter)
+            };
+
             // Use factory method to create Package
             var package = Package.Create(
                 name: decodedName,
-                type: PackageType.Baslangic, // Default type
+                type: packageType,
                 basePrice: basePrice,
                 limits: limits,
                 description: decodedDescription,
