@@ -81,6 +81,7 @@ import {
 import dayjs from 'dayjs';
 import { TwoFactorSettings } from './TwoFactorSettings';
 import { systemMonitoringService, systemManagementService } from '../../services/api';
+import { settingsService, type SettingsDto } from '../../services/api/settingsService';
 import type { DockerStats, SystemError, ErrorStatistics } from '../../services/api';
 
 const { Title, Text, Paragraph, Link } = Typography;
@@ -129,10 +130,15 @@ interface Integration {
 
 const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [settings, setSettings] = useState<SettingsDto | null>(null);
   const [generalForm] = Form.useForm();
   const [emailForm] = Form.useForm();
   const [securityForm] = Form.useForm();
+  const [backupForm] = Form.useForm();
+  const [maintenanceForm] = Form.useForm();
+  const [notificationForm] = Form.useForm();
   const [apiModalVisible, setApiModalVisible] = useState(false);
   const [emailTemplateModalVisible, setEmailTemplateModalVisible] = useState(false);
   const [apiForm] = Form.useForm();
@@ -287,6 +293,11 @@ const SettingsPage: React.FC = () => {
     }
   ]);
 
+  // Fetch settings on mount
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
   // Fetch system metrics when System tab is active
   useEffect(() => {
     if (activeTab === 'system') {
@@ -296,6 +307,30 @@ const SettingsPage: React.FC = () => {
       fetchSystemErrors();
     }
   }, [activeTab]);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const data = await settingsService.getAll();
+      setSettings(data);
+
+      // Populate forms with current settings
+      generalForm.setFieldsValue(data.general);
+      emailForm.setFieldsValue(data.email);
+      securityForm.setFieldsValue(data.security);
+      backupForm.setFieldsValue({
+        ...data.backup,
+        time: data.backup.time ? dayjs(data.backup.time, 'HH:mm') : null,
+      });
+      maintenanceForm.setFieldsValue(data.maintenance);
+      notificationForm.setFieldsValue(data.notifications);
+    } catch (error: any) {
+      console.error('Failed to fetch settings:', error);
+      message.error('Ayarlar yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchSystemMetrics = async () => {
     setSystemMetricsLoading(true);
@@ -413,34 +448,124 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleSaveGeneral = () => {
-    generalForm.validateFields().then(values => {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        message.success('Genel ayarlar kaydedildi');
-      }, 1000);
-    });
+  const handleSaveGeneral = async () => {
+    try {
+      setSaving(true);
+      const values = await generalForm.validateFields();
+      await settingsService.updateGeneral(values);
+      message.success('Genel ayarlar kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save general settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveEmail = () => {
-    emailForm.validateFields().then(values => {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        message.success('E-posta ayarları kaydedildi');
-      }, 1000);
-    });
+  const handleSaveEmail = async () => {
+    try {
+      setSaving(true);
+      const values = await emailForm.validateFields();
+      await settingsService.updateEmail(values);
+      message.success('E-posta ayarları kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save email settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveSecurity = () => {
-    securityForm.validateFields().then(values => {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        message.success('Güvenlik ayarları kaydedildi');
-      }, 1000);
-    });
+  const handleSaveSecurity = async () => {
+    try {
+      setSaving(true);
+      const values = await securityForm.validateFields();
+      await settingsService.updateSecurity(values);
+      message.success('Güvenlik ayarları kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save security settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveBackup = async () => {
+    try {
+      setSaving(true);
+      const values = await backupForm.validateFields();
+      const formattedValues = {
+        ...values,
+        time: values.time ? values.time.format('HH:mm') : '03:00',
+      };
+      await settingsService.updateBackup(formattedValues);
+      message.success('Yedekleme ayarları kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save backup settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveMaintenance = async () => {
+    try {
+      setSaving(true);
+      const values = await maintenanceForm.validateFields();
+      await settingsService.updateMaintenance(values);
+      message.success('Bakım ayarları kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save maintenance settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    try {
+      setSaving(true);
+      const values = await notificationForm.validateFields();
+      await settingsService.updateNotifications(values);
+      message.success('Bildirim ayarları kaydedildi');
+      fetchSettings();
+    } catch (error: any) {
+      console.error('Failed to save notification settings:', error);
+      message.error(error?.message || 'Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBackupNow = async () => {
+    try {
+      setSaving(true);
+      await settingsService.backupNow();
+      message.success('Yedekleme işlemi başlatıldı');
+    } catch (error: any) {
+      console.error('Failed to start backup:', error);
+      message.error(error?.message || 'Yedekleme başlatılamadı');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    try {
+      setSaving(true);
+      await settingsService.clearCache();
+      message.success('Önbellek temizlendi');
+    } catch (error: any) {
+      console.error('Failed to clear cache:', error);
+      message.error(error?.message || 'Önbellek temizlenemedi');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleTestEmail = () => {
@@ -750,7 +875,7 @@ const SettingsPage: React.FC = () => {
 
               <Form.Item>
                 <Space>
-                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveGeneral} loading={loading}>
+                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveGeneral} loading={saving}>
                     Kaydet
                   </Button>
                   <Button icon={<ReloadOutlined />} onClick={() => generalForm.resetFields()}>
@@ -875,7 +1000,7 @@ const SettingsPage: React.FC = () => {
 
               <Form.Item>
                 <Space>
-                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveEmail} loading={loading}>
+                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveEmail} loading={saving}>
                     Kaydet
                   </Button>
                   <Button icon={<MailOutlined />} onClick={handleTestEmail}>

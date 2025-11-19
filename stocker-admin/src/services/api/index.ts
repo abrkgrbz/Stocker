@@ -11,6 +11,7 @@ export { systemMonitoringService } from './systemMonitoringService';
 export { systemManagementService } from './systemManagementService';
 export { activityLogService } from './activityLogService';
 export { roleService } from './roleService';
+export { settingsService } from './settingsService';
 
 // Re-export types
 export type {
@@ -108,3 +109,13 @@ export type {
   Role,
   Permission,
 } from './roleService';
+
+export type {
+  SettingsDto,
+  GeneralSettingsDto,
+  EmailSettingsDto,
+  SecuritySettingsDto,
+  BackupSettingsDto,
+  MaintenanceSettingsDto,
+  NotificationSettingsDto,
+} from './settingsService';

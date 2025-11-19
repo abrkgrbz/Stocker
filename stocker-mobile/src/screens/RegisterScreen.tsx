@@ -17,13 +17,69 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../theme/colors';
 import { apiService } from '../services/api';
-import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import Animated, {
+    FadeInRight,
+    FadeOutLeft,
+    useSharedValue,
+    useAnimatedStyle,
+    withRepeat,
+    withTiming,
+    withSequence,
+    Easing
+} from 'react-native-reanimated';
+import { Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete';
 
 export default function RegisterScreen({ navigation }: any) {
     const [currentStep, setCurrentStep] = useState<Step>('email');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Animation values for background blobs
+    const blob1TranslateY = useSharedValue(0);
+    const blob2TranslateY = useSharedValue(0);
+    const blob3TranslateY = useSharedValue(0);
+
+    React.useEffect(() => {
+        blob1TranslateY.value = withRepeat(
+            withSequence(
+                withTiming(-20, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+                withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+            ),
+            -1,
+            true
+        );
+        blob2TranslateY.value = withRepeat(
+            withSequence(
+                withTiming(30, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+                withTiming(0, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+            ),
+            -1,
+            true
+        );
+        blob3TranslateY.value = withRepeat(
+            withSequence(
+                withTiming(-25, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
+                withTiming(0, { duration: 3500, easing: Easing.inOut(Easing.ease) })
+            ),
+            -1,
+            true
+        );
+    }, []);
+
+    const blob1Style = useAnimatedStyle(() => ({
+        transform: [{ translateY: blob1TranslateY.value }],
+    }));
+
+    const blob2Style = useAnimatedStyle(() => ({
+        transform: [{ translateY: blob2TranslateY.value }],
+    }));
+
+    const blob3Style = useAnimatedStyle(() => ({
+        transform: [{ translateY: blob3TranslateY.value }],
+    }));
 
     // Form Data
     const [email, setEmail] = useState('');
@@ -293,54 +349,61 @@ export default function RegisterScreen({ navigation }: any) {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
-            >
-                <View style={styles.header}>
-                    {currentStep !== 'complete' && (
-                        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                        </TouchableOpacity>
-                    )}
-                    <Text style={styles.headerTitle}>Kayıt Ol</Text>
-                    <View style={{ width: 24 }} />
-                </View>
+        <View style={styles.container}>
+            {/* Background Elements */}
+            <Animated.View style={[styles.bgGradientTop, blob1Style]} />
+            <Animated.View style={[styles.bgGradientBottom, blob2Style]} />
+            <Animated.View style={[styles.bgGradientCenter, blob3Style]} />
 
-                {renderStepIndicator()}
-
-                <ScrollView contentContainerStyle={styles.content}>
-                    {renderContent()}
-                </ScrollView>
-
-                {currentStep !== 'complete' && (
-                    <View style={styles.footer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.button,
-                                (currentStep === 'email' && (!email || !!emailError)) ||
-                                    (currentStep === 'password' && (!password || !!passwordError)) ||
-                                    (currentStep === 'teamName' && (!teamName || !!teamNameError)) ||
-                                    (currentStep === 'fullName' && (!firstName || !lastName))
-                                    ? styles.buttonDisabled
-                                    : null
-                            ]}
-                            onPress={handleNext}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#0a1f2e" />
-                            ) : (
-                                <Text style={styles.buttonText}>
-                                    {currentStep === 'fullName' ? 'Tamamla' : 'Devam Et'}
-                                </Text>
-                            )}
-                        </TouchableOpacity>
+            <SafeAreaView style={styles.safeArea}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.keyboardView}
+                >
+                    <View style={styles.header}>
+                        {currentStep !== 'complete' && (
+                            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                                <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                            </TouchableOpacity>
+                        )}
+                        <Text style={styles.headerTitle}>Kayıt Ol</Text>
+                        <View style={{ width: 24 }} />
                     </View>
-                )}
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+
+                    {renderStepIndicator()}
+
+                    <ScrollView contentContainerStyle={styles.content}>
+                        {renderContent()}
+                    </ScrollView>
+
+                    {currentStep !== 'complete' && (
+                        <View style={styles.footer}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.button,
+                                    (currentStep === 'email' && (!email || !!emailError)) ||
+                                        (currentStep === 'password' && (!password || !!passwordError)) ||
+                                        (currentStep === 'teamName' && (!teamName || !!teamNameError)) ||
+                                        (currentStep === 'fullName' && (!firstName || !lastName))
+                                        ? styles.buttonDisabled
+                                        : null
+                                ]}
+                                onPress={handleNext}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="#0a1f2e" />
+                                ) : (
+                                    <Text style={styles.buttonText}>
+                                        {currentStep === 'fullName' ? 'Tamamla' : 'Devam Et'}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -348,6 +411,42 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+    } as ViewStyle,
+    safeArea: {
+        flex: 1,
+    } as ViewStyle,
+    bgGradientTop: {
+        position: 'absolute',
+        top: -100,
+        left: -100,
+        width: width * 1.2,
+        height: width * 1.2,
+        borderRadius: width * 0.6,
+        backgroundColor: colors.primary,
+        opacity: 0.08,
+        transform: [{ scale: 1.2 }],
+    } as ViewStyle,
+    bgGradientBottom: {
+        position: 'absolute',
+        bottom: -100,
+        right: -100,
+        width: width,
+        height: width,
+        borderRadius: width * 0.5,
+        backgroundColor: colors.secondary,
+        opacity: 0.08,
+        transform: [{ scale: 1.2 }],
+    } as ViewStyle,
+    bgGradientCenter: {
+        position: 'absolute',
+        top: '40%',
+        left: -50,
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: colors.accent,
+        opacity: 0.05,
+        transform: [{ scale: 1.5 }],
     } as ViewStyle,
     keyboardView: {
         flex: 1,
