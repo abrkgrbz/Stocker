@@ -1,0 +1,19 @@
+﻿node.exe : npm warn config optional Use `--omi
+t=optional` to exclude optional dependencies, 
+or
+At C:\Program Files\nodejs\npx.ps1:29 char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   npm warn config...ependencies, or:String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+npm warn config `--include=optional` to includ
+e them.
+npm warn config
+npm warn config       Default value does insta
+ll optional deps unless otherwise omitted.
+npm warn using --force Recommended protections
+ disabled.

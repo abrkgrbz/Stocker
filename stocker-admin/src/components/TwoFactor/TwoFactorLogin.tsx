@@ -155,7 +155,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
           <span>İki Faktörlü Kimlik Doğrulama</span>
         </Space>
       }
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={null}
       width={420}
