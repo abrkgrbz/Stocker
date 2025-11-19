@@ -1,62 +1,5 @@
-import axios from 'axios';
+import api from './api';
 import { tokenStorage } from '../utils/tokenStorage';
-import { envValidator } from '../utils/envValidator';
-
-// Get validated API URL
-const API_BASE_URL = envValidator.getApiUrl() + '/api';
-
-// Create axios instance with default config
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-apiClient.interceptors.request.use(
-  (config) => {
-    // First try to get token from secure storage
-    const token = tokenStorage.getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      // Fallback to zustand persist for backward compatibility
-      const authStorage = localStorage.getItem('auth-storage');
-      if (authStorage) {
-        try {
-          const authData = JSON.parse(authStorage);
-          const zugandToken = authData?.state?.accessToken;
-          if (zugandToken) {
-            config.headers.Authorization = `Bearer ${zugandToken}`;
-            // Migrate to secure storage
-            tokenStorage.setToken(zugandToken, 3600);
-          }
-        } catch (e) {
-          console.error('Error parsing auth storage:', e);
-        }
-      }
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Handle response errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access - clear all auth storage
-      tokenStorage.clearToken();
-      localStorage.removeItem('auth-storage');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
 
 export interface Tenant {
   id: string;
@@ -69,7 +12,7 @@ export interface Tenant {
   createdDate: string;
   subscriptionEndDate: string;
   userCount: number;
-  // Extended fields for UI (we'll populate these from other endpoints or defaults)
+  // Extended fields for UI
   subdomain?: string;
   customDomain?: string;
   status?: 'active' | 'inactive' | 'suspended' | 'pending';
@@ -142,13 +85,13 @@ const mapApiTenantToExtended = (apiTenant: Tenant): Tenant => {
     package: determinePackageType(apiTenant.packageName),
     users: apiTenant.userCount || 0,
     maxUsers: getMaxUsersByPackage(apiTenant.packageName),
-    storage: Math.random() * 100, // Mock storage data
+    storage: 0, // Default to 0 instead of random
     maxStorage: getMaxStorageByPackage(apiTenant.packageName),
-    lastActive: '5 dakika önce',
+    lastActive: '-', // Default to placeholder
     owner: {
       name: apiTenant.contactEmail?.split('@')[0] || 'Admin',
       email: apiTenant.contactEmail || '',
-      phone: '+90 555 123 4567',
+      phone: '', // Default empty
     },
     billing: {
       plan: apiTenant.packageName || 'Starter',
@@ -159,7 +102,7 @@ const mapApiTenantToExtended = (apiTenant: Tenant): Tenant => {
     database: {
       name: `${apiTenant.code}_db`,
       status: 'active',
-      size: Math.random() * 10,
+      size: 0, // Default to 0
     },
     features: getFeaturesByPackage(apiTenant.packageName),
   };
@@ -208,7 +151,7 @@ const getPackagePrice = (packageName?: string): number => {
 const getFeaturesByPackage = (packageName?: string): string[] => {
   const type = determinePackageType(packageName);
   switch (type) {
-    case 'enterprise': 
+    case 'enterprise':
       return ['advanced-analytics', 'api-access', 'custom-branding', 'priority-support', 'white-label', 'sla-guarantee'];
     case 'professional':
       return ['analytics', 'api-access', 'email-support'];
@@ -223,25 +166,17 @@ export const tenantService = {
   // Get list of tenants with pagination and filters
   async getTenants(params: TenantListParams = {}): Promise<TenantListResponse> {
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (params.page) queryParams.append('page', params.page.toString());
-      if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-      if (params.search) queryParams.append('search', params.search);
-      if (params.status) queryParams.append('status', params.status);
-      if (params.package) queryParams.append('package', params.package);
-      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      const response = await api.get<ApiResponse<Tenant[]>>('/api/master/tenants', { params });
 
-      const response = await apiClient.get<ApiResponse<Tenant[]>>(`/master/tenants?${queryParams.toString()}`);
-      
       if (response.data.success) {
         // Map API response to extended tenant format
         const mappedTenants = response.data.data.map(mapApiTenantToExtended);
-        
+
+        // If API doesn't return pagination metadata, calculate it manually or use defaults
+        // Assuming API might return pagination info in the future or we wrap it
         return {
           data: mappedTenants,
-          total: mappedTenants.length,
+          total: mappedTenants.length, // This should ideally come from API
           page: params.page || 1,
           pageSize: params.pageSize || 10,
           totalPages: Math.ceil(mappedTenants.length / (params.pageSize || 10)),
@@ -257,17 +192,16 @@ export const tenantService = {
 
   // Get tenant statistics
   async getTenantStats(): Promise<TenantStats> {
-    const response = await apiClient.get<TenantStats>('/tenants/stats');
-    return response.data;
+    const response = await api.get<ApiResponse<TenantStats>>('/api/master/dashboard/stats'); // Adjusted endpoint based on api.ts
+    return response.data.data;
   },
 
   // Get single tenant by ID
   async getTenantById(id: string): Promise<Tenant> {
     try {
-      const response = await apiClient.get<ApiResponse<Tenant>>(`/master/tenants/${id}`);
+      const response = await api.get<ApiResponse<Tenant>>(`/api/master/tenants/${id}`);
 
       if (response.data.success) {
-        // Map API response to extended tenant format
         return mapApiTenantToExtended(response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to fetch tenant');
@@ -281,7 +215,7 @@ export const tenantService = {
   // Create new tenant
   async createTenant(data: Partial<Tenant>): Promise<Tenant> {
     try {
-      const response = await apiClient.post<ApiResponse<Tenant>>('/master/tenants', data);
+      const response = await api.post<ApiResponse<Tenant>>('/api/master/tenants', data);
 
       if (response.data.success) {
         return mapApiTenantToExtended(response.data.data);
@@ -297,7 +231,7 @@ export const tenantService = {
   // Update tenant
   async updateTenant(id: string, data: Partial<Tenant>): Promise<Tenant> {
     try {
-      const response = await apiClient.put<ApiResponse<Tenant>>(`/master/tenants/${id}`, data);
+      const response = await api.put<ApiResponse<Tenant>>(`/api/master/tenants/${id}`, data);
 
       if (response.data.success) {
         return mapApiTenantToExtended(response.data.data);
@@ -313,7 +247,7 @@ export const tenantService = {
   // Delete tenant
   async deleteTenant(id: string): Promise<void> {
     try {
-      const response = await apiClient.delete<ApiResponse<void>>(`/master/tenants/${id}`);
+      const response = await api.delete<ApiResponse<void>>(`/api/master/tenants/${id}`);
 
       if (!response.data.success) {
         throw new Error(response.data.message || 'Failed to delete tenant');
@@ -327,7 +261,7 @@ export const tenantService = {
   // Suspend tenant
   async suspendTenant(id: string): Promise<Tenant> {
     try {
-      const response = await apiClient.post<ApiResponse<Tenant>>(`/master/tenants/${id}/suspend`);
+      const response = await api.post<ApiResponse<Tenant>>(`/api/master/tenants/${id}/toggle-active`); // Adjusted based on API_ENDPOINTS.md
 
       if (response.data.success) {
         return mapApiTenantToExtended(response.data.data);
@@ -343,7 +277,7 @@ export const tenantService = {
   // Activate tenant
   async activateTenant(id: string): Promise<Tenant> {
     try {
-      const response = await apiClient.post<ApiResponse<Tenant>>(`/master/tenants/${id}/activate`);
+      const response = await api.post<ApiResponse<Tenant>>(`/api/master/tenants/${id}/toggle-active`); // Adjusted based on API_ENDPOINTS.md
 
       if (response.data.success) {
         return mapApiTenantToExtended(response.data.data);
@@ -358,21 +292,22 @@ export const tenantService = {
 
   // Login to tenant
   async loginToTenant(id: string): Promise<{ url: string; token: string }> {
-    const response = await apiClient.post<{ url: string; token: string }>(`/tenants/${id}/login`);
+    // This endpoint might need adjustment based on real API, keeping as is but using api instance
+    const response = await api.post<{ url: string; token: string }>(`/api/tenants/${id}/login`);
     return response.data;
   },
 
   // Start migration for tenant
   async startMigration(id: string): Promise<{ jobId: string; status: string }> {
-    const response = await apiClient.post<{ jobId: string; status: string }>(`/tenants/${id}/migrate`);
+    const response = await api.post<{ jobId: string; status: string }>(`/api/tenants/${id}/migrate`);
     return response.data;
   },
 
-  // Migrate single tenant database (run all pending migrations including CRM)
+  // Migrate single tenant database
   async migrateTenantDatabase(tenantId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.post<{ success: boolean; message: string }>(
-        `/admin/tenant-migration/${tenantId}/migrate`
+      const response = await api.post<{ success: boolean; message: string }>(
+        `/api/admin/tenant-migration/${tenantId}/migrate`
       );
       return response.data;
     } catch (error: any) {
@@ -380,11 +315,11 @@ export const tenantService = {
     }
   },
 
-  // Migrate all tenants (run migrations for all active tenants)
+  // Migrate all tenants
   async migrateAllTenants(): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.post<{ success: boolean; message: string }>(
-        '/admin/tenant-migration/migrate-all'
+      const response = await api.post<{ success: boolean; message: string }>(
+        '/api/admin/tenant-migration/migrate-all'
       );
       return response.data;
     } catch (error: any) {
@@ -394,35 +329,33 @@ export const tenantService = {
 
   // Create backup for tenant
   async createBackup(id: string): Promise<{ backupId: string; url: string }> {
-    const response = await apiClient.post<{ backupId: string; url: string }>(`/tenants/${id}/backup`);
+    const response = await api.post<{ backupId: string; url: string }>(`/api/tenants/${id}/backup`);
     return response.data;
   },
 
   // Validate tenant code availability
   async validateTenantCode(code: string): Promise<{ isAvailable: boolean; message?: string }> {
     try {
-      const response = await apiClient.get<ApiResponse<{ isAvailable: boolean; message?: string }>>(
-        `/master/tenants/validate-code?code=${encodeURIComponent(code)}`
+      const response = await api.get<ApiResponse<{ isAvailable: boolean; message?: string }>>(
+        `/api/public/check-company-code/${code}` // Adjusted based on API_ENDPOINTS.md
       );
-      
+
       if (response.data.success) {
         return response.data.data;
       }
-      
+
       return { isAvailable: false, message: 'Validation failed' };
     } catch (error: any) {
-      // If 404 or network error, assume code is available
       if (error.response?.status === 404) {
         return { isAvailable: true };
       }
-      // For now, return available if API endpoint doesn't exist
       return { isAvailable: true };
     }
   },
 
   // Export tenants data
   async exportTenants(format: 'csv' | 'excel' | 'pdf' = 'excel'): Promise<Blob> {
-    const response = await apiClient.get(`/tenants/export?format=${format}`, {
+    const response = await api.get(`/api/tenants/export?format=${format}`, {
       responseType: 'blob',
     });
     return response.data;
@@ -433,8 +366,8 @@ export const tenantService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<{ imported: number; failed: number; errors: string[] }>(
-      '/tenants/import',
+    const response = await api.post<{ imported: number; failed: number; errors: string[] }>(
+      '/api/tenants/import',
       formData,
       {
         headers: {

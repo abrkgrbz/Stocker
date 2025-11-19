@@ -26,7 +26,7 @@ sentryService.initialize({
 // initializeSecurity(import.meta.env.DEV);
 
 // Enable mock auth based on environment variable
-const shouldEnableMockAuth = import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true';
+const shouldEnableMockAuth = false; // Force disable mock auth for production readiness
 if (shouldEnableMockAuth) {
   enableMockAuth(true);
   console.log('🔐 Mock Auth Enabled - Use these credentials:');

@@ -4,8 +4,8 @@
  */
 
 import * as OTPAuth from 'otpauth';
-import { apiClient } from '../infrastructure/api/ApiClient';
-import { API_ENDPOINTS } from '../constants';
+import api from './api';
+import { ApiResponse } from './api';
 
 export interface ITwoFactorSetup {
   secret: string;
@@ -41,20 +41,23 @@ export class TwoFactorService {
    */
   async setupTwoFactor(userEmail: string): Promise<ITwoFactorSetup> {
     try {
-      // Call backend API to generate secret and QR code (backend now generates QR as base64 PNG)
-      const response = await apiClient.post<{
+      // Call backend API to generate secret and QR code
+      const response = await api.post<ApiResponse<{
         secret: string;
-        qrCodeUrl: string; // Now contains base64 PNG image data URL
+        qrCodeUrl: string;
         manualEntryKey: string;
         backupCodes: string[];
-      }>('/api/master/auth/setup-2fa', {});
+      }>>('/api/master/auth/setup-2fa', {});
 
-      const { secret, qrCodeUrl, manualEntryKey, backupCodes } = response.data;
+      if (!response.data.success || !response.data.data) {
+        throw new Error(response.data.message || 'Failed to setup 2FA');
+      }
 
-      // Backend now returns ready-to-use base64 PNG image, no client-side generation needed
+      const { secret, qrCodeUrl, manualEntryKey, backupCodes } = response.data.data;
+
       return {
         secret,
-        qrCodeUrl, // Already a data:image/png;base64,... string
+        qrCodeUrl,
         backupCodes,
         manualEntryKey
       };
@@ -70,14 +73,14 @@ export class TwoFactorService {
   private generateSecret(length: number = 32): string {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     let secret = '';
-    
+
     const randomValues = new Uint8Array(length);
     crypto.getRandomValues(randomValues);
-    
+
     for (let i = 0; i < length; i++) {
       secret += charset[randomValues[i] % charset.length];
     }
-    
+
     return secret;
   }
 
@@ -87,12 +90,12 @@ export class TwoFactorService {
    */
   private generateBackupCodes(count: number = 10): string[] {
     const codes: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const code = this.generateBackupCode();
       codes.push(code);
     }
-    
+
     return codes;
   }
 
@@ -102,12 +105,12 @@ export class TwoFactorService {
   private generateBackupCode(): string {
     const randomValues = new Uint8Array(4);
     crypto.getRandomValues(randomValues);
-    
+
     const code = Array.from(randomValues)
       .map(byte => byte.toString(16).padStart(2, '0'))
       .join('')
       .toUpperCase();
-    
+
     // Format as XXXX-XXXX
     return `${code.slice(0, 4)}-${code.slice(4, 8)}`;
   }
@@ -135,7 +138,7 @@ export class TwoFactorService {
 
       // Validate with window of 1 (allows previous and next token)
       const delta = totp.validate({ token, window: 1 });
-      
+
       return delta !== null;
     } catch (error) {
       console.error('TOTP verification failed:', error);
@@ -175,11 +178,11 @@ export class TwoFactorService {
    */
   async enable2FA(secret: string, token: string, backupCodes: string[]): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/master/auth/enable-2fa', {
+      const response = await api.post<ApiResponse>('/api/master/auth/enable-2fa', {
         verificationCode: token
       });
 
-      return response.success;
+      return response.data.success;
     } catch (error) {
       console.error('Failed to enable 2FA:', error);
       return false;
@@ -191,11 +194,11 @@ export class TwoFactorService {
    */
   async disable2FA(password: string): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/master/auth/disable-2fa', {
+      const response = await api.post<ApiResponse>('/api/master/auth/disable-2fa', {
         code: password
       });
 
-      return response.success;
+      return response.data.success;
     } catch (error) {
       console.error('Failed to disable 2FA:', error);
       return false;
@@ -207,12 +210,12 @@ export class TwoFactorService {
    */
   async get2FAStatus(): Promise<ITwoFactorStatus> {
     try {
-      const response = await apiClient.get<{ enabled: boolean; backupCodesRemaining: number }>('/api/master/auth/2fa-status');
+      const response = await api.get<ApiResponse<{ enabled: boolean; backupCodesRemaining: number }>>('/api/master/auth/2fa-status');
 
       return {
-        enabled: response.data?.enabled || false,
-        method: response.data?.enabled ? '2fa' : null,
-        backupCodesRemaining: response.data?.backupCodesRemaining
+        enabled: response.data.data?.enabled || false,
+        method: response.data.data?.enabled ? '2fa' : null,
+        backupCodesRemaining: response.data.data?.backupCodesRemaining
       };
     } catch (error) {
       console.error('Failed to get 2FA status:', error);
@@ -228,11 +231,11 @@ export class TwoFactorService {
    */
   async verifyLoginToken(token: string): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/auth/2fa/verify', {
+      const response = await api.post<ApiResponse>('/api/auth/2fa/verify', {
         token
       });
-      
-      return response.success;
+
+      return response.data.success;
     } catch (error) {
       console.error('Failed to verify 2FA token:', error);
       return false;
@@ -244,12 +247,12 @@ export class TwoFactorService {
    */
   async regenerateBackupCodes(password: string): Promise<string[]> {
     try {
-      const response = await apiClient.post<{ backupCodes: string[] }>(
+      const response = await api.post<ApiResponse<{ backupCodes: string[] }>>(
         '/api/auth/2fa/regenerate-backup-codes',
         { password }
       );
-      
-      return response.data?.backupCodes || [];
+
+      return response.data.data?.backupCodes || [];
     } catch (error) {
       console.error('Failed to regenerate backup codes:', error);
       return [];
@@ -261,11 +264,11 @@ export class TwoFactorService {
    */
   async verifyBackupCode(code: string): Promise<boolean> {
     try {
-      const response = await apiClient.post('/api/auth/2fa/verify-backup', {
+      const response = await api.post<ApiResponse>('/api/auth/2fa/verify-backup', {
         code
       });
-      
-      return response.success;
+
+      return response.data.success;
     } catch (error) {
       console.error('Failed to verify backup code:', error);
       return false;
