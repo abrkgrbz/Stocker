@@ -18,6 +18,8 @@ using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupChecklist;
 using Stocker.Application.Features.TenantSetupWizard.Commands.UpdateWizardStep;
 using Stocker.Application.Features.TenantSetupChecklist.Commands.UpdateChecklistItem;
+using Stocker.Application.Features.Tenants.Queries.GetTenantSettings;
+using Stocker.Application.Features.Tenants.Commands.UpdateTenantSettings;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
@@ -712,6 +714,38 @@ public class TenantsController : MasterControllerBase
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(content);
         return File(bytes, "text/plain", $"activity-logs-{id}-{DateTime.UtcNow:yyyyMMdd}.txt");
+    }
+
+    /// <summary>
+    /// Get tenant settings
+    /// </summary>
+    [HttpGet("{id}/settings")]
+    [ProducesResponseType(typeof(ApiResponse<GetTenantSettingsResponse>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetSettings(Guid id)
+    {
+        _logger.LogInformation("Getting settings for tenant {TenantId}", id);
+
+        var query = new GetTenantSettingsQuery { TenantId = id };
+        var result = await _mediator.Send(query);
+
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Update tenant settings
+    /// </summary>
+    [HttpPut("{id}/settings")]
+    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateSettings(Guid id, [FromBody] UpdateTenantSettingsCommand command)
+    {
+        _logger.LogInformation("Updating settings for tenant {TenantId}", id);
+
+        command = command with { TenantId = id };
+        var result = await _mediator.Send(command);
+
+        return HandleResult(result);
     }
 }
 

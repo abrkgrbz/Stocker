@@ -23,6 +23,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<TenantRegistration> TenantRegistrations => Set<TenantRegistration>();
     public DbSet<TenantContract> TenantContracts => Set<TenantContract>();
     public DbSet<TenantBilling> TenantBillings => Set<TenantBilling>();
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     
     // All tenant-specific entities have been moved to Tenant DB
     
