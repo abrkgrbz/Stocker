@@ -24,7 +24,7 @@ import {
 const { Text, Title, Paragraph } = Typography;
 
 interface BackupCodeVerificationProps {
-  visible: boolean;
+  open: boolean;
   onVerify: (code: string) => Promise<boolean>;
   onBack: () => void;
   onCancel: () => void;
@@ -32,7 +32,7 @@ interface BackupCodeVerificationProps {
 }
 
 export const BackupCodeVerification: React.FC<BackupCodeVerificationProps> = ({
-  visible,
+  open,
   onVerify,
   onBack,
   onCancel,
@@ -97,7 +97,7 @@ export const BackupCodeVerification: React.FC<BackupCodeVerificationProps> = ({
           <span>Yedek Kod Kullan</span>
         </Space>
       }
-      visible={visible}
+      open={open}
       onCancel={onCancel}
       footer={null}
       width={420}

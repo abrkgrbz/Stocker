@@ -374,7 +374,7 @@ const LoginPage: React.FC = () => {
 
       {/* 2FA Verification Modal */}
       <TwoFactorLogin
-        visible={show2FAModal && !showBackupCodeModal}
+        open={show2FAModal && !showBackupCodeModal}
         onVerify={handle2FAVerification}
         onCancel={handleCancel2FA}
         onUseBackupCode={() => {
@@ -386,7 +386,7 @@ const LoginPage: React.FC = () => {
 
       {/* Backup Code Verification Modal */}
       <BackupCodeVerification
-        visible={showBackupCodeModal}
+        open={showBackupCodeModal}
         onVerify={handleBackupCodeVerification}
         onBack={() => {
           setShowBackupCodeModal(false);

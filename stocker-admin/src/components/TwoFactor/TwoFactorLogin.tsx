@@ -28,7 +28,7 @@ import { apiClient } from '../../services/api/apiClient';
 const { Text, Title, Paragraph } = Typography;
 
 interface TwoFactorLoginProps {
-  visible: boolean;
+  open: boolean;
   onVerify: (token: string) => Promise<boolean>;
   onCancel: () => void;
   onUseBackupCode: () => void;
@@ -36,7 +36,7 @@ interface TwoFactorLoginProps {
 }
 
 export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
-  visible,
+  open,
   onVerify,
   onCancel,
   onUseBackupCode,
@@ -51,7 +51,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
   // Check lockout status and reset state when modal opens
   useEffect(() => {
-    if (visible) {
+    if (open) {
       setVerificationCode('');
       setError('');
       setAttempts(0);
@@ -74,15 +74,15 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
       checkLockoutStatus();
     }
-  }, [visible, userEmail]);
+  }, [open, userEmail]);
 
   // Update time remaining for TOTP
   useEffect(() => {
-    if (visible) {
+    if (open) {
       const interval = setInterval(() => {
         const remaining = Math.floor(twoFactorService.getTimeRemaining());
         setTimeRemaining(remaining);
-        
+
         // Clear error when new period starts
         if (remaining === 30) {
           setError('');
@@ -91,7 +91,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
       return () => clearInterval(interval);
     }
-  }, [visible]);
+  }, [open]);
 
   const handleVerify = async () => {
     if (verificationCode.length !== 6) {
@@ -155,7 +155,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
           <span>İki Faktörlü Kimlik Doğrulama</span>
         </Space>
       }
-      open={visible}
+      open={open}
       onCancel={onCancel}
       footer={null}
       width={420}

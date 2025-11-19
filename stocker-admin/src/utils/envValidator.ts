@@ -31,6 +31,10 @@ class EnvironmentValidator {
 
     // Check required variables
     this.requiredVars.forEach(varName => {
+      // In dev mode, VITE_API_URL is optional (proxy is used)
+      if (varName === 'VITE_API_URL' && import.meta.env.DEV) {
+        return; // Skip validation in development
+      }
       if (!import.meta.env[varName]) {
         errors.push(`Missing required environment variable: ${varName}`);
       }
@@ -97,16 +101,16 @@ class EnvironmentValidator {
    */
   getApiUrl(): string {
     const apiUrl = import.meta.env.VITE_API_URL;
-    
+
     // Production check
     if (import.meta.env.PROD && !apiUrl) {
       throw new Error('API URL not configured for production');
     }
 
-    // Development fallback
+    // Development: Use empty string to enable Vite proxy (/api -> api.stoocker.app/api)
     if (!apiUrl && import.meta.env.DEV) {
-      console.warn('Using default development API URL: http://localhost:7014');
-      return 'http://localhost:7014';
+      console.log('Using Vite proxy for API requests: /api -> api.stoocker.app/api');
+      return ''; // Empty baseURL will use relative paths, which Vite proxy will handle
     }
 
     return apiUrl;
