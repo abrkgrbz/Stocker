@@ -95,6 +95,17 @@ public class AuthenticationService : IAuthenticationService
                 };
             }
 
+            // IsActive kontrolü - kullanıcı pasif mi?
+            if (!masterUser.IsActive)
+            {
+                _logger.LogWarning("Login attempt for inactive user {Username}", masterUser.Username);
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    Errors = new List<string> { "Bu hesap pasif hale getirilmiştir. Lütfen sistem yöneticisiyle iletişime geçin." }
+                };
+            }
+
             // EÄŸer MasterUser bir tenant context'inde giriÅŸ yapÄ±yorsa ve henÃ¼z o tenant'ta TenantUser'Ä± yoksa, otomatik oluÅŸtur
             if (tenantId.HasValue && masterUser.UserType == Domain.Master.Enums.UserType.FirmaYoneticisi)
             {
