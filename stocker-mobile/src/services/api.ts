@@ -1,0 +1,157 @@
+import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import { tokenStorage } from '../utils/tokenStorage';
+import { API_URL, IS_DEV } from '../constants';
+import { Alert } from 'react-native';
+
+// API response type
+interface ApiResponse<T = any> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    errors?: string[];
+}
+
+// Create axios instance
+const api: AxiosInstance = axios.create({
+    baseURL: API_URL,
+    timeout: 30000,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+    async (config) => {
+        // Add auth token to requests
+        const token = await tokenStorage.getToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        // Log request in development
+        if (IS_DEV) {
+            console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+        }
+
+        return config;
+    },
+    (error) => {
+        console.error('[API Request Error]', error);
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor
+api.interceptors.response.use(
+    (response: AxiosResponse<ApiResponse>) => {
+        // Log response in development
+        if (IS_DEV) {
+            console.log(`[API Response] ${response.config.url}`, response.data);
+        }
+
+        // Handle API success response
+        if (response.data && response.data.success === false) {
+            const errorMessage = response.data.message || 'İşlem başarısız';
+            // Alert.alert('Hata', errorMessage); // Optional: don't spam alerts
+            return Promise.reject(new Error(errorMessage));
+        }
+
+        return response;
+    },
+    (error: AxiosError<ApiResponse>) => {
+        // Log error in development
+        if (IS_DEV) {
+            console.error('[API Error]', error.response?.data || error.message);
+        }
+
+        // Handle different error scenarios
+        if (error.response) {
+            const { status, data } = error.response;
+
+            switch (status) {
+                case 401:
+                    // Unauthorized - clear token
+                    tokenStorage.clearToken();
+                    // Navigation to login should be handled by auth state change
+                    break;
+
+                case 403:
+                    Alert.alert('Yetkisiz İşlem', 'Bu işlem için yetkiniz bulunmamaktadır.');
+                    break;
+
+                case 404:
+                    // Alert.alert('Hata', 'İstenen kaynak bulunamadı.');
+                    break;
+
+                case 422:
+                    // Validation error
+                    if (data?.errors && Array.isArray(data.errors)) {
+                        Alert.alert('Doğrulama Hatası', data.errors.join('\n'));
+                    } else {
+                        Alert.alert('Hata', data?.message || 'Doğrulama hatası');
+                    }
+                    break;
+
+                case 429:
+                    Alert.alert('Hata', 'Çok fazla istek gönderdiniz. Lütfen biraz bekleyin.');
+                    break;
+
+                case 500:
+                case 502:
+                case 503:
+                    Alert.alert('Sunucu Hatası', 'Lütfen daha sonra tekrar deneyin.');
+                    break;
+
+                default:
+                    Alert.alert('Hata', data?.message || `Bir hata oluştu (${status})`);
+            }
+        } else if (error.request) {
+            Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.');
+        } else {
+            Alert.alert('Hata', 'Beklenmeyen bir hata oluştu.');
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+// API methods
+export const apiService = {
+    // Auth endpoints
+    auth: {
+        login: (email: string, password: string) =>
+            api.post<ApiResponse>('/api/auth/login', { email, password }),
+
+        register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string }) =>
+            api.post<ApiResponse>('/api/auth/register', data),
+
+        logout: () =>
+            api.post<ApiResponse>('/api/master/auth/logout'),
+
+        refresh: (refreshToken: string) =>
+            api.post<ApiResponse>('/api/master/auth/refresh', { refreshToken }),
+
+        me: () =>
+            api.get<ApiResponse>('/api/master/auth/me'),
+    },
+
+    // Master endpoints (Subset for mobile)
+    master: {
+        getDashboardStats: () =>
+            api.get<ApiResponse>('/api/master/dashboard/stats'),
+
+        getTenants: (params?: any) =>
+            api.get<ApiResponse>('/api/master/tenants', { params }),
+    },
+
+    public: {
+        validateEmail: (email: string) =>
+            api.post<ApiResponse>('/api/public/validate-email', { email }),
+
+        validateCompanyCode: (code: string) =>
+            api.get<ApiResponse>('/api/public/check-company-code/' + code),
+    },
+};
+
+export default api;

@@ -156,7 +156,7 @@ const TenantDetails: React.FC = () => {
 
     const result = await Swal.fire({
       title: 'Durum Değişikliği',
-      text: `${tenant.name} tenant'ını ${statusMessages[status as keyof typeof statusMessages]} istediğinize emin misiniz?`,
+      text: `${tenant?.name || 'Tenant'}'ı ${statusMessages[status as keyof typeof statusMessages]} istediğinize emin misiniz?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Evet',
@@ -297,16 +297,22 @@ const TenantDetails: React.FC = () => {
         />
       )}
 
-      {/* Summary Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <InfoCard
-            title="Durum"
-            value={tenant.status === 'active' ? 'Aktif' : 'Askıda'}
-            icon={<CheckCircleOutlined />}
-            color={tenant.status === 'active' ? '#52c41a' : '#faad14'}
-          />
-        </Col>
+      {loading ? (
+        <Card loading={true} />
+      ) : !tenant ? (
+        <Empty description="Tenant bilgisi bulunamadı" />
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Col xs={24} sm={12} lg={6}>
+              <InfoCard
+                title="Durum"
+                value={tenant.status === 'active' ? 'Aktif' : 'Askıda'}
+                icon={<CheckCircleOutlined />}
+                color={tenant.status === 'active' ? '#52c41a' : '#faad14'}
+              />
+            </Col>
         <Col xs={24} sm={12} lg={6}>
           <InfoCard
             title="Kullanıcılar"
@@ -802,6 +808,8 @@ const TenantDetails: React.FC = () => {
             </Card>
           </TabPane>
         </Tabs>
+      )}
+        </>
       )}
     </PageContainer>
   );
