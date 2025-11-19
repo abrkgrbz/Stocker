@@ -102,6 +102,7 @@ public class CustomKeyVaultSecretManager : KeyVaultSecretManager
         {
             { "connectionstrings-", "ConnectionStrings:" },
             { "jwt-secret", "JwtSettings:Secret" },
+            { "hmac-secret-key", "Security:HmacSecretKey" },
             { "smtp-password", "EmailSettings:SmtpPassword" },
             { "smtp-host", "EmailSettings:SmtpHost" },
             { "smtp-port", "EmailSettings:SmtpPort" },

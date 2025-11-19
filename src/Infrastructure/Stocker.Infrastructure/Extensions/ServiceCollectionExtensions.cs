@@ -37,9 +37,12 @@ public static class ServiceCollectionExtensions
         
         // Add JWT Service
         services.AddScoped<IJwtService, JwtService>();
-        
+
         // Add Token Service
         services.AddScoped<ITokenService, TokenService>();
+
+        // Add HMAC Service (for data integrity and authentication)
+        services.AddSingleton<IHmacService, HmacService>();
 
         // Add Tenant Resolution Service
         services.AddScoped<ITenantResolverService, TenantResolverService>();
