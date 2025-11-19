@@ -13,25 +13,222 @@ import {
     ViewStyle,
     TextStyle,
     ImageStyle,
+    Alert,
+    ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
+import { apiService } from '../services/api';
 import { colors, spacing, typography } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
+type Step = 'email' | 'tenant-selection' | 'password';
+
+interface TenantInfo {
+    code: string;
+    name: string;
+    signature: string;
+    timestamp: number;
+    domain?: string;
+}
+
 export default function LoginScreen({ navigation }: any) {
+    const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, isLoading } = useAuthStore();
+    const [tenants, setTenants] = useState<TenantInfo[]>([]);
+    const [selectedTenant, setSelectedTenant] = useState<TenantInfo | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const { login } = useAuthStore();
+
+    const handleCheckEmail = async () => {
+        if (!email) {
+            Alert.alert('Hata', 'Lütfen e-posta adresinizi girin');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await apiService.auth.checkEmail(email);
+
+            if (response.data.success) {
+                const data = response.data.data;
+                const tenantsList = data.tenants || (data.tenant ? [data.tenant] : []);
+
+                if (tenantsList.length === 0) {
+                    Alert.alert('Hata', 'Bu e-posta adresi ile ilişkili bir çalışma alanı bulunamadı.');
+                    return;
+                }
+
+                setTenants(tenantsList);
+
+                // If only one tenant, auto-select? 
+                // Next.js app shows selection even for one, but let's be efficient.
+                // Actually, let's show selection to confirm.
+                setStep('tenant-selection');
+            } else {
+                Alert.alert('Hata', response.data.message || 'E-posta kontrolü başarısız');
+            }
+        } catch (error: any) {
+            Alert.alert('Hata', error.message || 'Bir hata oluştu');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleTenantSelect = (tenant: TenantInfo) => {
+        setSelectedTenant(tenant);
+        setStep('password');
+    };
 
     const handleLogin = async () => {
-        if (!email || !password) return;
-        await login(email, password);
+        if (!password || !selectedTenant) return;
+
+        try {
+            await login({
+                email,
+                password,
+                tenantCode: selectedTenant.code,
+                tenantSignature: selectedTenant.signature,
+                tenantTimestamp: selectedTenant.timestamp,
+            });
+            // Login success is handled in authStore (sets user, etc.)
+            // Navigation is handled by AppNavigator based on auth state
+        } catch (error) {
+            // Error alert is already shown in authStore
+        }
     };
+
+    const handleBack = () => {
+        if (step === 'password') {
+            setStep('tenant-selection');
+            setPassword('');
+        } else if (step === 'tenant-selection') {
+            setStep('email');
+            setTenants([]);
+            setSelectedTenant(null);
+        }
+    };
+
+    const renderEmailStep = () => (
+        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>E-posta</Text>
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="ornek@sirket.com"
+                        placeholderTextColor={colors.textMuted}
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoFocus
+                    />
+                </View>
+            </View>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={handleCheckEmail}
+                disabled={isLoading}
+            >
+                {isLoading ? (
+                    <ActivityIndicator color="#0a1f2e" />
+                ) : (
+                    <Text style={styles.buttonText}>Devam Et</Text>
+                )}
+            </TouchableOpacity>
+        </Animated.View>
+    );
+
+    const renderTenantSelectionStep = () => (
+        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
+            <Text style={styles.stepTitle}>Çalışma Alanı Seçin</Text>
+            <Text style={styles.stepSubtitle}>{email} için bulunan hesaplar:</Text>
+
+            <ScrollView style={{ maxHeight: 300 }}>
+                {tenants.map((tenant) => (
+                    <TouchableOpacity
+                        key={tenant.code}
+                        style={styles.tenantCard}
+                        onPress={() => handleTenantSelect(tenant)}
+                    >
+                        <View style={styles.tenantIcon}>
+                            <Text style={styles.tenantIconText}>
+                                {tenant.name?.[0]?.toUpperCase() || tenant.code?.[0]?.toUpperCase()}
+                            </Text>
+                        </View>
+                        <View style={styles.tenantInfo}>
+                            <Text style={styles.tenantName}>{tenant.name || tenant.code}</Text>
+                            <Text style={styles.tenantDomain}>{tenant.code}.stoocker.app</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                <Text style={styles.backButtonText}>Farklı bir e-posta kullan</Text>
+            </TouchableOpacity>
+        </Animated.View>
+    );
+
+    const renderPasswordStep = () => (
+        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
+            <View style={styles.selectedTenantContainer}>
+                <View style={styles.tenantIconSmall}>
+                    <Text style={styles.tenantIconTextSmall}>
+                        {selectedTenant?.name?.[0]?.toUpperCase() || selectedTenant?.code?.[0]?.toUpperCase()}
+                    </Text>
+                </View>
+                <View>
+                    <Text style={styles.selectedTenantName}>{selectedTenant?.name || selectedTenant?.code}</Text>
+                    <Text style={styles.selectedTenantDomain}>{selectedTenant?.code}.stoocker.app</Text>
+                </View>
+                <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => setStep('tenant-selection')}>
+                    <Text style={{ color: colors.primary, fontSize: 12 }}>Değiştir</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Şifre</Text>
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="******"
+                        placeholderTextColor={colors.textMuted}
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        autoFocus
+                    />
+                </View>
+            </View>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={handleLogin}
+                disabled={isLoading}
+            >
+                {isLoading ? (
+                    <ActivityIndicator color="#0a1f2e" />
+                ) : (
+                    <Text style={styles.buttonText}>Giriş Yap</Text>
+                )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                <Text style={styles.backButtonText}>Geri Dön</Text>
+            </TouchableOpacity>
+        </Animated.View>
+    );
 
     return (
         <View style={styles.container}>
@@ -70,60 +267,20 @@ export default function LoginScreen({ navigation }: any) {
                             </Animated.Text>
                         </View>
 
-                        <Animated.View
-                            entering={FadeInDown.delay(800).duration(1000).springify()}
-                            style={styles.form}
-                        >
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>E-posta</Text>
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="ornek@sirket.com"
-                                        placeholderTextColor={colors.textMuted}
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        autoCapitalize="none"
-                                        keyboardType="email-address"
-                                    />
+                        <View style={styles.form}>
+                            {step === 'email' && renderEmailStep()}
+                            {step === 'tenant-selection' && renderTenantSelectionStep()}
+                            {step === 'password' && renderPasswordStep()}
+
+                            {step === 'email' && (
+                                <View style={styles.footer}>
+                                    <Text style={styles.footerText}>Hesabınız yok mu? </Text>
+                                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                                        <Text style={styles.linkText}>Kayıt Olun</Text>
+                                    </TouchableOpacity>
                                 </View>
-                            </View>
-
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Şifre</Text>
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="******"
-                                        placeholderTextColor={colors.textMuted}
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        secureTextEntry
-                                    />
-                                </View>
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={handleLogin}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <ActivityIndicator color="#0a1f2e" />
-                                ) : (
-                                    <Text style={styles.buttonText}>Giriş Yap</Text>
-                                )}
-                            </TouchableOpacity>
-
-                            <View style={styles.footer}>
-                                <Text style={styles.footerText}>Hesabınız yok mu? </Text>
-                                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                                    <Text style={styles.linkText}>Kayıt Olun</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </Animated.View>
+                            )}
+                        </View>
                     </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
@@ -195,6 +352,7 @@ const styles = StyleSheet.create({
     } as TextStyle,
     form: {
         width: '100%',
+        minHeight: 200, // Prevent layout jump
     } as ViewStyle,
     inputContainer: {
         marginBottom: spacing.l,
@@ -253,5 +411,94 @@ const styles = StyleSheet.create({
         color: colors.primary,
         fontSize: 14,
         fontWeight: 'bold',
+    } as TextStyle,
+    stepTitle: {
+        ...typography.h3,
+        color: colors.textPrimary,
+        marginBottom: spacing.xs,
+    } as TextStyle,
+    stepSubtitle: {
+        ...typography.body,
+        color: colors.textSecondary,
+        marginBottom: spacing.l,
+    } as TextStyle,
+    tenantCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        padding: spacing.m,
+        borderRadius: 12,
+        marginBottom: spacing.m,
+        borderWidth: 1,
+        borderColor: colors.surfaceLight,
+    } as ViewStyle,
+    tenantIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: 'rgba(24, 144, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.m,
+    } as ViewStyle,
+    tenantIconText: {
+        color: colors.primary,
+        fontSize: 20,
+        fontWeight: 'bold',
+    } as TextStyle,
+    tenantInfo: {
+        flex: 1,
+    } as ViewStyle,
+    tenantName: {
+        color: colors.textPrimary,
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 2,
+    } as TextStyle,
+    tenantDomain: {
+        color: colors.textSecondary,
+        fontSize: 12,
+    } as TextStyle,
+    backButton: {
+        alignItems: 'center',
+        padding: spacing.m,
+        marginTop: spacing.s,
+    } as ViewStyle,
+    backButtonText: {
+        color: colors.textSecondary,
+        fontSize: 14,
+    } as TextStyle,
+    selectedTenantContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(24, 144, 255, 0.05)',
+        padding: spacing.m,
+        borderRadius: 12,
+        marginBottom: spacing.l,
+        borderWidth: 1,
+        borderColor: 'rgba(24, 144, 255, 0.2)',
+    } as ViewStyle,
+    tenantIconSmall: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: 'rgba(24, 144, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.m,
+    } as ViewStyle,
+    tenantIconTextSmall: {
+        color: colors.primary,
+        fontSize: 14,
+        fontWeight: 'bold',
+    } as TextStyle,
+    selectedTenantName: {
+        color: colors.textPrimary,
+        fontSize: 14,
+        fontWeight: 'bold',
+    } as TextStyle,
+    selectedTenantDomain: {
+        color: colors.textSecondary,
+        fontSize: 12,
     } as TextStyle,
 });

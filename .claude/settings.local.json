@@ -10,7 +10,12 @@
       "Bash(npm run dev:*)",
       "Bash(npx eslint:*)",
       "Bash(npx tsc:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(dotnet build:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []

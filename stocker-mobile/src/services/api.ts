@@ -120,8 +120,11 @@ api.interceptors.response.use(
 export const apiService = {
     // Auth endpoints
     auth: {
-        login: (email: string, password: string) =>
-            api.post<ApiResponse>('/api/auth/login', { email, password }),
+        login: (data: { email: string; password: string; tenantCode: string; tenantSignature: string; tenantTimestamp: number }) =>
+            api.post<ApiResponse>('/api/auth/login', data),
+
+        checkEmail: (email: string) =>
+            api.post<ApiResponse>('/api/auth/check-email', { email }),
 
         register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string }) =>
             api.post<ApiResponse>('/api/auth/register', data),
@@ -148,6 +151,8 @@ export const apiService = {
     public: {
         validateEmail: (email: string) =>
             api.post<ApiResponse>('/api/public/validate-email', { email }),
+
+
 
         validateCompanyCode: (code: string) =>
             api.get<ApiResponse>('/api/public/check-company-code/' + code),

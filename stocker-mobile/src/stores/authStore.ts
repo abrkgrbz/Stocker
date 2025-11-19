@@ -25,7 +25,7 @@ interface AuthState {
     isLoading: boolean;
 
     // Actions
-    login: (email: string, password: string) => Promise<void>;
+    login: (data: { email: string; password: string; tenantCode: string; tenantSignature: string; tenantTimestamp: number }) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     setLoading: (loading: boolean) => void;
@@ -44,11 +44,11 @@ export const useAuthStore = create<AuthState>()(
                 set({ isLoading: loading });
             },
 
-            login: async (email: string, password: string) => {
+            login: async (data) => {
                 set({ isLoading: true });
 
                 try {
-                    const response = await apiService.auth.login(email, password);
+                    const response = await apiService.auth.login(data);
 
                     if (response.data?.success) {
                         const { accessToken, refreshToken, user } = response.data.data;
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
                         const appUser: User = {
                             id: user.id,
                             email: user.email,
-                            name: user.fullName || user.username || 'User',
+                            name: `${user.firstName} ${user.lastName}`.trim() || 'User',
                             firstName: user.firstName,
                             lastName: user.lastName,
                             role: user.roles?.[0] || 'user',

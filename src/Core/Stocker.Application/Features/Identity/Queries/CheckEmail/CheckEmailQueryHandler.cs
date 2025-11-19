@@ -44,10 +44,15 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
 
             // Find tenant registrations where this email is the admin
             // This ensures users only see tenants they created or have access to
-            var tenantRegistrations = await _masterContext.TenantRegistrations
-                .Where(r => r.AdminEmail.Value == request.Email && r.TenantId.HasValue)
-                .Select(r => r.TenantId!.Value)
+            // Load into memory first to avoid EF Core translation issues with ValueObject
+            var allRegistrations = await _masterContext.TenantRegistrations
+                .Where(r => r.TenantId.HasValue)
                 .ToListAsync(cancellationToken);
+
+            var tenantRegistrations = allRegistrations
+                .Where(r => r.AdminEmail.Value == request.Email)
+                .Select(r => r.TenantId!.Value)
+                .ToList();
 
             // Get tenant details for these registrations
             var tenantList = await _masterContext.Tenants
