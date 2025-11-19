@@ -16,7 +16,9 @@
       "Bash(git push:*)",
       "Bash(find:*)",
       "Bash(netstat:*)",
-      "Bash(dotnet ef migrations add:*)"
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet ef database:*)",
+      "Bash(dotnet ef database update:*)"
     ],
     "deny": [],
     "ask": []
