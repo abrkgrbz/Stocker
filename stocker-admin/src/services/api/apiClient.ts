@@ -11,6 +11,7 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 import { tokenStorage } from '../../utils/tokenStorage';
 import { errorService, AppError, ERROR_CODES } from '../errorService';
 import { sentryService } from '../sentryService';
+import { envValidator } from '../../utils/envValidator';
 
 // API response types matching backend
 export interface ApiResponse<T = any> {
@@ -55,8 +56,8 @@ class ApiClient {
   private refreshSubscribers: Array<(token: string) => void> = [];
 
   constructor() {
-    const baseURL = import.meta.env.VITE_API_URL || 'https://api.stoocker.app';
-    
+    const baseURL = envValidator.getApiUrl();
+
     this.client = axios.create({
       baseURL,
       timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
