@@ -18,7 +18,8 @@
       "Bash(netstat:*)",
       "Bash(dotnet ef migrations add:*)",
       "Bash(dotnet ef database:*)",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

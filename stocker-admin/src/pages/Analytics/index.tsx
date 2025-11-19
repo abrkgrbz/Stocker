@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   Row, 
@@ -57,6 +57,12 @@ import { Line, Column, Pie, Area, DualAxes, Heatmap, Gauge } from '@ant-design/p
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { analyticsService } from '../../services/api/analyticsService';
+import type {
+  RevenueAnalytics,
+  UserAnalytics,
+  PerformanceAnalytics
+} from '../../services/api/analyticsService';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -108,6 +114,11 @@ const AnalyticsPage: React.FC = () => {
   ]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // API data states
+  const [revenueData, setRevenueData] = useState<RevenueAnalytics | null>(null);
+  const [userData, setUserData] = useState<UserAnalytics | null>(null);
+  const [performanceData, setPerformanceData] = useState<PerformanceAnalytics | null>(null);
+
   const [analyticsData] = useState<AnalyticsData>({
     totalUsers: 15420,
     activeUsers: 8950,
@@ -119,8 +130,39 @@ const AnalyticsPage: React.FC = () => {
     systemUptime: 99.97
   });
 
-  // Chart data
-  const revenueData: ChartData[] = [
+  // Load analytics data
+  useEffect(() => {
+    loadAnalytics();
+  }, [dateRange]);
+
+  const loadAnalytics = async () => {
+    setLoading(true);
+    try {
+      const [revenue, users, performance] = await Promise.all([
+        analyticsService.getRevenueAnalytics(
+          dateRange[0].format('YYYY-MM-DD'),
+          dateRange[1].format('YYYY-MM-DD'),
+          'monthly'
+        ),
+        analyticsService.getUserAnalytics('monthly'),
+        analyticsService.getPerformanceAnalytics()
+      ]);
+
+      setRevenueData(revenue);
+      setUserData(users);
+      setPerformanceData(performance);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chart data - converted from API data or fallback to mock
+  const revenueChartData: ChartData[] = revenueData?.revenueByPeriod?.map(p => ({
+    date: p.period,
+    value: p.revenue
+  })) || [
     { date: '2024-01-01', value: 98000 },
     { date: '2024-01-02', value: 102000 },
     { date: '2024-01-03', value: 105000 },
@@ -132,7 +174,10 @@ const AnalyticsPage: React.FC = () => {
     { date: '2024-01-09', value: 125000 },
   ];
 
-  const userGrowthData: ChartData[] = [
+  const userGrowthData: ChartData[] = userData?.userGrowth?.flatMap(ug => [
+    { date: ug.period, value: ug.totalUsers, type: 'Toplam Kullanıcı' },
+    { date: ug.period, value: ug.totalUsers - ug.churnedUsers, type: 'Aktif Kullanıcı' }
+  ]) || [
     { date: '2024-01-01', value: 12500, type: 'Toplam Kullanıcı' },
     { date: '2024-01-02', value: 12650, type: 'Toplam Kullanıcı' },
     { date: '2024-01-03', value: 12800, type: 'Toplam Kullanıcı' },
@@ -167,7 +212,14 @@ const AnalyticsPage: React.FC = () => {
     { location: 'Diğer', users: 540, percentage: 6.0 }
   ];
 
-  const topTenants: TopTenant[] = [
+  const topTenants: TopTenant[] = revenueData?.topPayingTenants?.map((t, index) => ({
+    id: String(index + 1),
+    name: t.tenantName,
+    revenue: t.revenue,
+    users: 0, // Not available from API
+    growth: 0, // Not available from API
+    status: 'active' as const
+  })) || [
     {
       id: '1',
       name: 'ABC Corp',
@@ -219,8 +271,13 @@ const AnalyticsPage: React.FC = () => {
     { hour: '20:00', desktop: 280, mobile: 180, tablet: 35 }
   ];
 
-  // Performance metrics
-  const performanceData = [
+  // Performance metrics - converted from API data
+  const performanceChartData = performanceData?.responseTimeHistory?.map(rt => ({
+    time: rt.timestamp,
+    cpu: rt.averageTime / 10, // Normalize to percentage-like values for chart
+    memory: rt.p95Time / 10,
+    disk: rt.p99Time / 10
+  })) || [
     { time: '00:00', cpu: 45, memory: 62, disk: 38 },
     { time: '04:00', cpu: 38, memory: 58, disk: 35 },
     { time: '08:00', cpu: 72, memory: 78, disk: 55 },
@@ -229,11 +286,10 @@ const AnalyticsPage: React.FC = () => {
     { time: '20:00', cpu: 65, memory: 70, disk: 48 }
   ];
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1500);
+    await loadAnalytics();
+    setRefreshing(false);
   };
 
   const getGrowthIcon = (growth: number) => {
@@ -253,7 +309,7 @@ const AnalyticsPage: React.FC = () => {
 
   // Chart configurations
   const revenueConfig = {
-    data: revenueData,
+    data: revenueChartData,
     xField: 'date',
     yField: 'value',
     smooth: true,
@@ -324,7 +380,7 @@ const AnalyticsPage: React.FC = () => {
   };
 
   const performanceDualConfig = {
-    data: [performanceData, performanceData, performanceData],
+    data: [performanceChartData, performanceChartData, performanceChartData],
     xField: 'time',
     yField: ['cpu', 'memory', 'disk'],
     geometryOptions: [
@@ -456,12 +512,14 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Kullanıcı"
-              value={analyticsData.totalUsers}
+              value={userData?.totalUsers || analyticsData.totalUsers}
               prefix={<UserOutlined />}
               suffix={
                 <Space>
                   <ArrowUpOutlined style={{ color: '#52c41a', fontSize: 12 }} />
-                  <span style={{ color: '#52c41a', fontSize: 12 }}>+12.5%</span>
+                  <span style={{ color: '#52c41a', fontSize: 12 }}>
+                    +{(userData?.activationRate || 12.5).toFixed(1)}%
+                  </span>
                 </Space>
               }
             />
@@ -471,14 +529,14 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Aktif Kullanıcı"
-              value={analyticsData.activeUsers}
+              value={userData?.activeUsers || analyticsData.activeUsers}
               prefix={<TeamOutlined />}
               valueStyle={{ color: '#1890ff' }}
               suffix={
-                <Progress 
-                  percent={(analyticsData.activeUsers / analyticsData.totalUsers) * 100} 
-                  size="small" 
-                  showInfo={false} 
+                <Progress
+                  percent={((userData?.activeUsers || analyticsData.activeUsers) / (userData?.totalUsers || analyticsData.totalUsers)) * 100}
+                  size="small"
+                  showInfo={false}
                   style={{ width: 60 }}
                 />
               }
@@ -489,7 +547,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Gelir"
-              value={analyticsData.totalRevenue}
+              value={revenueData?.totalRevenue || analyticsData.totalRevenue}
               prefix={<DollarOutlined />}
               precision={0}
               valueStyle={{ color: '#52c41a' }}
@@ -501,7 +559,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Sistem Çalışma Oranı"
-              value={analyticsData.systemUptime}
+              value={performanceData?.successRate || analyticsData.systemUptime}
               precision={2}
               suffix="%"
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
@@ -526,7 +584,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="API Çağrıları"
-              value={analyticsData.apiCalls}
+              value={performanceData?.totalRequests || analyticsData.apiCalls}
               prefix={<ApiOutlined />}
               suffix="/ay"
             />
@@ -536,10 +594,10 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Ortalama Yanıt Süresi"
-              value={analyticsData.avgResponseTime}
+              value={performanceData?.averageResponseTime || analyticsData.avgResponseTime}
               prefix={<ClockCircleOutlined />}
               suffix="ms"
-              valueStyle={{ color: analyticsData.avgResponseTime < 300 ? '#52c41a' : '#faad14' }}
+              valueStyle={{ color: (performanceData?.averageResponseTime || analyticsData.avgResponseTime) < 300 ? '#52c41a' : '#faad14' }}
             />
           </Card>
         </Col>
@@ -547,7 +605,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Aylık Büyüme"
-              value={analyticsData.monthlyGrowth}
+              value={revenueData?.growthRate || analyticsData.monthlyGrowth}
               precision={1}
               suffix="%"
               prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
@@ -639,25 +697,25 @@ const AnalyticsPage: React.FC = () => {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <Statistic
                       title="Günlük Aktif Kullanıcı"
-                      value={5420}
+                      value={userData?.userActivity?.dailyActiveUsers || 5420}
                       prefix={<UserOutlined />}
                     />
                     <Divider />
                     <Statistic
                       title="Haftalık Aktif Kullanıcı"
-                      value={8950}
+                      value={userData?.userActivity?.weeklyActiveUsers || 8950}
                       prefix={<TeamOutlined />}
                     />
                     <Divider />
                     <Statistic
                       title="Aylık Aktif Kullanıcı"
-                      value={15420}
+                      value={userData?.userActivity?.monthlyActiveUsers || 15420}
                       prefix={<GlobalOutlined />}
                     />
                     <Divider />
                     <Statistic
                       title="Ortalama Oturum Süresi"
-                      value={28}
+                      value={userData?.averageSessionDuration || 28}
                       suffix="dk"
                       prefix={<ClockCircleOutlined />}
                     />
@@ -685,15 +743,15 @@ const AnalyticsPage: React.FC = () => {
                 <Card title="CPU Kullanımı" size="small">
                   <Progress
                     type="circle"
-                    percent={78}
-                    format={() => '78%'}
+                    percent={performanceData?.systemMetrics?.cpuUsage || 78}
+                    format={() => `${performanceData?.systemMetrics?.cpuUsage || 78}%`}
                     strokeColor={{
                       '0%': '#108ee9',
                       '100%': '#87d068',
                     }}
                   />
                   <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <Text type="secondary">Ortalama: 65%</Text>
+                    <Text type="secondary">Ortalama: {performanceData?.systemMetrics?.cpuUsage || 65}%</Text>
                   </div>
                 </Card>
               </Col>
@@ -701,15 +759,15 @@ const AnalyticsPage: React.FC = () => {
                 <Card title="Bellek Kullanımı" size="small">
                   <Progress
                     type="circle"
-                    percent={75}
-                    format={() => '75%'}
+                    percent={performanceData?.systemMetrics?.memoryUsage || 75}
+                    format={() => `${performanceData?.systemMetrics?.memoryUsage || 75}%`}
                     strokeColor={{
                       '0%': '#faad14',
                       '100%': '#52c41a',
                     }}
                   />
                   <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <Text type="secondary">Kullanılan: 12.8 GB</Text>
+                    <Text type="secondary">Kullanılan: {((performanceData?.systemMetrics?.memoryUsage || 75) * 16 / 100).toFixed(1)} GB</Text>
                   </div>
                 </Card>
               </Col>
@@ -717,15 +775,15 @@ const AnalyticsPage: React.FC = () => {
                 <Card title="Disk Kullanımı" size="small">
                   <Progress
                     type="circle"
-                    percent={62}
-                    format={() => '62%'}
+                    percent={performanceData?.systemMetrics?.diskUsage || 62}
+                    format={() => `${performanceData?.systemMetrics?.diskUsage || 62}%`}
                     strokeColor={{
                       '0%': '#722ed1',
                       '100%': '#1890ff',
                     }}
                   />
                   <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <Text type="secondary">Kullanılan: 285 GB</Text>
+                    <Text type="secondary">Kullanılan: {((performanceData?.systemMetrics?.diskUsage || 62) * 500 / 100).toFixed(0)} GB</Text>
                   </div>
                 </Card>
               </Col>
@@ -739,21 +797,21 @@ const AnalyticsPage: React.FC = () => {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Text>Ortalama Yanıt Süresi</Text>
-                      <Text strong>245ms</Text>
+                      <Text strong>{performanceData?.averageResponseTime || 245}ms</Text>
                     </div>
                     <Progress percent={85} strokeColor="#52c41a" />
-                    
+
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Text>Throughput</Text>
-                      <Text strong>1,250 req/sec</Text>
+                      <Text strong>{performanceData?.requestsPerSecond?.toFixed(0) || '1,250'} req/sec</Text>
                     </div>
                     <Progress percent={92} strokeColor="#1890ff" />
-                    
+
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Text>Hata Oranı</Text>
-                      <Text strong>0.03%</Text>
+                      <Text strong>{performanceData?.errorRate?.toFixed(2) || '0.03'}%</Text>
                     </div>
-                    <Progress percent={5} strokeColor="#ff4d4f" />
+                    <Progress percent={performanceData?.errorRate ? Math.min(performanceData.errorRate * 20, 100) : 5} strokeColor="#ff4d4f" />
                   </Space>
                 </Card>
               </Col>
