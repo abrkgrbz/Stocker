@@ -130,13 +130,13 @@ export const apiService = {
             api.post<ApiResponse>('/api/auth/register', data),
 
         logout: () =>
-            api.post<ApiResponse>('/api/master/auth/logout'),
+            api.post<ApiResponse>('/api/auth/logout'),
 
         refresh: (refreshToken: string) =>
-            api.post<ApiResponse>('/api/master/auth/refresh', { refreshToken }),
+            api.post<ApiResponse>('/api/auth/refresh-token', { refreshToken }),
 
         me: () =>
-            api.get<ApiResponse>('/api/master/auth/me'),
+            api.get<ApiResponse>('/api/auth/me'),
     },
 
     // Master endpoints

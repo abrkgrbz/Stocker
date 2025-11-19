@@ -19,6 +19,11 @@ public class DashboardRepository : IDashboardRepository
     // Tenant Dashboard Methods
     public async Task<DashboardStatsDto> GetTenantDashboardStatsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        if (_tenantContext == null)
+        {
+            throw new InvalidOperationException("Tenant context is not available. Make sure the request has a valid tenant context.");
+        }
+
         var stats = new DashboardStatsDto();
 
         // Get invoice statistics
@@ -90,6 +95,11 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<List<ActivityDto>> GetRecentActivitiesAsync(Guid tenantId, int count = 10, CancellationToken cancellationToken = default)
     {
+        if (_tenantContext == null)
+        {
+            throw new InvalidOperationException("Tenant context is not available. Make sure the request has a valid tenant context.");
+        }
+
         // No TenantId filter needed (database-per-tenant)
         var activities = await _tenantContext.AuditLogs
             .OrderByDescending(a => a.Timestamp)
@@ -111,6 +121,11 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<List<NotificationDto>> GetNotificationsAsync(Guid tenantId, string userId, CancellationToken cancellationToken = default)
     {
+        if (_tenantContext == null)
+        {
+            throw new InvalidOperationException("Tenant context is not available. Make sure the request has a valid tenant context.");
+        }
+
         // For now, generate notifications from audit logs - no TenantId filter needed
         var notifications = await _tenantContext.AuditLogs
             .OrderByDescending(a => a.Timestamp)
@@ -131,6 +146,11 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<RevenueChartDto> GetRevenueChartDataAsync(Guid tenantId, string period, CancellationToken cancellationToken = default)
     {
+        if (_tenantContext == null)
+        {
+            throw new InvalidOperationException("Tenant context is not available. Make sure the request has a valid tenant context.");
+        }
+
         var chart = new RevenueChartDto
         {
             Period = period,
@@ -225,6 +245,11 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        if (_tenantContext == null)
+        {
+            throw new InvalidOperationException("Tenant context is not available. Make sure the request has a valid tenant context.");
+        }
+
         var summary = new DashboardSummaryDto
         {
             // No TenantId filters needed (database-per-tenant)
