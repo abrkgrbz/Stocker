@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { subscriptionService, SubscriptionDto, SubscriptionStatus, SubscriptionStatisticsDto } from '../../services/api/subscriptionService';
 import { 
   Card, 
   Row, 
@@ -119,135 +120,62 @@ interface SubscriptionStats {
 const SubscriptionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDto | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [form] = Form.useForm();
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([
-    {
-      id: '1',
-      tenantId: 'tenant_123',
-      tenantName: 'ABC Corp',
-      packageName: 'Enterprise Plan',
-      packageType: 'enterprise',
-      status: 'active',
-      price: 299,
-      currency: 'USD',
-      billingCycle: 'monthly',
-      startDate: '2023-01-15',
-      endDate: '2024-01-15',
-      nextBilling: '2024-02-15',
-      autoRenew: true,
-      users: 45,
-      maxUsers: 100,
-      features: ['Advanced Analytics', 'Priority Support', 'Custom Integrations', 'API Access'],
-      paymentMethod: 'Credit Card (**** 1234)',
-      lastPayment: '2024-01-15',
-      totalPaid: 3588,
-      invoicesCount: 12
-    },
-    {
-      id: '2',
-      tenantId: 'tenant_456',
-      tenantName: 'XYZ Solutions',
-      packageName: 'Standard Plan',
-      packageType: 'standard',
-      status: 'active',
-      price: 99,
-      currency: 'USD',
-      billingCycle: 'monthly',
-      startDate: '2023-06-01',
-      endDate: '2024-06-01',
-      nextBilling: '2024-02-01',
-      autoRenew: true,
-      users: 15,
-      maxUsers: 25,
-      features: ['Basic Analytics', 'Email Support', 'Standard Integrations'],
-      paymentMethod: 'Bank Transfer',
-      lastPayment: '2024-01-01',
-      totalPaid: 792,
-      invoicesCount: 8
-    },
-    {
-      id: '3',
-      tenantId: 'tenant_789',
-      tenantName: 'StartupCo',
-      packageName: 'Basic Plan',
-      packageType: 'basic',
-      status: 'trial',
-      price: 29,
-      currency: 'USD',
-      billingCycle: 'monthly',
-      startDate: '2024-01-01',
-      endDate: '2024-01-15',
-      nextBilling: '2024-01-15',
-      autoRenew: false,
-      trialPeriod: 14,
-      users: 3,
-      maxUsers: 5,
-      features: ['Basic Features', 'Community Support'],
-      paymentMethod: 'Not Set',
-      totalPaid: 0,
-      invoicesCount: 0
-    },
-    {
-      id: '4',
-      tenantId: 'tenant_012',
-      tenantName: 'Tech Agency',
-      packageName: 'Premium Plan',
-      packageType: 'premium',
-      status: 'paused',
-      price: 199,
-      currency: 'USD',
-      billingCycle: 'monthly',
-      startDate: '2023-03-10',
-      endDate: '2024-03-10',
-      nextBilling: '2024-02-10',
-      autoRenew: true,
-      users: 28,
-      maxUsers: 50,
-      features: ['Advanced Analytics', 'Priority Support', 'API Access'],
-      paymentMethod: 'Credit Card (**** 5678)',
-      lastPayment: '2023-12-10',
-      totalPaid: 2189,
-      invoicesCount: 11
-    },
-    {
-      id: '5',
-      tenantId: 'tenant_345',
-      tenantName: 'Digital Solutions',
-      packageName: 'Enterprise Plan',
-      packageType: 'enterprise',
-      status: 'cancelled',
-      price: 299,
-      currency: 'USD',
-      billingCycle: 'yearly',
-      startDate: '2022-08-01',
-      endDate: '2023-08-01',
-      nextBilling: '-',
-      autoRenew: false,
-      users: 0,
-      maxUsers: 100,
-      features: ['Advanced Analytics', 'Priority Support', 'Custom Integrations', 'API Access'],
-      paymentMethod: 'Credit Card (**** 9012)',
-      lastPayment: '2022-08-01',
-      totalPaid: 3588,
-      invoicesCount: 12
-    }
-  ]);
+  // API Data States
+  const [subscriptions, setSubscriptions] = useState<SubscriptionDto[]>([]);
+  const [statistics, setStatistics] = useState<SubscriptionStatisticsDto | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<SubscriptionStatus | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [stats] = useState<SubscriptionStats>({
-    totalSubscriptions: 234,
-    activeSubscriptions: 189,
-    monthlyRevenue: 45620,
-    annualRevenue: 547440,
-    churnRate: 3.2,
-    averagePrice: 142,
-    trialConversion: 68.5,
-    renewalRate: 92.3
-  });
+  // Load subscriptions from API
+  const loadSubscriptions = async () => {
+    setLoading(true);
+    try {
+      const [subscriptionsData, statsData] = await Promise.all([
+        subscriptionService.getAll({
+          pageNumber,
+          pageSize,
+          status: statusFilter,
+          searchTerm: searchTerm || undefined,
+        }),
+        subscriptionService.getStatistics()
+      ]);
+
+      setSubscriptions(subscriptionsData.items || subscriptionsData);
+      setTotalCount(subscriptionsData.totalCount || 0);
+      setStatistics(statsData);
+    } catch (error) {
+      message.error('Abonelikler yüklenirken hata oluştu');
+      console.error('Failed to load subscriptions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on mount and when filters change
+  useEffect(() => {
+    loadSubscriptions();
+  }, [pageNumber, pageSize, statusFilter, searchTerm]);
+
+  // Map statistics from API
+  const stats: SubscriptionStats = {
+    totalSubscriptions: statistics?.totalSubscriptions || 0,
+    activeSubscriptions: statistics?.activeSubscriptions || 0,
+    monthlyRevenue: statistics?.monthlyRevenue || 0,
+    annualRevenue: statistics?.annualRevenue || 0,
+    churnRate: statistics?.churnRate || 0,
+    averagePrice: statistics?.averagePrice || 0,
+    trialConversion: statistics?.trialConversionRate || 0,
+    renewalRate: statistics?.renewalRate || 0
+  };
 
   // Chart data
   const revenueData = [
@@ -296,30 +224,29 @@ const SubscriptionsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (subscriptionId: string, newStatus: string) => {
-    setSubscriptions(prev => prev.map(sub => 
-      sub.id === subscriptionId 
-        ? { ...sub, status: newStatus as any }
-        : sub
-    ));
-    message.success('Abonelik durumu güncellendi');
+  const handleStatusChange = async (subscriptionId: string, newStatus: string) => {
+    try {
+      await subscriptionService.updateStatus(subscriptionId, newStatus as SubscriptionStatus);
+      message.success('Abonelik durumu güncellendi');
+      await loadSubscriptions();
+    } catch (error) {
+      message.error('Durum güncellenemedi');
+      console.error('Failed to update subscription status:', error);
+    }
   };
 
-  const handleCreate = () => {
-    form.validateFields().then(values => {
-      const newSubscription: Subscription = {
-        id: Date.now().toString(),
-        ...values,
-        status: 'active',
-        totalPaid: 0,
-        invoicesCount: 0,
-        features: values.features || []
-      };
-      setSubscriptions([newSubscription, ...subscriptions]);
+  const handleCreate = async () => {
+    try {
+      const values = await form.validateFields();
+      await subscriptionService.create(values);
       message.success('Yeni abonelik oluşturuldu');
       setModalVisible(false);
       form.resetFields();
-    });
+      await loadSubscriptions();
+    } catch (error) {
+      message.error('Abonelik oluşturulamadı');
+      console.error('Failed to create subscription:', error);
+    }
   };
 
   const columns = [
@@ -327,7 +254,7 @@ const SubscriptionsPage: React.FC = () => {
       title: 'Tenant',
       dataIndex: 'tenantName',
       key: 'tenantName',
-      render: (text: string, record: Subscription) => (
+      render: (text: string, record: SubscriptionDto) => (
         <Space>
           <Avatar size="small" style={{ backgroundColor: getPackageColor(record.packageType) }}>
             {text.charAt(0)}
@@ -346,7 +273,7 @@ const SubscriptionsPage: React.FC = () => {
       title: 'Paket',
       dataIndex: 'packageName',
       key: 'packageName',
-      render: (text: string, record: Subscription) => (
+      render: (text: string, record: SubscriptionDto) => (
         <Space direction="vertical" size={0}>
           <Text strong>{text}</Text>
           <Tag color={getPackageColor(record.packageType)}>
@@ -376,7 +303,7 @@ const SubscriptionsPage: React.FC = () => {
       title: 'Fiyat',
       dataIndex: 'price',
       key: 'price',
-      render: (price: number, record: Subscription) => (
+      render: (price: number, record: SubscriptionDto) => (
         <Space direction="vertical" size={0}>
           <Text strong>${price}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -390,7 +317,7 @@ const SubscriptionsPage: React.FC = () => {
       title: 'Kullanıcılar',
       dataIndex: 'users',
       key: 'users',
-      render: (users: number, record: Subscription) => (
+      render: (users: number, record: SubscriptionDto) => (
         <Space direction="vertical" size={0}>
           <Text>{users} / {record.maxUsers}</Text>
           <Progress 
@@ -420,7 +347,7 @@ const SubscriptionsPage: React.FC = () => {
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_: any, record: Subscription) => (
+      render: (_: any, record: SubscriptionDto) => (
         <Space>
           <Button
             size="small"

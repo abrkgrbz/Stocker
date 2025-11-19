@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { invoiceService, InvoiceDto, InvoiceStatus, InvoiceStatisticsDto } from '../../services/api/invoiceService';
 import { 
   Card, 
   Row, 
@@ -142,169 +143,63 @@ interface InvoiceStats {
 const InvoicesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDto | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [form] = Form.useForm();
 
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      invoiceNumber: 'INV-2024-001',
-      tenantId: 'tenant_123',
-      tenantName: 'ABC Corp',
-      tenantEmail: 'billing@abccorp.com',
-      tenantAddress: '123 Business St, New York, NY 10001',
-      issueDate: '2024-01-15',
-      dueDate: '2024-02-14',
-      status: 'paid',
-      amount: 299.00,
-      taxAmount: 59.80,
-      totalAmount: 358.80,
-      currency: 'USD',
-      paymentMethod: 'Credit Card',
-      paidDate: '2024-01-18',
-      items: [
-        {
-          id: '1',
-          description: 'Enterprise Plan - Monthly Subscription',
-          quantity: 1,
-          unitPrice: 299.00,
-          total: 299.00,
-          taxRate: 20
-        }
-      ],
-      notes: 'Thank you for your business!',
-      remindersSent: 0,
-      subscriptionId: 'sub_123'
-    },
-    {
-      id: '2',
-      invoiceNumber: 'INV-2024-002',
-      tenantId: 'tenant_456',
-      tenantName: 'XYZ Solutions',
-      tenantEmail: 'finance@xyzsolutions.com',
-      tenantAddress: '456 Tech Ave, San Francisco, CA 94105',
-      issueDate: '2024-01-20',
-      dueDate: '2024-02-19',
-      status: 'sent',
-      amount: 99.00,
-      taxAmount: 19.80,
-      totalAmount: 118.80,
-      currency: 'USD',
-      items: [
-        {
-          id: '1',
-          description: 'Standard Plan - Monthly Subscription',
-          quantity: 1,
-          unitPrice: 99.00,
-          total: 99.00,
-          taxRate: 20
-        }
-      ],
-      remindersSent: 1,
-      lastReminderDate: '2024-02-10',
-      subscriptionId: 'sub_456'
-    },
-    {
-      id: '3',
-      invoiceNumber: 'INV-2024-003',
-      tenantId: 'tenant_789',
-      tenantName: 'Tech Agency',
-      tenantEmail: 'accounting@techagency.com',
-      tenantAddress: '789 Innovation Blvd, Austin, TX 73301',
-      issueDate: '2024-01-10',
-      dueDate: '2024-01-25',
-      status: 'overdue',
-      amount: 199.00,
-      taxAmount: 39.80,
-      totalAmount: 238.80,
-      currency: 'USD',
-      items: [
-        {
-          id: '1',
-          description: 'Premium Plan - Monthly Subscription',
-          quantity: 1,
-          unitPrice: 199.00,
-          total: 199.00,
-          taxRate: 20
-        }
-      ],
-      remindersSent: 3,
-      lastReminderDate: '2024-01-30',
-      subscriptionId: 'sub_789'
-    },
-    {
-      id: '4',
-      invoiceNumber: 'INV-2024-004',
-      tenantId: 'tenant_012',
-      tenantName: 'StartupCo',
-      tenantEmail: 'billing@startupco.com',
-      tenantAddress: '012 Startup Way, Seattle, WA 98101',
-      issueDate: '2024-01-25',
-      dueDate: '2024-02-24',
-      status: 'draft',
-      amount: 29.00,
-      taxAmount: 5.80,
-      totalAmount: 34.80,
-      currency: 'USD',
-      items: [
-        {
-          id: '1',
-          description: 'Basic Plan - Monthly Subscription',
-          quantity: 1,
-          unitPrice: 29.00,
-          total: 29.00,
-          taxRate: 20
-        }
-      ],
-      remindersSent: 0,
-      subscriptionId: 'sub_012'
-    },
-    {
-      id: '5',
-      invoiceNumber: 'INV-2024-005',
-      tenantId: 'tenant_345',
-      tenantName: 'Digital Solutions',
-      tenantEmail: 'finance@digitalsolutions.com',
-      tenantAddress: '345 Digital St, Boston, MA 02101',
-      issueDate: '2024-01-05',
-      dueDate: '2024-01-20',
-      status: 'refunded',
-      amount: 299.00,
-      taxAmount: 59.80,
-      totalAmount: 358.80,
-      currency: 'USD',
-      paymentMethod: 'Bank Transfer',
-      paidDate: '2024-01-08',
-      items: [
-        {
-          id: '1',
-          description: 'Enterprise Plan - Monthly Subscription',
-          quantity: 1,
-          unitPrice: 299.00,
-          total: 299.00,
-          taxRate: 20
-        }
-      ],
-      remindersSent: 0,
-      notes: 'Refunded due to service cancellation',
-      subscriptionId: 'sub_345'
-    }
-  ]);
+  // API Data States
+  const [invoices, setInvoices] = useState<InvoiceDto[]>([]);
+  const [statistics, setStatistics] = useState<InvoiceStatisticsDto | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [stats] = useState<InvoiceStats>({
-    totalInvoices: 156,
-    paidInvoices: 128,
-    overdueInvoices: 8,
-    totalRevenue: 45620,
-    outstandingAmount: 3240,
-    averagePaymentTime: 12.5,
-    collectionRate: 94.2,
-    monthlyGrowth: 8.7
-  });
+  // Load invoices from API
+  const loadInvoices = async () => {
+    setLoading(true);
+    try {
+      const [invoicesData, statsData] = await Promise.all([
+        invoiceService.getAll({
+          pageNumber,
+          pageSize,
+          status: statusFilter,
+          searchTerm: searchTerm || undefined,
+        }),
+        invoiceService.getStatistics()
+      ]);
+
+      setInvoices(invoicesData.items || invoicesData);
+      setTotalCount(invoicesData.totalCount || 0);
+      setStatistics(statsData);
+    } catch (error) {
+      message.error('Faturalar yüklenirken hata oluştu');
+      console.error('Failed to load invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on mount and when filters change
+  useEffect(() => {
+    loadInvoices();
+  }, [pageNumber, pageSize, statusFilter, searchTerm]);
+
+  // Map statistics from API
+  const stats: InvoiceStats = {
+    totalInvoices: statistics?.totalInvoices || 0,
+    paidInvoices: statistics?.paidInvoices || 0,
+    overdueInvoices: statistics?.overdueInvoices || 0,
+    totalRevenue: statistics?.totalRevenue || 0,
+    outstandingAmount: statistics?.outstandingAmount || 0,
+    averagePaymentTime: statistics?.averagePaymentDays || 0,
+    collectionRate: statistics?.collectionRate || 0,
+    monthlyGrowth: statistics?.monthlyGrowth || 0
+  };
 
   // Chart data
   const revenueData = [
@@ -354,57 +249,54 @@ const InvoicesPage: React.FC = () => {
     }
   };
 
-  const handleSendInvoice = (invoiceId: string) => {
-    setInvoices(prev => prev.map(inv => 
-      inv.id === invoiceId 
-        ? { ...inv, status: 'sent' as any }
-        : inv
-    ));
-    message.success('Fatura gönderildi');
+  const handleSendInvoice = async (invoiceId: string) => {
+    try {
+      await invoiceService.send(invoiceId);
+      message.success('Fatura gönderildi');
+      await loadInvoices();
+    } catch (error) {
+      message.error('Fatura gönderilemedi');
+      console.error('Failed to send invoice:', error);
+    }
   };
 
-  const handleMarkAsPaid = (invoiceId: string) => {
-    setInvoices(prev => prev.map(inv => 
-      inv.id === invoiceId 
-        ? { 
-            ...inv, 
-            status: 'paid' as any, 
-            paidDate: dayjs().format('YYYY-MM-DD'),
-            paymentMethod: 'Manual Entry'
-          }
-        : inv
-    ));
-    message.success('Fatura ödenmiş olarak işaretlendi');
+  const handleMarkAsPaid = async (invoiceId: string) => {
+    try {
+      await invoiceService.markAsPaid(invoiceId, {
+        paidDate: dayjs().toISOString(),
+        paymentMethod: 'Manual Entry'
+      });
+      message.success('Fatura ödenmiş olarak işaretlendi');
+      await loadInvoices();
+    } catch (error) {
+      message.error('Fatura güncellenemedi');
+      console.error('Failed to mark as paid:', error);
+    }
   };
 
-  const handleSendReminder = (invoiceId: string) => {
-    setInvoices(prev => prev.map(inv => 
-      inv.id === invoiceId 
-        ? { 
-            ...inv, 
-            remindersSent: inv.remindersSent + 1,
-            lastReminderDate: dayjs().format('YYYY-MM-DD')
-          }
-        : inv
-    ));
-    message.success('Hatırlatma gönderildi');
+  const handleSendReminder = async (invoiceId: string) => {
+    try {
+      await invoiceService.sendReminder(invoiceId);
+      message.success('Hatırlatma gönderildi');
+      await loadInvoices();
+    } catch (error) {
+      message.error('Hatırlatma gönderilemedi');
+      console.error('Failed to send reminder:', error);
+    }
   };
 
-  const handleCreate = () => {
-    form.validateFields().then(values => {
-      const newInvoice: Invoice = {
-        id: Date.now().toString(),
-        invoiceNumber: `INV-2024-${String(invoices.length + 6).padStart(3, '0')}`,
-        ...values,
-        status: 'draft',
-        remindersSent: 0,
-        items: values.items || []
-      };
-      setInvoices([newInvoice, ...invoices]);
+  const handleCreate = async () => {
+    try {
+      const values = await form.validateFields();
+      await invoiceService.create(values);
       message.success('Yeni fatura oluşturuldu');
       setModalVisible(false);
       form.resetFields();
-    });
+      await loadInvoices();
+    } catch (error) {
+      message.error('Fatura oluşturulamadı');
+      console.error('Failed to create invoice:', error);
+    }
   };
 
   const columns = [
@@ -420,7 +312,7 @@ const InvoicesPage: React.FC = () => {
       title: 'Müşteri',
       dataIndex: 'tenantName',
       key: 'tenantName',
-      render: (text: string, record: Invoice) => (
+      render: (text: string, record: InvoiceDto) => (
         <Space>
           <Avatar size="small" style={{ backgroundColor: '#667eea' }}>
             {text.charAt(0)}
@@ -439,7 +331,7 @@ const InvoicesPage: React.FC = () => {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string, record: Invoice) => (
+      render: (status: string, record: InvoiceDto) => (
         <Space direction="vertical" size={0}>
           <Badge
             status={status === 'paid' ? 'success' :
@@ -461,7 +353,7 @@ const InvoicesPage: React.FC = () => {
       title: 'Tutar',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      render: (amount: number, record: Invoice) => (
+      render: (amount: number, record: InvoiceDto) => (
         <Space direction="vertical" size={0}>
           <Text strong>${amount.toFixed(2)}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -480,7 +372,7 @@ const InvoicesPage: React.FC = () => {
       title: 'Vade Tarihi',
       dataIndex: 'dueDate',
       key: 'dueDate',
-      render: (date: string, record: Invoice) => (
+      render: (date: string, record: InvoiceDto) => (
         <Space direction="vertical" size={0}>
           <Text>{dayjs(date).format('DD.MM.YYYY')}</Text>
           {record.status !== 'paid' && dayjs().isAfter(dayjs(date)) && (
@@ -502,7 +394,7 @@ const InvoicesPage: React.FC = () => {
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_: any, record: Invoice) => (
+      render: (_: any, record: InvoiceDto) => (
         <Space>
           <Button
             size="small"
