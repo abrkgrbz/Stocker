@@ -189,11 +189,12 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             {
                 _logger.LogInformation("Queuing verification email for {Email}", request.Email);
                 _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
-                    job.SendVerificationEmailAsync(
+                    job.SendTenantVerificationEmailAsync(
                         request.Email,
+                        emailVerificationToken.OtpCode,
                         emailVerificationToken.Token,
                         $"{request.FirstName} {request.LastName}"));
-                _logger.LogInformation("Verification email queued successfully for {Email}", request.Email);
+                _logger.LogInformation("Verification email with OTP code queued successfully for {Email}", request.Email);
             }
             catch (Exception emailEx)
             {

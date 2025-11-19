@@ -5,6 +5,7 @@ namespace Stocker.Domain.Master.ValueObjects;
 public sealed class EmailVerificationToken : ValueObject
 {
     public string Token { get; private set; }
+    public string OtpCode { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public bool IsUsed { get; private set; }
@@ -14,11 +15,13 @@ public sealed class EmailVerificationToken : ValueObject
     private EmailVerificationToken()
     {
         Token = string.Empty;
+        OtpCode = string.Empty;
     }
 
-    private EmailVerificationToken(string token, DateTime expiresAt)
+    private EmailVerificationToken(string token, string otpCode, DateTime expiresAt)
     {
         Token = token;
+        OtpCode = otpCode;
         ExpiresAt = expiresAt;
         CreatedAt = DateTime.UtcNow;
         IsUsed = false;
@@ -27,8 +30,9 @@ public sealed class EmailVerificationToken : ValueObject
     public static EmailVerificationToken Create(int expirationHours = 24)
     {
         var token = GenerateToken();
+        var otpCode = GenerateOtpCode();
         var expiresAt = DateTime.UtcNow.AddHours(expirationHours);
-        return new EmailVerificationToken(token, expiresAt);
+        return new EmailVerificationToken(token, otpCode, expiresAt);
     }
 
     public bool IsValid()
@@ -61,8 +65,21 @@ public sealed class EmailVerificationToken : ValueObject
             .TrimEnd('=');
     }
 
+    private static string GenerateOtpCode()
+    {
+        // Use cryptographically secure random number generator
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[4];
+        rng.GetBytes(bytes);
+        var number = BitConverter.ToUInt32(bytes, 0);
+        // Generate 6-digit code between 100000-999999
+        var code = (number % 900000) + 100000;
+        return code.ToString();
+    }
+
     public override IEnumerable<object> GetEqualityComponents()
     {
         yield return Token;
+        yield return OtpCode;
     }
 }

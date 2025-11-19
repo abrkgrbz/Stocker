@@ -97,16 +97,20 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
             token.Property(t => t.Token)
                 .HasMaxLength(500)
                 .HasColumnName("EmailVerificationToken");
-            
+
+            token.Property(t => t.OtpCode)
+                .HasMaxLength(10)
+                .HasColumnName("EmailVerificationOtpCode");
+
             token.Property(t => t.ExpiresAt)
                 .HasColumnName("EmailVerificationTokenExpiresAt");
-            
+
             token.Property(t => t.CreatedAt)
                 .HasColumnName("EmailVerificationTokenCreatedAt");
-            
+
             token.Property(t => t.IsUsed)
                 .HasColumnName("EmailVerificationTokenIsUsed");
-            
+
             token.Property(t => t.UsedAt)
                 .HasColumnName("EmailVerificationTokenUsedAt");
         });
