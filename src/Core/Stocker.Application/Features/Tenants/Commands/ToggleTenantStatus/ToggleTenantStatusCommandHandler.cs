@@ -28,21 +28,15 @@ public class ToggleTenantStatusCommandHandler : IRequestHandler<ToggleTenantStat
             return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found"));
         }
 
-        // Toggle the status
-        // TODO: Implement status toggle method in Tenant entity
-        // tenant.ToggleStatus();
-        
-        _logger.LogWarning("Tenant status toggle functionality needs to be implemented in domain entity");
-        
-        // For now, returning current status
-        var currentStatus = tenant.IsActive;
-        
+        // Toggle the status using the domain method
+        var newStatus = tenant.ToggleStatus();
+
         _unitOfWork.Tenants().Update(tenant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogWarning("Tenant {TenantId} status change attempted by {ModifiedBy}", 
-            request.Id, request.ModifiedBy);
+        _logger.LogWarning("Tenant {TenantId} status toggled to {Status} by {ModifiedBy}",
+            request.Id, newStatus ? "Active" : "Inactive", request.ModifiedBy);
 
-        return Result.Success(currentStatus);
+        return Result.Success(newStatus);
     }
 }

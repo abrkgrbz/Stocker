@@ -136,6 +136,20 @@ public sealed class Tenant : AggregateRoot
         RaiseDomainEvent(new TenantDeactivatedDomainEvent(Id));
     }
 
+    public bool ToggleStatus()
+    {
+        if (IsActive)
+        {
+            Deactivate();
+        }
+        else
+        {
+            IsActive = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+        return IsActive;
+    }
+
     public void UpdateInfo(string name, string? description, string? logoUrl, Email contactEmail, PhoneNumber? contactPhone)
     {
         Name = name;

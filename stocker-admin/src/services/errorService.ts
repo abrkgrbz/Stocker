@@ -237,7 +237,7 @@ class ErrorService {
     
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🚨 ${error.severity.toUpperCase()} Error`);
+      console.group(`🚨 ${error.severity?.toUpperCase() || 'UNKNOWN'} Error`);
       console.error('Code:', error.code);
       console.error('Message:', error.message);
       console.error('Category:', error.category);

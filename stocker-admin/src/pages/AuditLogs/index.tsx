@@ -1080,7 +1080,7 @@ const AuditLogsPage: React.FC = () => {
         title="Log Detayları"
         placement="right"
         width={600}
-        visible={detailDrawerVisible}
+        open={detailDrawerVisible}
         onClose={() => setDetailDrawerVisible(false)}
       >
         {selectedLog && (
@@ -1217,7 +1217,7 @@ const AuditLogsPage: React.FC = () => {
       {/* Export Modal */}
       <Modal
         title="Audit Loglarını Dışa Aktar"
-        visible={exportModalVisible}
+        open={exportModalVisible}
         onOk={handleExport}
         onCancel={() => setExportModalVisible(false)}
         width={600}
@@ -1269,7 +1269,7 @@ const AuditLogsPage: React.FC = () => {
       {/* Filter Modal */}
       <Modal
         title="Gelişmiş Filtreler"
-        visible={filterModalVisible}
+        open={filterModalVisible}
         onOk={handleFilter}
         onCancel={() => setFilterModalVisible(false)}
         width={700}

@@ -62,10 +62,11 @@ import {
   CloudUploadOutlined,
   LineChartOutlined,
   LinkOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
-import { tenantService, type Tenant } from '../../services/tenantService';
+import { tenantService, type TenantDto as Tenant } from '../../services/api/tenantService';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -89,7 +90,9 @@ const TenantDetails: React.FC = () => {
   const fetchTenantData = async () => {
     try {
       setLoading(true);
-      const data = await tenantService.getTenantById(id!);
+      const data = await tenantService.getById(id!);
+      console.log('📊 Tenant Data Response:', data);
+      console.log('🔄 isActive status:', data.isActive);
       setTenant(data);
     } catch (error: any) {
       message.error(error?.message || 'Tenant bilgileri yüklenemedi');
@@ -102,24 +105,29 @@ const TenantDetails: React.FC = () => {
   const handleEdit = () => {
     if (!tenant) return;
 
+    if (!tenant) return;
+
     form.setFieldsValue({
       ...tenant,
-      subscriptionEndDate: tenant.subscriptionEndDate ? dayjs(tenant.subscriptionEndDate) : null,
+      subscriptionEndDate: tenant?.subscriptionEndDate ? dayjs(tenant.subscriptionEndDate) : null,
     });
     setEditMode(true);
   };
 
   const handleSave = async () => {
-    if (!tenant) return;
+    if (!tenant?.id) return;
 
     try {
       const values = await form.validateFields();
       setLoading(true);
 
       // Call real API
-      await tenantService.updateTenant(tenant.id, {
-        ...values,
-        subscriptionEndDate: values.subscriptionEndDate?.format('YYYY-MM-DD'),
+      await tenantService.update(tenant.id, {
+        name: values.name,
+        domain: values.domain,
+        contactEmail: values.contactEmail,
+        contactPhone: values.contactPhone,
+        isActive: tenant.isActive,
       });
 
       await Swal.fire({
@@ -146,7 +154,7 @@ const TenantDetails: React.FC = () => {
   };
 
   const handleStatusChange = async (status: string) => {
-    if (!tenant) return;
+    if (!tenant?.id) return;
 
     const statusMessages = {
       active: 'aktifleştirmek',
@@ -154,29 +162,47 @@ const TenantDetails: React.FC = () => {
       inactive: 'devre dışı bırakmak',
     };
 
+    const warningTexts = {
+      active: `${tenant?.name || 'Tenant'} tekrar aktifleştirilecek ve kullanıcılar giriş yapabilecek.`,
+      suspended: `${tenant?.name || 'Tenant'} askıya alınacak. Tüm kullanıcılar sistemden çıkarılacak ve subdomain erişimi engellenecek.`,
+      inactive: `${tenant?.name || 'Tenant'} tamamen devre dışı bırakılacak.`,
+    };
+
     const result = await Swal.fire({
       title: 'Durum Değişikliği',
-      text: `${tenant?.name || 'Tenant'}'ı ${statusMessages[status as keyof typeof statusMessages]} istediğinize emin misiniz?`,
+      html: `<p><strong>${warningTexts[status as keyof typeof warningTexts]}</strong></p>
+             <p style="color: #ff4d4f; margin-top: 10px;">Bu işlemi yapmak istediğinize emin misiniz?</p>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Evet',
+      confirmButtonText: 'Evet, Devam Et',
       cancelButtonText: 'İptal',
-      confirmButtonColor: '#667eea',
+      confirmButtonColor: status === 'suspended' ? '#ff4d4f' : '#667eea',
     });
 
     if (result.isConfirmed) {
       try {
         setLoading(true);
 
+        console.log('🔄 Status change requested:', { tenantId: tenant.id, newStatus: status });
+
         if (status === 'active') {
-          await tenantService.activateTenant(tenant.id);
+          const result = await tenantService.activate(tenant.id);
+          console.log('✅ Activate API response:', result);
         } else if (status === 'suspended') {
-          await tenantService.suspendTenant(tenant.id);
+          const result = await tenantService.suspend(tenant.id, {
+            reason: 'Admin panelden askıya alındı',
+          });
+          console.log('⏸️ Suspend API response:', result);
         }
 
         message.success('Tenant durumu güncellendi');
+
+        // Fetch updated data and log response
+        console.log('🔄 Fetching updated tenant data...');
         await fetchTenantData();
+        console.log('✅ Data refresh completed');
       } catch (error: any) {
+        console.error('❌ Status change failed:', error);
         message.error(error?.message || 'Durum değiştirilemedi');
       } finally {
         setLoading(false);
@@ -184,7 +210,7 @@ const TenantDetails: React.FC = () => {
     }
   };
 
-  const InfoCard = ({ title, value, icon, color }: any) => (
+  const InfoCard = ({ title, value, icon, color, progress }: any) => (
     <Card size="small">
       <Statistic
         title={title}
@@ -192,6 +218,15 @@ const TenantDetails: React.FC = () => {
         prefix={icon}
         valueStyle={{ color }}
       />
+      {progress !== undefined && (
+        <Progress
+          percent={progress}
+          strokeColor={color}
+          size="small"
+          showInfo={false}
+          style={{ marginTop: 8 }}
+        />
+      )}
     </Card>
   );
 
@@ -282,7 +317,7 @@ const TenantDetails: React.FC = () => {
       }}
     >
       {/* Status Alert */}
-      {tenant.status === 'suspended' && (
+      {tenant && !tenant.isActive && (
         <Alert
           message="Tenant Askıda"
           description="Bu tenant şu anda askıya alınmış durumda. Hizmetler devre dışı."
@@ -308,31 +343,33 @@ const TenantDetails: React.FC = () => {
             <Col xs={24} sm={12} lg={6}>
               <InfoCard
                 title="Durum"
-                value={tenant.status === 'active' ? 'Aktif' : 'Askıda'}
+                value={tenant?.isActive ? 'Aktif' : 'Askıda'}
                 icon={<CheckCircleOutlined />}
-                color={tenant.status === 'active' ? '#52c41a' : '#faad14'}
+                color={tenant?.isActive ? '#52c41a' : '#faad14'}
               />
             </Col>
         <Col xs={24} sm={12} lg={6}>
           <InfoCard
             title="Kullanıcılar"
-            value={`${tenant.users} / ${tenant.maxUsers}`}
+            value={`${tenant?.users || 0} / ${tenant?.maxUsers || 0}`}
             icon={<TeamOutlined />}
             color="#1890ff"
+            progress={Math.round(((tenant?.users || 0) / (tenant?.maxUsers || 1)) * 100)}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <InfoCard
             title="Depolama"
-            value={`${tenant.storage} GB`}
+            value={`${tenant?.storage || 0} GB`}
             icon={<CloudServerOutlined />}
             color="#722ed1"
+            progress={Math.round(((tenant?.storage || 0) / (tenant?.maxStorage || 1)) * 100)}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <InfoCard
             title="Aylık Ücret"
-            value={`₺${tenant.billing.amount.toLocaleString()}`}
+            value={`₺${tenant?.billing?.amount?.toLocaleString() || '0'}`}
             icon={<DollarOutlined />}
             color="#667eea"
           />
@@ -435,51 +472,104 @@ const TenantDetails: React.FC = () => {
               <Col span={16}>
                 <Card title="Tenant Bilgileri">
                   <Descriptions bordered column={2}>
-                    <Descriptions.Item label="Tenant ID">{tenant.id}</Descriptions.Item>
-                    <Descriptions.Item label="Tenant Adı">{tenant.name}</Descriptions.Item>
+                    <Descriptions.Item label="Tenant ID">
+                      <Space>
+                        <Typography.Text code copyable={{ text: tenant?.id || '', tooltips: ['Kopyala', 'Kopyalandı!'] }}>
+                          {tenant?.id || '-'}
+                        </Typography.Text>
+                      </Space>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Tenant Adı">{tenant?.name || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Subdomain">
-                      <a href={`https://${tenant.subdomain}.stocker.app`} target="_blank">
-                        {tenant.subdomain}.stocker.app
-                      </a>
+                      {tenant?.subdomain ? (
+                        <a href={`https://${tenant.subdomain}.stocker.app`} target="_blank" rel="noopener noreferrer">
+                          <Space>
+                            {tenant.subdomain}.stocker.app
+                            <ExportOutlined style={{ fontSize: 12 }} />
+                          </Space>
+                        </a>
+                      ) : '-'}
                     </Descriptions.Item>
                     <Descriptions.Item label="Özel Domain">
-                      {tenant.customDomain ? (
-                        <a href={`https://${tenant.customDomain}`} target="_blank">
-                          {tenant.customDomain}
+                      {tenant?.customDomain ? (
+                        <a href={`https://${tenant.customDomain}`} target="_blank" rel="noopener noreferrer">
+                          <Space>
+                            {tenant.customDomain}
+                            <ExportOutlined style={{ fontSize: 12 }} />
+                          </Space>
                         </a>
                       ) : (
                         '-'
                       )}
                     </Descriptions.Item>
                     <Descriptions.Item label="Paket">
-                      <Tag color="purple">{tenant.package.toUpperCase()}</Tag>
+                      <Tag color="purple">{tenant?.package?.toUpperCase() || '-'}</Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="Durum">
-                      <Badge status="success" text="Aktif" />
+                      <Badge
+                        status={tenant?.isActive ? "success" : "error"}
+                        text={tenant?.isActive ? "Aktif" : "Pasif"}
+                      />
                     </Descriptions.Item>
-                    <Descriptions.Item label="Oluşturulma">{tenant.createdAt}</Descriptions.Item>
-                    <Descriptions.Item label="Bitiş Tarihi">{tenant.expiresAt}</Descriptions.Item>
-                    <Descriptions.Item label="Son Aktivite">{tenant.lastActive}</Descriptions.Item>
-                    <Descriptions.Item label="Veritabanı Bölgesi">{tenant.database.region}</Descriptions.Item>
+                    <Descriptions.Item label="Oluşturulma">
+                      {tenant?.createdAt ? dayjs(tenant.createdAt).format('DD MMMM YYYY, HH:mm') : '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Bitiş Tarihi">
+                      {tenant?.expiresAt ? dayjs(tenant.expiresAt).format('DD MMMM YYYY') : '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Son Aktivite">
+                      {tenant?.lastActive ? dayjs(tenant.lastActive).format('DD MMMM YYYY, HH:mm') : '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Veritabanı Bölgesi">{tenant?.database?.region || '-'}</Descriptions.Item>
                   </Descriptions>
                 </Card>
               </Col>
               <Col span={8}>
-                <Card title="Hızlı İşlemler">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Button icon={<KeyOutlined />} block onClick={() => navigate(`/tenants/${id}/api-keys`)}>
+                <Card title="Hızlı İşlemler" size="small">
+                  <Space direction="vertical" style={{ width: '100%' }} size={2}>
+                    <Button
+                      type="text"
+                      icon={<KeyOutlined />}
+                      block
+                      onClick={() => navigate(`/tenants/${id}/api-keys`)}
+                      style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    >
                       API Anahtarları
                     </Button>
-                    <Button icon={<DatabaseOutlined />} block onClick={() => navigate(`/tenants/${id}/backup-restore`)}>
+                    <Button
+                      type="text"
+                      icon={<DatabaseOutlined />}
+                      block
+                      onClick={() => navigate(`/tenants/${id}/backup-restore`)}
+                      style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    >
                       Yedekleme & Geri Yükleme
                     </Button>
-                    <Button icon={<FileTextOutlined />} block onClick={() => navigate(`/tenants/${id}/billing`)}>
+                    <Button
+                      type="text"
+                      icon={<FileTextOutlined />}
+                      block
+                      onClick={() => navigate(`/tenants/${id}/billing`)}
+                      style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    >
                       Faturalar
                     </Button>
-                    <Button icon={<HistoryOutlined />} block onClick={() => navigate(`/tenants/${id}/activity-logs`)}>
+                    <Button
+                      type="text"
+                      icon={<HistoryOutlined />}
+                      block
+                      onClick={() => navigate(`/tenants/${id}/activity-logs`)}
+                      style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    >
                       Aktivite Logları
                     </Button>
-                    <Button icon={<SafetyOutlined />} block onClick={() => navigate(`/tenants/${id}/security`)}>
+                    <Button
+                      type="text"
+                      icon={<SafetyOutlined />}
+                      block
+                      onClick={() => navigate(`/tenants/${id}/security`)}
+                      style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    >
                       Güvenlik Ayarları
                     </Button>
                   </Space>
@@ -487,110 +577,6 @@ const TenantDetails: React.FC = () => {
               </Col>
             </Row>
 
-            {/* Tüm Yönetim Sayfaları Kartları */}
-            <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-              <Col span={24}>
-                <Title level={4}>Tenant Yönetimi</Title>
-              </Col>
-              
-              {/* İlk Satır */}
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/settings`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <SettingOutlined style={{ fontSize: 32, color: '#1890ff' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Ayarlar</Title>
-                  <Text type="secondary">Genel, e-posta, güvenlik ayarları</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/users`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <UserOutlined style={{ fontSize: 32, color: '#52c41a' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Kullanıcılar</Title>
-                  <Text type="secondary">Kullanıcı yönetimi ve roller</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/analytics`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <LineChartOutlined style={{ fontSize: 32, color: '#722ed1' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Analitik</Title>
-                  <Text type="secondary">Trafik ve kullanım raporları</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/integrations`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <ApiOutlined style={{ fontSize: 32, color: '#fa8c16' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Entegrasyonlar</Title>
-                  <Text type="secondary">3. parti servis bağlantıları</Text>
-                </Card>
-              </Col>
-              
-              {/* İkinci Satır */}
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/webhooks`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <LinkOutlined style={{ fontSize: 32, color: '#13c2c2' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Webhook'lar</Title>
-                  <Text type="secondary">Event yönetimi ve loglar</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/health`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <HeartOutlined style={{ fontSize: 32, color: '#ff4d4f' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Sistem Sağlığı</Title>
-                  <Text type="secondary">Performans ve metrikler</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/domains`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <GlobalOutlined style={{ fontSize: 32, color: '#2f54eb' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Domain'ler</Title>
-                  <Text type="secondary">Domain yönetimi</Text>
-                </Card>
-              </Col>
-              
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Card 
-                  hoverable 
-                  onClick={() => navigate(`/tenants/${id}/migrations`)}
-                  style={{ textAlign: 'center', cursor: 'pointer' }}
-                >
-                  <CloudUploadOutlined style={{ fontSize: 32, color: '#eb2f96' }} />
-                  <Title level={5} style={{ marginTop: 8 }}>Migrasyonlar</Title>
-                  <Text type="secondary">Veritabanı migrasyonları</Text>
-                </Card>
-              </Col>
-            </Row>
           </TabPane>
 
           <TabPane tab="Sahip & Şirket" key="owner">
@@ -599,19 +585,19 @@ const TenantDetails: React.FC = () => {
                 <Card title="Sahip Bilgileri">
                   <Descriptions bordered column={1}>
                     <Descriptions.Item label="Ad Soyad">
-                      {tenant.owner.firstName} {tenant.owner.lastName}
+                      {tenant?.owner?.firstName || '-'} {tenant?.owner?.lastName || ''}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Ünvan">{tenant.owner.title}</Descriptions.Item>
+                    <Descriptions.Item label="Ünvan">{tenant?.owner?.title || '-'}</Descriptions.Item>
                     <Descriptions.Item label="E-posta">
                       <Space>
                         <MailOutlined />
-                        {tenant.owner.email}
+                        {tenant?.owner?.email || '-'}
                       </Space>
                     </Descriptions.Item>
                     <Descriptions.Item label="Telefon">
                       <Space>
                         <PhoneOutlined />
-                        {tenant.owner.phone}
+                        {tenant?.owner?.phone || '-'}
                       </Space>
                     </Descriptions.Item>
                   </Descriptions>
@@ -620,14 +606,14 @@ const TenantDetails: React.FC = () => {
               <Col span={12}>
                 <Card title="Şirket Bilgileri">
                   <Descriptions bordered column={1}>
-                    <Descriptions.Item label="Şirket Adı">{tenant.company.name}</Descriptions.Item>
-                    <Descriptions.Item label="Vergi No">{tenant.company.taxNumber}</Descriptions.Item>
+                    <Descriptions.Item label="Şirket Adı">{tenant?.company?.name || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Vergi No">{tenant?.company?.taxNumber || '-'}</Descriptions.Item>
                     <Descriptions.Item label="Adres">
-                      {tenant.company.address}
+                      {tenant?.company?.address || '-'}
                       <br />
-                      {tenant.company.postalCode} {tenant.company.city}
+                      {tenant?.company?.postalCode || ''} {tenant?.company?.city || ''}
                       <br />
-                      {tenant.company.country}
+                      {tenant?.company?.country || ''}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -643,32 +629,32 @@ const TenantDetails: React.FC = () => {
                     <Col span={12}>
                       <LimitCard
                         title="API Çağrıları"
-                        used={tenant.limits.apiCalls.used}
-                        max={tenant.limits.apiCalls.max}
+                        used={tenant?.limits?.apiCalls?.used || 0}
+                        max={tenant?.limits?.apiCalls?.max || 0}
                         unit="çağrı"
                       />
                     </Col>
                     <Col span={12}>
                       <LimitCard
                         title="Bant Genişliği"
-                        used={tenant.limits.bandwidth.used}
-                        max={tenant.limits.bandwidth.max}
+                        used={tenant?.limits?.bandwidth?.used || 0}
+                        max={tenant?.limits?.bandwidth?.max || 0}
                         unit="GB"
                       />
                     </Col>
                     <Col span={12}>
                       <LimitCard
                         title="E-posta Gönderimi"
-                        used={tenant.limits.emailsSent.used}
-                        max={tenant.limits.emailsSent.max}
+                        used={tenant?.limits?.emailsSent?.used || 0}
+                        max={tenant?.limits?.emailsSent?.max || 0}
                         unit="e-posta"
                       />
                     </Col>
                     <Col span={12}>
                       <LimitCard
                         title="Özel Domain"
-                        used={tenant.limits.customDomains.used}
-                        max={tenant.limits.customDomains.max}
+                        used={tenant?.limits?.customDomains?.used || 0}
+                        max={tenant?.limits?.customDomains?.max || 0}
                         unit="domain"
                       />
                     </Col>
@@ -681,19 +667,19 @@ const TenantDetails: React.FC = () => {
                     <Col span={8}>
                       <Statistic
                         title="Kullanılan Alan"
-                        value={tenant.storage}
+                        value={tenant?.storage || 0}
                         suffix="GB"
                         prefix={<CloudServerOutlined />}
                       />
                       <Progress
-                        percent={Math.round((tenant.storage / tenant.maxStorage) * 100)}
+                        percent={Math.round(((tenant?.storage || 0) / (tenant?.maxStorage || 1)) * 100)}
                         strokeColor="#667eea"
                       />
                     </Col>
                     <Col span={8}>
                       <Statistic
                         title="Veritabanı Boyutu"
-                        value={tenant.database.size}
+                        value={tenant?.database?.size || 0}
                         suffix="GB"
                         prefix={<DatabaseOutlined />}
                       />

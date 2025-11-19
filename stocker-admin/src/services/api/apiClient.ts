@@ -411,12 +411,14 @@ class ApiClient {
 
   async post<T = any>(url: string, data?: any): Promise<T> {
     return rateLimiter.throttle(url, async () => {
-      const response = await this.client.post<ApiResponse<T>>(url, data);
-      
+      // If data is undefined or empty object, send null to avoid Content-Type issues
+      const requestData = data === undefined || (typeof data === 'object' && Object.keys(data).length === 0) ? null : data;
+      const response = await this.client.post<ApiResponse<T>>(url, requestData);
+
       if (!response.data.success) {
         throw new AppError(response.data.message || 'Request failed', ERROR_CODES.API_ERROR);
       }
-      
+
       return response.data.data as T;
     });
   }

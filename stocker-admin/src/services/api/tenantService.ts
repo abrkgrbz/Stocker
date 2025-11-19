@@ -124,7 +124,7 @@ class TenantService {
   }
 
   /**
-   * Activate or deactivate a tenant
+   * Activate or deactivate a tenant (toggle status)
    */
   async toggleStatus(id: string): Promise<boolean> {
     return apiClient.post<boolean>(`${this.basePath}/${id}/toggle-status`);
@@ -137,22 +137,24 @@ class TenantService {
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
     params.append('hardDelete', hardDelete.toString());
-    
+
     return apiClient.delete<boolean>(`${this.basePath}/${id}?${params.toString()}`);
   }
 
   /**
-   * Suspend a tenant
+   * Suspend a tenant (uses toggle-status)
    */
   async suspend(id: string, request: SuspendTenantRequest): Promise<boolean> {
-    return apiClient.post<boolean>(`${this.basePath}/${id}/suspend`, request);
+    // Backend only has toggle-status, not separate suspend endpoint
+    return this.toggleStatus(id);
   }
 
   /**
-   * Activate a suspended tenant
+   * Activate a tenant (uses toggle-status)
    */
   async activate(id: string): Promise<boolean> {
-    return apiClient.post<boolean>(`${this.basePath}/${id}/activate`);
+    // Backend only has toggle-status, not separate activate endpoint
+    return this.toggleStatus(id);
   }
 
   /**
