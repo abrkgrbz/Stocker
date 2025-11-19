@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Stocker.Application.Features.Identity.Queries.CheckEmail;
 
@@ -12,16 +10,16 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
 {
     private readonly ILogger<CheckEmailQueryHandler> _logger;
     private readonly IMasterDbContext _masterContext;
-    private readonly string _hmacSecret;
+    private readonly IHmacService _hmacService;
 
     public CheckEmailQueryHandler(
         ILogger<CheckEmailQueryHandler> logger,
         IMasterDbContext masterContext,
-        Microsoft.Extensions.Configuration.IConfiguration configuration)
+        IHmacService hmacService)
     {
         _logger = logger;
         _masterContext = masterContext;
-        _hmacSecret = configuration["Security:HmacSecret"] ?? throw new InvalidOperationException("HMAC secret not configured");
+        _hmacService = hmacService;
     }
 
     public async Task<Result<CheckEmailResponse>> Handle(CheckEmailQuery request, CancellationToken cancellationToken)
@@ -81,9 +79,6 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
 
     private string GenerateHmacSignature(string tenantCode, long timestamp)
     {
-        var message = $"{tenantCode}:{timestamp}";
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_hmacSecret));
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-        return Convert.ToBase64String(hash);
+        return _hmacService.GenerateTimestampedSignature(tenantCode, timestamp);
     }
 }
