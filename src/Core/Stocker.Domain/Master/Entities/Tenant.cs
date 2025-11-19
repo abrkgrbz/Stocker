@@ -144,8 +144,7 @@ public sealed class Tenant : AggregateRoot
         }
         else
         {
-            IsActive = true;
-            UpdatedAt = DateTime.UtcNow;
+            Activate();
         }
         return IsActive;
     }
