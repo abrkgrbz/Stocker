@@ -17,9 +17,8 @@ export default function DashboardScreen() {
 
     const fetchStats = async () => {
         try {
-            // Only fetch if user is master admin (assuming role check, but for now try fetching)
-            // If endpoint fails (e.g. 403), we'll catch it
-            const response = await apiService.master.getDashboardStats();
+            // Fetch tenant dashboard stats
+            const response = await apiService.tenant.getDashboardStats();
             if (response.data.success) {
                 setStats(response.data.data);
             }
@@ -79,15 +78,15 @@ export default function DashboardScreen() {
                             >
                                 <View style={styles.statHeader}>
                                     <View style={[styles.iconContainer, { backgroundColor: 'rgba(24, 144, 255, 0.2)' }]}>
-                                        <Ionicons name="business" size={20} color={colors.primary} />
+                                        <Ionicons name="cart" size={20} color={colors.primary} />
                                     </View>
                                     {isLoading ? (
                                         <ActivityIndicator size="small" color={colors.primary} />
                                     ) : (
-                                        <Text style={styles.statValue}>{stats?.totalTenants || 0}</Text>
+                                        <Text style={styles.statValue}>{stats?.totalOrders || 0}</Text>
                                     )}
                                 </View>
-                                <Text style={styles.statLabel}>Aktif Kiracı</Text>
+                                <Text style={styles.statLabel}>Toplam Sipariş</Text>
                             </LinearGradient>
 
                             <LinearGradient
@@ -101,10 +100,10 @@ export default function DashboardScreen() {
                                     {isLoading ? (
                                         <ActivityIndicator size="small" color={colors.success} />
                                     ) : (
-                                        <Text style={styles.statValue}>{stats?.totalUsers || 0}</Text>
+                                        <Text style={styles.statValue}>{stats?.totalCustomers || 0}</Text>
                                     )}
                                 </View>
-                                <Text style={styles.statLabel}>Toplam Kullanıcı</Text>
+                                <Text style={styles.statLabel}>Toplam Müşteri</Text>
                             </LinearGradient>
                         </View>
                     </Animated.View>

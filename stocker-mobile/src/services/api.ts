@@ -139,13 +139,19 @@ export const apiService = {
             api.get<ApiResponse>('/api/master/auth/me'),
     },
 
-    // Master endpoints (Subset for mobile)
+    // Master endpoints
     master: {
         getDashboardStats: () =>
             api.get<ApiResponse>('/api/master/dashboard/stats'),
 
         getTenants: (params?: any) =>
             api.get<ApiResponse>('/api/master/tenants', { params }),
+    },
+
+    // Tenant endpoints
+    tenant: {
+        getDashboardStats: () =>
+            api.get<ApiResponse>('/api/tenant/dashboard/stats'),
     },
 
     public: {
