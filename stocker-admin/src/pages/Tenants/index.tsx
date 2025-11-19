@@ -37,8 +37,7 @@ import {
   DollarOutlined,
   GlobalOutlined,
 } from '@ant-design/icons';
-import { useTenantStore } from '../../stores/tenantStore';
-import { TenantListDto } from '../../services/api/tenantService';
+import { tenantService, TenantListDto, TenantsStatisticsDto } from '../../services/api/tenantService';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -53,64 +52,94 @@ const TenantsPage: React.FC = () => {
   const [selectedTenant, setSelectedTenant] = useState<TenantListDto | null>(null);
   const [suspendForm] = Form.useForm();
 
-  const {
-    tenants,
-    loading,
-    totalCount,
-    pageNumber,
-    pageSize,
-    searchTerm,
-    statusFilter,
-    fetchTenants,
-    toggleTenantStatus,
-    deleteTenant,
-    suspendTenant,
-    activateTenant,
-    setSearchTerm,
-    setStatusFilter,
-    setPageNumber,
-    setPageSize,
-  } = useTenantStore();
+  // API Data States
+  const [tenants, setTenants] = useState<TenantListDto[]>([]);
+  const [statistics, setStatistics] = useState<TenantsStatisticsDto | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
+
+  // Load tenants from API
+  const fetchTenants = async () => {
+    setLoading(true);
+    try {
+      const [tenantsData, statsData] = await Promise.all([
+        tenantService.getAll({
+          searchTerm: searchTerm || undefined,
+          status: statusFilter,
+          pageNumber,
+          pageSize
+        }),
+        tenantService.getAllStatistics()
+      ]);
+
+      setTenants(Array.isArray(tenantsData) ? tenantsData : tenantsData.items || []);
+      setTotalCount(Array.isArray(tenantsData) ? tenantsData.length : tenantsData.totalCount || 0);
+      setStatistics(statsData);
+    } catch (error) {
+      message.error('Tenantlar yüklenirken hata oluştu');
+      console.error('Failed to load tenants:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchTenants();
-  }, []);
+  }, [pageNumber, pageSize, searchTerm, statusFilter]);
 
   const handleStatusToggle = async (id: string) => {
-    const success = await toggleTenantStatus(id);
-    if (success) {
+    try {
+      await tenantService.toggleStatus(id);
       message.success('Tenant durumu güncellendi');
+      await fetchTenants();
+    } catch (error) {
+      message.error('Durum güncellenemedi');
+      console.error('Failed to toggle tenant status:', error);
     }
   };
 
   const handleDelete = async (id: string, hardDelete: boolean = false) => {
-    const success = await deleteTenant(id, undefined, hardDelete);
-    if (success) {
+    try {
+      await tenantService.delete(id, undefined, hardDelete);
       message.success(hardDelete ? 'Tenant kalıcı olarak silindi' : 'Tenant pasif duruma alındı');
+      await fetchTenants();
+    } catch (error) {
+      message.error('Silme işlemi başarısız oldu');
+      console.error('Failed to delete tenant:', error);
     }
   };
 
-  const handleSuspend = () => {
-    suspendForm.validateFields().then(async (values) => {
+  const handleSuspend = async () => {
+    try {
+      const values = await suspendForm.validateFields();
       if (selectedTenant) {
-        const success = await suspendTenant(
-          selectedTenant.id,
-          values.reason,
-          values.suspendedUntil?.toISOString()
-        );
-        if (success) {
-          setSuspendModalVisible(false);
-          suspendForm.resetFields();
-          message.success('Tenant askıya alındı');
-        }
+        await tenantService.suspend(selectedTenant.id, {
+          reason: values.reason,
+          suspendedUntil: values.suspendedUntil?.toISOString()
+        });
+        setSuspendModalVisible(false);
+        suspendForm.resetFields();
+        message.success('Tenant askıya alındı');
+        await fetchTenants();
       }
-    });
+    } catch (error) {
+      message.error('Askıya alma işlemi başarısız oldu');
+      console.error('Failed to suspend tenant:', error);
+    }
   };
 
   const handleActivate = async (id: string) => {
-    const success = await activateTenant(id);
-    if (success) {
+    try {
+      await tenantService.activate(id);
       message.success('Tenant aktif edildi');
+      await fetchTenants();
+    } catch (error) {
+      message.error('Aktivasyon başarısız oldu');
+      console.error('Failed to activate tenant:', error);
     }
   };
 
@@ -287,28 +316,28 @@ const TenantsPage: React.FC = () => {
     },
   ];
 
-  const statistics = [
+  const statisticsCards = [
     {
       title: 'Toplam Tenant',
-      value: totalCount,
+      value: statistics?.totalTenants || totalCount,
       icon: <GlobalOutlined />,
       color: '#1890ff',
     },
     {
       title: 'Aktif Tenant',
-      value: tenants.filter(t => t.isActive).length,
+      value: statistics?.activeTenants || 0,
       icon: <CheckCircleOutlined />,
       color: '#52c41a',
     },
     {
-      title: 'Pasif Tenant',
-      value: tenants.filter(t => !t.isActive).length,
-      icon: <CloseCircleOutlined />,
-      color: '#ff4d4f',
+      title: 'Askıda Tenant',
+      value: statistics?.suspendedTenants || 0,
+      icon: <PauseCircleOutlined />,
+      color: '#faad14',
     },
     {
       title: 'Toplam Kullanıcı',
-      value: tenants.reduce((sum, t) => sum + t.userCount, 0),
+      value: statistics?.totalUsers || 0,
       icon: <UserOutlined />,
       color: '#722ed1',
     },
@@ -321,7 +350,7 @@ const TenantsPage: React.FC = () => {
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {statistics.map((stat, index) => (
+        {statisticsCards.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card>
               <Statistic
