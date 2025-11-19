@@ -736,7 +736,7 @@ public class TenantsController : MasterControllerBase
     /// Update tenant settings
     /// </summary>
     [HttpPut("{id}/settings")]
-    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> UpdateSettings(Guid id, [FromBody] UpdateTenantSettingsCommand command)
     {

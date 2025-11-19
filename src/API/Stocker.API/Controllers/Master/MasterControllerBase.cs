@@ -67,6 +67,48 @@ public abstract class MasterControllerBase : ControllerBase
             })
         };
     }
+
+    protected IActionResult HandleResult(Result result)
+    {
+        if (result.IsSuccess)
+        {
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+
+        return result.Error.Type switch
+        {
+            ErrorType.NotFound => NotFound(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = result.Error.Description,
+                Timestamp = DateTime.UtcNow
+            }),
+            ErrorType.Validation => BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = result.Error.Description,
+                Errors = new List<string> { result.Error.Description },
+                Timestamp = DateTime.UtcNow
+            }),
+            ErrorType.Conflict => Conflict(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = result.Error.Description,
+                Timestamp = DateTime.UtcNow
+            }),
+            _ => BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = result.Error.Description,
+                Timestamp = DateTime.UtcNow
+            })
+        };
+    }
 }
 
 public class ApiResponse<T>
