@@ -50,16 +50,26 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, Result<Ch
                 .ToListAsync(cancellationToken);
 
             // Get tenant details for these registrations
-            var tenants = await _masterContext.Tenants
+            var tenantList = await _masterContext.Tenants
                 .Where(t => tenantRegistrations.Contains(t.Id) && t.IsActive)
                 .OrderBy(t => t.Name)
-                .Select(t => new TenantInfo
+                .Select(t => new
                 {
-                    Code = t.Code,
-                    Name = t.Name,
-                    Domain = $"{t.Code}.stoocker.app"
+                    t.Code,
+                    t.Name
                 })
                 .ToListAsync(cancellationToken);
+
+            // Generate HMAC signature for all tenants (both web and mobile)
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var tenants = tenantList.Select(t => new TenantInfo
+            {
+                Code = t.Code,
+                Name = t.Name,
+                Domain = $"{t.Code}.stoocker.app",
+                Signature = GenerateHmacSignature(t.Code, timestamp),
+                Timestamp = timestamp
+            }).ToList();
 
             _logger.LogInformation("Email found: {Email} with {TenantCount} tenants", request.Email, tenants.Count);
 

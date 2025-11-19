@@ -19,4 +19,6 @@ public class TenantInfo
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Domain { get; set; } = string.Empty;
+    public string Signature { get; set; } = string.Empty;
+    public long Timestamp { get; set; }
 }
