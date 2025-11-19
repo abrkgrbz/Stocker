@@ -5,7 +5,6 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     Dimensions,
@@ -33,6 +32,7 @@ import Animated, {
     withSequence,
     Easing
 } from 'react-native-reanimated';
+import { Loading } from '../components/Loading';
 
 const { width } = Dimensions.get('window');
 
@@ -193,11 +193,7 @@ export default function LoginScreen({ navigation }: any) {
                 onPress={handleCheckEmail}
                 disabled={isLoading}
             >
-                {isLoading ? (
-                    <ActivityIndicator color="#0a1f2e" />
-                ) : (
-                    <Text style={styles.buttonText}>Devam Et</Text>
-                )}
+                <Text style={styles.buttonText}>Devam Et</Text>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -272,11 +268,7 @@ export default function LoginScreen({ navigation }: any) {
                 onPress={handleLogin}
                 disabled={isLoading}
             >
-                {isLoading ? (
-                    <ActivityIndicator color="#0a1f2e" />
-                ) : (
-                    <Text style={styles.buttonText}>Giriş Yap</Text>
-                )}
+                <Text style={styles.buttonText}>Giriş Yap</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -287,6 +279,7 @@ export default function LoginScreen({ navigation }: any) {
 
     return (
         <View style={styles.container}>
+            <Loading visible={isLoading} text="İşlem yapılıyor..." />
             {/* Background Elements */}
             <Animated.View style={[styles.bgGradientTop, blob1Style]} />
             <Animated.View style={[styles.bgGradientBottom, blob2Style]} />

@@ -72,16 +72,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-interface AnalyticsData {
-  totalUsers: number;
-  activeUsers: number;
-  totalRevenue: number;
-  monthlyGrowth: number;
-  tenantCount: number;
-  apiCalls: number;
-  avgResponseTime: number;
-  systemUptime: number;
-}
+// AnalyticsData interface removed - using API data types instead
 
 interface ChartData {
   date: string;
@@ -119,16 +110,7 @@ const AnalyticsPage: React.FC = () => {
   const [userData, setUserData] = useState<UserAnalytics | null>(null);
   const [performanceData, setPerformanceData] = useState<PerformanceAnalytics | null>(null);
 
-  const [analyticsData] = useState<AnalyticsData>({
-    totalUsers: 15420,
-    activeUsers: 8950,
-    totalRevenue: 125000,
-    monthlyGrowth: 12.5,
-    tenantCount: 234,
-    apiCalls: 1250000,
-    avgResponseTime: 245,
-    systemUptime: 99.97
-  });
+  // Remove mock data - will use API data only
 
   // Load analytics data
   useEffect(() => {
@@ -158,46 +140,18 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
-  // Chart data - converted from API data or fallback to mock
+  // Chart data - converted from API data
   const revenueChartData: ChartData[] = revenueData?.revenueByPeriod?.map(p => ({
     date: p.period,
     value: p.revenue
-  })) || [
-    { date: '2024-01-01', value: 98000 },
-    { date: '2024-01-02', value: 102000 },
-    { date: '2024-01-03', value: 105000 },
-    { date: '2024-01-04', value: 108000 },
-    { date: '2024-01-05', value: 112000 },
-    { date: '2024-01-06', value: 115000 },
-    { date: '2024-01-07', value: 118000 },
-    { date: '2024-01-08', value: 121000 },
-    { date: '2024-01-09', value: 125000 },
-  ];
+  })) || [];
 
   const userGrowthData: ChartData[] = userData?.userGrowth?.flatMap(ug => [
     { date: ug.period, value: ug.totalUsers, type: 'Toplam Kullanıcı' },
     { date: ug.period, value: ug.totalUsers - ug.churnedUsers, type: 'Aktif Kullanıcı' }
-  ]) || [
-    { date: '2024-01-01', value: 12500, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-02', value: 12650, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-03', value: 12800, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-04', value: 12950, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-05', value: 13100, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-06', value: 13250, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-07', value: 13400, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-08', value: 13550, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-09', value: 13700, type: 'Toplam Kullanıcı' },
-    { date: '2024-01-01', value: 8200, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-02', value: 8350, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-03', value: 8500, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-04', value: 8650, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-05', value: 8800, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-06', value: 8950, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-07', value: 9100, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-08', value: 9250, type: 'Aktif Kullanıcı' },
-    { date: '2024-01-09', value: 9400, type: 'Aktif Kullanıcı' },
-  ];
+  ]) || [];
 
+  // Device and location data from API (placeholder for future implementation)
   const deviceData = [
     { type: 'Desktop', value: 65.2 },
     { type: 'Mobile', value: 28.5 },
@@ -219,57 +173,10 @@ const AnalyticsPage: React.FC = () => {
     users: 0, // Not available from API
     growth: 0, // Not available from API
     status: 'active' as const
-  })) || [
-    {
-      id: '1',
-      name: 'ABC Corp',
-      revenue: 15000,
-      users: 450,
-      growth: 15.2,
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'XYZ Ltd',
-      revenue: 12500,
-      users: 380,
-      growth: 8.7,
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Tech Solutions',
-      revenue: 10800,
-      users: 320,
-      growth: -2.1,
-      status: 'active'
-    },
-    {
-      id: '4',
-      name: 'Digital Agency',
-      revenue: 9200,
-      users: 275,
-      growth: 22.3,
-      status: 'trial'
-    },
-    {
-      id: '5',
-      name: 'StartupCo',
-      revenue: 7500,
-      users: 198,
-      growth: 45.6,
-      status: 'active'
-    }
-  ];
+  })) || [];
 
-  const activityData: UserActivity[] = [
-    { hour: '00:00', desktop: 120, mobile: 80, tablet: 20 },
-    { hour: '04:00', desktop: 85, mobile: 60, tablet: 15 },
-    { hour: '08:00', desktop: 450, mobile: 200, tablet: 50 },
-    { hour: '12:00', desktop: 680, mobile: 350, tablet: 70 },
-    { hour: '16:00', desktop: 520, mobile: 280, tablet: 55 },
-    { hour: '20:00', desktop: 280, mobile: 180, tablet: 35 }
-  ];
+  // Activity data (placeholder - will be added to API in future)
+  const activityData: UserActivity[] = [];
 
   // Performance metrics - converted from API data
   const performanceChartData = performanceData?.responseTimeHistory?.map(rt => ({
@@ -403,7 +310,7 @@ const AnalyticsPage: React.FC = () => {
   };
 
   const gaugeConfig = {
-    percent: analyticsData.systemUptime / 100,
+    percent: (performanceData?.successRate || 99.97) / 100,
     range: {
       color: '#30BF78',
     },
@@ -425,7 +332,7 @@ const AnalyticsPage: React.FC = () => {
           fontSize: '36px',
           lineHeight: '36px',
         },
-        formatter: () => `${analyticsData.systemUptime}%`,
+        formatter: () => `${(performanceData?.successRate || 99.97).toFixed(2)}%`,
       },
     },
   };
@@ -512,13 +419,13 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Kullanıcı"
-              value={userData?.totalUsers || analyticsData.totalUsers}
+              value={userData?.totalUsers || 0}
               prefix={<UserOutlined />}
               suffix={
                 <Space>
                   <ArrowUpOutlined style={{ color: '#52c41a', fontSize: 12 }} />
                   <span style={{ color: '#52c41a', fontSize: 12 }}>
-                    +{(userData?.activationRate || 12.5).toFixed(1)}%
+                    +{(userData?.activationRate || 0).toFixed(1)}%
                   </span>
                 </Space>
               }
@@ -529,12 +436,12 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Aktif Kullanıcı"
-              value={userData?.activeUsers || analyticsData.activeUsers}
+              value={userData?.activeUsers || 0}
               prefix={<TeamOutlined />}
               valueStyle={{ color: '#1890ff' }}
               suffix={
                 <Progress
-                  percent={((userData?.activeUsers || analyticsData.activeUsers) / (userData?.totalUsers || analyticsData.totalUsers)) * 100}
+                  percent={userData?.totalUsers ? ((userData.activeUsers / userData.totalUsers) * 100) : 0}
                   size="small"
                   showInfo={false}
                   style={{ width: 60 }}
@@ -547,7 +454,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Gelir"
-              value={revenueData?.totalRevenue || analyticsData.totalRevenue}
+              value={revenueData?.totalRevenue || 0}
               prefix={<DollarOutlined />}
               precision={0}
               valueStyle={{ color: '#52c41a' }}
@@ -559,7 +466,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Sistem Çalışma Oranı"
-              value={performanceData?.successRate || analyticsData.systemUptime}
+              value={performanceData?.successRate || 0}
               precision={2}
               suffix="%"
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
@@ -575,7 +482,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Tenant Sayısı"
-              value={analyticsData.tenantCount}
+              value={userData?.tenantCount || 0}
               prefix={<GlobalOutlined />}
             />
           </Card>
@@ -584,7 +491,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="API Çağrıları"
-              value={performanceData?.totalRequests || analyticsData.apiCalls}
+              value={performanceData?.totalRequests || 0}
               prefix={<ApiOutlined />}
               suffix="/ay"
             />
@@ -594,10 +501,10 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Ortalama Yanıt Süresi"
-              value={performanceData?.averageResponseTime || analyticsData.avgResponseTime}
+              value={performanceData?.averageResponseTime || 0}
               prefix={<ClockCircleOutlined />}
               suffix="ms"
-              valueStyle={{ color: (performanceData?.averageResponseTime || analyticsData.avgResponseTime) < 300 ? '#52c41a' : '#faad14' }}
+              valueStyle={{ color: (performanceData?.averageResponseTime || 0) < 300 ? '#52c41a' : '#faad14' }}
             />
           </Card>
         </Col>
@@ -605,7 +512,7 @@ const AnalyticsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Aylık Büyüme"
-              value={revenueData?.growthRate || analyticsData.monthlyGrowth}
+              value={revenueData?.growthRate || 0}
               precision={1}
               suffix="%"
               prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
