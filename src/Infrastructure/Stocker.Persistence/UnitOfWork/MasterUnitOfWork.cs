@@ -24,7 +24,10 @@ public class MasterUnitOfWork : BaseUnitOfWork<MasterDbContext>, IMasterUnitOfWo
 
     public IReadRepository<T> ReadRepository<T>() where T : Entity<Guid>
     {
-        return (IReadRepository<T>)Repository<T>();
+        // Return the same repository instance but typed as IReadRepository
+        // IRepository<T> implements IReadRepository<T>, so this cast is valid
+        var repository = GetOrAddRepository<T>();
+        return (IReadRepository<T>)(object)repository;
     }
 
     #endregion
