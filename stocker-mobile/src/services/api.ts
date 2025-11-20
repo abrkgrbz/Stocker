@@ -114,6 +114,9 @@ export const apiService = {
         verifyEmail: (data: { email: string; code: string }) =>
             api.post<ApiResponse>('/api/auth/verify-email', data),
 
+        resendVerificationEmail: (email: string) =>
+            api.post<ApiResponse>('/api/auth/resend-verification-email', { email }),
+
         register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string }) =>
             api.post<ApiResponse>('/api/auth/register', data),
 

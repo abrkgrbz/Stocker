@@ -115,6 +115,18 @@ export default function RegisterScreen({ navigation }: any) {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
+    const [resendTimer, setResendTimer] = useState(0);
+
+    // Resend Timer Logic
+    useEffect(() => {
+        let interval: any;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
 
     // Validation
     const [emailError, setEmailError] = useState('');
@@ -249,6 +261,25 @@ export default function RegisterScreen({ navigation }: any) {
             }
         } catch (error: any) {
             showToast(error.message || 'Doğrulama işlemi başarısız', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+
+        setIsLoading(true);
+        try {
+            const response = await apiService.auth.resendVerificationEmail(email);
+            if (response.data.success) {
+                showToast('Doğrulama kodu tekrar gönderildi.', 'success');
+                setResendTimer(60); // Start 60s cooldown
+            } else {
+                throw new Error(response.data.message || 'Kod gönderilemedi');
+            }
+        } catch (error: any) {
+            showToast(error.message || 'Kod gönderilemedi', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -486,6 +517,20 @@ export default function RegisterScreen({ navigation }: any) {
                                     autoFocus
                                 />
                             </View>
+                            <TouchableOpacity
+                                style={styles.resendButton}
+                                onPress={handleResendOtp}
+                                disabled={resendTimer > 0 || isLoading}
+                            >
+                                <Text style={[
+                                    styles.resendButtonText,
+                                    resendTimer > 0 && styles.resendButtonTextDisabled
+                                ]}>
+                                    {resendTimer > 0
+                                        ? `Tekrar gönder (${resendTimer}s)`
+                                        : 'Kodu Tekrar Gönder'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </Animated.View>
                 );
@@ -763,5 +808,18 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
         fontSize: 11,
         marginLeft: spacing.xs,
+    } as TextStyle,
+    resendButton: {
+        marginTop: spacing.m,
+        alignSelf: 'center',
+        padding: spacing.s,
+    } as ViewStyle,
+    resendButtonText: {
+        color: colors.primary,
+        fontSize: 14,
+        fontWeight: '600',
+    } as TextStyle,
+    resendButtonTextDisabled: {
+        color: colors.textMuted,
     } as TextStyle,
 });

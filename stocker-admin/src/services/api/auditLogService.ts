@@ -49,7 +49,7 @@ export interface AuditStatistics {
 }
 
 class AuditLogService {
-  private readonly basePath = '/api/master/audit-logs';
+  private readonly basePath = '/api/master/auditlogs';
 
   /**
    * Get audit logs with filtering and pagination
@@ -128,9 +128,10 @@ class AuditLogService {
         if (query.toDate) params.append('toDate', query.toDate);
       }
 
-      params.append('format', format);
+      const endpoint = format === 'csv' ? '/export/csv' : '/export/excel';
+      const url = params.toString() ? `${this.basePath}${endpoint}?${params.toString()}` : `${this.basePath}${endpoint}`;
 
-      return await apiClient.get<Blob>(`${this.basePath}/export?${params.toString()}`, undefined);
+      return await apiClient.get<Blob>(url, undefined);
     } catch (error) {
       console.error('Failed to export audit logs:', error);
       throw error;

@@ -176,6 +176,8 @@ export default function LoginScreen({ navigation }: any) {
                 const status = error.response.status;
                 if (status === 401) {
                     errorMessage = 'E-posta veya şifre hatalı.';
+                } else if (status === 400) {
+                    errorMessage = 'Giriş bilgileri hatalı. Lütfen kontrol edin.';
                 } else if (status === 403) {
                     errorMessage = 'Giriş yetkiniz yok.';
                 } else if (status === 429) {

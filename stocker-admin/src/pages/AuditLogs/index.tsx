@@ -196,22 +196,27 @@ const AuditLogsPage: React.FC = () => {
   const loadAuditLogs = async () => {
     setLoading(true);
     try {
-      const [logsData, statsData] = await Promise.all([
-        auditLogService.getAll({
-          pageNumber,
-          pageSize,
-          fromDate: dateRange?.[0]?.toISOString(),
-          toDate: dateRange?.[1]?.toISOString()
-        }),
-        auditLogService.getStatistics(
-          dateRange?.[0]?.toISOString(),
-          dateRange?.[1]?.toISOString()
-        )
-      ]);
+      const logsData = await auditLogService.getAll({
+        pageNumber,
+        pageSize,
+        fromDate: dateRange?.[0]?.toISOString(),
+        toDate: dateRange?.[1]?.toISOString()
+      });
 
       setAuditLogs(logsData.data || []);
       setTotalCount(logsData.totalCount || 0);
-      setStatistics(statsData);
+
+      // Try to load statistics, but don't fail if endpoint doesn't exist
+      try {
+        const statsData = await auditLogService.getStatistics(
+          dateRange?.[0]?.toISOString(),
+          dateRange?.[1]?.toISOString()
+        );
+        setStatistics(statsData);
+      } catch (statsError) {
+        console.warn('Statistics endpoint not available:', statsError);
+        setStatistics(null);
+      }
     } catch (error) {
       message.error('Audit loglar yüklenirken hata oluştu');
       console.error('Failed to load audit logs:', error);
