@@ -21,7 +21,7 @@ public class GetAuditLogStatisticsQueryHandler : IRequestHandler<GetAuditLogStat
 
     public async Task<Result<AuditLogStatisticsDto>> Handle(GetAuditLogStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var query = _unitOfWork.SecurityAuditLogsReadOnly().AsQueryable();
+        var query = _unitOfWork.SecurityAuditLogs().AsQueryable();
 
         // Apply date filters if provided
         if (request.FromDate.HasValue)

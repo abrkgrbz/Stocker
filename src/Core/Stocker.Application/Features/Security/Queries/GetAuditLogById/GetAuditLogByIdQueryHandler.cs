@@ -21,7 +21,7 @@ public class GetAuditLogByIdQueryHandler : IRequestHandler<GetAuditLogByIdQuery,
 
     public async Task<Result<SecurityAuditLogDto>> Handle(GetAuditLogByIdQuery request, CancellationToken cancellationToken)
     {
-        var auditLog = await _unitOfWork.SecurityAuditLogsReadOnly()
+        var auditLog = await _unitOfWork.SecurityAuditLogs()
             .AsQueryable()
             .Where(x => x.Id == request.Id)
             .Select(x => new SecurityAuditLogDto

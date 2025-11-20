@@ -21,7 +21,7 @@ public class GetComplianceStatusQueryHandler : IRequestHandler<GetComplianceStat
 
     public async Task<Result<ComplianceStatusDto>> Handle(GetComplianceStatusQuery request, CancellationToken cancellationToken)
     {
-        var query = _unitOfWork.SecurityAuditLogsReadOnly().AsQueryable();
+        var query = _unitOfWork.SecurityAuditLogs().AsQueryable();
 
         // Apply date filters
         if (request.FromDate.HasValue)

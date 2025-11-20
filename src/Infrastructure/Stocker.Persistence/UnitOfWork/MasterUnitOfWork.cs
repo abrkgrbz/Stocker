@@ -24,10 +24,12 @@ public class MasterUnitOfWork : BaseUnitOfWork<MasterDbContext>, IMasterUnitOfWo
 
     public IReadRepository<T> ReadRepository<T>() where T : Entity<Guid>
     {
-        // Return the same repository instance but typed as IReadRepository
-        // IRepository<T> implements IReadRepository<T>, so this cast is valid
-        var repository = GetOrAddRepository<T>();
-        return (IReadRepository<T>)(object)repository;
+        // IRepository<T> already contains all IReadRepository<T> methods
+        // Use Repository<T>() directly instead - it has the same functionality
+        // This method exists only to satisfy the interface contract
+        throw new NotSupportedException(
+            "Use Repository<T>() instead of ReadRepository<T>(). " +
+            "IRepository<T> already includes all read operations from IReadRepository<T>.");
     }
 
     #endregion
