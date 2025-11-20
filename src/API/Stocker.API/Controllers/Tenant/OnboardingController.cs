@@ -5,12 +5,14 @@ using Stocker.SharedKernel.Authorization;
 using Stocker.Application.Features.Onboarding.Commands.CompleteOnboarding;
 using Stocker.Application.Features.Onboarding.Queries.GetOnboardingStatus;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
-namespace Stocker.Api.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[SwaggerTag("Tenant - Onboarding")]
 public class OnboardingController : ControllerBase
 {
     private readonly ISender _sender;

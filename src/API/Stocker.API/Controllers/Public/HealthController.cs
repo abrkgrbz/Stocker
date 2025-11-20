@@ -5,12 +5,14 @@ using StackExchange.Redis;
 using Stocker.Persistence.Contexts;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
+using Swashbuckle.AspNetCore.Annotations;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Public;
 
 [ApiController]
 [Route("[controller]")]
 [AllowAnonymous]
+[SwaggerTag("Public API - Health Checks")]
 public class HealthController : ControllerBase
 {
     private readonly IServiceProvider _serviceProvider;

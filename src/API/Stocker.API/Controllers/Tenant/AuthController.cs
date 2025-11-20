@@ -19,7 +19,7 @@ using Stocker.Application.Features.Identity.Queries.Check2FALockout;
 using Stocker.Application.Features.Identity.Queries.GetCurrentUser;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Route("api/[controller]")]

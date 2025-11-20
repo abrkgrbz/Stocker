@@ -9,7 +9,7 @@ using Stocker.Identity.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Route("api/secure-auth")]

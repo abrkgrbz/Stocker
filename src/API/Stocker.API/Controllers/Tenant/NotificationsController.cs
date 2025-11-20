@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Notifications.Queries.GetUnreadCount;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Route("api/[controller]")]
