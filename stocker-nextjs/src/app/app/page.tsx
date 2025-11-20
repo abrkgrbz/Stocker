@@ -5,7 +5,7 @@
  * Standalone page without sidebar/header
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown } from 'antd';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
+import SetupWizardModal from '@/components/setup/SetupWizardModal';
 
 const { Title, Text } = Typography;
 
@@ -42,12 +43,41 @@ export default function AppHomePage() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { tenant } = useTenant();
 
+  // Setup modal state
+  const [setupModalOpen, setSetupModalOpen] = useState(false);
+
   // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  // Check if setup is required on mount
+  useEffect(() => {
+    const checkSetupRequired = () => {
+      // Get requiresSetup from localStorage (set during login)
+      const requiresSetup = localStorage.getItem('requiresSetup') === 'true';
+
+      if (requiresSetup) {
+        setSetupModalOpen(true);
+      }
+    };
+
+    // Only check after auth is loaded and user is authenticated
+    if (!isLoading && isAuthenticated) {
+      checkSetupRequired();
+    }
+  }, [isLoading, isAuthenticated]);
+
+  const handleSetupComplete = () => {
+    // Remove requiresSetup flag from localStorage
+    localStorage.removeItem('requiresSetup');
+    setSetupModalOpen(false);
+
+    // Reload the page to refresh with new data
+    window.location.reload();
+  };
 
   // Don't render until auth check completes
   if (isLoading || !isAuthenticated || !user) {
@@ -378,6 +408,9 @@ export default function AppHomePage() {
           Stocker - Modern İşletme Yönetim Sistemi
         </Text>
       </div>
+
+      {/* Setup Modal */}
+      <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />
     </div>
   );
 }
