@@ -203,7 +203,7 @@ const AuditLogsPage: React.FC = () => {
         toDate: dateRange?.[1]?.toISOString()
       });
 
-      setAuditLogs(logsData.data || []);
+      setAuditLogs(logsData.logs || []);
       setTotalCount(logsData.totalCount || 0);
 
       // Try to load statistics, but don't fail if endpoint doesn't exist
