@@ -1,3 +1,5 @@
+import { auditLogService, AuditLogDto, GetAuditLogsQuery, AuditStatistics } from '../../services/api/auditLogService';
+import { useEffect } from 'react';
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -178,193 +180,45 @@ const AuditLogsPage: React.FC = () => {
   const [exportForm] = Form.useForm();
   const [filterForm] = Form.useForm();
 
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    {
-      id: '1',
-      timestamp: '2024-01-15 14:32:15',
-      action: 'USER_LOGIN',
-      category: 'auth',
-      severity: 'info',
-      user: 'admin@example.com',
-      userId: 'usr_123',
-      ipAddress: '192.168.1.100',
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      description: 'Kullanıcı başarıyla giriş yaptı',
-      result: 'success',
-      duration: 245,
-      tenant: 'Tenant A',
-      location: 'İstanbul, TR',
-      device: 'Desktop',
-      sessionId: 'sess_abc123',
-      tags: ['login', 'authentication']
-    },
-    {
-      id: '2',
-      timestamp: '2024-01-15 14:28:42',
-      action: 'USER_LOGIN_FAILED',
-      category: 'auth',
-      severity: 'warning',
-      user: 'user@example.com',
-      userId: 'usr_456',
-      ipAddress: '10.0.0.50',
-      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)',
-      description: 'Başarısız giriş denemesi - Yanlış şifre',
-      result: 'failure',
-      duration: 180,
-      location: 'Ankara, TR',
-      device: 'Mobile',
-      tags: ['failed-login', 'security']
-    },
-    {
-      id: '3',
-      timestamp: '2024-01-15 14:15:00',
-      action: 'TENANT_CREATED',
-      category: 'admin',
-      severity: 'info',
-      user: 'admin@example.com',
-      userId: 'usr_123',
-      ipAddress: '192.168.1.100',
-      userAgent: 'Mozilla/5.0',
-      resource: 'Tenant',
-      resourceId: 'tenant_789',
-      description: 'Yeni tenant oluşturuldu: Test Company',
-      result: 'success',
-      duration: 1250,
-      tags: ['tenant', 'creation']
-    },
-    {
-      id: '4',
-      timestamp: '2024-01-15 13:45:00',
-      action: 'DATA_EXPORT',
-      category: 'data',
-      severity: 'warning',
-      user: 'analyst@example.com',
-      userId: 'usr_789',
-      ipAddress: '192.168.1.150',
-      userAgent: 'Mozilla/5.0',
-      resource: 'Report',
-      resourceId: 'report_123',
-      description: 'Kullanıcı verileri dışa aktarıldı (50000 kayıt)',
-      result: 'success',
-      duration: 5420,
-      tenant: 'Tenant B',
-      tags: ['export', 'data', 'compliance']
-    },
-    {
-      id: '5',
-      timestamp: '2024-01-15 12:30:00',
-      action: 'UNAUTHORIZED_ACCESS',
-      category: 'security',
-      severity: 'critical',
-      user: 'unknown',
-      userId: 'unknown',
-      ipAddress: '185.220.101.45',
-      userAgent: 'curl/7.68.0',
-      resource: 'API',
-      description: 'Yetkisiz API erişim denemesi tespit edildi',
-      result: 'failure',
-      location: 'Unknown',
-      tags: ['security', 'intrusion', 'blocked']
-    },
-    {
-      id: '6',
-      timestamp: '2024-01-15 11:20:00',
-      action: 'PERMISSION_CHANGED',
-      category: 'admin',
-      severity: 'warning',
-      user: 'admin@example.com',
-      userId: 'usr_123',
-      ipAddress: '192.168.1.100',
-      userAgent: 'Mozilla/5.0',
-      resource: 'User',
-      resourceId: 'usr_999',
-      description: 'Kullanıcı yetkileri güncellendi - Admin yetkisi verildi',
-      result: 'success',
-      duration: 150,
-      tags: ['permission', 'admin', 'critical-change']
-    }
-  ]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
-  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([
-    {
-      id: '1',
-      timestamp: '2024-01-15 12:30:00',
-      type: 'bruteforce',
-      severity: 'high',
-      source: '185.220.101.45',
-      target: 'Login API',
-      description: 'Brute force saldırısı tespit edildi - 50 başarısız deneme',
-      status: 'blocked',
-      actionTaken: 'IP adresi 24 saat engellendi'
-    },
-    {
-      id: '2',
-      timestamp: '2024-01-15 10:15:00',
-      type: 'injection',
-      severity: 'critical',
-      source: '192.168.1.200',
-      target: 'Search API',
-      description: 'SQL injection denemesi tespit edildi',
-      status: 'blocked',
-      actionTaken: 'İstek engellendi, güvenlik ekibi bilgilendirildi'
-    },
-    {
-      id: '3',
-      timestamp: '2024-01-14 22:45:00',
-      type: 'ddos',
-      severity: 'high',
-      source: 'Multiple IPs',
-      target: 'Main Application',
-      description: 'DDoS saldırısı tespit edildi - 10000+ istek/sn',
-      status: 'resolved',
-      assignedTo: 'Security Team',
-      actionTaken: 'CloudFlare DDoS koruması devreye alındı'
-    }
-  ]);
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [complianceReports] = useState<ComplianceReport[]>([]);
+  const [statistics, setStatistics] = useState<any | null>(null);
 
-  const [complianceReports] = useState<ComplianceReport[]>([
-    {
-      id: '1',
-      standard: 'GDPR',
-      status: 'compliant',
-      lastAudit: '2024-01-01',
-      nextAudit: '2024-04-01',
-      score: 95,
-      findings: 2,
-      criticalIssues: 0
-    },
-    {
-      id: '2',
-      standard: 'ISO27001',
-      status: 'partial',
-      lastAudit: '2023-12-15',
-      nextAudit: '2024-03-15',
-      score: 78,
-      findings: 8,
-      criticalIssues: 2
-    },
-    {
-      id: '3',
-      standard: 'PCI-DSS',
-      status: 'compliant',
-      lastAudit: '2024-01-10',
-      nextAudit: '2024-07-10',
-      score: 92,
-      findings: 3,
-      criticalIssues: 0
-    }
-  ]);
+  useEffect(() => {
+    loadAuditLogs();
+  }, [pageNumber, pageSize, dateRange]);
 
-  const [statistics] = useState<AuditStatistics>({
-    totalEvents: 15420,
-    failedAttempts: 342,
-    securityIncidents: 28,
-    dataChanges: 3456,
-    adminActions: 892,
-    apiCalls: 8954,
-    uniqueUsers: 245,
-    averageResponseTime: 350
-  });
+  const loadAuditLogs = async () => {
+    setLoading(true);
+    try {
+      const [logsData, statsData] = await Promise.all([
+        auditLogService.getAll({
+          pageNumber,
+          pageSize,
+          fromDate: dateRange?.[0]?.toISOString(),
+          toDate: dateRange?.[1]?.toISOString()
+        }),
+        auditLogService.getStatistics(
+          dateRange?.[0]?.toISOString(),
+          dateRange?.[1]?.toISOString()
+        )
+      ]);
+
+      setAuditLogs(logsData.data || []);
+      setTotalCount(logsData.totalCount || 0);
+      setStatistics(statsData);
+    } catch (error) {
+      message.error('Audit loglar yüklenirken hata oluştu');
+      console.error('Failed to load audit logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Chart data
   const activityData = [
@@ -748,7 +602,7 @@ const AuditLogsPage: React.FC = () => {
               <Button icon={<ExportOutlined />} onClick={() => setExportModalVisible(true)}>
                 Dışa Aktar
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => message.info('Loglar yenilendi')}>
+              <Button icon={<ReloadOutlined />} onClick={loadAuditLogs} loading={loading}>
                 Yenile
               </Button>
             </Space>
@@ -762,7 +616,7 @@ const AuditLogsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Olay"
-              value={statistics.totalEvents}
+              value={statistics?.totalActions || 0}
               prefix={<FileSearchOutlined />}
             />
           </Card>
@@ -771,7 +625,7 @@ const AuditLogsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Başarısız Girişler"
-              value={statistics.failedAttempts}
+              value={statistics?.failedActions || 0}
               prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
               valueStyle={{ color: '#ff4d4f' }}
             />
@@ -780,18 +634,18 @@ const AuditLogsPage: React.FC = () => {
         <Col span={3}>
           <Card bordered={false}>
             <Statistic
-              title="Güvenlik Olayları"
-              value={statistics.securityIncidents}
-              prefix={<WarningOutlined style={{ color: '#faad14' }} />}
-              valueStyle={{ color: '#faad14' }}
+              title="Başarılı İşlemler"
+              value={statistics?.successfulActions || 0}
+              prefix={<WarningOutlined style={{ color: '#52c41a' }} />}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
         <Col span={3}>
           <Card bordered={false}>
             <Statistic
-              title="Veri Değişiklikleri"
-              value={statistics.dataChanges}
+              title="Toplam İşlem"
+              value={statistics?.totalActions || 0}
               prefix={<DatabaseOutlined />}
             />
           </Card>
@@ -799,26 +653,8 @@ const AuditLogsPage: React.FC = () => {
         <Col span={3}>
           <Card bordered={false}>
             <Statistic
-              title="Admin İşlemleri"
-              value={statistics.adminActions}
-              prefix={<CrownOutlined style={{ color: '#722ed1' }} />}
-            />
-          </Card>
-        </Col>
-        <Col span={3}>
-          <Card bordered={false}>
-            <Statistic
-              title="API Çağrıları"
-              value={statistics.apiCalls}
-              prefix={<ApiOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={3}>
-          <Card bordered={false}>
-            <Statistic
-              title="Aktif Kullanıcılar"
-              value={statistics.uniqueUsers}
+              title="Toplam Kullanıcı"
+              value={statistics?.uniqueUsers || 0}
               prefix={<TeamOutlined style={{ color: '#1890ff' }} />}
             />
           </Card>
@@ -826,10 +662,18 @@ const AuditLogsPage: React.FC = () => {
         <Col span={3}>
           <Card bordered={false}>
             <Statistic
-              title="Ort. Yanıt (ms)"
-              value={statistics.averageResponseTime}
-              suffix="ms"
-              prefix={<ClockCircleOutlined />}
+              title="Top İşlemler"
+              value={statistics?.topActions?.length || 0}
+              prefix={<CrownOutlined style={{ color: '#722ed1' }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={3}>
+          <Card bordered={false}>
+            <Statistic
+              title="Top Kullanıcılar"
+              value={statistics?.topUsers?.length || 0}
+              prefix={<ApiOutlined />}
             />
           </Card>
         </Col>
@@ -871,10 +715,17 @@ const AuditLogsPage: React.FC = () => {
               columns={auditColumns}
               dataSource={auditLogs}
               rowKey="id"
-              pagination={{ 
-                pageSize: 10,
+              loading={loading}
+              pagination={{
+                current: pageNumber,
+                pageSize: pageSize,
+                total: totalCount,
                 showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} kayıt`
+                showTotal: (total) => `Toplam ${total} kayıt`,
+                onChange: (page, size) => {
+                  setPageNumber(page);
+                  if (size !== pageSize) setPageSize(size);
+                }
               }}
               scroll={{ x: 1200 }}
             />

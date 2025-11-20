@@ -1,35 +1,30 @@
-import React, { useState } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Button, 
-  Select, 
-  DatePicker, 
-  Table, 
-  Tag, 
-  Space, 
-  Typography, 
-  Tabs, 
-  Statistic, 
-  Progress, 
-  Alert, 
-  Modal, 
-  Form, 
-  Input, 
-  Radio, 
-  Checkbox, 
-  Divider, 
-  List, 
-  Badge, 
-  Tooltip, 
-  Dropdown, 
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  Row,
+  Col,
+  Button,
+  Select,
+  DatePicker,
+  Table,
+  Tag,
+  Space,
+  Typography,
+  Tabs,
+  Statistic,
+  Alert,
+  Modal,
+  Form,
+  Input,
+  Radio,
+  Badge,
+  Tooltip,
+  Dropdown,
   Menu,
   Timeline,
   Result,
-  Empty,
   Spin,
-  message 
+  message
 } from 'antd';
 import {
   FileTextOutlined,
@@ -45,63 +40,33 @@ import {
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
-  AreaChartOutlined,
   DollarOutlined,
-  UserOutlined,
   TeamOutlined,
-  ShoppingCartOutlined,
-  RiseOutlined,
-  FallOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
   FilePdfOutlined,
   FileExcelOutlined,
-  FileWordOutlined,
   ScheduleOutlined,
-  SaveOutlined,
-  ShareAltOutlined,
-  FolderOutlined,
   StarOutlined,
   ReloadOutlined,
   SettingOutlined,
   PlayCircleOutlined,
   CopyOutlined
 } from '@ant-design/icons';
-import { Line, Column, Pie, Area, DualAxes } from '@ant-design/plots';
+import { Line, Column, DualAxes } from '@ant-design/plots';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { reportService, ReportDto, ReportType, ReportStatus } from '../../services/api/reportService';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { TextArea } = Input;
-
-interface Report {
-  id: string;
-  name: string;
-  type: 'financial' | 'usage' | 'performance' | 'tenant' | 'audit' | 'custom';
-  category: string;
-  description: string;
-  format: 'pdf' | 'excel' | 'csv' | 'json';
-  schedule?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  lastGenerated?: string;
-  nextGeneration?: string;
-  size?: string;
-  status: 'ready' | 'generating' | 'scheduled' | 'failed';
-  createdBy: string;
-  createdAt: string;
-  tags: string[];
-  recipients?: string[];
-  starred?: boolean;
-}
 
 interface ReportTemplate {
   id: string;
@@ -130,7 +95,7 @@ interface ScheduledReport {
 const ReportsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [selectedReport, setSelectedReport] = useState<ReportDto | null>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
@@ -141,147 +106,17 @@ const ReportsPage: React.FC = () => {
   const [createForm] = Form.useForm();
   const [scheduleForm] = Form.useForm();
 
-  const [reports, setReports] = useState<Report[]>([
-    {
-      id: '1',
-      name: 'Aylık Finansal Özet',
-      type: 'financial',
-      category: 'Finans',
-      description: 'Aylık gelir, gider ve kar analizi',
-      format: 'pdf',
-      schedule: 'monthly',
-      lastGenerated: '2024-01-01 09:00',
-      nextGeneration: '2024-02-01 09:00',
-      size: '2.4 MB',
-      status: 'ready',
-      createdBy: 'Admin',
-      createdAt: '2023-12-01',
-      tags: ['finans', 'aylık', 'özet'],
-      recipients: ['admin@example.com', 'finance@example.com'],
-      starred: true
-    },
-    {
-      id: '2',
-      name: 'Tenant Kullanım Raporu',
-      type: 'usage',
-      category: 'Kullanım',
-      description: 'Tenant bazlı detaylı kullanım istatistikleri',
-      format: 'excel',
-      schedule: 'weekly',
-      lastGenerated: '2024-01-14 10:00',
-      nextGeneration: '2024-01-21 10:00',
-      size: '5.8 MB',
-      status: 'ready',
-      createdBy: 'System',
-      createdAt: '2023-11-15',
-      tags: ['tenant', 'kullanım', 'haftalık']
-    },
-    {
-      id: '3',
-      name: 'Performans Metrikleri',
-      type: 'performance',
-      category: 'Performans',
-      description: 'Sistem performans ve yanıt süreleri analizi',
-      format: 'pdf',
-      lastGenerated: '2024-01-15 14:30',
-      size: '1.2 MB',
-      status: 'generating',
-      createdBy: 'DevOps',
-      createdAt: '2024-01-10',
-      tags: ['performans', 'metrik', 'sistem']
-    },
-    {
-      id: '4',
-      name: 'Denetim Günlüğü Raporu',
-      type: 'audit',
-      category: 'Güvenlik',
-      description: 'Güvenlik ve denetim olayları özeti',
-      format: 'csv',
-      schedule: 'daily',
-      lastGenerated: '2024-01-15 00:00',
-      nextGeneration: '2024-01-16 00:00',
-      size: '890 KB',
-      status: 'ready',
-      createdBy: 'Security',
-      createdAt: '2023-10-20',
-      tags: ['güvenlik', 'denetim', 'günlük'],
-      recipients: ['security@example.com']
-    }
-  ]);
+  // API State
+  const [reports, setReports] = useState<ReportDto[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const [templates, setTemplates] = useState<ReportTemplate[]>([
-    {
-      id: '1',
-      name: 'Finansal Özet Şablonu',
-      description: 'Standart finansal raporlama şablonu',
-      category: 'Finans',
-      fields: ['revenue', 'expenses', 'profit', 'tax'],
-      filters: ['date_range', 'tenant', 'product'],
-      charts: ['line', 'bar', 'pie'],
-      isPublic: true,
-      usageCount: 156
-    },
-    {
-      id: '2',
-      name: 'Kullanıcı Aktivite Şablonu',
-      description: 'Kullanıcı davranış ve aktivite analizi',
-      category: 'Kullanım',
-      fields: ['logins', 'actions', 'duration', 'pages'],
-      filters: ['date_range', 'user_type', 'tenant'],
-      charts: ['area', 'heatmap'],
-      isPublic: true,
-      usageCount: 89
-    },
-    {
-      id: '3',
-      name: 'SLA Performans Şablonu',
-      description: 'Servis seviyesi anlaşması performansı',
-      category: 'Performans',
-      fields: ['uptime', 'response_time', 'error_rate'],
-      filters: ['date_range', 'service', 'severity'],
-      charts: ['gauge', 'line'],
-      isPublic: false,
-      usageCount: 45
-    }
-  ]);
+  // Placeholder data for templates and scheduled reports (to be replaced with API later)
+  const [templates] = useState<ReportTemplate[]>([]);
+  const [scheduledReports] = useState<ScheduledReport[]>([]);
 
-  const [scheduledReports, setScheduledReports] = useState<ScheduledReport[]>([
-    {
-      id: '1',
-      reportId: '1',
-      reportName: 'Aylık Finansal Özet',
-      schedule: 'Her ayın 1\'i saat 09:00',
-      nextRun: '2024-02-01 09:00',
-      lastRun: '2024-01-01 09:00',
-      recipients: ['admin@example.com', 'finance@example.com'],
-      format: 'PDF',
-      enabled: true
-    },
-    {
-      id: '2',
-      reportId: '2',
-      reportName: 'Tenant Kullanım Raporu',
-      schedule: 'Her Pazartesi saat 10:00',
-      nextRun: '2024-01-22 10:00',
-      lastRun: '2024-01-15 10:00',
-      recipients: ['admin@example.com'],
-      format: 'Excel',
-      enabled: true
-    },
-    {
-      id: '3',
-      reportId: '4',
-      reportName: 'Denetim Günlüğü Raporu',
-      schedule: 'Her gün saat 00:00',
-      nextRun: '2024-01-16 00:00',
-      lastRun: '2024-01-15 00:00',
-      recipients: ['security@example.com'],
-      format: 'CSV',
-      enabled: false
-    }
-  ]);
-
-  // Sample chart data
+  // Sample chart data (to be replaced with API data)
   const revenueData = [
     { month: 'Oca', value: 125000, type: 'Gelir' },
     { month: 'Şub', value: 135000, type: 'Gelir' },
@@ -314,81 +149,119 @@ const ReportsPage: React.FC = () => {
     { time: '20:00', cpu: 65, memory: 70 }
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready': return 'green';
-      case 'generating': return 'blue';
-      case 'scheduled': return 'orange';
-      case 'failed': return 'red';
-      default: return 'default';
+  // Load reports from API
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const response = await reportService.getAll({ pageNumber, pageSize });
+      setReports(response.data || []);
+      setTotalCount(response.totalCount || 0);
+    } catch (error) {
+      message.error('Raporlar yüklenirken hata oluştu');
+      console.error('Failed to load reports:', error);
+      setReports([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  useEffect(() => {
+    loadReports();
+  }, [pageNumber, pageSize]);
+
+  const getTypeIcon = (type: ReportType) => {
     switch (type) {
-      case 'financial': return <DollarOutlined />;
-      case 'usage': return <BarChartOutlined />;
-      case 'performance': return <LineChartOutlined />;
-      case 'tenant': return <TeamOutlined />;
-      case 'audit': return <FileTextOutlined />;
-      default: return <PieChartOutlined />;
+      case ReportType.Financial:
+        return <DollarOutlined />;
+      case ReportType.Users:
+        return <TeamOutlined />;
+      case ReportType.Subscriptions:
+        return <BarChartOutlined />;
+      case ReportType.Performance:
+        return <LineChartOutlined />;
+      case ReportType.Custom:
+        return <PieChartOutlined />;
+      default:
+        return <FileTextOutlined />;
     }
   };
 
   const getFormatIcon = (format: string) => {
-    switch (format) {
-      case 'pdf': return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
-      case 'excel': return <FileExcelOutlined style={{ color: '#52c41a' }} />;
-      case 'csv': return <FileTextOutlined style={{ color: '#1890ff' }} />;
-      case 'json': return <FileTextOutlined style={{ color: '#722ed1' }} />;
-      default: return <FileTextOutlined />;
+    switch (format?.toLowerCase()) {
+      case 'pdf':
+        return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
+      case 'excel':
+        return <FileExcelOutlined style={{ color: '#52c41a' }} />;
+      case 'csv':
+        return <FileTextOutlined style={{ color: '#1890ff' }} />;
+      case 'json':
+        return <FileTextOutlined style={{ color: '#722ed1' }} />;
+      default:
+        return <FileTextOutlined />;
     }
   };
 
-  const handleGenerateReport = (report: Report) => {
+  const handleGenerateReport = async (report: ReportDto) => {
     setLoading(true);
-    message.loading('Rapor oluşturuluyor...');
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await reportService.generate({
+        reportId: report.id,
+        format: 'pdf'
+      });
       message.success('Rapor başarıyla oluşturuldu');
-      setReports(prev => prev.map(r => 
-        r.id === report.id 
-          ? { ...r, status: 'ready', lastGenerated: dayjs().format('YYYY-MM-DD HH:mm') }
-          : r
-      ));
-    }, 2000);
+      await loadReports();
+    } catch (error) {
+      message.error('Rapor oluşturulurken hata oluştu');
+      console.error('Failed to generate report:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateReport = () => {
-    createForm.validateFields().then(values => {
-      const newReport: Report = {
-        id: Date.now().toString(),
-        ...values,
-        status: 'scheduled',
-        createdBy: 'Current User',
-        createdAt: dayjs().format('YYYY-MM-DD'),
-        tags: values.tags || []
-      };
-      setReports([...reports, newReport]);
-      message.success('Rapor başarıyla oluşturuldu');
-      setCreateModalVisible(false);
-      createForm.resetFields();
+    createForm.validateFields().then(async values => {
+      try {
+        // Note: Create API endpoint not available in reportService yet
+        // This would need to be added to the service
+        message.info('Rapor oluşturma API entegrasyonu bekleniyor');
+        setCreateModalVisible(false);
+        createForm.resetFields();
+      } catch (error) {
+        message.error('Rapor oluşturulurken hata oluştu');
+        console.error('Failed to create report:', error);
+      }
     });
   };
 
   const handleScheduleReport = () => {
-    scheduleForm.validateFields().then(values => {
-      const newSchedule: ScheduledReport = {
-        id: Date.now().toString(),
-        ...values,
-        enabled: true,
-        nextRun: dayjs().add(1, 'day').format('YYYY-MM-DD HH:mm')
-      };
-      setScheduledReports([...scheduledReports, newSchedule]);
-      message.success('Rapor zamanlaması oluşturuldu');
-      setScheduleModalVisible(false);
-      scheduleForm.resetFields();
+    scheduleForm.validateFields().then(async values => {
+      try {
+        await reportService.schedule(values.reportId, {
+          frequency: values.schedule,
+          time: '09:00',
+          enabled: true
+        });
+        message.success('Rapor zamanlaması oluşturuldu');
+        setScheduleModalVisible(false);
+        scheduleForm.resetFields();
+        await loadReports();
+      } catch (error) {
+        message.error('Zamanlama oluşturulurken hata oluştu');
+        console.error('Failed to schedule report:', error);
+      }
     });
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    try {
+      // Note: Delete API endpoint not available in reportService yet
+      // This would need to be added to the service
+      message.info('Rapor silme API entegrasyonu bekleniyor');
+      await loadReports();
+    } catch (error) {
+      message.error('Rapor silinirken hata oluştu');
+      console.error('Failed to delete report:', error);
+    }
   };
 
   const reportColumns = [
@@ -396,9 +269,8 @@ const ReportsPage: React.FC = () => {
       title: 'Rapor Adı',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string, record: Report) => (
+      render: (text: string, record: ReportDto) => (
         <Space>
-          {record.starred && <StarOutlined style={{ color: '#faad14' }} />}
           {getTypeIcon(record.type)}
           <Text strong>{text}</Text>
         </Space>
@@ -411,55 +283,64 @@ const ReportsPage: React.FC = () => {
       render: (category: string) => <Tag>{category}</Tag>
     },
     {
-      title: 'Format',
-      dataIndex: 'format',
-      key: 'format',
-      render: (format: string) => getFormatIcon(format)
+      title: 'Tip',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type: ReportType) => (
+        <Tag color={reportService.getTypeColor(type)}>{type}</Tag>
+      )
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
+      render: (status: ReportStatus) => (
         <Badge
-          status={status === 'ready' ? 'success' : 
-                 status === 'generating' ? 'processing' : 
-                 status === 'scheduled' ? 'warning' : 'error'}
-          text={status === 'ready' ? 'Hazır' :
-               status === 'generating' ? 'Oluşturuluyor' :
-               status === 'scheduled' ? 'Zamanlandı' : 'Başarısız'}
+          status={status === ReportStatus.Completed ? 'success' :
+                 status === ReportStatus.Running ? 'processing' :
+                 status === ReportStatus.Scheduled ? 'warning' :
+                 status === ReportStatus.Failed ? 'error' : 'default'}
+          text={status === ReportStatus.Completed ? 'Tamamlandı' :
+               status === ReportStatus.Running ? 'Çalışıyor' :
+               status === ReportStatus.Scheduled ? 'Zamanlandı' :
+               status === ReportStatus.Failed ? 'Başarısız' : 'Bekliyor'}
         />
       )
     },
     {
-      title: 'Son Oluşturma',
-      dataIndex: 'lastGenerated',
-      key: 'lastGenerated',
+      title: 'Son Çalışma',
+      dataIndex: 'lastRun',
+      key: 'lastRun',
       render: (date?: string) => date ? dayjs(date).fromNow() : '-'
     },
     {
-      title: 'Boyut',
-      dataIndex: 'size',
-      key: 'size',
-      render: (size?: string) => size || '-'
+      title: 'Oluşturan',
+      dataIndex: 'createdBy',
+      key: 'createdBy'
     },
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_, record: Report) => (
+      render: (_, record: ReportDto) => (
         <Space>
           <Dropdown
             overlay={
               <Menu>
-                <Menu.Item key="generate" icon={<ReloadOutlined />} 
-                  onClick={() => handleGenerateReport(record)}>
+                <Menu.Item
+                  key="generate"
+                  icon={<ReloadOutlined />}
+                  onClick={() => handleGenerateReport(record)}
+                >
                   Yeniden Oluştur
                 </Menu.Item>
-                <Menu.Item key="preview" icon={<EyeOutlined />}
+                <Menu.Item
+                  key="preview"
+                  icon={<EyeOutlined />}
                   onClick={() => {
                     setSelectedReport(record);
                     setPreviewModalVisible(true);
-                  }}>
+                  }}
+                >
                   Önizle
                 </Menu.Item>
                 <Menu.Item key="download" icon={<DownloadOutlined />}>
@@ -468,15 +349,23 @@ const ReportsPage: React.FC = () => {
                 <Menu.Item key="email" icon={<MailOutlined />}>
                   E-posta Gönder
                 </Menu.Item>
-                <Menu.Item key="schedule" icon={<ScheduleOutlined />}
-                  onClick={() => setScheduleModalVisible(true)}>
+                <Menu.Item
+                  key="schedule"
+                  icon={<ScheduleOutlined />}
+                  onClick={() => setScheduleModalVisible(true)}
+                >
                   Zamanla
                 </Menu.Item>
                 <Menu.Divider />
                 <Menu.Item key="edit" icon={<EditOutlined />}>
                   Düzenle
                 </Menu.Item>
-                <Menu.Item key="delete" icon={<DeleteOutlined />} danger>
+                <Menu.Item
+                  key="delete"
+                  icon={<DeleteOutlined />}
+                  danger
+                  onClick={() => handleDeleteReport(record.id)}
+                >
                   Sil
                 </Menu.Item>
               </Menu>
@@ -522,7 +411,7 @@ const ReportsPage: React.FC = () => {
       render: (recipients: string[]) => (
         <Space>
           <MailOutlined />
-          <Text>{recipients.length} kişi</Text>
+          <Text>{recipients?.length || 0} kişi</Text>
         </Space>
       )
     },
@@ -537,7 +426,7 @@ const ReportsPage: React.FC = () => {
       dataIndex: 'enabled',
       key: 'enabled',
       render: (enabled: boolean) => (
-        <Badge status={enabled ? 'success' : 'default'} 
+        <Badge status={enabled ? 'success' : 'default'}
                text={enabled ? 'Aktif' : 'Pasif'} />
       )
     },
@@ -613,7 +502,7 @@ const ReportsPage: React.FC = () => {
                 format="DD.MM.YYYY"
               />
               <Button icon={<FilterOutlined />}>Filtrele</Button>
-              <Button type="primary" icon={<PlusOutlined />} 
+              <Button type="primary" icon={<PlusOutlined />}
                 onClick={() => setCreateModalVisible(true)}>
                 Yeni Rapor
               </Button>
@@ -628,7 +517,7 @@ const ReportsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Toplam Rapor"
-              value={reports.length}
+              value={totalCount}
               prefix={<FileTextOutlined />}
             />
           </Card>
@@ -636,8 +525,8 @@ const ReportsPage: React.FC = () => {
         <Col span={6}>
           <Card bordered={false}>
             <Statistic
-              title="Hazır Raporlar"
-              value={reports.filter(r => r.status === 'ready').length}
+              title="Tamamlanan Raporlar"
+              value={reports.filter(r => r.status === ReportStatus.Completed).length}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
           </Card>
@@ -646,7 +535,7 @@ const ReportsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Zamanlanmış"
-              value={scheduledReports.filter(s => s.enabled).length}
+              value={reports.filter(r => r.status === ReportStatus.Scheduled).length}
               prefix={<ScheduleOutlined style={{ color: '#1890ff' }} />}
             />
           </Card>
@@ -655,181 +544,113 @@ const ReportsPage: React.FC = () => {
           <Card bordered={false}>
             <Statistic
               title="Bu Ay Oluşturulan"
-              value={42}
+              value={reports.filter(r => dayjs(r.createdAt).isAfter(dayjs().startOf('month'))).length}
               prefix={<CalendarOutlined />}
-              suffix={<Tag color="green">+12%</Tag>}
             />
           </Card>
         </Col>
       </Row>
 
-      <Card bordered={false}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="Tüm Raporlar" key="all">
-            <Space style={{ marginBottom: 16 }}>
-              <Select placeholder="Kategori" style={{ width: 150 }}>
-                <Option value="all">Tümü</Option>
-                <Option value="financial">Finans</Option>
-                <Option value="usage">Kullanım</Option>
-                <Option value="performance">Performans</Option>
-                <Option value="audit">Denetim</Option>
-              </Select>
-              <Select placeholder="Format" style={{ width: 120 }}>
-                <Option value="all">Tümü</Option>
-                <Option value="pdf">PDF</Option>
-                <Option value="excel">Excel</Option>
-                <Option value="csv">CSV</Option>
-              </Select>
-              <Input.Search placeholder="Rapor ara..." style={{ width: 250 }} />
-            </Space>
+      <Spin spinning={loading}>
+        <Card bordered={false}>
+          <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <TabPane tab="Tüm Raporlar" key="all">
+              <Space style={{ marginBottom: 16 }}>
+                <Select placeholder="Kategori" style={{ width: 150 }}>
+                  <Option value="all">Tümü</Option>
+                  <Option value="Financial">Finans</Option>
+                  <Option value="Users">Kullanıcılar</Option>
+                  <Option value="Subscriptions">Abonelikler</Option>
+                  <Option value="Performance">Performans</Option>
+                </Select>
+                <Select placeholder="Durum" style={{ width: 120 }}>
+                  <Option value="all">Tümü</Option>
+                  <Option value="Pending">Bekliyor</Option>
+                  <Option value="Running">Çalışıyor</Option>
+                  <Option value="Completed">Tamamlandı</Option>
+                  <Option value="Failed">Başarısız</Option>
+                </Select>
+                <Input.Search placeholder="Rapor ara..." style={{ width: 250 }} />
+              </Space>
 
-            <Table
-              columns={reportColumns}
-              dataSource={reports}
-              rowKey="id"
-              pagination={{ pageSize: 10 }}
-            />
-          </TabPane>
+              <Table
+                columns={reportColumns}
+                dataSource={reports}
+                rowKey="id"
+                pagination={{
+                  current: pageNumber,
+                  pageSize: pageSize,
+                  total: totalCount,
+                  onChange: (page, size) => {
+                    setPageNumber(page);
+                    setPageSize(size || 10);
+                  }
+                }}
+              />
+            </TabPane>
 
-          <TabPane tab="Zamanlanmış Raporlar" key="scheduled">
-            <Alert
-              message="Otomatik Rapor Üretimi"
-              description="Belirlediğiniz zaman aralıklarında otomatik olarak rapor oluşturulur ve belirtilen alıcılara gönderilir."
-              type="info"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
+            <TabPane tab="Zamanlanmış Raporlar" key="scheduled">
+              <Alert
+                message="Otomatik Rapor Üretimi"
+                description="Belirlediğiniz zaman aralıklarında otomatik olarak rapor oluşturulur ve belirtilen alıcılara gönderilir."
+                type="info"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
 
-            <Table
-              columns={scheduledColumns}
-              dataSource={scheduledReports}
-              rowKey="id"
-              pagination={false}
-            />
-          </TabPane>
+              <Table
+                columns={scheduledColumns}
+                dataSource={scheduledReports}
+                rowKey="id"
+                pagination={false}
+              />
+            </TabPane>
 
-          <TabPane tab="Rapor Şablonları" key="templates">
-            <Row gutter={[16, 16]}>
-              {templates.map(template => (
-                <Col span={8} key={template.id}>
-                  <Card
-                    hoverable
-                    actions={[
-                      <Tooltip title="Kullan">
-                        <PlayCircleOutlined key="use" />
-                      </Tooltip>,
-                      <Tooltip title="Düzenle">
-                        <EditOutlined key="edit" />
-                      </Tooltip>,
-                      <Tooltip title="Kopyala">
-                        <CopyOutlined key="copy" />
-                      </Tooltip>
-                    ]}
-                  >
-                    <Card.Meta
-                      title={
-                        <Space>
-                          {template.name}
-                          {template.isPublic && <Tag color="blue">Herkese Açık</Tag>}
-                        </Space>
-                      }
-                      description={template.description}
-                    />
-                    <Divider />
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Statistic
-                          title="Kullanım"
-                          value={template.usageCount}
-                          valueStyle={{ fontSize: 16 }}
-                        />
-                      </Col>
-                      <Col span={12}>
-                        <Statistic
-                          title="Alan Sayısı"
-                          value={template.fields.length}
-                          valueStyle={{ fontSize: 16 }}
-                        />
-                      </Col>
-                    </Row>
-                    <Space wrap style={{ marginTop: 16 }}>
-                      {template.charts.map(chart => (
-                        <Tag key={chart} icon={<PieChartOutlined />}>
-                          {chart}
-                        </Tag>
-                      ))}
-                    </Space>
+            <TabPane tab="Rapor Analizi" key="analytics">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Card title="Gelir/Gider Analizi" size="small">
+                    <Line {...lineConfig} height={250} />
                   </Card>
                 </Col>
-              ))}
-            </Row>
-          </TabPane>
+                <Col span={12}>
+                  <Card title="Tenant Kullanım Durumu" size="small">
+                    <Column {...columnConfig} height={250} />
+                  </Card>
+                </Col>
+              </Row>
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col span={24}>
+                  <Card title="Sistem Performans Metrikleri" size="small">
+                    <DualAxes {...dualAxesConfig} height={250} />
+                  </Card>
+                </Col>
+              </Row>
+            </TabPane>
 
-          <TabPane tab="Rapor Analizi" key="analytics">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card title="Gelir/Gider Analizi" size="small">
-                  <Line {...lineConfig} height={250} />
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="Tenant Kullanım Durumu" size="small">
-                  <Column {...columnConfig} height={250} />
-                </Card>
-              </Col>
-            </Row>
-            <Divider />
-            <Row gutter={16}>
-              <Col span={24}>
-                <Card title="Sistem Performans Metrikleri" size="small">
-                  <DualAxes {...dualAxesConfig} height={250} />
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-
-          <TabPane tab="Rapor Geçmişi" key="history">
-            <Timeline mode="left">
-              <Timeline.Item color="green">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Aylık Finansal Özet</Text>
-                  <Text type="secondary">admin@example.com tarafından oluşturuldu</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    15.01.2024 14:30
-                  </Text>
-                </Space>
-              </Timeline.Item>
-              <Timeline.Item color="blue">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Tenant Kullanım Raporu</Text>
-                  <Text type="secondary">Otomatik oluşturuldu</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    15.01.2024 10:00
-                  </Text>
-                </Space>
-              </Timeline.Item>
-              <Timeline.Item color="orange">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Performans Metrikleri</Text>
-                  <Text type="secondary">Zamanlandı</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    16.01.2024 09:00
-                  </Text>
-                </Space>
-              </Timeline.Item>
-              <Timeline.Item color="red">
-                <Space direction="vertical" size={0}>
-                  <Text strong>Denetim Raporu</Text>
-                  <Text type="secondary">Oluşturma başarısız</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    14.01.2024 23:59
-                  </Text>
-                </Space>
-              </Timeline.Item>
-            </Timeline>
-          </TabPane>
-        </Tabs>
-      </Card>
+            <TabPane tab="Rapor Geçmişi" key="history">
+              <Timeline mode="left">
+                {reports.slice(0, 5).map((report, index) => (
+                  <Timeline.Item
+                    key={report.id}
+                    color={report.status === ReportStatus.Completed ? 'green' :
+                           report.status === ReportStatus.Running ? 'blue' :
+                           report.status === ReportStatus.Failed ? 'red' : 'orange'}
+                  >
+                    <Space direction="vertical" size={0}>
+                      <Text strong>{report.name}</Text>
+                      <Text type="secondary">{report.createdBy} tarafından oluşturuldu</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {dayjs(report.createdAt).format('DD.MM.YYYY HH:mm')}
+                      </Text>
+                    </Space>
+                  </Timeline.Item>
+                ))}
+              </Timeline>
+            </TabPane>
+          </Tabs>
+        </Card>
+      </Spin>
 
       {/* Create Report Modal */}
       <Modal
@@ -857,12 +678,11 @@ const ReportsPage: React.FC = () => {
                 rules={[{ required: true, message: 'Rapor tipi seçiniz' }]}
               >
                 <Select placeholder="Tip seçiniz">
-                  <Option value="financial">Finansal</Option>
-                  <Option value="usage">Kullanım</Option>
-                  <Option value="performance">Performans</Option>
-                  <Option value="tenant">Tenant</Option>
-                  <Option value="audit">Denetim</Option>
-                  <Option value="custom">Özel</Option>
+                  <Option value="Financial">Finansal</Option>
+                  <Option value="Users">Kullanıcılar</Option>
+                  <Option value="Subscriptions">Abonelikler</Option>
+                  <Option value="Performance">Performans</Option>
+                  <Option value="Custom">Özel</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -893,32 +713,10 @@ const ReportsPage: React.FC = () => {
                   <Option value="pdf">PDF</Option>
                   <Option value="excel">Excel</Option>
                   <Option value="csv">CSV</Option>
-                  <Option value="json">JSON</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item
-            name="tags"
-            label="Etiketler"
-          >
-            <Select mode="tags" placeholder="Etiket ekleyin">
-              <Option value="günlük">Günlük</Option>
-              <Option value="haftalık">Haftalık</Option>
-              <Option value="aylık">Aylık</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="schedule"
-            label="Otomatik Oluşturma"
-          >
-            <Radio.Group>
-              <Radio value="none">Yok</Radio>
-              <Radio value="daily">Günlük</Radio>
-              <Radio value="weekly">Haftalık</Radio>
-              <Radio value="monthly">Aylık</Radio>
-            </Radio.Group>
-          </Form.Item>
         </Form>
       </Modal>
 
@@ -950,32 +748,18 @@ const ReportsPage: React.FC = () => {
             rules={[{ required: true, message: 'Zamanlama gereklidir' }]}
           >
             <Select placeholder="Zamanlama seçiniz">
-              <Option value="daily">Her gün</Option>
-              <Option value="weekly">Her hafta</Option>
-              <Option value="monthly">Her ay</Option>
-              <Option value="quarterly">Her çeyrek</Option>
-              <Option value="yearly">Her yıl</Option>
+              <Option value="Daily">Her gün</Option>
+              <Option value="Weekly">Her hafta</Option>
+              <Option value="Monthly">Her ay</Option>
+              <Option value="Yearly">Her yıl</Option>
             </Select>
           </Form.Item>
           <Form.Item
             name="recipients"
             label="Alıcılar"
-            rules={[{ required: true, message: 'En az bir alıcı ekleyin' }]}
           >
             <Select mode="tags" placeholder="E-posta adresleri">
               <Option value="admin@example.com">admin@example.com</Option>
-              <Option value="finance@example.com">finance@example.com</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="format"
-            label="Format"
-            rules={[{ required: true, message: 'Format seçiniz' }]}
-          >
-            <Select placeholder="Format seçiniz">
-              <Option value="PDF">PDF</Option>
-              <Option value="Excel">Excel</Option>
-              <Option value="CSV">CSV</Option>
             </Select>
           </Form.Item>
         </Form>
@@ -1005,16 +789,15 @@ const ReportsPage: React.FC = () => {
         {selectedReport && (
           <div>
             <Result
-              icon={getFormatIcon(selectedReport.format)}
+              icon={getTypeIcon(selectedReport.type)}
               title={selectedReport.name}
               subTitle={selectedReport.description}
               extra={[
                 <Text key="date">
-                  Oluşturulma: {dayjs(selectedReport.lastGenerated).format('DD.MM.YYYY HH:mm')}
+                  Oluşturulma: {dayjs(selectedReport.createdAt).format('DD.MM.YYYY HH:mm')}
                 </Text>
               ]}
             />
-            <Divider />
             <Alert
               message="Rapor Önizlemesi"
               description="Tam rapor içeriği burada görüntülenecek."
