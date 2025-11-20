@@ -146,6 +146,7 @@ const UsersPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // Load users from API
   const loadUsers = async () => {
