@@ -30,15 +30,8 @@ public static class UnitOfWorkExtensions
     public static IRepository<MasterEntities.SecurityAuditLog> SecurityAuditLogs(this IMasterUnitOfWork unitOfWork)
         => unitOfWork.Repository<MasterEntities.SecurityAuditLog>();
 
-    // Read-only repository access
-    public static IReadRepository<MasterEntities.Tenant> TenantsReadOnly(this IMasterUnitOfWork unitOfWork)
-        => unitOfWork.ReadRepository<MasterEntities.Tenant>();
-
-    public static IReadRepository<MasterEntities.SecurityAuditLog> SecurityAuditLogsReadOnly(this IMasterUnitOfWork unitOfWork)
-        => unitOfWork.ReadRepository<MasterEntities.SecurityAuditLog>();
-
-    public static IReadRepository<MasterEntities.Package> PackagesReadOnly(this IMasterUnitOfWork unitOfWork)
-        => unitOfWork.ReadRepository<MasterEntities.Package>();
+    // Note: ReadOnly repository methods removed - use Repository<T>() directly instead
+    // IRepository<T> already contains all IReadRepository<T> methods
 
     #endregion
 
@@ -65,12 +58,8 @@ public static class UnitOfWorkExtensions
     public static IRepository<TenantEntities.Payment> Payments(this ITenantUnitOfWork unitOfWork)
         => unitOfWork.Repository<TenantEntities.Payment>();
 
-    // Read-only repository access
-    public static IReadRepository<TenantEntities.Company> CompaniesReadOnly(this ITenantUnitOfWork unitOfWork)
-        => unitOfWork.ReadRepository<TenantEntities.Company>();
-
-    public static IReadRepository<TenantEntities.TenantUser> TenantUsersReadOnly(this ITenantUnitOfWork unitOfWork)
-        => unitOfWork.ReadRepository<TenantEntities.TenantUser>();
+    // Note: ReadOnly repository methods removed - use Repository<T>() directly instead
+    // IRepository<T> already contains all IReadRepository<T> methods
 
     #endregion
 }

@@ -26,7 +26,12 @@ public class TenantUnitOfWork : BaseUnitOfWork<TenantDbContext>, ITenantUnitOfWo
 
     public IReadRepository<T> ReadRepository<T>() where T : Entity<Guid>
     {
-        return (IReadRepository<T>)Repository<T>();
+        // IRepository<T> already contains all IReadRepository<T> methods
+        // Use Repository<T>() directly instead - it has the same functionality
+        // This method exists only to satisfy the interface contract
+        throw new NotSupportedException(
+            "Use Repository<T>() instead of ReadRepository<T>(). " +
+            "IRepository<T> already includes all read operations from IReadRepository<T>.");
     }
 
     #endregion
