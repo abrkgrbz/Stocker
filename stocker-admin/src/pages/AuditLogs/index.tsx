@@ -186,7 +186,8 @@ const AuditLogsPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
 
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
-  const [complianceReports] = useState<ComplianceReport[]>([]);
+  const [complianceReports, setComplianceReports] = useState<ComplianceReport[]>([]);
+  const [complianceStatus, setComplianceStatus] = useState<any | null>(null);
   const [statistics, setStatistics] = useState<any | null>(null);
 
   useEffect(() => {
@@ -228,6 +229,18 @@ const AuditLogsPage: React.FC = () => {
       } catch (eventsError) {
         console.warn('Security events endpoint not available:', eventsError);
         setSecurityEvents([]);
+      }
+
+      // Load compliance status
+      try {
+        const compliance = await auditLogService.getCompliance(
+          dateRange?.[0]?.toISOString(),
+          dateRange?.[1]?.toISOString()
+        );
+        setComplianceStatus(compliance);
+      } catch (complianceError) {
+        console.warn('Compliance endpoint not available:', complianceError);
+        setComplianceStatus(null);
       }
     } catch (error) {
       message.error('Audit loglar yüklenirken hata oluştu');

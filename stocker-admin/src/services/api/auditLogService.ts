@@ -160,6 +160,25 @@ class AuditLogService {
   }
 
   /**
+   * Get compliance status
+   */
+  async getCompliance(fromDate?: string, toDate?: string): Promise<any> {
+    try {
+      const params = new URLSearchParams();
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+
+      const queryString = params.toString();
+      const url = queryString ? `${this.basePath}/compliance?${queryString}` : `${this.basePath}/compliance`;
+
+      return await apiClient.get<any>(url);
+    } catch (error) {
+      console.error('Failed to fetch compliance status:', error);
+      return null;
+    }
+  }
+
+  /**
    * Helper: Get action color for UI
    */
   getActionColor(action: string): string {
