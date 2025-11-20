@@ -27,9 +27,15 @@ public static class UnitOfWorkExtensions
     public static IRepository<MasterEntities.MasterUser> MasterUsers(this IMasterUnitOfWork unitOfWork)
         => unitOfWork.Repository<MasterEntities.MasterUser>();
 
+    public static IRepository<MasterEntities.SecurityAuditLog> SecurityAuditLogs(this IMasterUnitOfWork unitOfWork)
+        => unitOfWork.Repository<MasterEntities.SecurityAuditLog>();
+
     // Read-only repository access
     public static IReadRepository<MasterEntities.Tenant> TenantsReadOnly(this IMasterUnitOfWork unitOfWork)
         => unitOfWork.ReadRepository<MasterEntities.Tenant>();
+
+    public static IReadRepository<MasterEntities.SecurityAuditLog> SecurityAuditLogsReadOnly(this IMasterUnitOfWork unitOfWork)
+        => unitOfWork.ReadRepository<MasterEntities.SecurityAuditLog>();
 
     public static IReadRepository<MasterEntities.Package> PackagesReadOnly(this IMasterUnitOfWork unitOfWork)
         => unitOfWork.ReadRepository<MasterEntities.Package>();
