@@ -112,7 +112,10 @@ export const apiService = {
             api.post<ApiResponse>('/api/auth/check-email', { email }),
 
         verifyEmail: (data: { email: string; code: string }) =>
-            api.post<ApiResponse>('/api/auth/verify-email', data),
+            api.post<ApiResponse>('/api/auth/verify-email', {
+                email: data.email,
+                token: data.code
+            }),
 
         resendVerificationEmail: (email: string) =>
             api.post<ApiResponse>('/api/auth/resend-verification-email', { email }),
