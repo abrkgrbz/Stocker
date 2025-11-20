@@ -18,7 +18,7 @@ namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/auth")]
-[SwaggerTag("Master Authentication - System administrator authentication")]
+[SwaggerTag("Master Admin Panel - Authentication")]
 public class MasterAuthController : ApiController
 {
     private readonly ILogger<MasterAuthController> _logger;

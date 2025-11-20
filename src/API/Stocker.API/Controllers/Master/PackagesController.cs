@@ -18,7 +18,7 @@ namespace Stocker.API.Controllers.Master;
 /// <summary>
 /// Manages subscription packages
 /// </summary>
-[SwaggerTag("Package Management - Manage subscription packages and pricing")]
+[SwaggerTag("Master Admin Panel - Package Management")]
 public class PackagesController : MasterControllerBase
 {
     public PackagesController(IMediator mediator, ILogger<PackagesController> logger) 

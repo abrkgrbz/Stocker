@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Services;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;

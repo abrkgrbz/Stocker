@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Common.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Infrastructure.BackgroundJobs;
 
 namespace Stocker.API.Controllers.Master;

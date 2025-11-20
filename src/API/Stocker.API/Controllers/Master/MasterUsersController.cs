@@ -14,7 +14,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Master User Management - Manage system administrators and support staff")]
+[SwaggerTag("Master Admin Panel - Master Users")]
 public class MasterUsersController : MasterControllerBase
 {
     public MasterUsersController(IMediator mediator, ILogger<MasterUsersController> logger) 

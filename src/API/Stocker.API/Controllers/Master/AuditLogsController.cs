@@ -15,7 +15,7 @@ namespace Stocker.API.Controllers.Master;
 /// <summary>
 /// Audit logs and security monitoring endpoints for Master admin panel
 /// </summary>
-[SwaggerTag("Audit Logs - Security audit logs, compliance tracking, and activity monitoring")]
+[SwaggerTag("Master Admin Panel - Audit Logs and Compliance")]
 public class AuditLogsController : MasterControllerBase
 {
     public AuditLogsController(IMediator mediator, ILogger<AuditLogsController> logger)

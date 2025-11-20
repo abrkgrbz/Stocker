@@ -11,7 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Payment Processing - Process and manage payments")]
+[SwaggerTag("Master Admin Panel - Payment Processing")]
 public class PaymentsController : MasterControllerBase
 {
     public PaymentsController(IMediator mediator, ILogger<PaymentsController> logger) 

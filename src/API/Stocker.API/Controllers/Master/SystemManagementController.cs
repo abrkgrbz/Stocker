@@ -2,12 +2,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
 using Stocker.Application.Features.SystemManagement.Commands.CleanDocker;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Commands.ResolveError;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Commands.DeleteError;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Commands.ClearResolvedErrors;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Queries.GetDockerStats;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Queries.GetSystemErrors;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemManagement.Queries.GetErrorStatistics;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 

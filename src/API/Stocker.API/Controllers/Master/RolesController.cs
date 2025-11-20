@@ -4,7 +4,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Role Management - Manage system roles and permissions")]
+[SwaggerTag("Master Admin Panel - Role Management")]
 public class RolesController : MasterControllerBase
 {
     public RolesController(IMediator mediator, ILogger<RolesController> logger)

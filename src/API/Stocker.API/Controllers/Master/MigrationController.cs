@@ -21,7 +21,7 @@ namespace Stocker.API.Controllers.Master;
 [Authorize(Policy = "RequireMasterAccess")]
 [ApiController]
 [Route("api/master/migrations")]
-[SwaggerTag("Master - Database Migration Management")]
+[SwaggerTag("Master Admin Panel - Database Migrations")]
 public class MigrationController : ApiController
 {
     private readonly ISender _sender;

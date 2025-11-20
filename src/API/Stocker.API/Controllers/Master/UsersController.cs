@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Interfaces.Repositories;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/users")]
 [Authorize(Policy = "RequireMasterAccess")]
+[SwaggerTag("Master Admin Panel - Tenant Users")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;

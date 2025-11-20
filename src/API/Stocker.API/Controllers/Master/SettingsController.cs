@@ -13,7 +13,7 @@ namespace Stocker.API.Controllers.Master;
 /// <summary>
 /// System settings management
 /// </summary>
-[SwaggerTag("System Settings - Configure and manage system-wide settings")]
+[SwaggerTag("Master Admin Panel - System Settings")]
 public class SettingsController : MasterControllerBase
 {
     public SettingsController(IMediator mediator, ILogger<SettingsController> logger) 

@@ -15,7 +15,7 @@ namespace Stocker.API.Controllers.Master;
 
 [Authorize]
 [Route("api/master/[controller]")]
-[SwaggerTag("Subscription Management - Manage tenant subscriptions and billing")]
+[SwaggerTag("Master Admin Panel - Subscription Management")]
 public class SubscriptionsController : MasterControllerBase
 {
     public SubscriptionsController(IMediator mediator, ILogger<SubscriptionsController> logger) : base(mediator, logger)

@@ -2,12 +2,14 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Interfaces.Repositories;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/dashboard")]
 [Authorize(Policy = "RequireMasterAccess")]
+[SwaggerTag("Master Admin Panel - Dashboard and Statistics")]
 public class DashboardController : ControllerBase
 {
     private readonly IDashboardRepository _dashboardRepository;

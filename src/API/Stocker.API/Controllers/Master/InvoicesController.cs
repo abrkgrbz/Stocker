@@ -12,7 +12,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Invoice Management - Manage billing invoices and statements")]
+[SwaggerTag("Master Admin Panel - Invoice Management")]
 public class InvoicesController : MasterControllerBase
 {
     public InvoicesController(IMediator mediator, ILogger<InvoicesController> logger) 

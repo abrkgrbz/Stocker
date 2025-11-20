@@ -8,7 +8,7 @@ using Stocker.SharedKernel.Exceptions;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("System Monitoring - Monitor system health, performance and resource usage")]
+[SwaggerTag("Master Admin Panel - System Monitoring")]
 public class MonitoringController : MasterControllerBase
 {
     private readonly IWebHostEnvironment _environment;

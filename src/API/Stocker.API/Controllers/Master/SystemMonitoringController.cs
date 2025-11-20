@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.API.Controllers.Base;
 using Stocker.Application.Features.SystemMonitoring.Queries.GetServiceStatus;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemMonitoring.Queries.GetSystemHealth;
+using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Features.SystemMonitoring.Queries.GetSystemMetrics;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 

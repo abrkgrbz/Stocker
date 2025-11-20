@@ -5,7 +5,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Analytics - System analytics and business intelligence")]
+[SwaggerTag("Master Admin Panel - Analytics and Business Intelligence")]
 public class AnalyticsController : MasterControllerBase
 {
     public AnalyticsController(IMediator mediator, ILogger<AnalyticsController> logger) 

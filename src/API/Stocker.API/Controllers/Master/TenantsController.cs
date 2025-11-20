@@ -24,7 +24,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Tenant Management - Manage system tenants and their configurations")]
+[SwaggerTag("Master Admin Panel - Tenant Management")]
 
 public class TenantsController : MasterControllerBase
 {

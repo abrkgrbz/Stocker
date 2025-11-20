@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Stocker.API.Controllers.Master;
 
-[SwaggerTag("Reports - Generate and manage system reports")]
+[SwaggerTag("Master Admin Panel - Reports")]
 public class ReportsController : MasterControllerBase
 {
     public ReportsController(IMediator mediator, ILogger<ReportsController> logger) 
