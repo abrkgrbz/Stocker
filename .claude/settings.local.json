@@ -29,7 +29,9 @@
       "Bash(findstr:*)",
       "Bash(mkdir:*)",
       "Bash(dir \"C:\\Users\\PC\\source\\repos\\Stocker\\src\\API\\Stocker.API\\Controllers\\Master\")",
-      "Bash(Select-String -Pattern \"error|succeeded|failed\")"
+      "Bash(Select-String -Pattern \"error|succeeded|failed\")",
+      "Bash(NUL)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

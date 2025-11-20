@@ -15,6 +15,7 @@ interface User {
     roles?: string[];
     tenantId?: string;
     tenantName?: string;
+    requiresSetup?: boolean;
 }
 
 interface AuthState {
@@ -30,6 +31,7 @@ interface AuthState {
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     setLoading: (loading: boolean) => void;
+    updateUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -46,6 +48,10 @@ export const useAuthStore = create<AuthState>()(
                 set({ isLoading: loading });
             },
 
+            updateUser: (user: User) => {
+                set({ user });
+            },
+
             login: async (data) => {
                 set({ isLoading: true });
 
@@ -53,7 +59,7 @@ export const useAuthStore = create<AuthState>()(
                     const response = await apiService.auth.login(data);
 
                     if (response.data?.success) {
-                        const { accessToken, refreshToken, user } = response.data.data;
+                        const { accessToken, refreshToken, user, requiresSetup } = response.data.data;
 
                         // Map user data
                         const appUser: User = {
@@ -66,6 +72,7 @@ export const useAuthStore = create<AuthState>()(
                             roles: user.roles,
                             tenantId: user.tenantId,
                             tenantName: user.tenantName,
+                            requiresSetup: requiresSetup || false,
                         };
 
                         // Store tokens

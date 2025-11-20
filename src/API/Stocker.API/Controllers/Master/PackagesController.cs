@@ -27,22 +27,6 @@ public class PackagesController : MasterControllerBase
     }
 
     /// <summary>
-    /// Get all packages (public endpoint for registration/setup)
-    /// </summary>
-    [HttpGet("public")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<List<PackageDto>>), 200)]
-    public async Task<IActionResult> GetPublicPackages()
-    {
-        _logger.LogInformation("Getting public packages list for setup");
-
-        // Only return active packages for public endpoint
-        var query = new GetPackagesListQuery { OnlyActive = true };
-        var result = await _mediator.Send(query);
-        return HandleResult(result);
-    }
-
-    /// <summary>
     /// Get all packages (admin only)
     /// </summary>
     [HttpGet]

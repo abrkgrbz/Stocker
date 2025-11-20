@@ -152,10 +152,16 @@ export const apiService = {
         validateEmail: (email: string) =>
             api.post<ApiResponse>('/api/public/validate-email', { email }),
 
-
-
         validateCompanyCode: (code: string) =>
             api.get<ApiResponse>('/api/public/check-company-code/' + code),
+
+        getPackages: () =>
+            api.get<ApiResponse>('/api/packages/public'),
+    },
+
+    setup: {
+        complete: (data: any) =>
+            api.post<ApiResponse>('/api/setup/complete', data),
     },
 };
 

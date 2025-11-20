@@ -5,12 +5,13 @@ import { useAuthStore } from '../stores/authStore';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import SetupScreen from '../screens/SetupScreen';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-    const { isAuthenticated, isInitializing } = useAuthStore();
+    const { isAuthenticated, isInitializing, user } = useAuthStore();
 
     if (isInitializing) {
         return (
@@ -24,7 +25,11 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isAuthenticated ? (
-                    <Stack.Screen name="Dashboard" component={DashboardScreen} />
+                    user?.requiresSetup ? (
+                        <Stack.Screen name="Setup" component={SetupScreen} />
+                    ) : (
+                        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+                    )
                 ) : (
                     <>
                         <Stack.Screen name="Login" component={LoginScreen} />
