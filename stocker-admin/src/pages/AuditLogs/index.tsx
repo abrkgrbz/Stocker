@@ -189,6 +189,8 @@ const AuditLogsPage: React.FC = () => {
   const [complianceReports, setComplianceReports] = useState<ComplianceReport[]>([]);
   const [complianceStatus, setComplianceStatus] = useState<any | null>(null);
   const [statistics, setStatistics] = useState<any | null>(null);
+  const [complianceModalVisible, setComplianceModalVisible] = useState(false);
+  const [selectedCompliance, setSelectedCompliance] = useState<ComplianceReport | null>(null);
 
   useEffect(() => {
     loadAuditLogs();
@@ -286,6 +288,11 @@ const AuditLogsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewComplianceReport = (report: ComplianceReport) => {
+    setSelectedCompliance(report);
+    setComplianceModalVisible(true);
   };
 
   // Chart data
@@ -908,7 +915,12 @@ const AuditLogsPage: React.FC = () => {
                           Sonraki Denetim: {dayjs(report.nextAudit).format('DD.MM.YYYY')}
                         </Text>
                       </Space>
-                      <Button type="primary" block icon={<FileSearchOutlined />}>
+                      <Button
+                        type="primary"
+                        block
+                        icon={<FileSearchOutlined />}
+                        onClick={() => handleViewComplianceReport(report)}
+                      >
                         Raporu Görüntüle
                       </Button>
                     </Space>
@@ -1236,6 +1248,140 @@ const AuditLogsPage: React.FC = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      {/* Compliance Report Modal */}
+      <Modal
+        title={
+          <Space>
+            <SafetyOutlined style={{ color: '#1890ff' }} />
+            <span>{selectedCompliance?.standard} Uyumluluk Raporu</span>
+          </Space>
+        }
+        open={complianceModalVisible}
+        onCancel={() => setComplianceModalVisible(false)}
+        width={800}
+        footer={[
+          <Button key="close" onClick={() => setComplianceModalVisible(false)}>
+            Kapat
+          </Button>,
+          <Button key="download" type="primary" icon={<DownloadOutlined />}>
+            PDF İndir
+          </Button>
+        ]}
+      >
+        {selectedCompliance && complianceStatus && (
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            {/* Overall Status */}
+            <Card size="small">
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic
+                    title="Uyumluluk Skoru"
+                    value={selectedCompliance.score}
+                    suffix="%"
+                    valueStyle={{
+                      color: selectedCompliance.score >= 90 ? '#52c41a' :
+                             selectedCompliance.score >= 70 ? '#faad14' : '#ff4d4f'
+                    }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Toplam Bulgular"
+                    value={selectedCompliance.findings}
+                    prefix={<FileSearchOutlined />}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Kritik Sorunlar"
+                    value={selectedCompliance.criticalIssues}
+                    prefix={<WarningOutlined />}
+                    valueStyle={{
+                      color: selectedCompliance.criticalIssues > 0 ? '#ff4d4f' : '#52c41a'
+                    }}
+                  />
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Compliance Checks */}
+            <Card title="Uyumluluk Kontrolleri" size="small">
+              <List
+                dataSource={
+                  selectedCompliance.id === 'gdpr' ? complianceStatus.gdpr?.checks || [] :
+                  selectedCompliance.id === 'iso27001' ? complianceStatus.iso27001?.checks || [] :
+                  selectedCompliance.id === 'pcidss' ? complianceStatus.pciDss?.checks || [] : []
+                }
+                renderItem={(check: any) => (
+                  <List.Item
+                    extra={
+                      check.passed ? (
+                        <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                      ) : (
+                        <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 20 }} />
+                      )
+                    }
+                  >
+                    <List.Item.Meta
+                      title={check.name}
+                      description={
+                        <Space direction="vertical" size={0}>
+                          <Text type="secondary">{check.details || 'Detay bilgisi yok'}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Son kontrol: {dayjs(check.lastChecked).format('DD.MM.YYYY HH:mm')}
+                          </Text>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </Card>
+
+            {/* Audit Information */}
+            <Card title="Denetim Bilgileri" size="small">
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="Son Denetim">
+                  {dayjs(selectedCompliance.lastAudit).format('DD.MM.YYYY')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Sonraki Denetim">
+                  {dayjs(selectedCompliance.nextAudit).format('DD.MM.YYYY')}
+                </Descriptions.Item>
+                <Descriptions.Item label="Durum" span={2}>
+                  <Badge
+                    status={
+                      selectedCompliance.status === 'compliant' ? 'success' :
+                      selectedCompliance.status === 'partial' ? 'warning' : 'error'
+                    }
+                    text={
+                      selectedCompliance.status === 'compliant' ? 'Tam Uyumlu' :
+                      selectedCompliance.status === 'partial' ? 'Kısmi Uyumlu' : 'Uyumsuz'
+                    }
+                  />
+                </Descriptions.Item>
+                {complianceStatus.notes && (
+                  <Descriptions.Item label="Notlar" span={2}>
+                    {complianceStatus.notes}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+
+            {/* Description */}
+            <Alert
+              message="Açıklama"
+              description={
+                selectedCompliance.id === 'gdpr' ? complianceStatus.gdpr?.description :
+                selectedCompliance.id === 'iso27001' ? complianceStatus.iso27001?.description :
+                selectedCompliance.id === 'pcidss' ? complianceStatus.pciDss?.description : ''
+              }
+              type="info"
+              showIcon
+            />
+          </Space>
+        )}
       </Modal>
     </div>
   );
