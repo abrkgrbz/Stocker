@@ -211,14 +211,6 @@ const MasterLayout: React.FC = () => {
       keywords: ['settings', 'ayarlar', 'config', 'konfigürasyon', 'preferences', 'tercihler']
     },
     // Quick Actions
-    {
-      type: 'action',
-      title: locale === 'tr' ? 'Yeni Tenant Oluştur' : 'Create New Tenant',
-      description: locale === 'tr' ? 'Hızlı tenant oluşturma' : 'Quick tenant creation',
-      path: '/tenants',
-      icon: <PlusOutlined />,
-      keywords: ['create', 'oluştur', 'new', 'yeni', 'tenant', 'add', 'ekle']
-    },
     // Common Terms
     {
       type: 'term',
@@ -340,11 +332,6 @@ const MasterLayout: React.FC = () => {
           path: '/tenant-registrations',
           name: locale === 'tr' ? 'Kayıt Onayları' : 'Registration Approvals',
           icon: <CheckCircleOutlined />,
-        },
-        {
-          path: '/tenants',
-          name: locale === 'tr' ? 'Yeni Tenant' : 'New Tenant',
-          icon: <PlusOutlined />,
         },
         {
           path: '/tenants/migrations',
@@ -537,13 +524,6 @@ const MasterLayout: React.FC = () => {
     rightContentRender: () => (
       <Space size={16} style={{ paddingRight: 16 }}>
         {/* Quick Actions */}
-        <Tooltip title={locale === 'tr' ? 'Yeni Tenant' : 'New Tenant'}>
-          <Button 
-            type="text" 
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/tenants')}
-          />
-        </Tooltip>
 
         <Tooltip title={locale === 'tr' ? 'Yenile' : 'Refresh'}>
           <Button 
