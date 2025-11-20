@@ -314,6 +314,15 @@ function LoginForm() {
         return;
       }
 
+      // Check if setup is required and store in localStorage
+      if (authData.requiresSetup === true) {
+        localStorage.setItem('requiresSetup', 'true');
+        console.log('✅ Setup required flag set in localStorage');
+      } else {
+        // Make sure flag is removed if not required
+        localStorage.removeItem('requiresSetup');
+      }
+
       // Redirect to tenant dashboard
       console.log('🎯 Login success! Redirecting to tenant dashboard...')
       console.log('📋 Tenant code:', tenant.code)
