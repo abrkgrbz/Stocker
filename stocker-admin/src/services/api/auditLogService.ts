@@ -139,6 +139,27 @@ class AuditLogService {
   }
 
   /**
+   * Get security events
+   */
+  async getSecurityEvents(fromDate?: string, toDate?: string, severity?: string, type?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      if (severity) params.append('severity', severity);
+      if (type) params.append('type', type);
+
+      const queryString = params.toString();
+      const url = queryString ? `${this.basePath}/security-events?${queryString}` : `${this.basePath}/security-events`;
+
+      return await apiClient.get<any[]>(url);
+    } catch (error) {
+      console.error('Failed to fetch security events:', error);
+      return [];
+    }
+  }
+
+  /**
    * Helper: Get action color for UI
    */
   getActionColor(action: string): string {

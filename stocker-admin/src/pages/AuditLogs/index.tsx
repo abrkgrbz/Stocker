@@ -217,6 +217,18 @@ const AuditLogsPage: React.FC = () => {
         console.warn('Statistics endpoint not available:', statsError);
         setStatistics(null);
       }
+
+      // Load security events
+      try {
+        const events = await auditLogService.getSecurityEvents(
+          dateRange?.[0]?.toISOString(),
+          dateRange?.[1]?.toISOString()
+        );
+        setSecurityEvents(events || []);
+      } catch (eventsError) {
+        console.warn('Security events endpoint not available:', eventsError);
+        setSecurityEvents([]);
+      }
     } catch (error) {
       message.error('Audit loglar yüklenirken hata oluştu');
       console.error('Failed to load audit logs:', error);
