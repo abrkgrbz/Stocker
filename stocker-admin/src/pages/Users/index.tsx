@@ -138,111 +138,48 @@ const UsersPage: React.FC = () => {
   const [form] = Form.useForm();
   const [roleForm] = Form.useForm();
 
-  // Mock data
-  const mockUsers: User[] = [
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+90 555 123 4567',
-      tenant: 'ABC Corporation',
-      role: 'Admin',
-      department: 'IT',
-      status: 'active',
-      createdAt: '2024-01-15',
-      lastLogin: '5 dakika önce',
-      loginCount: 324,
-      permissions: ['users.view', 'users.edit', 'users.delete', 'settings.manage'],
-      twoFactorEnabled: true,
-      emailVerified: true,
-      phoneVerified: true,
-      sessions: 2,
-      ipAddress: '192.168.1.100',
-      location: 'İstanbul, Türkiye',
-      deviceInfo: 'Chrome 120, Windows 11',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone: '+90 555 987 6543',
-      tenant: 'Tech Startup Ltd.',
-      role: 'User',
-      department: 'Sales',
-      status: 'active',
-      createdAt: '2024-03-20',
-      lastLogin: '1 saat önce',
-      loginCount: 145,
-      permissions: ['dashboard.view', 'reports.view'],
-      twoFactorEnabled: false,
-      emailVerified: true,
-      phoneVerified: false,
-      sessions: 1,
-      ipAddress: '192.168.1.101',
-      location: 'Ankara, Türkiye',
-      deviceInfo: 'Safari 17, MacOS',
-    },
-    {
-      id: '3',
-      name: 'Bob Johnson',
-      email: 'bob.johnson@example.com',
-      phone: '+90 555 456 7890',
-      tenant: 'Small Business Co.',
-      role: 'Manager',
-      department: 'Operations',
-      status: 'suspended',
-      createdAt: '2024-06-10',
-      lastLogin: '3 gün önce',
-      loginCount: 89,
-      permissions: ['users.view', 'reports.view', 'reports.export'],
-      twoFactorEnabled: false,
-      emailVerified: false,
-      phoneVerified: false,
-      sessions: 0,
-      ipAddress: '192.168.1.102',
-      location: 'İzmir, Türkiye',
-      deviceInfo: 'Firefox 121, Ubuntu',
-    },
-  ];
+  // API Data States
+  const [users, setUsers] = useState<UserListDto[]>([]);
+  const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  const mockRoles: Role[] = [
-    {
-      id: '1',
-      name: 'Super Admin',
-      description: 'Tüm sistem yetkilerine sahip',
-      permissions: ['*'],
-      userCount: 3,
-      createdAt: '2024-01-01',
-      isSystem: true,
-    },
-    {
-      id: '2',
-      name: 'Admin',
-      description: 'Tenant yönetim yetkilerine sahip',
-      permissions: ['users.*', 'settings.*', 'reports.*'],
-      userCount: 15,
-      createdAt: '2024-01-01',
-      isSystem: true,
-    },
-    {
-      id: '3',
-      name: 'Manager',
-      description: 'Ekip yönetimi ve raporlama yetkilerine sahip',
-      permissions: ['users.view', 'users.edit', 'reports.*'],
-      userCount: 42,
-      createdAt: '2024-01-15',
-      isSystem: false,
-    },
-    {
-      id: '4',
-      name: 'User',
-      description: 'Temel kullanıcı yetkileri',
-      permissions: ['dashboard.view', 'profile.edit'],
-      userCount: 1150,
-      createdAt: '2024-01-01',
-      isSystem: true,
-    },
-  ];
+  // Load users from API
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const [usersData, statsData] = await Promise.all([
+        userService.getAll({
+          pageNumber,
+          pageSize,
+          searchTerm: searchTerm || undefined,
+          role: roleFilter === 'all' ? undefined : roleFilter,
+          isActive: statusFilter === 'all' ? undefined : statusFilter === 'active'
+        }),
+        userService.getStatistics()
+      ]);
+
+      setUsers(Array.isArray(usersData) ? usersData : usersData.data || []);
+      setTotalCount(Array.isArray(usersData) ? usersData.length : usersData.totalCount || 0);
+      setStatistics(statsData);
+    } catch (error) {
+      message.error('Kullanıcılar yüklenirken hata oluştu');
+      console.error('Failed to load users:', error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, [pageNumber, pageSize, searchTerm, roleFilter, statusFilter]);
+
+  const mockRoles: Role[] = [];
+
 
   const allPermissions = [
     { key: 'users.view', title: 'Kullanıcıları Görüntüle', group: 'Kullanıcılar' },
@@ -313,7 +250,7 @@ const UsersPage: React.FC = () => {
       dataIndex: 'tenant',
       key: 'tenant',
       width: 150,
-      filters: mockUsers.map(u => ({ text: u.tenant, value: u.tenant }))
+      filters: users.map(u => ({ text: u.tenantName || "N/A", value: u.tenantName || "N/A" }))
         .filter((v, i, a) => a.findIndex(t => t.value === v.value) === i),
     },
     {
@@ -621,7 +558,7 @@ const UsersPage: React.FC = () => {
     });
   };
 
-  const handleMenuClick = (key: string, record: User) => {
+  const handleMenuClick = async (key: string, record: User) => {
     switch (key) {
       case 'impersonate':
         message.info(`${record.name} olarak giriş yapılıyor...`);
@@ -645,11 +582,25 @@ const UsersPage: React.FC = () => {
         Modal.confirm({
           title: 'Kullanıcı Askıya Al',
           content: `${record.name} askıya alınacak. Onaylıyor musunuz?`,
-          onOk: () => message.warning('Kullanıcı askıya alındı'),
+          onOk: async () => {
+            try {
+              await userService.deactivate(record.id);
+              message.warning('Kullanıcı askıya alındı');
+              await loadUsers();
+            } catch (error) {
+              message.error('Askıya alma başarısız oldu');
+            }
+          },
         });
         break;
       case 'activate':
-        message.success('Kullanıcı aktifleştirildi');
+        try {
+          await userService.activate(record.id);
+          message.success('Kullanıcı aktifleştirildi');
+          await loadUsers();
+        } catch (error) {
+          message.error('Aktivasyon başarısız oldu');
+        }
         break;
       case 'logout-all':
         Modal.confirm({
@@ -676,7 +627,15 @@ const UsersPage: React.FC = () => {
           ),
           okText: 'Sil',
           okType: 'danger',
-          onOk: () => message.success('Kullanıcı silindi'),
+          onOk: async () => {
+            try {
+              await userService.delete(record.id);
+              message.success('Kullanıcı silindi');
+              await loadUsers();
+            } catch (error) {
+              message.error('Silme işlemi başarısız oldu');
+            }
+          },
         });
         break;
     }
@@ -686,20 +645,36 @@ const UsersPage: React.FC = () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
-      setTimeout(() => {
-        if (editMode) {
-          message.success('Kullanıcı güncellendi');
-        } else {
-          message.success('Yeni kullanıcı oluşturuldu');
-        }
-        setIsModalVisible(false);
-        form.resetFields();
-        setLoading(false);
-        actionRef.current?.reload();
-      }, 1500);
+
+      if (editMode && selectedUser) {
+        await userService.update(selectedUser.id, {
+          email: values.email,
+          fullName: values.name,
+          username: values.email.split('@')[0],
+          phoneNumber: values.phone,
+          isActive: values.status === 'active',
+        });
+        message.success('Kullanıcı güncellendi');
+      } else {
+        await userService.create({
+          email: values.email,
+          fullName: values.name,
+          username: values.email.split('@')[0],
+          password: 'TempPass123!', // Temporary password
+          phoneNumber: values.phone,
+          tenantId: values.tenant,
+        });
+        message.success('Yeni kullanıcı oluşturuldu');
+      }
+
+      setIsModalVisible(false);
+      form.resetFields();
+      await loadUsers();
     } catch (error) {
-      console.error('Validation failed:', error);
+      message.error('İşlem başarısız oldu');
+      console.error('Operation failed:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1115,7 +1090,7 @@ const UsersPage: React.FC = () => {
               <Card>
                 <Statistic
                   title="Toplam Kullanıcı"
-                  value={15632}
+                  value={statistics?.totalUsers || totalCount}
                   prefix={<UserOutlined style={{ color: '#667eea' }} />}
                 />
               </Card>
@@ -1124,7 +1099,7 @@ const UsersPage: React.FC = () => {
               <Card>
                 <Statistic
                   title="Aktif Kullanıcı"
-                  value={14280}
+                  value={statistics?.activeUsers || 0}
                   prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
                   valueStyle={{ color: '#52c41a' }}
                 />
@@ -1133,19 +1108,19 @@ const UsersPage: React.FC = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="Askıda"
-                  value={342}
-                  prefix={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
-                  valueStyle={{ color: '#faad14' }}
+                  title="Admin Kullanıcı"
+                  value={statistics?.adminUsers || 0}
+                  prefix={<CrownOutlined style={{ color: '#722ed1' }} />}
+                  valueStyle={{ color: '#722ed1' }}
                 />
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="2FA Aktif"
-                  value="68%"
-                  prefix={<SafetyOutlined style={{ color: '#1890ff' }} />}
+                  title="Bu Ay Yeni"
+                  value={statistics?.newUsersThisMonth || 0}
+                  prefix={<PlusOutlined style={{ color: '#1890ff' }} />}
                 />
               </Card>
             </Col>
@@ -1154,7 +1129,7 @@ const UsersPage: React.FC = () => {
           {/* Users Table */}
           <ProTable<User>
             columns={userColumns}
-            dataSource={mockUsers}
+            dataSource={users}
             actionRef={actionRef}
             rowKey="id"
             search={{

@@ -56,7 +56,6 @@ import {
   KeyOutlined,
   ControlOutlined,
   SecurityScanOutlined,
-  SafetyOutlined,
   ApiOutlined,
   DatabaseOutlined,
   GlobalOutlined,
