@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Packages.Commands.CreatePackage;
 using Stocker.Application.Features.Packages.Commands.UpdatePackage;
@@ -26,14 +27,30 @@ public class PackagesController : MasterControllerBase
     }
 
     /// <summary>
-    /// Get all packages
+    /// Get all packages (public endpoint for registration/setup)
+    /// </summary>
+    [HttpGet("public")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<List<PackageDto>>), 200)]
+    public async Task<IActionResult> GetPublicPackages()
+    {
+        _logger.LogInformation("Getting public packages list for setup");
+
+        // Only return active packages for public endpoint
+        var query = new GetPackagesListQuery { OnlyActive = true };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get all packages (admin only)
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<PackageDto>>), 200)]
     public async Task<IActionResult> GetAll([FromQuery] GetPackagesListQuery query)
     {
         _logger.LogInformation("Getting all packages");
-        
+
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
