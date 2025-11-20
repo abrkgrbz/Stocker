@@ -783,68 +783,12 @@ const AnalyticsPage: React.FC = () => {
             <Divider />
 
             <Row gutter={16}>
-              <Col span={12}>
-                <Card title="Son Güvenlik Olayları" size="small">
-                  <Timeline>
-                    <Timeline.Item color="green">
-                      <Text>Sistem güvenlik taraması tamamlandı</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        2 saat önce
-                      </Text>
-                    </Timeline.Item>
-                    <Timeline.Item color="orange">
-                      <Text>Şüpheli API isteği engellendi</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        6 saat önce - IP: 185.xxx.xxx.45
-                      </Text>
-                    </Timeline.Item>
-                    <Timeline.Item color="green">
-                      <Text>SSL sertifikaları yenilendi</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        1 gün önce
-                      </Text>
-                    </Timeline.Item>
-                    <Timeline.Item color="blue">
-                      <Text>Firewall kuralları güncellendi</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        3 gün önce
-                      </Text>
-                    </Timeline.Item>
-                  </Timeline>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="Güvenlik Durumu" size="small">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>Firewall</Text>
-                      <Badge status="success" text="Aktif" />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>DDoS Koruması</Text>
-                      <Badge status="success" text="Aktif" />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>WAF (Web Application Firewall)</Text>
-                      <Badge status="success" text="Aktif" />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>Intrusion Detection</Text>
-                      <Badge status="success" text="Aktif" />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>SSL/TLS</Text>
-                      <Badge status="success" text="A+ Rating" />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text>Vulnerability Scan</Text>
-                      <Badge status="success" text="Temiz" />
-                    </div>
-                  </Space>
+              <Col span={24}>
+                <Card>
+                  <Empty
+                    description="Güvenlik metrikleri henüz API'den sağlanmamaktadır"
+                    style={{ padding: '40px 0' }}
+                  />
                 </Card>
               </Col>
             </Row>
