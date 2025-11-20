@@ -151,20 +151,17 @@ const AnalyticsPage: React.FC = () => {
     { date: ug.period, value: ug.totalUsers - ug.churnedUsers, type: 'Aktif Kullanıcı' }
   ]) || [];
 
-  // Device and location data from API (placeholder for future implementation)
-  const deviceData = [
-    { type: 'Desktop', value: 65.2 },
-    { type: 'Mobile', value: 28.5 },
-    { type: 'Tablet', value: 6.3 }
-  ];
+  // Device and location data from API - empty arrays if not available
+  const deviceData = userData?.deviceBreakdown?.map(d => ({
+    type: d.deviceType,
+    value: d.percentage
+  })) || [];
 
-  const locationData = [
-    { location: 'Türkiye', users: 5420, percentage: 62.1 },
-    { location: 'Almanya', users: 1250, percentage: 14.3 },
-    { location: 'İngiltere', users: 890, percentage: 10.2 },
-    { location: 'Fransa', users: 650, percentage: 7.4 },
-    { location: 'Diğer', users: 540, percentage: 6.0 }
-  ];
+  const locationData = userData?.locationBreakdown?.map(l => ({
+    location: l.country,
+    users: l.userCount,
+    percentage: l.percentage
+  })) || [];
 
   const topTenants: TopTenant[] = revenueData?.topPayingTenants?.map((t, index) => ({
     id: String(index + 1),
@@ -184,14 +181,7 @@ const AnalyticsPage: React.FC = () => {
     cpu: rt.averageTime / 10, // Normalize to percentage-like values for chart
     memory: rt.p95Time / 10,
     disk: rt.p99Time / 10
-  })) || [
-    { time: '00:00', cpu: 45, memory: 62, disk: 38 },
-    { time: '04:00', cpu: 38, memory: 58, disk: 35 },
-    { time: '08:00', cpu: 72, memory: 78, disk: 55 },
-    { time: '12:00', cpu: 85, memory: 82, disk: 68 },
-    { time: '16:00', cpu: 78, memory: 75, disk: 62 },
-    { time: '20:00', cpu: 65, memory: 70, disk: 48 }
-  ];
+  })) || [];
 
   const handleRefresh = async () => {
     setRefreshing(true);
