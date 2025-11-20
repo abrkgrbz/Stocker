@@ -19,6 +19,14 @@ import {
   Modal,
   Form,
   DatePicker,
+  Drawer,
+  Steps,
+  Radio,
+  InputNumber,
+  Switch,
+  Checkbox,
+  Divider,
+  Alert,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -36,15 +44,26 @@ import {
   CalendarOutlined,
   DollarOutlined,
   GlobalOutlined,
+  TeamOutlined,
+  AppstoreOutlined,
+  SettingOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+  SaveOutlined,
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
 } from '@ant-design/icons';
 import { tenantService, TenantListDto, TenantsStatisticsDto } from '../../services/api/tenantService';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import CreateTenantDrawer from './CreateTenantDrawer';
 
 dayjs.extend(relativeTime);
 
 const { Title, Text } = Typography;
 const { Search } = Input;
+const { TextArea } = Input;
 
 const TenantsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,6 +80,9 @@ const TenantsPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
+
+  // Create Tenant Drawer State
+  const [createDrawerVisible, setCreateDrawerVisible] = useState(false);
 
   // Load tenants from API
   const fetchTenants = async () => {
@@ -390,7 +412,7 @@ const TenantsPage: React.FC = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => navigate('/tenants/create')}
+              onClick={() => setCreateDrawerVisible(true)}
             >
               Yeni Tenant
             </Button>
@@ -448,6 +470,15 @@ const TenantsPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <CreateTenantDrawer
+        visible={createDrawerVisible}
+        onClose={() => setCreateDrawerVisible(false)}
+        onSuccess={() => {
+          setCreateDrawerVisible(false);
+          fetchTenants();
+        }}
+      />
     </div>
   );
 };
