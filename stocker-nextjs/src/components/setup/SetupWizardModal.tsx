@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Modal } from 'antd'
+import { getApiUrl } from '@/lib/env'
 
 type SetupStep = 'package' | 'company' | 'complete'
 
@@ -61,21 +62,32 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const loadPackages = async () => {
     try {
       setLoadingPackages(true)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const apiUrl = getApiUrl(true) // Use tenant-aware API URL
+      console.log('📦 Loading packages from:', `${apiUrl}/api/packages/public`)
+
       const response = await fetch(`${apiUrl}/api/packages/public`)
+      console.log('📦 Packages response status:', response.status)
 
       if (response.ok) {
         const data = await response.json()
+        console.log('📦 Packages data:', data)
+
         if (data.success && data.data) {
           setPackages(data.data)
+          console.log('✅ Loaded packages:', data.data.length)
+
           // Auto-select first package
           if (data.data.length > 0) {
             setSelectedPackageId(data.data[0].id)
           }
+        } else {
+          console.warn('⚠️ Invalid packages response format:', data)
         }
+      } else {
+        console.error('❌ Failed to load packages:', response.status, response.statusText)
       }
     } catch (error) {
-      console.error('Failed to load packages:', error)
+      console.error('❌ Failed to load packages:', error)
     } finally {
       setLoadingPackages(false)
     }
@@ -99,8 +111,10 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     setIsLoading(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const token = localStorage.getItem('token')
+      const apiUrl = getApiUrl(true) // Use tenant-aware API URL
+      const token = localStorage.getItem('access_token') // Use access_token from cookies
+      console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
+      console.log('🔑 Token exists:', !!token)
 
       const response = await fetch(`${apiUrl}/api/setup/complete`, {
         method: 'POST',
@@ -122,8 +136,10 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       })
 
       const data = await response.json()
+      console.log('🔧 Setup response:', data)
 
       if (response.ok && data.success) {
+        console.log('✅ Setup completed successfully')
         setCurrentStep('complete')
 
         // Call onComplete after 2 seconds
@@ -131,11 +147,12 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           onComplete()
         }, 2000)
       } else {
+        console.error('❌ Setup failed:', data)
         alert(data.message || 'Kurulum tamamlanamadı')
         setIsLoading(false)
       }
     } catch (error) {
-      console.error('Setup error:', error)
+      console.error('❌ Setup error:', error)
       alert('Kurulum sırasında bir hata oluştu')
       setIsLoading(false)
     }
