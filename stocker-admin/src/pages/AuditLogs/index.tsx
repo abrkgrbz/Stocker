@@ -338,82 +338,69 @@ const AuditLogsPage: React.FC = () => {
       )
     },
     {
-      title: 'Kategori',
-      dataIndex: 'category',
-      key: 'category',
-      width: 100,
-      render: (category: string) => (
-        <Space>
-          {getCategoryIcon(category)}
-          <Tag>{category.toUpperCase()}</Tag>
-        </Space>
-      )
-    },
-    {
-      title: 'Aksiyon',
-      dataIndex: 'action',
-      key: 'action',
-      render: (action: string, record: AuditLog) => (
+      title: 'Olay',
+      dataIndex: 'event',
+      key: 'event',
+      width: 200,
+      render: (event: string) => (
         <Space direction="vertical" size={0}>
-          <Text strong>{action}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.description}
-          </Text>
+          <Text strong>{event}</Text>
         </Space>
       )
     },
     {
       title: 'Kullanıcı',
-      dataIndex: 'user',
-      key: 'user',
-      render: (user: string, record: AuditLog) => (
+      dataIndex: 'email',
+      key: 'email',
+      render: (email: string, record: AuditLog) => (
         <Space>
           <Avatar size="small" icon={<UserOutlined />} />
           <Space direction="vertical" size={0}>
-            <Text>{user}</Text>
+            <Text>{email || 'N/A'}</Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              {record.ipAddress}
+              {record.ipAddress || 'N/A'}
             </Text>
           </Space>
         </Space>
       )
     },
     {
-      title: 'Önem',
-      dataIndex: 'severity',
-      key: 'severity',
-      width: 90,
-      render: (severity: string) => (
-        <Tag color={getSeverityColor(severity)}>
-          {severity === 'critical' ? 'KRİTİK' :
-           severity === 'error' ? 'HATA' :
-           severity === 'warning' ? 'UYARI' : 'BİLGİ'}
-        </Tag>
+      title: 'Tenant',
+      dataIndex: 'tenantCode',
+      key: 'tenantCode',
+      width: 100,
+      render: (tenantCode: string) => (
+        <Text>{tenantCode || 'N/A'}</Text>
       )
     },
     {
-      title: 'Sonuç',
-      dataIndex: 'result',
-      key: 'result',
-      width: 80,
-      render: (result: string) => (
-        <Space>
-          {getResultIcon(result)}
-          <Text type={result === 'success' ? 'success' : 'danger'}>
-            {result === 'success' ? 'Başarılı' : 'Başarısız'}
+      title: 'Risk',
+      dataIndex: 'riskLevel',
+      key: 'riskLevel',
+      width: 90,
+      render: (riskLevel: string, record: AuditLog) => (
+        <Space direction="vertical" size={0}>
+          <Tag color={getSeverityColor(riskLevel?.toLowerCase() || 'info')}>
+            {riskLevel || 'LOW'}
+          </Tag>
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            Skor: {record.riskScore || 0}
           </Text>
         </Space>
       )
     },
     {
-      title: 'Cihaz',
-      dataIndex: 'device',
-      key: 'device',
+      title: 'Durum',
+      dataIndex: 'blocked',
+      key: 'blocked',
       width: 80,
-      render: (device?: string) => (
-        <Tooltip title={device || 'Bilinmiyor'}>
-          {getDeviceIcon(device)}
-        </Tooltip>
+      render: (blocked: boolean) => (
+        <Space>
+          {blocked ? <CloseCircleOutlined style={{ color: '#ff4d4f' }} /> : <CheckCircleOutlined style={{ color: '#52c41a' }} />}
+          <Text type={blocked ? 'danger' : 'success'}>
+            {blocked ? 'Engellendi' : 'İzin Verildi'}
+          </Text>
+        </Space>
       )
     },
     {
