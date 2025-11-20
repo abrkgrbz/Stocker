@@ -198,6 +198,8 @@ export async function POST(request: NextRequest) {
     // Create response with secure cookies
     logger.info('✅ Login successful! Token:', loginData?.accessToken ? 'EXISTS' : 'MISSING');
     logger.info('👤 User:', loginData?.user?.id);
+    logger.info('🔧 RequiresSetup:', loginData?.requiresSetup);
+    logger.info('📋 Full loginData:', JSON.stringify(loginData, null, 2));
 
     const response = NextResponse.json(loginResult, {
       status: 200

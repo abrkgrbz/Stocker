@@ -315,10 +315,15 @@ function LoginForm() {
       }
 
       // Check if setup is required and store in localStorage
+      console.log('🔍 Checking requiresSetup in authData:', authData.requiresSetup);
+      console.log('📋 Full authData:', JSON.stringify(authData, null, 2));
+
       if (authData.requiresSetup === true) {
         localStorage.setItem('requiresSetup', 'true');
         console.log('✅ Setup required flag set in localStorage');
+        console.log('📦 Verify localStorage:', localStorage.getItem('requiresSetup'));
       } else {
+        console.log('⚠️ Setup NOT required or undefined, removing flag');
         // Make sure flag is removed if not required
         localStorage.removeItem('requiresSetup');
       }

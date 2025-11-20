@@ -57,16 +57,25 @@ export default function AppHomePage() {
   useEffect(() => {
     const checkSetupRequired = () => {
       // Get requiresSetup from localStorage (set during login)
-      const requiresSetup = localStorage.getItem('requiresSetup') === 'true';
+      const requiresSetup = localStorage.getItem('requiresSetup');
+      console.log('🔍 Checking setup required...');
+      console.log('📦 localStorage requiresSetup:', requiresSetup);
+      console.log('✅ Should open modal:', requiresSetup === 'true');
 
-      if (requiresSetup) {
+      if (requiresSetup === 'true') {
+        console.log('🎉 Opening setup modal!');
         setSetupModalOpen(true);
+      } else {
+        console.log('❌ Setup not required or flag not set');
       }
     };
 
     // Only check after auth is loaded and user is authenticated
     if (!isLoading && isAuthenticated) {
+      console.log('✅ Auth loaded and authenticated, checking setup...');
       checkSetupRequired();
+    } else {
+      console.log('⏳ Waiting for auth... isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
     }
   }, [isLoading, isAuthenticated]);
 
@@ -410,6 +419,7 @@ export default function AppHomePage() {
       </div>
 
       {/* Setup Modal */}
+      {console.log('🎭 Rendering SetupWizardModal, open:', setupModalOpen)}
       <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />
     </div>
   );
