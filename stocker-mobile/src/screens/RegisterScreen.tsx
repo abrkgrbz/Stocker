@@ -31,7 +31,7 @@ import Animated, {
     Easing
 } from 'react-native-reanimated';
 import { tokenStorage } from '../utils/tokenStorage';
-import { useSignalRValidation } from '../hooks/useSignalRValidation';
+import { useSignalRValidation, PasswordStrength } from '../hooks/useSignalRValidation';
 
 const { width } = Dimensions.get('window');
 
@@ -120,7 +120,7 @@ export default function RegisterScreen({ navigation }: any) {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [teamNameError, setTeamNameError] = useState('');
-    const [passwordStrength, setPasswordStrength] = useState({ score: 0, level: '', color: '', suggestions: [] as string[] });
+    const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
 
     const validateEmail = async (text: string) => {
         setEmail(text);
@@ -140,10 +140,6 @@ export default function RegisterScreen({ navigation }: any) {
                     setEmailError(result.message || 'E-posta kullanılamıyor');
                 }
             });
-        } else {
-            // Fallback: Client-side only (SignalR not connected)
-            console.warn('[RegisterScreen] SignalR not connected, skipping server-side validation');
-            setEmailError('');
         }
     };
 
@@ -153,14 +149,14 @@ export default function RegisterScreen({ navigation }: any) {
         // Basic client-side validation
         if (text.length < 8) {
             setPasswordError('En az 8 karakter olmalı');
-            setPasswordStrength({ score: 0, level: '', color: '', suggestions: [] });
+            setPasswordStrength(null);
             return;
         }
 
         setPasswordError('');
 
         // Real-time password strength check via SignalR
-        if (isConnected && text.length >= 8) {
+        if (isConnected) {
             console.log('[RegisterScreen] Checking password strength via SignalR');
             checkPasswordStrength(text, (result) => {
                 console.log('[RegisterScreen] Password strength result:', result);
@@ -182,7 +178,7 @@ export default function RegisterScreen({ navigation }: any) {
             });
         } else {
             // SignalR not connected, use basic validation only
-            setPasswordStrength({ score: 0, level: '', color: '', suggestions: [] });
+            setPasswordStrength(null);
         }
     };
 
@@ -204,10 +200,6 @@ export default function RegisterScreen({ navigation }: any) {
                     setTeamNameError(result.message || 'Bu alan adı kullanılamıyor');
                 }
             });
-        } else {
-            // Fallback: Client-side only (SignalR not connected)
-            console.warn('[RegisterScreen] SignalR not connected, skipping server-side validation');
-            setTeamNameError('');
         }
     };
 
@@ -384,6 +376,32 @@ export default function RegisterScreen({ navigation }: any) {
                                 </TouchableOpacity>
                             </View>
                             {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+                            {passwordStrength && !passwordError && (
+                                <View style={styles.strengthContainer}>
+                                    <View style={styles.strengthBarContainer}>
+                                        <View
+                                            style={[
+                                                styles.strengthBar,
+                                                {
+                                                    width: `${(passwordStrength.score / 5) * 100}%`,
+                                                    backgroundColor: passwordStrength.color
+                                                }
+                                            ]}
+                                        />
+                                    </View>
+                                    <Text style={[styles.strengthText, { color: passwordStrength.color }]}>
+                                        {passwordStrength.level}
+                                    </Text>
+                                    {passwordStrength.suggestions.length > 0 && (
+                                        <View style={styles.suggestionsContainer}>
+                                            {passwordStrength.suggestions.map((suggestion, index) => (
+                                                <Text key={index} style={styles.suggestionText}>• {suggestion}</Text>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            )}
                         </View>
                     </Animated.View>
                 );
@@ -537,7 +555,7 @@ export default function RegisterScreen({ navigation }: any) {
                                 style={[
                                     styles.button,
                                     (currentStep === 'email' && (!email || !!emailError)) ||
-                                        (currentStep === 'password' && (!password || !!passwordError || (isConnected && passwordStrength.score < 2))) ||
+                                        (currentStep === 'password' && (!password || !!passwordError || (isConnected && passwordStrength && passwordStrength.score < 2))) ||
                                         (currentStep === 'teamName' && (!teamName || !!teamNameError)) ||
                                         (currentStep === 'fullName' && (!firstName || !lastName)) ||
                                         (currentStep === 'verification' && verificationCode.length !== 6)
@@ -719,4 +737,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: spacing.l,
     } as ViewStyle,
+    strengthContainer: {
+        marginTop: spacing.s,
+    } as ViewStyle,
+    strengthBarContainer: {
+        height: 4,
+        backgroundColor: colors.surfaceLight,
+        borderRadius: 2,
+        overflow: 'hidden',
+        marginBottom: spacing.xs,
+    } as ViewStyle,
+    strengthBar: {
+        height: '100%',
+        borderRadius: 2,
+    } as ViewStyle,
+    strengthText: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: spacing.xs,
+    } as TextStyle,
+    suggestionsContainer: {
+        marginTop: spacing.xs,
+    } as ViewStyle,
+    suggestionText: {
+        color: colors.textSecondary,
+        fontSize: 11,
+        marginLeft: spacing.xs,
+    } as TextStyle,
 });

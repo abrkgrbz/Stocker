@@ -76,40 +76,25 @@ api.interceptors.response.use(
                     // Navigation to login should be handled by auth state change
                     break;
 
+                // Let the caller handle these errors with Toast
                 case 403:
-                    Alert.alert('Yetkisiz İşlem', 'Bu işlem için yetkiniz bulunmamaktadır.');
-                    break;
-
                 case 404:
-                    // Alert.alert('Hata', 'İstenen kaynak bulunamadı.');
-                    break;
-
                 case 422:
-                    // Validation error
-                    if (data?.errors && Array.isArray(data.errors)) {
-                        Alert.alert('Doğrulama Hatası', data.errors.join('\n'));
-                    } else {
-                        Alert.alert('Hata', data?.message || 'Doğrulama hatası');
-                    }
-                    break;
-
                 case 429:
-                    Alert.alert('Hata', 'Çok fazla istek gönderdiniz. Lütfen biraz bekleyin.');
-                    break;
-
                 case 500:
                 case 502:
                 case 503:
-                    Alert.alert('Sunucu Hatası', 'Lütfen daha sonra tekrar deneyin.');
                     break;
 
                 default:
-                    Alert.alert('Hata', data?.message || `Bir hata oluştu (${status})`);
+                // console.error(`Unhandled error status: ${status}`);
             }
         } else if (error.request) {
-            Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.');
+            // Network error
+            // console.error('Network error');
         } else {
-            Alert.alert('Hata', 'Beklenmeyen bir hata oluştu.');
+            // Other error
+            // console.error('Error', error.message);
         }
 
         return Promise.reject(error);

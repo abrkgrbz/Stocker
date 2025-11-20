@@ -23,6 +23,7 @@ interface AuthState {
     refreshToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitializing: boolean;
 
     // Actions
     login: (data: { email: string; password: string; tenantCode: string; tenantSignature: string; tenantTimestamp: number }) => Promise<void>;
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
+            isInitializing: true,
 
             setLoading: (loading: boolean) => {
                 set({ isLoading: loading });
@@ -85,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
                 } catch (error: any) {
                     set({ isLoading: false });
                     console.error('Login error:', error);
-                    Alert.alert('Giriş Hatası', error.message || 'Giriş yapılamadı');
+                    // Alert.alert('Giriş Hatası', error.message || 'Giriş yapılamadı');
                     throw error;
                 }
             },
@@ -107,12 +109,16 @@ export const useAuthStore = create<AuthState>()(
             },
 
             checkAuth: async () => {
-                const token = await tokenStorage.getToken();
-                if (token) {
-                    // Optionally verify token with /me endpoint
-                    set({ isAuthenticated: true, accessToken: token });
-                } else {
-                    set({ isAuthenticated: false, accessToken: null });
+                try {
+                    const token = await tokenStorage.getToken();
+                    if (token) {
+                        // Optionally verify token with /me endpoint
+                        set({ isAuthenticated: true, accessToken: token });
+                    } else {
+                        set({ isAuthenticated: false, accessToken: null });
+                    }
+                } finally {
+                    set({ isInitializing: false });
                 }
             },
         }),
@@ -122,8 +128,7 @@ export const useAuthStore = create<AuthState>()(
             partialize: (state) => ({
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
-                accessToken: state.accessToken,
-                refreshToken: state.refreshToken,
+                // Don't persist tokens to AsyncStorage, they are handled by SecureStore
             }),
         }
     )

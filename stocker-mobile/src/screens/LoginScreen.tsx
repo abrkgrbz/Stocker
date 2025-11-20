@@ -154,6 +154,7 @@ export default function LoginScreen({ navigation }: any) {
     const handleLogin = async () => {
         if (!password || !selectedTenant) return;
 
+        setIsLoading(true);
         try {
             await login({
                 email,
@@ -164,8 +165,36 @@ export default function LoginScreen({ navigation }: any) {
             });
             // Login success is handled in authStore (sets user, etc.)
             // Navigation is handled by AppNavigator based on auth state
-        } catch (error) {
-            // Error alert is already shown in authStore
+        } catch (error: any) {
+            // Error alert is already shown in authStore (removed now)
+            console.error('Login failed:', error);
+
+            let errorMessage = 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.';
+
+            // Handle specific error messages from backend or status codes
+            if (error.response) {
+                const status = error.response.status;
+                if (status === 401) {
+                    errorMessage = 'E-posta veya şifre hatalı.';
+                } else if (status === 403) {
+                    errorMessage = 'Giriş yetkiniz yok.';
+                } else if (status === 429) {
+                    errorMessage = 'Çok fazla deneme yaptınız. Lütfen bekleyin.';
+                } else if (status >= 500) {
+                    errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+                } else if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                }
+            } else if (error.message) {
+                // Fallback for other errors
+                if (error.message.includes('Network Error')) {
+                    errorMessage = 'İnternet bağlantınızı kontrol edin.';
+                }
+            }
+
+            showToast(errorMessage, 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
 

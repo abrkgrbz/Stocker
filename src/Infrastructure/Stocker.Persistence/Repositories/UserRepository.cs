@@ -380,7 +380,11 @@ public class UserRepository : IUserRepository
 
     public async Task<object?> GetMasterUserByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var guidUserId = Guid.Parse(userId);
+        if (!Guid.TryParse(userId, out var guidUserId))
+        {
+            return null; // Invalid GUID format
+        }
+
         var user = await _masterContext.MasterUsers
             .Include(u => u.LoginHistory)
             .Where(u => u.Id == guidUserId)
@@ -433,7 +437,11 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> ToggleMasterUserStatusAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var guidUserId = Guid.Parse(userId);
+        if (!Guid.TryParse(userId, out var guidUserId))
+        {
+            return false; // Invalid GUID format
+        }
+
         var user = await _masterContext.MasterUsers
             .FirstOrDefaultAsync(u => u.Id == guidUserId, cancellationToken);
 
@@ -451,7 +459,11 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> AssignTenantToUserAsync(string userId, Guid tenantId, CancellationToken cancellationToken = default)
     {
-        var guidUserId = Guid.Parse(userId);
+        if (!Guid.TryParse(userId, out var guidUserId))
+        {
+            return false; // Invalid GUID format
+        }
+
         var user = await _masterContext.MasterUsers
             // UserTenants moved to Tenant domain
             .FirstOrDefaultAsync(u => u.Id == guidUserId, cancellationToken);

@@ -10,9 +10,9 @@ import { ActivityIndicator, View } from 'react-native';
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-    const { isAuthenticated, isLoading } = useAuthStore();
+    const { isAuthenticated, isInitializing } = useAuthStore();
 
-    if (isLoading) {
+    if (isInitializing) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0e27' }}>
                 <ActivityIndicator size="large" color="#667eea" />
