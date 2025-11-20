@@ -752,7 +752,7 @@ const AnalyticsPage: React.FC = () => {
                 <Card bordered={false}>
                   <Statistic
                     title="Başarısız Giriş Denemeleri"
-                    value={24}
+                    value={0}
                     prefix={<WarningOutlined style={{ color: '#faad14' }} />}
                     suffix="son 24 saat"
                   />
@@ -762,7 +762,7 @@ const AnalyticsPage: React.FC = () => {
                 <Card bordered={false}>
                   <Statistic
                     title="Engellenen IP"
-                    value={3}
+                    value={0}
                     prefix={<SecurityScanOutlined style={{ color: '#ff4d4f' }} />}
                     suffix="otomatik"
                   />
@@ -772,10 +772,9 @@ const AnalyticsPage: React.FC = () => {
                 <Card bordered={false}>
                   <Statistic
                     title="Güvenlik Skoru"
-                    value={98}
+                    value={0}
                     suffix="/100"
                     prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                    valueStyle={{ color: '#52c41a' }}
                   />
                 </Card>
               </Col>
