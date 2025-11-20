@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -82,6 +82,7 @@ import {
   FileProtectOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { userService, UserListDto, UserStatistics } from '../../services/api/userService';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
