@@ -73,6 +73,8 @@ export const LoginResponseSchema = z.object({
       roles: z.array(z.string()).optional(),
     }).optional(),
     requires2FA: z.boolean().optional(),
+    requiresSetup: z.boolean().optional(),
+    requiresOnboarding: z.boolean().optional(),
   }).optional(),
   message: z.string().optional(),
 })
