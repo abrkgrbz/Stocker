@@ -14,7 +14,6 @@ import TwoFactorVerifyPage from './pages/TwoFactorVerifyPage';
 // Lazy loaded pages (loaded on demand)
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const TenantsPage = lazy(() => import('./pages/Tenants'));
-const TenantCreate = lazy(() => import('./pages/Tenants/Create'));
 const TenantDetails = lazy(() => import('./pages/Tenants/Details'));
 const TenantSettings = lazy(() => import('./pages/Tenants/Settings'));
 const TenantBilling = lazy(() => import('./pages/Tenants/Billing'));
@@ -122,11 +121,6 @@ function App() {
             </Suspense>
           } />
           <Route path="tenants/create" element={
-            <Suspense fallback={<PageLoader />}>
-              <TenantCreate />
-            </Suspense>
-          } />
-          <Route path="tenants/migrations" element={
             <Suspense fallback={<PageLoader />}>
               <TenantMigrations />
             </Suspense>

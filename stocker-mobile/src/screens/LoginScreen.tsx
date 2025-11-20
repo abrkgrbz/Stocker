@@ -33,6 +33,7 @@ import Animated, {
     Easing
 } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
+import { Toast } from '../components/Toast';
 
 const { width } = Dimensions.get('window');
 
@@ -53,6 +54,16 @@ export default function LoginScreen({ navigation }: any) {
     const [tenants, setTenants] = useState<TenantInfo[]>([]);
     const [selectedTenant, setSelectedTenant] = useState<TenantInfo | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'error') => {
+        setToast({ visible: true, message, type });
+    };
+
+    const hideToast = () => {
+        setToast({ ...toast, visible: false });
+    };
 
     // Animation values for background blobs
     const blob1TranslateY = useSharedValue(0);
@@ -102,7 +113,7 @@ export default function LoginScreen({ navigation }: any) {
 
     const handleCheckEmail = async () => {
         if (!email) {
-            Alert.alert('Hata', 'Lütfen e-posta adresinizi girin');
+            showToast('Lütfen e-posta adresinizi girin', 'error');
             return;
         }
 
@@ -115,7 +126,7 @@ export default function LoginScreen({ navigation }: any) {
                 const tenantsList = data.tenants || (data.tenant ? [data.tenant] : []);
 
                 if (tenantsList.length === 0) {
-                    Alert.alert('Hata', 'Bu e-posta adresi ile ilişkili bir çalışma alanı bulunamadı.');
+                    showToast('Bu e-posta adresi ile ilişkili bir çalışma alanı bulunamadı.', 'error');
                     return;
                 }
 
@@ -126,10 +137,10 @@ export default function LoginScreen({ navigation }: any) {
                 // Actually, let's show selection to confirm.
                 setStep('tenant-selection');
             } else {
-                Alert.alert('Hata', response.data.message || 'E-posta kontrolü başarısız');
+                showToast(response.data.message || 'E-posta kontrolü başarısız', 'error');
             }
         } catch (error: any) {
-            Alert.alert('Hata', error.message || 'Bir hata oluştu');
+            showToast(error.message || 'Bir hata oluştu', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -252,14 +263,21 @@ export default function LoginScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                     <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                     <TextInput
+                        key={showPassword ? 'text' : 'password'}
                         style={styles.input}
                         placeholder="******"
                         placeholderTextColor={colors.textMuted}
                         value={password}
                         onChangeText={setPassword}
-                        secureTextEntry
-                        autoFocus
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        textContentType="password"
+                        keyboardType="default"
                     />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
+                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -280,6 +298,12 @@ export default function LoginScreen({ navigation }: any) {
     return (
         <View style={styles.container}>
             <Loading visible={isLoading} text="İşlem yapılıyor..." />
+            <Toast
+                visible={toast.visible}
+                message={toast.message}
+                type={toast.type}
+                onHide={hideToast}
+            />
             {/* Background Elements */}
             <Animated.View style={[styles.bgGradientTop, blob1Style]} />
             <Animated.View style={[styles.bgGradientBottom, blob2Style]} />
@@ -441,6 +465,10 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontSize: 16,
     } as TextStyle,
+    passwordToggle: {
+        padding: spacing.s,
+        marginRight: spacing.xs,
+    } as ViewStyle,
     button: {
         backgroundColor: colors.accent,
         borderRadius: 12,

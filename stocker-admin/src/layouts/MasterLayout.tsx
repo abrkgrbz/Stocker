@@ -215,7 +215,7 @@ const MasterLayout: React.FC = () => {
       type: 'action',
       title: locale === 'tr' ? 'Yeni Tenant Oluştur' : 'Create New Tenant',
       description: locale === 'tr' ? 'Hızlı tenant oluşturma' : 'Quick tenant creation',
-      path: '/tenants/create',
+      path: '/tenants',
       icon: <PlusOutlined />,
       keywords: ['create', 'oluştur', 'new', 'yeni', 'tenant', 'add', 'ekle']
     },
@@ -342,7 +342,7 @@ const MasterLayout: React.FC = () => {
           icon: <CheckCircleOutlined />,
         },
         {
-          path: '/tenants/create',
+          path: '/tenants',
           name: locale === 'tr' ? 'Yeni Tenant' : 'New Tenant',
           icon: <PlusOutlined />,
         },
@@ -541,7 +541,7 @@ const MasterLayout: React.FC = () => {
           <Button 
             type="text" 
             icon={<PlusOutlined />}
-            onClick={() => navigate('/tenants/create')}
+            onClick={() => navigate('/tenants')}
           />
         </Tooltip>
 

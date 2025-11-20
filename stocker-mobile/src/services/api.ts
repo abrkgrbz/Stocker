@@ -126,6 +126,9 @@ export const apiService = {
         checkEmail: (email: string) =>
             api.post<ApiResponse>('/api/auth/check-email', { email }),
 
+        verifyEmail: (data: { email: string; code: string }) =>
+            api.post<ApiResponse>('/api/auth/verify-email', data),
+
         register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string }) =>
             api.post<ApiResponse>('/api/auth/register', data),
 

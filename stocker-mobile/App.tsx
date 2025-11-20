@@ -4,6 +4,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useAuthStore } from './src/stores/authStore';
 
+import { SignalRProvider } from './src/services/signalr/SignalRContext';
+
 export default function App() {
     const checkAuth = useAuthStore((state) => state.checkAuth);
 
@@ -14,7 +16,9 @@ export default function App() {
     return (
         <SafeAreaProvider>
             <StatusBar style="light" />
-            <AppNavigator />
+            <SignalRProvider>
+                <AppNavigator />
+            </SignalRProvider>
         </SafeAreaProvider>
     );
 }
