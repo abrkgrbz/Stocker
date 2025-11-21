@@ -122,7 +122,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
     try {
       const apiUrl = getApiUrl(false) // Client-side: use NEXT_PUBLIC_API_URL
-      const token = localStorage.getItem('access_token') // Use access_token from cookies
+      const token = localStorage.getItem('token') // Token saved during registration
       console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
       console.log('🔑 Token exists:', !!token)
 
