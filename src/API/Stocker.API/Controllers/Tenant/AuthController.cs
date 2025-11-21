@@ -76,6 +76,13 @@ public class AuthController : ControllerBase
             command.Email, command.Password, command.Password?.Length ?? 0);
         _logger.LogInformation("Login attempt for email: {Email}", command.Email);
 
+        // Debug: Log tenant context
+        _logger.LogInformation("🔍 Login request headers - X-Tenant-Code: {TenantCode}, X-Tenant-Id: {TenantId}",
+            Request.Headers["X-Tenant-Code"].ToString(),
+            Request.Headers["X-Tenant-Id"].ToString());
+        _logger.LogInformation("🔍 HttpContext.Items - TenantId: {TenantId}",
+            HttpContext.Items.ContainsKey("TenantId") ? HttpContext.Items["TenantId"] : "NOT SET");
+
         // Add IP address and User-Agent for audit logging
         var enrichedCommand = command with
         {
