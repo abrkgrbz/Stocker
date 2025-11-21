@@ -62,7 +62,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const loadPackages = async () => {
     try {
       setLoadingPackages(true)
-      const apiUrl = getApiUrl(true) // Use tenant-aware API URL
+      const apiUrl = getApiUrl(false) // Client-side: use public API URL
       console.log('📦 Loading packages from:', `${apiUrl}/api/public/packages`)
 
       const response = await fetch(`${apiUrl}/api/public/packages`)
