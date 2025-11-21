@@ -54,7 +54,7 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT
 ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 
-# Build Next.js app
+# Build Next.js app (with env vars validation)
 RUN npm run build
 
 # Production image, copy all the files and run next
