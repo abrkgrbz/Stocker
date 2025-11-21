@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { tokenStorage } from '../utils/tokenStorage';
 import { API_URL, IS_DEV } from '../constants';
 import { Alert } from 'react-native';
@@ -20,6 +21,8 @@ const api: AxiosInstance = axios.create({
     },
 });
 
+
+
 // Request interceptor
 api.interceptors.request.use(
     async (config) => {
@@ -27,6 +30,30 @@ api.interceptors.request.use(
         const token = await tokenStorage.getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+
+            try {
+                const decoded: any = jwtDecode(token);
+
+                if (IS_DEV) {
+                    console.log('🔑 [DEBUG] Raw Token:', token);
+                    console.log('🔓 [DEBUG] Decoded Token:', decoded);
+                }
+
+                const tenantId = decoded.tenantId || decoded.tenant_id || decoded['http://schemas.microsoft.com/identity/claims/tenantid'];
+
+                if (tenantId) {
+                    if (IS_DEV) {
+                        console.log('🏢 [DEBUG] Extracted TenantId:', tenantId);
+                    }
+                    config.headers['X-Tenant-Id'] = tenantId;
+                } else {
+                    if (IS_DEV) {
+                        console.warn('⚠️ [DEBUG] No TenantId found in token claims');
+                    }
+                }
+            } catch (e) {
+                console.error('❌ [DEBUG] Token decode error:', e);
+            }
         }
 
         // Log request in development
@@ -106,7 +133,11 @@ export const apiService = {
     // Auth endpoints
     auth: {
         login: (data: { email: string; password: string; tenantCode: string; tenantSignature: string; tenantTimestamp: number }) =>
-            api.post<ApiResponse>('/api/auth/login', data),
+            api.post<ApiResponse>('/api/auth/login', data, {
+                headers: {
+                    'X-Tenant-Code': data.tenantCode
+                }
+            }),
 
         checkEmail: (email: string) =>
             api.post<ApiResponse>('/api/auth/check-email', { email }),
@@ -156,7 +187,7 @@ export const apiService = {
             api.get<ApiResponse>('/api/public/check-company-code/' + code),
 
         getPackages: () =>
-            api.get<ApiResponse>('/api/packages/public'),
+            api.get<ApiResponse>('/api/public/packages'),
     },
 
     setup: {

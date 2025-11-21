@@ -61,6 +61,8 @@ export const useAuthStore = create<AuthState>()(
                     if (response.data?.success) {
                         const { accessToken, refreshToken, user, requiresSetup } = response.data.data;
 
+                        console.log('🔑 [DEBUG] Login Success - Access Token:', accessToken);
+
                         // Map user data
                         const appUser: User = {
                             id: user.id,
@@ -94,7 +96,6 @@ export const useAuthStore = create<AuthState>()(
                 } catch (error: any) {
                     set({ isLoading: false });
                     console.error('Login error:', error);
-                    // Alert.alert('Giriş Hatası', error.message || 'Giriş yapılamadı');
                     throw error;
                 }
             },
