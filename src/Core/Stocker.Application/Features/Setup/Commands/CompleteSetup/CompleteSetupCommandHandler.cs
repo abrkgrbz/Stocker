@@ -60,7 +60,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     Error.NotFound("Setup.UserNotFound", "Kullanıcı bulunamadı"));
             }
 
-            // Verify tenant exists
+            // Verify tenant exists and get its code
             var tenant = await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>()
                 .GetByIdAsync(request.TenantId, cancellationToken);
 
@@ -69,6 +69,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                 return Result<CompleteSetupResponse>.Failure(
                     Error.NotFound("Setup.TenantNotFound", "Tenant bulunamadı"));
             }
+
+            // Use tenant code instead of requesting it again from user
+            var tenantCode = tenant.Code;
 
             Guid companyId = Guid.Empty;
             Guid subscriptionId = Guid.Empty;
@@ -114,7 +117,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     var company = Company.Create(
                         tenantId: request.TenantId,
                         name: request.CompanyName,
-                        code: request.CompanyCode,
+                        code: tenantCode, // Use tenant code instead of requesting from user
                         taxNumber: request.TaxNumber ?? "0000000000", // Default if not provided
                         email: emailResult.Value,
                         address: addressResult.Value,

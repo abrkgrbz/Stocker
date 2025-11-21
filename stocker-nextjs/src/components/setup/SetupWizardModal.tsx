@@ -44,7 +44,6 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
   // Company information state
   const [companyName, setCompanyName] = useState('')
-  const [companyCode, setCompanyCode] = useState('')
   const [sector, setSector] = useState('')
   const [employeeCount, setEmployeeCount] = useState('')
   const [contactPhone, setContactPhone] = useState('')
@@ -103,8 +102,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
   const handleCompanySubmit = async () => {
     // Validate required fields
-    if (!companyName.trim() || !companyCode.trim()) {
-      alert('Firma adı ve firma kodu zorunludur')
+    if (!companyName.trim()) {
+      alert('Firma adı zorunludur')
       return
     }
 
@@ -125,7 +124,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         body: JSON.stringify({
           packageId: selectedPackageId,
           companyName,
-          companyCode,
+          // companyCode removed - already set during registration
           sector,
           employeeCount,
           contactPhone,
@@ -320,25 +319,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Firma Kodu <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={companyCode}
-                  onChange={(e) => setCompanyCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="örn: acme-corp"
-                  maxLength={50}
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Subdomain adresiniz: <span className="font-mono font-medium text-blue-600">{companyCode || 'firma-kodu'}.stoocker.app</span>
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  Sadece küçük harf, rakam ve tire (-) kullanabilirsiniz
-                </p>
-              </div>
+              {/* Firma Kodu kaldırıldı - zaten kayıt sırasında oluşturuldu */}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -441,7 +422,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </button>
               <button
                 onClick={handleCompanySubmit}
-                disabled={isLoading || !companyName.trim() || !companyCode.trim()}
+                disabled={isLoading || !companyName.trim()}
                 className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
               >
                 {isLoading ? (
