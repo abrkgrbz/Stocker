@@ -46,42 +46,73 @@ public class TenantModuleService : ITenantModuleService
         // This avoids concurrency issues when multiple queries are needed
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Get tenant registration - use AsNoTracking for read-only queries
-        var tenantRegistration = await dbContext.TenantRegistrations
+        // Get active subscription for tenant - use AsNoTracking for read-only queries
+        var subscription = await dbContext.Subscriptions
             .AsNoTracking()
-            .Where(tr => tr.TenantId == tenantId)
-            .Select(tr => new
+            .Where(s => s.TenantId == tenantId &&
+                       (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
+                        s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme))
+            .OrderByDescending(s => s.StartDate) // Get most recent subscription
+            .Select(s => new
             {
-                tr.TenantId,
-                tr.SelectedPackageId,
-                PackageName = tr.SelectedPackage != null ? tr.SelectedPackage.Name : null
+                s.TenantId,
+                s.PackageId,
+                PackageName = s.Package != null ? s.Package.Name : null
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (tenantRegistration == null)
+        // Fallback: Try TenantRegistration if no subscription found (for backward compatibility)
+        if (subscription == null)
         {
-            _logger.LogWarning("Tenant registration not found for TenantId {TenantId}", tenantId);
+            _logger.LogDebug("No active subscription found for TenantId {TenantId}, checking TenantRegistration", tenantId);
+
+            var tenantRegistration = await dbContext.TenantRegistrations
+                .AsNoTracking()
+                .Where(tr => tr.TenantId == tenantId)
+                .Select(tr => new
+                {
+                    tr.TenantId,
+                    PackageId = tr.SelectedPackageId,
+                    PackageName = tr.SelectedPackage != null ? tr.SelectedPackage.Name : null
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (tenantRegistration != null && tenantRegistration.PackageId.HasValue && tenantRegistration.TenantId.HasValue)
+            {
+                subscription = new
+                {
+                    TenantId = tenantRegistration.TenantId.Value,
+                    PackageId = tenantRegistration.PackageId.Value,
+                    tenantRegistration.PackageName
+                };
+            }
+        }
+
+        if (subscription == null)
+        {
+            _logger.LogWarning("No subscription or registration found for TenantId {TenantId}", tenantId);
             return new List<string>();
         }
 
         // Get subscribed modules from package
         var subscribedModules = new List<string>();
 
-        if (tenantRegistration.SelectedPackageId.HasValue)
+        if (subscription.PackageId != Guid.Empty)
         {
             // Get package modules from PackageModules table
             var packageModules = await dbContext.PackageModules
                 .AsNoTracking()
-                .Where(pm => pm.PackageId == tenantRegistration.SelectedPackageId.Value)
+                .Where(pm => pm.PackageId == subscription.PackageId)
                 .Select(pm => pm.ModuleName)
                 .ToListAsync(cancellationToken);
 
             subscribedModules = packageModules;
 
             _logger.LogInformation(
-                "Tenant {TenantId} subscribed to package '{Package}' with {Count} modules: {Modules}",
+                "Tenant {TenantId} subscribed to package '{Package}' ({PackageId}) with {Count} modules: {Modules}",
                 tenantId,
-                tenantRegistration.PackageName ?? "Unknown",
+                subscription.PackageName ?? "Unknown",
+                subscription.PackageId,
                 subscribedModules.Count,
                 string.Join(", ", subscribedModules));
         }
