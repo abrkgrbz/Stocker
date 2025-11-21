@@ -2,13 +2,15 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Features.Setup.Commands.CompleteSetup;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 
-namespace Stocker.API.Controllers;
+namespace Stocker.API.Controllers.Tenant;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[SwaggerTag("Setup - Post-registration setup and onboarding")]
 public class SetupController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -24,6 +26,14 @@ public class SetupController : ControllerBase
     /// Complete post-registration setup with package selection and company details
     /// </summary>
     [HttpPost("complete")]
+    [SwaggerOperation(
+        Summary = "Complete setup wizard",
+        Description = "Completes the setup wizard by creating company and subscription after tenant registration"
+    )]
+    [SwaggerResponse(200, "Setup completed successfully")]
+    [SwaggerResponse(400, "Invalid request or setup failed")]
+    [SwaggerResponse(401, "Unauthorized - missing or invalid token")]
+    [SwaggerResponse(500, "Internal server error")]
     public async Task<IActionResult> CompleteSetup([FromBody] CompleteSetupRequest request, CancellationToken cancellationToken)
     {
         try
@@ -85,17 +95,4 @@ public class SetupController : ControllerBase
             });
         }
     }
-}
-
-public sealed record CompleteSetupRequest
-{
-    public Guid PackageId { get; init; }
-    public string CompanyName { get; init; } = string.Empty;
-    public string CompanyCode { get; init; } = string.Empty;
-    public string? Sector { get; init; }
-    public string? EmployeeCount { get; init; }
-    public string? ContactPhone { get; init; }
-    public string? Address { get; init; }
-    public string? TaxOffice { get; init; }
-    public string? TaxNumber { get; init; }
 }
