@@ -82,7 +82,7 @@ export default function LeadsPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: number, lead: Lead) => {
+  const handleDelete = async (id: string, lead: Lead) => {
     const confirmed = await confirmDelete(
       'Potansiyel Müşteri',
       `${lead.firstName} ${lead.lastName}`

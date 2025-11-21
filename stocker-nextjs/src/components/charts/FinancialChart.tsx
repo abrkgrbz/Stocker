@@ -78,14 +78,15 @@ export function FinancialChart({ className }: FinancialChartProps) {
         return (
           <BarChart
             data={comparisonData}
-            xKey="name"
-            yKeys={['gelir', 'gider']}
+            bars={[
+              { dataKey: 'gelir', fill: '#52c41a', name: 'Gelir' },
+              { dataKey: 'gider', fill: '#ff4d4f', name: 'Gider' }
+            ]}
             height={300}
-            valueFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`}
-            colors={['#52c41a', '#ff4d4f']}
             showGrid
             showTooltip
             showLegend
+            xAxisKey="name"
           />
         );
       case 'profit':
@@ -93,13 +94,11 @@ export function FinancialChart({ className }: FinancialChartProps) {
           <div>
             <BarChart
               data={profitData}
-              xKey="name"
-              yKey="kar"
+              bars={[{ dataKey: 'kar', fill: '#52c41a', name: 'Kar' }]}
               height={240}
-              valueFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`}
-              color="green"
               showGrid
               showTooltip
+              xAxisKey="name"
             />
             <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4">
               <Statistic
@@ -131,13 +130,11 @@ export function FinancialChart({ className }: FinancialChartProps) {
           <div>
             <LineChart
               data={cashflowData}
-              xKey="name"
-              yKey="nakit"
+              lines={[{ dataKey: 'nakit', stroke: '#3b82f6', name: 'Nakit' }]}
               height={240}
-              valueFormatter={(value) => `₺${(value / 1000).toFixed(0)}K`}
-              color="blue"
               showGrid
               showTooltip
+              xAxisKey="name"
             />
             <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4">
               <Statistic

@@ -143,7 +143,10 @@ export default function CRMDashboardScreen({ navigation }: any) {
                             </LinearGradient>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.actionButton}>
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => navigation.navigate('AddCustomer')}
+                        >
                             <LinearGradient
                                 colors={[colors.success, '#4ade80']}
                                 style={styles.actionGradient}
@@ -153,7 +156,10 @@ export default function CRMDashboardScreen({ navigation }: any) {
                             </LinearGradient>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.actionButton}>
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => navigation.navigate('DealList')}
+                        >
                             <LinearGradient
                                 colors={[colors.warning, '#fbbf24']}
                                 style={styles.actionGradient}

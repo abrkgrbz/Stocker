@@ -15,12 +15,14 @@ export interface PasswordStrengthMeterProps {
   password: string;
   showFeedback?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function PasswordStrengthMeter({
   password,
   showFeedback = true,
   className,
+  style,
 }: PasswordStrengthMeterProps) {
   const strength: PasswordStrength = useMemo(
     () => calculatePasswordStrength(password),
@@ -42,7 +44,7 @@ export function PasswordStrengthMeter({
   const progressPercent = (strength.score / 4) * 100;
 
   return (
-    <div className={className}>
+    <div className={className} style={style}>
       <Space direction="vertical" size="small" style={{ width: '100%' }}>
         {/* Progress Bar */}
         <div>

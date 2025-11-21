@@ -129,10 +129,10 @@ export function ActivityModal({
   const { data: leadsData, isLoading: leadsLoading } = useLeads();
   const { data: dealsData, isLoading: dealsLoading } = useDeals();
 
-  // Extract arrays from API response (handle both array and object responses)
-  const customers = Array.isArray(customersData) ? customersData : customersData?.data || customersData?.items || [];
-  const leads = Array.isArray(leadsData) ? leadsData : leadsData?.data || leadsData?.items || [];
-  const deals = Array.isArray(dealsData) ? dealsData : dealsData?.data || dealsData?.items || [];
+  // Extract arrays from API response (PaginatedResponse has .items property)
+  const customers = Array.isArray(customersData) ? customersData : customersData?.items || [];
+  const leads = Array.isArray(leadsData) ? leadsData : leadsData?.items || [];
+  const deals = Array.isArray(dealsData) ? dealsData : dealsData?.items || [];
 
   React.useEffect(() => {
     if (open && activity) {
@@ -351,7 +351,7 @@ export function ActivityModal({
                       showSearch
                       optionFilterProp="label"
                       filterOption={(input, option) =>
-                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     >
                       {activityTypes.map((type) => (
@@ -378,7 +378,7 @@ export function ActivityModal({
                       showSearch
                       optionFilterProp="label"
                       filterOption={(input, option) =>
-                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                       }
                     >
                       {activityStatuses.map((status) => (

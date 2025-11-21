@@ -9,6 +9,14 @@ interface SignalRContextValue {
   notificationHub: SignalRClient;
   isNotificationConnected: boolean;
 
+  // Inventory Hub (placeholder - not implemented yet)
+  inventoryHub?: SignalRClient;
+  isInventoryConnected?: boolean;
+
+  // Order Hub (placeholder - not implemented yet)
+  orderHub?: SignalRClient;
+  isOrderConnected?: boolean;
+
   // Methods
   connectAll: () => Promise<void>;
   disconnectAll: () => Promise<void>;

@@ -198,6 +198,7 @@ export interface DocumentDto {
   originalFileName: string;
   contentType: string;
   size: number;
+  fileSize?: number; // Alias for size
   storagePath: string;
   entityId: number;
   entityType: string;

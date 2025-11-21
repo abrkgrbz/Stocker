@@ -364,7 +364,7 @@ function LoginForm() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           {/* Logo */}
-          <Logo variant="white" size="3xl" />
+          <Logo size="3xl" />
 
           {/* Main Content */}
           <div className="space-y-8 max-w-lg">
@@ -422,7 +422,7 @@ function LoginForm() {
         <div className="w-full max-w-md relative z-10">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
-            <Logo variant="gradient" size="3xl" />
+            <Logo size="3xl" />
           </div>
 
           {/* Header */}

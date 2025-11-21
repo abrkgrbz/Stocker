@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (!validationResult.success) {
       auditData.event = 'login_invalid_request'
-      auditData.errors = validationResult.error.errors
+      auditData.errors = validationResult.error.issues
       await logAudit(auditData)
 
       return NextResponse.json(
@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
 
     const backendData = await backendResponse.json()
 
-    logger.info('🔍 Backend response:', JSON.stringify(backendData, null, 2));
-    logger.info('🍪 Backend Set-Cookie headers:', backendResponse.headers.get('set-cookie'));
+    logger.info('🔍 Backend response', { metadata: { response: JSON.stringify(backendData, null, 2) } });
+    logger.info('🍪 Backend Set-Cookie headers', { metadata: { setCookie: backendResponse.headers.get('set-cookie') } });
 
     // Validate backend response
     const responseValidation = LoginResponseSchema.safeParse(backendData)
@@ -196,10 +196,10 @@ export async function POST(request: NextRequest) {
     await logAudit(auditData)
 
     // Create response with secure cookies
-    logger.info('✅ Login successful! Token:', loginData?.accessToken ? 'EXISTS' : 'MISSING');
-    logger.info('👤 User:', loginData?.user?.id);
-    logger.info('🔧 RequiresSetup:', loginData?.requiresSetup);
-    logger.info('📋 Full loginData:', JSON.stringify(loginData, null, 2));
+    logger.info('✅ Login successful! Token', { metadata: { tokenExists: loginData?.accessToken ? 'EXISTS' : 'MISSING' } });
+    logger.info('👤 User', { metadata: { userId: loginData?.user?.id } });
+    logger.info('🔧 RequiresSetup', { metadata: { requiresSetup: loginData?.requiresSetup } });
+    logger.info('📋 Full loginData', { metadata: { loginData: JSON.stringify(loginData, null, 2) } });
 
     const response = NextResponse.json(loginResult, {
       status: 200
@@ -209,13 +209,13 @@ export async function POST(request: NextRequest) {
     const isDevelopment = process.env.NODE_ENV === 'development'
     const cookieDomain = getCookieDomain()
 
-    logger.info('🍪 Cookie domain:', cookieDomain);
-    logger.info('🔒 Is development:', isDevelopment);
+    logger.info('🍪 Cookie domain', { metadata: { cookieDomain } });
+    logger.info('🔒 Is development', { metadata: { isDevelopment } });
 
     // Forward cookies from backend response (access_token, refresh_token)
     const backendCookies = backendResponse.headers.get('set-cookie')
     if (backendCookies) {
-      logger.info('🍪 Forwarding backend cookies:', backendCookies);
+      logger.info('🍪 Forwarding backend cookies', { metadata: { backendCookies } });
       // Parse and set each cookie from backend
       const cookies = backendCookies.split(',').map(c => c.trim())
       cookies.forEach(cookie => {
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
 async function logAudit(data: Record<string, any>): Promise<void> {
   // For now, just console log in development
   if (process.env.NODE_ENV === 'development') {
-    logger.info('[AUDIT]', JSON.stringify(data, null, 2));
+    logger.info('[AUDIT]', { metadata: { auditData: JSON.stringify(data, null, 2) } });
   }
 
   // TODO: Send to audit logging service

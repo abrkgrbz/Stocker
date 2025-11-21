@@ -62,13 +62,11 @@ export function CustomerChart({ className }: CustomerChartProps) {
         return (
           <LineChart
             data={growthData}
-            xKey="name"
-            yKey="value"
+            lines={[{ dataKey: 'value', stroke: '#8b5cf6', name: 'Müşteriler' }]}
             height={300}
-            valueFormatter={(value) => `${value} müşteri`}
-            color="purple"
             showGrid
             showTooltip
+            xAxisKey="name"
           />
         );
       case 'segments':
@@ -80,20 +78,17 @@ export function CustomerChart({ className }: CustomerChartProps) {
             height={300}
             showLegend
             showTooltip
-            valueFormatter={(value) => `${value} müşteri`}
           />
         );
       case 'geography':
         return (
           <BarChart
             data={geographyData}
-            xKey="name"
-            yKey="value"
+            bars={[{ dataKey: 'value', fill: '#3b82f6', name: 'Müşteriler' }]}
             height={300}
-            valueFormatter={(value) => `${value} müşteri`}
-            color="blue"
             showGrid
             showTooltip
+            xAxisKey="name"
           />
         );
       default:

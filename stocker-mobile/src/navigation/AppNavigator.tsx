@@ -9,6 +9,9 @@ import SetupScreen from '../screens/SetupScreen';
 import CRMDashboardScreen from '../screens/crm/CRMDashboardScreen';
 import CustomerListScreen from '../screens/crm/CustomerListScreen';
 import CustomerDetailScreen from '../screens/crm/CustomerDetailScreen';
+import AddCustomerScreen from '../screens/crm/AddCustomerScreen';
+import DealListScreen from '../screens/crm/DealListScreen';
+import DealDetailScreen from '../screens/crm/DealDetailScreen';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +39,9 @@ export default function AppNavigator() {
                             <Stack.Screen name="CRMDashboard" component={CRMDashboardScreen} />
                             <Stack.Screen name="CustomerList" component={CustomerListScreen} />
                             <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
+                            <Stack.Screen name="AddCustomer" component={AddCustomerScreen} />
+                            <Stack.Screen name="DealList" component={DealListScreen} />
+                            <Stack.Screen name="DealDetail" component={DealDetailScreen} />
                         </>
                     )
                 ) : (

@@ -390,7 +390,7 @@ export default function CustomerDetailPage() {
 
         {/* Tags Section */}
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <CustomerTags customerId={customer.id} editable={true} size="default" />
+          <CustomerTags customerId={String(customer.id)} editable={true} size="default" />
         </div>
       </motion.div>
 
@@ -776,7 +776,7 @@ export default function CustomerDetailPage() {
                 min={0}
                 step={1000}
                 formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => (value || '').replace(/₺\s?|(,*)/g, '')}
+                parser={(value) => Number((value || '').replace(/₺\s?|(,*)/g, '')) as any}
                 placeholder="1,000,000"
               />
             </Form.Item>

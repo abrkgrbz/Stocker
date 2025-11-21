@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message: 'Geçersiz e-posta formatı',
-          errors: validationResult.error.errors
+          errors: validationResult.error.issues
         },
         { status: 400 }
       )

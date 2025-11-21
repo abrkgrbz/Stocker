@@ -18,7 +18,7 @@ interface UseSignalRHubOptions {
 export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOptions) {
   const context = useSignalRContext();
 
-  const hubInstance: SignalRClient =
+  const hubInstance: SignalRClient | undefined =
     hub === 'notification'
       ? context.notificationHub
       : hub === 'inventory'
@@ -29,11 +29,11 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
     hub === 'notification'
       ? context.isNotificationConnected
       : hub === 'inventory'
-      ? context.isInventoryConnected
-      : context.isOrderConnected;
+      ? context.isInventoryConnected ?? false
+      : context.isOrderConnected ?? false;
 
   useEffect(() => {
-    if (!enabled || !isConnected) return;
+    if (!enabled || !isConnected || !hubInstance) return;
 
     // Register event handlers
     Object.entries(events).forEach(([eventName, handler]) => {
@@ -50,6 +50,6 @@ export function useSignalRHub({ hub, events, enabled = true }: UseSignalRHubOpti
 
   return {
     isConnected,
-    invoke: hubInstance.invoke.bind(hubInstance),
+    invoke: hubInstance ? hubInstance.invoke.bind(hubInstance) : async () => {},
   };
 }

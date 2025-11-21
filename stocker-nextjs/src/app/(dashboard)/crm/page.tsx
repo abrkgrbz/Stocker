@@ -60,7 +60,7 @@ export default function CRMDashboardPage() {
   const leads = leadsData?.items || [];
   const deals = dealsData?.items || [];
   const activities = activitiesData?.items || [];
-  const campaigns = campaignsData?.items || [];
+  const campaigns = campaignsData || []; // campaigns is Campaign[], not PaginatedResponse
   const pipelines = pipelinesData || [];
 
   // Calculate all metrics using utility function

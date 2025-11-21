@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -17,39 +17,29 @@ import { apiService } from '../../services/api';
 import { Loading } from '../../components/Loading';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-export default function CustomerListScreen({ navigation }: any) {
-    const [customers, setCustomers] = useState<any[]>([]);
+export default function DealListScreen({ navigation }: any) {
+    const [deals, setDeals] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalCount, setTotalCount] = useState(0);
 
-    const loadCustomers = async (pageNumber: number, search: string = '', refresh: boolean = false) => {
+    const loadDeals = async () => {
         try {
-            if (pageNumber === 1) setIsLoading(true);
-
-            const response = await apiService.crm.getCustomers({
-                pageNumber,
-                pageSize: 10,
-                search
-            });
-
-            if (response.data.success) {
-                const { items, totalCount: total } = response.data.data;
-
-                if (refresh) {
-                    setCustomers(items);
-                } else {
-                    setCustomers(prev => [...prev, ...items]);
+            const response = await apiService.crm.getDeals();
+            if (response.data && response.data.success) {
+                // Filter locally for now as the API might not support search yet
+                let items = response.data.data || [];
+                if (searchText) {
+                    const lowerSearch = searchText.toLowerCase();
+                    items = items.filter((d: any) =>
+                        d.title?.toLowerCase().includes(lowerSearch) ||
+                        d.customerName?.toLowerCase().includes(lowerSearch)
+                    );
                 }
-
-                setTotalCount(total);
-                setHasMore(items.length === 10); // Assuming page size is 10
+                setDeals(items);
             }
         } catch (error) {
-            console.error('Failed to load customers:', error);
+            console.error('Failed to load deals:', error);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
@@ -57,64 +47,69 @@ export default function CustomerListScreen({ navigation }: any) {
     };
 
     useEffect(() => {
-        loadCustomers(1, searchText, true);
-    }, []);
-
-    // Debounce search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchText !== '') {
-                setPage(1);
-                loadCustomers(1, searchText, true);
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
+        loadDeals();
     }, [searchText]);
 
     const handleRefresh = () => {
         setIsRefreshing(true);
-        setPage(1);
-        loadCustomers(1, searchText, true);
+        loadDeals();
     };
 
-    const handleLoadMore = () => {
-        if (!hasMore || isLoading) return;
-        const nextPage = page + 1;
-        setPage(nextPage);
-        loadCustomers(nextPage, searchText);
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Won': return colors.success;
+            case 'Lost': return colors.error;
+            case 'Negotiation': return colors.warning;
+            default: return colors.primary;
+        }
+    };
+
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case 'Won': return 'Kazanıldı';
+            case 'Lost': return 'Kaybedildi';
+            case 'Negotiation': return 'Görüşülüyor';
+            case 'New': return 'Yeni';
+            case 'Qualified': return 'Uygun';
+            case 'Proposition': return 'Teklif';
+            default: return status;
+        }
     };
 
     const renderItem = ({ item, index }: any) => (
         <Animated.View entering={FadeInUp.delay(index * 50).duration(400)}>
             <TouchableOpacity
                 style={styles.card}
-                onPress={() => navigation.navigate('CustomerDetail', { id: item.id, name: item.companyName })}
+                onPress={() => navigation.navigate('DealDetail', { id: item.id, title: item.title })}
             >
                 <View style={styles.cardHeader}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {item.companyName.substring(0, 2).toUpperCase()}
-                        </Text>
+                    <View style={styles.iconContainer}>
+                        <Ionicons name="briefcase" size={24} color={colors.primary} />
                     </View>
                     <View style={styles.cardInfo}>
-                        <Text style={styles.companyName}>{item.companyName}</Text>
-                        <Text style={styles.contactPerson}>{item.contactPerson || 'Yetkili Belirtilmemiş'}</Text>
+                        <Text style={styles.dealTitle}>{item.title}</Text>
+                        <Text style={styles.customerName}>{item.customerName}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.stage) + '20' }]}>
+                        <Text style={[styles.statusText, { color: getStatusColor(item.stage) }]}>
+                            {getStatusText(item.stage)}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
-                        <Ionicons name="mail-outline" size={14} color={colors.textSecondary} />
-                        <Text style={styles.footerText}>{item.email}</Text>
+                        <Ionicons name="cash-outline" size={16} color={colors.success} />
+                        <Text style={[styles.footerText, { color: colors.success, fontWeight: 'bold' }]}>
+                            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(item.value || 0)}
+                        </Text>
                     </View>
-                    {item.phone && (
-                        <View style={styles.footerItem}>
-                            <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
-                            <Text style={styles.footerText}>{item.phone}</Text>
-                        </View>
-                    )}
+                    <View style={styles.footerItem}>
+                        <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                        <Text style={styles.footerText}>
+                            {new Date(item.createdAt).toLocaleDateString('tr-TR')}
+                        </Text>
+                    </View>
                 </View>
             </TouchableOpacity>
         </Animated.View>
@@ -128,11 +123,8 @@ export default function CustomerListScreen({ navigation }: any) {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Müşteriler</Text>
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => navigation.navigate('AddCustomer')}
-                    >
+                    <Text style={styles.headerTitle}>Fırsatlar</Text>
+                    <TouchableOpacity style={styles.addButton}>
                         <Ionicons name="add" size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
@@ -142,48 +134,33 @@ export default function CustomerListScreen({ navigation }: any) {
                     <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Müşteri ara..."
+                        placeholder="Fırsat ara..."
                         placeholderTextColor={colors.textMuted}
                         value={searchText}
                         onChangeText={setSearchText}
                     />
-                    {searchText.length > 0 && (
-                        <TouchableOpacity onPress={() => {
-                            setSearchText('');
-                            handleRefresh();
-                        }}>
-                            <Ionicons name="close-circle" size={20} color={colors.textMuted} />
-                        </TouchableOpacity>
-                    )}
                 </View>
 
                 {/* List */}
                 <FlatList
-                    data={customers}
+                    data={deals}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id.toString()}
                     contentContainerStyle={styles.listContent}
                     refreshing={isRefreshing}
                     onRefresh={handleRefresh}
-                    onEndReached={handleLoadMore}
-                    onEndReachedThreshold={0.5}
                     ListEmptyComponent={
                         !isLoading ? (
                             <View style={styles.emptyContainer}>
-                                <Ionicons name="people-outline" size={64} color={colors.textMuted} />
-                                <Text style={styles.emptyText}>Müşteri bulunamadı</Text>
+                                <Ionicons name="briefcase-outline" size={64} color={colors.textMuted} />
+                                <Text style={styles.emptyText}>Fırsat bulunamadı</Text>
                             </View>
-                        ) : null
-                    }
-                    ListFooterComponent={
-                        isLoading && page > 1 ? (
-                            <ActivityIndicator style={{ padding: 20 }} color={colors.primary} />
                         ) : null
                     }
                 />
             </SafeAreaView>
 
-            {isLoading && page === 1 && <Loading visible={true} />}
+            {isLoading && <Loading visible={true} />}
         </View>
     );
 }
@@ -249,42 +226,46 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     cardHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: spacing.m,
     } as ViewStyle,
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: 'rgba(124, 58, 237, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.m,
     } as ViewStyle,
-    avatarText: {
-        color: colors.primary,
-        fontSize: 18,
-        fontWeight: 'bold',
-    } as TextStyle,
     cardInfo: {
         flex: 1,
     } as ViewStyle,
-    companyName: {
+    dealTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: colors.textPrimary,
         marginBottom: 2,
     } as TextStyle,
-    contactPerson: {
+    customerName: {
         fontSize: 14,
         color: colors.textSecondary,
     } as TextStyle,
+    statusBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    } as ViewStyle,
+    statusText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+    } as TextStyle,
     cardFooter: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         borderTopWidth: 1,
         borderTopColor: colors.surfaceLight,
         paddingTop: spacing.s,
-        gap: spacing.l,
     } as ViewStyle,
     footerItem: {
         flexDirection: 'row',
@@ -292,7 +273,7 @@ const styles = StyleSheet.create({
         gap: 4,
     } as ViewStyle,
     footerText: {
-        fontSize: 12,
+        fontSize: 14,
         color: colors.textSecondary,
     } as TextStyle,
     emptyContainer: {

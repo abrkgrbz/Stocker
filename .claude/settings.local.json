@@ -57,7 +57,9 @@
       "Bash(Select-String -Pattern \"error|succeeded|failed\" -Context 2,0)",
       "SlashCommand(/sc:troubleshoot \"stocker-nextjs içerisinde ki typescript hatalarını düzeltelim\")",
       "SlashCommand(/sc:troubleshoot:*)",
-      "Bash(cut:*)"
+      "Bash(cut:*)",
+      "Bash(Select-String -Pattern \"error TS\")",
+      "Bash(Measure-Object -Line)"
     ],
     "deny": [],
     "ask": []

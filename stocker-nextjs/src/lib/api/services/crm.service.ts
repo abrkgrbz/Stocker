@@ -71,6 +71,7 @@ import type {
 export interface Customer {
   id: number;
   companyName: string;
+  customerName?: string; // Alias for companyName
   contactPerson: string | null;
   email: string;
   phone: string | null;
@@ -86,7 +87,14 @@ export interface Customer {
   taxId: string | null;
   paymentTerms: string | null;
   notes: string | null;
+  description: string | null;
   totalPurchases: number | null;
+  // Additional CRM fields
+  industry: string | null;
+  annualRevenue: number | null;
+  numberOfEmployees: number | null;
+  isActive: boolean;
+  contacts?: any[]; // Contact array if backend provides it
   createdAt: string;
   updatedAt: string;
 }
@@ -100,6 +108,7 @@ export interface Lead {
   phone: string | null;
   mobilePhone?: string | null;
   companyName: string | null;
+  company?: string | null; // Alias for companyName
   jobTitle: string | null;
   industry?: string | null;
   source: string | null;
@@ -148,11 +157,14 @@ export interface Deal {
 export interface Activity {
   id: number;
   title: string;
+  subject?: string | null; // Email subject or activity title
   type: 'Call' | 'Email' | 'Meeting' | 'Task' | 'Note';
   description: string | null;
   startTime: string;
   endTime: string | null;
+  scheduledAt?: string; // Scheduled date/time
   status: 'Scheduled' | 'Completed' | 'Cancelled';
+  priority?: 'Low' | 'Medium' | 'High';
   customerId: number | null;
   customerName?: string | null;
   leadId: number | null;
@@ -167,6 +179,7 @@ export interface Activity {
   ownerName?: string | null;
   assignedToId?: string | null;
   assignedToName?: string | null;
+  relatedToName?: string | null;
   createdAt: string;
 }
 
@@ -219,20 +232,31 @@ export interface Campaign {
   id: string;
   name: string;
   description: string | null;
+  subject?: string | null; // Email subject line
   type: 'Email' | 'SocialMedia' | 'Webinar' | 'Event' | 'Conference' | 'Advertisement' | 'Banner' | 'Telemarketing' | 'PublicRelations';
   status: 'Planned' | 'InProgress' | 'Completed' | 'Aborted' | 'OnHold';
   startDate: string;
   endDate: string;
   budgetedCost: number;
+  budget?: number; // Alias for budgetedCost
   actualCost: number;
   expectedRevenue: number;
   actualRevenue: number;
+  revenue?: number; // Alias for actualRevenue
   targetAudience: string | null;
   targetLeads: number;
   actualLeads: number;
   convertedLeads: number;
+  // Email campaign metrics
+  totalRecipients?: number;
+  deliveredCount?: number;
+  openedCount?: number;
+  clickedCount?: number;
+  targetSegmentName?: string | null;
+  // Ownership
   ownerId: string | null;
   ownerName: string | null;
+  customerName?: string | null;
   conversionRate: number;
   roi: number;
   memberCount: number;
@@ -377,7 +401,7 @@ export class CRMService {
       }
     };
 
-    logger.info('📤 Sending CreateCustomerCommand to CRM module:', command);
+    logger.info('📤 Sending CreateCustomerCommand to CRM module', { metadata: { command } });
     return ApiService.post<Customer>(this.getPath('customers'), command);
   }
 
@@ -408,7 +432,7 @@ export class CRMService {
       }
     };
 
-    logger.info('📤 Sending UpdateCustomerCommand to CRM module:', command);
+    logger.info('📤 Sending UpdateCustomerCommand to CRM module', { metadata: { command } });
     return ApiService.put<Customer>(
       this.getPath(`customers/${id}`),
       command
@@ -419,7 +443,7 @@ export class CRMService {
    * Delete customer using CRM module's DeleteCustomerCommand
    */
   static async deleteCustomer(id: string): Promise<void> {
-    logger.info('📤 Sending DeleteCustomerCommand to CRM module:', { customerId: id });
+    logger.info('📤 Sending DeleteCustomerCommand to CRM module', { metadata: { customerId: id } });
     return ApiService.delete<void>(this.getPath(`customers/${id}`));
   }
 

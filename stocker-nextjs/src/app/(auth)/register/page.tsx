@@ -556,7 +556,7 @@ export default function RegisterPage() {
         <div className="relative z-10 flex flex-col justify-between p-12 text-white overflow-y-auto">
           <div>
             <Link href="/" className="mb-16 inline-block">
-              <Logo variant="white" size="lg" />
+              <Logo size="lg" />
             </Link>
 
             <div className="space-y-8">
@@ -633,7 +633,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md py-8">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden mb-8 inline-block">
-            <Logo variant="gradient" size="md" />
+            <Logo size="md" />
           </Link>
 
           {/* Progress Indicator */}

@@ -289,8 +289,8 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: (data: any) => {
       // DEBUG: Log incoming data from form
-      logger.info('🎯 Hook received data:', data);
-      logger.info('🎯 Data keys:', Object.keys(data));
+      logger.info('🎯 Hook received data', { metadata: { data } });
+      logger.info('🎯 Data keys', { metadata: { keys: Object.keys(data) } });
 
       // Backend expects data wrapped in LeadData property (CreateLeadDto)
       // Form now uses correct field names matching backend DTO
@@ -308,7 +308,7 @@ export function useCreateLead() {
         description: data.description || null,
       };
 
-      logger.info('🎯 Mapped leadData:', leadData);
+      logger.info('🎯 Mapped leadData', { metadata: { leadData } });
 
       return CRMService.createLead({ LeadData: leadData });
     },
@@ -345,7 +345,7 @@ export function useDeleteLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => CRMService.deleteLead(id),
+    mutationFn: (id: string) => CRMService.deleteLead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead silindi');
@@ -427,7 +427,7 @@ export function useConvertLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ leadId, customerData }: { leadId: number; customerData: any }) =>
+    mutationFn: ({ leadId, customerData }: { leadId: string; customerData: any }) =>
       CRMService.convertLeadToCustomer(leadId, customerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
