@@ -137,7 +137,7 @@ export function getCookieDomain(): string | undefined {
   }
 
   // Use COOKIE_BASE_DOMAIN if set, otherwise fall back to NEXT_PUBLIC_BASE_DOMAIN
-  const cookieDomain = env.COOKIE_BASE_DOMAIN || env.NEXT_PUBLIC_BASE_DOMAIN
+  const cookieDomain = (env.COOKIE_BASE_DOMAIN as string | undefined) || env.NEXT_PUBLIC_BASE_DOMAIN
 
   // Add leading dot for subdomain sharing (e.g., .stoocker.app)
   return `.${cookieDomain}`
@@ -145,7 +145,10 @@ export function getCookieDomain(): string | undefined {
 
 // Get API URL (internal for server-side, public for client-side)
 export function getApiUrl(serverSide = false): string {
-  return serverSide ? env.API_INTERNAL_URL : env.NEXT_PUBLIC_API_URL
+  if (serverSide && env.API_INTERNAL_URL) {
+    return env.API_INTERNAL_URL
+  }
+  return env.NEXT_PUBLIC_API_URL
 }
 
 // Get auth URL (removes port for production HTTPS)
