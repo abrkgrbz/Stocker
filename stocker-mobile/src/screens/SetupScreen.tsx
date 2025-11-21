@@ -43,7 +43,7 @@ interface PackageOption {
 }
 
 export default function SetupScreen({ navigation }: any) {
-    const { user, updateUser } = useAuthStore();
+    const { user, updateUser, logout } = useAuthStore();
     const [currentStep, setCurrentStep] = useState<SetupStep>('package');
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
@@ -143,6 +143,27 @@ export default function SetupScreen({ navigation }: any) {
             index: 0,
             routes: [{ name: 'Dashboard' }],
         });
+    };
+
+    const handleLogout = async () => {
+        Alert.alert(
+            'Çıkış Yap',
+            'Kurulumu iptal edip çıkış yapmak istediğinize emin misiniz?',
+            [
+                { text: 'İptal', style: 'cancel' },
+                {
+                    text: 'Çıkış Yap',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await logout();
+                        } catch (error) {
+                            console.error('Logout failed:', error);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const renderStepIndicator = () => {
@@ -377,6 +398,9 @@ export default function SetupScreen({ navigation }: any) {
                 >
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Hesap Kurulumu</Text>
+                        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                            <Ionicons name="log-out-outline" size={24} color={colors.error} />
+                        </TouchableOpacity>
                     </View>
 
                     {renderStepIndicator()}
@@ -405,14 +429,22 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     header: {
         padding: spacing.m,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         borderBottomWidth: 1,
         borderBottomColor: colors.surfaceLight,
+        position: 'relative',
     } as ViewStyle,
     headerTitle: {
         ...typography.h3,
         color: colors.textPrimary,
     } as TextStyle,
+    logoutButton: {
+        position: 'absolute',
+        right: spacing.m,
+        padding: spacing.xs,
+    } as ViewStyle,
     stepIndicator: {
         flexDirection: 'row',
         justifyContent: 'center',

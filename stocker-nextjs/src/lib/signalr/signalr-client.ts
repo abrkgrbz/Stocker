@@ -48,19 +48,19 @@ export class SignalRClient {
 
     // Connection event handlers
     this.connection.onreconnecting((error) => {
-      logger.warn('SignalR reconnecting...', error?.message || 'Unknown error');
+      logger.warn('SignalR reconnecting...', { metadata: { error: error?.message || 'Unknown error' } });
       this.reconnectAttempts++;
     });
 
     this.connection.onreconnected((connectionId) => {
-      logger.info('SignalR reconnected:', connectionId);
+      logger.info('SignalR reconnected', { metadata: { connectionId } });
       this.reconnectAttempts = 0;
     });
 
     this.connection.onclose(async (error) => {
       // Only log as warning if it's not a deliberate disconnect
       if (error) {
-        logger.warn('SignalR connection closed:', error?.message || 'Unknown error');
+        logger.warn('SignalR connection closed', { metadata: { error: error?.message || 'Unknown error' } });
       } else {
         logger.info('SignalR disconnected gracefully');
       }

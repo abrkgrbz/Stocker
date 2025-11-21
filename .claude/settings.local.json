@@ -54,7 +54,10 @@
       "Bash(__NEW_LINE__ sed -i 's/namespace Stocker.API.Controllers;/namespace Stocker.API.Controllers.Public;/' src/API/Stocker.API/Controllers/Public/HealthController.cs)",
       "Bash(__NEW_LINE__ echo \"Namespaces updated\")",
       "Bash(git restore:*)",
-      "Bash(Select-String -Pattern \"error|succeeded|failed\" -Context 2,0)"
+      "Bash(Select-String -Pattern \"error|succeeded|failed\" -Context 2,0)",
+      "SlashCommand(/sc:troubleshoot \"stocker-nextjs içerisinde ki typescript hatalarını düzeltelim\")",
+      "SlashCommand(/sc:troubleshoot:*)",
+      "Bash(cut:*)"
     ],
     "deny": [],
     "ask": []

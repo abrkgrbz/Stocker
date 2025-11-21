@@ -28,7 +28,7 @@ export function useNotificationHub() {
 
       // Inventory update notification
       UpdateInventory: (data: { productId: string; stockLevel: number; message: string }) => {
-        logger.info('Inventory updated:', data);
+        logger.info('Inventory updated', { metadata: data });
         addNotification({
           id: `inventory-${Date.now()}`,
           title: 'Stok Güncellendi',
@@ -50,7 +50,7 @@ export function useNotificationHub() {
 
       // Order status changed notification
       OrderStatusChanged: (data: { orderId: string; status: string; message: string }) => {
-        logger.info('Order status changed:', data);
+        logger.info('Order status changed', { metadata: data });
         addNotification({
           id: `order-${Date.now()}`,
           title: 'Sipariş Durumu Değişti',
@@ -77,7 +77,7 @@ export function useNotificationHub() {
 
       // System alert notification
       SystemAlert: (data: { severity: 'info' | 'warning' | 'error'; message: string }) => {
-        logger.info('System alert:', data);
+        logger.info('System alert', { metadata: data });
         addNotification({
           id: `system-${Date.now()}`,
           title: 'Sistem Bildirimi',

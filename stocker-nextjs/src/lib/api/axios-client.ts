@@ -49,7 +49,7 @@ apiClient.interceptors.request.use(
 
       if (tenantCodeCookie) {
         tenantCode = tenantCodeCookie.split('=')[1]?.trim();
-        logger.info('🍪 Found tenant-code in cookie:', tenantCode);
+        logger.info('🍪 Found tenant-code in cookie', { metadata: { tenantCode } });
       }
 
       // 2. Fallback: Extract tenant code from subdomain
@@ -59,7 +59,7 @@ apiClient.interceptors.request.use(
         // If subdomain exists (e.g., abg-tech.stoocker.app)
         if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'auth') {
           tenantCode = parts[0]; // Extract subdomain as tenant code
-          logger.info('🌐 Extracted tenant-code from subdomain:', tenantCode);
+          logger.info('🌐 Extracted tenant-code from subdomain', { metadata: { tenantCode } });
         }
       }
 
@@ -67,24 +67,24 @@ apiClient.interceptors.request.use(
       if (!tenantCode && (hostname === 'localhost' || hostname === '127.0.0.1')) {
         tenantCode = process.env.NEXT_PUBLIC_DEV_TENANT_CODE || null;
         if (tenantCode) {
-          logger.info('🔧 Using development tenant:', tenantCode);
+          logger.info('🔧 Using development tenant', { metadata: { tenantCode } });
         }
       }
 
       // Set tenant code header
       if (tenantCode) {
         config.headers['X-Tenant-Code'] = tenantCode;
-        logger.info('✅ Tenant Code set:', tenantCode, 'for', config.url);
+        logger.info('✅ Tenant Code set', { metadata: { tenantCode, url: config.url } });
         console.log('📋 Request headers:', {
           'X-Tenant-Code': config.headers['X-Tenant-Code'],
           'Content-Type': config.headers['Content-Type']
         });
       } else {
         logger.error('❌ NO TENANT CODE FOUND!');
-        logger.info('🌐 Hostname:', hostname);
-        logger.info('🍪 All cookies:', document.cookie);
-        logger.info('🔍 Cookie array:', cookies);
-        logger.warn('⚠️ No tenant code found for request:', config.url);
+        logger.info('🌐 Hostname', { metadata: { hostname } });
+        logger.info('🍪 All cookies', { metadata: { cookies: document.cookie } });
+        logger.info('🔍 Cookie array', { metadata: { cookies } });
+        logger.warn('⚠️ No tenant code found for request', { metadata: { url: config.url } });
       }
 
       // ❌ REMOVED: X-Tenant-Id from localStorage causes conflicts
@@ -114,18 +114,18 @@ apiClient.interceptors.request.use(
 
     // Debug logging for POST requests
     if (config.method === 'post' && (config.url?.includes('/opportunities') || config.url?.includes('/deals') || config.url?.includes('/leads'))) {
-      logger.info('📤 POST Request to:', config.url);
-      logger.info('📦 Request payload:', JSON.stringify(config.data, null, 2));
-      logger.info('📋 Payload keys:', Object.keys(config.data || {}));
+      logger.info('📤 POST Request', { metadata: { url: config.url } });
+      logger.info('📦 Request payload', { metadata: { payload: JSON.stringify(config.data, null, 2) } });
+      logger.info('📋 Payload keys', { metadata: { keys: Object.keys(config.data || {}) } });
 
       // Special logging for leads to debug validation errors
       if (config.url?.includes('/leads')) {
         const leadData = (config.data as any)?.LeadData;
-        logger.info('🔍 LeadData object:', leadData);
-        logger.info('🔍 LeadData keys:', leadData ? Object.keys(leadData) : 'LeadData is null/undefined');
-        logger.info('🔍 firstName:', leadData?.firstName);
-        logger.info('🔍 lastName:', leadData?.lastName);
-        logger.info('🔍 email:', leadData?.email);
+        logger.info('🔍 LeadData object', { metadata: { leadData } });
+        logger.info('🔍 LeadData keys', { metadata: { keys: leadData ? Object.keys(leadData) : 'LeadData is null/undefined' } });
+        logger.info('🔍 firstName', { metadata: { firstName: leadData?.firstName } });
+        logger.info('🔍 lastName', { metadata: { lastName: leadData?.lastName } });
+        logger.info('🔍 email', { metadata: { email: leadData?.email } });
       }
     }
 
@@ -159,7 +159,7 @@ apiClient.interceptors.response.use(
     }
 
     // Handle Tenant.Unauthorized (400) - Token tenant mismatch
-    if (error.response?.status === 400 && error.response?.data?.code === 'Tenant.Unauthorized') {
+    if (error.response?.status === 400 && (error.response?.data as any)?.code === 'Tenant.Unauthorized') {
       logger.error('🔒 Tenant mismatch - access token belongs to different tenant');
       console.error('🔍 Debug info:', {
         'Current tenant-code (from cookie)': document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='))?.split('=')[1],

@@ -194,6 +194,38 @@ export const apiService = {
         complete: (data: any) =>
             api.post<ApiResponse>('/api/setup/complete', data),
     },
+
+    // CRM endpoints
+    crm: {
+        // Customers
+        getCustomers: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/customers/paged', { params }),
+
+        getCustomer: (id: string) =>
+            api.get<ApiResponse>(`/api/crm/customers/${id}`),
+
+        createCustomer: (data: any) =>
+            api.post<ApiResponse>('/api/crm/customers', data),
+
+        updateCustomer: (id: string, data: any) =>
+            api.put<ApiResponse>(`/api/crm/customers/${id}`, data),
+
+        // Leads
+        getLeads: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/leads', { params }),
+
+        // Deals
+        getDeals: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/deals', { params }),
+
+        // Activities
+        getActivities: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/activities', { params }),
+
+        // Stats
+        getStats: () =>
+            api.get<ApiResponse>('/api/crm/stats'), // Assuming this exists, or we use tenant stats
+    },
 };
 
 export default api;
