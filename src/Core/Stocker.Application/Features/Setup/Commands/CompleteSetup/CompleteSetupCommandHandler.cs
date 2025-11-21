@@ -33,11 +33,10 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                 request.UserId, request.TenantId, request.PackageId);
 
             // Validate required fields
-            if (string.IsNullOrWhiteSpace(request.CompanyName) ||
-                string.IsNullOrWhiteSpace(request.CompanyCode))
+            if (string.IsNullOrWhiteSpace(request.CompanyName))
             {
                 return Result<CompleteSetupResponse>.Failure(
-                    Error.Validation("Setup.MissingFields", "Firma adı ve firma kodu zorunludur"));
+                    Error.Validation("Setup.MissingFields", "Firma adı zorunludur"));
             }
 
             // Verify package exists
