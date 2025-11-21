@@ -9,9 +9,16 @@ services:
       context: stocker-nextjs
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://api.stoocker.app
-        - NEXT_PUBLIC_BASE_DOMAIN=stoocker.app
-        - NEXT_PUBLIC_AUTH_DOMAIN=https://auth.stoocker.app
+        # Public environment variables (embedded at build time)
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.stoocker.app}
+        - NEXT_PUBLIC_BASE_DOMAIN=${NEXT_PUBLIC_BASE_DOMAIN:-stoocker.app}
+        - NEXT_PUBLIC_AUTH_DOMAIN=${NEXT_PUBLIC_AUTH_DOMAIN:-https://auth.stoocker.app}
+
+        # Server-side environment variables (needed at build time for validation)
+        - API_INTERNAL_URL=${API_INTERNAL_URL:-http://api:5000}
+        - HMAC_SECRET=${HMAC_SECRET}
+        - NODE_ENV=${NODE_ENV:-production}
+
         # Sentry build args (required for build-time embedding)
         - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
         - SENTRY_DSN=${SENTRY_DSN}

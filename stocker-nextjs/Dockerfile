@@ -22,6 +22,11 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_BASE_DOMAIN
 ARG NEXT_PUBLIC_AUTH_DOMAIN
 
+# Build arguments for server-side environment variables (needed for env.ts validation)
+ARG API_INTERNAL_URL
+ARG HMAC_SECRET
+ARG NODE_ENV
+
 # Sentry build arguments (passed from docker-compose.yml)
 ARG NEXT_PUBLIC_SENTRY_DSN
 ARG SENTRY_DSN
@@ -32,7 +37,14 @@ ARG SENTRY_AUTH_TOKEN
 
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+
+# Set all required environment variables for build (env.ts validation)
+ENV NODE_ENV=$NODE_ENV
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_DOMAIN=$NEXT_PUBLIC_BASE_DOMAIN
+ENV NEXT_PUBLIC_AUTH_DOMAIN=$NEXT_PUBLIC_AUTH_DOMAIN
+ENV API_INTERNAL_URL=$API_INTERNAL_URL
+ENV HMAC_SECRET=$HMAC_SECRET
 
 # Set Sentry env vars for build (NEXT_PUBLIC_* must be available at build time)
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
@@ -41,9 +53,6 @@ ENV SENTRY_ORG=$SENTRY_ORG
 ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT
 ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
-
-# Note: NEXT_PUBLIC_* variables are now dynamically determined at runtime
-# See src/lib/env.ts getAuthUrl() for runtime domain detection
 
 # Build Next.js app
 RUN npm run build
