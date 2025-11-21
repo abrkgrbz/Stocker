@@ -111,7 +111,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     setIsLoading(true)
 
     try {
-      const apiUrl = getApiUrl(true) // Use tenant-aware API URL
+      const apiUrl = getApiUrl(false) // Client-side: use NEXT_PUBLIC_API_URL
       const token = localStorage.getItem('access_token') // Use access_token from cookies
       console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
       console.log('🔑 Token exists:', !!token)
@@ -327,10 +327,17 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                 <input
                   type="text"
                   value={companyCode}
-                  onChange={(e) => setCompanyCode(e.target.value)}
+                  onChange={(e) => setCompanyCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Örn: ABC123"
+                  placeholder="örn: acme-corp"
+                  maxLength={50}
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Subdomain adresiniz: <span className="font-mono font-medium text-blue-600">{companyCode || 'firma-kodu'}.stoocker.app</span>
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Sadece küçük harf, rakam ve tire (-) kullanabilirsiniz
+                </p>
               </div>
 
               <div>

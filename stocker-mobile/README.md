@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+# Stocker Mobile App 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Stocker Mobile is a cutting-edge CRM and business management application built with **React Native** and **Expo**. It provides a seamless, premium user experience for managing customers, deals, and business insights on the go.
 
-## Get started
+## 🌟 Visual Showcase
 
-1. Install dependencies
+| Login Screen | Dashboard |
+|:---:|:---:|
+| ![Login](./assets/docs/mobile_login_screen.png) | ![Dashboard](./assets/docs/mobile_dashboard_screen.png) |
 
+| CRM List | Deal Details |
+|:---:|:---:|
+| ![CRM List](./assets/docs/mobile_crm_list.png) | ![Deal Detail](./assets/docs/mobile_deal_detail.png) |
+
+## 🚀 Key Features
+
+### 🔐 Advanced Authentication
+- **Secure Login**: JWT-based authentication with robust security.
+- **SignalR Integration**: Real-time validation during login and registration.
+- **Multi-step Registration**: User-friendly onboarding flow.
+
+### 📊 Dynamic Dashboard
+- **Modern UI**: Glassmorphism effects and gradient backgrounds.
+- **Module Selector**: Easy access to CRM, Sales, Stock, and other modules.
+- **Tenant Context**: Automatic handling of tenant-specific data.
+
+### 💼 CRM Module
+- **Customer Management**: Add, view, and manage customer profiles.
+- **Deal Tracking**: Visualize sales pipeline with detailed deal views.
+- **Search & Filter**: Powerful search capabilities for quick access.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Expo](https://expo.dev) & [React Native](https://reactnative.dev)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: Custom Theme System & Gradient Effects
+- **Animations**: [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)
+- **Real-time**: [@microsoft/signalr](https://www.npmjs.com/package/@microsoft/signalr)
+- **Networking**: Axios
+
+## 🏃‍♂️ Getting Started
+
+1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start the App**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Run on Device/Emulator**
+   - Press `a` for Android Emulator
+   - Press `i` for iOS Simulator
+   - Scan QR code with Expo Go
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+*Built with ❤️ by the Stocker Team*

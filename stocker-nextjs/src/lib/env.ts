@@ -49,10 +49,10 @@ function getEnv(): z.infer<typeof envSchema> {
   // Create safe env object with fallbacks
   const safeEnv = {
     NODE_ENV: (process.env.NODE_ENV as 'development' | 'test' | 'production') || 'development',
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5249',
     NEXT_PUBLIC_BASE_DOMAIN: process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001',
     NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000',
-    API_INTERNAL_URL: isClient ? undefined : (process.env.API_INTERNAL_URL || 'http://localhost:5000'),
+    API_INTERNAL_URL: isClient ? undefined : (process.env.API_INTERNAL_URL || 'http://localhost:5249'),
     HMAC_SECRET: isClient ? undefined : process.env.HMAC_SECRET,
     COOKIE_BASE_DOMAIN: isClient ? undefined : process.env.COOKIE_BASE_DOMAIN,
     REDIS_URL: isClient ? undefined : process.env.REDIS_URL,

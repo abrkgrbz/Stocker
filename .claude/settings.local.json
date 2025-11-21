@@ -59,7 +59,9 @@
       "SlashCommand(/sc:troubleshoot:*)",
       "Bash(cut:*)",
       "Bash(Select-String -Pattern \"error TS\")",
-      "Bash(Measure-Object -Line)"
+      "Bash(Measure-Object -Line)",
+      "Bash(Select-String \"error TS\")",
+      "Bash(Select-Object -First 30)"
     ],
     "deny": [],
     "ask": []
