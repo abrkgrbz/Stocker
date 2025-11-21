@@ -8,6 +8,7 @@ import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutli
 import Logo from '@/components/Logo'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { showAlert } from '@/lib/sweetalert-config'
+import { cookieStorage } from '@/lib/auth/cookie-storage'
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
 
@@ -217,10 +218,11 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        // Save token for authenticated setup
+        // Save tokens to cookies for authenticated setup
         if (data.token) {
-          localStorage.setItem('token', data.token)
-          localStorage.setItem('refreshToken', data.refreshToken)
+          cookieStorage.setItem('access_token', data.token)
+          cookieStorage.setItem('refresh_token', data.refreshToken)
+          cookieStorage.setItem('tenant-code', data.subdomain || teamName.toLowerCase())
         }
 
         // Show email verification success message

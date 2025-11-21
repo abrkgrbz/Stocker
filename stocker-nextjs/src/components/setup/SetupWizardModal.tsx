@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Modal } from 'antd'
 import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
+import { cookieStorage } from '@/lib/auth/cookie-storage'
 
 type SetupStep = 'package' | 'company' | 'complete'
 
@@ -122,7 +123,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
     try {
       const apiUrl = getApiUrl(false) // Client-side: use NEXT_PUBLIC_API_URL
-      const token = localStorage.getItem('token') // Token saved during registration
+      const token = cookieStorage.getItem('access_token') // Token saved during registration
       console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
       console.log('🔑 Token exists:', !!token)
       console.log('🔑 Token value (first 50 chars):', token?.substring(0, 50))
