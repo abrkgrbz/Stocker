@@ -42,33 +42,35 @@ let _env: z.infer<typeof envSchema> | null = null
 function getEnv(): z.infer<typeof envSchema> {
   if (_env) return _env
 
+  // Client-side: process.env only contains NEXT_PUBLIC_* vars
+  // Server-side: process.env contains all vars
+  const isClient = typeof window !== 'undefined'
+
+  // Create safe env object with fallbacks
+  const safeEnv = {
+    NODE_ENV: (process.env.NODE_ENV as 'development' | 'test' | 'production') || 'development',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+    NEXT_PUBLIC_BASE_DOMAIN: process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001',
+    NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000',
+    API_INTERNAL_URL: isClient ? undefined : (process.env.API_INTERNAL_URL || 'http://localhost:5000'),
+    HMAC_SECRET: isClient ? undefined : process.env.HMAC_SECRET,
+    COOKIE_BASE_DOMAIN: isClient ? undefined : process.env.COOKIE_BASE_DOMAIN,
+    REDIS_URL: isClient ? undefined : process.env.REDIS_URL,
+    NEXTAUTH_URL: isClient ? undefined : process.env.NEXTAUTH_URL,
+    NEXTAUTH_SECRET: isClient ? undefined : process.env.NEXTAUTH_SECRET,
+  }
+
   try {
-    _env = envSchema.parse(process.env)
+    _env = envSchema.parse(safeEnv)
     return _env
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.issues?.map(e => e.path.join('.')).join(', ') || 'unknown'
-
-      // Development: warn and use defaults
-      console.warn('[ENV] Using development defaults for:', missingVars);
-
-      try {
-        _env = envSchema.parse({})
-        return _env
-      } catch {
-        // If even defaults fail, create minimal valid env
-        const fallbackEnv: z.infer<typeof envSchema> = {
-          NODE_ENV: (process.env.NODE_ENV as 'development' | 'test' | 'production') || 'development',
-          NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
-          NEXT_PUBLIC_BASE_DOMAIN: process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001',
-          NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000',
-          API_INTERNAL_URL: process.env.API_INTERNAL_URL || 'http://localhost:5000',
-        }
-        _env = fallbackEnv
-        return fallbackEnv
-      }
+      console.warn('[ENV] Validation warning:', error.issues?.map(e => e.path.join('.')).join(', '))
     }
-    throw error
+
+    // Return safeEnv even if validation fails (permissive mode)
+    _env = safeEnv as z.infer<typeof envSchema>
+    return _env
   }
 }
 
