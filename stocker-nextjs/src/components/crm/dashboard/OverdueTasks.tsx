@@ -45,10 +45,11 @@ export function OverdueTasks({
   const overdueActivities = activities
     .filter(a => {
       if (a.status === 'Completed' || a.status === 'Cancelled') return false;
+      if (!a.scheduledAt) return false;
       const dueDate = new Date(a.scheduledAt);
       return dueDate < now;
     })
-    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+    .sort((a, b) => new Date(a.scheduledAt || 0).getTime() - new Date(b.scheduledAt || 0).getTime());
 
   const getDaysOverdue = (scheduledAt: string) => {
     const dueDate = new Date(scheduledAt);
@@ -76,7 +77,7 @@ export function OverdueTasks({
     );
   }
 
-  const criticalCount = overdueActivities.filter(a => getDaysOverdue(a.scheduledAt) > 7).length;
+  const criticalCount = overdueActivities.filter(a => a.scheduledAt && getDaysOverdue(a.scheduledAt) > 7).length;
 
   return (
     <AnimatedCard
@@ -104,9 +105,9 @@ export function OverdueTasks({
         {overdueActivities.slice(0, 6).map((activity) => {
           const Icon = activityIcons[activity.type] || FileTextOutlined;
           const color = activityColors[activity.type] || 'default';
-          const daysOverdue = getDaysOverdue(activity.scheduledAt);
+          const daysOverdue = activity.scheduledAt ? getDaysOverdue(activity.scheduledAt) : 0;
           const isCritical = daysOverdue > 7;
-          const dueDate = new Date(activity.scheduledAt).toLocaleDateString('tr-TR');
+          const dueDate = activity.scheduledAt ? new Date(activity.scheduledAt).toLocaleDateString('tr-TR') : 'N/A';
 
           return (
             <div

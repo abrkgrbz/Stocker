@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import {
   Card,
   Button,
@@ -47,14 +47,16 @@ const { Title, Text } = Typography;
 const { confirm } = Modal;
 
 interface WorkflowDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+  searchParams?: Promise<any>;
 }
 
 export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) {
   const router = useRouter();
-  const workflowId = parseInt(params.id);
+  const resolvedParams = use(params);
+  const workflowId = parseInt(resolvedParams.id);
   const [workflow, setWorkflow] = useState<WorkflowDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -157,14 +159,13 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
       }));
 
       await CRMService.updateWorkflow(workflowId, {
-        workflowId: workflowId, // Backend expects this
         name: workflow.name,
         description: workflow.description || '',
         triggerType: workflow.triggerType,
         entityType: workflow.entityType,
         triggerConditions: triggerConfig ? JSON.stringify(triggerConfig.config) : workflow.triggerConditions || '{}',
         isActive: workflow.isActive, // Backend expects this
-        steps: steps,
+        steps: steps as any,
       });
 
       showSuccess('Workflow kaydedildi');

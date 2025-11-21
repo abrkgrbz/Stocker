@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, Avatar, Tag, Button, Tabs, Timeline, Progress, Statistic, Row, Col, Badge, Descriptions, Empty, Divider, Tooltip, Space, Alert, FloatButton, Modal, Form, Input, Select, InputNumber, Skeleton } from 'antd';
+import { Card, Avatar, Tag, Button, Tabs, Timeline, Progress, Statistic, Row, Col, Badge, Descriptions, Empty, Divider, Tooltip, Space, Alert, FloatButton, Modal, Form, Input, Select, InputNumber, Skeleton, notification } from 'antd';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
   ArrowLeftOutlined,

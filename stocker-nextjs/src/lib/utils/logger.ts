@@ -139,7 +139,7 @@ class Logger {
 
       // Add custom context
       if (context) {
-        Sentry.setContext('custom', context);
+        Sentry.setContext('custom', context as any);
       }
 
       // Send based on log level

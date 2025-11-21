@@ -168,7 +168,7 @@ export function CampaignModal({
               className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value?.replace(/₺\s?|(,*)/g, '') || ''}
+              parser={(value) => Number(value?.replace(/₺\s?|(,*)/g, '') || '0') as any}
             />
           </Form.Item>
 
@@ -183,7 +183,7 @@ export function CampaignModal({
               className="w-full bg-gray-50 hover:bg-white focus:bg-white transition-colors"
               size="large"
               formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value?.replace(/₺\s?|(,*)/g, '') || ''}
+              parser={(value) => Number(value?.replace(/₺\s?|(,*)/g, '') || '0') as any}
             />
           </Form.Item>
 

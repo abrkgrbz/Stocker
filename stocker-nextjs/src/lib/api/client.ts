@@ -257,3 +257,6 @@ export function handleApiError(error: unknown): string {
 export function isApiError(error: unknown, code: string): boolean {
   return error instanceof ApiClientError && error.error.code === code;
 }
+
+// Re-export ApiResponse type for convenience
+export type { ApiResponse } from './types';

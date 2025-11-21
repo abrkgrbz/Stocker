@@ -215,7 +215,7 @@ export default function LeadsPage() {
       try {
         // Delete each selected lead
         await Promise.all(
-          selectedRowKeys.map((key) => deleteLead.mutateAsync(Number(key)))
+          selectedRowKeys.map((key) => deleteLead.mutateAsync(String(key)))
         );
         showDeleteSuccess(`${selectedRowKeys.length} potansiyel müşteri`);
         setSelectedRowKeys([]);
@@ -237,7 +237,7 @@ export default function LeadsPage() {
         // Update each selected lead's status
         await Promise.all(
           selectedRowKeys.map((key) => {
-            const lead = leads.find((l) => l.id === Number(key));
+            const lead = leads.find((l) => l.id === String(key));
             if (lead) {
               return updateLead.mutateAsync({
                 id: lead.id,

@@ -128,27 +128,27 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
         logicalOperator: rules.length > 0 ? 'AND' : undefined,
       },
     ];
-    setRules(newRules);
+    setRules(newRules as any);
   };
 
   const removeRule = (id: string) => {
     const newRules = rules.filter((r) => r.id !== id);
-    setRules(newRules);
-    updateJSON(newRules);
+    setRules(newRules as any);
+    updateJSON(newRules as any);
   };
 
   const updateRule = (id: string, updates: Partial<Rule>) => {
     const newRules = rules.map((r) => (r.id === id ? { ...r, ...updates } : r));
-    setRules(newRules);
-    updateJSON(newRules);
+    setRules(newRules as any);
+    updateJSON(newRules as any);
   };
 
   const toggleLogicalOperator = (id: string) => {
     const newRules = rules.map((r) =>
       r.id === id ? { ...r, logicalOperator: r.logicalOperator === 'AND' ? 'OR' : 'AND' } : r
     );
-    setRules(newRules);
-    updateJSON(newRules);
+    setRules(newRules as any);
+    updateJSON(newRules as any);
   };
 
   const applyTemplate = (template: typeof TEMPLATES[0]) => {
@@ -156,8 +156,8 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
       id: Math.random().toString(),
       ...rule,
     }));
-    setRules(newRules);
-    updateJSON(newRules);
+    setRules(newRules as any);
+    updateJSON(newRules as any);
   };
 
   const getFieldType = (fieldValue: string) => {

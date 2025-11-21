@@ -68,10 +68,10 @@ export default function IndustriesSection() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: 'easeOut',
+        ease: 'easeOut' as any,
       },
     },
-  };
+  } as any;
 
   return (
     <section id="industries" className="py-24 bg-gradient-to-b from-gray-50 to-white">

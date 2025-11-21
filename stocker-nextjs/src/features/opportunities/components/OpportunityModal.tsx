@@ -14,11 +14,17 @@ import {
   ArrowRightOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
-import type { OpportunityDto, OpportunityStatus, Pipeline } from '@/lib/api/services/crm.types';
+import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
+
+interface Pipeline {
+  id: string;
+  name: string;
+  stages: any[];
+}
 
 interface OpportunityModalProps {
   open: boolean;
@@ -254,7 +260,7 @@ export function OpportunityModal({
                       className="rounded-lg"
                       prefix="₺"
                       formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       placeholder="0.00"
                       size="large"
                     />
@@ -406,7 +412,7 @@ export function OpportunityModal({
                   allowClear
                   disabled={!selectedPipeline}
                 >
-                  {stages.map((stage) => (
+                  {stages.map((stage: any) => (
                     <Select.Option key={stage.id} value={stage.id}>
                       <div className="flex items-center gap-2">
                         <div

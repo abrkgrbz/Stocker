@@ -60,6 +60,9 @@ import type {
   CreateWorkflowCommand,
   ExecuteWorkflowCommand,
   WorkflowExecutionResponse,
+  // Notifications
+  NotificationFilterParams,
+  GetNotificationsResponse,
   Guid,
   DateTime,
 } from './crm.types';
@@ -641,7 +644,7 @@ export class CRMService {
    * Add stage to pipeline
    */
   static async addPipelineStage(pipelineId: string, data: Omit<PipelineStage, 'id' | 'itemCount' | 'totalValue'>): Promise<PipelineStage> {
-    return ApiService.post<PipelineStage>(this.getPath(`pipelines/${pipelineId}/stages`), { pipelineId, ...data });
+    return ApiService.post<PipelineStage>(this.getPath(`pipelines/${pipelineId}/stages`), data);
   }
 
   /**
@@ -790,6 +793,13 @@ export class CRMService {
    */
   static async pauseCampaign(id: string): Promise<Campaign> {
     return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/pause`), {});
+  }
+
+  /**
+   * Abort a campaign
+   */
+  static async abortCampaign(id: string): Promise<Campaign> {
+    return ApiService.post<Campaign>(this.getPath(`campaigns/${id}/abort`), {});
   }
 
   // =====================================

@@ -9,6 +9,7 @@ import {
   RocketOutlined
 } from '@ant-design/icons';
 import { showAlert } from '@/lib/sweetalert-config';
+import Swal from 'sweetalert2';
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
@@ -178,7 +179,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
           await showAlert.error(
             'Doğrulama Hataları',
-            errorList || 'Kurulum sırasında bir hata oluştu',
+            errorMessage || 'Kurulum sırasında bir hata oluştu',
             { width: '600px' }
           );
           return;

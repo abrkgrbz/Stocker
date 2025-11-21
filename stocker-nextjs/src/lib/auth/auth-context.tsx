@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { ApiService } from '@/lib/api';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   firstName: string;
@@ -14,13 +14,13 @@ interface User {
   tenantCode?: string;
 }
 
-interface LoginCredentials {
+export interface LoginCredentials {
   email: string;
   password: string;
   tenantIdentifier?: string;
 }
 
-interface RegisterData {
+export interface RegisterData {
   email: string;
   password: string;
   firstName: string;

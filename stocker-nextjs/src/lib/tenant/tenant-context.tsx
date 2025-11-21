@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { extractTenantSubdomain } from '@/lib/utils/auth';
 
-interface TenantInfo {
+export interface TenantInfo {
   id: string;
   identifier: string;
   name: string;

@@ -104,7 +104,7 @@ const getReminderStatusLabel = (status: ReminderStatus): string => {
 };
 
 const getRecurrenceLabel = (recurrenceType: RecurrenceType): string | null => {
-  const labels: Record<number, string> = {
+  const labels: Record<number, string | null> = {
     0: null,
     1: 'Günlük',
     2: 'Haftalık',

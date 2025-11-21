@@ -74,10 +74,10 @@ export default function IntegrationsSection() {
       scale: 1,
       transition: {
         duration: 0.5,
-        ease: 'easeOut',
+        ease: 'easeOut' as any,
       },
     },
-  };
+  } as any;
 
   return (
     <section id="integrations" className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">

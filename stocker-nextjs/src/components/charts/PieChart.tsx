@@ -66,7 +66,7 @@ export default function PieChart({
     <ResponsiveContainer width="100%" height={height}>
       <RechartsPieChart>
         <Pie
-          data={data}
+          data={data as any}
           cx="50%"
           cy="50%"
           labelLine={showLabels}

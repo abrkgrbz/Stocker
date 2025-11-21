@@ -9,13 +9,13 @@ export function calculateConversionRate(converted: number, total: number): numbe
 // Calculate average customer value
 export function calculateAverageCustomerValue(customers: Customer[]): number {
   if (customers.length === 0) return 0;
-  const totalValue = customers.reduce((sum, customer) => sum + customer.totalPurchases, 0);
+  const totalValue = customers.reduce((sum, customer) => sum + (customer.totalPurchases || 0), 0);
   return totalValue / customers.length;
 }
 
 // Calculate total revenue
 export function calculateTotalRevenue(customers: Customer[]): number {
-  return customers.reduce((sum, customer) => sum + customer.totalPurchases, 0);
+  return customers.reduce((sum, customer) => sum + (customer.totalPurchases || 0), 0);
 }
 
 // Calculate deal win rate
@@ -72,7 +72,7 @@ export function calculateDashboardMetrics(data: {
 
   // Top customers by revenue
   const topCustomers = [...customers]
-    .sort((a, b) => b.totalPurchases - a.totalPurchases)
+    .sort((a, b) => (b.totalPurchases || 0) - (a.totalPurchases || 0))
     .slice(0, 5);
 
   // Upcoming deals (open deals sorted by expected close date)

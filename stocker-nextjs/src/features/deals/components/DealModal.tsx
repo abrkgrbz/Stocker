@@ -282,7 +282,7 @@ export function DealModal({
                       className="rounded-lg"
                       prefix="₺"
                       formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '')}
+                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       placeholder="0.00"
                       size="large"
                     />

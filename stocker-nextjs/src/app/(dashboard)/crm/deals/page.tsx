@@ -508,7 +508,7 @@ export default function DealsPage() {
                     <Tag color={stages.find((s) => s.id === deal.stageId)?.color}>
                       {stages.find((s) => s.id === deal.stageId)?.name}
                     </Tag>
-                    <Tag color={statusColors[deal.status]}>
+                    <Tag color={statusColors[deal.status as Deal['status']]}>
                       {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
                     </Tag>
                   </div>

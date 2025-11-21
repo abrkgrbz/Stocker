@@ -73,8 +73,6 @@ export function CustomerChart({ className }: CustomerChartProps) {
         return (
           <PieChart
             data={segmentsData}
-            dataKey="value"
-            nameKey="name"
             height={300}
             showLegend
             showTooltip

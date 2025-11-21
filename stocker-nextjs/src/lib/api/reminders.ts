@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, ApiResponse } from './client';
 import type {
   Reminder,
   CreateReminderRequest,
@@ -25,11 +25,13 @@ export const remindersApi = {
     const query = queryParams.toString();
     const url = query ? `/api/crm/Reminders?${query}` : '/api/crm/Reminders';
 
-    return await apiClient.get<GetRemindersResponse>(url);
+    const response = await apiClient.get<ApiResponse<GetRemindersResponse>>(url);
+    return (response.data as any).data || response.data;
   },
 
   createReminder: async (data: CreateReminderRequest): Promise<number> => {
-    return await apiClient.post<number>('/api/crm/Reminders', data);
+    const response = await apiClient.post<ApiResponse<number>>('/api/crm/Reminders', data);
+    return (response.data as any).data || response.data;
   },
 
   updateReminder: async (id: number, data: UpdateReminderRequest): Promise<void> => {

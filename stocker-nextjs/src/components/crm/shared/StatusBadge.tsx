@@ -12,8 +12,9 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, entityType }: StatusBadgeProps) {
-  const color = CRM_COLORS[entityType === 'activityStatus' ? 'activities' : entityType]?.[status as keyof typeof CRM_COLORS.leads] || 'default';
-  const label = CRM_STATUS_LABELS[entityType]?.[status as keyof typeof CRM_STATUS_LABELS.leads] || status;
+  const entityKey = entityType === 'activityStatus' ? 'activities' : entityType;
+  const color = (CRM_COLORS as any)[entityKey]?.[status] || 'default';
+  const label = (CRM_STATUS_LABELS as any)[entityType]?.[status] || status;
 
   return <Tag color={color}>{label}</Tag>;
 }

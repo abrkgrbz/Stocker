@@ -77,7 +77,7 @@ export const toast = {
   },
 
   custom: (jsx: React.ReactNode, options?: { duration?: number }) => {
-    return sonnerToast.custom(jsx, {
+    return sonnerToast.custom(jsx as any, {
       duration: options?.duration,
     });
   },

@@ -777,7 +777,7 @@ export default function UsersPage() {
       {/* User Modal */}
       <UserModal
         open={modalOpen}
-        user={editingUser}
+        user={editingUser as any}
         onClose={() => {
           setModalOpen(false);
           setEditingUser(null);

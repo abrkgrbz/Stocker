@@ -66,17 +66,17 @@ export function useSignalRValidation() {
         })
 
       connection.onclose((error) => {
-        logger.info('[SignalR] Disconnected', error);
+        logger.info('[SignalR] Disconnected', { error: error as Error });
         setIsConnected(false)
       })
 
       connection.onreconnecting((error) => {
-        logger.info('[SignalR] Reconnecting...', error);
+        logger.info('[SignalR] Reconnecting...', { error: error as Error });
         setIsConnected(false)
       })
 
       connection.onreconnected((connectionId) => {
-        logger.info('[SignalR] Reconnected! ID:', connectionId);
+        logger.info('[SignalR] Reconnected! ID:', { metadata: { connectionId: connectionId ? String(connectionId) : 'unknown' } });
         setIsConnected(true)
       })
 

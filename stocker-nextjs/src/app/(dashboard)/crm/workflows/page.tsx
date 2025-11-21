@@ -32,6 +32,7 @@ import { CRMService } from '@/lib/api/services/crm.service';
 import type {
   WorkflowDto,
   WorkflowTriggerType,
+  WorkflowActionType,
   CreateWorkflowCommand,
 } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -279,10 +280,13 @@ export default function WorkflowsPage() {
       const command: CreateWorkflowCommand = {
         name: step1Data.name,
         description: step1Data.description,
-        triggerType: step1Data.triggerType,
-        entityType: step1Data.entityType || 'Lead',
-        triggerConditions: triggerConditions,
-        steps: [], // Empty for now, will be added in builder
+        trigger: {
+          type: step1Data.triggerType as any,
+          entityType: step1Data.entityType || 'Lead',
+          conditions: triggerConditions,
+        } as any,
+        actions: [], // Empty for now, will be added in builder
+        isActive: false,
       };
 
       const workflowId = await CRMService.createWorkflow(command);

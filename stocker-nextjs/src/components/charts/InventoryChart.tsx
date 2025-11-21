@@ -54,11 +54,9 @@ export function InventoryChart({ className }: InventoryChartProps) {
         return (
           <LineChart
             data={stockLevelsData}
-            xKey="name"
-            yKey="stock"
+            lines={[{ dataKey: 'stock', stroke: '#10b981', name: 'Stok' }]}
+            xAxisKey="name"
             height={300}
-            valueFormatter={(value) => `${value} adet`}
-            color="green"
             showGrid
             showTooltip
           />
@@ -67,12 +65,9 @@ export function InventoryChart({ className }: InventoryChartProps) {
         return (
           <PieChart
             data={distributionData}
-            dataKey="value"
-            nameKey="name"
             height={300}
             showLegend
             showTooltip
-            valueFormatter={(value) => `${value} ürün`}
           />
         );
       case 'alerts':
@@ -80,12 +75,9 @@ export function InventoryChart({ className }: InventoryChartProps) {
           <div>
             <PieChart
               data={alertsData}
-              dataKey="value"
-              nameKey="name"
               height={240}
               showLegend
               showTooltip
-              valueFormatter={(value) => `${value} ürün`}
             />
             <div className="mt-4 pt-4 border-t">
               <Space direction="vertical" size="small" className="w-full">

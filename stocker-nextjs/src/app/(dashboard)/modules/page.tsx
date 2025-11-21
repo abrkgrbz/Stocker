@@ -261,7 +261,7 @@ export default function ModulesPage() {
       {/* Modules Grid */}
       <Row gutter={[24, 24]}>
         {modules.map((module, index) => {
-          const tier = tierConfig[module.tier];
+          const tier = tierConfig[module.tier as keyof typeof tierConfig];
 
           return (
             <Col key={module.id} xs={24} lg={12} xl={8}>

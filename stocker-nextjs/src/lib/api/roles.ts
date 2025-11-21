@@ -83,8 +83,8 @@ export async function getRoles(): Promise<Role[]> {
     '/api/tenant/roles'
   );
   // Backend returns: { success, data: Role[], message }
-  // We need response.data directly (not response.data.data)
-  return response.data || [];
+  // We need response.data.data (not response.data)
+  return (response.data as any).data || [];
 }
 
 /**
@@ -105,7 +105,7 @@ export async function createRole(data: CreateRoleRequest): Promise<Role> {
     '/api/tenant/roles',
     requestData
   );
-  return response.data as Role;
+  return (response.data as any).data as Role;
 }
 
 /**

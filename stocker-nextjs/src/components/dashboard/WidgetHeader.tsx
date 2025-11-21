@@ -49,7 +49,7 @@ export function WidgetHeader({
       onClick: onDelete,
       danger: true,
     },
-  ].filter(Boolean);
+  ].filter(Boolean) as MenuProps['items'];
 
   return (
     <div className="flex items-center justify-between w-full">
@@ -79,7 +79,7 @@ export function WidgetHeader({
             onClick={onSettings}
           />
         )}
-        {showMore && menuItems.length > 0 && (
+        {showMore && menuItems && menuItems.length > 0 && (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <Button
               type="text"

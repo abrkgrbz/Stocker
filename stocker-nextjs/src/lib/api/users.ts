@@ -132,7 +132,7 @@ export async function getUsers(
     `/api/tenant/users?${params.toString()}`
   );
 
-  return response.data;
+  return (response.data as any).data || response.data;
 }
 
 /**
@@ -142,7 +142,7 @@ export async function getUserById(userId: string): Promise<User> {
   const response = await apiClient.get<{ success: boolean; data: User; message: string }>(
     `/api/tenant/users/${userId}`
   );
-  return response.data;
+  return (response.data as any).data || response.data;
 }
 
 /**
@@ -153,7 +153,7 @@ export async function createUser(data: CreateUserRequest): Promise<{ data: UserL
     '/api/tenant/users',
     data
   );
-  return { data: response.data, message: response.message };
+  return { data: (response.data as any).data || response.data, message: response.message || '' };
 }
 
 /**
@@ -164,7 +164,7 @@ export async function updateUser(userId: string, data: UpdateUserRequest): Promi
     `/api/tenant/users/${userId}`,
     data
   );
-  return response.data;
+  return (response.data as any).data || response.data || false;
 }
 
 /**
@@ -174,7 +174,7 @@ export async function deleteUser(userId: string): Promise<boolean> {
   const response = await apiClient.delete<{ success: boolean; data: boolean; message: string }>(
     `/api/tenant/users/${userId}`
   );
-  return response.data;
+  return (response.data as any).data || response.data || false;
 }
 
 /**
@@ -184,7 +184,7 @@ export async function toggleUserStatus(userId: string): Promise<ToggleUserStatus
   const response = await apiClient.post<{ success: boolean; data: ToggleUserStatusResult; message: string }>(
     `/api/tenant/users/${userId}/toggle-status`
   );
-  return response.data;
+  return (response.data as any).data || response.data;
 }
 
 /**

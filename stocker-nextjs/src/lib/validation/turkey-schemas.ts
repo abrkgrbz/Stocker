@@ -73,8 +73,8 @@ export const ibanSchema = z
         })
         .join('');
 
-      let remainder = BigInt(numericString) % 97n;
-      return remainder === 1n;
+      let remainder = BigInt(numericString) % BigInt(97);
+      return remainder === BigInt(1);
     },
     'Geçersiz IBAN numarası'
   );

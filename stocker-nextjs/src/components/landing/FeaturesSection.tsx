@@ -95,10 +95,10 @@ export default function FeaturesSection() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: 'easeOut',
+        ease: 'easeOut' as any,
       },
     },
-  };
+  } as any;
 
   return (
     <section id="features" className="py-24 bg-gradient-to-b from-white to-gray-50">

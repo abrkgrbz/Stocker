@@ -173,13 +173,13 @@ export default function CampaignsPage() {
         name: `${campaign.name} (Kopya)`,
         description: campaign.description,
         type: campaign.type,
-        status: 'Planned', // Cloned campaigns start as Planned
+        status: 'Planned' as const, // Cloned campaigns start as Planned
         startDate: campaign.startDate,
         endDate: campaign.endDate,
         budgetedCost: campaign.budgetedCost,
         targetLeads: campaign.targetLeads,
       };
-      await createCampaign.mutateAsync(clonedData);
+      await createCampaign.mutateAsync(clonedData as any);
       showCreateSuccess('kampanya', 'başarıyla kopyalandı');
     } catch (error: any) {
       const apiError = error.response?.data;

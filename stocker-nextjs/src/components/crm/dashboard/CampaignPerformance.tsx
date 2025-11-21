@@ -28,7 +28,7 @@ export function CampaignPerformance({
 }: CampaignPerformanceProps) {
   // Filter active campaigns and sort by ROI
   const activeCampaigns = campaigns
-    .filter(c => c.status === 'Active')
+    .filter(c => c.status === 'InProgress') // Changed from 'Active' to 'InProgress'
     .sort((a, b) => (b.roi || 0) - (a.roi || 0))
     .slice(0, 5); // Top 5
 
@@ -66,14 +66,14 @@ export function CampaignPerformance({
     >
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
         {activeCampaigns.map((campaign) => {
-          const deliveryRate = campaign.totalRecipients > 0
-            ? (campaign.deliveredCount / campaign.totalRecipients) * 100
+          const deliveryRate = (campaign.totalRecipients || 0) > 0
+            ? ((campaign.deliveredCount || 0) / (campaign.totalRecipients || 0)) * 100
             : 0;
-          const openRate = campaign.deliveredCount > 0
-            ? (campaign.openedCount / campaign.deliveredCount) * 100
+          const openRate = (campaign.deliveredCount || 0) > 0
+            ? ((campaign.openedCount || 0) / (campaign.deliveredCount || 0)) * 100
             : 0;
-          const clickRate = campaign.deliveredCount > 0
-            ? (campaign.clickedCount / campaign.deliveredCount) * 100
+          const clickRate = (campaign.deliveredCount || 0) > 0
+            ? ((campaign.clickedCount || 0) / (campaign.deliveredCount || 0)) * 100
             : 0;
           const roi = campaign.roi || 0;
           const roiPositive = roi >= 0;
@@ -90,8 +90,8 @@ export function CampaignPerformance({
                     {campaign.name}
                   </Link>
                   <div className="flex gap-2 mt-1">
-                    <Tag color={campaign.type === 'Email' ? 'blue' : campaign.type === 'SMS' ? 'green' : 'purple'}>
-                      {campaign.type === 'Email' ? '📧 E-posta' : campaign.type === 'SMS' ? '📱 SMS' : '🔔 Push'}
+                    <Tag color={campaign.type === 'Email' ? 'blue' : 'purple'}>
+                      {campaign.type === 'Email' ? '📧 E-posta' : '🔔 ' + campaign.type}
                     </Tag>
                     {campaign.targetSegmentName && (
                       <Tag>{campaign.targetSegmentName}</Tag>

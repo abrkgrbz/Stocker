@@ -421,7 +421,7 @@ export default function RolesPage() {
                             disabled={role.isSystemRole}
                           />
                         </Tooltip>
-                        <Dropdown menu={{ items: getMenuItems(role) }} trigger={['click']}>
+                        <Dropdown menu={{ items: getMenuItems(role) as any }} trigger={['click']}>
                           <Button
                             type="text"
                             icon={<MoreOutlined />}

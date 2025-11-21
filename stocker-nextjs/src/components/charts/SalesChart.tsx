@@ -37,11 +37,11 @@ export function SalesChart({ className }: SalesChartProps) {
     };
 
     const count = counts[timeRange];
-    const data = generateDemoData(count, ranges[dataType][timeRange]);
+    const data = generateDemoData(count, ['value'], ranges[dataType][timeRange] as [number, number]);
 
-    return data.map((value, index) => ({
+    return data.map((item, index) => ({
       name: labels[timeRange][index] || `${index + 1}`,
-      value
+      value: item.value
     }));
   };
 
@@ -98,11 +98,9 @@ export function SalesChart({ className }: SalesChartProps) {
     >
       <AreaChart
         data={chartData}
-        xKey="name"
-        yKey="value"
+        areas={[{ dataKey: 'value', stroke: '#3b82f6', name: titles[dataType] }]}
+        xAxisKey="name"
         height={300}
-        valueFormatter={valueFormatters[dataType]}
-        color="blue"
         showGrid
         showTooltip
       />

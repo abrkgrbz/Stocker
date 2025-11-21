@@ -77,7 +77,7 @@ export default function CustomerSegmentsPage() {
   const handleCreateOrUpdate = async (values: any) => {
     try {
       if (selectedSegment) {
-        await updateSegment.mutateAsync({ id: selectedSegment.id, ...values });
+        await updateSegment.mutateAsync({ id: selectedSegment.id, data: values });
       } else {
         await createSegment.mutateAsync(values);
       }
@@ -109,7 +109,7 @@ export default function CustomerSegmentsPage() {
         color: segment.color,
         isActive: false, // Cloned segments start as inactive
       };
-      await createSegment.mutateAsync(clonedData);
+      await createSegment.mutateAsync(clonedData as any);
       message.success('Segment başarıyla kopyalandı');
     } catch (error: any) {
       const apiError = error.response?.data;

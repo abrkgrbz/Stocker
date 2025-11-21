@@ -310,7 +310,7 @@ export function useCreateLead() {
 
       logger.info('🎯 Mapped leadData', { metadata: { leadData } });
 
-      return CRMService.createLead({ LeadData: leadData });
+      return CRMService.createLead(leadData as any);
     },
     onSuccess: () => {
       // Force immediate refetch of leads list to show new lead
@@ -345,7 +345,7 @@ export function useDeleteLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => CRMService.deleteLead(id),
+    mutationFn: (id: string) => CRMService.deleteLead(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead silindi');
@@ -428,7 +428,7 @@ export function useConvertLead() {
 
   return useMutation({
     mutationFn: ({ leadId, customerData }: { leadId: string; customerData: any }) =>
-      CRMService.convertLeadToCustomer(leadId, customerData),
+      CRMService.convertLeadToCustomer(Number(leadId), customerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads });
       showSuccess('Lead müşteriye dönüştürüldü');

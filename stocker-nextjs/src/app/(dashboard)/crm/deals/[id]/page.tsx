@@ -146,9 +146,11 @@ export default function DealDetailPage() {
               <Tag color={statusColors[deal.status]} className="m-0">
                 {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? 'Kazanıldı' : 'Kaybedildi'}
               </Tag>
-              <Tag color={priorityColors[deal.priority]} className="m-0">
-                {deal.priority}
-              </Tag>
+              {deal.priority && (
+                <Tag color={priorityColors[deal.priority]} className="m-0">
+                  {deal.priority}
+                </Tag>
+              )}
             </div>
           </div>
 
@@ -261,7 +263,11 @@ export default function DealDetailPage() {
                               </Tag>
                             </Descriptions.Item>
                             <Descriptions.Item label="Öncelik" labelStyle={{ fontWeight: 'bold' }}>
-                              <Tag color={priorityColors[deal.priority]}>{deal.priority}</Tag>
+                              {deal.priority ? (
+                                <Tag color={priorityColors[deal.priority]}>{deal.priority}</Tag>
+                              ) : (
+                                '-'
+                              )}
                             </Descriptions.Item>
                             <Descriptions.Item label="Atanan Kişi" labelStyle={{ fontWeight: 'bold' }}>
                               {deal.assignedToName || '-'}

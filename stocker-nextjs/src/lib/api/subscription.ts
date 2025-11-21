@@ -27,5 +27,5 @@ export async function getSubscriptionInfo(): Promise<SubscriptionInfo> {
   const response = await apiClient.get<{ success: boolean; data: SubscriptionInfo; message: string }>(
     '/api/tenant/users/subscription-info'
   );
-  return response.data;
+  return (response.data as any).data || response.data;
 }

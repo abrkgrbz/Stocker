@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+// @ts-ignore
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
 import {
@@ -49,7 +50,7 @@ interface DocumentUploadProps {
   multiple?: boolean;
 }
 
-const documentCategories: { label: string; value: DocumentCategory }[] = [
+const documentCategories: { label: string; value: string }[] = [
   { label: 'Genel', value: 'General' },
   { label: 'Sözleşme', value: 'Contract' },
   { label: 'Teklif', value: 'Quote' },
@@ -58,7 +59,7 @@ const documentCategories: { label: string; value: DocumentCategory }[] = [
   { label: 'Diğer', value: 'Other' },
 ];
 
-const accessLevels: { label: string; value: AccessLevel }[] = [
+const accessLevels: { label: string; value: string }[] = [
   { label: 'Herkese Açık', value: 'Public' },
   { label: 'Dahili', value: 'Internal' },
   { label: 'Gizli', value: 'Confidential' },
@@ -171,7 +172,7 @@ export function DocumentUpload({
     });
 
     // Handle file added
-    myDropzone.on('addedfile', (file) => {
+    myDropzone.on('addedfile', (file: any) => {
       setSelectedFiles((prev) => [...prev, file as File]);
       setIsDragging(false);
       // Auto open modal when file is added
@@ -358,7 +359,7 @@ export function DocumentUpload({
                           {doc.category}
                         </Tag>
                         <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200">
-                          {formatFileSize(doc.fileSize)}
+                          {formatFileSize(doc.fileSize || 0)}
                         </span>
                         {doc.uploadedAt && (
                           <span className="text-xs text-gray-500">

@@ -428,7 +428,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
                     onClose={() => handleRemovePermission(perm)}
                     color="blue"
                   >
-                    {resource?.label} - {PERMISSION_TYPE_LABELS[perm.permissionType]}
+                    {resource?.label} - {(PERMISSION_TYPE_LABELS as any)[perm.permissionType]}
                   </Tag>
                 );
               })}

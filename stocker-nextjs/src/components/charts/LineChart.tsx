@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
         <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
-        {payload.map((entry, index) => (
+        {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
               className="w-3 h-3 rounded-full"

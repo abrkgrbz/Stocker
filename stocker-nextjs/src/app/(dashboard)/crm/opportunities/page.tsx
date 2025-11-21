@@ -26,6 +26,7 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   BarChartOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import {
   useOpportunities,
@@ -101,20 +102,28 @@ export default function OpportunitiesPage() {
           return;
         }
 
+        // Validation: Pipeline and stage are required by backend
+        if (!values.pipelineId) {
+          message.error('Pipeline seçimi zorunludur');
+          return;
+        }
+        if (!values.stageId) {
+          message.error('Aşama seçimi zorunludur');
+          return;
+        }
+
         const payload = {
           name: values.name,
           customerId: values.customerId,
+          pipelineId: values.pipelineId,
+          stageId: values.stageId,
           amount: values.amount,
-          probability: values.probability || 50,
-          expectedCloseDate: values.expectedCloseDate.toISOString(),
-          status: values.status || 'Prospecting',
-          description: values.description || undefined,
-          pipelineId: values.pipelineId || undefined,
-          currentStageId: values.stageId || undefined,
-          score: 0, // Default score
+          probability: values.probability,
+          expectedCloseDate: values.expectedCloseDate?.toISOString(),
+          description: values.description,
         };
 
-        await createOpportunity.mutateAsync(payload);
+        await createOpportunity.mutateAsync(payload as any);
       }
       setModalOpen(false);
     } catch (error: any) {

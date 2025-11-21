@@ -15,11 +15,11 @@ export const crmKeys = {
   leads: () => [...crmKeys.all, 'leads'] as const,
   leadsList: (filters?: CustomerFilters) =>
     [...crmKeys.leads(), 'list', filters] as const,
-  lead: (id: number) => [...crmKeys.leads(), id] as const,
+  lead: (id: string) => [...crmKeys.leads(), id] as const,
   deals: () => [...crmKeys.all, 'deals'] as const,
   dealsList: (filters?: CustomerFilters) =>
     [...crmKeys.deals(), 'list', filters] as const,
-  deal: (id: number) => [...crmKeys.deals(), id] as const,
+  deal: (id: string) => [...crmKeys.deals(), id] as const,
   activities: () => [...crmKeys.all, 'activities'] as const,
   activitiesList: (filters?: CustomerFilters) =>
     [...crmKeys.activities(), 'list', filters] as const,
@@ -132,7 +132,7 @@ export function useLeads(filters?: CustomerFilters) {
 /**
  * Hook to fetch single lead
  */
-export function useLead(id: number) {
+export function useLead(id: string) {
   return useQuery({
     queryKey: crmKeys.lead(id),
     queryFn: () => CRMService.getLead(id),
@@ -161,7 +161,7 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       CRMService.updateLead(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.leads() });
@@ -218,7 +218,7 @@ export function useDeals(filters?: CustomerFilters) {
 /**
  * Hook to fetch single deal
  */
-export function useDeal(id: number) {
+export function useDeal(id: string) {
   return useQuery({
     queryKey: crmKeys.deal(id),
     queryFn: () => CRMService.getDeal(id),
@@ -247,7 +247,7 @@ export function useUpdateDeal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       CRMService.updateDeal(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.deals() });
@@ -288,10 +288,10 @@ export function useActivities(filters?: CustomerFilters) {
 /**
  * Hook to fetch single activity
  */
-export function useActivity(id: number) {
+export function useActivity(id: number | string) {
   return useQuery({
-    queryKey: crmKeys.activity(id),
-    queryFn: () => CRMService.getActivity(id),
+    queryKey: crmKeys.activity(Number(id)),
+    queryFn: () => CRMService.getActivity(Number(id)),
     enabled: !!id,
   });
 }
@@ -317,11 +317,11 @@ export function useUpdateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
-      CRMService.updateActivity(id, data),
+    mutationFn: ({ id, data }: { id: number | string; data: any }) =>
+      CRMService.updateActivity(Number(id), data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities() });
-      queryClient.invalidateQueries({ queryKey: crmKeys.activity(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.activity(Number(variables.id)) });
     },
   });
 }
@@ -686,6 +686,88 @@ export function useAbortCampaign() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns() });
       message.success('Kampanya iptal edildi');
+    },
+  });
+}
+
+// =====================================
+// OPPORTUNITIES HOOKS
+// =====================================
+
+/**
+ * Hook to fetch opportunities list with filters
+ */
+export function useOpportunities(filters?: any) {
+  return useQuery({
+    queryKey: ['opportunities', filters],
+    queryFn: () => CRMService.getOpportunities(filters),
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Hook to fetch single opportunity
+ */
+export function useOpportunity(id: string) {
+  return useQuery({
+    queryKey: ['opportunity', id],
+    queryFn: () => CRMService.getOpportunity(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create opportunity
+ */
+export function useCreateOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createOpportunity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      message.success('Fırsat oluşturuldu');
+    },
+    onError: () => {
+      message.error('Fırsat oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update opportunity
+ */
+export function useUpdateOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateOpportunity(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] });
+      message.success('Fırsat güncellendi');
+    },
+    onError: () => {
+      message.error('Fırsat güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete opportunity
+ */
+export function useDeleteOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteOpportunity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      message.success('Fırsat silindi');
+    },
+    onError: () => {
+      message.error('Fırsat silinemedi');
     },
   });
 }

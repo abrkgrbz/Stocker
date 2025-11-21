@@ -172,7 +172,7 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
                 <Space wrap>
                   {perms.map((perm, index) => (
                     <Tag key={index} color="blue">
-                      {PERMISSION_TYPE_LABELS[perm.permissionType]}
+                      {(PERMISSION_TYPE_LABELS as any)[perm.permissionType]}
                     </Tag>
                   ))}
                 </Space>

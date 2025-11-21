@@ -65,12 +65,12 @@ export function PipelineStats({
   // Calculate statistics
   const totalValue = pipelineDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0);
   const avgDealSize = pipelineDeals.length > 0 ? totalValue / pipelineDeals.length : 0;
-  const wonDeals = pipelineDeals.filter(d => d.stage === 'Won').length;
+  const wonDeals = pipelineDeals.filter(d => d.stageId === 'Won').length;
   const winRate = pipelineDeals.length > 0 ? (wonDeals / pipelineDeals.length) * 100 : 0;
 
   // Calculate stage distribution
   const stageStats = (activePipeline?.stages || []).map(stage => {
-    const stageDeals = pipelineDeals.filter(d => d.stage === stage.name);
+    const stageDeals = pipelineDeals.filter(d => d.stageId === stage.id);
     const stageValue = stageDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0);
     const dealCount = stageDeals.length;
     const percentage = pipelineDeals.length > 0 ? (dealCount / pipelineDeals.length) * 100 : 0;

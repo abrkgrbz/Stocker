@@ -23,18 +23,18 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] },
+    transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as any },
   },
-};
+} as any;
 
 const floatingAnimation = {
   y: [0, -20, 0],
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: [0.42, 0, 0.58, 1],
+    ease: [0.42, 0, 0.58, 1] as any,
   },
-};
+} as any;
 
 export default function AnimatedHero() {
   const { t } = useTranslations();

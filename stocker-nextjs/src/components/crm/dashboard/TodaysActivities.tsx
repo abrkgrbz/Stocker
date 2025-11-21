@@ -48,13 +48,14 @@ export function TodaysActivities({
 
   const todaysActivities = activities
     .filter(a => {
+      if (!a.scheduledAt) return false;
       const activityDate = new Date(a.scheduledAt);
       return activityDate >= today && activityDate < tomorrow;
     })
-    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+    .sort((a, b) => new Date(a.scheduledAt || 0).getTime() - new Date(b.scheduledAt || 0).getTime());
 
   const completedCount = todaysActivities.filter(a => a.status === 'Completed').length;
-  const pendingCount = todaysActivities.filter(a => a.status === 'Pending').length;
+  const pendingCount = todaysActivities.filter(a => a.status === 'Scheduled').length;
 
   if (!loading && todaysActivities.length === 0) {
     return (
@@ -108,10 +109,10 @@ export function TodaysActivities({
         {todaysActivities.slice(0, 8).map((activity) => {
           const Icon = activityIcons[activity.type] || FileTextOutlined;
           const color = activityColors[activity.type] || 'default';
-          const time = new Date(activity.scheduledAt).toLocaleTimeString('tr-TR', {
+          const time = new Intl.DateTimeFormat('tr-TR', {
             hour: '2-digit',
             minute: '2-digit'
-          });
+          }).format(new Date(activity.scheduledAt || new Date()));
           const isCompleted = activity.status === 'Completed';
 
           return (

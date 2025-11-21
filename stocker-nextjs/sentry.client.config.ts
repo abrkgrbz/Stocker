@@ -42,10 +42,11 @@ Sentry.init({
   // CRITICAL: Override transport to force tunnel usage
   transport: makeFetchTransport,
   transportOptions: {
+    // @ts-ignore - fetchParameters is valid but not in types
     fetchParameters: {
       keepalive: true,
     },
-  },
+  } as any,
 
   // Session Replay - DISABLED temporarily to fix "Multiple instances" error
   // TODO: Re-enable after verifying single initialization

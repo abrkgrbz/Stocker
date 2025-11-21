@@ -385,7 +385,7 @@ export default function AppHomePage() {
                 )}
 
                 {/* Icon */}
-                {React.cloneElement(module.icon as React.ReactElement, {
+                {React.cloneElement(module.icon as any, {
                   style: {
                     fontSize: 56,
                     color: module.disabled ? 'rgba(255,255,255,0.5)' : 'white',
@@ -414,12 +414,12 @@ export default function AppHomePage() {
       <div style={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
         <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>
           <RocketOutlined style={{ marginRight: 8 }} />
+          {/* @ts-ignore */}
           Stocker - Modern İşletme Yönetim Sistemi
         </Text>
       </div>
 
       {/* Setup Modal */}
-      {console.log('🎭 Rendering SetupWizardModal, open:', setupModalOpen)}
       <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />
     </div>
   );

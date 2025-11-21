@@ -83,7 +83,7 @@ export const ApiErrorResponseSchema = z.object({
   success: z.literal(false),
   message: z.string(),
   code: z.string().optional(),
-  details: z.record(z.any()).optional(),
+  details: z.record(z.string(), z.any()).optional(),
 })
 
 // ============================================================================

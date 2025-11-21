@@ -58,7 +58,7 @@ export async function createDepartment(data: CreateDepartmentRequest): Promise<{
     '/api/tenant/department',
     data
   );
-  return { data: response.data, message: response.message };
+  return { data: (response.data as any).data || '', message: (response.data as any).message || '' };
 }
 
 /**
@@ -69,7 +69,7 @@ export async function updateDepartment(departmentId: string, data: UpdateDepartm
     `/api/tenant/department/${departmentId}`,
     data
   );
-  return response.data;
+  return (response.data as any).data || false;
 }
 
 /**
@@ -79,5 +79,5 @@ export async function deleteDepartment(departmentId: string): Promise<boolean> {
   const response = await apiClient.delete<{ success: boolean; data: boolean; message: string }>(
     `/api/tenant/department/${departmentId}`
   );
-  return response.data;
+  return (response.data as any).data || false;
 }

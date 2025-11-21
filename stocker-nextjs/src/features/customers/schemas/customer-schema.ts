@@ -11,9 +11,7 @@ import {
 
 export const customerSchema = z.object({
   // Basic Information
-  type: z.enum(['individual', 'corporate'], {
-    required_error: 'Müşteri tipi seçiniz',
-  }),
+  type: z.enum(['individual', 'corporate'] as const).describe('Müşteri tipi seçiniz'),
 
   // Individual fields
   firstName: z.string().optional(),
@@ -40,14 +38,10 @@ export const customerSchema = z.object({
   // Financial Information
   iban: ibanSchema.optional().or(z.literal('')),
   creditLimit: z.number().min(0, 'Kredi limiti negatif olamaz').optional(),
-  paymentTerm: z.enum(['immediate', '15-days', '30-days', '45-days', '60-days', '90-days'], {
-    required_error: 'Ödeme vadesi seçiniz',
-  }),
+  paymentTerm: z.enum(['immediate', '15-days', '30-days', '45-days', '60-days', '90-days'] as const).describe('Ödeme vadesi seçiniz'),
 
   // Additional
-  segment: z.enum(['retail', 'wholesale', 'corporate', 'vip'], {
-    required_error: 'Müşteri segmenti seçiniz',
-  }),
+  segment: z.enum(['retail', 'wholesale', 'corporate', 'vip'] as const).describe('Müşteri segmenti seçiniz'),
   status: z.enum(['active', 'inactive', 'blocked']).default('active'),
   notes: z.string().max(500, 'Notlar en fazla 500 karakter olabilir').optional(),
 }).refine(

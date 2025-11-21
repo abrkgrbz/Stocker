@@ -118,7 +118,7 @@ export const useNotifications = create<NotificationState>((set, get) => ({
       set({ unreadCount: count });
     } catch (error) {
       // Silently fail - notifications are optional feature
-      logger.warn('⚠️ Notification service unavailable:', error);
+      logger.warn('⚠️ Notification service unavailable:', { error: error as Error });
     }
   },
 }));

@@ -95,7 +95,7 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
         <Tooltip title="Etiket ekle">
           <Button
             type="dashed"
-            size={size}
+            size={size as any}
             icon={<PlusOutlined />}
             onClick={() => setIsModalVisible(true)}
           >

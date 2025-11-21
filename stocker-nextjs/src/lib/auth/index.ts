@@ -1,2 +1,1 @@
-export { AuthProvider, useAuth } from './auth-context';
-export type { User, LoginCredentials, RegisterData } from './auth-context';
+export { AuthProvider, useAuth, type User, type LoginCredentials, type RegisterData } from './auth-context';

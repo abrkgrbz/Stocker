@@ -18,6 +18,7 @@ import {
   Tooltip,
   Alert,
   Card,
+  Modal,
 } from 'antd';
 import {
   UserOutlined,
@@ -142,7 +143,7 @@ export default function CustomerModal({
       if (isEditMode && customer) {
         console.log('📤 Calling updateCustomer...');
         await updateCustomer.mutateAsync({
-          id: customer.id,
+          id: String(customer.id),
           data: values,
         });
         console.log('✅ Update successful');
