@@ -159,8 +159,36 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     Error.Failure("Setup.TenantSetupFailed", "Kurulum sırasında bir hata oluştu"));
             }
 
-            // Mark user as setup completed (optional: add a flag to MasterUser if needed)
-            // For now, we'll return success
+            // Create and complete SetupWizard in tenant database to mark setup as done
+            try
+            {
+                using (var tenantContext = await _tenantContextFactory.CreateAsync(request.TenantId))
+                {
+                    // Create SetupWizard with InitialSetup type
+                    var setupWizard = SetupWizard.Create(
+                        WizardType.InitialSetup,
+                        startedBy: user.Username);
+
+                    // Start and immediately complete the wizard since setup form submits everything at once
+                    setupWizard.StartWizard();
+
+                    // Complete all required steps
+                    while (setupWizard.Status == WizardStatus.InProgress)
+                    {
+                        setupWizard.CompleteCurrentStep(completedBy: user.Username, stepData: null);
+                    }
+
+                    await tenantContext.Set<SetupWizard>().AddAsync(setupWizard, cancellationToken);
+                    await tenantContext.SaveChangesAsync(cancellationToken);
+
+                    _logger.LogInformation("SetupWizard created and completed for tenant {TenantId}", request.TenantId);
+                }
+            }
+            catch (Exception setupEx)
+            {
+                _logger.LogError(setupEx, "Failed to create SetupWizard record for tenant {TenantId}", request.TenantId);
+                // Don't fail the entire setup for this - the company and subscription are already created
+            }
 
             _logger.LogInformation("Setup completed successfully - CompanyId: {CompanyId}, SubscriptionId: {SubscriptionId}",
                 companyId, subscriptionId);
