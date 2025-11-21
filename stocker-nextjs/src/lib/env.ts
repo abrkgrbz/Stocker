@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-import logger from '@/lib/utils/logger';
 // Development schema (permissive with defaults)
 const devEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -160,12 +159,12 @@ export function getAuthUrl(path: string = ''): string {
     const hostname = window.location.hostname
     const protocol = window.location.protocol
 
-    logger.info('[getAuthUrl] hostname:', hostname, 'protocol:', protocol);
+    console.log('[getAuthUrl] hostname:', hostname, 'protocol:', protocol);
 
     // If on localhost, use localhost:3000
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       authDomain = 'http://localhost:3000'
-      logger.info('[getAuthUrl] Using localhost');
+      console.log('[getAuthUrl] Using localhost');
     } else {
       // Production: extract base domain from current hostname
       // stoocker.app → stoocker.app
@@ -175,13 +174,13 @@ export function getAuthUrl(path: string = ''): string {
       const baseDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname
 
       authDomain = `${protocol}//auth.${baseDomain}`
-      logger.info('[getAuthUrl] Using production, hostname:', hostname, 'baseDomain:', baseDomain, 'authDomain:', authDomain);
+      console.log('[getAuthUrl] Using production, hostname:', hostname, 'baseDomain:', baseDomain, 'authDomain:', authDomain);
     }
   } else {
     // Force rebuild timestamp: 2025-10-08T12:00:00
     // Server-side: use env variable
     authDomain = env.NEXT_PUBLIC_AUTH_DOMAIN
-    logger.info('[getAuthUrl] Server-side, using env:', authDomain);
+    console.log('[getAuthUrl] Server-side, using env:', authDomain);
   }
 
   // Remove port from HTTPS URLs
