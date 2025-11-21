@@ -436,4 +436,149 @@ public class RefactoredAuthenticationService : IAuthenticationService
                 Stocker.SharedKernel.Results.Error.Failure("Auth.GenerationError", "Failed to generate authentication response"));
         }
     }
+
+    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("AuthenticateAsync called for email: {Email}", email);
+
+            // Get tenant context from middleware
+            var tenantId = _tenantService.GetCurrentTenantId();
+            _logger.LogDebug("Tenant context from middleware: {TenantId}", tenantId);
+
+            // Use existing LoginAsync method
+            var loginRequest = new LoginRequest
+            {
+                Username = email,
+                Password = password,
+                TenantId = tenantId
+            };
+
+            var authResult = await LoginAsync(loginRequest);
+
+            // Convert AuthenticationResult to Result<AuthResponse>
+            if (!authResult.Success)
+            {
+                return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                    Stocker.SharedKernel.Results.Error.Validation("Auth.Failed", authResult.Errors?.FirstOrDefault() ?? "Authentication failed"));
+            }
+
+            var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
+            {
+                AccessToken = authResult.AccessToken ?? string.Empty,
+                RefreshToken = authResult.RefreshToken ?? string.Empty,
+                ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
+                TokenType = "Bearer",
+                User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
+                {
+                    Id = authResult.User.Id,
+                    Username = authResult.User.Username,
+                    Email = authResult.User.Email,
+                    FullName = authResult.User.FullName,
+                    TenantId = authResult.User.TenantId,
+                    TenantName = authResult.User.TenantName,
+                    Roles = authResult.User.Roles ?? new List<string>()
+                },
+                Requires2FA = false,
+                TempToken = null
+            };
+
+            return Stocker.SharedKernel.Results.Result.Success(authResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in AuthenticateAsync for email: {Email}", email);
+            return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                Stocker.SharedKernel.Results.Error.Failure("Auth.Error", "An error occurred during authentication"));
+        }
+    }
+
+    public async Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> AuthenticateMasterUserAsync(string email, string password, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("AuthenticateMasterUserAsync called for email: {Email}", email);
+
+            // For master user authentication with tenant context selection (mobile app flow)
+            // The tenant context should be available from middleware via X-Tenant-Code header
+            var tenantId = _tenantService.GetCurrentTenantId();
+            _logger.LogInformation("Master user authentication - Tenant context: {TenantId}", tenantId);
+
+            // Use existing LoginAsync method which handles master users
+            var loginRequest = new LoginRequest
+            {
+                Username = email,
+                Password = password,
+                TenantId = tenantId  // Pass tenant context for token generation
+            };
+
+            var authResult = await LoginAsync(loginRequest);
+
+            // Convert AuthenticationResult to Result<AuthResponse>
+            if (!authResult.Success)
+            {
+                return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                    Stocker.SharedKernel.Results.Error.Validation("Auth.Failed", authResult.Errors?.FirstOrDefault() ?? "Authentication failed"));
+            }
+
+            var authResponse = new Stocker.Application.Features.Identity.Commands.Login.AuthResponse
+            {
+                AccessToken = authResult.AccessToken ?? string.Empty,
+                RefreshToken = authResult.RefreshToken ?? string.Empty,
+                ExpiresAt = authResult.AccessTokenExpiration ?? DateTime.UtcNow.AddMinutes(60),
+                TokenType = "Bearer",
+                User = new Stocker.Application.Features.Identity.Commands.Login.UserInfo
+                {
+                    Id = authResult.User.Id,
+                    Username = authResult.User.Username,
+                    Email = authResult.User.Email,
+                    FullName = authResult.User.FullName,
+                    TenantId = authResult.User.TenantId,
+                    TenantName = authResult.User.TenantName,
+                    Roles = authResult.User.Roles ?? new List<string>()
+                },
+                Requires2FA = false,
+                TempToken = null
+            };
+
+            return Stocker.SharedKernel.Results.Result.Success(authResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in AuthenticateMasterUserAsync for email: {Email}", email);
+            return Stocker.SharedKernel.Results.Result.Failure<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>(
+                Stocker.SharedKernel.Results.Error.Failure("Auth.Error", "An error occurred during master user authentication"));
+        }
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result<Stocker.Application.Features.Identity.Commands.Login.AuthResponse>> RefreshTokenAsync(string refreshToken, string? ipAddress = null, string? userAgent = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("RefreshTokenAsync(string, string, string, CancellationToken) not implemented yet");
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result> RevokeRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("RevokeRefreshTokenAsync(string, CancellationToken) not implemented yet");
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("ChangePasswordAsync(string, string, string, CancellationToken) not implemented yet");
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result<string>> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GeneratePasswordResetTokenAsync not implemented yet");
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("ResetPasswordAsync not implemented yet");
+    }
+
+    public Task<Stocker.SharedKernel.Results.Result<bool>> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("ValidateTokenAsync not implemented yet");
+    }
 }
