@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Modal } from 'antd'
 import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
-import { cookieStorage } from '@/lib/auth/cookie-storage'
 
 type SetupStep = 'package' | 'company' | 'complete'
 
@@ -123,27 +122,14 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
     try {
       const apiUrl = getApiUrl(false) // Client-side: use NEXT_PUBLIC_API_URL
-      const token = cookieStorage.getItem('access_token') // Token saved during registration
       console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
-      console.log('🔑 Token exists:', !!token)
-      console.log('🔑 Token value (first 50 chars):', token?.substring(0, 50))
-
-      if (!token) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oturum Hatası',
-          text: 'Token bulunamadı. Lütfen tekrar giriş yapın.',
-          confirmButtonText: 'Tamam'
-        })
-        setIsLoading(false)
-        return
-      }
+      console.log('🍪 Browser cookies:', document.cookie)
 
       const response = await fetch(`${apiUrl}/api/setup/complete`, {
         method: 'POST',
+        credentials: 'include', // Send HttpOnly cookies automatically
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           packageId: selectedPackageId,

@@ -219,10 +219,27 @@ export default function RegisterPage() {
 
       if (response.ok && data.success) {
         // Save tokens to cookies for authenticated setup
+        console.log('📦 Register response data:', {
+          hasToken: !!data.token,
+          hasRefreshToken: !!data.refreshToken,
+          subdomain: data.subdomain,
+          tokenLength: data.token?.length
+        })
+
         if (data.token) {
           cookieStorage.setItem('access_token', data.token)
           cookieStorage.setItem('refresh_token', data.refreshToken)
           cookieStorage.setItem('tenant-code', data.subdomain || teamName.toLowerCase())
+
+          // Verify cookies were set
+          console.log('✅ Cookies set:', {
+            access_token: !!cookieStorage.getItem('access_token'),
+            refresh_token: !!cookieStorage.getItem('refresh_token'),
+            tenant_code: !!cookieStorage.getItem('tenant-code')
+          })
+          console.log('🍪 All cookies:', document.cookie)
+        } else {
+          console.error('❌ No token in response!', data)
         }
 
         // Show email verification success message
