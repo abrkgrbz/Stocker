@@ -125,6 +125,18 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       const token = localStorage.getItem('token') // Token saved during registration
       console.log('🔧 Submitting setup to:', `${apiUrl}/api/setup/complete`)
       console.log('🔑 Token exists:', !!token)
+      console.log('🔑 Token value (first 50 chars):', token?.substring(0, 50))
+
+      if (!token) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oturum Hatası',
+          text: 'Token bulunamadı. Lütfen tekrar giriş yapın.',
+          confirmButtonText: 'Tamam'
+        })
+        setIsLoading(false)
+        return
+      }
 
       const response = await fetch(`${apiUrl}/api/setup/complete`, {
         method: 'POST',
@@ -144,6 +156,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           taxNumber
         }),
       })
+
+      console.log('📊 Response status:', response.status, response.statusText)
 
       const data = await response.json()
       console.log('🔧 Setup response:', data)
