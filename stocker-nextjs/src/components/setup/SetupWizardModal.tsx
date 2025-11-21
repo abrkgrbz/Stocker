@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Modal } from 'antd'
 import { getApiUrl } from '@/lib/env'
+import Swal from 'sweetalert2'
 
 type SetupStep = 'package' | 'company' | 'complete'
 
@@ -94,7 +95,12 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
   const handlePackageNext = () => {
     if (!selectedPackageId) {
-      alert('Lütfen bir paket seçin')
+      Swal.fire({
+        icon: 'warning',
+        title: 'Uyarı',
+        text: 'Lütfen bir paket seçin',
+        confirmButtonText: 'Tamam'
+      })
       return
     }
     setCurrentStep('company')
@@ -103,7 +109,12 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const handleCompanySubmit = async () => {
     // Validate required fields
     if (!companyName.trim()) {
-      alert('Firma adı zorunludur')
+      Swal.fire({
+        icon: 'warning',
+        title: 'Eksik Bilgi',
+        text: 'Firma adı zorunludur',
+        confirmButtonText: 'Tamam'
+      })
       return
     }
 
@@ -147,12 +158,22 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         }, 2000)
       } else {
         console.error('❌ Setup failed:', data)
-        alert(data.message || 'Kurulum tamamlanamadı')
+        Swal.fire({
+          icon: 'error',
+          title: 'Kurulum Başarısız',
+          text: data.message || 'Kurulum tamamlanamadı',
+          confirmButtonText: 'Tamam'
+        })
         setIsLoading(false)
       }
     } catch (error) {
       console.error('❌ Setup error:', error)
-      alert('Kurulum sırasında bir hata oluştu')
+      Swal.fire({
+        icon: 'error',
+        title: 'Hata',
+        text: 'Kurulum sırasında bir hata oluştu',
+        confirmButtonText: 'Tamam'
+      })
       setIsLoading(false)
     }
   }
