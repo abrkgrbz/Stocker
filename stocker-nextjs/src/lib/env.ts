@@ -33,6 +33,56 @@ const prodEnvSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(32).optional(),
 })
 
+// Select schema based on NODE_ENV
+const envSchema = process.env.NODE_ENV === 'production' ? prodEnvSchema : devEnvSchema
+
+// Validate environment variables (lazy - only when accessed)
+let _env: z.infer<typeof envSchema> | null = null
+
+function getEnv(): z.infer<typeof envSchema> {
+  if (_env) return _env
+
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  try {
+    _env = envSchema.parse(process.env)
+    return _env
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const missingVars = error.issues?.map(e => e.path.join('.')).join(', ') || 'unknown'
+
+      if (isProduction) {
+        // FAIL FAST in production - no defaults, no fallbacks
+        throw new Error(`❌ Production build failed - Missing required environment variables: ${missingVars}`)
+      }
+
+      // Development: warn and use defaults
+      console.warn('[ENV] Using development defaults for:', missingVars);
+
+      try {
+        _env = envSchema.parse({})
+        return _env
+      } catch {
+        // If even defaults fail, create minimal valid env
+        const fallbackEnv: z.infer<typeof envSchema> = {
+          NODE_ENV: (process.env.NODE_ENV as 'development' | 'test' | 'production') || 'development',
+          NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+          NEXT_PUBLIC_BASE_DOMAIN: process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001',
+          NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000',
+          API_INTERNAL_URL: process.env.API_INTERNAL_URL || 'http://localhost:5000',
+        }
+        _env = fallbackEnv
+        return fallbackEnv
+      }
+    }
+    throw error
+  }
+}
+
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get: (_, prop) => {
+    const envData = getEnv()
+    return envData[prop as keyof z.infer<typeof envSchema>]
   }
 })
 
