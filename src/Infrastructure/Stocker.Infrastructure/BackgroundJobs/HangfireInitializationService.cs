@@ -1,6 +1,6 @@
 using Hangfire;
-using Hangfire.SqlServer;
-using Microsoft.Data.SqlClient;
+using Hangfire.PostgreSql;
+using Npgsql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -40,30 +40,30 @@ public class HangfireInitializationService : IHostedService
                 return;
             }
 
-            using var connection = new SqlConnection(connectionString);
+            using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync(cancellationToken);
 
-            // Check if Hangfire schema exists
-            var schemaExists = await CheckSchemaExists(connection, "Hangfire");
-            
+            // Check if hangfire schema exists
+            var schemaExists = await CheckSchemaExists(connection, "hangfire");
+
             if (!schemaExists)
             {
-                _logger.LogInformation("Creating Hangfire schema and tables...");
-                
+                _logger.LogInformation("Creating hangfire schema and tables...");
+
                 // Create schema
                 using var schemaCommand = connection.CreateCommand();
-                schemaCommand.CommandText = "IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'Hangfire') EXEC('CREATE SCHEMA [Hangfire]')";
+                schemaCommand.CommandText = "CREATE SCHEMA IF NOT EXISTS hangfire";
                 await schemaCommand.ExecuteNonQueryAsync(cancellationToken);
 
                 // Install Hangfire schema
-                var options = new SqlServerStorageOptions
+                var options = new PostgreSqlStorageOptions
                 {
-                    SchemaName = "Hangfire",
+                    SchemaName = "hangfire",
                     PrepareSchemaIfNecessary = true
                 };
 
                 // Install Hangfire tables by creating storage and forcing initialization
-                var storage = new SqlServerStorage(connectionString, options);
+                var storage = new PostgreSqlStorage(connectionString, options);
 
                 // Force schema and tables creation by getting monitoring API
                 var monitoringApi = storage.GetMonitoringApi();
@@ -85,13 +85,13 @@ public class HangfireInitializationService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private async Task<bool> CheckSchemaExists(SqlConnection connection, string schemaName)
+    private async Task<bool> CheckSchemaExists(NpgsqlConnection connection, string schemaName)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM sys.schemas WHERE name = @schemaName";
-        command.Parameters.Add(new SqlParameter("@schemaName", schemaName));
-        
-        var count = (int)await command.ExecuteScalarAsync();
+        command.CommandText = "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name = @schemaName";
+        command.Parameters.Add(new NpgsqlParameter("@schemaName", schemaName));
+
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync());
         return count > 0;
     }
 }

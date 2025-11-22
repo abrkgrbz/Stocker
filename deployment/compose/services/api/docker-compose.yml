@@ -19,9 +19,19 @@ services:
       - ASPNETCORE_SWAGGER_ENABLED=true
       
       # ==================================
-      # DATABASE CONNECTIONS
+      # DATABASE CONNECTIONS (PostgreSQL)
       # ==================================
-      # These are injected by Coolify at runtime
+      # Connection strings are managed by Azure Key Vault
+      # Database host for internal Docker network
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=stocker_admin
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=stocker_admin
+      # Password is managed by Azure Key Vault
+
+      # These connection strings are auto-injected from Azure Key Vault
       - ConnectionStrings__MasterConnection
       - ConnectionStrings__TenantConnection
       - ConnectionStrings__DefaultConnection
@@ -94,15 +104,15 @@ services:
       - RabbitMQ__RetryInterval=5
 
       # ==================================
-      # HANGFIRE BACKGROUND JOBS
+      # HANGFIRE BACKGROUND JOBS (PostgreSQL)
       # ==================================
       - Hangfire__DashboardPath=/hangfire
       - Hangfire__ServerName=Stocker-Server
       - Hangfire__WorkerCount=4
       - Hangfire__Queues=critical,default,low
       - Hangfire__RetryAttempts=3
-      # Hangfire connection injected by Coolify at runtime
-      - Hangfire__ConnectionString
+      - HANGFIRE_DB_NAME=stocker_hangfire
+      # Hangfire connection string auto-injected from Azure Key Vault
       - ConnectionStrings__HangfireConnection
       
       # ==================================
@@ -157,6 +167,9 @@ services:
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
       - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
 
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - coolify
     labels:

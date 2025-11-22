@@ -208,7 +208,10 @@ public partial class MigrationService : IMigrationService
                         {
                             sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
                             sqlOptions.CommandTimeout(30);
-                            sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                            sqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(30),
+                                errorNumbersToAdd: null);
                         });
                         
                         // Create a simple ITenantService implementation for CRMDbContext constructor
@@ -386,7 +389,10 @@ public partial class MigrationService : IMigrationService
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
             optionsBuilder.UseNpgsql(tenant.ConnectionString.Value, sqlOptions =>
             {
-                sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
             });
 
             using var context = new TenantDbContext(optionsBuilder.Options, backgroundTenantService);
@@ -661,7 +667,10 @@ public partial class MigrationService
                 {
                     sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
                     sqlOptions.CommandTimeout(30);
-                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
                 });
                 crmOptionsBuilder.ConfigureWarnings(warnings =>
                     warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));

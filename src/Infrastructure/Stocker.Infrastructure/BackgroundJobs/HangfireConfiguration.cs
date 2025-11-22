@@ -1,6 +1,6 @@
 using Hangfire;
 using Hangfire.Dashboard;
-using Hangfire.SqlServer;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,22 +18,14 @@ public static class HangfireConfiguration
         // If connection string is not found, try to build it from environment variables
         if (string.IsNullOrEmpty(connectionString))
         {
-            var dbHost = configuration["DB_HOST"] ?? "database";
-            var dbName = configuration["HANGFIRE_DB_NAME"] ?? "StockerHangfireDb";
-            var dbUser = configuration["DB_USER"] ?? "sa";
-            var dbPassword = configuration["DB_PASSWORD"];
-            
-            if (!string.IsNullOrEmpty(dbPassword))
-            {
-                connectionString = $"Server={dbHost};Database={dbName};User Id={dbUser};Password={dbPassword};TrustServerCertificate=True;MultipleActiveResultSets=true";
-                Console.WriteLine($"[Hangfire] Built connection string from environment variables");
-            }
-            else
-            {
-                // Fallback to a default connection string for local development
-                connectionString = "Server=localhost;Database=StockerHangfireDb;Trusted_Connection=true;TrustServerCertificate=true;MultipleActiveResultSets=true";
-                Console.WriteLine($"[Hangfire] Using default connection string");
-            }
+            var dbHost = configuration["DB_HOST"] ?? "localhost";
+            var dbPort = configuration["DB_PORT"] ?? "5432";
+            var dbName = configuration["HANGFIRE_DB_NAME"] ?? "stocker_hangfire";
+            var dbUser = configuration["DB_USER"] ?? "stocker_user";
+            var dbPassword = configuration["DB_PASSWORD"] ?? "stocker_pass";
+
+            connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};Include Error Detail=true";
+            Console.WriteLine($"[Hangfire] Built connection string from environment variables");
         }
         
         Console.WriteLine($"[Hangfire] Connection string configured: {!string.IsNullOrEmpty(connectionString)}");
@@ -43,18 +35,18 @@ public static class HangfireConfiguration
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+            .UsePostgreSqlStorage(options =>
             {
-                CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-                SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-                QueuePollInterval = TimeSpan.FromSeconds(15), // Changed from Zero for better reliability
-                UseRecommendedIsolationLevel = true,
-                DisableGlobalLocks = true,
-                SchemaName = "Hangfire",
+                options.UseNpgsqlConnection(connectionString);
+            }, new PostgreSqlStorageOptions
+            {
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                SchemaName = "hangfire",
                 PrepareSchemaIfNecessary = true,
-                // Add connection resilience
-                CommandTimeout = TimeSpan.FromMinutes(5),
-                InvisibilityTimeout = TimeSpan.FromMinutes(30)
+                InvisibilityTimeout = TimeSpan.FromMinutes(30),
+                DistributedLockTimeout = TimeSpan.FromMinutes(5),
+                TransactionSynchronisationTimeout = TimeSpan.FromMinutes(5),
+                JobExpirationCheckInterval = TimeSpan.FromHours(1)
             }));
 
         // Hangfire server with retry configuration

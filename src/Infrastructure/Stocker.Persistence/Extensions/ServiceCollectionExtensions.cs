@@ -56,7 +56,7 @@ public static class ServiceCollectionExtensions
                 logger?.LogError("MasterDb connection string is null or empty!");
             }
 
-            options.UseSqlServer(connectionString);
+            options.UseNpgsql(connectionString);
 
             // Suppress pending model changes warning in production
             options.ConfigureWarnings(warnings =>
@@ -93,7 +93,7 @@ public static class ServiceCollectionExtensions
                 connectionString = databaseSettings?.GetMasterConnectionString();
             }
 
-            options.UseSqlServer(connectionString);
+            options.UseNpgsql(connectionString);
 
             options.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));

@@ -71,10 +71,10 @@ public static class SerilogConfiguration
         // Database sink only in non-production environments
         if (environment != "Production")
         {
-            loggerConfig = loggerConfig.WriteTo.MSSqlServer(
-                connectionString: configuration.GetConnectionString("MasterConnection"),
-                tableName: "Logs",
-                autoCreateSqlTable: true,
+            loggerConfig = loggerConfig.WriteTo.PostgreSQL(
+                connectionString: configuration.GetConnectionString("MasterConnection") ?? string.Empty,
+                tableName: "logs",
+                needAutoCreateTable: true,
                 restrictedToMinimumLevel: LogEventLevel.Warning);
         }
         

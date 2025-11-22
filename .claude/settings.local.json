@@ -63,7 +63,21 @@
       "Bash(Select-String \"error TS\")",
       "Bash(Select-Object -First 30)",
       "Bash(Select-String -Pattern \"error|succeeded|failed\" -Context 0,2)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(Select-String -Pattern \"Build succeeded|Build FAILED|error CS\")",
+      "Bash(taskkill:*)",
+      "Bash(dotnet build-server:*)",
+      "Bash(Get-Process)",
+      "Bash(Where-Object {$_rocessName -match \"Stocker|vsdbg|dotnet\"})",
+      "Bash(Select-Object ProcessName,Id)",
+      "Bash(Format-Table)",
+      "Bash(dotnet clean:*)",
+      "Bash(python3:*)",
+      "Bash(openssl rand:*)",
+      "Bash(tr:*)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []
