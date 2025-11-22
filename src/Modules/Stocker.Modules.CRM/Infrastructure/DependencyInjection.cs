@@ -50,14 +50,14 @@ public static class DependencyInjection
             }
 
             var optionsBuilder = new DbContextOptionsBuilder<CRMDbContext>();
-            optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
+            optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
             {
-                sqlOptions.MigrationsAssembly(typeof(CRMDbContext).Assembly.FullName);
-                sqlOptions.CommandTimeout(30);
-                sqlOptions.EnableRetryOnFailure(
+                npgsqlOptions.MigrationsAssembly(typeof(CRMDbContext).Assembly.FullName);
+                npgsqlOptions.CommandTimeout(30);
+                npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 5,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
+                    errorCodesToAdd: null);
             });
 
             return new CRMDbContext(optionsBuilder.Options, tenantService);

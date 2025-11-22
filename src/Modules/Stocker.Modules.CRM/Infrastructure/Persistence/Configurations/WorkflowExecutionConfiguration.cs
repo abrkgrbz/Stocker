@@ -25,7 +25,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
 
         builder.Property(e => e.TriggerData)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(e => e.ErrorMessage)
             .HasMaxLength(2000);

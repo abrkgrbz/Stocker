@@ -1,5 +1,5 @@
 using MediatR;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -383,7 +383,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 // This prevents orphaned tenant records without functioning databases
                 if (ex is InvalidOperationException ||
                     ex is DbUpdateException ||
-                    ex is SqlException ||
+                    ex is NpgsqlException ||
                     ex.GetType().Name.Contains("Migration") ||
                     ex.Message.Contains("database") ||
                     ex.Message.Contains("migration"))
@@ -467,13 +467,13 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         }
 
         // Parse master connection string to get server, user, and password
-        var builder = new SqlConnectionStringBuilder(masterConnectionString);
+        var builder = new NpgsqlConnectionStringBuilder(masterConnectionString);
 
         // Build tenant connection string with same server but different database
-        builder.InitialCatalog = databaseName;
+        builder.Database = databaseName;
 
         _logger.LogInformation("Generated connection string for database: {DatabaseName}, Server: {Server}",
-            databaseName, builder.DataSource);
+            databaseName, builder.Host);
 
         return builder.ConnectionString;
     }

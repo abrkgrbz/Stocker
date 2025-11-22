@@ -28,11 +28,11 @@ public class WorkflowStepConfiguration : IEntityTypeConfiguration<WorkflowStep>
 
         builder.Property(s => s.ActionConfiguration)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(s => s.Conditions)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(s => s.DelayMinutes)
             .IsRequired();

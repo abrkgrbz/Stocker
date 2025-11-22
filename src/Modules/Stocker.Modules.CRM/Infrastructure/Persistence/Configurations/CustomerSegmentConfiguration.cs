@@ -29,7 +29,7 @@ public class CustomerSegmentConfiguration : IEntityTypeConfiguration<CustomerSeg
             .IsRequired();
 
         builder.Property(cs => cs.Criteria)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(cs => cs.Color)
             .IsRequired();

@@ -29,7 +29,7 @@ public class WorkflowConfiguration : IEntityTypeConfiguration<Workflow>
 
         builder.Property(w => w.TriggerConditions)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(w => w.TenantId)
             .IsRequired();

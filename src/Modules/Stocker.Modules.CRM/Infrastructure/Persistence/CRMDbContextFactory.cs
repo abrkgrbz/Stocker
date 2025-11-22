@@ -42,7 +42,7 @@ public class CRMDbContextFactory : IDesignTimeDbContextFactory<CRMDbContext>
             ?? configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'TenantConnection' not found.");
 
-        optionsBuilder.UseSqlServer(connectionString, options =>
+        optionsBuilder.UseNpgsql(connectionString, options =>
         {
             options.MigrationsAssembly(typeof(CRMDbContext).Assembly.FullName);
             options.CommandTimeout(30);
@@ -64,7 +64,7 @@ public class DesignTimeTenantService : ITenantService
 
     public Guid? GetCurrentTenantId() => _tenantId;
     public string? GetCurrentTenantName() => "Design Tenant";
-    public string? GetConnectionString() => "Server=coolify.stoocker.app;Database=StockerTenantDb_Design;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=true;MultipleActiveResultSets=true";
+    public string? GetConnectionString() => "Host=coolify.stoocker.app;Port=5432;Database=StockerTenantDb_Design;Username=postgres;Password=YourStrongPassword123!;Include Error Detail=true";
     public Task<bool> SetCurrentTenant(Guid tenantId) => Task.FromResult(true);
     public Task<bool> SetCurrentTenant(string tenantIdentifier) => Task.FromResult(true);
 }

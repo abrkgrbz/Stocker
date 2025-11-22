@@ -32,11 +32,11 @@ public class WorkflowStepExecutionConfiguration : IEntityTypeConfiguration<Workf
 
         builder.Property(se => se.InputData)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(se => se.OutputData)
             .HasMaxLength(4000)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(se => se.ErrorMessage)
             .HasMaxLength(2000);

@@ -38,9 +38,9 @@ public class TenantCRMDatabaseService : ITenantCRMDatabaseService
         try
         {
             var connectionString = GetTenantConnectionString(tenantId);
-            
+
             var optionsBuilder = new DbContextOptionsBuilder<CRMDbContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseNpgsql(connectionString);
 
             // Tenant service'i al
             var tenantService = _serviceProvider.GetRequiredService<ITenantService>();
@@ -68,10 +68,10 @@ public class TenantCRMDatabaseService : ITenantCRMDatabaseService
         try
         {
             var optionsBuilder = new DbContextOptionsBuilder<CRMDbContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseNpgsql(connectionString);
 
             var tenantService = _serviceProvider.GetRequiredService<ITenantService>();
-            
+
             using (var context = new CRMDbContext(optionsBuilder.Options, tenantService))
             {
                 // Migration'ları uygula
@@ -107,8 +107,8 @@ public class TenantCRMDatabaseService : ITenantCRMDatabaseService
     {
         // Her tenant'ın kendi veritabanı var
         // Format: Stocker_Tenant_{TenantId}
-        var baseConnectionString = _configuration.GetConnectionString("TenantConnection") 
-            ?? "Server=DESKTOP-A1C2AO3;Database={0};Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true";
+        var baseConnectionString = _configuration.GetConnectionString("TenantConnection")
+            ?? "Host=localhost;Port=5432;Database={0};Username=postgres;Password=YourStrongPassword123!;Include Error Detail=true";
         
         var tenantDbName = $"Stocker_Tenant_{tenantId:N}";
         return baseConnectionString.Replace("StockerTenantDb", tenantDbName);
