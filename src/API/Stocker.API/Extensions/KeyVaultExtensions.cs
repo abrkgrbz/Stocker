@@ -108,6 +108,7 @@ public class CustomKeyVaultSecretManager : KeyVaultSecretManager
             { "smtp-port", "EmailSettings:SmtpPort" },
             { "smtp-username", "EmailSettings:SmtpUsername" },
             { "sa-password", "SA_PASSWORD" },
+            { "postgres-password", "POSTGRES_PASSWORD" },
             { "redis-password", "Redis:Password" },
             { "rabbitmq-password", "RabbitMQ:Password" },
             { "minio-root-password", "Storage:MinIO:RootPassword" },
