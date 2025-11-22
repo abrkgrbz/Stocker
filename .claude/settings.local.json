@@ -77,7 +77,11 @@
       "Bash(openssl rand:*)",
       "Bash(tr:*)",
       "Bash(chmod:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(ssh root@95.217.219.4 \"systemctl status coolify\")",
+      "Bash(ssh root@95.217.219.4 \"docker ps -a | grep -i coolify\")",
+      "Bash(ssh:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
