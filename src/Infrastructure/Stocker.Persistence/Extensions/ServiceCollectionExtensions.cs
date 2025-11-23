@@ -34,26 +34,34 @@ public static class ServiceCollectionExtensions
         {
             // In Production/Docker, prefer ConnectionStrings over DatabaseSettings
             var connectionString = configuration.GetConnectionString("MasterConnection");
-            var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
-
-            // Fallback to DatabaseSettings if ConnectionString is not provided
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                connectionString = databaseSettings?.GetMasterConnectionString();
-            }
 
             // Log the connection string for debugging (remove sensitive parts)
             var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<MasterDbContext>>();
-            if (logger != null && !string.IsNullOrEmpty(connectionString))
+
+            if (string.IsNullOrEmpty(connectionString))
             {
-                var sanitizedConnStr = connectionString.Contains("Password")
-                    ? connectionString.Substring(0, connectionString.IndexOf("Password")) + "Password=***"
-                    : connectionString;
-                logger.LogInformation("Connecting to MasterDb with connection string: {ConnectionString}", sanitizedConnStr);
+                logger?.LogError("CRITICAL: MasterConnection string is missing from configuration!");
+                throw new InvalidOperationException("MasterConnection configuration is required. Please set ConnectionStrings:MasterConnection in appsettings.json or via environment variable ConnectionStrings__MasterConnection");
             }
-            else if (string.IsNullOrEmpty(connectionString))
+
+            if (logger != null)
             {
-                logger?.LogError("MasterDb connection string is null or empty!");
+                // Extract and log connection details for debugging
+                var host = connectionString.Contains("Host=")
+                    ? connectionString.Split("Host=")[1].Split(";")[0]
+                    : "unknown";
+                var database = connectionString.Contains("Database=")
+                    ? connectionString.Split("Database=")[1].Split(";")[0]
+                    : "unknown";
+                var username = connectionString.Contains("Username=")
+                    ? connectionString.Split("Username=")[1].Split(";")[0]
+                    : "unknown";
+                var sslMode = connectionString.Contains("SslMode=")
+                    ? connectionString.Split("SslMode=")[1].Split(";")[0]
+                    : "NOT SET";
+
+                logger.LogInformation("Connecting to MasterDb: Host={Host}, Database={Database}, Username={Username}, SslMode={SslMode}",
+                    host, database, username, sslMode);
             }
 
             options.UseNpgsql(connectionString);
@@ -86,11 +94,10 @@ public static class ServiceCollectionExtensions
         services.AddDbContextFactory<MasterDbContext>((serviceProvider, options) =>
         {
             var connectionString = configuration.GetConnectionString("MasterConnection");
-            var databaseSettings = serviceProvider.GetService<IOptions<DatabaseSettings>>()?.Value;
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                connectionString = databaseSettings?.GetMasterConnectionString();
+                throw new InvalidOperationException("MasterConnection configuration is required for DbContextFactory");
             }
 
             options.UseNpgsql(connectionString);
