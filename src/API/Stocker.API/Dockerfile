@@ -114,10 +114,10 @@ fi\n\
 echo ""\n\
 # Export connection strings if environment variables are present (PostgreSQL format)\n\
 if [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_HOST" ]; then\n\
-    export ConnectionStrings__MasterConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
-    export ConnectionStrings__TenantConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
-    export ConnectionStrings__DefaultConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
-    export ConnectionStrings__HangfireConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_hangfire;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    export ConnectionStrings__MasterConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__TenantConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__DefaultConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__HangfireConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_hangfire;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
     echo "Connection strings constructed from POSTGRES_PASSWORD and POSTGRES_HOST"\n\
 else\n\
     echo "WARNING: POSTGRES_PASSWORD or POSTGRES_HOST not set - will use Azure Key Vault or appsettings"\n\
@@ -128,7 +128,7 @@ if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
     ./efbundle-master --connection "$ConnectionStrings__MasterConnection"\n\
 else\n\
     echo "Building Master connection string from environment variables"\n\
-    MASTER_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    MASTER_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Disable"\n\
     echo "Using constructed connection string for Master migrations"\n\
     ./efbundle-master --connection "$MASTER_CONNECTION_STRING"\n\
 fi\n\
@@ -143,7 +143,7 @@ if [ -n "$ConnectionStrings__TenantConnection" ]; then\n\
     ./efbundle-tenant --connection "$ConnectionStrings__TenantConnection"\n\
 else\n\
     echo "Building Tenant connection string from environment variables"\n\
-    TENANT_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    TENANT_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Disable"\n\
     echo "Using constructed connection string for Tenant migrations"\n\
     ./efbundle-tenant --connection "$TENANT_CONNECTION_STRING"\n\
 fi\n\
