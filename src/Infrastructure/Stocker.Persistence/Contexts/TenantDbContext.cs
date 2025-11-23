@@ -182,16 +182,6 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
         // modelBuilder.Entity<Warehouse>().HasQueryFilter(e => e.TenantId == _tenantService.GetCurrentTenantId());
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-
-        // Enable legacy timestamp behavior for Npgsql
-        // This allows DateTime to work with both 'timestamp with time zone' and 'timestamp without time zone'
-        // Without this, Npgsql enforces strict Kind checking which causes errors with mixed column types
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-    }
-
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);

@@ -17,6 +17,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Enable legacy timestamp behavior for Npgsql GLOBALLY
+        // This allows DateTime to work with both 'timestamp with time zone' and 'timestamp without time zone'
+        // Must be set before any DbContext instances are created
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         // Add MasterDbContext
         services.AddDbContext<MasterDbContext>(options =>
             options.UseNpgsql(
