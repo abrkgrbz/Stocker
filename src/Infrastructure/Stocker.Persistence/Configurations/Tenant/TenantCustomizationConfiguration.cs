@@ -114,13 +114,13 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             .HasMaxLength(50);
             
         builder.Property(x => x.CustomCss)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CustomJavaScript)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CustomHtml)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Login Page
         builder.Property(x => x.LoginBackgroundUrl)
@@ -152,10 +152,10 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             
         // Email Templates
         builder.Property(x => x.EmailHeaderHtml)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.EmailFooterHtml)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.EmailLogoUrl)
             .HasMaxLength(500);
@@ -174,10 +174,10 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             
         // Dashboard
         builder.Property(x => x.DashboardLayout)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.DefaultWidgets)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.ShowDashboardStats)
             .IsRequired();
@@ -196,10 +196,10 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             
         // Reports
         builder.Property(x => x.ReportHeaderTemplate)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.ReportFooterTemplate)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.ReportLogoUrl)
             .HasMaxLength(500);
@@ -215,7 +215,7 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             
         // Invoice Templates
         builder.Property(x => x.InvoiceTemplate)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.InvoiceLogoUrl)
             .HasMaxLength(500);
@@ -227,10 +227,10 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             .HasMaxLength(500);
             
         builder.Property(x => x.InvoiceTermsAndConditions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.InvoicePaymentInstructions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Localization
         builder.Property(x => x.DefaultLanguage)
@@ -284,13 +284,13 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             
         // Custom Menu Items
         builder.Property(x => x.CustomMenuItems)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CustomShortcuts)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CustomActions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // SEO & Metadata
         builder.Property(x => x.MetaTitle)
@@ -325,7 +325,7 @@ public class TenantCustomizationConfiguration : BaseEntityTypeConfiguration<Tena
             .HasMaxLength(50);
             
         builder.Property(x => x.CustomTrackingScripts)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Audit
         builder.Property(x => x.CreatedAt)

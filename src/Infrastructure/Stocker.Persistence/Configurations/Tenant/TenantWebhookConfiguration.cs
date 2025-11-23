@@ -42,7 +42,7 @@ public class TenantWebhookConfiguration : BaseEntityTypeConfiguration<TenantWebh
             .HasMaxLength(100);
             
         builder.Property(x => x.Headers)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.TimeoutSeconds)
             .IsRequired();
@@ -71,10 +71,10 @@ public class TenantWebhookConfiguration : BaseEntityTypeConfiguration<TenantWebh
             
         // Filtering & Conditions
         builder.Property(x => x.EventFilters)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.PayloadTemplate)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.OnlyOnSuccess)
             .IsRequired();

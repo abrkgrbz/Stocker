@@ -114,7 +114,7 @@ public class TenantUserConfiguration : BaseEntityTypeConfiguration<TenantUser>
 
         builder.HasIndex(u => new { u.TenantId, u.EmployeeCode })
             .IsUnique()
-            .HasFilter("[EmployeeCode] IS NOT NULL")
+            .HasFilter("\"EmployeeCode\" IS NOT NULL")
             .HasDatabaseName("IX_TenantUsers_TenantId_EmployeeCode");
 
         builder.HasIndex(u => u.Status)

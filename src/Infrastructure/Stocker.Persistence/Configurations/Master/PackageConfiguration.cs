@@ -77,7 +77,7 @@ public class PackageConfiguration : BaseEntityTypeConfiguration<Package>
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, int>())
                 .HasColumnName("ModuleLimits")
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("text");
         });
 
         // Relationships

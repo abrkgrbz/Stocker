@@ -47,13 +47,13 @@ public class UserTenantConfiguration : BaseEntityTypeConfiguration<UserTenant>
             .HasMaxLength(100);
             
         builder.Property(ut => ut.Permissions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.CustomPermissions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.RestrictedPermissions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Access Control
         builder.Property(ut => ut.IsActive)
@@ -101,7 +101,7 @@ public class UserTenantConfiguration : BaseEntityTypeConfiguration<UserTenant>
         builder.Property(ut => ut.WorkEndTime);
         
         builder.Property(ut => ut.WorkingDays)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.TimeZone)
             .HasMaxLength(100);
@@ -116,10 +116,10 @@ public class UserTenantConfiguration : BaseEntityTypeConfiguration<UserTenant>
             
         // Access Restrictions
         builder.Property(ut => ut.AllowedIpAddresses)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.BlockedIpAddresses)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.RequireTwoFactor)
             .IsRequired()
@@ -179,10 +179,10 @@ public class UserTenantConfiguration : BaseEntityTypeConfiguration<UserTenant>
             .HasMaxLength(50);
             
         builder.Property(ut => ut.DashboardLayout)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.NotificationPreferences)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(ut => ut.EmailNotifications)
             .IsRequired()

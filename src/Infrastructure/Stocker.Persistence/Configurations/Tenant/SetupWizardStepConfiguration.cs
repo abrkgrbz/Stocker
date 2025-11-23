@@ -57,10 +57,10 @@ public class SetupWizardStepConfiguration : IEntityTypeConfiguration<SetupWizard
             
         // JSON Data columns
         builder.Property(s => s.StepData)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.ValidationErrors)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // User tracking
         builder.Property(s => s.StartedBy)

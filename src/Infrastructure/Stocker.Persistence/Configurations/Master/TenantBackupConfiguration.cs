@@ -126,11 +126,11 @@ public class TenantBackupConfiguration : IEntityTypeConfiguration<TenantBackup>
 
         builder.Property(x => x.Tags)
             .HasColumnName("Tags")
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(x => x.Metadata)
             .HasColumnName("Metadata")
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         // Relationships
         builder.HasOne(x => x.Tenant)

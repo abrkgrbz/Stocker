@@ -28,7 +28,7 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.TwoFactorCodeLength)
             .IsRequired()
@@ -132,13 +132,13 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.AllowedIpRanges)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.EnableIpBlacklist)
             .IsRequired()
@@ -148,13 +148,13 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.BlockedIpRanges)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.BlockVpnAccess)
             .IsRequired()
@@ -172,13 +172,13 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.BlockedCountries)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Device Management
         builder.Property(s => s.EnableDeviceTracking)
@@ -229,7 +229,7 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.AllowCredentials)
             .IsRequired()
@@ -374,7 +374,7 @@ public class TenantSecuritySettingsConfiguration : IEntityTypeConfiguration<Tena
             
         // Configuration
         builder.Property(s => s.CustomConfiguration)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(s => s.IsDefault)
             .IsRequired()

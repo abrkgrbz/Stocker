@@ -74,16 +74,16 @@ public class TenantFeatureConfiguration : BaseEntityTypeConfiguration<TenantFeat
         
         // Configuration
         builder.Property(x => x.Configuration)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.DefaultSettings)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CurrentSettings)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.Metadata)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Usage Limits
         builder.Property(x => x.HasUsageLimit)
@@ -136,13 +136,13 @@ public class TenantFeatureConfiguration : BaseEntityTypeConfiguration<TenantFeat
         
         // Dependencies
         builder.Property(x => x.RequiredFeatures)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.ConflictingFeatures)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.IncludedFeatures)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Activation
         builder.Property(x => x.ActivatedAt);

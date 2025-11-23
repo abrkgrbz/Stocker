@@ -98,11 +98,11 @@ public class BranchConfiguration : BaseEntityTypeConfiguration<Branch>
 
         builder.HasIndex(b => new { b.CompanyId, b.Code })
             .IsUnique()
-            .HasFilter("[Code] IS NOT NULL")
+            .HasFilter("\"Code\" IS NOT NULL")
             .HasDatabaseName("IX_Branches_CompanyId_Code");
 
         builder.HasIndex(b => new { b.CompanyId, b.IsHeadOffice })
-            .HasFilter("[IsHeadOffice] = 1")
+            .HasFilter("\"IsHeadOffice\" = TRUE")
             .IsUnique()
             .HasDatabaseName("IX_Branches_CompanyId_HeadOffice");
 

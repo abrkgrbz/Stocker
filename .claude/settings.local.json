@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(az keyvault secret show:*)",
-      "Bash(dotnet ef migrations:*)"
+      "Bash(dotnet ef migrations:*)",
+      "Bash(ssh:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(done)",
+      "Bash(dotnet build:*)",
+      "Bash(az keyvault secret list:*)",
+      "Bash(dotnet ef database update --context MasterDbContext --project . --startup-project ../../API/Stocker.API --connection \"Host=95.217.219.4;Port=5432;Database=stocker_master;Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable\")",
+      "Bash(dotnet ef database update:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

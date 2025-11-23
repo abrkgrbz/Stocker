@@ -152,11 +152,11 @@ public class TenantHealthCheckConfiguration : IEntityTypeConfiguration<TenantHea
         // Errors and Warnings
         builder.Property(x => x.Errors)
             .HasColumnName("Errors")
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(x => x.Warnings)
             .HasColumnName("Warnings")
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(x => x.ErrorCount)
             .HasColumnName("ErrorCount")

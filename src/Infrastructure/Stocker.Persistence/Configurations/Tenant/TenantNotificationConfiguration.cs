@@ -65,7 +65,7 @@ public class TenantNotificationConfiguration : IEntityTypeConfiguration<TenantNo
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<Guid>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(n => n.IsGlobal)
             .IsRequired()
@@ -94,7 +94,7 @@ public class TenantNotificationConfiguration : IEntityTypeConfiguration<TenantNo
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Configure Actions as owned entity collection
         builder.OwnsMany(n => n.Actions, actions =>
@@ -234,19 +234,19 @@ public class TenantNotificationConfiguration : IEntityTypeConfiguration<TenantNo
             
         // Additional Data
         builder.Property(n => n.Metadata)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(n => n.Data)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(n => n.Tags)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(n => n.GroupKey)
             .HasMaxLength(100);

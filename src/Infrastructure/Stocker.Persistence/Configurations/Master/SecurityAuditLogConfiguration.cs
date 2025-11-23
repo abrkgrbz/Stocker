@@ -15,7 +15,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
         // Primary columns
         builder.Property(a => a.Timestamp)
             .IsRequired()
-            .HasColumnType("datetime2");
+            .HasColumnType("timestamp without time zone");
 
         builder.Property(a => a.Event)
             .IsRequired()
@@ -51,7 +51,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
 
         // Metadata (JSON)
         builder.Property(a => a.Metadata)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(a => a.DurationMs)
             .IsRequired(false);
@@ -66,7 +66,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
 
         builder.Property(a => a.CreatedAt)
             .IsRequired()
-            .HasColumnType("datetime2");
+            .HasColumnType("timestamp without time zone");
 
         // Indexes for performance
         builder.HasIndex(a => a.Timestamp)
@@ -90,7 +90,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
 
         builder.HasIndex(a => a.RiskScore)
             .HasDatabaseName("IX_SecurityAuditLogs_RiskScore")
-            .HasFilter("[RiskScore] > 50");
+            .HasFilter("\"RiskScore\" > 50");
 
         builder.HasIndex(a => new { a.Event, a.Timestamp })
             .HasDatabaseName("IX_SecurityAuditLogs_Event_Timestamp");

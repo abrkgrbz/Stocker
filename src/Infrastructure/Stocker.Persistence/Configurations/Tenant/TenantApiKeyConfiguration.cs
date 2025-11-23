@@ -45,32 +45,32 @@ public class TenantApiKeyConfiguration : IEntityTypeConfiguration<TenantApiKey>
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(k => k.AllowedEndpoints)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(k => k.AllowedMethods)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Access Control - JSON arrays
         builder.Property(k => k.AllowedIpAddresses)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(k => k.AllowedDomains)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(k => k.RateLimitPerMinute);
         builder.Property(k => k.RateLimitPerHour);
@@ -132,7 +132,7 @@ public class TenantApiKeyConfiguration : IEntityTypeConfiguration<TenantApiKey>
             .HasMaxLength(100);
             
         builder.Property(k => k.Metadata)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Indexes
         builder.HasIndex(k => k.KeyPrefix)

@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Stocker.Persistence.Migrations.Master
+namespace Stocker.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialPostgreSQL_Master : Migration
+    public partial class InitialPostgreSQL : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -117,7 +117,7 @@ namespace Stocker.Persistence.Migrations.Master
                     MaxStorageGB = table.Column<int>(type: "integer", nullable: false),
                     MaxProjects = table.Column<int>(type: "integer", nullable: false),
                     MaxApiCallsPerMonth = table.Column<int>(type: "integer", nullable: false),
-                    ModuleLimits = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ModuleLimits = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false),
                     TrialDays = table.Column<int>(type: "integer", nullable: false),
@@ -159,7 +159,7 @@ namespace Stocker.Persistence.Migrations.Master
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Event = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: true),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
@@ -169,11 +169,11 @@ namespace Stocker.Persistence.Migrations.Master
                     RequestId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     RiskScore = table.Column<int>(type: "integer", nullable: true),
                     Blocked = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    Metadata = table.Column<string>(type: "nvarchar(max)", maxLength: 256, nullable: true),
+                    Metadata = table.Column<string>(type: "text", maxLength: 256, nullable: true),
                     DurationMs = table.Column<int>(type: "integer", nullable: true),
                     GdprCategory = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     RetentionDays = table.Column<int>(type: "integer", nullable: false, defaultValue: 365),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -451,8 +451,8 @@ namespace Stocker.Persistence.Migrations.Master
                     ErrorMessage = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     RetryCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Tags = table.Column<string>(type: "nvarchar(max)", maxLength: 256, nullable: true),
-                    Metadata = table.Column<string>(type: "nvarchar(max)", maxLength: 256, nullable: true),
+                    Tags = table.Column<string>(type: "text", maxLength: 256, nullable: true),
+                    Metadata = table.Column<string>(type: "text", maxLength: 256, nullable: true),
                     TenantId1 = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
@@ -671,8 +671,8 @@ namespace Stocker.Persistence.Migrations.Master
                     LastBackupDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsBackupHealthy = table.Column<bool>(type: "boolean", nullable: false),
                     LastBackupSizeMb = table.Column<long>(type: "bigint", nullable: false),
-                    Errors = table.Column<string>(type: "nvarchar(max)", maxLength: 256, nullable: true),
-                    Warnings = table.Column<string>(type: "nvarchar(max)", maxLength: 256, nullable: true),
+                    Errors = table.Column<string>(type: "text", maxLength: 256, nullable: true),
+                    Warnings = table.Column<string>(type: "text", maxLength: 256, nullable: true),
                     ErrorCount = table.Column<int>(type: "integer", nullable: false),
                     WarningCount = table.Column<int>(type: "integer", nullable: false),
                     TenantId1 = table.Column<Guid>(type: "uuid", nullable: true)
@@ -1154,7 +1154,7 @@ namespace Stocker.Persistence.Migrations.Master
                 schema: "master",
                 table: "SecurityAuditLogs",
                 column: "RiskScore",
-                filter: "[RiskScore] > 50");
+                filter: "\"RiskScore\" > 50");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SecurityAuditLogs_TenantCode",
@@ -1336,7 +1336,7 @@ namespace Stocker.Persistence.Migrations.Master
                 table: "TenantDomains",
                 columns: new[] { "TenantId", "IsPrimary" },
                 unique: true,
-                filter: "[IsPrimary] = 1");
+                filter: "\"IsPrimary\" = TRUE");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantHealthChecks_CheckedAt",

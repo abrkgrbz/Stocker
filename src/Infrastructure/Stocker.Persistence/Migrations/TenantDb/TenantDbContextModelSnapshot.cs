@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Persistence.Contexts;
 
 #nullable disable
 
-namespace Stocker.Persistence.Migrations.Tenant
+namespace Stocker.Persistence.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20251123000735_InitialPostgreSQL_Tenant")]
-    partial class InitialPostgreSQL_Tenant
+    partial class TenantDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,12 +139,12 @@ namespace Stocker.Persistence.Migrations.Tenant
                     b.HasIndex("CompanyId", "Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Branches_CompanyId_Code")
-                        .HasFilter("[Code] IS NOT NULL");
+                        .HasFilter("\"Code\" IS NOT NULL");
 
                     b.HasIndex("CompanyId", "IsHeadOffice")
                         .IsUnique()
                         .HasDatabaseName("IX_Branches_CompanyId_HeadOffice")
-                        .HasFilter("[IsHeadOffice] = 1");
+                        .HasFilter("\"IsHeadOffice\" = TRUE");
 
                     b.ToTable("Branches", "tenant");
                 });
@@ -337,7 +334,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                     b.HasIndex("CompanyId", "Code")
                         .IsUnique()
                         .HasDatabaseName("IX_Departments_CompanyId_Code")
-                        .HasFilter("[Code] IS NOT NULL");
+                        .HasFilter("\"Code\" IS NOT NULL");
 
                     b.ToTable("Departments", "tenant");
                 });
@@ -1105,7 +1102,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("StepData")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("StepOrder")
                         .HasColumnType("integer");
@@ -1117,7 +1114,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("ValidationErrors")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid>("WizardId")
                         .HasColumnType("uuid");
@@ -1161,7 +1158,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("AdditionalData")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -1170,7 +1167,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Changes")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1190,7 +1187,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("ErrorDetails")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(1000)
@@ -1215,11 +1212,11 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("NewData")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("OldData")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RequestId")
                         .HasMaxLength(100)
@@ -1296,18 +1293,18 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("uuid");
 
                     b.Property<string>("AllowedDomains")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedEndpoints")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedIpAddresses")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedMethods")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AssociatedApplication")
                         .HasMaxLength(100)
@@ -1374,7 +1371,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Metadata")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1408,7 +1405,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Scopes")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2111,11 +2108,11 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("AllowedRoles")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedUsers")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ApprovalNotes")
                         .HasMaxLength(1000)
@@ -2144,7 +2141,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("CustomMetadata")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
@@ -2284,7 +2281,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("NotificationRecipients")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("ParentDocumentId")
                         .HasColumnType("uuid");
@@ -2294,7 +2291,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("RelatedDocumentIds")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("RenewalNoticeDays")
                         .HasColumnType("integer");
@@ -2361,7 +2358,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Tags")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2801,7 +2798,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("EnabledModules")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("FiscalYearStart")
                         .HasColumnType("integer");
@@ -2817,31 +2814,31 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("InitialAccounts")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialBranches")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialDepartments")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialProductCategories")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialRoles")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialTaxRates")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("InitialWarehouses")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsValidated")
                         .ValueGeneratedOnAdd()
@@ -2874,11 +2871,11 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("ProcessingLog")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RequestedFeatures")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("State")
                         .HasMaxLength(100)
@@ -2911,11 +2908,11 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("ValidationErrors")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ValidationWarnings")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Website")
                         .HasMaxLength(200)
@@ -2954,7 +2951,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                     b.Property<string>("Configuration")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -3122,7 +3119,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("ActionData")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ActionText")
                         .HasMaxLength(100)
@@ -3158,7 +3155,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Data")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("DeliveryAttempts")
                         .ValueGeneratedOnAdd()
@@ -3249,7 +3246,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Metadata")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("Persistent")
                         .ValueGeneratedOnAdd()
@@ -3343,7 +3340,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("character varying(20)");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TargetDepartment")
                         .HasMaxLength(100)
@@ -3362,7 +3359,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("uuid");
 
                     b.Property<string>("TargetUserIds")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -3604,16 +3601,16 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasDefaultValue(true);
 
                     b.Property<string>("AllowedCountries")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedIpAddresses")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedIpRanges")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedOrigins")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("AnonymizePersonalData")
                         .ValueGeneratedOnAdd()
@@ -3656,13 +3653,13 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasDefaultValue(false);
 
                     b.Property<string>("BlockedCountries")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("BlockedIpAddresses")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("BlockedIpRanges")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("CaptchaThreshold")
                         .ValueGeneratedOnAdd()
@@ -3683,7 +3680,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("CustomConfiguration")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("DataRetentionDays")
                         .ValueGeneratedOnAdd()
@@ -3986,7 +3983,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("TwoFactorMethods")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorOptional")
                         .ValueGeneratedOnAdd()
@@ -4134,7 +4131,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("BlockingIssues")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("BranchCount")
                         .ValueGeneratedOnAdd()
@@ -4288,7 +4285,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("IntegratedServices")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("LogoUploaded")
                         .ValueGeneratedOnAdd()
@@ -4358,7 +4355,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PendingTasks")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PricingRulesConfigured")
                         .ValueGeneratedOnAdd()
@@ -4445,7 +4442,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("SelectedModulesList")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("SmsIntegrationConfigured")
                         .ValueGeneratedOnAdd()
@@ -4681,7 +4678,7 @@ namespace Stocker.Persistence.Migrations.Tenant
                     b.HasIndex("TenantId", "EmployeeCode")
                         .IsUnique()
                         .HasDatabaseName("IX_TenantUsers_TenantId_EmployeeCode")
-                        .HasFilter("[EmployeeCode] IS NOT NULL");
+                        .HasFilter("\"EmployeeCode\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "Username")
                         .IsUnique()
@@ -4920,7 +4917,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("AllowedIpAddresses")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("AssignedAt")
                         .HasColumnType("timestamp with time zone");
@@ -4932,7 +4929,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("BlockedIpAddresses")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("BranchId")
                         .HasColumnType("uuid");
@@ -4962,11 +4959,11 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("CustomPermissions")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("DashboardLayout")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("DateFormat")
                         .HasMaxLength(50)
@@ -5082,7 +5079,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("NotificationPreferences")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("NumberFormat")
                         .HasMaxLength(50)
@@ -5097,7 +5094,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("Permissions")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(50)
@@ -5120,7 +5117,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("RestrictedPermissions")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("RoleId")
                         .HasColumnType("uuid");
@@ -5178,7 +5175,7 @@ namespace Stocker.Persistence.Migrations.Tenant
 
                     b.Property<string>("WorkingDays")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

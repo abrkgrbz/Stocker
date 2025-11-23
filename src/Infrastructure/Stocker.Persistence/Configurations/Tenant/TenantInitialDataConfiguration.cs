@@ -140,13 +140,13 @@ public class TenantInitialDataConfiguration : BaseEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.RequestedFeatures)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Data Sets
         builder.Property(d => d.CreateSampleData)
@@ -168,49 +168,49 @@ public class TenantInitialDataConfiguration : BaseEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialDepartment>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Branches - JSON
         builder.Property(d => d.InitialBranches)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialBranch>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Roles - JSON
         builder.Property(d => d.InitialRoles)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialRole>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Chart of Accounts - JSON
         builder.Property(d => d.InitialAccounts)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialAccount>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Tax Settings - JSON
         builder.Property(d => d.InitialTaxRates)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialTaxRate>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Product Categories - JSON
         builder.Property(d => d.InitialProductCategories)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialProductCategory>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Initial Warehouses - JSON
         builder.Property(d => d.InitialWarehouses)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<InitialWarehouse>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Processing Information
         builder.Property(d => d.CreatedAt)
@@ -233,7 +233,7 @@ public class TenantInitialDataConfiguration : BaseEntityTypeConfiguration<Tenant
             .HasMaxLength(2000);
             
         builder.Property(d => d.ProcessingLog)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Validation
         builder.Property(d => d.IsValidated)
@@ -246,13 +246,13 @@ public class TenantInitialDataConfiguration : BaseEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.ValidationWarnings)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Indexes
         builder.HasIndex(d => d.Status)

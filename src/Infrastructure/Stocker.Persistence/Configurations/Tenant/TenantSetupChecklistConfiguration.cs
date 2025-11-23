@@ -91,7 +91,7 @@ public class TenantSetupChecklistConfiguration : IEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(c => c.ModulesConfigured)
             .IsRequired()
@@ -201,7 +201,7 @@ public class TenantSetupChecklistConfiguration : IEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Customization
         builder.Property(c => c.ThemeCustomized)
@@ -315,13 +315,13 @@ public class TenantSetupChecklistConfiguration : IEntityTypeConfiguration<Tenant
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(c => c.BlockingIssues)
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
                 v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Audit
         builder.Property(c => c.CreatedAt)

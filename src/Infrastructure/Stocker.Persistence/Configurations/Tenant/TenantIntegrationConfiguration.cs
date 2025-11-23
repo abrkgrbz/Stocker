@@ -25,7 +25,7 @@ public class TenantIntegrationConfiguration : IEntityTypeConfiguration<TenantInt
             
         builder.Property(i => i.Configuration)
             .IsRequired()
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(i => i.IsActive)
             .IsRequired()

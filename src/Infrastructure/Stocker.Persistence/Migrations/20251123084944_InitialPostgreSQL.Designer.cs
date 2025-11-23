@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Stocker.Persistence.Contexts;
 
 #nullable disable
 
-namespace Stocker.Persistence.Migrations.Master
+namespace Stocker.Persistence.Migrations
 {
     [DbContext(typeof(MasterDbContext))]
-    partial class MasterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251123084944_InitialPostgreSQL")]
+    partial class InitialPostgreSQL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -493,7 +496,7 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasDefaultValue(false);
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("DurationMs")
                         .HasColumnType("integer");
@@ -517,7 +520,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("Metadata")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RequestId")
                         .HasMaxLength(100)
@@ -536,7 +539,7 @@ namespace Stocker.Persistence.Migrations.Master
                         .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(500)
@@ -558,7 +561,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.HasIndex("RiskScore")
                         .HasDatabaseName("IX_SecurityAuditLogs_RiskScore")
-                        .HasFilter("[RiskScore] > 50");
+                        .HasFilter("\"RiskScore\" > 50");
 
                     b.HasIndex("TenantCode")
                         .HasDatabaseName("IX_SecurityAuditLogs_TenantCode");
@@ -866,7 +869,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("Metadata")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("Metadata");
 
                     b.Property<int>("RestoreCount")
@@ -903,7 +906,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("Tags")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("Tags");
 
                     b.Property<Guid>("TenantId")
@@ -1354,7 +1357,7 @@ namespace Stocker.Persistence.Migrations.Master
                     b.HasIndex("TenantId", "IsPrimary")
                         .IsUnique()
                         .HasDatabaseName("IX_TenantDomains_TenantId_Primary")
-                        .HasFilter("[IsPrimary] = 1");
+                        .HasFilter("\"IsPrimary\" = TRUE");
 
                     b.ToTable("TenantDomains", "master");
                 });
@@ -1412,7 +1415,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("Errors")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("Errors");
 
                     b.Property<int>("FailedLoginAttempts")
@@ -1511,7 +1514,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                     b.Property<string>("Warnings")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("Warnings");
 
                     b.HasKey("Id");
@@ -2624,7 +2627,7 @@ namespace Stocker.Persistence.Migrations.Master
 
                             b1.Property<string>("ModuleLimits")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)")
+                                .HasColumnType("text")
                                 .HasColumnName("ModuleLimits");
 
                             b1.HasKey("PackageId");

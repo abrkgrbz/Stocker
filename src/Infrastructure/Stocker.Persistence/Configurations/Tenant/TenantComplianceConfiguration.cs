@@ -49,15 +49,15 @@ public class TenantComplianceConfiguration : BaseEntityTypeConfiguration<TenantC
             
         // Requirements & Controls
         builder.Property(x => x.Requirements)
-            .HasColumnType("nvarchar(max)")
+            .HasColumnType("text")
             .IsRequired();
             
         builder.Property(x => x.ImplementedControls)
-            .HasColumnType("nvarchar(max)")
+            .HasColumnType("text")
             .IsRequired();
             
         builder.Property(x => x.PendingControls)
-            .HasColumnType("nvarchar(max)")
+            .HasColumnType("text")
             .IsRequired();
             
         builder.Property(x => x.TotalRequirements)
@@ -95,10 +95,10 @@ public class TenantComplianceConfiguration : BaseEntityTypeConfiguration<TenantC
             .HasMaxLength(500);
             
         builder.Property(x => x.LastAuditFindings)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.CorrectiveActions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.HasOpenFindings)
             .IsRequired();
@@ -120,7 +120,7 @@ public class TenantComplianceConfiguration : BaseEntityTypeConfiguration<TenantC
             .HasMaxLength(500);
             
         builder.Property(x => x.RelatedDocuments)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Notifications & Reminders
         builder.Property(x => x.NotifyOnExpiration)
@@ -142,7 +142,7 @@ public class TenantComplianceConfiguration : BaseEntityTypeConfiguration<TenantC
         
         // Geographic & Legal
         builder.Property(x => x.ApplicableRegions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(x => x.LegalJurisdiction)
             .HasMaxLength(200);

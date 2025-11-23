@@ -50,7 +50,7 @@ public class DepartmentConfiguration : BaseEntityTypeConfiguration<Department>
 
         builder.HasIndex(d => new { d.CompanyId, d.Code })
             .IsUnique()
-            .HasFilter("[Code] IS NOT NULL")
+            .HasFilter("\"Code\" IS NOT NULL")
             .HasDatabaseName("IX_Departments_CompanyId_Code");
 
         builder.HasIndex(d => d.IsActive)

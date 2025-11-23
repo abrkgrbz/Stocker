@@ -63,16 +63,16 @@ public class TenantActivityLogConfiguration : IEntityTypeConfiguration<TenantAct
             
         // Data tracking - JSON columns
         builder.Property(l => l.OldData)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(l => l.NewData)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(l => l.Changes)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(l => l.AdditionalData)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         // Result information
         builder.Property(l => l.IsSuccess)
@@ -83,7 +83,7 @@ public class TenantActivityLogConfiguration : IEntityTypeConfiguration<TenantAct
             .HasMaxLength(1000);
             
         builder.Property(l => l.ErrorDetails)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(l => l.HttpStatusCode);
         

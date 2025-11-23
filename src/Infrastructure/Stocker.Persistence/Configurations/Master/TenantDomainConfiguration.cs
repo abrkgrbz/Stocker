@@ -35,7 +35,7 @@ public class TenantDomainConfiguration : BaseEntityTypeConfiguration<TenantDomai
             .HasDatabaseName("IX_TenantDomains_DomainName");
 
         builder.HasIndex(td => new { td.TenantId, td.IsPrimary })
-            .HasFilter("[IsPrimary] = 1")
+            .HasFilter("\"IsPrimary\" = TRUE")
             .IsUnique()
             .HasDatabaseName("IX_TenantDomains_TenantId_Primary");
     }

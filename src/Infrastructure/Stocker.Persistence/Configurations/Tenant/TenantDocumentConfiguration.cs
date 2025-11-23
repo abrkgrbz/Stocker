@@ -139,10 +139,10 @@ public class TenantDocumentConfiguration : IEntityTypeConfiguration<TenantDocume
             .HasDefaultValue(false);
             
         builder.Property(d => d.AllowedRoles)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.AllowedUsers)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.RequiresNDA)
             .IsRequired()
@@ -174,10 +174,10 @@ public class TenantDocumentConfiguration : IEntityTypeConfiguration<TenantDocume
             
         // Tags & Metadata
         builder.Property(d => d.Tags)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.CustomMetadata)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.Keywords)
             .HasMaxLength(1000);
@@ -189,7 +189,7 @@ public class TenantDocumentConfiguration : IEntityTypeConfiguration<TenantDocume
         builder.Property(d => d.ParentDocumentId);
         
         builder.Property(d => d.RelatedDocumentIds)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.ReplacesDocumentId)
             .HasMaxLength(100);
@@ -204,7 +204,7 @@ public class TenantDocumentConfiguration : IEntityTypeConfiguration<TenantDocume
             .HasDefaultValue(false);
             
         builder.Property(d => d.NotificationRecipients)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
             
         builder.Property(d => d.LastNotificationSent);
         
