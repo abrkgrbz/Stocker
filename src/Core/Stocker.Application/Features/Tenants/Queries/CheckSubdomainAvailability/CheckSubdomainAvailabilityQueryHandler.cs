@@ -107,7 +107,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
 
         // Check if subdomain exists in TenantDomain table
         // Note: subdomain is already lowercased, and DomainName is stored in lowercase
-        var fullDomain = $"{subdomain}.stocker.app";
+        var fullDomain = $"{subdomain}.stoocker.app";
         var existingDomain = await _masterUnitOfWork.Repository<TenantDomain>()
             .AsQueryable()
             .FirstOrDefaultAsync(td => td.DomainName == subdomain ||
@@ -131,7 +131,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
             Available = true,
             Subdomain = subdomain,
             Reason = null,
-            SuggestedUrl = $"{subdomain}.stocker.app"
+            SuggestedUrl = $"{subdomain}.stoocker.app"
         });
     }
 }
