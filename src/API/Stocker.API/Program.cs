@@ -17,6 +17,14 @@ using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 
+// ========================================
+// NPGSQL CONFIGURATION
+// ========================================
+// Enable legacy timestamp behavior for Npgsql
+// This allows DateTime to work with both 'timestamp with time zone' and 'timestamp without time zone'
+// MUST be set at the very beginning, before any DbContext instances are created
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ========================================

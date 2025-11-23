@@ -15,7 +15,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
         // Primary columns
         builder.Property(a => a.Timestamp)
             .IsRequired()
-            .HasColumnType("timestamp without time zone");
+            .HasColumnType("timestamp with time zone");
 
         builder.Property(a => a.Event)
             .IsRequired()
@@ -66,7 +66,7 @@ public class SecurityAuditLogConfiguration : BaseEntityTypeConfiguration<Securit
 
         builder.Property(a => a.CreatedAt)
             .IsRequired()
-            .HasColumnType("timestamp without time zone");
+            .HasColumnType("timestamp with time zone");
 
         // Indexes for performance
         builder.HasIndex(a => a.Timestamp)
