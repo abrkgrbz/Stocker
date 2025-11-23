@@ -72,8 +72,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
 
             // Configure to use the same table without additional columns
             // WithOwner prevents creating a separate table and foreign key column
-            email.ToTable("MasterUsers", "master");
-            email.WithOwner();
         });
 
         builder.OwnsOne(u => u.Password, password =>
@@ -89,8 +87,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .HasColumnName("PasswordSalt");
 
             // Configure to use the same table without additional columns
-            password.ToTable("MasterUsers", "master");
-            password.WithOwner();
         });
 
         builder.OwnsOne(u => u.PhoneNumber, phone =>
@@ -100,8 +96,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .HasColumnName("PhoneNumber");
 
             // Configure to use the same table without additional columns
-            phone.ToTable("MasterUsers", "master");
-            phone.WithOwner();
         });
 
         // EmailVerificationToken as owned type
@@ -128,8 +122,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .HasColumnName("EmailVerificationTokenUsedAt");
 
             // Configure to use the same table without additional columns
-            token.ToTable("MasterUsers", "master");
-            token.WithOwner();
         });
 
         // RefreshTokens as owned collection

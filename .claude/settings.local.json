@@ -14,7 +14,9 @@
       "Bash(dotnet ef database update --context MasterDbContext --project . --startup-project ../../API/Stocker.API --connection \"Host=95.217.219.4;Port=5432;Database=stocker_master;Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable\")",
       "Bash(dotnet ef database update:*)",
       "Bash(git restore:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(az keyvault secret set:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []
