@@ -216,7 +216,7 @@ export default function RegisterPage() {
         // Show email verification success message
         await showAlert.success(
           'Kayıt Başarılı! 📧',
-          response.data.message || 'Lütfen email adresinizi kontrol edin ve doğrulama kodunu girin.'
+          response.message || 'Lütfen email adresinizi kontrol edin ve doğrulama kodunu girin.'
         )
 
         // Registration successful - redirect to email verification
@@ -228,7 +228,7 @@ export default function RegisterPage() {
         }, 1000)
       } else {
         // Registration failed - handle specific errors
-        const errorMessage = response.error?.message || 'Kayıt işlemi başarısız oldu'
+        const errorMessage = response.message || 'Kayıt işlemi başarısız oldu'
 
         // Check if it's an email duplicate error
         if (errorMessage.includes('e-posta') || errorMessage.toLowerCase().includes('email')) {
