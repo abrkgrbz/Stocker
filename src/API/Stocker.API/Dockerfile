@@ -2,6 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Build arguments for PostgreSQL connection
+ARG POSTGRES_HOST
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_DB
+ARG POSTGRES_PORT=5432
+
 # Copy solution and project files from repository root
 # Context is repository root, so paths are relative to root
 COPY Stocker.sln ./
@@ -51,6 +58,13 @@ RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s .
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
+
+# Build arguments for PostgreSQL connection (needed at runtime)
+ARG POSTGRES_HOST
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_DB
+ARG POSTGRES_PORT=5432
 
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
