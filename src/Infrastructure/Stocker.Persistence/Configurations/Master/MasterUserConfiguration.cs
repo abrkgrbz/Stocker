@@ -69,9 +69,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
             email.HasIndex(e => e.Value)
                 .IsUnique()
                 .HasDatabaseName("IX_MasterUsers_Email");
-
-            // Configure to use the same table without additional columns
-            // WithOwner prevents creating a separate table and foreign key column
         });
 
         builder.OwnsOne(u => u.Password, password =>
@@ -85,8 +82,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .IsRequired()
                 .HasMaxLength(256)
                 .HasColumnName("PasswordSalt");
-
-            // Configure to use the same table without additional columns
         });
 
         builder.OwnsOne(u => u.PhoneNumber, phone =>
@@ -94,8 +89,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
             phone.Property(p => p.Value)
                 .HasMaxLength(20)
                 .HasColumnName("PhoneNumber");
-
-            // Configure to use the same table without additional columns
         });
 
         // EmailVerificationToken as owned type
@@ -120,8 +113,6 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
 
             token.Property(t => t.UsedAt)
                 .HasColumnName("EmailVerificationTokenUsedAt");
-
-            // Configure to use the same table without additional columns
         });
 
         // RefreshTokens as owned collection
