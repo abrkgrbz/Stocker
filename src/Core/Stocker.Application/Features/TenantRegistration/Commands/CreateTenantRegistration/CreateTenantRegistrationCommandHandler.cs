@@ -53,8 +53,9 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                 return Result<TenantRegistrationDto>.Failure(Error.Validation("Email.Exists", "Bu e-posta adresi zaten kayıtlı."));
 
             // Check if email already exists in master users
+            // Note: For owned entities, compare the Value property directly
             var existingUser = await _context.MasterUsers
-                .AnyAsync(x => x.Email == email, cancellationToken);
+                .AnyAsync(x => x.Email.Value == email.Value, cancellationToken);
 
             if (existingUser)
                 return Result<TenantRegistrationDto>.Failure(Error.Validation("Email.Exists", "Bu e-posta adresi zaten kullanılıyor."));
