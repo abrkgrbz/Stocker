@@ -1,13 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ssh:*)",
-      "Bash(del 20251020231415_InitialCRM.*)",
-      "Bash(del 20251029195938_AddCustomerFinancialFields.*)",
-      "Bash(del 20251106071214_ChangeDocumentEntityIdToString.*)",
-      "Bash(del 20251111171755_AddCompetitorNameToDeal.*)",
-      "Bash(del 20251114182941_AddNotificationAndReminder.*)",
-      "Bash(del 20251117083206_AddReminderRecurrenceAndAssignmentFields.*)"
+      "Bash(az keyvault secret show:*)"
     ],
     "deny": [],
     "ask": []

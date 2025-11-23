@@ -32,18 +32,21 @@ COPY src/ ./src/
 RUN dotnet tool install --global dotnet-ef --version 9.0.8
 ENV PATH="$PATH:/root/.dotnet/tools"
 
-# Build and publish
+# Build the solution first
 WORKDIR /src
-# Simply publish without warning suppression to avoid syntax issues
+RUN dotnet build ./src/API/Stocker.API/Stocker.API.csproj -c Release --no-restore
+
+# Publish
 RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
     -c Release \
     -o /app/publish \
-    --no-restore
+    --no-restore \
+    --no-build
 
-# Generate migration bundles (self-contained migration executables)
+# Generate migration bundles (self-contained migration executables for PostgreSQL)
 WORKDIR /src
-RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -o /app/efbundle-master || echo "Master migration bundle creation skipped"
-RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c TenantDbContext --self-contained -o /app/efbundle-tenant || echo "Tenant migration bundle creation skipped"
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c MasterDbContext --self-contained -r linux-x64 -o /app/efbundle-master || echo "Master migration bundle creation skipped"
+RUN dotnet ef migrations bundle -p ./src/Infrastructure/Stocker.Persistence -s ./src/API/Stocker.API -c TenantDbContext --self-contained -r linux-x64 -o /app/efbundle-tenant || echo "Tenant migration bundle creation skipped"
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
@@ -80,33 +83,34 @@ ENV ASPNETCORE_URLS=http://+:5000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5000/health || exit 1
 
-# Create startup script that runs migrations then starts the app
+# Create startup script that runs migrations then starts the app (PostgreSQL)
 RUN echo '#!/bin/bash\n\
-echo "=== Stocker API Startup Script ==="\n\
+echo "=== Stocker API Startup Script (PostgreSQL) ==="\n\
 echo "Setting up environment variables for Coolify..."\n\
 echo ""\n\
 echo "Environment Check:"\n\
-if [ -n "$SA_PASSWORD" ]; then\n\
-    echo "  SA_PASSWORD: Set"\n\
+if [ -n "$POSTGRES_PASSWORD" ]; then\n\
+    echo "  POSTGRES_PASSWORD: Set"\n\
 else\n\
-    echo "  SA_PASSWORD: Not set"\n\
+    echo "  POSTGRES_PASSWORD: Not set"\n\
 fi\n\
-echo "  DB_SERVER: ${DB_SERVER:-Not set}"\n\
+echo "  POSTGRES_HOST: ${POSTGRES_HOST:-Not set}"\n\
+echo "  POSTGRES_USER: ${POSTGRES_USER:-Not set}"\n\
 if [ -n "$AZURE_KEY_VAULT_URI" ]; then\n\
     echo "  AZURE_KEY_VAULT_URI: $AZURE_KEY_VAULT_URI"\n\
 else\n\
     echo "  AZURE_KEY_VAULT_URI: Not set (using env vars)"\n\
 fi\n\
 echo ""\n\
-# Export connection strings if environment variables are present\n\
-if [ -n "$SA_PASSWORD" ] && [ -n "$DB_SERVER" ]; then\n\
-    export ConnectionStrings__MasterConnection="Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__TenantConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__DefaultConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__HangfireConnection="Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    echo "Connection strings constructed from SA_PASSWORD and DB_SERVER"\n\
+# Export connection strings if environment variables are present (PostgreSQL format)\n\
+if [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_HOST" ]; then\n\
+    export ConnectionStrings__MasterConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    export ConnectionStrings__TenantConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    export ConnectionStrings__DefaultConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    export ConnectionStrings__HangfireConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=stocker_hangfire;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
+    echo "Connection strings constructed from POSTGRES_PASSWORD and POSTGRES_HOST"\n\
 else\n\
-    echo "WARNING: SA_PASSWORD or DB_SERVER not set - will use Azure Key Vault or appsettings"\n\
+    echo "WARNING: POSTGRES_PASSWORD or POSTGRES_HOST not set - will use Azure Key Vault or appsettings"\n\
 fi\n\
 echo "Running Master database migrations..."\n\
 if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
@@ -114,7 +118,7 @@ if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
     ./efbundle-master --connection "$ConnectionStrings__MasterConnection"\n\
 else\n\
     echo "Building Master connection string from environment variables"\n\
-    MASTER_CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    MASTER_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_master;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
     echo "Using constructed connection string for Master migrations"\n\
     ./efbundle-master --connection "$MASTER_CONNECTION_STRING"\n\
 fi\n\
@@ -129,7 +133,7 @@ if [ -n "$ConnectionStrings__TenantConnection" ]; then\n\
     ./efbundle-tenant --connection "$ConnectionStrings__TenantConnection"\n\
 else\n\
     echo "Building Tenant connection string from environment variables"\n\
-    TENANT_CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    TENANT_CONNECTION_STRING="Host=${POSTGRES_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=stocker_tenant;Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-changeme};SslMode=Prefer;TrustServerCertificate=true;IncludeErrorDetail=true"\n\
     echo "Using constructed connection string for Tenant migrations"\n\
     ./efbundle-tenant --connection "$TENANT_CONNECTION_STRING"\n\
 fi\n\
