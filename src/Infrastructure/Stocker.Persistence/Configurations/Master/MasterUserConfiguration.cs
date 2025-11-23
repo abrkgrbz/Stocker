@@ -58,7 +58,7 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
         builder.Property(u => u.PreferredLanguage)
             .HasMaxLength(10);
 
-        // Value Objects
+        // Value Objects - PostgreSQL requires explicit navigation configuration
         builder.OwnsOne(u => u.Email, email =>
         {
             email.Property(e => e.Value)
@@ -70,6 +70,9 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .IsUnique()
                 .HasDatabaseName("IX_MasterUsers_Email");
         });
+
+        // Configure navigation to prevent backing field errors
+        builder.Navigation(u => u.Email).IsRequired();
 
         builder.OwnsOne(u => u.Password, password =>
         {
@@ -83,6 +86,8 @@ public class MasterUserConfiguration : BaseEntityTypeConfiguration<MasterUser>
                 .HasMaxLength(256)
                 .HasColumnName("PasswordSalt");
         });
+
+        builder.Navigation(u => u.Password).IsRequired();
 
         builder.OwnsOne(u => u.PhoneNumber, phone =>
         {
