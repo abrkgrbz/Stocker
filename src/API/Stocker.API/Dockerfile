@@ -39,16 +39,12 @@ COPY src/ ./src/
 RUN dotnet tool install --global dotnet-ef --version 9.0.8
 ENV PATH="$PATH:/root/.dotnet/tools"
 
-# Build the solution first
+# Build and publish - removed --no-build to ensure all assemblies are included
 WORKDIR /src
-RUN dotnet build ./src/API/Stocker.API/Stocker.API.csproj -c Release --no-restore
-
-# Publish
 RUN dotnet publish ./src/API/Stocker.API/Stocker.API.csproj \
     -c Release \
     -o /app/publish \
-    --no-restore \
-    --no-build
+    --no-restore
 
 # Generate migration bundles (self-contained migration executables for PostgreSQL)
 WORKDIR /src
