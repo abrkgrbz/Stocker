@@ -89,9 +89,10 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
         }
 
         // Check if subdomain already exists in Tenant.Code
+        // Note: subdomain is already lowercased, and Tenant.Code is stored in lowercase
         var existingTenant = await _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>()
             .AsQueryable()
-            .FirstOrDefaultAsync(t => t.Code.ToLower() == subdomain, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Code == subdomain, cancellationToken);
 
         if (existingTenant != null)
         {
@@ -105,10 +106,12 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
         }
 
         // Check if subdomain exists in TenantDomain table
+        // Note: subdomain is already lowercased, and DomainName is stored in lowercase
+        var fullDomain = $"{subdomain}.stocker.app";
         var existingDomain = await _masterUnitOfWork.Repository<TenantDomain>()
             .AsQueryable()
-            .FirstOrDefaultAsync(td => td.DomainName.ToLower() == subdomain || 
-                                      td.DomainName.ToLower() == $"{subdomain}.stoocker.app", 
+            .FirstOrDefaultAsync(td => td.DomainName == subdomain ||
+                                      td.DomainName == fullDomain,
                                       cancellationToken);
 
         if (existingDomain != null)
@@ -128,7 +131,7 @@ public sealed class CheckSubdomainAvailabilityQueryHandler : IRequestHandler<Che
             Available = true,
             Subdomain = subdomain,
             Reason = null,
-            SuggestedUrl = $"{subdomain}.stoocker.app"
+            SuggestedUrl = $"{subdomain}.stocker.app"
         });
     }
 }
