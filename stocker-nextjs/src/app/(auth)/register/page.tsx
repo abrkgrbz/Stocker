@@ -9,6 +9,7 @@ import Logo from '@/components/Logo'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { showAlert } from '@/lib/sweetalert-config'
 import { cookieStorage } from '@/lib/auth/cookie-storage'
+import { authService } from '@/lib/api/services/auth.service'
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
 
@@ -200,65 +201,34 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          teamName,
-          firstName,
-          lastName,
-        }),
+      // Use new minimal registration endpoint
+      const response = await authService.register({
+        email,
+        password,
+        teamName,
+        firstName,
+        lastName,
+        acceptTerms: true,
+        acceptPrivacyPolicy: true
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        // Save tokens to cookies for authenticated setup
-        console.log('📦 Register response data:', {
-          hasToken: !!data.token,
-          hasRefreshToken: !!data.refreshToken,
-          subdomain: data.subdomain,
-          tokenLength: data.token?.length
-        })
-
-        if (data.token) {
-          cookieStorage.setItem('access_token', data.token)
-          cookieStorage.setItem('refresh_token', data.refreshToken)
-          cookieStorage.setItem('tenant-code', data.subdomain || teamName.toLowerCase())
-
-          // Verify cookies were set
-          console.log('✅ Cookies set:', {
-            access_token: !!cookieStorage.getItem('access_token'),
-            refresh_token: !!cookieStorage.getItem('refresh_token'),
-            tenant_code: !!cookieStorage.getItem('tenant-code')
-          })
-          console.log('🍪 All cookies:', document.cookie)
-        } else {
-          console.error('❌ No token in response!', data)
-        }
-
+      if (response.success && response.data) {
         // Show email verification success message
         await showAlert.success(
           'Kayıt Başarılı! 📧',
-          data.message || 'Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın.'
+          response.data.message || 'Lütfen email adresinizi kontrol edin ve doğrulama kodunu girin.'
         )
 
         // Registration successful - redirect to email verification
         setCurrentStep('complete')
 
-        // Redirect to the URL specified by backend (email verification page)
-        const redirectUrl = data.redirectUrl || `/register/verify-email?email=${encodeURIComponent(email)}`
+        // Redirect to email verification page
         setTimeout(() => {
-          window.location.href = redirectUrl
+          window.location.href = `/register/verify-email?email=${encodeURIComponent(email)}`
         }, 1000)
       } else {
         // Registration failed - handle specific errors
-        const errorMessage = data.message || 'Kayıt işlemi başarısız oldu'
+        const errorMessage = response.error?.message || 'Kayıt işlemi başarısız oldu'
 
         // Check if it's an email duplicate error
         if (errorMessage.includes('e-posta') || errorMessage.toLowerCase().includes('email')) {
