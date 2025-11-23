@@ -71,21 +71,21 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Create startup script that runs migrations then starts the app
 RUN echo '#!/bin/bash\n\
 echo "Setting up environment variables for Coolify..."\n\
-# Export connection strings if environment variables are present\n\
-if [ -n "$SA_PASSWORD" ] && [ -n "$DB_SERVER" ]; then\n\
-    export ConnectionStrings__MasterConnection="Server=${DB_SERVER};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__TenantConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__DefaultConnection="Server=${DB_SERVER};Database=StockerTenantDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    export ConnectionStrings__HangfireConnection="Server=${DB_SERVER};Database=StockerHangfireDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
-    echo "Connection strings set from environment variables"\n\
+# Export PostgreSQL connection strings if environment variables are present\n\
+if [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_HOST" ]; then\n\
+    export ConnectionStrings__MasterConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-stocker_master};Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__TenantConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-stocker_master};Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__DefaultConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-stocker_master};Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    export ConnectionStrings__HangfireConnection="Host=${POSTGRES_HOST};Port=${POSTGRES_PORT:-5432};Database=${HANGFIRE_DB_NAME:-stocker_hangfire};Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD};SslMode=Disable"\n\
+    echo "PostgreSQL connection strings set from environment variables"\n\
 fi\n\
 echo "Running database migrations..."\n\
 if [ -n "$ConnectionStrings__MasterConnection" ]; then\n\
     echo "Using MasterConnection for migrations"\n\
     ./efbundle --connection "$ConnectionStrings__MasterConnection"\n\
 else\n\
-    echo "Building connection string from environment variables"\n\
-    CONNECTION_STRING="Server=${DB_SERVER:-mssql};Database=StockerMasterDb;User Id=sa;Password=${SA_PASSWORD:-YourStrongPassword123!};TrustServerCertificate=true;MultipleActiveResultSets=true"\n\
+    echo "Building PostgreSQL connection string from environment variables"\n\
+    CONNECTION_STRING="Host=${POSTGRES_HOST:-95.217.219.4};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-stocker_master};Username=${POSTGRES_USER:-stocker_admin};Password=${POSTGRES_PASSWORD:-KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK};SslMode=Disable"\n\
     echo "Using constructed connection string for migrations"\n\
     ./efbundle --connection "$CONNECTION_STRING"\n\
 fi\n\
