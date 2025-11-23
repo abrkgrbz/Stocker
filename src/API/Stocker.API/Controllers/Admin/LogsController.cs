@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Persistence.Contexts;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
+using Npgsql;
 
 namespace Stocker.API.Controllers.Admin;
 
@@ -37,29 +38,29 @@ public class LogsController : ControllerBase
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null)
     {
-        var query = "SELECT TOP (@PageSize) * FROM Logs WHERE 1=1";
+        var query = "SELECT * FROM \"Logs\" WHERE 1=1";
         var parameters = new List<object>();
 
         if (!string.IsNullOrEmpty(level))
         {
-            query += " AND Level = @Level";
-            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@Level", level));
+            query += " AND \"Level\" = @Level";
+            parameters.Add(new NpgsqlParameter("@Level", level));
         }
 
         if (from.HasValue)
         {
-            query += " AND TimeStamp >= @From";
-            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@From", from.Value));
+            query += " AND \"TimeStamp\" >= @From";
+            parameters.Add(new NpgsqlParameter("@From", from.Value));
         }
 
         if (to.HasValue)
         {
-            query += " AND TimeStamp <= @To";
-            parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@To", to.Value));
+            query += " AND \"TimeStamp\" <= @To";
+            parameters.Add(new NpgsqlParameter("@To", to.Value));
         }
 
-        query += " ORDER BY TimeStamp DESC";
-        parameters.Insert(0, new Microsoft.Data.SqlClient.SqlParameter("@PageSize", pageSize));
+        query += " ORDER BY \"TimeStamp\" DESC LIMIT @PageSize";
+        parameters.Add(new NpgsqlParameter("@PageSize", pageSize));
 
         var logs = await _context.Database
             .SqlQueryRaw<LogEntry>(query, parameters.ToArray())
@@ -211,10 +212,10 @@ public class LogsController : ControllerBase
     {
         // Clear database logs
         var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
-        var deleteQuery = "DELETE FROM Logs WHERE TimeStamp < @CutoffDate";
+        var deleteQuery = "DELETE FROM \"Logs\" WHERE \"TimeStamp\" < @CutoffDate";
         var deletedRows = await _context.Database.ExecuteSqlRawAsync(
-            deleteQuery, 
-            new Microsoft.Data.SqlClient.SqlParameter("@CutoffDate", cutoffDate));
+            deleteQuery,
+            new NpgsqlParameter("@CutoffDate", cutoffDate));
 
         // Clear old log files
         var deletedFiles = 0;

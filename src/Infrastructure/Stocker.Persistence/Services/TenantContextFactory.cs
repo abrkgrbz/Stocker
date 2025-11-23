@@ -34,7 +34,7 @@ public class TenantContextFactory : ITenantContextFactory
         // Create a new service scope for the tenant context
         var scope = _serviceProvider.CreateScope();
         var dbContextOptions = new DbContextOptionsBuilder<TenantDbContext>()
-            .UseSqlServer(tenantInfo.ConnectionString)
+            .UseNpgsql(tenantInfo.ConnectionString)
             .Options;
 
         var context = new TenantDbContext(dbContextOptions, tenantId);

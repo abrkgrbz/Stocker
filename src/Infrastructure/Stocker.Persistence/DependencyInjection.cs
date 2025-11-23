@@ -19,7 +19,7 @@ public static class DependencyInjection
     {
         // Add MasterDbContext
         services.AddDbContext<MasterDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(MasterDbContext).Assembly.FullName)));
 

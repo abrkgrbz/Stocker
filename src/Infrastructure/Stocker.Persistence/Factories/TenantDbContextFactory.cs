@@ -30,12 +30,12 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         var connectionString = await GetTenantConnectionStringAsync(tenantId);
         
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-        optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
+        optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
         {
-            sqlOptions.EnableRetryOnFailure(
+            npgsqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
+                errorCodesToAdd: null);
         });
         
         if (_configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))

@@ -41,14 +41,14 @@ public class TenantDbContextDesignFactory : IDesignTimeDbContextFactory<TenantDb
         
         // Get connection string from configuration
         var connectionString = configuration.GetConnectionString("TenantConnection");
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             // Fallback for local development
-            connectionString = "Server=localhost;Database=StockerTenantDb_Design;User Id=sa;Password=YourStrongPassword123!;MultipleActiveResultSets=true;TrustServerCertificate=True";
+            connectionString = "Host=localhost;Port=5432;Database=stocker_tenant_design;Username=postgres;Password=postgres";
         }
-        
-        optionsBuilder.UseSqlServer(connectionString);
+
+        optionsBuilder.UseNpgsql(connectionString);
 
         // Create a design-time tenant service
         var tenantService = new DesignTimeTenantService(connectionString);

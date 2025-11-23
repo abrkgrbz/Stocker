@@ -21,14 +21,14 @@ public class MasterDbContextFactory : IDesignTimeDbContextFactory<MasterDbContex
         
         // Get connection string from configuration
         var connectionString = configuration.GetConnectionString("MasterConnection");
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             // Fallback for local development
-            connectionString = "Server=localhost;Database=StockerMasterDb;User Id=sa;Password=YourStrongPassword123!;MultipleActiveResultSets=true;TrustServerCertificate=True";
+            connectionString = "Host=localhost;Port=5432;Database=stocker_master;Username=postgres;Password=postgres";
         }
-        
-        optionsBuilder.UseSqlServer(connectionString);
+
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new MasterDbContext(optionsBuilder.Options);
     }

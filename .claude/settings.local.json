@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(az keyvault secret show:*)"
+      "Bash(az keyvault secret show:*)",
+      "Bash(dotnet ef migrations:*)"
     ],
     "deny": [],
     "ask": []
