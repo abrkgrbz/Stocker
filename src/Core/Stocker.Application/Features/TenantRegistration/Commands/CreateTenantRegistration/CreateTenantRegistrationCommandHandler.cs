@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Domain.Master.Entities;
-using Stocker.Domain.Master.Enums;
-using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -15,129 +13,91 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
 {
     private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantRegistrationCommandHandler> _logger;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IBackgroundJobService _backgroundJobService;
-    private readonly ICaptchaService _captchaService;
 
     public CreateTenantRegistrationCommandHandler(
         IMasterDbContext context,
         ILogger<CreateTenantRegistrationCommandHandler> logger,
-        ICurrentUserService currentUserService,
-        IBackgroundJobService backgroundJobService,
-        ICaptchaService captchaService)
+        IBackgroundJobService backgroundJobService)
     {
-        _context = context;
+    _context = context;
         _logger = logger;
-        _currentUserService = currentUserService;
         _backgroundJobService = backgroundJobService;
-        _captchaService = captchaService;
     }
 
     public async Task<Result<TenantRegistrationDto>> Handle(CreateTenantRegistrationCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            // Verify captcha if provided
-            if (!string.IsNullOrEmpty(request.CaptchaToken))
-            {
-                var captchaValid = await _captchaService.VerifyAsync(request.CaptchaToken, null, cancellationToken);
-                if (!captchaValid)
-                {
-                    return Result<TenantRegistrationDto>.Failure(Error.Validation("Captcha.Invalid", "Güvenlik doğrulaması başarısız."));
-                }
-            }
-            
-            // Check if company code already exists
-            var existingCode = await _context.TenantRegistrations
-                .AnyAsync(x => x.CompanyCode == request.CompanyCode, cancellationToken);
-                
-            if (existingCode)
-                return Result<TenantRegistrationDto>.Failure(Error.Validation("CompanyCode.Exists", "Bu şirket kodu zaten kullanılıyor."));
+            // Normalize team name to lowercase subdomain
+            var subdomain = request.TeamName.ToLowerInvariant().Trim();
 
-            // Check if email already exists
-            var contactEmailResult = Email.Create(request.ContactEmail);
-            if (contactEmailResult.IsFailure)
-                return Result<TenantRegistrationDto>.Failure(contactEmailResult.Error);
-                
-            var adminEmailResult = Email.Create(request.AdminEmail);
-            if (adminEmailResult.IsFailure)
-                return Result<TenantRegistrationDto>.Failure(adminEmailResult.Error);
-                
-            var contactEmail = contactEmailResult.Value;
-            var adminEmail = adminEmailResult.Value;
-            
+            // Check if company code (subdomain) already exists
+            var existingCode = await _context.TenantRegistrations
+                .AnyAsync(x => x.CompanyCode == subdomain, cancellationToken);
+
+            if (existingCode)
+                return Result<TenantRegistrationDto>.Failure(Error.Validation("TeamName.Exists", "Bu takım adı zaten kullanılıyor."));
+
+            // Check if email already exists in registrations
+            var emailResult = Email.Create(request.Email);
+            if (emailResult.IsFailure)
+                return Result<TenantRegistrationDto>.Failure(emailResult.Error);
+
+            var email = emailResult.Value;
+
             var existingEmail = await _context.TenantRegistrations
-                .AnyAsync(x => x.ContactEmail == contactEmail || x.AdminEmail == adminEmail, cancellationToken);
-                
+                .AnyAsync(x => x.ContactEmail == email || x.AdminEmail == email, cancellationToken);
+
             if (existingEmail)
                 return Result<TenantRegistrationDto>.Failure(Error.Validation("Email.Exists", "Bu e-posta adresi zaten kayıtlı."));
 
-            // Create value objects
-            var contactPhoneResult = PhoneNumber.Create(request.ContactPhone);
-            if (contactPhoneResult.IsFailure)
-                return Result<TenantRegistrationDto>.Failure(contactPhoneResult.Error);
-                
-            var contactPhone = contactPhoneResult.Value;
+            // Check if email already exists in master users
+            var existingUser = await _context.MasterUsers
+                .AnyAsync(x => x.Email == email, cancellationToken);
+
+            if (existingUser)
+                return Result<TenantRegistrationDto>.Failure(Error.Validation("Email.Exists", "Bu e-posta adresi zaten kullanılıyor."));
+
+            // Create dummy phone (will be updated later in setup wizard)
+            var dummyPhone = PhoneNumber.Create("+905551234567").Value;
+
+            // Use team name + user's name as company name initially
+            var companyName = $"{request.FirstName} {request.LastName}'s Team";
 
             // Create TenantRegistration entity
             var registration = Domain.Master.Entities.TenantRegistration.Create(
-                companyName: request.CompanyName,
-                companyCode: request.CompanyCode,
-                contactPersonName: request.AdminFirstName,
-                contactPersonSurname: request.AdminLastName,
-                contactEmail: contactEmail,
-                contactPhone: contactPhone,
-                addressLine1: request.AddressLine1 ?? string.Empty,
-                city: request.City ?? string.Empty,
-                postalCode: request.PostalCode ?? string.Empty,
-                country: request.Country ?? "Türkiye",
-                adminEmail: adminEmail,
-                adminUsername: request.AdminUsername,
-                adminFirstName: request.AdminFirstName,
-                adminLastName: request.AdminLastName);
+                companyName: companyName,
+                companyCode: subdomain,
+                contactPersonName: request.FirstName,
+                contactPersonSurname: request.LastName,
+                contactEmail: email,
+                contactPhone: dummyPhone,
+                addressLine1: "To be provided", // Will be set in setup wizard
+                city: "To be provided",
+                postalCode: "00000",
+                country: "Türkiye",
+                adminEmail: email,
+                adminUsername: subdomain, // Use subdomain as username
+                adminFirstName: request.FirstName,
+                adminLastName: request.LastName);
 
-            // Set tax info
-            if (!string.IsNullOrEmpty(request.TaxNumber))
-            {
-                registration.SetTaxInfo(request.TaxNumber, request.TaxOffice ?? string.Empty);
-            }
-            
-            // Set company details
-            registration.SetCompanyDetails(
-                request.Website,
-                ParseEmployeeCount(request.EmployeeCountRange) ?? 0,
-                request.IndustryType);
-                
-            // Set admin info
-            registration.SetAdminInfo(request.AdminPhone, request.AdminTitle);
+            // Set admin password (hash it)
+            var hashedPassword = Domain.Master.ValueObjects.HashedPassword.Create(request.Password);
+            registration.SetAdminPassword(hashedPassword.Value);
 
-            // Set admin password (hash it using HashedPassword value object)
-            if (!string.IsNullOrEmpty(request.AdminPassword))
+            // Set billing info (default to Trial)
+            registration.SetBillingInfo("Trial", "Monthly");
+
+            // Accept terms if provided
+            if (request.AcceptTerms)
             {
-                var hashedPassword = Domain.Master.ValueObjects.HashedPassword.Create(request.AdminPassword);
-                registration.SetAdminPassword(hashedPassword.Value);
-            }
-            else
-            {
-                // If no password provided, log warning - this shouldn't happen with proper validation
-                _logger.LogWarning("Admin password not provided for registration: {CompanyCode}", request.CompanyCode);
+                registration.AcceptTerms("1.0");
             }
 
-            // Set billing info
-            registration.SetBillingInfo(
-                request.PackageId.HasValue ? "Professional" : "Trial",
-                request.BillingCycle);
-
-            // Select package if provided
-            if (request.PackageId.HasValue)
+            if (request.AcceptPrivacyPolicy)
             {
-                var package = await _context.Packages
-                    .FirstOrDefaultAsync(x => x.Id == request.PackageId.Value, cancellationToken);
-                    
-                if (package != null)
-                {
-                    registration.SelectPackage(request.PackageId.Value, package.Name, request.BillingCycle);
-                }
+                registration.AcceptPrivacyPolicy();
             }
 
             // Add to context
@@ -145,9 +105,6 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
 
             // Save changes
             await _context.SaveChangesAsync(cancellationToken);
-            
-            // Note: TenantInitialData will be created after tenant approval and database creation
-            // in the specific tenant's database context
 
             // Map to DTO
             var dto = new TenantRegistrationDto
@@ -167,14 +124,15 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                 BillingCycle = registration.BillingCycle
             };
 
-            _logger.LogInformation("Tenant registration created successfully. Code: {RegistrationCode}", registration.RegistrationCode);
+            _logger.LogInformation("Minimal tenant registration created successfully. Code: {RegistrationCode}, Email: {Email}",
+                registration.RegistrationCode, registration.ContactEmail.Value);
 
             // Queue verification email as background job
             try
             {
-                _logger.LogInformation("Attempting to queue verification email for {Email} with token {Token}",
+                _logger.LogInformation("Queueing verification email for {Email} with code {Code}",
                     registration.ContactEmail.Value,
-                    registration.EmailVerificationToken ?? "NULL");
+                    registration.EmailVerificationCode ?? "NULL");
 
                 var jobId = _backgroundJobService.Enqueue<IEmailBackgroundJob>(job =>
                     job.SendTenantVerificationEmailAsync(
@@ -183,7 +141,7 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
                         registration.EmailVerificationToken ?? "",
                         $"{registration.ContactPersonName} {registration.ContactPersonSurname}"));
 
-                _logger.LogInformation("Verification email queued successfully with JobId: {JobId} for {Email}", jobId, registration.ContactEmail.Value);
+                _logger.LogInformation("Verification email queued successfully with JobId: {JobId}", jobId);
             }
             catch (Exception emailEx)
             {
@@ -195,29 +153,8 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating tenant registration");
+            _logger.LogError(ex, "Error creating minimal tenant registration");
             return Result<TenantRegistrationDto>.Failure(Error.Failure("Registration.CreateFailed", $"Kayıt oluşturulurken hata oluştu: {ex.Message}"));
         }
-    }
-
-    private string GenerateRegistrationCode()
-    {
-        return $"REG-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
-    }
-
-    private int? ParseEmployeeCount(string? range)
-    {
-        if (string.IsNullOrEmpty(range))
-            return null;
-
-        return range switch
-        {
-            "1-10" => 5,
-            "11-50" => 30,
-            "51-100" => 75,
-            "101-500" => 300,
-            "500+" => 1000,
-            _ => null
-        };
     }
 }

@@ -75,9 +75,9 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 return Result<RegisterResponse>.Failure(Error.Conflict("Register.TeamNameExists", "Bu takım adı zaten kullanılıyor"));
             }
                 
-            // Use a placeholder SQLite connection string during registration
-            // The actual connection string will be set during tenant provisioning
-            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create($"Data Source=StockerTenant_{subdomain}.db");
+            // Use PostgreSQL connection string for tenant database
+            // This will be used during tenant provisioning
+            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create($"Host=postgres;Port=5432;Database=tenant_{subdomain};Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable");
             var emailResult = Domain.Common.ValueObjects.Email.Create(request.Email);
             
             if (connectionStringResult.IsFailure || emailResult.IsFailure)
@@ -91,7 +91,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             var tenant = Domain.Master.Entities.Tenant.Create(
                 name: companyName,
                 code: subdomain,
-                databaseName: $"StockerTenant_{subdomain}",
+                databaseName: $"tenant_{subdomain}",
                 connectionString: connectionStringResult.Value,
                 contactEmail: emailResult.Value,
                 contactPhone: null,
