@@ -27,8 +27,9 @@ public sealed class ConnectionString : ValueObject
 
         // Basic validation - check for required components
         var hasServerInfo = value.Contains("Server=", StringComparison.OrdinalIgnoreCase) ||
-                           value.Contains("Data Source=", StringComparison.OrdinalIgnoreCase);
-        
+                           value.Contains("Data Source=", StringComparison.OrdinalIgnoreCase) ||
+                           value.Contains("Host=", StringComparison.OrdinalIgnoreCase); // PostgreSQL format
+
         if (!hasServerInfo)
         {
             return Result<ConnectionString>.Failure(new Error("ConnectionString.NoServer", "Connection string must contain server information.", ErrorType.Validation));
