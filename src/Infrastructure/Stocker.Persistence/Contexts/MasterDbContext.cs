@@ -88,25 +88,18 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
         }
     }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+
+        // Enable legacy timestamp behavior for Npgsql
+        // This allows DateTime to work with both 'timestamp with time zone' and 'timestamp without time zone'
+        // Without this, Npgsql enforces strict Kind checking which causes errors with mixed column types
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+    }
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-
-        // Configure DateTime to use timestamp without time zone and handle UTC conversion
-        configurationBuilder.Properties<DateTime>()
-            .HaveConversion<DateTimeToTimestampConverter>();
-    }
-
-    /// <summary>
-    /// Converts UTC DateTime to timestamp without time zone for PostgreSQL
-    /// </summary>
-    private class DateTimeToTimestampConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>
-    {
-        public DateTimeToTimestampConverter()
-            : base(
-                v => v.Kind == DateTimeKind.Utc ? DateTime.SpecifyKind(v, DateTimeKind.Unspecified) : v,
-                v => DateTime.SpecifyKind(v, DateTimeKind.Utc))
-        {
-        }
     }
 }
