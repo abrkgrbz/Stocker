@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Input, Button } from 'antd'
+import { Input, Button, Checkbox } from 'antd'
 import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
 import Logo from '@/components/Logo'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
@@ -32,6 +32,8 @@ export default function RegisterPage() {
   const [teamName, setTeamName] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false)
 
   // Validation states
   const [emailValid, setEmailValid] = useState(false)
@@ -208,8 +210,8 @@ export default function RegisterPage() {
         teamName,
         firstName,
         lastName,
-        acceptTerms: true,
-        acceptPrivacyPolicy: true
+        acceptTerms,
+        acceptPrivacyPolicy: acceptPrivacy
       })
 
       if (response.success && response.data) {
@@ -476,16 +478,41 @@ export default function RegisterPage() {
                 placeholder="Soyadınız"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                onPressEnter={handleComplete}
                 className="h-14 text-lg"
               />
+
+              <div className="space-y-3 pt-2">
+                <Checkbox
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="text-sm"
+                >
+                  <span className="text-gray-700">
+                    <Link href="/terms" target="_blank" className="text-violet-600 hover:text-violet-700 font-medium">
+                      Kullanım Koşulları
+                    </Link>'nı okudum ve kabul ediyorum
+                  </span>
+                </Checkbox>
+
+                <Checkbox
+                  checked={acceptPrivacy}
+                  onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                  className="text-sm"
+                >
+                  <span className="text-gray-700">
+                    <Link href="/privacy" target="_blank" className="text-violet-600 hover:text-violet-700 font-medium">
+                      Gizlilik Politikası
+                    </Link>'nı okudum ve kabul ediyorum
+                  </span>
+                </Checkbox>
+              </div>
             </div>
 
             <Button
               type="primary"
               size="large"
               block
-              disabled={!firstName.trim() || !lastName.trim()}
+              disabled={!firstName.trim() || !lastName.trim() || !acceptTerms || !acceptPrivacy}
               onClick={handleComplete}
               loading={isLoading}
               className="h-14 text-lg font-semibold btn-neon-green"
