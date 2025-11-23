@@ -295,7 +295,8 @@ public partial class MigrationService : IMigrationService
         var context = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<MasterDataSeeder>>();
         var adminCredentials = scope.ServiceProvider.GetRequiredService<IOptions<AdminCredentials>>();
-        var seeder = new MasterDataSeeder(context, logger, adminCredentials);
+        var environment = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+        var seeder = new MasterDataSeeder(context, logger, adminCredentials, environment);
 
         try
         {

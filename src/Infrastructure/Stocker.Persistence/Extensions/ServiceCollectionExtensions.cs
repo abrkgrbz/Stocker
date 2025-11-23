@@ -74,18 +74,11 @@ public static class ServiceCollectionExtensions
             var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
             options.AddInterceptors(auditInterceptor);
 
-            // Apply development settings if configured
-            if (databaseSettings != null)
+            // Apply development settings if in development environment
+            if (configuration.GetValue<bool>("IsDevelopment", false))
             {
-                if (databaseSettings.EnableSensitiveDataLogging && configuration.GetValue<bool>("IsDevelopment", false))
-                {
-                    options.EnableSensitiveDataLogging();
-                }
-
-                if (databaseSettings.EnableDetailedErrors)
-                {
-                    options.EnableDetailedErrors();
-                }
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
             }
         });
 
@@ -108,17 +101,11 @@ public static class ServiceCollectionExtensions
             // Note: Interceptors are scoped services, so we can't add them to pooled contexts
             // Factory-created contexts will not have interceptors
 
-            if (databaseSettings != null)
+            // Apply development settings if in development environment
+            if (configuration.GetValue<bool>("IsDevelopment", false))
             {
-                if (databaseSettings.EnableSensitiveDataLogging && configuration.GetValue<bool>("IsDevelopment", false))
-                {
-                    options.EnableSensitiveDataLogging();
-                }
-
-                if (databaseSettings.EnableDetailedErrors)
-                {
-                    options.EnableDetailedErrors();
-                }
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
             }
         });
 

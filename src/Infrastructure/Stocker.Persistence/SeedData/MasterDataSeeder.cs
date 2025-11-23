@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stocker.Domain.Common.ValueObjects;
@@ -16,22 +17,31 @@ public class MasterDataSeeder
     private readonly MasterDbContext _context;
     private readonly ILogger<MasterDataSeeder> _logger;
     private readonly AdminCredentials _adminCredentials;
+    private readonly IHostEnvironment _environment;
 
     public MasterDataSeeder(
-        MasterDbContext context, 
+        MasterDbContext context,
         ILogger<MasterDataSeeder> logger,
-        IOptions<AdminCredentials> adminCredentials)
+        IOptions<AdminCredentials> adminCredentials,
+        IHostEnvironment environment)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _adminCredentials = adminCredentials?.Value ?? new AdminCredentials();
+        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
     }
 
     public async Task SeedAsync()
     {
         await SeedPackagesAsync();
         await SeedSystemAdminAsync();
-        await SeedTenantAdminAsync();
+
+        // Only seed test admin in Development environment
+        if (_environment.IsDevelopment())
+        {
+            await SeedTenantAdminAsync();
+        }
+
         await SystemSettingsSeed.SeedAsync(_context);
         await _context.SaveChangesAsync();
     }
@@ -169,25 +179,19 @@ public class MasterDataSeeder
 
         systemAdmin.Activate();
         systemAdmin.VerifyEmail();
-        
-        // CRITICAL DEBUG: Before SaveChanges  
-        _logger.LogWarning("SEED BEFORE SAVE - User: {User}, Hash: {Hash}, Salt: {Salt}, PasswordValue: {PValue}, PasswordHash: {PHash}",
-            systemAdmin.Username,
-            systemAdmin.Password?.Hash,
-            systemAdmin.Password?.Salt,
-            systemAdmin.Password?.Value,
-            systemAdmin.PasswordHash);
 
         await _context.MasterUsers.AddAsync(systemAdmin);
-        _logger.LogInformation("Seeded system administrator.");
+        _logger.LogInformation("System administrator user created successfully with username '{Username}'.", systemAdmin.Username);
     }
 
     private async Task SeedTenantAdminAsync()
     {
-        // Her tenant için kullanılabilecek bir default admin user oluştur
+        // DEVELOPMENT ONLY: Create a test tenant admin user
+        _logger.LogWarning("DEVELOPMENT ENVIRONMENT: Creating test tenant admin user. This should NOT be used in production.");
+
         if (await _context.MasterUsers.AnyAsync(u => u.Username == "tenantadmin"))
         {
-            _logger.LogInformation("Tenant admin user already exists.");
+            _logger.LogInformation("Test tenant admin user already exists.");
             return;
         }
 
@@ -201,7 +205,7 @@ public class MasterDataSeeder
         var phoneResult = PhoneNumber.Create("+905555555555");
         if (phoneResult.IsFailure)
         {
-            _logger.LogError("Failed to create tenant admin phone: {Error}", phoneResult.Error.Description);
+            _logger.LogError("Failed to create tenant admin phone: {Error}", emailResult.Error.Description);
             return;
         }
 
@@ -209,8 +213,8 @@ public class MasterDataSeeder
             username: "tenantadmin",
             email: emailResult.Value,
             plainPassword: "Admin123!",
-            firstName: "Tenant",
-            lastName: "Administrator",
+            firstName: "Test",
+            lastName: "Admin",
             phoneNumber: phoneResult.Value,
             userType: UserType.FirmaYoneticisi);
 
@@ -218,6 +222,6 @@ public class MasterDataSeeder
         tenantAdmin.VerifyEmail();
 
         await _context.MasterUsers.AddAsync(tenantAdmin);
-        _logger.LogInformation("Created default tenant admin user with username 'tenantadmin' and password 'Admin123!'");
+        _logger.LogInformation("DEVELOPMENT: Created test tenant admin (Username: 'tenantadmin', Password: 'Admin123!')");
     }
 }

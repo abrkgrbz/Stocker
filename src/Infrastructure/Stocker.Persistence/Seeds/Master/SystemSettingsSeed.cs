@@ -31,9 +31,9 @@ public static class SystemSettingsSeed
             new SystemSettings(SettingCategories.Email, "Email.Enable", "true", "Enable email service", true, false),
             new SystemSettings(SettingCategories.Email, "Email.Provider", "SMTP", "Email service provider", true, false),
             new SystemSettings(SettingCategories.Email, "Smtp.Host", "mail.privateemail.com", "SMTP server host", true, false),
-            new SystemSettings(SettingCategories.Email, "Smtp.Port", "465", "SMTP server port", true, false),
+            new SystemSettings(SettingCategories.Email, "Smtp.Port", "587", "SMTP server port", true, false),
             new SystemSettings(SettingCategories.Email, "Smtp.Username", "info@stoocker.app", "SMTP username", true, false),
-            new SystemSettings(SettingCategories.Email, "Smtp.Password", "A.bg010203", "SMTP password", true, true), // Encrypted
+            new SystemSettings(SettingCategories.Email, "Smtp.Password", "", "SMTP password (configure via environment variables)", true, true), // Should be set via env vars or KeyVault
             new SystemSettings(SettingCategories.Email, "Smtp.EnableSsl", "true", "Enable SSL for SMTP", true, false),
             new SystemSettings(SettingCategories.Email, "Smtp.Encryption", "SSL", "SMTP encryption type", true, false),
             new SystemSettings(SettingCategories.Email, "Email.FromAddress", "info@stoocker.app", "Default from email address", true, false),
