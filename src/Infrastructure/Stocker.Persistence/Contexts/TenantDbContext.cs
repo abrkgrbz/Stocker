@@ -28,6 +28,15 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     // Tenant Id property for Unit of Work
     public Guid TenantId => _tenantId ?? _tenantService?.GetCurrentTenantId() ?? throw new InvalidOperationException("TenantId is not set");
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+
+        // Suppress PendingModelChangesWarning for navigation configuration changes that don't affect schema
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
+
     // Company & Organization
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Department> Departments => Set<Department>();
