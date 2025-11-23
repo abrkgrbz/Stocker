@@ -121,7 +121,7 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 })
             }, cancellationToken);
 
-            // Enqueue tenant provisioning job (async) - don't block user
+            // Create tenant immediately (synchronous) for better UX
             // Only if tenant doesn't already exist
             if (!matchingRegistration.TenantId.HasValue || matchingRegistration.TenantId.Value == Guid.Empty)
             {
@@ -129,25 +129,50 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 if (matchingRegistration.Status == RegistrationStatus.Pending ||
                     matchingRegistration.Status == RegistrationStatus.Approved)
                 {
-                    // Enqueue background job for tenant creation
-                    // This will create tenant, database, run migrations, and seed data
-                    var jobId = _backgroundJobService.Enqueue<IMediator>(mediator =>
-                        mediator.Send(new CreateTenantFromRegistrationCommand(matchingRegistration.Id), CancellationToken.None));
-
                     _logger.LogInformation(
-                        "🚀 Tenant provisioning job enqueued with ID {JobId} for registration: {RegistrationId}, Company: {CompanyCode}, Status: {Status}",
-                        jobId,
+                        "🚀 Creating tenant synchronously for registration: {RegistrationId}, Company: {CompanyCode}, Status: {Status}",
                         matchingRegistration.Id,
                         matchingRegistration.CompanyCode,
                         matchingRegistration.Status);
 
-                    // Note: Tenant will be created asynchronously by Hangfire (typically 10-30 seconds)
-                    // Frontend will receive real-time SignalR notification when ready
+                    try
+                    {
+                        // Create tenant synchronously
+                        var tenantCreationResult = await _mediator.Send(
+                            new CreateTenantFromRegistrationCommand(matchingRegistration.Id),
+                            cancellationToken);
+
+                        if (tenantCreationResult.IsSuccess)
+                        {
+                            _logger.LogInformation(
+                                "✅ Tenant created successfully for registration: {RegistrationId}, TenantId: {TenantId}",
+                                matchingRegistration.Id,
+                                tenantCreationResult.Value.Id);
+                        }
+                        else
+                        {
+                            _logger.LogError(
+                                "❌ Failed to create tenant for registration: {RegistrationId}, Error: {Error}",
+                                matchingRegistration.Id,
+                                tenantCreationResult.Error?.Description);
+
+                            // Don't fail email verification if tenant creation fails
+                            // User can try again or admin can manually create tenant
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex,
+                            "❌ Exception during tenant creation for registration: {RegistrationId}",
+                            matchingRegistration.Id);
+
+                        // Don't fail email verification if tenant creation fails
+                    }
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "⚠️ Tenant provisioning NOT enqueued - Invalid status: {Status} for registration: {RegistrationId}",
+                        "⚠️ Tenant creation skipped - Invalid status: {Status} for registration: {RegistrationId}",
                         matchingRegistration.Status,
                         matchingRegistration.Id);
                 }
