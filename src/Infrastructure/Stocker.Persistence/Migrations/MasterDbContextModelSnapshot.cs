@@ -2434,25 +2434,6 @@ namespace Stocker.Persistence.Migrations
                                 .HasForeignKey("MasterUserId");
                         });
 
-                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
-                        {
-                            b1.Property<Guid>("MasterUserId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
-                                .HasColumnName("PhoneNumber");
-
-                            b1.HasKey("MasterUserId");
-
-                            b1.ToTable("MasterUsers", "master");
-
-                            b1.WithOwner()
-                                .HasForeignKey("MasterUserId");
-                        });
-
                     b.OwnsOne("Stocker.Domain.Master.ValueObjects.EmailVerificationToken", "EmailVerificationToken", b1 =>
                         {
                             b1.Property<Guid>("MasterUserId")
@@ -2510,6 +2491,25 @@ namespace Stocker.Persistence.Migrations
                                 .HasMaxLength(256)
                                 .HasColumnType("character varying(256)")
                                 .HasColumnName("PasswordSalt");
+
+                            b1.HasKey("MasterUserId");
+
+                            b1.ToTable("MasterUsers", "master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MasterUserId");
+                        });
+
+                    b.OwnsOne("Stocker.Domain.Common.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<Guid>("MasterUserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("PhoneNumber");
 
                             b1.HasKey("MasterUserId");
 
@@ -2762,6 +2762,25 @@ namespace Stocker.Persistence.Migrations
 
             modelBuilder.Entity("Stocker.Domain.Master.Entities.Tenant", b =>
                 {
+                    b.OwnsOne("Stocker.Domain.Master.ValueObjects.ConnectionString", "ConnectionString", b1 =>
+                        {
+                            b1.Property<Guid>("TenantId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("ConnectionString");
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("Tenants", "master");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId");
+                        });
+
                     b.OwnsOne("Stocker.Domain.Common.ValueObjects.Email", "ContactEmail", b1 =>
                         {
                             b1.Property<Guid>("TenantId")
@@ -2794,25 +2813,6 @@ namespace Stocker.Persistence.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)")
                                 .HasColumnName("ContactPhone");
-
-                            b1.HasKey("TenantId");
-
-                            b1.ToTable("Tenants", "master");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TenantId");
-                        });
-
-                    b.OwnsOne("Stocker.Domain.Master.ValueObjects.ConnectionString", "ConnectionString", b1 =>
-                        {
-                            b1.Property<Guid>("TenantId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("ConnectionString");
 
                             b1.HasKey("TenantId");
 
