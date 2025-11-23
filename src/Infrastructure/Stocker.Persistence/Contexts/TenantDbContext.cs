@@ -185,6 +185,23 @@ public class TenantDbContext : BaseDbContext, ITenantDbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
+
+        // Configure DateTime to use timestamp without time zone and handle UTC conversion
+        configurationBuilder.Properties<DateTime>()
+            .HaveConversion<DateTimeToTimestampConverter>();
+    }
+
+    /// <summary>
+    /// Converts UTC DateTime to timestamp without time zone for PostgreSQL
+    /// </summary>
+    private class DateTimeToTimestampConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>
+    {
+        public DateTimeToTimestampConverter()
+            : base(
+                v => v.Kind == DateTimeKind.Utc ? DateTime.SpecifyKind(v, DateTimeKind.Unspecified) : v,
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc))
+        {
+        }
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
