@@ -26,7 +26,8 @@ class SignalRService {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:7001';
+      // Use NEXT_PUBLIC_API_URL (from .env.local) or fallback to localhost
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5249';
       const hubUrl = `${baseUrl}/hubs/notifications`;
 
       console.log(`Connecting to SignalR hub: ${hubUrl}`);

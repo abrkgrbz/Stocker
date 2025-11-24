@@ -5,7 +5,8 @@
       "Bash(\"Process cleanup completed\")",
       "Bash(Start-Sleep -Seconds 10)",
       "Bash(dotnet add:*)",
-      "Bash(dotnet remove:*)"
+      "Bash(dotnet remove:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

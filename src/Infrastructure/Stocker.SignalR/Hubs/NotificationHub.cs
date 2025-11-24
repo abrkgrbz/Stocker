@@ -248,6 +248,33 @@ public class NotificationHub : Hub
             throw;
         }
     }
+
+    /// <summary>
+    /// Leave registration group
+    /// This allows users to unsubscribe from tenant creation progress updates
+    /// </summary>
+    [AllowAnonymous]
+    public async Task LeaveRegistrationGroup(Guid registrationId)
+    {
+        try
+        {
+            var groupName = $"registration-{registrationId}";
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+            await Clients.Caller.SendAsync("LeftRegistrationGroup", new
+            {
+                registrationId,
+                groupName,
+                message = "Unsubscribed from tenant creation progress updates"
+            });
+            _logger.LogInformation("Connection {ConnectionId} left registration group {RegistrationId}",
+                Context.ConnectionId, registrationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error leaving registration group {RegistrationId}", registrationId);
+            throw;
+        }
+    }
 }
 
 #region DTOs
