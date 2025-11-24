@@ -225,11 +225,11 @@ public static class SwaggerExtensions
 
                 return docName switch
                 {
-                    "master" => path.Contains("/master/"),
-                    "tenant" => path.Contains("/tenant/"),
-                    "crm" => path.Contains("/crm/"),
-                    "public" => path.Contains("/public/") || path.Contains("/auth"),
-                    "admin" => path.Contains("/admin/"),
+                    "master" => path.Contains("api/master/"),
+                    "tenant" => path.Contains("api/tenant/") || path.Contains("api/auth"),
+                    "crm" => path.Contains("api/crm/"),
+                    "public" => path.Contains("api/public/"),
+                    "admin" => path.Contains("api/admin/"),
                     _ => false
                 };
             });
