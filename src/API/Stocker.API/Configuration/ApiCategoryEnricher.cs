@@ -19,8 +19,21 @@ public class ApiCategoryEnricher : ILogEventEnricher
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         var httpContext = _httpContextAccessor.HttpContext;
+
+        // If no HTTP context, categorize based on SourceContext (for background jobs)
         if (httpContext == null)
+        {
+            if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContextValue))
+            {
+                var sourceContext = sourceContextValue.ToString().Trim('"');
+
+                if (sourceContext.Contains("BackgroundJobs") || sourceContext.Contains("Hangfire"))
+                {
+                    logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ApiCategory", "Background Jobs"));
+                }
+            }
             return;
+        }
 
         var path = httpContext.Request.Path.Value?.ToLower() ?? "";
 
