@@ -54,13 +54,52 @@ public class CorrelationIdMiddleware
             Activity.Current.SetTag(_options.Header, correlationId);
         }
 
-        // Add to logging scope
-        using (_logger.BeginScope(new Dictionary<string, object>
+        // Determine API category from request path
+        var path = context.Request.Path.Value?.ToLower() ?? "";
+        var apiCategory = path switch
+        {
+            var p when p.Contains("/api/master/") => "Master API",
+            var p when p.Contains("/api/tenant/") => "Tenant API",
+            var p when p.Contains("/api/crm/") => "CRM Module",
+            var p when p.Contains("/api/public/") => "Public API",
+            var p when p.Contains("/api/admin/") => "Admin API",
+            var p when p.Contains("/api/auth") => "Authentication",
+            var p when p.Contains("/hubs/") => "SignalR Hubs",
+            var p when p.Contains("/health") => "Health Checks",
+            var p when p.Contains("/swagger") => "Documentation",
+            var p when p.Contains("/hangfire") => "Background Jobs",
+            _ => "Other"
+        };
+
+        // Determine API module and resource
+        string? apiModule = null;
+        string? apiResource = null;
+        if (path.Contains("/api/"))
+        {
+            var pathParts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (pathParts.Length >= 3)
+            {
+                apiModule = pathParts[1]; // master, tenant, crm, etc.
+                apiResource = pathParts[2]; // users, products, invoices, etc.
+            }
+        }
+
+        // Add to logging scope with API categorization
+        var scopeData = new Dictionary<string, object>
         {
             ["CorrelationId"] = correlationId,
             ["RequestPath"] = context.Request.Path.ToString(),
-            ["RequestMethod"] = context.Request.Method
-        }))
+            ["RequestMethod"] = context.Request.Method,
+            ["ApiCategory"] = apiCategory
+        };
+
+        if (apiModule != null)
+            scopeData["ApiModule"] = apiModule;
+
+        if (apiResource != null)
+            scopeData["ApiResource"] = apiResource;
+
+        using (_logger.BeginScope(scopeData))
         {
             _logger.LogInformation(
                 "Processing request {Method} {Path} with CorrelationId: {CorrelationId}",
