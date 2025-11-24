@@ -37,12 +37,16 @@ public class TenantDbContextFactory : ITenantDbContextFactory
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorCodesToAdd: null);
         });
-        
+
+        // Suppress PendingModelChangesWarning for navigation configuration changes that don't affect schema
+        optionsBuilder.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
         if (_configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))
         {
             optionsBuilder.EnableSensitiveDataLogging();
         }
-        
+
         if (_configuration.GetValue<bool>("Database:EnableDetailedErrors"))
         {
             optionsBuilder.EnableDetailedErrors();
