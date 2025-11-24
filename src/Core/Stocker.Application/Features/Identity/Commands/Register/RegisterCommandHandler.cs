@@ -19,6 +19,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ITokenService _tokenService;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly IMigrationService _migrationService;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
@@ -26,12 +27,14 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         ITenantContextFactory tenantContextFactory,
         ITokenService tokenService,
         IBackgroundJobService backgroundJobService,
+        IMigrationService migrationService,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
         _tenantContextFactory = tenantContextFactory;
         _tokenService = tokenService;
         _backgroundJobService = backgroundJobService;
+        _migrationService = migrationService;
         _logger = logger;
     }
 
@@ -210,21 +213,26 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                     "Kayıt işlemi tamamlanamadı. Lütfen daha sonra tekrar deneyin."));
             }
 
-            // CRITICAL: Provision tenant database synchronously - if this fails, rollback entire registration
-            // This ensures users don't get registered without a working tenant database
+            // CRITICAL: Create tenant database synchronously immediately after registration
+            // This ensures the database is ready when user verifies email
             try
             {
-                _logger.LogInformation("Provisioning tenant database for {TenantId}", tenant.Id);
-                
-                // Queue tenant provisioning job
+                _logger.LogInformation("Creating tenant database synchronously for {TenantId}", tenant.Id);
+
+                // Create and migrate tenant database immediately
+                await _migrationService.MigrateTenantDatabaseAsync(tenant.Id);
+
+                _logger.LogInformation("Tenant database created successfully for {TenantId}", tenant.Id);
+
+                // Queue data seeding as background job (non-critical)
                 _backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
-                    job.ProvisionNewTenantAsync(tenant.Id));
-                
-                _logger.LogInformation("Tenant provisioning queued successfully for {TenantId}", tenant.Id);
+                    job.SeedTenantDataAsync(tenant.Id));
+
+                _logger.LogInformation("Tenant data seeding queued for {TenantId}", tenant.Id);
             }
             catch (Exception provisionEx)
             {
-                _logger.LogError(provisionEx, "CRITICAL: Failed to queue tenant provisioning for {TenantId}. Rolling back registration.", tenant.Id);
+                _logger.LogError(provisionEx, "CRITICAL: Failed to create tenant database for {TenantId}. Rolling back registration.", tenant.Id);
 
                 // Rollback: Remove the user and tenant from database
                 _masterUnitOfWork.Repository<MasterUser>().Remove(masterUser);
@@ -232,8 +240,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
 
                 return Result<RegisterResponse>.Failure(
-                    Error.Failure("Register.ProvisioningFailed",
-                    "Kayıt işlemi tamamlanamadı. Lütfen daha sonra tekrar deneyin."));
+                    Error.Failure("Register.DatabaseCreationFailed",
+                    "Veritabanı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
             }
 
             _logger.LogInformation("Registration completed successfully for team: {TeamName}", request.TeamName);

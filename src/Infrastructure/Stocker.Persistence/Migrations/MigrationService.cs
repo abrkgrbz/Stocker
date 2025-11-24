@@ -232,14 +232,14 @@ public partial class MigrationService : IMigrationService
                     if (hasCrmAccess)
                     {
                         _logger.LogInformation("Tenant {TenantId} has CRM module access. Applying CRM migrations...", tenantId);
-                        
+
                         // Get tenant connection string
-                        var connectionString = tenantDbContext.Database.GetConnectionString();
-                        
+                        var crmConnectionString = tenantDbContext.Database.GetConnectionString();
+
                         // Create CRMDbContext manually with tenant connection string
                         // Cannot use scoped ITenantService here as tenant context is not set during migration
                         var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
-                        crmOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                        crmOptionsBuilder.UseNpgsql(crmConnectionString, sqlOptions =>
                         {
                             sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
                             sqlOptions.CommandTimeout(30);
@@ -247,7 +247,7 @@ public partial class MigrationService : IMigrationService
                         });
                         
                         // Create a simple ITenantService implementation for CRMDbContext constructor
-                        var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenantId, connectionString);
+                        var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenantId, crmConnectionString);
                         
                         using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
                             crmOptionsBuilder.Options, 
