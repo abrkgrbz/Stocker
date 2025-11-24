@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
 using Stocker.Domain.Master.Entities;
@@ -19,6 +21,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ITokenService _tokenService;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
@@ -26,12 +29,14 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         ITenantContextFactory tenantContextFactory,
         ITokenService tokenService,
         IBackgroundJobService backgroundJobService,
+        IConfiguration configuration,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
         _tenantContextFactory = tenantContextFactory;
         _tokenService = tokenService;
         _backgroundJobService = backgroundJobService;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -75,9 +80,21 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 return Result<RegisterResponse>.Failure(Error.Conflict("Register.TeamNameExists", "Bu takım adı zaten kullanılıyor"));
             }
 
-            // Build PostgreSQL connection string for tenant database
+            // Build PostgreSQL connection string for tenant database based on master connection
+            var masterConnectionString = _configuration.GetConnectionString("MasterConnection");
+            if (string.IsNullOrEmpty(masterConnectionString))
+            {
+                return Result<RegisterResponse>.Failure(Error.Validation("Register.NoMasterConnection", "Sistem yapılandırması hatalı"));
+            }
+
             var tenantDatabaseName = $"tenant_{subdomain}";
-            var tenantConnectionString = $"Host=95.217.219.4;Port=5432;Database={tenantDatabaseName};Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable";
+
+            // Parse master connection string and replace database name
+            var builder = new Npgsql.NpgsqlConnectionStringBuilder(masterConnectionString)
+            {
+                Database = tenantDatabaseName
+            };
+            var tenantConnectionString = builder.ConnectionString;
 
             _logger.LogInformation("Creating tenant with database: {DatabaseName}", tenantDatabaseName);
 

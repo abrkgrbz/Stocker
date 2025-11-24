@@ -147,7 +147,12 @@ public static class SwaggerExtensions
                     "CreateInvoiceCommand",
                     "UpdateInvoiceCommand",
                     "ApiResponse",
-                    "PagedResult"
+                    "PagedResult",
+                    "GeneralSettings",
+                    "EmailSettings",
+                    "SecuritySettings",
+                    "NotificationSettings",
+                    "ModuleInfo"
                 };
 
                 var baseTypeName = typeName.Contains("Of") ? typeName.Substring(0, typeName.IndexOf("Of")) : typeName;

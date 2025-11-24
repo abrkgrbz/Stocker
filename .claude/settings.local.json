@@ -20,7 +20,14 @@
       "Bash(Select-String -Pattern \"error|succeeded|failed\")",
       "Bash(Select-Object -Last 20)",
       "Bash(dotnet run:*)",
-      "Bash(Start-Sleep -Seconds 15)"
+      "Bash(Start-Sleep -Seconds 15)",
+      "Bash(docker run:*)",
+      "Bash(docker:*)",
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(dotnet user-secrets:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []
