@@ -26,6 +26,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly IConfiguration _configuration;
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ISecurityAuditService _auditService;
+    private readonly ITenantCreationProgressService _progressService;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -36,7 +37,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         IPublisher publisher,
         IConfiguration configuration,
         ITenantDbContextFactory tenantDbContextFactory,
-        ISecurityAuditService auditService)
+        ISecurityAuditService auditService,
+        ITenantCreationProgressService progressService)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -47,6 +49,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         _configuration = configuration;
         _tenantDbContextFactory = tenantDbContextFactory;
         _auditService = auditService;
+        _progressService = progressService;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -86,6 +89,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             if (registration.Status != RegistrationStatus.Pending && registration.Status != RegistrationStatus.Approved)
             {
                 return Result<TenantDto>.Failure(Error.Validation("Registration.InvalidStatus", "Kayıt durumu tenant oluşturma için uygun değil."));
+            }
+
+            // Send progress: Starting
+            try
+            {
+                await _progressService.SendProgressAsync(
+                    registration.Id,
+                    TenantCreationStep.Starting,
+                    "Tenant oluşturma işlemi başlatılıyor...",
+                    5,
+                    cancellationToken);
+            }
+            catch (Exception progressEx)
+            {
+                _logger.LogWarning(progressEx, "Failed to send progress update for Starting step");
             }
 
             // Check if tenant with same code already exists
@@ -138,6 +156,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             var domainName = $"{registration.CompanyCode.ToLower()}.stocker.app";
             tenant.AddDomain(domainName, isPrimary: true);
 
+            // Send progress: CreatingTenant
+            try
+            {
+                await _progressService.SendProgressAsync(
+                    registration.Id,
+                    TenantCreationStep.CreatingTenant,
+                    "Tenant kaydı oluşturuluyor...",
+                    10,
+                    cancellationToken);
+            }
+            catch (Exception progressEx)
+            {
+                _logger.LogWarning(progressEx, "Failed to send progress update for CreatingTenant step");
+            }
+
             // Create subscription
             var startDate = DateTime.UtcNow;
             DateTime? trialEndDate = package.TrialDays > 0 
@@ -178,6 +211,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             if (!trialEndDate.HasValue)
             {
                 subscription.Activate();
+            }
+
+            // Send progress: CreatingSubscription
+            try
+            {
+                await _progressService.SendProgressAsync(
+                    registration.Id,
+                    TenantCreationStep.CreatingSubscription,
+                    "Abonelik oluşturuluyor...",
+                    20,
+                    cancellationToken);
+            }
+            catch (Exception progressEx)
+            {
+                _logger.LogWarning(progressEx, "Failed to send progress update for CreatingSubscription step");
             }
 
             // Add to repository
@@ -274,6 +322,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
 
                 _logger.LogInformation("✅ MasterUser created successfully for {Email}, MasterUserId: {MasterUserId}, TenantId: {TenantId}",
                     registration.AdminEmail.Value, masterUser.Id, tenant.Id);
+
+                // Send progress: CreatingMasterUser
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.CreatingMasterUser,
+                        "Kullanıcı hesabı oluşturuluyor...",
+                        30,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for CreatingMasterUser step");
+                }
             }
             catch (Exception ex)
             {
@@ -284,11 +347,56 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             // Create and migrate tenant database
             try
             {
+                // Send progress: CreatingDatabase
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.CreatingDatabase,
+                        "Veritabanı oluşturuluyor...",
+                        40,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for CreatingDatabase step");
+                }
+
                 _logger.LogInformation("Starting database migration for tenant: {TenantId}", tenant.Id);
                 await _migrationService.MigrateTenantDatabaseAsync(tenant.Id);
-                
+
+                // Send progress: RunningMigrations
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.RunningMigrations,
+                        "Veritabanı yapılandırılıyor...",
+                        50,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for RunningMigrations step");
+                }
+
                 _logger.LogInformation("Seeding initial data for tenant: {TenantId}", tenant.Id);
                 await _migrationService.SeedTenantDataAsync(tenant.Id);
+
+                // Send progress: SeedingData
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.SeedingData,
+                        "İlk veriler yükleniyor...",
+                        60,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for SeedingData step");
+                }
 
                 // ✅ NOW activate package modules AFTER database is created and migrated
                 _logger.LogInformation("Activating package modules for tenant {TenantId}...", tenant.Id);
@@ -322,6 +430,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                         await tenantDbContext.SaveChangesAsync(cancellationToken);
                         _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
                             package.Modules.Count(m => m.IsIncluded), tenant.Id);
+
+                        // Send progress: ActivatingModules
+                        try
+                        {
+                            await _progressService.SendProgressAsync(
+                                registration.Id,
+                                TenantCreationStep.ActivatingModules,
+                                "Modüller aktifleştiriliyor...",
+                                75,
+                                cancellationToken);
+                        }
+                        catch (Exception progressEx)
+                        {
+                            _logger.LogWarning(progressEx, "Failed to send progress update for ActivatingModules step");
+                        }
                     }
                     else
                     {
@@ -342,6 +465,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("✅ Tenant activated successfully: {TenantId}", tenant.Id);
+
+                // Send progress: ActivatingTenant
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.ActivatingTenant,
+                        "Hesabınız aktifleştiriliyor...",
+                        85,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for ActivatingTenant step");
+                }
 
                 // Log successful tenant activation
                 await _auditService.LogAuthEventAsync(new SecurityAuditEvent
@@ -398,12 +536,27 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             // Send welcome email
             try
             {
+                // Send progress: SendingWelcomeEmail
+                try
+                {
+                    await _progressService.SendProgressAsync(
+                        registration.Id,
+                        TenantCreationStep.SendingWelcomeEmail,
+                        "Hoşgeldin e-postası gönderiliyor...",
+                        95,
+                        cancellationToken);
+                }
+                catch (Exception progressEx)
+                {
+                    _logger.LogWarning(progressEx, "Failed to send progress update for SendingWelcomeEmail step");
+                }
+
                 await _emailService.SendWelcomeEmailAsync(
                     email: registration.AdminEmail.Value,
                     userName: $"{registration.AdminFirstName} {registration.AdminLastName}",
                     companyName: tenant.Name,
                     cancellationToken);
-                    
+
                 _logger.LogInformation("Welcome email sent to {Email} for tenant {TenantId}", registration.AdminEmail, tenant.Id);
             }
             catch (Exception emailEx)
@@ -412,11 +565,38 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 // Don't fail the operation if email fails
             }
 
+            // Send completion progress
+            try
+            {
+                await _progressService.SendCompletionAsync(
+                    registration.Id,
+                    tenant.Id,
+                    tenant.Name,
+                    cancellationToken);
+            }
+            catch (Exception progressEx)
+            {
+                _logger.LogWarning(progressEx, "Failed to send completion progress update");
+            }
+
             return Result<TenantDto>.Success(MapToDto(tenant));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating tenant from registration: {RegistrationId}", request.RegistrationId);
+
+            // Send error progress
+            try
+            {
+                await _progressService.SendErrorAsync(
+                    request.RegistrationId,
+                    $"Tenant oluşturulurken hata oluştu: {ex.Message}",
+                    cancellationToken);
+            }
+            catch (Exception progressEx)
+            {
+                _logger.LogWarning(progressEx, "Failed to send error progress update");
+            }
 
             // Log tenant activation failure
             try

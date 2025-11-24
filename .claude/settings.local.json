@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ForEach-Object { taskkill /PID $_d /F } 2)",
       "Bash(\"Process cleanup completed\")",
-      "Bash(Start-Sleep -Seconds 10)"
+      "Bash(Start-Sleep -Seconds 10)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet remove:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Interfaces.Notifications;
 using Stocker.SignalR.Hubs;
 using Stocker.SignalR.Services;

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SignalR.Hubs;
 using Stocker.SignalR.Models;
 
