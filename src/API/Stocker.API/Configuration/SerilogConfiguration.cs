@@ -2,6 +2,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Configuration;
 
 namespace Stocker.API.Configuration;
 
@@ -27,7 +28,7 @@ public static class SerilogConfiguration
             .MinimumLevel.Is(logLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", 
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore",
                 environment == "Development" ? LogEventLevel.Information : LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
                 environment == "Development" ? LogEventLevel.Debug : LogEventLevel.Warning)
@@ -36,6 +37,7 @@ public static class SerilogConfiguration
             .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
             // Application namespaces - always log at configured level
             .MinimumLevel.Override("Stocker", logLevel)
+            // Core enrichers
             .Enrich.FromLogContext()
             .Enrich.WithEnvironmentUserName()
             .Enrich.WithMachineName()
@@ -48,34 +50,34 @@ public static class SerilogConfiguration
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
                 theme: AnsiConsoleTheme.Literate)
-            // File output - Structured JSON logs
-            .WriteTo.File(
+            // File output - Structured JSON logs (Async)
+            .WriteTo.Async(a => a.File(
                 new JsonFormatter(),
                 "logs/stocker-.json",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 30,
                 fileSizeLimitBytes: 10_485_760, // 10MB
-                rollOnFileSizeLimit: true)
-            // File output - Human readable
-            .WriteTo.File(
+                rollOnFileSizeLimit: true))
+            // File output - Human readable (Async)
+            .WriteTo.Async(a => a.File(
                 "logs/stocker-.log",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 30,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-            // Seq - Merkezi log server
-            .WriteTo.Seq(
-                seqUrl, 
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            // Seq - Merkezi log server (Async)
+            .WriteTo.Async(a => a.Seq(
+                seqUrl,
                 apiKey: seqApiKey,
-                restrictedToMinimumLevel: logLevel);
+                restrictedToMinimumLevel: logLevel));
         
-        // Database sink only in non-production environments
+        // Database sink only in non-production environments (Async)
         if (environment != "Production")
         {
-            loggerConfig = loggerConfig.WriteTo.PostgreSQL(
+            loggerConfig = loggerConfig.WriteTo.Async(a => a.PostgreSQL(
                 connectionString: configuration.GetConnectionString("MasterConnection") ?? string.Empty,
                 tableName: "logs",
                 needAutoCreateTable: true,
-                restrictedToMinimumLevel: LogEventLevel.Warning);
+                restrictedToMinimumLevel: LogEventLevel.Warning));
         }
         
         Log.Logger = loggerConfig.CreateLogger();
@@ -111,12 +113,55 @@ public static class SerilogConfiguration
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
                 diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
                 diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
-                
+
+                // API Category - istekleri gruplandırmak için
+                var path = httpContext.Request.Path.Value?.ToLower() ?? "";
+                var apiCategory = path switch
+                {
+                    var p when p.Contains("/api/master/") => "Master API",
+                    var p when p.Contains("/api/tenant/") => "Tenant API",
+                    var p when p.Contains("/api/crm/") => "CRM Module",
+                    var p when p.Contains("/api/public/") => "Public API",
+                    var p when p.Contains("/api/admin/") => "Admin API",
+                    var p when p.Contains("/api/auth") => "Authentication",
+                    var p when p.Contains("/hubs/") => "SignalR Hubs",
+                    var p when p.Contains("/health") => "Health Checks",
+                    var p when p.Contains("/swagger") => "Documentation",
+                    var p when p.Contains("/hangfire") => "Background Jobs",
+                    _ => "Other"
+                };
+                diagnosticContext.Set("ApiCategory", apiCategory);
+
+                // Endpoint Details - daha detaylı kategorileme
+                if (path.Contains("/api/"))
+                {
+                    var pathParts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    if (pathParts.Length >= 3)
+                    {
+                        diagnosticContext.Set("ApiModule", pathParts[1]); // master, tenant, crm, etc.
+                        diagnosticContext.Set("ApiResource", pathParts[2]); // users, products, invoices, etc.
+                    }
+                }
+
+                // HTTP Method için tag
+                diagnosticContext.Set("HttpMethod", httpContext.Request.Method);
+
+                // Response için ek bilgiler
+                diagnosticContext.Set("ResponseContentType", httpContext.Response.ContentType);
+                diagnosticContext.Set("ResponseSize", httpContext.Response.ContentLength);
+
                 var user = httpContext.User;
                 if (user?.Identity?.IsAuthenticated ?? false)
                 {
                     diagnosticContext.Set("UserName", user.Identity.Name);
                     diagnosticContext.Set("UserId", user.FindFirst("UserId")?.Value);
+
+                    // Tenant bilgisi varsa ekle
+                    var tenantId = user.FindFirst("TenantId")?.Value;
+                    if (!string.IsNullOrEmpty(tenantId))
+                    {
+                        diagnosticContext.Set("TenantId", tenantId);
+                    }
                 }
             };
         });

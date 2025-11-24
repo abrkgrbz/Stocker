@@ -30,7 +30,12 @@
       "Bash(dotnet clean:*)",
       "Bash(for api in master tenant public crm admin)",
       "Bash(do echo \"=== $api API ===\")",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(dir:*)",
+      "Bash(dotnet list:*)",
+      "Bash(dotnet add package:*)",
+      "Bash($null)",
+      "Bash(Start-Sleep -Seconds 3)"
     ],
     "deny": [],
     "ask": []
