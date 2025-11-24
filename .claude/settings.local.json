@@ -27,7 +27,10 @@
       "Bash(dotnet user-secrets:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(dotnet clean:*)"
+      "Bash(dotnet clean:*)",
+      "Bash(for api in master tenant public crm admin)",
+      "Bash(do echo \"=== $api API ===\")",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

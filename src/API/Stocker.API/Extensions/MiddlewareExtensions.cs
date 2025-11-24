@@ -23,9 +23,6 @@ public static class MiddlewareExtensions
     {
         var environment = app.Environment;
 
-        // Get API Version Description Provider for Swagger
-        var apiVersionProvider = app.Services.GetService<IApiVersionDescriptionProvider>();
-
         // 0. Forwarded Headers (MUST BE FIRST - for reverse proxy support)
         // This allows the app to work correctly behind nginx/Caddy with HTTPS
         app.UseForwardedHeaders(new Microsoft.AspNetCore.Builder.ForwardedHeadersOptions
@@ -43,25 +40,13 @@ public static class MiddlewareExtensions
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                // Add versioned API documentation
-                if (apiVersionProvider != null)
-                {
-                    foreach (var description in apiVersionProvider.ApiVersionDescriptions)
-                    {
-                        c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", 
-                            $"Stocker API {description.GroupName.ToUpperInvariant()}");
-                    }
-                }
-                else
-                {
-                    // Fallback to existing endpoints
-                    c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
-                    c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
-                    c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
-                    c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
-                    c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
-                }
-                
+                // Define API groups
+                c.SwaggerEndpoint("/swagger/master/swagger.json", "Master API");
+                c.SwaggerEndpoint("/swagger/tenant/swagger.json", "Tenant API");
+                c.SwaggerEndpoint("/swagger/crm/swagger.json", "CRM Module");
+                c.SwaggerEndpoint("/swagger/public/swagger.json", "Public API");
+                c.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+
                 c.RoutePrefix = string.Empty; // Swagger UI at root
                 c.DocumentTitle = "Stocker API Documentation";
             });
