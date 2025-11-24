@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
@@ -20,8 +19,6 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ITokenService _tokenService;
     private readonly IBackgroundJobService _backgroundJobService;
-    private readonly IMigrationService _migrationService;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
@@ -29,16 +26,12 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         ITenantContextFactory tenantContextFactory,
         ITokenService tokenService,
         IBackgroundJobService backgroundJobService,
-        IMigrationService migrationService,
-        IConfiguration configuration,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
         _tenantContextFactory = tenantContextFactory;
         _tokenService = tokenService;
         _backgroundJobService = backgroundJobService;
-        _migrationService = migrationService;
-        _configuration = configuration;
         _logger = logger;
     }
 
@@ -221,38 +214,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                     "Kayıt işlemi tamamlanamadı. Lütfen daha sonra tekrar deneyin."));
             }
 
-            // CRITICAL: Create tenant database synchronously immediately after registration
-            // This ensures the database is ready when user verifies email
-            try
-            {
-                _logger.LogInformation("Creating tenant database synchronously for {TenantId}", tenant.Id);
-
-                // Create and migrate tenant database immediately
-                await _migrationService.MigrateTenantDatabaseAsync(tenant.Id);
-
-                _logger.LogInformation("Tenant database created successfully for {TenantId}", tenant.Id);
-
-                // Queue data seeding as background job (non-critical)
-                _backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
-                    job.SeedTenantDataAsync(tenant.Id));
-
-                _logger.LogInformation("Tenant data seeding queued for {TenantId}", tenant.Id);
-            }
-            catch (Exception provisionEx)
-            {
-                _logger.LogError(provisionEx, "CRITICAL: Failed to create tenant database for {TenantId}. Rolling back registration.", tenant.Id);
-
-                // Rollback: Remove the user and tenant from database
-                _masterUnitOfWork.Repository<MasterUser>().Remove(masterUser);
-                _masterUnitOfWork.Repository<Domain.Master.Entities.Tenant>().Remove(tenant);
-                await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
-
-                return Result<RegisterResponse>.Failure(
-                    Error.Failure("Register.DatabaseCreationFailed",
-                    "Veritabanı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
-            }
-
-            _logger.LogInformation("Registration completed successfully for team: {TeamName}", request.TeamName);
+            _logger.LogInformation("Registration completed successfully for team: {TeamName}. Database will be created after email verification.", request.TeamName);
 
             return Result<RegisterResponse>.Success(new RegisterResponse
             {

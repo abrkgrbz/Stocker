@@ -11,13 +11,19 @@ namespace Stocker.Application.Features.Identity.Commands.VerifyEmail;
 public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Result<VerifyEmailResponse>>
 {
     private readonly IMasterUnitOfWork _unitOfWork;
+    private readonly IMigrationService _migrationService;
+    private readonly IBackgroundJobService _backgroundJobService;
     private readonly ILogger<VerifyEmailCommandHandler> _logger;
 
     public VerifyEmailCommandHandler(
         IMasterUnitOfWork unitOfWork,
+        IMigrationService migrationService,
+        IBackgroundJobService backgroundJobService,
         ILogger<VerifyEmailCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _migrationService = migrationService;
+        _backgroundJobService = backgroundJobService;
         _logger = logger;
     }
 
@@ -181,6 +187,34 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Res
 
             _logger.LogInformation("Email verified successfully for user: {UserId}, Tenant: {TenantId}", user.Id, tenant.Id);
             _logger.LogInformation("Created TenantRegistration and TenantDomain for tenant: {TenantId}", tenant.Id);
+
+            // CRITICAL: Create tenant database synchronously after email verification
+            // This ensures the database is ready when user logs in
+            try
+            {
+                _logger.LogInformation("Creating tenant database for verified user. TenantId: {TenantId}", tenant.Id);
+
+                // Create and migrate tenant database immediately
+                await _migrationService.MigrateTenantDatabaseAsync(tenant.Id);
+
+                _logger.LogInformation("Tenant database created successfully for {TenantId}", tenant.Id);
+
+                // Queue data seeding as background job (non-critical)
+                _backgroundJobService.Enqueue<ITenantProvisioningJob>(job =>
+                    job.SeedTenantDataAsync(tenant.Id));
+
+                _logger.LogInformation("Tenant data seeding queued for {TenantId}", tenant.Id);
+            }
+            catch (Exception dbEx)
+            {
+                _logger.LogError(dbEx, "CRITICAL: Failed to create tenant database for {TenantId}. User cannot login yet.", tenant.Id);
+
+                // Database creation failed - user's email is verified but database doesn't exist
+                // Return error so user knows to try again or contact support
+                return Result<VerifyEmailResponse>.Failure(
+                    Error.Failure("VerifyEmail.DatabaseCreationFailed",
+                    "Email doğrulandı ancak sistem hazırlanırken bir hata oluştu. Lütfen birkaç dakika sonra tekrar deneyin."));
+            }
 
             return Result<VerifyEmailResponse>.Success(new VerifyEmailResponse
             {
