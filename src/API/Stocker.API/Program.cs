@@ -245,6 +245,12 @@ builder.Services.AddTenantRateLimiting(builder.Configuration);
 var app = builder.Build();
 
 // ========================================
+// CONFIGURE API CATEGORY ENRICHER
+// ========================================
+// Configure after DI container is built to enable HttpContextAccessor injection
+SerilogConfiguration.ConfigureApiCategoryEnricher(app.Services, app.Configuration);
+
+// ========================================
 // DATABASE MIGRATION (MUST BE BEFORE MIDDLEWARE)
 // ========================================
 // IMPORTANT: Database migration must run BEFORE UseApiPipeline because

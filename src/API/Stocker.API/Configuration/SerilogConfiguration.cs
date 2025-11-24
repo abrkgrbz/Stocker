@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
@@ -13,16 +14,16 @@ public static class SerilogConfiguration
         var seqUrl = configuration["Logging:Seq:ServerUrl"] ?? "http://localhost:5341";
         var seqApiKey = configuration["Logging:Seq:ApiKey"];
         var minimumLevel = configuration["Logging:Seq:MinimumLevel"] ?? "Information";
-        
+
         Console.WriteLine($"[SERILOG] Environment: {environment}");
         Console.WriteLine($"[SERILOG] Seq URL: {seqUrl}");
         Console.WriteLine($"[SERILOG] Minimum Level: {minimumLevel}");
-        
+
         // Parse minimum level from configuration
-        var logLevel = Enum.TryParse<LogEventLevel>(minimumLevel, out var parsedLevel) 
-            ? parsedLevel 
+        var logLevel = Enum.TryParse<LogEventLevel>(minimumLevel, out var parsedLevel)
+            ? parsedLevel
             : LogEventLevel.Information;
-        
+
         var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Is(logLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -68,7 +69,7 @@ public static class SerilogConfiguration
                 seqUrl,
                 apiKey: seqApiKey,
                 restrictedToMinimumLevel: logLevel));
-        
+
         // Database sink only in non-production environments (Async)
         if (environment != "Production")
         {
@@ -78,10 +79,129 @@ public static class SerilogConfiguration
                 needAutoCreateTable: true,
                 restrictedToMinimumLevel: LogEventLevel.Warning));
         }
-        
+
         Log.Logger = loggerConfig.CreateLogger();
 
         hostBuilder.UseSerilog();
+    }
+
+    /// <summary>
+    /// Configures API categorization enricher after DI container is built
+    /// This must be called after services are configured but before the app runs
+    /// </summary>
+    public static void ConfigureApiCategoryEnricher(IServiceProvider serviceProvider, IConfiguration configuration)
+    {
+        var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        var seqUrl = configuration["Logging:Seq:ServerUrl"] ?? "http://localhost:5341";
+        var seqApiKey = configuration["Logging:Seq:ApiKey"];
+        var minimumLevel = configuration["Logging:Seq:MinimumLevel"] ?? "Information";
+
+        var logLevel = Enum.TryParse<LogEventLevel>(minimumLevel, out var parsedLevel)
+            ? parsedLevel
+            : LogEventLevel.Information;
+
+        // Recreate logger with API category enricher
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Is(logLevel)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore",
+                environment == "Development" ? LogEventLevel.Information : LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
+                environment == "Development" ? LogEventLevel.Debug : LogEventLevel.Warning)
+            .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+            .MinimumLevel.Override("Stocker", logLevel)
+            // Core enrichers
+            .Enrich.FromLogContext()
+            .Enrich.WithEnvironmentUserName()
+            .Enrich.WithMachineName()
+            .Enrich.WithProperty("Application", "Stocker.API")
+            .Enrich.WithProperty("Environment", environment)
+            .Enrich.WithThreadId()
+            .Enrich.WithProcessId()
+            .Enrich.WithProcessName()
+            // API Category Enricher - adds ApiCategory, ApiModule, ApiResource to all events
+            .Enrich.With(new ApiCategoryEnricher(httpContextAccessor))
+            // Console output
+            .WriteTo.Console(
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+                theme: AnsiConsoleTheme.Literate)
+            // File output - Structured JSON logs (Async)
+            .WriteTo.Async(a => a.File(
+                new JsonFormatter(),
+                "logs/stocker-.json",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                fileSizeLimitBytes: 10_485_760,
+                rollOnFileSizeLimit: true))
+            // File output - Human readable (Async)
+            .WriteTo.Async(a => a.File(
+                "logs/stocker-.log",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            // Seq - Merkezi log server (Async)
+            .WriteTo.Async(a => a.Seq(
+                seqUrl,
+                apiKey: seqApiKey,
+                restrictedToMinimumLevel: logLevel))
+            .CreateLogger();
+
+        // Database sink - will be added dynamically if needed
+        if (environment != "Production")
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Is(logLevel)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore",
+                    environment == "Development" ? LogEventLevel.Information : LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
+                    environment == "Development" ? LogEventLevel.Debug : LogEventLevel.Warning)
+                .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
+                .MinimumLevel.Override("System", LogEventLevel.Warning)
+                .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+                .MinimumLevel.Override("Stocker", logLevel)
+                .Enrich.FromLogContext()
+                .Enrich.WithEnvironmentUserName()
+                .Enrich.WithMachineName()
+                .Enrich.WithProperty("Application", "Stocker.API")
+                .Enrich.WithProperty("Environment", environment)
+                .Enrich.WithThreadId()
+                .Enrich.WithProcessId()
+                .Enrich.WithProcessName()
+                .Enrich.With(new ApiCategoryEnricher(httpContextAccessor))
+                .WriteTo.Console(
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+                    theme: AnsiConsoleTheme.Literate)
+                .WriteTo.Async(a => a.File(
+                    new JsonFormatter(),
+                    "logs/stocker-.json",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 30,
+                    fileSizeLimitBytes: 10_485_760,
+                    rollOnFileSizeLimit: true))
+                .WriteTo.Async(a => a.File(
+                    "logs/stocker-.log",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 30,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"))
+                .WriteTo.Async(a => a.Seq(
+                    seqUrl,
+                    apiKey: seqApiKey,
+                    restrictedToMinimumLevel: logLevel))
+                .WriteTo.Async(a => a.PostgreSQL(
+                    connectionString: configuration.GetConnectionString("MasterConnection") ?? string.Empty,
+                    tableName: "logs",
+                    needAutoCreateTable: true,
+                    restrictedToMinimumLevel: LogEventLevel.Warning))
+                .CreateLogger();
+        }
+
+        Log.Information("API Category Enricher configured successfully");
     }
     
     public static void ConfigureRequestLogging(WebApplication app)
