@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
@@ -20,6 +21,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
     private readonly ITokenService _tokenService;
     private readonly IBackgroundJobService _backgroundJobService;
     private readonly IMigrationService _migrationService;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
@@ -28,6 +30,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         ITokenService tokenService,
         IBackgroundJobService backgroundJobService,
         IMigrationService migrationService,
+        IConfiguration configuration,
         ILogger<RegisterCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
@@ -35,6 +38,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         _tokenService = tokenService;
         _backgroundJobService = backgroundJobService;
         _migrationService = migrationService;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -77,24 +81,28 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
                 _logger.LogWarning("Registration failed - Team name already exists: {TeamName}", request.TeamName);
                 return Result<RegisterResponse>.Failure(Error.Conflict("Register.TeamNameExists", "Bu takım adı zaten kullanılıyor"));
             }
-                
-            // Use PostgreSQL connection string for tenant database
-            // This will be used during tenant provisioning
-            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create($"Host=postgres;Port=5432;Database=tenant_{subdomain};Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable");
+
+            // Build PostgreSQL connection string for tenant database
+            var tenantDatabaseName = $"tenant_{subdomain}";
+            var tenantConnectionString = $"Host=95.217.219.4;Port=5432;Database={tenantDatabaseName};Username=stocker_admin;Password=KMVCh4TrpA6BPS2ZnZWgieqxEcFGXpGK;SslMode=Disable";
+
+            _logger.LogInformation("Creating tenant with database: {DatabaseName}", tenantDatabaseName);
+
+            var connectionStringResult = Domain.Master.ValueObjects.ConnectionString.Create(tenantConnectionString);
             var emailResult = Domain.Common.ValueObjects.Email.Create(request.Email);
-            
+
             if (connectionStringResult.IsFailure || emailResult.IsFailure)
             {
                 return Result<RegisterResponse>.Failure(Error.Validation("Register.InvalidData", "Geçersiz veri"));
             }
-            
+
             // Use TeamName as company name initially (can be updated later)
             var companyName = $"{request.FirstName} {request.LastName}'s Team";
 
             var tenant = Domain.Master.Entities.Tenant.Create(
                 name: companyName,
                 code: subdomain,
-                databaseName: $"tenant_{subdomain}",
+                databaseName: tenantDatabaseName,
                 connectionString: connectionStringResult.Value,
                 contactEmail: emailResult.Value,
                 contactPhone: null,
