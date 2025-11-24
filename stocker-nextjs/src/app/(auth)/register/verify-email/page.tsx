@@ -59,9 +59,15 @@ function VerifyEmailContent() {
 
       if (response.ok && data.success) {
         setVerifySuccess(true);
-        // Redirect to login after 2 seconds
+        // Redirect to tenant creation progress page with registrationId
         setTimeout(() => {
-          router.push('/login');
+          const registrationId = data.registrationId || data.data?.registrationId;
+          if (registrationId) {
+            router.push(`/register/tenant-creation?registrationId=${registrationId}`);
+          } else {
+            // Fallback to login if no registrationId
+            router.push('/login');
+          }
         }, 2000);
       } else {
         setVerifyError(data.message || 'Token geçersiz veya süresi dolmuş. Lütfen yeni kod isteyin.');
@@ -89,9 +95,15 @@ function VerifyEmailContent() {
 
       if (response.success) {
         setVerifySuccess(true);
-        // Redirect to login after 2 seconds
+        // Redirect to tenant creation progress page with registrationId
         setTimeout(() => {
-          router.push('/login');
+          const registrationId = response.registrationId || response.data?.registrationId;
+          if (registrationId) {
+            router.push(`/register/tenant-creation?registrationId=${registrationId}`);
+          } else {
+            // Fallback to login if no registrationId
+            router.push('/login');
+          }
         }, 2000);
       } else {
         setVerifyError('Geçersiz kod. Lütfen tekrar deneyin.');
@@ -145,22 +157,15 @@ function VerifyEmailContent() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">E-posta Doğrulandı!</h2>
               <p className="mt-2 text-sm text-gray-600">
-                Hesabınız başarıyla aktive edildi.
+                E-posta adresiniz başarıyla doğrulandı.
               </p>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-sm text-gray-700">
-                Giriş sayfasına yönlendiriliyorsunuz...
+                Hesabınız oluşturuluyor... Lütfen bekleyin.
               </p>
             </div>
-
-            <Link
-              href="/login"
-              className="block w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-center font-medium"
-            >
-              Giriş Sayfasına Git
-            </Link>
           </div>
         </div>
       </div>
