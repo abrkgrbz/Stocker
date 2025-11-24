@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signalRService, TenantCreationProgress as ProgressData } from '@/lib/signalr/signalr.service';
-import { logger } from '@/lib/logger';
 
 interface ProgressState {
   step: string;
@@ -57,7 +56,7 @@ export default function TenantCreationProgress() {
 
     // Redirect to dashboard after successful completion
     if (progressData.isCompleted && !progressData.hasError) {
-      logger.info('Tenant creation completed, redirecting to login', {
+      console.log('Tenant creation completed, redirecting to login', {
         registrationId: progressData.registrationId
       });
 
@@ -69,7 +68,7 @@ export default function TenantCreationProgress() {
 
   useEffect(() => {
     if (!registrationId) {
-      logger.error('No registrationId provided in URL');
+      console.error('No registrationId provided in URL');
       setConnectionError('Geçersiz kayıt kimliği');
       return;
     }
@@ -79,7 +78,7 @@ export default function TenantCreationProgress() {
 
     const setupSignalR = async () => {
       try {
-        logger.info('Setting up SignalR connection', { registrationId });
+        console.log('Setting up SignalR connection', { registrationId });
 
         // Connect to SignalR
         await signalRService.connect();
@@ -94,9 +93,9 @@ export default function TenantCreationProgress() {
         // Subscribe to progress updates
         signalRService.onTenantCreationProgress(handleProgress);
 
-        logger.info('SignalR setup complete', { registrationId });
+        console.log('SignalR setup complete', { registrationId });
       } catch (error) {
-        logger.error('Failed to setup SignalR', { error, registrationId });
+        console.error('Failed to setup SignalR', { error, registrationId });
         if (isSubscribed) {
           setConnectionError('Bağlantı kurulamadı. Lütfen sayfayı yenileyin.');
         }
@@ -111,7 +110,7 @@ export default function TenantCreationProgress() {
       cleanupCalled = true;
       isSubscribed = false;
 
-      logger.info('Cleaning up SignalR connection', { registrationId });
+      console.log('Cleaning up SignalR connection', { registrationId });
 
       // Unsubscribe from progress updates
       signalRService.offTenantCreationProgress();
@@ -119,7 +118,7 @@ export default function TenantCreationProgress() {
       // Leave registration group
       if (registrationId) {
         signalRService.leaveRegistrationGroup(registrationId).catch((error) => {
-          logger.warn('Failed to leave registration group during cleanup', {
+          console.warn('Failed to leave registration group during cleanup', {
             error,
             registrationId
           });

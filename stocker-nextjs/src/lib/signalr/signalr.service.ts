@@ -1,5 +1,4 @@
 import * as signalR from '@microsoft/signalr';
-import { logger } from '@/lib/logger';
 
 export interface TenantCreationProgress {
   registrationId: string;
@@ -22,7 +21,7 @@ class SignalRService {
    */
   async connect(): Promise<void> {
     if (this.isConnected && this.connection) {
-      logger.info('SignalR already connected');
+      console.log('[SignalR] Already connected');
       return;
     }
 
@@ -30,7 +29,7 @@ class SignalRService {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:7001';
       const hubUrl = `${baseUrl}/hubs/notifications`;
 
-      logger.info(`Connecting to SignalR hub: ${hubUrl}`);
+      console.log(`Connecting to SignalR hub: ${hubUrl}`);
 
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, {
@@ -52,25 +51,25 @@ class SignalRService {
 
       // Connection event handlers
       this.connection.onreconnecting((error) => {
-        logger.warn('SignalR reconnecting...', { error: error?.message });
+        console.warn('SignalR reconnecting...', { error: error?.message });
       });
 
       this.connection.onreconnected((connectionId) => {
-        logger.info('SignalR reconnected', { connectionId });
+        console.log('SignalR reconnected', { connectionId });
       });
 
       this.connection.onclose((error) => {
         this.isConnected = false;
-        logger.error('SignalR connection closed', { error: error?.message });
+        console.error('SignalR connection closed', { error: error?.message });
       });
 
       await this.connection.start();
       this.isConnected = true;
-      logger.info('SignalR connected successfully', {
+      console.log('SignalR connected successfully', {
         connectionId: this.connection.connectionId
       });
     } catch (error) {
-      logger.error('Failed to connect to SignalR', { error });
+      console.error('Failed to connect to SignalR', { error });
       throw error;
     }
   }
@@ -84,11 +83,11 @@ class SignalRService {
     }
 
     try {
-      logger.info('Joining registration group', { registrationId });
+      console.log('Joining registration group', { registrationId });
       await this.connection.invoke('JoinRegistrationGroup', registrationId);
-      logger.info('Successfully joined registration group', { registrationId });
+      console.log('Successfully joined registration group', { registrationId });
     } catch (error) {
-      logger.error('Failed to join registration group', {
+      console.error('Failed to join registration group', {
         registrationId,
         error
       });
@@ -105,11 +104,11 @@ class SignalRService {
     }
 
     try {
-      logger.info('Leaving registration group', { registrationId });
+      console.log('Leaving registration group', { registrationId });
       await this.connection.invoke('LeaveRegistrationGroup', registrationId);
-      logger.info('Successfully left registration group', { registrationId });
+      console.log('Successfully left registration group', { registrationId });
     } catch (error) {
-      logger.error('Failed to leave registration group', {
+      console.error('Failed to leave registration group', {
         registrationId,
         error
       });
@@ -127,7 +126,7 @@ class SignalRService {
     }
 
     this.connection.on('TenantCreationProgress', (progress: TenantCreationProgress) => {
-      logger.info('Received tenant creation progress', {
+      console.log('Received tenant creation progress', {
         step: progress.step,
         percentage: progress.progressPercentage,
         isCompleted: progress.isCompleted,
@@ -154,9 +153,9 @@ class SignalRService {
       try {
         await this.connection.stop();
         this.isConnected = false;
-        logger.info('SignalR disconnected');
+        console.log('SignalR disconnected');
       } catch (error) {
-        logger.error('Error disconnecting from SignalR', { error });
+        console.error('Error disconnecting from SignalR', { error });
       }
     }
   }
