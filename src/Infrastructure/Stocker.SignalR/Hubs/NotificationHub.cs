@@ -221,6 +221,33 @@ public class NotificationHub : Hub
             throw;
         }
     }
+
+    /// <summary>
+    /// Join registration group to receive tenant creation progress updates
+    /// This allows unauthenticated users to track their registration progress
+    /// </summary>
+    [AllowAnonymous]
+    public async Task JoinRegistrationGroup(Guid registrationId)
+    {
+        try
+        {
+            var groupName = $"registration-{registrationId}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            await Clients.Caller.SendAsync("JoinedRegistrationGroup", new
+            {
+                registrationId,
+                groupName,
+                message = "Subscribed to tenant creation progress updates"
+            });
+            _logger.LogInformation("Connection {ConnectionId} joined registration group {RegistrationId}",
+                Context.ConnectionId, registrationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error joining registration group {RegistrationId}", registrationId);
+            throw;
+        }
+    }
 }
 
 #region DTOs
