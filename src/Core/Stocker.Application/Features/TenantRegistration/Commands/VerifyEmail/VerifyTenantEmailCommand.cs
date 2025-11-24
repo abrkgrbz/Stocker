@@ -3,7 +3,7 @@ using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Commands.VerifyEmail;
 
-public sealed class VerifyTenantEmailCommand : IRequest<Result<bool>>
+public sealed class VerifyTenantEmailCommand : IRequest<Result<VerifyTenantEmailResponse>>
 {
     public string Token { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;

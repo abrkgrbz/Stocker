@@ -10,7 +10,7 @@ using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.TenantRegistration.Commands.VerifyEmail;
 
-public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTenantEmailCommand, Result<bool>>
+public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTenantEmailCommand, Result<VerifyTenantEmailResponse>>
 {
     private readonly IMasterDbContext _context;
     private readonly ILogger<VerifyTenantEmailCommandHandler> _logger;
@@ -32,7 +32,7 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
         _auditService = auditService;
     }
 
-    public async Task<Result<bool>> Handle(VerifyTenantEmailCommand request, CancellationToken cancellationToken)
+    public async Task<Result<VerifyTenantEmailResponse>> Handle(VerifyTenantEmailCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -72,7 +72,7 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                     })
                 }, cancellationToken);
 
-                return Result<bool>.Failure(Error.NotFound("Registration.NotFound", "Kayıt bulunamadı veya doğrulama kodu geçersiz."));
+                return Result<VerifyTenantEmailResponse>.Failure(Error.NotFound("Registration.NotFound", "Kayıt bulunamadı veya doğrulama kodu geçersiz."));
             }
 
             if (matchingRegistration.EmailVerified)
@@ -92,7 +92,7 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                     })
                 }, cancellationToken);
 
-                return Result<bool>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
+                return Result<VerifyTenantEmailResponse>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
             }
 
             // Verify email (use token or code)
@@ -185,7 +185,12 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                     matchingRegistration.TenantId);
             }
 
-            return Result<bool>.Success(true);
+            return Result<VerifyTenantEmailResponse>.Success(new VerifyTenantEmailResponse
+            {
+                Success = true,
+                RegistrationId = matchingRegistration.Id,
+                Message = "E-posta doğrulandı. Hesabınız oluşturuluyor..."
+            });
         }
         catch (Exception ex)
         {
@@ -204,7 +209,7 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 })
             }, cancellationToken);
 
-            return Result<bool>.Failure(Error.Failure("Verification.Failed", $"E-posta doğrulama işlemi başarısız: {ex.Message}"));
+            return Result<VerifyTenantEmailResponse>.Failure(Error.Failure("Verification.Failed", $"E-posta doğrulama işlemi başarısız: {ex.Message}"));
         }
     }
 }
