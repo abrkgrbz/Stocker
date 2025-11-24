@@ -2,7 +2,6 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.SystemConsole.Themes;
-using Serilog.Configuration;
 
 namespace Stocker.API.Configuration;
 
