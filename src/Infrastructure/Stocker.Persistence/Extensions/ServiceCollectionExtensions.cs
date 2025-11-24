@@ -29,50 +29,25 @@ public static class ServiceCollectionExtensions
         // Add Audit Interceptor
         services.AddScoped<AuditInterceptor>();
 
-        // Add DbContexts
-        services.AddDbContext<MasterDbContext>((serviceProvider, options) =>
+        // Add DbContextFactory for MasterDbContext
+        // Using factory pattern for better control over DbContext lifetime and concurrency
+        services.AddPooledDbContextFactory<MasterDbContext>(options =>
         {
-            // In Production/Docker, prefer ConnectionStrings over DatabaseSettings
             var connectionString = configuration.GetConnectionString("MasterConnection");
-
-            // Log the connection string for debugging (remove sensitive parts)
-            var logger = serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<MasterDbContext>>();
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                logger?.LogError("CRITICAL: MasterConnection string is missing from configuration!");
-                throw new InvalidOperationException("MasterConnection configuration is required. Please set ConnectionStrings:MasterConnection in appsettings.json or via environment variable ConnectionStrings__MasterConnection");
-            }
-
-            if (logger != null)
-            {
-                // Extract and log connection details for debugging
-                var host = connectionString.Contains("Host=")
-                    ? connectionString.Split("Host=")[1].Split(";")[0]
-                    : "unknown";
-                var database = connectionString.Contains("Database=")
-                    ? connectionString.Split("Database=")[1].Split(";")[0]
-                    : "unknown";
-                var username = connectionString.Contains("Username=")
-                    ? connectionString.Split("Username=")[1].Split(";")[0]
-                    : "unknown";
-                var sslMode = connectionString.Contains("SslMode=")
-                    ? connectionString.Split("SslMode=")[1].Split(";")[0]
-                    : "NOT SET";
-
-                logger.LogInformation("Connecting to MasterDb: Host={Host}, Database={Database}, Username={Username}, SslMode={SslMode}",
-                    host, database, username, sslMode);
+                throw new InvalidOperationException("MasterConnection configuration is required. Please set ConnectionStrings:MasterConnection");
             }
 
             options.UseNpgsql(connectionString);
 
-            // Suppress pending model changes warning in production
+            // Suppress pending model changes warning
             options.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-            // Add interceptors
-            var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
-            options.AddInterceptors(auditInterceptor);
+            // Note: Interceptors are scoped services, cannot be added to pooled contexts
+            // If auditing is needed, implement at application layer
 
             // Apply development settings if in development environment
             if (configuration.GetValue<bool>("IsDevelopment", false))
@@ -82,31 +57,29 @@ public static class ServiceCollectionExtensions
             }
         });
 
-        // Add DbContextFactory for MasterDbContext to avoid concurrency issues
-        // Used by TenantModuleService which needs to run multiple queries per request
-        services.AddDbContextFactory<MasterDbContext>((serviceProvider, options) =>
+        // Add MasterDbContext as scoped service using the factory
+        services.AddScoped<MasterDbContext>(serviceProvider =>
         {
-            var connectionString = configuration.GetConnectionString("MasterConnection");
+            var factory = serviceProvider.GetRequiredService<IDbContextFactory<MasterDbContext>>();
+            var context = factory.CreateDbContext();
 
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("MasterConnection configuration is required for DbContextFactory");
-            }
+            // Add audit interceptor to the context
+            var auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
+            var optionsBuilder = new DbContextOptionsBuilder<MasterDbContext>();
 
-            options.UseNpgsql(connectionString);
-
-            options.ConfigureWarnings(warnings =>
+            // Get existing options and add interceptor
+            optionsBuilder.UseNpgsql(configuration.GetConnectionString("MasterConnection"));
+            optionsBuilder.ConfigureWarnings(warnings =>
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            optionsBuilder.AddInterceptors(auditInterceptor);
 
-            // Note: Interceptors are scoped services, so we can't add them to pooled contexts
-            // Factory-created contexts will not have interceptors
-
-            // Apply development settings if in development environment
             if (configuration.GetValue<bool>("IsDevelopment", false))
             {
-                options.EnableSensitiveDataLogging();
-                options.EnableDetailedErrors();
+                optionsBuilder.EnableSensitiveDataLogging();
+                optionsBuilder.EnableDetailedErrors();
             }
+
+            return new MasterDbContext(optionsBuilder.Options);
         });
 
 

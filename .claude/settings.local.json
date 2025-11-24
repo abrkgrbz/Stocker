@@ -16,7 +16,11 @@
       "Bash(git restore:*)",
       "Bash(cat:*)",
       "Bash(az keyvault secret set:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(Select-String -Pattern \"error|succeeded|failed\")",
+      "Bash(Select-Object -Last 20)",
+      "Bash(dotnet run:*)",
+      "Bash(Start-Sleep -Seconds 15)"
     ],
     "deny": [],
     "ask": []
