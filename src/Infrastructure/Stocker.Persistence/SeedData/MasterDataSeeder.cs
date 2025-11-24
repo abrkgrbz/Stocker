@@ -56,6 +56,35 @@ public class MasterDataSeeder
 
         var packages = new List<Package>();
 
+        // Trial Package (Deneme Paketi)
+        var trialPackage = Package.Create(
+            name: "Deneme",
+            type: PackageType.Trial,
+            basePrice: Money.Create(0m, "TRY"),
+            limits: PackageLimit.Create(
+                maxUsers: 2,
+                maxStorage: 5,
+                maxProjects: 1,
+                maxApiCalls: 5000,
+                moduleLimits: new Dictionary<string, int>
+                {
+                    ["CRM"] = 50
+                }),
+            description: "Sistemi tanımak için ücretsiz deneme paketi",
+            trialDays: 14,
+            displayOrder: 0,
+            isPublic: true);
+
+        trialPackage.AddFeature("TRIAL_PERIOD", "14 Günlük Deneme", "Ücretsiz 14 gün deneme süresi", true);
+        trialPackage.AddFeature("BASIC_FEATURES", "Temel Özellikler", "Tüm temel özelliklere erişim", true);
+        trialPackage.AddFeature("EMAIL_SUPPORT", "E-posta Desteği", "Deneme süresi boyunca e-posta desteği");
+        trialPackage.AddFeature("USER_MANAGEMENT", "2 Kullanıcı", "2 kullanıcıya kadar");
+        trialPackage.AddFeature("STORAGE", "5 GB Depolama", "5 GB bulut depolama alanı");
+
+        trialPackage.AddModule("CRM", "CRM Modülü", true, 50);
+
+        packages.Add(trialPackage);
+
         // Başlangıç Package
         var starterPackage = Package.Create(
             name: "Başlangıç",
@@ -151,7 +180,7 @@ public class MasterDataSeeder
         packages.Add(enterprisePackage);
 
         await _context.Packages.AddRangeAsync(packages);
-        _logger.LogInformation("Seeded {Count} packages.", packages.Count);
+        _logger.LogInformation("Seeded {Count} packages: Trial, Starter, Professional, Enterprise.", packages.Count);
     }
 
     private async Task SeedSystemAdminAsync()
