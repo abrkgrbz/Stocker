@@ -481,7 +481,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private async Task<Guid> GetDefaultPackageId(CancellationToken cancellationToken)
     {
         var trialPackage = await _context.Packages
-            .FirstOrDefaultAsync(p => p.Name.Contains("Trial") || p.Name.Contains("Free"), cancellationToken);
+            .FirstOrDefaultAsync(p => p.Type == PackageType.Trial, cancellationToken);
 
         return trialPackage?.Id ?? Guid.Empty;
     }
