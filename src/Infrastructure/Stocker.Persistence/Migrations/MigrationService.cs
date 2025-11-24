@@ -175,9 +175,44 @@ public partial class MigrationService : IMigrationService
             
             // Cast to TenantDbContext to access Database property
             var tenantDbContext = (TenantDbContext)context;
-            
-            // MigrateAsync will create the database if it doesn't exist and apply all migrations
-            _logger.LogInformation("Creating database and applying migrations for tenant {TenantId}...", tenantId);
+
+            // Check if database exists, if not create it (required for PostgreSQL)
+            var connectionString = tenantDbContext.Database.GetConnectionString();
+            var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+            var databaseName = builder.Database;
+
+            // Connect to postgres database to create tenant database
+            builder.Database = "postgres";
+            var masterConnectionString = builder.ConnectionString;
+
+            using (var masterConnection = new Npgsql.NpgsqlConnection(masterConnectionString))
+            {
+                await masterConnection.OpenAsync();
+
+                // Check if database exists
+                var checkDbCommand = masterConnection.CreateCommand();
+                checkDbCommand.CommandText = $"SELECT 1 FROM pg_database WHERE datname = '{databaseName}'";
+                var dbExists = await checkDbCommand.ExecuteScalarAsync();
+
+                if (dbExists == null)
+                {
+                    _logger.LogInformation("Creating database {DatabaseName} for tenant {TenantId}...", databaseName, tenantId);
+
+                    // Create database
+                    var createDbCommand = masterConnection.CreateCommand();
+                    createDbCommand.CommandText = $"CREATE DATABASE \"{databaseName}\"";
+                    await createDbCommand.ExecuteNonQueryAsync();
+
+                    _logger.LogInformation("Database {DatabaseName} created successfully.", databaseName);
+                }
+                else
+                {
+                    _logger.LogInformation("Database {DatabaseName} already exists.", databaseName);
+                }
+            }
+
+            // Now apply migrations
+            _logger.LogInformation("Applying migrations for tenant {TenantId}...", tenantId);
             await tenantDbContext.Database.MigrateAsync();
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);
