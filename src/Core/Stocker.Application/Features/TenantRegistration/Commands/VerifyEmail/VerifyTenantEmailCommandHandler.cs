@@ -121,8 +121,9 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                 })
             }, cancellationToken);
 
-            // Create tenant immediately (synchronous) for better UX
-            // Only if tenant doesn't already exist
+            // Schedule tenant creation in background with a small delay
+            // This allows frontend to connect to SignalR and join the registration group
+            // before tenant creation progress updates start being sent
             if (!matchingRegistration.TenantId.HasValue || matchingRegistration.TenantId.Value == Guid.Empty)
             {
                 // Status must be Pending or Approved
@@ -130,44 +131,25 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
                     matchingRegistration.Status == RegistrationStatus.Approved)
                 {
                     _logger.LogInformation(
-                        "🚀 Creating tenant synchronously for registration: {RegistrationId}, Company: {CompanyCode}, Status: {Status}",
+                        "🚀 Scheduling tenant creation with 3 second delay for registration: {RegistrationId}, Company: {CompanyCode}, Status: {Status}",
                         matchingRegistration.Id,
                         matchingRegistration.CompanyCode,
                         matchingRegistration.Status);
 
-                    try
-                    {
-                        // Create tenant synchronously
-                        var tenantCreationResult = await _mediator.Send(
+                    // Schedule tenant creation with 3 second delay to allow frontend to:
+                    // 1. Receive the API response with registrationId
+                    // 2. Connect to SignalR
+                    // 3. Join the registration-{id} group
+                    // 4. Subscribe to TenantCreationProgress events
+                    _backgroundJobService.Schedule<IMediator>(
+                        mediator => mediator.Send(
                             new CreateTenantFromRegistrationCommand(matchingRegistration.Id),
-                            cancellationToken);
+                            CancellationToken.None),
+                        TimeSpan.FromSeconds(3));
 
-                        if (tenantCreationResult.IsSuccess)
-                        {
-                            _logger.LogInformation(
-                                "✅ Tenant created successfully for registration: {RegistrationId}, TenantId: {TenantId}",
-                                matchingRegistration.Id,
-                                tenantCreationResult.Value.Id);
-                        }
-                        else
-                        {
-                            _logger.LogError(
-                                "❌ Failed to create tenant for registration: {RegistrationId}, Error: {Error}",
-                                matchingRegistration.Id,
-                                tenantCreationResult.Error?.Description);
-
-                            // Don't fail email verification if tenant creation fails
-                            // User can try again or admin can manually create tenant
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex,
-                            "❌ Exception during tenant creation for registration: {RegistrationId}",
-                            matchingRegistration.Id);
-
-                        // Don't fail email verification if tenant creation fails
-                    }
+                    _logger.LogInformation(
+                        "✅ Tenant creation scheduled for registration: {RegistrationId}",
+                        matchingRegistration.Id);
                 }
                 else
                 {

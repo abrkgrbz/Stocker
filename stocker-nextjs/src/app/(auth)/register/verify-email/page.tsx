@@ -39,86 +39,45 @@ function VerifyEmailContent() {
   }, [resendCountdown]);
 
   const handleVerifyToken = async (verificationToken: string) => {
-    setVerifying(true);
-    setVerifyError('');
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/public/tenant-registration/verify-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email || '',
-          token: verificationToken,
-        }),
-      });
-
-      const data = await response.json();
-      console.log('Token verification response:', data);
-
-      if (response.ok && data.success) {
-        setVerifySuccess(true);
-        // Redirect to tenant creation progress page with registrationId
-        setTimeout(() => {
-          const registrationId = data.registrationId;
-          console.log('Redirecting with registrationId:', registrationId);
-          if (registrationId) {
-            router.push(`/register/tenant-creation?registrationId=${registrationId}`);
-          } else {
-            console.warn('No registrationId in response, falling back to login');
-            router.push('/login');
-          }
-        }, 2000);
-      } else {
-        setVerifyError(data.message || 'Token geçersiz veya süresi dolmuş. Lütfen yeni kod isteyin.');
-      }
-    } catch (err) {
-      setVerifyError('Doğrulama yapılamadı. Lütfen tekrar deneyin.');
-      console.error('Token verification error:', err);
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleVerifyCode = async (code: string) => {
+    // Instead of verifying here and missing SignalR updates,
+    // redirect to progress page which will verify AFTER connecting to SignalR
     if (!email) {
       setVerifyError('E-posta adresi bulunamadı');
       return;
     }
 
     setVerifying(true);
-    setVerifyError('');
+    setVerifySuccess(true);
 
-    try {
-      const { authService } = await import('@/lib/api/services');
-      const response = await authService.verifyEmail(email, code);
-      console.log('Code verification response:', response);
+    // Pass verification params to progress page - it will call verify-email API after SignalR connects
+    setTimeout(() => {
+      const params = new URLSearchParams({
+        email: email,
+        token: verificationToken,
+      });
+      router.push(`/register/tenant-creation?${params.toString()}`);
+    }, 1000);
+  };
 
-      if (response.success) {
-        setVerifySuccess(true);
-        // Redirect to tenant creation progress page with registrationId
-        setTimeout(() => {
-          // Response is directly the API response: { success, registrationId, message }
-          const registrationId = response.registrationId;
-          console.log('Redirecting with registrationId:', registrationId);
-          if (registrationId) {
-            router.push(`/register/tenant-creation?registrationId=${registrationId}`);
-          } else {
-            console.warn('No registrationId in response, falling back to login');
-            router.push('/login');
-          }
-        }, 2000);
-      } else {
-        setVerifyError('Geçersiz kod. Lütfen tekrar deneyin.');
-      }
-    } catch (err) {
-      setVerifyError('Kod doğrulanamadı. Lütfen tekrar deneyin.');
-      console.error('Email verification error:', err);
-    } finally {
-      setVerifying(false);
+  const handleVerifyCode = async (code: string) => {
+    // Instead of verifying here and missing SignalR updates,
+    // redirect to progress page which will verify AFTER connecting to SignalR
+    if (!email) {
+      setVerifyError('E-posta adresi bulunamadı');
+      return;
     }
+
+    setVerifying(true);
+    setVerifySuccess(true);
+
+    // Pass verification params to progress page - it will call verify-email API after SignalR connects
+    setTimeout(() => {
+      const params = new URLSearchParams({
+        email: email,
+        code: code,
+      });
+      router.push(`/register/tenant-creation?${params.toString()}`);
+    }, 1000);
   };
 
   const handleResendEmail = async () => {

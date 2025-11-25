@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signalRService, TenantCreationProgress as ProgressData } from '@/lib/signalr/signalr.service';
 
@@ -13,26 +13,47 @@ interface ProgressState {
   errorMessage?: string;
 }
 
-const stepMessages: Record<string, string> = {
-  'EmailVerified': 'E-posta doğrulandı',
-  'Starting': 'Başlatılıyor',
-  'CreatingTenant': 'Şirket kaydı oluşturuluyor',
-  'CreatingSubscription': 'Abonelik hazırlanıyor',
-  'CreatingMasterUser': 'Kullanıcı hesabı oluşturuluyor',
-  'CreatingDatabase': 'Veritabanı oluşturuluyor',
-  'RunningMigrations': 'Veritabanı yapılandırılıyor',
-  'SeedingData': 'İlk veriler yükleniyor',
-  'ActivatingModules': 'Modüller aktifleştiriliyor',
-  'ActivatingTenant': 'Hesabınız aktifleştiriliyor',
-  'SendingWelcomeEmail': 'Hoşgeldin e-postası gönderiliyor',
-  'Completed': 'Tamamlandı',
-  'Failed': 'Hata oluştu'
+interface VerificationParams {
+  email?: string;
+  code?: string;
+  token?: string;
+  registrationId?: string;
+}
+
+// Step configuration with icons and messages
+const stepConfig: Record<string, { message: string; icon: string }> = {
+  'EmailVerified': { message: 'E-posta doğrulandı', icon: '✉️' },
+  'Starting': { message: 'Başlatılıyor', icon: '🚀' },
+  'CreatingTenant': { message: 'Şirket kaydı oluşturuluyor', icon: '🏢' },
+  'CreatingSubscription': { message: 'Abonelik hazırlanıyor', icon: '📋' },
+  'CreatingMasterUser': { message: 'Kullanıcı hesabı oluşturuluyor', icon: '👤' },
+  'CreatingDatabase': { message: 'Veritabanı oluşturuluyor', icon: '🗄️' },
+  'RunningMigrations': { message: 'Veritabanı yapılandırılıyor', icon: '⚙️' },
+  'SeedingData': { message: 'İlk veriler yükleniyor', icon: '📊' },
+  'ActivatingModules': { message: 'Modüller aktifleştiriliyor', icon: '🔌' },
+  'ActivatingTenant': { message: 'Hesabınız aktifleştiriliyor', icon: '✨' },
+  'SendingWelcomeEmail': { message: 'Hoşgeldin e-postası gönderiliyor', icon: '📧' },
+  'Completed': { message: 'Tamamlandı', icon: '🎉' },
+  'Failed': { message: 'Hata oluştu', icon: '❌' }
 };
 
 export default function TenantCreationProgress() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const registrationId = searchParams.get('registrationId');
+
+  // Get parameters from URL - can be either registrationId (old flow) or email+code/token (new flow)
+  const verificationParams: VerificationParams = {
+    email: searchParams.get('email') || undefined,
+    code: searchParams.get('code') || undefined,
+    token: searchParams.get('token') || undefined,
+    registrationId: searchParams.get('registrationId') || undefined,
+  };
+
+  const [currentRegistrationId, setCurrentRegistrationId] = useState<string | null>(
+    verificationParams.registrationId || null
+  );
+  const [verificationStarted, setVerificationStarted] = useState(false);
+  const verificationCalledRef = useRef(false);
 
   const [progress, setProgress] = useState<ProgressState>({
     step: 'Starting',
@@ -66,43 +87,118 @@ export default function TenantCreationProgress() {
     }
   }, [router]);
 
+  // Call verify-email API after SignalR is connected
+  const callVerifyEmailAPI = useCallback(async (email: string, codeOrToken: string, isCode: boolean): Promise<string | null> => {
+    console.log('Calling verify-email API', { email, isCode });
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/public/tenant-registration/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          ...(isCode ? { code: codeOrToken } : { token: codeOrToken }),
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Verify-email response:', data);
+
+      if (response.ok && data.success && data.registrationId) {
+        return data.registrationId;
+      } else {
+        throw new Error(data.message || 'E-posta doğrulama başarısız oldu');
+      }
+    } catch (error) {
+      console.error('Verify-email API error:', error);
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
-    if (!registrationId) {
-      console.error('No registrationId provided in URL');
-      setConnectionError('Geçersiz kayıt kimliği');
+    // Check if we have required parameters
+    const hasVerificationParams = verificationParams.email && (verificationParams.code || verificationParams.token);
+    const hasRegistrationId = verificationParams.registrationId;
+
+    if (!hasVerificationParams && !hasRegistrationId) {
+      console.error('No verification params or registrationId provided');
+      setConnectionError('Geçersiz kayıt bilgisi');
       return;
     }
 
     let isSubscribed = true;
     let cleanupCalled = false;
 
-    const setupSignalR = async () => {
+    const setupSignalRAndVerify = async () => {
       try {
-        console.log('Setting up SignalR connection', { registrationId });
+        console.log('Setting up SignalR connection', { verificationParams });
 
-        // Connect to SignalR
+        // Step 1: Connect to SignalR
         await signalRService.connect();
 
         if (!isSubscribed) return;
 
-        // Join registration group
-        await signalRService.joinRegistrationGroup(registrationId);
+        // Step 2: Subscribe to progress updates FIRST (before joining group or verifying)
+        signalRService.onTenantCreationProgress(handleProgress);
+
+        // Step 3: If we have email+code/token, we need to verify first to get registrationId
+        let regId = verificationParams.registrationId;
+
+        if (!regId && verificationParams.email && (verificationParams.code || verificationParams.token)) {
+          // Prevent double calls
+          if (verificationCalledRef.current) {
+            console.log('Verification already called, skipping');
+            return;
+          }
+          verificationCalledRef.current = true;
+          setVerificationStarted(true);
+
+          console.log('Calling verify-email API to get registrationId');
+          const codeOrToken = verificationParams.code || verificationParams.token!;
+          const isCode = !!verificationParams.code;
+
+          try {
+            regId = await callVerifyEmailAPI(verificationParams.email, codeOrToken, isCode);
+            if (regId) {
+              setCurrentRegistrationId(regId);
+              console.log('Got registrationId from verify-email:', regId);
+            }
+          } catch (verifyError: unknown) {
+            console.error('Verification failed', verifyError);
+            if (isSubscribed) {
+              const errorMessage = verifyError instanceof Error ? verifyError.message : 'Doğrulama başarısız';
+              setConnectionError(errorMessage);
+            }
+            return;
+          }
+        }
+
+        if (!regId) {
+          console.error('No registrationId available');
+          if (isSubscribed) {
+            setConnectionError('Kayıt kimliği alınamadı');
+          }
+          return;
+        }
 
         if (!isSubscribed) return;
 
-        // Subscribe to progress updates
-        signalRService.onTenantCreationProgress(handleProgress);
+        // Step 4: Join registration group with the registrationId
+        await signalRService.joinRegistrationGroup(regId);
 
-        console.log('SignalR setup complete', { registrationId });
+        console.log('SignalR setup complete, waiting for progress updates', { registrationId: regId });
       } catch (error) {
-        console.error('Failed to setup SignalR', { error, registrationId });
+        console.error('Failed to setup SignalR', { error });
         if (isSubscribed) {
           setConnectionError('Bağlantı kurulamadı. Lütfen sayfayı yenileyin.');
         }
       }
     };
 
-    setupSignalR();
+    setupSignalRAndVerify();
 
     // Cleanup function
     return () => {
@@ -110,33 +206,41 @@ export default function TenantCreationProgress() {
       cleanupCalled = true;
       isSubscribed = false;
 
-      console.log('Cleaning up SignalR connection', { registrationId });
+      console.log('Cleaning up SignalR connection');
 
       // Unsubscribe from progress updates
       signalRService.offTenantCreationProgress();
 
       // Leave registration group
-      if (registrationId) {
-        signalRService.leaveRegistrationGroup(registrationId).catch((error) => {
+      const regIdToLeave = currentRegistrationId || verificationParams.registrationId;
+      if (regIdToLeave) {
+        signalRService.leaveRegistrationGroup(regIdToLeave).catch((error) => {
           console.warn('Failed to leave registration group during cleanup', {
             error,
-            registrationId
+            registrationId: regIdToLeave
           });
         });
       }
     };
-  }, [registrationId, handleProgress]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (!registrationId) {
+  // Check if we have required params
+  const hasRequiredParams = verificationParams.registrationId ||
+    (verificationParams.email && (verificationParams.code || verificationParams.token));
+
+  if (!hasRequiredParams) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Hata</h1>
-          <p className="text-gray-600 mb-4">Geçersiz kayıt kimliği</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
+            <span className="text-4xl">⚠️</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Hata</h1>
+          <p className="text-gray-600 mb-6">Geçersiz kayıt bilgisi</p>
           <button
             onClick={() => router.push('/register')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
           >
             Kayıt Sayfasına Dön
           </button>
@@ -147,14 +251,16 @@ export default function TenantCreationProgress() {
 
   if (connectionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-orange-500 text-5xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Bağlantı Hatası</h1>
-          <p className="text-gray-600 mb-4">{connectionError}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30">
+            <span className="text-4xl">⚠️</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Bağlantı Hatası</h1>
+          <p className="text-gray-600 mb-6">{connectionError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
           >
             Sayfayı Yenile
           </button>
@@ -165,23 +271,25 @@ export default function TenantCreationProgress() {
 
   if (progress.hasError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Hata Oluştu</h1>
-          <p className="text-gray-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
+            <span className="text-4xl">❌</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Hata Oluştu</h1>
+          <p className="text-gray-600 mb-6">
             {progress.errorMessage || 'Hesap oluşturulurken bir hata oluştu'}
           </p>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
             >
               Tekrar Dene
             </button>
             <button
               onClick={() => router.push('/register')}
-              className="w-full px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all duration-300"
             >
               Kayıt Sayfasına Dön
             </button>
@@ -191,21 +299,73 @@ export default function TenantCreationProgress() {
     );
   }
 
+  // Get visible steps (exclude EmailVerified and Failed from display)
+  const visibleSteps = Object.entries(stepConfig).filter(
+    ([key]) => key !== 'EmailVerified' && key !== 'Failed'
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
+      {/* Background decorations */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#00ff88]/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#00dd77]/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-xl w-full border border-white/20">
         {/* Header */}
         <div className="text-center mb-8">
           {progress.isCompleted ? (
-            <div className="text-green-500 text-6xl mb-4 animate-bounce">✅</div>
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88] to-[#00dd77] rounded-full animate-pulse shadow-lg shadow-[#00ff88]/40"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-5xl animate-bounce">🎉</span>
+              </div>
+            </div>
           ) : (
-            <div className="relative w-20 h-20 mx-auto mb-4">
-              <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              {/* Outer glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/20 to-[#00dd77]/20 rounded-full blur-md animate-pulse"></div>
+              {/* Progress ring background */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="44"
+                  stroke="#e5e7eb"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="44"
+                  stroke="url(#progressGradient)"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={276.46}
+                  strokeDashoffset={276.46 - (276.46 * progress.percentage) / 100}
+                  className="transition-all duration-500 ease-out"
+                />
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#00ff88" />
+                    <stop offset="100%" stopColor="#00dd77" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              {/* Center content */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold bg-gradient-to-r from-[#00ff88] to-[#00dd77] bg-clip-text text-transparent">
+                  {progress.percentage}%
+                </span>
+              </div>
             </div>
           )}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {progress.isCompleted ? 'Hesabınız Hazır!' : 'Hesabınız Oluşturuluyor'}
+
+          <h1 className="text-3xl font-bold text-[#0a1f2e] mb-2">
+            {progress.isCompleted ? 'Hesabınız Hazır! 🚀' : 'Hesabınız Oluşturuluyor'}
           </h1>
           <p className="text-gray-600">
             {progress.isCompleted
@@ -217,67 +377,73 @@ export default function TenantCreationProgress() {
 
         {/* Progress Bar */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              {stepMessages[progress.step] || progress.step}
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-[#0a1f2e] flex items-center gap-2">
+              <span>{stepConfig[progress.step]?.icon || '⏳'}</span>
+              {stepConfig[progress.step]?.message || progress.step}
             </span>
-            <span className="text-sm font-bold text-blue-600">
+            <span className="text-sm font-bold bg-gradient-to-r from-[#00ff88] to-[#00dd77] bg-clip-text text-transparent">
               {progress.percentage}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-[#00ff88] to-[#00dd77] rounded-full transition-all duration-500 ease-out relative overflow-hidden"
               style={{ width: `${progress.percentage}%` }}
-            />
+            >
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+            </div>
           </div>
         </div>
 
         {/* Current Step Message */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800 text-center">
+        <div className="bg-gradient-to-r from-[#0a1f2e]/5 to-[#1a3a4f]/5 border border-[#0a1f2e]/10 rounded-2xl p-4 mb-6">
+          <p className="text-sm text-[#0a1f2e] text-center font-medium">
             {progress.message}
           </p>
         </div>
 
-        {/* Steps Checklist */}
-        <div className="space-y-3">
-          {Object.entries(stepMessages).map(([stepKey, stepLabel]) => {
-            if (stepKey === 'Failed') return null;
-
-            const stepIndex = Object.keys(stepMessages).indexOf(stepKey);
-            const currentStepIndex = Object.keys(stepMessages).indexOf(progress.step);
+        {/* Steps Checklist - Compact Grid View */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {visibleSteps.map(([stepKey, config], index) => {
+            const stepIndex = Object.keys(stepConfig).indexOf(stepKey);
+            const currentStepIndex = Object.keys(stepConfig).indexOf(progress.step);
             const isCompleted = stepIndex < currentStepIndex || progress.isCompleted;
             const isCurrent = stepKey === progress.step;
 
             return (
               <div
                 key={stepKey}
-                className={`flex items-center space-x-3 p-2 rounded-lg transition-all ${
-                  isCurrent ? 'bg-blue-50 border border-blue-200' : ''
+                className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+                  isCurrent
+                    ? 'bg-gradient-to-r from-[#00ff88]/10 to-[#00dd77]/10 border-2 border-[#00ff88]/30 shadow-sm'
+                    : isCompleted
+                    ? 'bg-green-50 border border-green-100'
+                    : 'bg-gray-50 border border-gray-100'
                 }`}
               >
                 <div
-                  className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-gradient-to-br from-green-400 to-green-500 text-white shadow-sm'
                       : isCurrent
-                      ? 'bg-blue-500 text-white animate-pulse'
+                      ? 'bg-gradient-to-br from-[#00ff88] to-[#00dd77] text-[#0a1f2e] shadow-sm animate-pulse'
                       : 'bg-gray-200 text-gray-400'
                   }`}
                 >
-                  {isCompleted ? '✓' : stepIndex + 1}
+                  {isCompleted ? '✓' : config.icon}
                 </div>
                 <span
-                  className={`text-sm ${
+                  className={`text-xs font-medium leading-tight ${
                     isCompleted
-                      ? 'text-green-700 font-medium'
+                      ? 'text-green-700'
                       : isCurrent
-                      ? 'text-blue-700 font-medium'
+                      ? 'text-[#0a1f2e] font-semibold'
                       : 'text-gray-500'
                   }`}
                 >
-                  {stepLabel}
+                  {config.message}
                 </span>
               </div>
             );
@@ -286,13 +452,36 @@ export default function TenantCreationProgress() {
 
         {/* Info Footer */}
         {!progress.isCompleted && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center">
-              💡 Bu sayfayı kapatmayın. İşlem tamamlandığında otomatik olarak yönlendirileceksiniz.
+          <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl">
+            <p className="text-xs text-amber-800 text-center flex items-center justify-center gap-2">
+              <span className="text-base">💡</span>
+              <span>Bu sayfayı kapatmayın. İşlem tamamlandığında otomatik olarak yönlendirileceksiniz.</span>
             </p>
           </div>
         )}
+
+        {/* Completion CTA */}
+        {progress.isCompleted && (
+          <button
+            onClick={() => router.push('/login?message=tenant-created')}
+            className="w-full px-6 py-4 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
+          >
+            <span>Giriş Yap</span>
+            <span className="text-xl">→</span>
+          </button>
+        )}
       </div>
+
+      {/* Add shimmer animation */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
     </div>
   );
 }
