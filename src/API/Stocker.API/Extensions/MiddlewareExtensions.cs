@@ -202,14 +202,15 @@ public static class MiddlewareExtensions
         .RequireCors(corsPolicy)
         .RequireAuthorization(); // ✅ Authentication required
 
+        // NotificationHub allows anonymous connections for tenant registration progress
+        // Individual methods use [Authorize] or [AllowAnonymous] as needed
         app.MapHub<NotificationHub>("/hubs/notification", options =>
         {
             options.Transports = HttpTransportType.WebSockets |
                                  HttpTransportType.ServerSentEvents |
                                  HttpTransportType.LongPolling;
         })
-        .RequireCors(corsPolicy)
-        .RequireAuthorization(); // ✅ Authentication required
+        .RequireCors(corsPolicy);
 
         app.MapHub<ChatHub>("/hubs/chat", options =>
         {
