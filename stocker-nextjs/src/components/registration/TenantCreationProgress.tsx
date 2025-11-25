@@ -471,14 +471,14 @@ export default function TenantCreationProgress() {
                   isCurrent
                     ? 'bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border-2 border-[#2F70B5]/30 shadow-sm'
                     : isCompleted
-                    ? 'bg-green-50 border border-green-100'
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 shadow-sm'
                     : 'bg-gray-50 border border-gray-100'
                 }`}
               >
                 <div
                   className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-gradient-to-br from-green-400 to-green-500 text-white shadow-sm'
+                      ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30'
                       : isCurrent
                       ? 'bg-gradient-to-br from-[#28002D] to-[#2F70B5] text-white shadow-sm animate-pulse'
                       : 'bg-gray-200 text-gray-400'
@@ -489,7 +489,7 @@ export default function TenantCreationProgress() {
                 <span
                   className={`text-xs font-medium leading-tight ${
                     isCompleted
-                      ? 'text-green-700'
+                      ? 'text-green-700 font-semibold'
                       : isCurrent
                       ? 'text-[#2F70B5] font-semibold'
                       : 'text-gray-500'
