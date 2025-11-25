@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signalRService, TenantCreationProgress as ProgressData } from '@/lib/signalr/signalr.service';
+import Swal from 'sweetalert2';
 
 interface ProgressState {
   step: string;
@@ -127,9 +128,38 @@ export default function TenantCreationProgress() {
       // Clear localStorage since tenant creation is complete
       clearStoredRegistrationId();
 
-      setTimeout(() => {
+      // Show success message with SweetAlert2 and redirect
+      Swal.fire({
+        icon: 'success',
+        title: 'Hesabınız Hazır! 🎉',
+        html: `
+          <div class="text-gray-600">
+            <p class="mb-2">Hesabınız başarıyla oluşturuldu.</p>
+            <p class="text-sm">Giriş sayfasına yönlendiriliyorsunuz...</p>
+          </div>
+        `,
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        background: '#ffffff',
+        color: '#1f2937',
+        customClass: {
+          popup: 'rounded-3xl shadow-2xl border border-[#2F70B5]/20',
+          title: 'text-2xl font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent',
+          timerProgressBar: 'bg-gradient-to-r from-[#28002D] to-[#2F70B5]',
+        },
+        didOpen: () => {
+          // Custom styling for timer progress bar
+          const timerBar = Swal.getPopup()?.querySelector('.swal2-timer-progress-bar') as HTMLElement;
+          if (timerBar) {
+            timerBar.style.background = 'linear-gradient(to right, #28002D, #2F70B5)';
+          }
+        }
+      }).then(() => {
         router.push('/login?message=tenant-created');
-      }, 2000);
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
@@ -541,17 +571,6 @@ export default function TenantCreationProgress() {
               <span>Bu sayfayı kapatmayın. İşlem tamamlandığında otomatik olarak yönlendirileceksiniz.</span>
             </p>
           </div>
-        )}
-
-        {/* Completion CTA */}
-        {progress.isCompleted && (
-          <button
-            onClick={() => router.push('/login?message=tenant-created')}
-            className="w-full px-6 py-4 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
-          >
-            <span>Giriş Yap</span>
-            <span className="text-xl">→</span>
-          </button>
         )}
       </div>
 
