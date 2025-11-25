@@ -11,7 +11,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
     public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        builder.ToTable("Customers", "CRM");
+        builder.ToTable("Customers", "crm");
 
         builder.HasKey(c => c.Id);
 

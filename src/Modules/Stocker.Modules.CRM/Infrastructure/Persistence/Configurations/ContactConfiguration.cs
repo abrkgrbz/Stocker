@@ -11,7 +11,7 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
 {
     public void Configure(EntityTypeBuilder<Contact> builder)
     {
-        builder.ToTable("Contacts", "CRM");
+        builder.ToTable("Contacts", "crm");
 
         builder.HasKey(c => c.Id);
 

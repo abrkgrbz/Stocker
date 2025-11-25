@@ -11,7 +11,7 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
 {
     public void Configure(EntityTypeBuilder<Lead> builder)
     {
-        builder.ToTable("Leads", "CRM");
+        builder.ToTable("Leads", "crm");
 
         builder.HasKey(l => l.Id);
 
