@@ -217,53 +217,65 @@ public partial class MigrationService : IMigrationService
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);
 
-            // Apply CRM module migrations if tenant has CRM module access
+            // Apply CRM module migrations if tenant's package includes CRM module
+            // NOTE: We check Package.Modules instead of TenantModules because during tenant creation,
+            // TenantModules table is populated AFTER migrations run. This ensures CRM tables are created
+            // before the module activation step.
             try
             {
-                _logger.LogInformation("Checking CRM module access for tenant {TenantId}...", tenantId);
-                
-                // Get tenant module service to check if tenant has CRM access
-                var tenantModuleService = scope.ServiceProvider.GetService<ITenantModuleService>();
-                
-                if (tenantModuleService != null)
+                _logger.LogInformation("Checking CRM module access for tenant {TenantId} from package...", tenantId);
+
+                // Check if tenant's subscription package includes CRM module
+                // This is more reliable during tenant creation as TenantModules may not be populated yet
+                var hasCrmInPackage = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                        .ThenInclude(p => p.Modules)
+                    .Where(s => s.TenantId == tenantId)
+                    .SelectMany(s => s.Package.Modules)
+                    .AnyAsync(m => m.ModuleCode == "CRM" && m.IsIncluded);
+
+                // Also check TenantModules as a fallback (for existing tenants with already populated modules)
+                if (!hasCrmInPackage)
                 {
-                    var hasCrmAccess = await tenantModuleService.HasModuleAccessAsync(tenantId, "CRM", CancellationToken.None);
-                    
-                    if (hasCrmAccess)
+                    var tenantModuleService = scope.ServiceProvider.GetService<ITenantModuleService>();
+                    if (tenantModuleService != null)
                     {
-                        _logger.LogInformation("Tenant {TenantId} has CRM module access. Applying CRM migrations...", tenantId);
-
-                        // Get tenant connection string
-                        var crmConnectionString = tenantDbContext.Database.GetConnectionString();
-
-                        // Create CRMDbContext manually with tenant connection string
-                        // Cannot use scoped ITenantService here as tenant context is not set during migration
-                        var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
-                        crmOptionsBuilder.UseNpgsql(crmConnectionString, sqlOptions =>
-                        {
-                            sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
-                            sqlOptions.CommandTimeout(30);
-                            sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
-                        });
-                        
-                        // Create a simple ITenantService implementation for CRMDbContext constructor
-                        var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenantId, crmConnectionString);
-                        
-                        using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
-                            crmOptionsBuilder.Options, 
-                            mockTenantService);
-                        
-                        await crmDbContext.Database.MigrateAsync();
-                        _logger.LogInformation("CRM module migrations completed successfully for tenant {TenantId}.", tenantId);
+                        hasCrmInPackage = await tenantModuleService.HasModuleAccessAsync(tenantId, "CRM", CancellationToken.None);
                     }
-                    else
+                }
+
+                _logger.LogInformation("Tenant {TenantId} CRM module access check result: {HasCrmAccess}", tenantId, hasCrmInPackage);
+
+                if (hasCrmInPackage)
+                {
+                    _logger.LogInformation("Tenant {TenantId} has CRM module in package. Applying CRM migrations...", tenantId);
+
+                    // Get tenant connection string
+                    var crmConnectionString = tenantDbContext.Database.GetConnectionString();
+
+                    // Create CRMDbContext manually with tenant connection string
+                    // Cannot use scoped ITenantService here as tenant context is not set during migration
+                    var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                    crmOptionsBuilder.UseNpgsql(crmConnectionString, sqlOptions =>
                     {
-                        _logger.LogInformation("Tenant {TenantId} does not have CRM module access. CRM migrations skipped.", tenantId);
-                    }
+                        sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(30);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    // Create a simple ITenantService implementation for CRMDbContext constructor
+                    var mockTenantService = new Stocker.Persistence.Migrations.MockTenantService(tenantId, crmConnectionString);
+
+                    using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                        crmOptionsBuilder.Options,
+                        mockTenantService);
+
+                    await crmDbContext.Database.MigrateAsync();
+                    _logger.LogInformation("CRM module migrations completed successfully for tenant {TenantId}.", tenantId);
                 }
                 else
                 {
-                    _logger.LogWarning("TenantModuleService not available. CRM module check skipped for tenant {TenantId}.", tenantId);
+                    _logger.LogInformation("Tenant {TenantId} does not have CRM module in package. CRM migrations skipped.", tenantId);
                 }
             }
             catch (Exception crmEx)
