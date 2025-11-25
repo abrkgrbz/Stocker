@@ -48,6 +48,8 @@ class SignalRService {
             return 60000;
           }
         })
+        .withServerTimeout(120000) // 2 minutes server timeout (default is 30s)
+        .withKeepAliveInterval(30000) // Send keepalive every 30 seconds
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
