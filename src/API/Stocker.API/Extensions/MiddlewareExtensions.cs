@@ -210,7 +210,8 @@ public static class MiddlewareExtensions
                                  HttpTransportType.ServerSentEvents |
                                  HttpTransportType.LongPolling;
         })
-        .RequireCors(corsPolicy);
+        .RequireCors(corsPolicy)
+        .AllowAnonymous(); // Allow anonymous for registration progress tracking
 
         app.MapHub<ChatHub>("/hubs/chat", options =>
         {
