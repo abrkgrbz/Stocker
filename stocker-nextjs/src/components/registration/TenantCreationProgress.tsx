@@ -464,10 +464,25 @@ export default function TenantCreationProgress() {
             const isCompleted = stepIndex < currentStepIndex || progress.isCompleted;
             const isCurrent = stepKey === progress.step;
 
+            // Calculate step-specific progress percentage
+            // Each step gets a portion of the total progress
+            const totalSteps = visibleSteps.length;
+            const stepPercentageRange = 100 / totalSteps;
+            const stepStartPercentage = stepIndex * stepPercentageRange;
+
+            let stepProgress = 0;
+            if (isCompleted) {
+              stepProgress = 100;
+            } else if (isCurrent) {
+              // Calculate how far we are within this step's range
+              const progressInStep = progress.percentage - stepStartPercentage;
+              stepProgress = Math.min(100, Math.max(0, (progressInStep / stepPercentageRange) * 100));
+            }
+
             return (
               <div
                 key={stepKey}
-                className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+                className={`relative overflow-hidden flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
                   isCurrent
                     ? 'bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border-2 border-[#2F70B5]/30 shadow-sm'
                     : isCompleted
@@ -475,8 +490,24 @@ export default function TenantCreationProgress() {
                     : 'bg-gray-50 border border-gray-100'
                 }`}
               >
+                {/* Step progress bar background */}
                 <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all duration-300 ${
+                  className={`absolute inset-0 transition-all duration-500 ease-out ${
+                    isCompleted
+                      ? 'bg-gradient-to-r from-green-100/80 to-emerald-100/80'
+                      : isCurrent
+                      ? 'bg-gradient-to-r from-[#220430]/10 to-[#2F70B5]/20'
+                      : ''
+                  }`}
+                  style={{
+                    width: `${stepProgress}%`,
+                    opacity: stepProgress > 0 ? 1 : 0
+                  }}
+                />
+
+                {/* Content */}
+                <div
+                  className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all duration-300 ${
                     isCompleted
                       ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30'
                       : isCurrent
@@ -487,7 +518,7 @@ export default function TenantCreationProgress() {
                   {isCompleted ? '✓' : config.icon}
                 </div>
                 <span
-                  className={`text-xs font-medium leading-tight ${
+                  className={`relative z-10 text-xs font-medium leading-tight ${
                     isCompleted
                       ? 'text-green-700 font-semibold'
                       : isCurrent
