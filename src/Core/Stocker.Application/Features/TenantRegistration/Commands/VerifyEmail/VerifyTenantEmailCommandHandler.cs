@@ -77,22 +77,51 @@ public sealed class VerifyTenantEmailCommandHandler : IRequestHandler<VerifyTena
 
             if (matchingRegistration.EmailVerified)
             {
-                // Log failed verification - already verified
-                await _auditService.LogAuthEventAsync(new SecurityAuditEvent
-                {
-                    Event = "tenant_email_verification_failed",
-                    Email = matchingRegistration.ContactEmail.Value,
-                    TenantCode = matchingRegistration.CompanyCode,
-                    RiskScore = 20,
-                    GdprCategory = "authentication",
-                    Metadata = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                        reason = "already_verified",
-                        registrationId = matchingRegistration.Id
-                    })
-                }, cancellationToken);
+                // Email already verified - this is an idempotent retry
+                // Check if tenant creation is already in progress or completed
+                _logger.LogInformation(
+                    "Email already verified for registration: {RegistrationId}, TenantId: {TenantId}, Status: {Status}",
+                    matchingRegistration.Id,
+                    matchingRegistration.TenantId,
+                    matchingRegistration.Status);
 
-                return Result<VerifyTenantEmailResponse>.Failure(Error.Validation("Email.AlreadyVerified", "E-posta adresi zaten doğrulanmış."));
+                // If tenant already exists and is valid, just return success
+                if (matchingRegistration.TenantId.HasValue && matchingRegistration.TenantId.Value != Guid.Empty)
+                {
+                    _logger.LogInformation(
+                        "Tenant already exists for registration: {RegistrationId}, returning success for idempotent retry",
+                        matchingRegistration.Id);
+
+                    return Result<VerifyTenantEmailResponse>.Success(new VerifyTenantEmailResponse
+                    {
+                        Success = true,
+                        RegistrationId = matchingRegistration.Id,
+                        Message = "Hesabınız oluşturuluyor..."
+                    });
+                }
+
+                // Email verified but no tenant yet - schedule tenant creation (handles retry scenario)
+                // The CreateTenantFromRegistrationCommandHandler has orphaned tenant cleanup logic
+                if (matchingRegistration.Status == RegistrationStatus.Pending ||
+                    matchingRegistration.Status == RegistrationStatus.Approved)
+                {
+                    _logger.LogInformation(
+                        "🔄 Re-scheduling tenant creation for already-verified registration: {RegistrationId}",
+                        matchingRegistration.Id);
+
+                    _backgroundJobService.Schedule<IMediator>(
+                        mediator => mediator.Send(
+                            new CreateTenantFromRegistrationCommand(matchingRegistration.Id),
+                            CancellationToken.None),
+                        TimeSpan.FromSeconds(3));
+                }
+
+                return Result<VerifyTenantEmailResponse>.Success(new VerifyTenantEmailResponse
+                {
+                    Success = true,
+                    RegistrationId = matchingRegistration.Id,
+                    Message = "Hesabınız oluşturuluyor..."
+                });
             }
 
             // Verify email (use token or code)

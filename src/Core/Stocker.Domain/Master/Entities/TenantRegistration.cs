@@ -283,8 +283,20 @@ public sealed class TenantRegistration : Entity
     {
         if (Status != RegistrationStatus.Pending)
             throw new InvalidOperationException("Only pending registrations can be cancelled.");
-            
+
         Status = RegistrationStatus.Cancelled;
+    }
+
+    /// <summary>
+    /// Clears the tenant reference when tenant creation fails and needs retry.
+    /// This resets the registration to allow a fresh tenant creation attempt.
+    /// </summary>
+    public void ClearTenantId()
+    {
+        TenantId = null;
+        Status = RegistrationStatus.Pending;
+        ApprovalDate = null;
+        ApprovedBy = null;
     }
     
     private static string GenerateRegistrationCode()

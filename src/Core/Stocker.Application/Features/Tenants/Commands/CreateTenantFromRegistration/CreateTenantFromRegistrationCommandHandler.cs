@@ -68,14 +68,115 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             // Check if already has a tenant
             if (registration.TenantId.HasValue && registration.TenantId.Value != Guid.Empty)
             {
-                _logger.LogWarning("Registration already has a tenant: {RegistrationId}", request.RegistrationId);
-                
+                _logger.LogWarning("Registration already has a tenant: {RegistrationId}, TenantId: {TenantId}",
+                    request.RegistrationId, registration.TenantId.Value);
+
                 var existingTenant = await _unitOfWork.Repository<Domain.Master.Entities.Tenant>()
                     .GetByIdAsync(registration.TenantId.Value);
-                    
+
                 if (existingTenant != null)
                 {
-                    return Result<TenantDto>.Success(MapToDto(existingTenant));
+                    // Check if tenant database actually exists and is accessible
+                    // This handles cases where previous tenant creation failed during migration
+                    var tenantDbIsValid = false;
+                    try
+                    {
+                        using var existingTenantDbContext = await _tenantDbContextFactory.CreateDbContextAsync(existingTenant.Id);
+                        // Cast to DbContext to access Database property
+                        if (existingTenantDbContext is DbContext dbContext)
+                        {
+                            tenantDbIsValid = await dbContext.Database.CanConnectAsync(cancellationToken);
+                        }
+
+                        if (tenantDbIsValid && existingTenant.IsActive)
+                        {
+                            _logger.LogInformation("Existing tenant {TenantId} is valid and active, returning existing tenant", existingTenant.Id);
+                            return Result<TenantDto>.Success(MapToDto(existingTenant));
+                        }
+
+                        // Tenant exists but database not accessible or tenant not active
+                        // This means previous creation failed - we need to cleanup and retry
+                        _logger.LogWarning("Existing tenant {TenantId} has database issues (valid={IsValid}) or is inactive (active={IsActive}). Cleaning up for retry...",
+                            existingTenant.Id, tenantDbIsValid, existingTenant.IsActive);
+                    }
+                    catch (Exception dbEx)
+                    {
+                        _logger.LogWarning(dbEx, "Cannot connect to existing tenant {TenantId} database. Cleaning up for retry...", existingTenant.Id);
+                    }
+
+                    // Cleanup orphaned tenant - delete tenant and related records so we can retry
+                    try
+                    {
+                        _logger.LogInformation("Cleaning up orphaned tenant {TenantId} for registration {RegistrationId}",
+                            existingTenant.Id, registration.Id);
+
+                        // Remove subscription if exists
+                        var orphanedSubscription = await _context.Subscriptions
+                            .FirstOrDefaultAsync(s => s.TenantId == existingTenant.Id, cancellationToken);
+                        if (orphanedSubscription != null)
+                        {
+                            _context.Subscriptions.Remove(orphanedSubscription);
+                        }
+
+                        // Remove MasterUser created for this registration (match by admin email)
+                        var orphanedUser = await _context.MasterUsers
+                            .FirstOrDefaultAsync(u => u.Email.Value == registration.AdminEmail.Value, cancellationToken);
+                        if (orphanedUser != null)
+                        {
+                            _context.MasterUsers.Remove(orphanedUser);
+                            _logger.LogInformation("Removed orphaned MasterUser {UserId} for email {Email}",
+                                orphanedUser.Id, registration.AdminEmail.Value);
+                        }
+
+                        // Remove tenant
+                        _context.Tenants.Remove(existingTenant);
+
+                        // Clear registration's tenant reference
+                        registration.ClearTenantId();
+                        _context.TenantRegistrations.Update(registration);
+
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation("✅ Successfully cleaned up orphaned tenant {TenantId}. Proceeding with fresh tenant creation.",
+                            existingTenant.Id);
+
+                        // Try to drop orphaned database (best effort - may not exist or may fail)
+                        try
+                        {
+                            var orphanedConnStr = existingTenant.ConnectionString.Value;
+                            var connBuilder = new NpgsqlConnectionStringBuilder(orphanedConnStr);
+                            var orphanedDbName = connBuilder.Database;
+                            connBuilder.Database = "postgres";
+
+                            using var masterConnection = new NpgsqlConnection(connBuilder.ConnectionString);
+                            await masterConnection.OpenAsync(cancellationToken);
+
+                            // Terminate existing connections to the database
+                            var terminateCmd = masterConnection.CreateCommand();
+                            terminateCmd.CommandText = $@"
+                                SELECT pg_terminate_backend(pid)
+                                FROM pg_stat_activity
+                                WHERE datname = '{orphanedDbName}' AND pid <> pg_backend_pid()";
+                            await terminateCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                            // Drop database
+                            var dropCmd = masterConnection.CreateCommand();
+                            dropCmd.CommandText = $"DROP DATABASE IF EXISTS \"{orphanedDbName}\"";
+                            await dropCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                            _logger.LogInformation("✅ Dropped orphaned database: {DatabaseName}", orphanedDbName);
+                        }
+                        catch (Exception dropEx)
+                        {
+                            _logger.LogWarning(dropEx, "Could not drop orphaned database (may not exist). Continuing with creation.");
+                        }
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        _logger.LogError(cleanupEx, "Failed to cleanup orphaned tenant {TenantId}. Manual intervention may be required.", existingTenant.Id);
+                        return Result<TenantDto>.Failure(Error.Failure("Tenant.CleanupFailed",
+                            "Önceki başarısız tenant oluşturma işlemi temizlenemedi. Lütfen destek ile iletişime geçin."));
+                    }
                 }
             }
 

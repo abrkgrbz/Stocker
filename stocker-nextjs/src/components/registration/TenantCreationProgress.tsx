@@ -49,11 +49,54 @@ export default function TenantCreationProgress() {
     registrationId: searchParams.get('registrationId') || undefined,
   };
 
+  // Check localStorage for previously saved registrationId (for page refresh scenarios)
+  const getStoredRegistrationId = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const email = verificationParams.email;
+    if (!email) return null;
+    const key = `tenant_creation_${email}`;
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        // Only use if less than 30 minutes old
+        if (data.timestamp && Date.now() - data.timestamp < 30 * 60 * 1000) {
+          return data.registrationId;
+        }
+        localStorage.removeItem(key);
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+    return null;
+  };
+
+  const saveRegistrationId = (regId: string) => {
+    if (typeof window === 'undefined') return;
+    const email = verificationParams.email;
+    if (!email) return;
+    const key = `tenant_creation_${email}`;
+    localStorage.setItem(key, JSON.stringify({
+      registrationId: regId,
+      timestamp: Date.now()
+    }));
+  };
+
+  const clearStoredRegistrationId = () => {
+    if (typeof window === 'undefined') return;
+    const email = verificationParams.email;
+    if (!email) return;
+    const key = `tenant_creation_${email}`;
+    localStorage.removeItem(key);
+  };
+
+  const storedRegId = getStoredRegistrationId();
   const [currentRegistrationId, setCurrentRegistrationId] = useState<string | null>(
-    verificationParams.registrationId || null
+    verificationParams.registrationId || storedRegId || null
   );
   const [verificationStarted, setVerificationStarted] = useState(false);
-  const verificationCalledRef = useRef(false);
+  // Use stored registrationId to determine if verification was already called
+  const verificationCalledRef = useRef(!!storedRegId);
 
   const [progress, setProgress] = useState<ProgressState>({
     step: 'Starting',
@@ -81,10 +124,14 @@ export default function TenantCreationProgress() {
         registrationId: progressData.registrationId
       });
 
+      // Clear localStorage since tenant creation is complete
+      clearStoredRegistrationId();
+
       setTimeout(() => {
         router.push('/login?message=tenant-created');
       }, 2000);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // Call verify-email API after SignalR is connected
@@ -145,34 +192,38 @@ export default function TenantCreationProgress() {
         signalRService.onTenantCreationProgress(handleProgress);
 
         // Step 3: If we have email+code/token, we need to verify first to get registrationId
-        let regId = verificationParams.registrationId;
+        // Check for registrationId in order: URL param > stored in localStorage > verify API
+        let regId = verificationParams.registrationId || storedRegId;
 
         if (!regId && verificationParams.email && (verificationParams.code || verificationParams.token)) {
           // Prevent double calls
           if (verificationCalledRef.current) {
-            console.log('Verification already called, skipping');
-            return;
-          }
-          verificationCalledRef.current = true;
-          setVerificationStarted(true);
+            console.log('Verification already called, skipping - using stored registrationId');
+            regId = currentRegistrationId;
+          } else {
+            verificationCalledRef.current = true;
+            setVerificationStarted(true);
 
-          console.log('Calling verify-email API to get registrationId');
-          const codeOrToken = verificationParams.code || verificationParams.token!;
-          const isCode = !!verificationParams.code;
+            console.log('Calling verify-email API to get registrationId');
+            const codeOrToken = verificationParams.code || verificationParams.token!;
+            const isCode = !!verificationParams.code;
 
-          try {
-            regId = await callVerifyEmailAPI(verificationParams.email, codeOrToken, isCode);
-            if (regId) {
-              setCurrentRegistrationId(regId);
-              console.log('Got registrationId from verify-email:', regId);
+            try {
+              regId = await callVerifyEmailAPI(verificationParams.email, codeOrToken, isCode);
+              if (regId) {
+                setCurrentRegistrationId(regId);
+                // Save to localStorage for page refresh scenarios
+                saveRegistrationId(regId);
+                console.log('Got registrationId from verify-email:', regId);
+              }
+            } catch (verifyError: unknown) {
+              console.error('Verification failed', verifyError);
+              if (isSubscribed) {
+                const errorMessage = verifyError instanceof Error ? verifyError.message : 'Doğrulama başarısız';
+                setConnectionError(errorMessage);
+              }
+              return;
             }
-          } catch (verifyError: unknown) {
-            console.error('Verification failed', verifyError);
-            if (isSubscribed) {
-              const errorMessage = verifyError instanceof Error ? verifyError.message : 'Doğrulama başarısız';
-              setConnectionError(errorMessage);
-            }
-            return;
           }
         }
 
