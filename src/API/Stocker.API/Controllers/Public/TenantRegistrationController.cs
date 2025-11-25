@@ -158,19 +158,21 @@ public class TenantRegistrationController : ControllerBase
 
     /// <summary>
     /// Verify email for registration
+    /// Returns registrationId for SignalR progress subscription
     /// </summary>
     [HttpPost("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyTenantEmailCommand command)
     {
         var result = await _mediator.Send(command);
-        
+
         if (!result.IsSuccess)
             throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
 
         return Ok(new
         {
-            success = true,
-            message = "E-posta adresi doğrulandı."
+            success = result.Value!.Success,
+            registrationId = result.Value!.RegistrationId,
+            message = result.Value!.Message ?? "E-posta adresi doğrulandı."
         });
     }
 }

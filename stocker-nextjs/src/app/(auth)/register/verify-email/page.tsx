@@ -44,28 +44,30 @@ function VerifyEmailContent() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/auth/verify-email`, {
+      const response = await fetch(`${apiUrl}/api/public/tenant-registration/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email || '', // Email might be in token or we need to extract
+          email: email || '',
           token: verificationToken,
         }),
       });
 
       const data = await response.json();
+      console.log('Token verification response:', data);
 
       if (response.ok && data.success) {
         setVerifySuccess(true);
         // Redirect to tenant creation progress page with registrationId
         setTimeout(() => {
-          const registrationId = data.registrationId || data.data?.registrationId;
+          const registrationId = data.registrationId;
+          console.log('Redirecting with registrationId:', registrationId);
           if (registrationId) {
             router.push(`/register/tenant-creation?registrationId=${registrationId}`);
           } else {
-            // Fallback to login if no registrationId
+            console.warn('No registrationId in response, falling back to login');
             router.push('/login');
           }
         }, 2000);
@@ -92,16 +94,19 @@ function VerifyEmailContent() {
     try {
       const { authService } = await import('@/lib/api/services');
       const response = await authService.verifyEmail(email, code);
+      console.log('Code verification response:', response);
 
       if (response.success) {
         setVerifySuccess(true);
         // Redirect to tenant creation progress page with registrationId
         setTimeout(() => {
-          const registrationId = response.registrationId || response.data?.registrationId;
+          // Response is directly the API response: { success, registrationId, message }
+          const registrationId = response.registrationId;
+          console.log('Redirecting with registrationId:', registrationId);
           if (registrationId) {
             router.push(`/register/tenant-creation?registrationId=${registrationId}`);
           } else {
-            // Fallback to login if no registrationId
+            console.warn('No registrationId in response, falling back to login');
             router.push('/login');
           }
         }, 2000);

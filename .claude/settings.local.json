@@ -6,7 +6,9 @@
       "Bash(Start-Sleep -Seconds 10)",
       "Bash(dotnet add:*)",
       "Bash(dotnet remove:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dotnet build:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

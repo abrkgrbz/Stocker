@@ -180,8 +180,9 @@ export class AuthService {
 
   /**
    * Verify email with code (for tenant registration)
+   * Returns registrationId for SignalR progress subscription
    */
-  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean }>> {
+  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean; registrationId: string; message?: string }>> {
     return apiClient.post('/api/public/tenant-registration/verify-email', { email, code });
   }
 
