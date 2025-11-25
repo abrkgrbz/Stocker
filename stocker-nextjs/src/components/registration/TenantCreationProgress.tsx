@@ -231,8 +231,8 @@ export default function TenantCreationProgress() {
 
   if (!hasRequiredParams) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
             <span className="text-4xl">⚠️</span>
           </div>
@@ -240,7 +240,7 @@ export default function TenantCreationProgress() {
           <p className="text-gray-600 mb-6">Geçersiz kayıt bilgisi</p>
           <button
             onClick={() => router.push('/register')}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
           >
             Kayıt Sayfasına Dön
           </button>
@@ -251,8 +251,8 @@ export default function TenantCreationProgress() {
 
   if (connectionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30">
             <span className="text-4xl">⚠️</span>
           </div>
@@ -260,7 +260,7 @@ export default function TenantCreationProgress() {
           <p className="text-gray-600 mb-6">{connectionError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
+            className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
           >
             Sayfayı Yenile
           </button>
@@ -271,8 +271,8 @@ export default function TenantCreationProgress() {
 
   if (progress.hasError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
+        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
             <span className="text-4xl">❌</span>
           </div>
@@ -283,7 +283,7 @@ export default function TenantCreationProgress() {
           <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-105"
+              className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
             >
               Tekrar Dene
             </button>
@@ -305,19 +305,20 @@ export default function TenantCreationProgress() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1f2e] via-[#1a3a4f] to-[#0d2538] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#00ff88]/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#00dd77]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#2F70B5]/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#28002D]/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#2F70B5]/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-xl w-full border border-white/20">
+      <div className="relative bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-xl w-full border border-[#2F70B5]/20">
         {/* Header */}
         <div className="text-center mb-8">
           {progress.isCompleted ? (
             <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88] to-[#00dd77] rounded-full animate-pulse shadow-lg shadow-[#00ff88]/40"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#28002D] to-[#2F70B5] rounded-full animate-pulse shadow-lg shadow-[#2F70B5]/40"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-5xl animate-bounce">🎉</span>
               </div>
@@ -325,7 +326,7 @@ export default function TenantCreationProgress() {
           ) : (
             <div className="relative w-24 h-24 mx-auto mb-6">
               {/* Outer glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88]/20 to-[#00dd77]/20 rounded-full blur-md animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#28002D]/20 to-[#2F70B5]/20 rounded-full blur-md animate-pulse"></div>
               {/* Progress ring background */}
               <svg className="absolute inset-0 w-full h-full -rotate-90">
                 <circle
@@ -350,21 +351,21 @@ export default function TenantCreationProgress() {
                 />
                 <defs>
                   <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#00ff88" />
-                    <stop offset="100%" stopColor="#00dd77" />
+                    <stop offset="0%" stopColor="#28002D" />
+                    <stop offset="100%" stopColor="#2F70B5" />
                   </linearGradient>
                 </defs>
               </svg>
               {/* Center content */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold bg-gradient-to-r from-[#00ff88] to-[#00dd77] bg-clip-text text-transparent">
+                <span className="text-2xl font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent">
                   {progress.percentage}%
                 </span>
               </div>
             </div>
           )}
 
-          <h1 className="text-3xl font-bold text-[#0a1f2e] mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {progress.isCompleted ? 'Hesabınız Hazır! 🚀' : 'Hesabınız Oluşturuluyor'}
           </h1>
           <p className="text-gray-600">
@@ -378,17 +379,17 @@ export default function TenantCreationProgress() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-semibold text-[#0a1f2e] flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
               <span>{stepConfig[progress.step]?.icon || '⏳'}</span>
               {stepConfig[progress.step]?.message || progress.step}
             </span>
-            <span className="text-sm font-bold bg-gradient-to-r from-[#00ff88] to-[#00dd77] bg-clip-text text-transparent">
+            <span className="text-sm font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent">
               {progress.percentage}%
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-[#00ff88] to-[#00dd77] rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+              className="h-full bg-gradient-to-r from-[#28002D] to-[#2F70B5] rounded-full transition-all duration-500 ease-out relative overflow-hidden"
               style={{ width: `${progress.percentage}%` }}
             >
               {/* Shimmer effect */}
@@ -398,15 +399,15 @@ export default function TenantCreationProgress() {
         </div>
 
         {/* Current Step Message */}
-        <div className="bg-gradient-to-r from-[#0a1f2e]/5 to-[#1a3a4f]/5 border border-[#0a1f2e]/10 rounded-2xl p-4 mb-6">
-          <p className="text-sm text-[#0a1f2e] text-center font-medium">
+        <div className="bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border border-[#2F70B5]/20 rounded-2xl p-4 mb-6">
+          <p className="text-sm text-gray-700 text-center font-medium">
             {progress.message}
           </p>
         </div>
 
         {/* Steps Checklist - Compact Grid View */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          {visibleSteps.map(([stepKey, config], index) => {
+          {visibleSteps.map(([stepKey, config]) => {
             const stepIndex = Object.keys(stepConfig).indexOf(stepKey);
             const currentStepIndex = Object.keys(stepConfig).indexOf(progress.step);
             const isCompleted = stepIndex < currentStepIndex || progress.isCompleted;
@@ -417,7 +418,7 @@ export default function TenantCreationProgress() {
                 key={stepKey}
                 className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
                   isCurrent
-                    ? 'bg-gradient-to-r from-[#00ff88]/10 to-[#00dd77]/10 border-2 border-[#00ff88]/30 shadow-sm'
+                    ? 'bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border-2 border-[#2F70B5]/30 shadow-sm'
                     : isCompleted
                     ? 'bg-green-50 border border-green-100'
                     : 'bg-gray-50 border border-gray-100'
@@ -428,7 +429,7 @@ export default function TenantCreationProgress() {
                     isCompleted
                       ? 'bg-gradient-to-br from-green-400 to-green-500 text-white shadow-sm'
                       : isCurrent
-                      ? 'bg-gradient-to-br from-[#00ff88] to-[#00dd77] text-[#0a1f2e] shadow-sm animate-pulse'
+                      ? 'bg-gradient-to-br from-[#28002D] to-[#2F70B5] text-white shadow-sm animate-pulse'
                       : 'bg-gray-200 text-gray-400'
                   }`}
                 >
@@ -439,7 +440,7 @@ export default function TenantCreationProgress() {
                     isCompleted
                       ? 'text-green-700'
                       : isCurrent
-                      ? 'text-[#0a1f2e] font-semibold'
+                      ? 'text-[#2F70B5] font-semibold'
                       : 'text-gray-500'
                   }`}
                 >
@@ -452,8 +453,8 @@ export default function TenantCreationProgress() {
 
         {/* Info Footer */}
         {!progress.isCompleted && (
-          <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl">
-            <p className="text-xs text-amber-800 text-center flex items-center justify-center gap-2">
+          <div className="p-4 bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border border-[#2F70B5]/20 rounded-2xl">
+            <p className="text-xs text-[#28002D] text-center flex items-center justify-center gap-2">
               <span className="text-base">💡</span>
               <span>Bu sayfayı kapatmayın. İşlem tamamlandığında otomatik olarak yönlendirileceksiniz.</span>
             </p>
@@ -464,7 +465,7 @@ export default function TenantCreationProgress() {
         {progress.isCompleted && (
           <button
             onClick={() => router.push('/login?message=tenant-created')}
-            className="w-full px-6 py-4 bg-gradient-to-r from-[#00ff88] to-[#00dd77] text-[#0a1f2e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#00ff88]/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="w-full px-6 py-4 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
           >
             <span>Giriş Yap</span>
             <span className="text-xl">→</span>
