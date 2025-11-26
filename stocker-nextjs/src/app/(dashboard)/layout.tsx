@@ -29,6 +29,7 @@ import {
   ClockCircleOutlined,
   ShoppingCartOutlined,
   FileTextOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -201,8 +202,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         },
         {
           key: '/sales/orders',
-          icon: <FileTextOutlined />,
+          icon: <ShoppingCartOutlined />,
           label: 'Siparişler',
+        },
+        {
+          key: '/sales/invoices',
+          icon: <FileTextOutlined />,
+          label: 'Faturalar',
+        },
+        {
+          key: '/sales/payments',
+          icon: <WalletOutlined />,
+          label: 'Ödemeler',
         },
       ],
     },
@@ -294,8 +305,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     // CRM routes
     if (pathname.startsWith('/crm')) return [pathname];
 
-    // Sales routes
-    if (pathname.startsWith('/sales')) return [pathname];
+    // Sales routes - match to parent route for nested pages
+    if (pathname.startsWith('/sales/orders')) return ['/sales/orders'];
+    if (pathname.startsWith('/sales/invoices')) return ['/sales/invoices'];
+    if (pathname.startsWith('/sales/payments')) return ['/sales/payments'];
+    if (pathname.startsWith('/sales')) return ['/sales'];
 
     // Communication routes
     if (pathname.startsWith('/notifications')) return [pathname];

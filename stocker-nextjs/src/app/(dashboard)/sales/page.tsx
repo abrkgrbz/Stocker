@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Space, Progress } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Progress } from 'antd';
 import {
   ShoppingCartOutlined,
   FileTextOutlined,
   WalletOutlined,
   DollarOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
@@ -87,20 +84,9 @@ export default function SalesDashboardPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Satış Dashboard</Title>
-          <Text type="secondary">Satış operasyonlarınızın genel görünümü</Text>
-        </div>
-        <Space>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/sales/orders?action=new')}
-          >
-            Yeni Sipariş
-          </Button>
-        </Space>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={2} style={{ margin: 0 }}>Satış Dashboard</Title>
+        <Text type="secondary">Satış operasyonlarınızın genel görünümü</Text>
       </div>
 
       {/* Statistics Cards */}
