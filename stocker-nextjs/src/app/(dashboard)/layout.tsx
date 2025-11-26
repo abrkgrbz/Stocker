@@ -27,6 +27,8 @@ import {
   ThunderboltOutlined,
   BellOutlined,
   ClockCircleOutlined,
+  ShoppingCartOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -90,6 +92,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
     if (pathname.startsWith('/crm')) {
       newOpenKeys.push('crm');
+    }
+
+    if (pathname.startsWith('/sales')) {
+      newOpenKeys.push('sales');
     }
 
     if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) {
@@ -184,6 +190,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       ],
     },
     {
+      key: 'sales',
+      icon: <ShoppingCartOutlined />,
+      label: 'Satış',
+      children: [
+        {
+          key: '/sales',
+          icon: <DashboardOutlined />,
+          label: 'Satış Dashboard',
+        },
+        {
+          key: '/sales/orders',
+          icon: <FileTextOutlined />,
+          label: 'Siparişler',
+        },
+      ],
+    },
+    {
       key: 'communication',
       icon: <BellOutlined />,
       label: 'İletişim',
@@ -270,6 +293,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
     // CRM routes
     if (pathname.startsWith('/crm')) return [pathname];
+
+    // Sales routes
+    if (pathname.startsWith('/sales')) return [pathname];
 
     // Communication routes
     if (pathname.startsWith('/notifications')) return [pathname];

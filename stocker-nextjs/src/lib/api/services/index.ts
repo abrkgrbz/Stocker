@@ -34,3 +34,51 @@ export type {
   UpdateSessionSettingsRequest,
   UpdateApiSecurityRequest,
 } from './security-settings.service';
+
+// Sales Module
+export { SalesService } from './sales.service';
+export type {
+  SalesOrder,
+  SalesOrderItem,
+  SalesOrderListItem,
+  SalesOrderStatus,
+  SalesOrderStatistics,
+  GetSalesOrdersParams,
+  CreateSalesOrderCommand,
+  CreateSalesOrderItemCommand,
+  UpdateSalesOrderCommand,
+  AddSalesOrderItemCommand,
+  CancelSalesOrderCommand,
+} from './sales.service';
+
+export { InvoiceService } from './invoice.service';
+export type {
+  Invoice,
+  InvoiceItem,
+  InvoiceListItem,
+  InvoiceStatus,
+  InvoiceType,
+  InvoiceStatistics,
+  GetInvoicesParams,
+  CreateInvoiceCommand,
+  CreateInvoiceFromOrderCommand,
+  CreateInvoiceItemCommand,
+  UpdateInvoiceCommand,
+  AddInvoiceItemCommand,
+  RecordPaymentCommand,
+  SetEInvoiceCommand,
+} from './invoice.service';
+
+export { PaymentService } from './payment.service';
+export type {
+  Payment,
+  PaymentListItem,
+  PaymentStatus,
+  PaymentMethod,
+  PaymentStatistics,
+  GetPaymentsParams,
+  CreatePaymentCommand,
+  UpdatePaymentCommand,
+  RefundPaymentCommand,
+  RejectPaymentCommand,
+} from './payment.service';
