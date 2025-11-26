@@ -96,7 +96,7 @@ export default function SalesDashboardPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => router.push('/sales/orders/new')}
+            onClick={() => router.push('/sales/orders?action=new')}
           >
             Yeni Sipariş
           </Button>
