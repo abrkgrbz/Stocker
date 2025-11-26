@@ -19,6 +19,7 @@ import {
   ThunderboltOutlined,
   RocketOutlined,
   LogoutOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -105,6 +106,16 @@ export default function AppHomePage() {
       badge: 'Aktif',
     },
     {
+      id: 'sales',
+      title: 'Satış',
+      icon: <ShoppingCartOutlined />,
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+      path: '/sales',
+      description: 'Sipariş, fatura ve ödeme',
+      badge: 'Aktif',
+    },
+    {
       id: 'dashboards',
       title: 'Dashboards',
       icon: <DashboardOutlined />,
@@ -150,17 +161,6 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
       path: '/calendar',
       description: 'Etkinlik ve toplantılar',
-      badge: 'Yakında',
-      disabled: true,
-    },
-    {
-      id: 'contacts',
-      title: 'Kontaklar',
-      icon: <UserOutlined />,
-      color: '#0891b2',
-      gradient: 'linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)',
-      path: '/contacts',
-      description: 'Kişiler ve iletişim',
       badge: 'Yakında',
       disabled: true,
     },
