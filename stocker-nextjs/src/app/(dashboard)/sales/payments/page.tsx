@@ -17,6 +17,9 @@ import {
   Dropdown,
   Modal,
   message,
+  Drawer,
+  Form,
+  InputNumber,
 } from 'antd';
 import {
   PlusOutlined,
@@ -38,8 +41,9 @@ import {
   useConfirmPayment,
   useCompletePayment,
   useRejectPayment,
+  useCreatePayment,
 } from '@/lib/api/hooks/usePayments';
-import type { PaymentListItem, PaymentStatus, PaymentMethod, GetPaymentsParams } from '@/lib/api/services/payment.service';
+import type { PaymentListItem, PaymentStatus, PaymentMethod, GetPaymentsParams, CreatePaymentCommand } from '@/lib/api/services/payment.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -87,6 +91,7 @@ const methodOptions = [
 export default function PaymentsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [form] = Form.useForm();
 
   // Filter state
   const [filters, setFilters] = useState<GetPaymentsParams>({
@@ -102,6 +107,7 @@ export default function PaymentsPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
 
   // API hooks
   const { data, isLoading, refetch } = usePayments(filters);
@@ -109,6 +115,7 @@ export default function PaymentsPage() {
   const confirmPayment = useConfirmPayment();
   const completePayment = useCompletePayment();
   const rejectPayment = useRejectPayment();
+  const createPayment = useCreatePayment();
 
   const payments = data?.items || [];
   const totalCount = data?.totalCount || 0;
@@ -208,6 +215,38 @@ export default function PaymentsPage() {
         }
       },
     });
+  };
+
+  const openCreateDrawer = () => {
+    form.resetFields();
+    form.setFieldsValue({
+      paymentDate: dayjs(),
+      currency: 'TRY',
+      method: 'BankTransfer',
+    });
+    setCreateDrawerOpen(true);
+  };
+
+  const handleCreatePayment = async (values: any) => {
+    try {
+      const paymentData: CreatePaymentCommand = {
+        paymentDate: values.paymentDate.toISOString(),
+        customerName: values.customerName,
+        method: values.method,
+        currency: values.currency || 'TRY',
+        amount: values.amount,
+        reference: values.reference,
+        description: values.description,
+        bankAccountName: values.bankAccountName,
+        transactionId: values.transactionId,
+      };
+      await createPayment.mutateAsync(paymentData);
+      message.success('Ödeme oluşturuldu');
+      setCreateDrawerOpen(false);
+      form.resetFields();
+    } catch {
+      message.error('Ödeme oluşturulamadı');
+    }
   };
 
   const getActionItems = (record: PaymentListItem) => {
@@ -376,11 +415,9 @@ export default function PaymentsPage() {
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
-          <Link href="/sales/payments/new">
-            <Button type="primary" icon={<PlusOutlined />}>
-              Yeni Ödeme
-            </Button>
-          </Link>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateDrawer}>
+            Yeni Ödeme
+          </Button>
         </Space>
       </div>
 
@@ -464,6 +501,126 @@ export default function PaymentsPage() {
           rows={3}
         />
       </Modal>
+
+      {/* Create Payment Drawer */}
+      <Drawer
+        title="Yeni Ödeme Oluştur"
+        width={600}
+        open={createDrawerOpen}
+        onClose={() => setCreateDrawerOpen(false)}
+        extra={
+          <Space>
+            <Button onClick={() => setCreateDrawerOpen(false)}>İptal</Button>
+            <Button type="primary" onClick={() => form.submit()} loading={createPayment.isPending}>
+              Oluştur
+            </Button>
+          </Space>
+        }
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreatePayment}
+          initialValues={{
+            paymentDate: dayjs(),
+            currency: 'TRY',
+            method: 'BankTransfer',
+          }}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="customerName"
+                label="Müşteri Adı"
+                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
+              >
+                <Input placeholder="Müşteri adını giriniz" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="paymentDate"
+                label="Ödeme Tarihi"
+                rules={[{ required: true, message: 'Ödeme tarihi zorunludur' }]}
+              >
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="method"
+                label="Ödeme Yöntemi"
+                rules={[{ required: true, message: 'Ödeme yöntemi zorunludur' }]}
+              >
+                <Select>
+                  <Select.Option value="Cash">Nakit</Select.Option>
+                  <Select.Option value="BankTransfer">Havale/EFT</Select.Option>
+                  <Select.Option value="CreditCard">Kredi Kartı</Select.Option>
+                  <Select.Option value="DebitCard">Banka Kartı</Select.Option>
+                  <Select.Option value="Check">Çek</Select.Option>
+                  <Select.Option value="DirectDebit">Otomatik Ödeme</Select.Option>
+                  <Select.Option value="Other">Diğer</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="currency" label="Para Birimi">
+                <Select>
+                  <Select.Option value="TRY">TRY - Türk Lirası</Select.Option>
+                  <Select.Option value="USD">USD - Amerikan Doları</Select.Option>
+                  <Select.Option value="EUR">EUR - Euro</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="amount"
+                label="Tutar"
+                rules={[{ required: true, message: 'Tutar zorunludur' }]}
+              >
+                <InputNumber
+                  min={0}
+                  precision={2}
+                  style={{ width: '100%' }}
+                  placeholder="Ödeme tutarı"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="reference" label="Referans">
+                <Input placeholder="Ödeme referansı" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="bankAccountName" label="Banka Hesabı">
+                <Input placeholder="Banka hesap adı" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="transactionId" label="İşlem No">
+                <Input placeholder="Banka işlem numarası" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name="description" label="Açıklama">
+                <Input.TextArea rows={3} placeholder="Ödeme açıklaması" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Drawer>
     </div>
   );
 }
