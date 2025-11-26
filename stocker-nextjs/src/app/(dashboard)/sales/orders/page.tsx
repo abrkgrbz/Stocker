@@ -42,6 +42,8 @@ import {
   useDeleteSalesOrder,
   useCreateSalesOrder,
 } from '@/lib/api/hooks/useSales';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
+import type { Customer } from '@/lib/api/services/crm.service';
 import type { SalesOrderListItem, SalesOrderStatus, GetSalesOrdersParams, CreateSalesOrderCommand, CreateSalesOrderItemCommand } from '@/lib/api/services/sales.service';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -87,12 +89,25 @@ export default function SalesOrdersPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<SalesOrderListItem | null>(null);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
 
   const { data, isLoading, refetch } = useSalesOrders(filters);
+  const { data: customersData, isLoading: customersLoading } = useCustomers({
+    searchTerm: customerSearch,
+    status: 'Active',
+    pageSize: 50
+  });
   const approveMutation = useApproveSalesOrder();
   const cancelMutation = useCancelSalesOrder();
   const deleteMutation = useDeleteSalesOrder();
   const createMutation = useCreateSalesOrder();
+
+  // Get customers list for select options
+  const customerOptions = customersData?.items?.map((customer: Customer) => ({
+    value: customer.id.toString(),
+    label: customer.companyName || `${customer.contactPerson}`,
+    customer: customer,
+  })) || [];
 
   // Handle query param to open drawer
   useEffect(() => {
@@ -153,13 +168,19 @@ export default function SalesOrdersPage() {
 
   const handleCreateOrder = async (values: any) => {
     try {
+      // Find selected customer from options
+      const selectedCustomer = customerOptions.find(
+        (opt: { value: string; customer: Customer }) => opt.value === values.customerId
+      )?.customer;
+
       const orderData: CreateSalesOrderCommand = {
         orderDate: values.orderDate.toISOString(),
-        customerName: values.customerName,
-        customerEmail: values.customerEmail,
+        customerId: selectedCustomer?.id?.toString() || undefined,
+        customerName: selectedCustomer?.companyName || selectedCustomer?.contactPerson || values.customerName,
+        customerEmail: selectedCustomer?.email || values.customerEmail,
         currency: values.currency || 'TRY',
-        shippingAddress: values.shippingAddress,
-        billingAddress: values.billingAddress,
+        shippingAddress: values.shippingAddress || selectedCustomer?.address,
+        billingAddress: values.billingAddress || selectedCustomer?.address,
         notes: values.notes,
         salesPersonName: values.salesPersonName,
         items: values.items.map((item: any, index: number) => ({
@@ -450,11 +471,31 @@ export default function SalesOrdersPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="customerName"
-                label="Müşteri Adı"
-                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
+                name="customerId"
+                label="Müşteri"
+                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
               >
-                <Input placeholder="Müşteri adını giriniz" />
+                <Select
+                  showSearch
+                  placeholder="Müşteri seçiniz"
+                  loading={customersLoading}
+                  filterOption={false}
+                  onSearch={(value) => setCustomerSearch(value)}
+                  options={customerOptions}
+                  onChange={(value) => {
+                    const customer = customerOptions.find(
+                      (opt: { value: string; customer: Customer }) => opt.value === value
+                    )?.customer;
+                    if (customer) {
+                      form.setFieldsValue({
+                        customerEmail: customer.email,
+                        shippingAddress: customer.address,
+                        billingAddress: customer.address,
+                      });
+                    }
+                  }}
+                  notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>

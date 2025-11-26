@@ -47,6 +47,8 @@ import {
   useCancelInvoice,
   useCreateInvoice,
 } from '@/lib/api/hooks/useInvoices';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
+import type { Customer } from '@/lib/api/services/crm.service';
 import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams, CreateInvoiceCommand, CreateInvoiceItemCommand } from '@/lib/api/services/invoice.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -101,9 +103,15 @@ export default function InvoicesPage() {
 
   // Drawer state
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
 
   // API hooks
   const { data, isLoading, refetch } = useInvoices(filters);
+  const { data: customersData, isLoading: customersLoading } = useCustomers({
+    searchTerm: customerSearch,
+    status: 'Active',
+    pageSize: 50
+  });
   const deleteInvoice = useDeleteInvoice();
   const issueInvoice = useIssueInvoice();
   const sendInvoice = useSendInvoice();
@@ -112,6 +120,13 @@ export default function InvoicesPage() {
 
   const invoices = data?.items || [];
   const totalCount = data?.totalCount || 0;
+
+  // Get customers list for select options
+  const customerOptions = customersData?.items?.map((customer: Customer) => ({
+    value: customer.id.toString(),
+    label: customer.companyName || `${customer.contactPerson}`,
+    customer: customer,
+  })) || [];
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: value, page: 1 }));
@@ -221,17 +236,23 @@ export default function InvoicesPage() {
 
   const handleCreateInvoice = async (values: any) => {
     try {
+      // Find selected customer from options
+      const selectedCustomer = customerOptions.find(
+        (opt: { value: string; customer: Customer }) => opt.value === values.customerId
+      )?.customer;
+
       const invoiceData: CreateInvoiceCommand = {
         invoiceDate: values.invoiceDate.toISOString(),
         dueDate: values.dueDate.toISOString(),
-        customerName: values.customerName,
-        customerEmail: values.customerEmail,
-        customerTaxNumber: values.customerTaxNumber,
-        customerAddress: values.customerAddress,
+        customerId: selectedCustomer?.id?.toString() || undefined,
+        customerName: selectedCustomer?.companyName || selectedCustomer?.contactPerson || values.customerName,
+        customerEmail: selectedCustomer?.email || values.customerEmail,
+        customerTaxNumber: selectedCustomer?.taxId || values.customerTaxNumber,
+        customerAddress: selectedCustomer?.address || values.customerAddress,
         type: values.type || 'Sales',
         currency: values.currency || 'TRY',
         notes: values.notes,
-        paymentTerms: values.paymentTerms,
+        paymentTerms: selectedCustomer?.paymentTerms || values.paymentTerms,
         items: values.items.map((item: any) => ({
           productCode: item.productCode,
           productName: item.productName,
@@ -535,11 +556,32 @@ export default function InvoicesPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="customerName"
-                label="Müşteri Adı"
-                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
+                name="customerId"
+                label="Müşteri"
+                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
               >
-                <Input placeholder="Müşteri adını giriniz" />
+                <Select
+                  showSearch
+                  placeholder="Müşteri seçiniz"
+                  loading={customersLoading}
+                  filterOption={false}
+                  onSearch={(value) => setCustomerSearch(value)}
+                  options={customerOptions}
+                  onChange={(value) => {
+                    const customer = customerOptions.find(
+                      (opt: { value: string; customer: Customer }) => opt.value === value
+                    )?.customer;
+                    if (customer) {
+                      form.setFieldsValue({
+                        customerEmail: customer.email,
+                        customerTaxNumber: customer.taxId,
+                        customerAddress: customer.address,
+                        paymentTerms: customer.paymentTerms,
+                      });
+                    }
+                  }}
+                  notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
