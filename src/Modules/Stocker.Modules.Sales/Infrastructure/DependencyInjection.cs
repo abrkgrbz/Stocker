@@ -1,7 +1,10 @@
+using FluentValidation;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
+using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
 
 namespace Stocker.Modules.Sales.Infrastructure;
@@ -12,7 +15,33 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Sales module infrastructure services will be added here in the future
+        // Register MediatR handlers
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        // Register FluentValidation validators
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers SalesDbContext with the provided connection string
+    /// Called during tenant context resolution
+    /// </summary>
+    public static IServiceCollection AddSalesDbContext(
+        this IServiceCollection services,
+        string connectionString)
+    {
+        services.AddDbContext<SalesDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
+                npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "sales");
+            });
+        });
+
         return services;
     }
 

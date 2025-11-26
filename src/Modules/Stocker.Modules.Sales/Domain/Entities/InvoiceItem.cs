@@ -4,11 +4,12 @@ using Stocker.SharedKernel.Results;
 namespace Stocker.Modules.Sales.Domain.Entities;
 
 /// <summary>
-/// Represents a line item in a sales order
+/// Represents a line item in an invoice
 /// </summary>
-public class SalesOrderItem : TenantAggregateRoot
+public class InvoiceItem : TenantAggregateRoot
 {
-    public Guid SalesOrderId { get; private set; }
+    public Guid InvoiceId { get; private set; }
+    public Guid? SalesOrderItemId { get; private set; }
     public Guid? ProductId { get; private set; }
     public string ProductCode { get; private set; } = string.Empty;
     public string ProductName { get; private set; } = string.Empty;
@@ -22,18 +23,16 @@ public class SalesOrderItem : TenantAggregateRoot
     public decimal VatAmount { get; private set; }
     public decimal LineTotal { get; private set; }
     public int LineNumber { get; private set; }
-    public decimal DeliveredQuantity { get; private set; }
-    public bool IsDelivered { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    public virtual SalesOrder? SalesOrder { get; private set; }
+    public virtual Invoice? Invoice { get; private set; }
 
-    private SalesOrderItem() : base() { }
+    private InvoiceItem() : base() { }
 
-    public static Result<SalesOrderItem> Create(
+    public static Result<InvoiceItem> Create(
         Guid tenantId,
-        Guid salesOrderId,
+        Guid invoiceId,
         int lineNumber,
         Guid? productId,
         string productCode,
@@ -42,27 +41,28 @@ public class SalesOrderItem : TenantAggregateRoot
         decimal quantity,
         decimal unitPrice,
         decimal vatRate,
+        Guid? salesOrderItemId = null,
         string? description = null)
     {
         if (string.IsNullOrWhiteSpace(productCode))
-            return Result<SalesOrderItem>.Failure(Error.Validation("SalesOrderItem.ProductCode", "Product code is required"));
+            return Result<InvoiceItem>.Failure(Error.Validation("InvoiceItem.ProductCode", "Product code is required"));
 
         if (string.IsNullOrWhiteSpace(productName))
-            return Result<SalesOrderItem>.Failure(Error.Validation("SalesOrderItem.ProductName", "Product name is required"));
+            return Result<InvoiceItem>.Failure(Error.Validation("InvoiceItem.ProductName", "Product name is required"));
 
         if (quantity <= 0)
-            return Result<SalesOrderItem>.Failure(Error.Validation("SalesOrderItem.Quantity", "Quantity must be greater than zero"));
+            return Result<InvoiceItem>.Failure(Error.Validation("InvoiceItem.Quantity", "Quantity must be greater than zero"));
 
         if (unitPrice < 0)
-            return Result<SalesOrderItem>.Failure(Error.Validation("SalesOrderItem.UnitPrice", "Unit price cannot be negative"));
+            return Result<InvoiceItem>.Failure(Error.Validation("InvoiceItem.UnitPrice", "Unit price cannot be negative"));
 
         if (vatRate < 0 || vatRate > 100)
-            return Result<SalesOrderItem>.Failure(Error.Validation("SalesOrderItem.VatRate", "VAT rate must be between 0 and 100"));
+            return Result<InvoiceItem>.Failure(Error.Validation("InvoiceItem.VatRate", "VAT rate must be between 0 and 100"));
 
-        var item = new SalesOrderItem();
+        var item = new InvoiceItem();
         item.Id = Guid.NewGuid();
         item.SetTenantId(tenantId);
-        item.SalesOrderId = salesOrderId;
+        item.InvoiceId = invoiceId;
         item.LineNumber = lineNumber;
         item.ProductId = productId;
         item.ProductCode = productCode;
@@ -72,21 +72,20 @@ public class SalesOrderItem : TenantAggregateRoot
         item.Quantity = quantity;
         item.UnitPrice = unitPrice;
         item.VatRate = vatRate;
+        item.SalesOrderItemId = salesOrderItemId;
         item.DiscountRate = 0;
         item.DiscountAmount = 0;
-        item.DeliveredQuantity = 0;
-        item.IsDelivered = false;
         item.CreatedAt = DateTime.UtcNow;
 
         item.CalculateAmounts();
 
-        return Result<SalesOrderItem>.Success(item);
+        return Result<InvoiceItem>.Success(item);
     }
 
     public Result UpdateQuantity(decimal quantity)
     {
         if (quantity <= 0)
-            return Result.Failure(Error.Validation("SalesOrderItem.Quantity", "Quantity must be greater than zero"));
+            return Result.Failure(Error.Validation("InvoiceItem.Quantity", "Quantity must be greater than zero"));
 
         Quantity = quantity;
         CalculateAmounts();
@@ -98,7 +97,7 @@ public class SalesOrderItem : TenantAggregateRoot
     public Result UpdateUnitPrice(decimal unitPrice)
     {
         if (unitPrice < 0)
-            return Result.Failure(Error.Validation("SalesOrderItem.UnitPrice", "Unit price cannot be negative"));
+            return Result.Failure(Error.Validation("InvoiceItem.UnitPrice", "Unit price cannot be negative"));
 
         UnitPrice = unitPrice;
         CalculateAmounts();
@@ -110,7 +109,7 @@ public class SalesOrderItem : TenantAggregateRoot
     public Result ApplyDiscount(decimal discountRate)
     {
         if (discountRate < 0 || discountRate > 100)
-            return Result.Failure(Error.Validation("SalesOrderItem.DiscountRate", "Discount rate must be between 0 and 100"));
+            return Result.Failure(Error.Validation("InvoiceItem.DiscountRate", "Discount rate must be between 0 and 100"));
 
         DiscountRate = discountRate;
         CalculateAmounts();
@@ -125,23 +124,6 @@ public class SalesOrderItem : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
-
-    public Result UpdateDeliveredQuantity(decimal deliveredQuantity)
-    {
-        if (deliveredQuantity < 0)
-            return Result.Failure(Error.Validation("SalesOrderItem.DeliveredQuantity", "Delivered quantity cannot be negative"));
-
-        if (deliveredQuantity > Quantity)
-            return Result.Failure(Error.Validation("SalesOrderItem.DeliveredQuantity", "Delivered quantity cannot exceed ordered quantity"));
-
-        DeliveredQuantity = deliveredQuantity;
-        IsDelivered = DeliveredQuantity >= Quantity;
-        UpdatedAt = DateTime.UtcNow;
-
-        return Result.Success();
-    }
-
-    public decimal GetRemainingQuantity() => Quantity - DeliveredQuantity;
 
     private void CalculateAmounts()
     {
