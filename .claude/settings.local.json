@@ -8,7 +8,22 @@
       "Bash(dotnet remove:*)",
       "Bash(npm run build:*)",
       "Bash(dotnet build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git clean:*)",
+      "Bash(find:*)",
+      "Bash(ls -la \"c:\\Users\\PC\\.claude-worktrees\\Stocker.Modules.CRM\\friendly-solomon\\stocker-nextjs\\src\\app\\(protected)\\crm 2>/dev/null || ls -la c:UsersPC.claude-worktreesStocker.Modules.CRMfriendly-solomonstocker-nextjssrcappcrm\")",
+      "Bash(npx tsc --noEmit --skipLibCheck)",
+      "Bash(npx next build)",
+      "Bash(dotnet restore:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat(frontend): Add comprehensive CRM React Query hooks and Kanban view\n\n- Add ~40+ missing React Query hooks for full CRM backend coverage:\n  - Opportunity: update, delete, move stage\n  - Pipeline: CRUD, activate, deactivate, set default, stage management\n  - Campaign: CRUD, lifecycle (start, pause, complete), member management\n  - Segment: CRUD, activate, deactivate, member and criteria management\n\n- Add Kanban board view to Opportunities page:\n  - Pipeline-based column layout with stages\n  - Won/Lost columns for closed opportunities\n  - View toggle between Kanban and Grid modes\n  - Stage totals with count and amount display\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\"`)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(npm install)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

@@ -152,7 +152,7 @@ services:
       # RATE LIMITING
       # ==================================
       - TenantRateLimiting__Algorithm=SlidingWindow
-      - TenantRateLimiting__PermitLimit=100
+      - TenantRateLimiting__PermitLimit=1000
       - TenantRateLimiting__WindowSeconds=60
       - TenantRateLimiting__QueueLimit=5
       - TenantRateLimiting__SegmentsPerWindow=4
@@ -203,11 +203,28 @@ services:
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
       
       # Apply CORS to HTTPS router
-      # Note: Traefik automatically upgrades WebSocket connections, no special config needed
       - "traefik.http.routers.api-secure.middlewares=api-cors"
+
+      # ==================================
+      # WEBSOCKET/SIGNALR SUPPORT
+      # ==================================
+      # Dedicated router for SignalR hubs with WebSocket support
+      - "traefik.http.routers.api-ws.rule=Host(`api.stoocker.app`) && PathPrefix(`/hubs`)"
+      - "traefik.http.routers.api-ws.entrypoints=https"
+      - "traefik.http.routers.api-ws.tls=true"
+      - "traefik.http.routers.api-ws.tls.certresolver=cloudflare"
+      - "traefik.http.routers.api-ws.service=api"
+      - "traefik.http.routers.api-ws.middlewares=api-cors"
 
       # Service configuration for proper WebSocket handling
       - "traefik.http.services.api.loadbalancer.passhostheader=true"
+      # Sticky sessions for SignalR (important for multiple instances)
+      - "traefik.http.services.api.loadbalancer.sticky.cookie.name=stocker_signalr"
+      - "traefik.http.services.api.loadbalancer.sticky.cookie.httponly=true"
+      - "traefik.http.services.api.loadbalancer.sticky.cookie.secure=true"
+      # Response forwarding timeout for long-polling fallback
+      - "traefik.http.services.api.loadbalancer.responseforwardingtimeouts.readtimeout=3600s"
+      - "traefik.http.services.api.loadbalancer.responseforwardingtimeouts.idletimeout=3600s"
       
       # Coolify labels
       - "coolify.managed=true"
