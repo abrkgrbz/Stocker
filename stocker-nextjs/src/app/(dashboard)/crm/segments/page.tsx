@@ -20,7 +20,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
-import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment, useUpdateCustomerSegment } from '@/hooks/useCRM';
+import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment, useUpdateCustomerSegment } from '@/lib/api/hooks/useCRM';
 import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
 import { CustomerSegmentModal } from '@/components/crm/segments/CustomerSegmentModal';
 

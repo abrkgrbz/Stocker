@@ -20,7 +20,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
-import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline, useSetDefaultPipeline } from '@/hooks/useCRM';
+import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline, useSetDefaultPipeline } from '@/lib/api/hooks/useCRM';
 import { PipelineModal } from '@/components/crm/pipelines/PipelineModal';
 import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
 

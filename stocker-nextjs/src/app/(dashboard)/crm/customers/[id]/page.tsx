@@ -48,8 +48,7 @@ import {
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCustomer, useDeleteCustomer, useUpdateCustomer } from '@/hooks/useCRM';
-import { useActivities } from '@/lib/api/hooks/useCRM';
+import { useCustomer, useDeleteCustomer, useUpdateCustomer, useActivities } from '@/lib/api/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
 import { CustomerTags } from '@/components/crm/customers';
 import dayjs from 'dayjs';

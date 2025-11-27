@@ -37,7 +37,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useCreateCustomer, useUpdateCustomer } from '@/hooks/useCRM';
+import { useCreateCustomer, useUpdateCustomer } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { getCityNames, getDistrictsByCity } from '@/lib/data/turkey-cities';
 

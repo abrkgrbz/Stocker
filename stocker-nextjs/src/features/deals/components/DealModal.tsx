@@ -16,7 +16,7 @@ import {
   CheckOutlined,
 } from '@ant-design/icons';
 import type { Deal, Pipeline } from '@/lib/api/services/crm.service';
-import { useCustomers } from '@/hooks/useCRM';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;

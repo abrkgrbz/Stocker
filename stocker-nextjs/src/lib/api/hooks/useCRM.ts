@@ -39,6 +39,10 @@ import logger from '../../utils/logger';
 // =====================================
 
 export const crmKeys = {
+  // Customers
+  customers: ['crm', 'customers'] as const,
+  customer: (id: string) => ['crm', 'customers', id] as const,
+
   // Activities
   activities: ['crm', 'activities'] as const,
   activity: (id: Guid) => ['crm', 'activities', id] as const,
@@ -105,6 +109,73 @@ export const crmKeys = {
   customers: ['crm', 'customers'] as const,
   customer: (id: string) => ['crm', 'customers', id] as const,
 };
+
+// =====================================
+// CUSTOMERS HOOKS
+// =====================================
+
+export function useCustomers(filters?: any) {
+  return useQuery({
+    queryKey: [...crmKeys.customers, filters],
+    queryFn: () => CRMService.getCustomers(filters),
+    staleTime: 30000,
+  });
+}
+
+export function useCustomer(id: string) {
+  return useQuery({
+    queryKey: crmKeys.customer(id),
+    queryFn: () => CRMService.getCustomer(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => CRMService.createCustomer(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers });
+      showSuccess('Müşteri oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateCustomer(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.customer(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers });
+      showSuccess('Müşteri güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => CRMService.deleteCustomer(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers });
+      showSuccess('Müşteri silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri silinemedi');
+    },
+  });
+}
 
 // =====================================
 // ACTIVITIES HOOKS
@@ -1157,7 +1228,7 @@ export function useReorderPipelineStages() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ pipelineId, stageOrders }: { pipelineId: string; stageOrders: { stageId: string; order: number }[] }) =>
+    mutationFn: ({ pipelineId, stageOrders }: { pipelineId: string; stageOrders: { stageId: string; newOrder: number }[] }) =>
       CRMService.reorderPipelineStages(pipelineId, stageOrders),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.pipelineId) });
@@ -1308,6 +1379,22 @@ export function useCompleteCampaign() {
   });
 }
 
+export function useAbortCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.abortCampaign,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showInfo('Kampanya iptal edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya iptal edilemedi');
+    },
+  });
+}
+
 export function useAddCampaignMember() {
   const queryClient = useQueryClient();
 
@@ -1383,14 +1470,14 @@ export function useConvertCampaignMember() {
 export function useSegments() {
   return useQuery({
     queryKey: crmKeys.segments,
-    queryFn: () => CRMService.getSegments(),
+    queryFn: () => CRMService.getCustomerSegments(),
   });
 }
 
 export function useSegment(id: string) {
   return useQuery({
     queryKey: crmKeys.segment(id),
-    queryFn: () => CRMService.getSegment(id),
+    queryFn: () => CRMService.getCustomerSegment(id),
     enabled: !!id,
   });
 }
@@ -1407,7 +1494,7 @@ export function useCreateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createSegment,
+    mutationFn: CRMService.createCustomerSegment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showSuccess('Segment oluşturuldu');
@@ -1423,7 +1510,7 @@ export function useUpdateSegment() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) =>
-      CRMService.updateSegment(id, data),
+      CRMService.updateCustomerSegment(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
@@ -1439,7 +1526,7 @@ export function useDeleteSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deleteSegment,
+    mutationFn: CRMService.deleteCustomerSegment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showSuccess('Segment silindi');
@@ -1454,9 +1541,9 @@ export function useActivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.activateSegment,
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.segment(id) });
+    mutationFn: CRMService.activateCustomerSegment,
+    onSuccess: (result, _) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(result.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showSuccess('Segment aktifleştirildi');
     },
@@ -1470,9 +1557,9 @@ export function useDeactivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deactivateSegment,
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: crmKeys.segment(id) });
+    mutationFn: CRMService.deactivateCustomerSegment,
+    onSuccess: (result, _) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(result.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showInfo('Segment devre dışı bırakıldı');
     },
@@ -1520,7 +1607,7 @@ export function useUpdateSegmentCriteria() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ segmentId, criteria }: { segmentId: string; criteria: ScoringCriteria }) =>
+    mutationFn: ({ segmentId, criteria }: { segmentId: string; criteria: { field: string; operator: 'equals' | 'contains' | 'greaterThan' | 'lessThan' | 'between'; value: any }[] }) =>
       CRMService.updateSegmentCriteria(segmentId, criteria),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.segmentId) });
@@ -1720,3 +1807,12 @@ export function useCustomer(id: string) {
     enabled: !!id,
   });
 }
+
+// =====================================
+// ALIASES FOR BACKWARD COMPATIBILITY
+// =====================================
+export { useSegments as useCustomerSegments };
+export { useSegment as useCustomerSegment };
+export { useDeleteSegment as useDeleteCustomerSegment };
+export { useCreateSegment as useCreateCustomerSegment };
+export { useUpdateSegment as useUpdateCustomerSegment };
