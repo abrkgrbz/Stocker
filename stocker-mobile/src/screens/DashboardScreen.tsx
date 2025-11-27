@@ -22,8 +22,10 @@ import { spacing } from '../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { biometricService } from '../services/biometric';
+import { hapticService } from '../services/haptic';
 import { notificationService } from '../services/notification/NotificationService';
 import { useAlert } from '../context/AlertContext';
+import { DashboardWidget } from '../components/DashboardWidget';
 
 const { width } = Dimensions.get('window');
 
@@ -149,6 +151,7 @@ export default function DashboardScreen({ navigation }: any) {
     ];
 
     const handleModuleClick = (module: ModuleCard) => {
+        hapticService.selection();
         if (module.disabled) return;
 
         if (module.id === 'crm') {
@@ -172,6 +175,7 @@ export default function DashboardScreen({ navigation }: any) {
     const { showAlert } = useAlert();
 
     const handleLogout = () => {
+        hapticService.warning();
         setUserMenuVisible(false);
         showAlert({
             title: 'Çıkış Yap',
@@ -244,6 +248,30 @@ export default function DashboardScreen({ navigation }: any) {
                             İşletmenizi yönetmek için bir modül seçin
                         </Text>
                     </Animated.View>
+
+                    {/* Widgets Section */}
+                    <View style={styles.gridContainer}>
+                        <DashboardWidget
+                            title="Günlük Satış"
+                            value="₺12,450"
+                            subtitle="Bugün"
+                            icon="cash-outline"
+                            color="#10b981"
+                            trend={{ value: 12.5, direction: 'up' }}
+                            onPress={() => navigation.navigate('SalesDashboard')}
+                            delay={200}
+                        />
+                        <DashboardWidget
+                            title="Yeni Müşteri"
+                            value="5"
+                            subtitle="Bu hafta"
+                            icon="person-add-outline"
+                            color="#3b82f6"
+                            trend={{ value: 2, direction: 'up' }}
+                            onPress={() => navigation.navigate('CRMDashboard')}
+                            delay={300}
+                        />
+                    </View>
 
                     {/* Modules Grid */}
                     <View style={styles.gridContainer}>
@@ -334,6 +362,7 @@ export default function DashboardScreen({ navigation }: any) {
                                         <Switch
                                             value={theme === 'dark'}
                                             onValueChange={() => {
+                                                hapticService.selection();
                                                 toggleTheme();
                                             }}
                                             trackColor={{ false: "#767577", true: colors.primary }}
@@ -348,7 +377,10 @@ export default function DashboardScreen({ navigation }: any) {
                                         </View>
                                         <Switch
                                             value={themePreference === 'system'}
-                                            onValueChange={(val) => setTheme(val ? 'system' : theme)}
+                                            onValueChange={(val) => {
+                                                hapticService.selection();
+                                                setTheme(val ? 'system' : theme);
+                                            }}
                                             trackColor={{ false: "#767577", true: colors.primary }}
                                             thumbColor={themePreference === 'system' ? "#fff" : "#f4f3f4"}
                                         />
@@ -362,7 +394,10 @@ export default function DashboardScreen({ navigation }: any) {
                                             </View>
                                             <Switch
                                                 value={biometricEnabled}
-                                                onValueChange={setBiometricEnabled}
+                                                onValueChange={(val) => {
+                                                    hapticService.selection();
+                                                    setBiometricEnabled(val);
+                                                }}
                                                 trackColor={{ false: "#767577", true: colors.primary }}
                                                 thumbColor={biometricEnabled ? "#fff" : "#f4f3f4"}
                                             />

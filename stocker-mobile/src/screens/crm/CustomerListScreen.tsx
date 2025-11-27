@@ -19,6 +19,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useCustomerStore } from '../../stores/customerStore';
+import { hapticService } from '../../services/haptic';
 
 export default function CustomerListScreen({ navigation }: any) {
     const { customers, isLoading, loadCustomers, deleteCustomers, syncCustomers } = useCustomerStore();
@@ -44,6 +45,7 @@ export default function CustomerListScreen({ navigation }: any) {
     }, [searchText]);
 
     const handleRefresh = async () => {
+        hapticService.medium();
         setIsRefreshing(true);
         await syncCustomers();
         setIsRefreshing(false);
@@ -58,6 +60,7 @@ export default function CustomerListScreen({ navigation }: any) {
     };
 
     const toggleSelection = (id: string) => {
+        hapticService.selection();
         if (selectedIds.includes(id)) {
             const newSelected = selectedIds.filter(item => item !== id);
             setSelectedIds(newSelected);
@@ -75,6 +78,7 @@ export default function CustomerListScreen({ navigation }: any) {
     };
 
     const handlePress = (item: any) => {
+        hapticService.light();
         if (isSelectionMode) {
             toggleSelection(item.id);
         } else {
