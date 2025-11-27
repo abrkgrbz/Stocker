@@ -16,146 +16,201 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
 import { Loading } from '../../components/Loading';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { useCustomerStore } from '../../stores/customerStore';
 
 export default function CustomerListScreen({ navigation }: any) {
-    const [customers, setCustomers] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { customers, isLoading, loadCustomers, deleteCustomers, syncCustomers } = useCustomerStore();
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalCount, setTotalCount] = useState(0);
+    const [page, setPage] = useState(1); // Pagination might need adjustment for local DB
 
-    const loadCustomers = async (pageNumber: number, search: string = '', refresh: boolean = false) => {
-        try {
-            if (pageNumber === 1) setIsLoading(true);
-
-            const response = await apiService.crm.getCustomers({
-                pageNumber,
-                pageSize: 10,
-                search
-            });
-
-            if (response.data.success) {
-                const { items, totalCount: total } = response.data.data;
-
-                if (refresh) {
-                    setCustomers(items);
-                } else {
-                    setCustomers(prev => [...prev, ...items]);
-                }
-
-                setTotalCount(total);
-                setHasMore(items.length === 10); // Assuming page size is 10
-            }
-        } catch (error) {
-            console.error('Failed to load customers:', error);
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    };
+    // Selection Mode State
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     useEffect(() => {
-        loadCustomers(1, searchText, true);
+        loadCustomers(searchText);
     }, []);
 
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (searchText !== '') {
-                setPage(1);
-                loadCustomers(1, searchText, true);
-            }
+            loadCustomers(searchText);
         }, 500);
 
         return () => clearTimeout(timer);
     }, [searchText]);
 
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         setIsRefreshing(true);
-        setPage(1);
-        loadCustomers(1, searchText, true);
+        await syncCustomers();
+        setIsRefreshing(false);
+        // Exit selection mode on refresh
+        setIsSelectionMode(false);
+        setSelectedIds([]);
     };
 
     const handleLoadMore = () => {
-        if (!hasMore || isLoading) return;
-        const nextPage = page + 1;
-        setPage(nextPage);
-        loadCustomers(nextPage, searchText);
+        // Local DB pagination or load all?
+        // For now, store loads all. We can implement pagination in store later.
     };
 
-    const renderItem = ({ item, index }: any) => (
-        <Animated.View entering={FadeInUp.delay(index * 50).duration(400)}>
-            <TouchableOpacity
-                style={styles.card}
-                onPress={() => navigation.navigate('CustomerDetail', { id: item.id, name: item.companyName })}
-            >
-                <View style={styles.cardHeader}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {item.companyName.substring(0, 2).toUpperCase()}
-                        </Text>
-                    </View>
-                    <View style={styles.cardInfo}>
-                        <Text style={styles.companyName}>{item.companyName}</Text>
-                        <Text style={styles.contactPerson}>{item.contactPerson || 'Yetkili Belirtilmemiş'}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                </View>
+    const toggleSelection = (id: string) => {
+        if (selectedIds.includes(id)) {
+            const newSelected = selectedIds.filter(item => item !== id);
+            setSelectedIds(newSelected);
+            if (newSelected.length === 0) {
+                setIsSelectionMode(false);
+            }
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
 
-                <View style={styles.cardFooter}>
-                    <View style={styles.footerItem}>
-                        <Ionicons name="mail-outline" size={14} color={colors.textSecondary} />
-                        <Text style={styles.footerText}>{item.email}</Text>
-                    </View>
-                    {item.phone && (
-                        <View style={styles.footerItem}>
-                            <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
-                            <Text style={styles.footerText}>{item.phone}</Text>
+    const handleLongPress = (id: string) => {
+        setIsSelectionMode(true);
+        toggleSelection(id);
+    };
+
+    const handlePress = (item: any) => {
+        if (isSelectionMode) {
+            toggleSelection(item.id);
+        } else {
+            navigation.navigate('CustomerDetail', { id: item.id, name: item.companyName });
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        try {
+            await deleteCustomers(selectedIds);
+            setIsSelectionMode(false);
+            setSelectedIds([]);
+        } catch (error) {
+            console.error("Delete failed", error);
+        }
+    };
+
+    const renderItem = ({ item, index }: any) => {
+        const isSelected = selectedIds.includes(item.id);
+
+        return (
+            <Animated.View entering={FadeInUp.delay(index * 50).duration(400)}>
+                <TouchableOpacity
+                    style={[
+                        styles.card,
+                        isSelected && { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.primary + '10' }
+                    ]}
+                    onPress={() => handlePress(item)}
+                    onLongPress={() => handleLongPress(item.id)}
+                    delayLongPress={300}
+                >
+                    <View style={styles.cardHeader}>
+                        <View style={styles.avatar}>
+                            {isSelected ? (
+                                <Ionicons name="checkmark" size={24} color={colors.primary} />
+                            ) : (
+                                <Text style={styles.avatarText}>
+                                    {item.companyName.substring(0, 2).toUpperCase()}
+                                </Text>
+                            )}
                         </View>
-                    )}
-                </View>
-            </TouchableOpacity>
-        </Animated.View>
-    );
+                        <View style={styles.cardInfo}>
+                            <Text style={styles.companyName}>{item.companyName}</Text>
+                            <Text style={styles.contactPerson}>{item.contactPerson || 'Yetkili Belirtilmemiş'}</Text>
+                        </View>
+                        {!isSelectionMode && (
+                            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                        )}
+                    </View>
+
+                    <View style={styles.cardFooter}>
+                        <View style={styles.footerItem}>
+                            <Ionicons name="mail-outline" size={14} color={colors.textSecondary} />
+                            <Text style={styles.footerText}>{item.email}</Text>
+                        </View>
+                        {item.phone && (
+                            <View style={styles.footerItem}>
+                                <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
+                                <Text style={styles.footerText}>{item.phone}</Text>
+                            </View>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
 
     return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Müşteriler</Text>
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => navigation.navigate('AddCustomer')}
-                    >
-                        <Ionicons name="add" size={24} color={colors.primary} />
-                    </TouchableOpacity>
+                    {isSelectionMode ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <TouchableOpacity onPress={() => {
+                                setIsSelectionMode(false);
+                                setSelectedIds([]);
+                            }} style={styles.backButton}>
+                                <Ionicons name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
+                            <Text style={[styles.headerTitle, { marginLeft: 16 }]}>{selectedIds.length} Seçildi</Text>
+                            <View style={{ flex: 1 }} />
+                            <TouchableOpacity onPress={handleBulkDelete} style={[styles.backButton, { backgroundColor: colors.error }]}>
+                                <Ionicons name="trash" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                                <Ionicons name="arrow-back" size={24} color="#fff" />
+                            </TouchableOpacity>
+                            <Text style={styles.headerTitle}>Müşteriler</Text>
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={() => navigation.navigate('AddCustomer')}
+                            >
+                                <LinearGradient
+                                    colors={colors.gradientGreen as [string, string]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.addButtonGradient}
+                                >
+                                    <Ionicons name="add" size={24} color="#fff" />
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
 
                 {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Müşteri ara..."
-                        placeholderTextColor={colors.textMuted}
-                        value={searchText}
-                        onChangeText={setSearchText}
-                    />
-                    {searchText.length > 0 && (
-                        <TouchableOpacity onPress={() => {
-                            setSearchText('');
-                            handleRefresh();
-                        }}>
-                            <Ionicons name="close-circle" size={20} color={colors.textMuted} />
-                        </TouchableOpacity>
-                    )}
-                </View>
+                {!isSelectionMode && (
+                    <View style={styles.searchContainer}>
+                        <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon as TextStyle} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Müşteri ara..."
+                            placeholderTextColor={colors.textMuted}
+                            value={searchText}
+                            onChangeText={setSearchText}
+                        />
+                        {searchText.length > 0 && (
+                            <TouchableOpacity onPress={() => {
+                                setSearchText('');
+                                handleRefresh();
+                            }}>
+                                <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
 
                 {/* List */}
                 <FlatList
@@ -191,7 +246,6 @@ export default function CustomerListScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -202,19 +256,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.l,
         paddingVertical: spacing.m,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
     } as ViewStyle,
     backButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        color: '#fff',
     } as TextStyle,
     addButton: {
-        padding: 4,
+        borderRadius: 12,
+        overflow: 'hidden',
+    } as ViewStyle,
+    addButtonGradient: {
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
     } as ViewStyle,
     searchContainer: {
         flexDirection: 'row',

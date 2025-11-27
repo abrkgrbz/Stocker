@@ -10,7 +10,7 @@ using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.RateLimiting;
 using Stocker.Persistence.Extensions;
 using Stocker.Modules.CRM;
-using Stocker.Modules.Sales.Infrastructure;
+using Stocker.Modules.Sales;
 using Stocker.Modules.Finance.Infrastructure;
 using Stocker.Modules.Inventory.Infrastructure;
 using Stocker.SharedKernel.Settings;
@@ -203,7 +203,7 @@ if (enabledModules.GetValue<bool>("CRM"))
 if (enabledModules.GetValue<bool>("Sales"))
 {
     Log.Information("Loading Sales Module...");
-    builder.Services.AddSalesInfrastructure(builder.Configuration);
+    builder.Services.AddSalesModule(builder.Configuration);
 }
 
 // Finance Module

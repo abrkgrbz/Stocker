@@ -120,8 +120,32 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     const token = await tokenStorage.getToken();
                     if (token) {
-                        // Optionally verify token with /me endpoint
-                        set({ isAuthenticated: true, accessToken: token });
+                        // Verify token and get latest user data
+                        try {
+                            const response = await apiService.auth.me();
+                            if (response.data.success) {
+                                const userData = response.data.data;
+                                // Update user store with latest data
+                                set((state) => ({
+                                    isAuthenticated: true,
+                                    accessToken: token,
+                                    user: {
+                                        ...state.user!,
+                                        ...userData,
+                                        // Ensure requiresSetup is updated from server
+                                        requiresSetup: userData.requiresSetup
+                                    }
+                                }));
+                            } else {
+                                // Token invalid or expired
+                                throw new Error('Token validation failed');
+                            }
+                        } catch (error) {
+                            console.error('Auth check failed:', error);
+                            // If API call fails (e.g. 401), clear auth
+                            await tokenStorage.clearToken();
+                            set({ isAuthenticated: false, accessToken: null, user: null });
+                        }
                     } else {
                         set({ isAuthenticated: false, accessToken: null });
                     }

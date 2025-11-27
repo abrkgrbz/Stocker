@@ -11,14 +11,18 @@ import {
     Alert,
     ViewStyle,
     TextStyle,
-    ImageStyle
+    ImageStyle,
+    Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../stores/authStore';
-import { colors, spacing, typography } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { spacing } from '../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { notificationService } from '../services/notification/NotificationService';
+import { useAlert } from '../context/AlertContext';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +40,7 @@ interface ModuleCard {
 
 export default function DashboardScreen({ navigation }: any) {
     const { user, logout } = useAuthStore();
+    const { colors, theme, toggleTheme, setTheme, themePreference } = useTheme();
     const [userMenuVisible, setUserMenuVisible] = useState(false);
 
     const modules: ModuleCard[] = [
@@ -45,7 +50,7 @@ export default function DashboardScreen({ navigation }: any) {
             icon: 'people',
             color: '#7c3aed',
             gradient: ['#7c3aed', '#c026d3'],
-            path: 'CRM',
+            path: 'CRMDashboard',
             description: 'Müşteri ilişkileri yönetimi',
             badge: 'Aktif',
         },
@@ -57,6 +62,16 @@ export default function DashboardScreen({ navigation }: any) {
             gradient: ['#c026d3', '#0891b2'],
             path: 'DashboardDetail',
             description: 'Analiz ve raporlar',
+        },
+        {
+            id: 'sales',
+            title: 'Satış Yönetimi',
+            icon: 'cart',
+            color: '#10b981',
+            gradient: ['#10b981', '#34d399'],
+            path: 'SalesDashboard',
+            description: 'Teklif, sipariş ve faturalar',
+            badge: 'Yeni',
         },
         {
             id: 'apps',
@@ -130,19 +145,28 @@ export default function DashboardScreen({ navigation }: any) {
             return;
         }
 
-        Alert.alert(
-            "Yakında",
-            `${module.title} modülü henüz mobil uygulamada aktif değil.`,
-            [{ text: "Tamam" }]
-        );
+        if (module.id === 'sales') {
+            navigation.navigate('SalesDashboard');
+            return;
+        }
+
+        showAlert({
+            title: "Yakında",
+            message: `${module.title} modülü henüz mobil uygulamada aktif değil.`,
+            type: 'info',
+            buttons: [{ text: "Tamam" }]
+        });
     };
+
+    const { showAlert } = useAlert();
 
     const handleLogout = () => {
         setUserMenuVisible(false);
-        Alert.alert(
-            'Çıkış Yap',
-            'Çıkış yapmak istediğinize emin misiniz?',
-            [
+        showAlert({
+            title: 'Çıkış Yap',
+            message: 'Çıkış yapmak istediğinize emin misiniz?',
+            type: 'warning',
+            buttons: [
                 { text: 'İptal', style: 'cancel' },
                 {
                     text: 'Çıkış Yap',
@@ -156,13 +180,13 @@ export default function DashboardScreen({ navigation }: any) {
                     }
                 }
             ]
-        );
+        });
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <LinearGradient
-                colors={['#28002D', '#1A315A']}
+                colors={theme === 'dark' ? ['#28002D', '#1A315A'] : ['#f0f9ff', '#e0f2fe']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -170,17 +194,29 @@ export default function DashboardScreen({ navigation }: any) {
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.tenantName}>{user?.tenantName || 'Stocker'}</Text>
+                    <Text style={[styles.tenantName, { color: theme === 'dark' ? '#fff' : colors.textPrimary }]}>
+                        {user?.tenantName || 'Stocker'}
+                    </Text>
 
                     <TouchableOpacity
-                        style={styles.userBadge}
+                        style={[styles.userBadge, {
+                            backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                            borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                        }]}
                         onPress={() => setUserMenuVisible(true)}
                     >
-                        <View style={styles.avatarContainer}>
+                        <View style={[styles.avatarContainer, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.2)' : colors.primary }]}>
                             <Ionicons name="person" size={16} color="#fff" />
                         </View>
-                        <Text style={styles.userName}>{user?.firstName} {user?.lastName}</Text>
-                        <Ionicons name="chevron-down" size={12} color="rgba(255,255,255,0.7)" style={{ marginLeft: 4 }} />
+                        <Text style={[styles.userName, { color: theme === 'dark' ? '#fff' : colors.textPrimary }]}>
+                            {user?.firstName} {user?.lastName}
+                        </Text>
+                        <Ionicons
+                            name="chevron-down"
+                            size={12}
+                            color={theme === 'dark' ? "rgba(255,255,255,0.7)" : colors.textSecondary}
+                            style={{ marginLeft: 4 }}
+                        />
                     </TouchableOpacity>
                 </View>
 
@@ -190,8 +226,12 @@ export default function DashboardScreen({ navigation }: any) {
                         entering={FadeInDown.delay(100).duration(800)}
                         style={styles.welcomeSection}
                     >
-                        <Text style={styles.welcomeTitle}>Hoş Geldiniz! 👋</Text>
-                        <Text style={styles.welcomeSubtitle}>İşletmenizi yönetmek için bir modül seçin</Text>
+                        <Text style={[styles.welcomeTitle, { color: theme === 'dark' ? '#fff' : colors.textPrimary }]}>
+                            Hoş Geldiniz! 👋
+                        </Text>
+                        <Text style={[styles.welcomeSubtitle, { color: theme === 'dark' ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>
+                            İşletmenizi yönetmek için bir modül seçin
+                        </Text>
                     </Animated.View>
 
                     {/* Modules Grid */}
@@ -205,6 +245,13 @@ export default function DashboardScreen({ navigation }: any) {
                                 <TouchableOpacity
                                     style={[
                                         styles.moduleCard,
+                                        {
+                                            backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff',
+                                            elevation: theme === 'dark' ? 0 : 5,
+                                            shadowOpacity: theme === 'dark' ? 0 : 0.1,
+                                            borderWidth: theme === 'dark' ? 1 : 0,
+                                            borderColor: 'rgba(255,255,255,0.1)'
+                                        },
                                         module.disabled && styles.moduleCardDisabled
                                     ]}
                                     onPress={() => handleModuleClick(module)}
@@ -222,17 +269,19 @@ export default function DashboardScreen({ navigation }: any) {
                                     <Ionicons
                                         name={module.icon}
                                         size={48}
-                                        color={module.disabled ? 'rgba(255,255,255,0.5)' : '#fff'}
+                                        color={module.disabled ? (theme === 'dark' ? 'rgba(255,255,255,0.5)' : '#ccc') : module.color}
                                         style={styles.moduleIcon}
                                     />
 
                                     <Text style={[
                                         styles.moduleTitle,
+                                        { color: theme === 'dark' ? '#fff' : colors.textPrimary },
                                         module.disabled && styles.textDisabled
                                     ]}>{module.title}</Text>
 
                                     <Text style={[
                                         styles.moduleDescription,
+                                        { color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : colors.textSecondary },
                                         module.disabled && styles.textDisabled
                                     ]} numberOfLines={2}>
                                         {module.description}
@@ -244,8 +293,10 @@ export default function DashboardScreen({ navigation }: any) {
 
                     {/* Footer */}
                     <View style={styles.footer}>
-                        <Ionicons name="rocket-outline" size={16} color="rgba(255,255,255,0.6)" style={{ marginRight: 8 }} />
-                        <Text style={styles.footerText}>Stocker - Modern İşletme Yönetim Sistemi</Text>
+                        <Ionicons name="rocket-outline" size={16} color={theme === 'dark' ? "rgba(255,255,255,0.6)" : colors.textSecondary} style={{ marginRight: 8 }} />
+                        <Text style={[styles.footerText, { color: theme === 'dark' ? "rgba(255,255,255,0.6)" : colors.textSecondary }]}>
+                            Stocker - Modern İşletme Yönetim Sistemi
+                        </Text>
                     </View>
                 </ScrollView>
 
@@ -259,17 +310,66 @@ export default function DashboardScreen({ navigation }: any) {
                     <TouchableWithoutFeedback onPress={() => setUserMenuVisible(false)}>
                         <View style={styles.modalOverlay}>
                             <TouchableWithoutFeedback>
-                                <View style={styles.menuContainer}>
-                                    <TouchableOpacity style={styles.menuItem} onPress={() => {
-                                        setUserMenuVisible(false);
-                                        // navigation.navigate('Profile');
-                                        Alert.alert('Bilgi', 'Profil sayfası yakında eklenecek.');
+                                <View style={[styles.menuContainer, { backgroundColor: theme === 'dark' ? '#1e1e1e' : '#fff' }]}>
+                                    <View style={styles.menuHeader}>
+                                        <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Ayarlar</Text>
+                                    </View>
+
+                                    <View style={styles.menuItemRow}>
+                                        <View style={styles.menuItemLeft}>
+                                            <Ionicons name={theme === 'dark' ? "moon" : "sunny"} size={20} color={colors.textPrimary} />
+                                            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Karanlık Mod</Text>
+                                        </View>
+                                        <Switch
+                                            value={theme === 'dark'}
+                                            onValueChange={() => {
+                                                toggleTheme();
+                                            }}
+                                            trackColor={{ false: "#767577", true: colors.primary }}
+                                            thumbColor={theme === 'dark' ? "#fff" : "#f4f3f4"}
+                                        />
+                                    </View>
+
+                                    <View style={styles.menuItemRow}>
+                                        <View style={styles.menuItemLeft}>
+                                            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+                                            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Sistem Teması</Text>
+                                        </View>
+                                        <Switch
+                                            value={themePreference === 'system'}
+                                            onValueChange={(val) => setTheme(val ? 'system' : theme)}
+                                            trackColor={{ false: "#767577", true: colors.primary }}
+                                            thumbColor={themePreference === 'system' ? "#fff" : "#f4f3f4"}
+                                        />
+                                    </View>
+
+                                    <View style={[styles.menuDivider, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]} />
+
+                                    <TouchableOpacity style={styles.menuItem} onPress={async () => {
+                                        await notificationService.scheduleLocalNotification('Test Bildirimi', 'Bu bir test bildirimidir 🚀');
+                                        showAlert({
+                                            title: 'Başarılı',
+                                            message: 'Bildirim gönderildi (1 saniye içinde gelecek)',
+                                            type: 'success'
+                                        });
                                     }}>
-                                        <Ionicons name="person-outline" size={20} color={colors.textPrimary} />
-                                        <Text style={styles.menuText}>Profil</Text>
+                                        <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
+                                        <Text style={[styles.menuText, { color: colors.textPrimary }]}>Test Bildirim</Text>
                                     </TouchableOpacity>
 
-                                    <View style={styles.menuDivider} />
+                                    <TouchableOpacity style={styles.menuItem} onPress={() => {
+                                        setUserMenuVisible(false);
+                                        showAlert({
+                                            title: 'Bilgi',
+                                            message: 'Profil sayfası yakında eklenecek.',
+                                            type: 'info'
+                                        });
+                                    }}>
+                                        <Ionicons name="person-outline" size={20} color={colors.textPrimary} />
+                                        <Text style={[styles.menuText, { color: colors.textPrimary }]}>Profil</Text>
+                                    </TouchableOpacity>
+
+                                    <View style={[styles.menuDivider, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]} />
 
                                     <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
                                         <Ionicons name="log-out-outline" size={20} color={colors.error} />
@@ -301,31 +401,26 @@ const styles = StyleSheet.create({
         marginBottom: spacing.m,
     } as ViewStyle,
     tenantName: {
-        color: '#fff',
         fontSize: 20,
         fontWeight: 'bold',
     } as TextStyle,
     userBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
     } as ViewStyle,
     avatarContainer: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 8,
     } as ViewStyle,
     userName: {
-        color: '#fff',
         fontSize: 14,
         fontWeight: '500',
     } as TextStyle,
@@ -334,88 +429,74 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.xl,
     } as ViewStyle,
     welcomeSection: {
-        alignItems: 'center',
-        marginBottom: spacing.xl,
-        marginTop: spacing.m,
+        marginBottom: spacing.l,
     } as ViewStyle,
     welcomeTitle: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: spacing.s,
-        textAlign: 'center',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4,
+        marginBottom: 4,
     } as TextStyle,
     welcomeSubtitle: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.8)',
-        textAlign: 'center',
     } as TextStyle,
     gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        gap: spacing.m,
     } as ViewStyle,
     gridItemWrapper: {
-        width: (width - (spacing.l * 2) - spacing.m) / 2,
+        width: '48%',
         marginBottom: spacing.m,
     } as ViewStyle,
     moduleCard: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 16,
         padding: spacing.m,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        height: 180,
-        justifyContent: 'center',
+        height: 160,
+        justifyContent: 'space-between',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
     } as ViewStyle,
     moduleCardDisabled: {
-        opacity: 0.6,
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        opacity: 0.7,
     } as ViewStyle,
-    moduleIcon: {
-        marginBottom: spacing.m,
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4,
-    } as TextStyle,
-    moduleTitle: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-        textAlign: 'center',
-    } as TextStyle,
-    moduleDescription: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: 12,
-        textAlign: 'center',
-    } as TextStyle,
-    textDisabled: {
-        color: 'rgba(255,255,255,0.5)',
-    } as TextStyle,
     badge: {
         position: 'absolute',
-        top: 8,
-        right: 8,
+        top: 12,
+        right: 12,
         paddingHorizontal: 8,
         paddingVertical: 4,
-        borderRadius: 8,
+        borderRadius: 12,
     } as ViewStyle,
     badgeSuccess: {
-        backgroundColor: 'rgba(16, 185, 129, 0.9)',
+        backgroundColor: '#10b981',
     } as ViewStyle,
     badgeWarning: {
-        backgroundColor: 'rgba(250, 173, 20, 0.9)',
+        backgroundColor: '#f59e0b',
     } as ViewStyle,
     badgeText: {
         color: '#fff',
         fontSize: 10,
         fontWeight: 'bold',
+    } as TextStyle,
+    moduleIcon: {
+        marginBottom: spacing.s,
+    } as TextStyle,
+    moduleTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    } as TextStyle,
+    moduleDescription: {
+        fontSize: 12,
+    } as TextStyle,
+    textDisabled: {
+        color: 'rgba(255,255,255,0.5)',
     } as TextStyle,
     footer: {
         flexDirection: 'row',
@@ -425,7 +506,6 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xl,
     } as ViewStyle,
     footerText: {
-        color: 'rgba(255,255,255,0.6)',
         fontSize: 12,
     } as TextStyle,
     modalOverlay: {
@@ -433,14 +513,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
+        paddingTop: 60,
+        paddingRight: 20,
     } as ViewStyle,
     menuContainer: {
-        backgroundColor: colors.surface,
-        width: 200,
+        width: 250,
         borderRadius: 12,
-        marginTop: 100, // Adjust based on header height
-        marginRight: spacing.l,
-        padding: spacing.s,
+        padding: spacing.m,
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -450,21 +529,38 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     } as ViewStyle,
+    menuHeader: {
+        marginBottom: spacing.m,
+        paddingBottom: spacing.s,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(0,0,0,0.1)',
+    } as ViewStyle,
+    menuTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    } as TextStyle,
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: spacing.m,
-        borderRadius: 8,
+        paddingVertical: spacing.s,
+    } as ViewStyle,
+    menuItemRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.s,
+    } as ViewStyle,
+    menuItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
     } as ViewStyle,
     menuText: {
-        marginLeft: spacing.m,
         fontSize: 14,
-        color: colors.textPrimary,
+        marginLeft: spacing.m,
         fontWeight: '500',
     } as TextStyle,
     menuDivider: {
         height: 1,
-        backgroundColor: colors.surfaceLight,
-        marginVertical: spacing.xs,
+        marginVertical: spacing.s,
     } as ViewStyle,
 });

@@ -9,7 +9,6 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    Alert,
     ViewStyle,
     TextStyle,
     Dimensions,
@@ -32,12 +31,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tokenStorage } from '../utils/tokenStorage';
 import { useSignalRValidation, PasswordStrength } from '../hooks/useSignalRValidation';
+import { useAlert } from '../context/AlertContext';
 
 const { width } = Dimensions.get('window');
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'verification' | 'complete';
 
 export default function RegisterScreen({ navigation }: any) {
+    const { showAlert } = useAlert();
     const [currentStep, setCurrentStep] = useState<Step>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -243,7 +244,11 @@ export default function RegisterScreen({ navigation }: any) {
 
     const handleVerify = async () => {
         if (verificationCode.length !== 6) {
-            Alert.alert('Hata', 'Lütfen 6 haneli doğrulama kodunu giriniz.');
+            showAlert({
+                title: 'Hata',
+                message: 'Lütfen 6 haneli doğrulama kodunu giriniz.',
+                type: 'error'
+            });
             return;
         }
 
@@ -255,7 +260,15 @@ export default function RegisterScreen({ navigation }: any) {
             });
 
             if (response.data.success) {
-                setCurrentStep('complete');
+                // Check if we have a registrationId for progress tracking
+                const responseData = response.data as any;
+                if (responseData.registrationId) {
+                    navigation.replace('TenantProgress', {
+                        registrationId: responseData.registrationId
+                    });
+                } else {
+                    setCurrentStep('complete');
+                }
             } else {
                 throw new Error(response.data.message || 'Doğrulama başarısız');
             }
@@ -317,14 +330,15 @@ export default function RegisterScreen({ navigation }: any) {
                 setCurrentStep('teamName');
                 break;
             case 'verification':
-                Alert.alert(
-                    'Dikkat',
-                    'Geri dönerseniz kayıt işlemini yeniden başlatmanız gerekebilir. Emin misiniz?',
-                    [
+                showAlert({
+                    title: 'Dikkat',
+                    message: 'Geri dönerseniz kayıt işlemini yeniden başlatmanız gerekebilir. Emin misiniz?',
+                    type: 'warning',
+                    buttons: [
                         { text: 'İptal', style: 'cancel' },
                         { text: 'Evet', onPress: () => setCurrentStep('fullName') }
                     ]
-                );
+                });
                 break;
             case 'email':
                 navigation.goBack();

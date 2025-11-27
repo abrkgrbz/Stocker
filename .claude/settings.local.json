@@ -8,7 +8,16 @@
       "Bash(dotnet remove:*)",
       "Bash(npm run build:*)",
       "Bash(dotnet build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(docker ps:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx tsc:*)",
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
