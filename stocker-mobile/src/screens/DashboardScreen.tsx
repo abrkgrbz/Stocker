@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { spacing } from '../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { biometricService } from '../services/biometric';
 import { notificationService } from '../services/notification/NotificationService';
 import { useAlert } from '../context/AlertContext';
 
@@ -39,9 +40,19 @@ interface ModuleCard {
 }
 
 export default function DashboardScreen({ navigation }: any) {
-    const { user, logout } = useAuthStore();
+    const { user, logout, biometricEnabled, setBiometricEnabled } = useAuthStore();
     const { colors, theme, toggleTheme, setTheme, themePreference } = useTheme();
     const [userMenuVisible, setUserMenuVisible] = useState(false);
+    const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+
+    React.useEffect(() => {
+        checkBiometric();
+    }, []);
+
+    const checkBiometric = async () => {
+        const status = await biometricService.checkAvailability();
+        setIsBiometricAvailable(status.available);
+    };
 
     const modules: ModuleCard[] = [
         {
@@ -342,6 +353,21 @@ export default function DashboardScreen({ navigation }: any) {
                                             thumbColor={themePreference === 'system' ? "#fff" : "#f4f3f4"}
                                         />
                                     </View>
+
+                                    {isBiometricAvailable && (
+                                        <View style={styles.menuItemRow}>
+                                            <View style={styles.menuItemLeft}>
+                                                <Ionicons name="finger-print-outline" size={20} color={colors.textPrimary} />
+                                                <Text style={[styles.menuText, { color: colors.textPrimary }]}>Biyometrik Giriş</Text>
+                                            </View>
+                                            <Switch
+                                                value={biometricEnabled}
+                                                onValueChange={setBiometricEnabled}
+                                                trackColor={{ false: "#767577", true: colors.primary }}
+                                                thumbColor={biometricEnabled ? "#fff" : "#f4f3f4"}
+                                            />
+                                        </View>
+                                    )}
 
                                     <View style={[styles.menuDivider, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]} />
 

@@ -1771,44 +1771,6 @@ export function useDeactivateWorkflow() {
 }
 
 // =====================================
-// CUSTOMERS HOOKS
-// =====================================
-
-/**
- * Get customers list for selection in Sales module
- */
-export function useCustomers(filters?: {
-  searchTerm?: string;
-  status?: 'Active' | 'Inactive' | 'Potential';
-  page?: number;
-  pageSize?: number
-}) {
-  // Map to CustomerFilters format
-  const customerFilters = filters ? {
-    search: filters.searchTerm,
-    status: filters.status,
-    pageNumber: filters.page,
-    pageSize: filters.pageSize,
-  } : undefined;
-
-  return useQuery({
-    queryKey: [...crmKeys.customers, filters],
-    queryFn: () => CRMService.getCustomers(customerFilters),
-  });
-}
-
-/**
- * Get single customer by ID
- */
-export function useCustomer(id: string) {
-  return useQuery({
-    queryKey: crmKeys.customer(id),
-    queryFn: () => CRMService.getCustomer(id),
-    enabled: !!id,
-  });
-}
-
-// =====================================
 // ALIASES FOR BACKWARD COMPATIBILITY
 // =====================================
 export { useSegments as useCustomerSegments };

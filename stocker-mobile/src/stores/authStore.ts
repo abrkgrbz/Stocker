@@ -32,6 +32,10 @@ interface AuthState {
     checkAuth: () => Promise<void>;
     setLoading: (loading: boolean) => void;
     updateUser: (user: User) => void;
+
+    // Biometrics
+    biometricEnabled: boolean;
+    setBiometricEnabled: (enabled: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,6 +54,11 @@ export const useAuthStore = create<AuthState>()(
 
             updateUser: (user: User) => {
                 set({ user });
+            },
+
+            biometricEnabled: false,
+            setBiometricEnabled: (enabled: boolean) => {
+                set({ biometricEnabled: enabled });
             },
 
             login: async (data) => {
@@ -160,6 +169,7 @@ export const useAuthStore = create<AuthState>()(
             partialize: (state) => ({
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
+                biometricEnabled: state.biometricEnabled,
                 // Don't persist tokens to AsyncStorage, they are handled by SecureStore
             }),
         }

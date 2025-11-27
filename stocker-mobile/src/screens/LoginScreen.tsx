@@ -35,6 +35,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
+import { biometricService } from '../services/biometric';
+import { hapticService } from '../services/haptic';
 
 const { width } = Dimensions.get('window');
 
@@ -58,6 +60,7 @@ export default function LoginScreen({ navigation }: any) {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
+    const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'error') => {
         setToast({ visible: true, message, type });
@@ -111,9 +114,27 @@ export default function LoginScreen({ navigation }: any) {
         transform: [{ translateY: blob3TranslateY.value }],
     }));
 
-    const { login } = useAuthStore();
+    const { login, biometricEnabled } = useAuthStore();
+
+    React.useEffect(() => {
+        checkBiometric();
+    }, []);
+
+    const checkBiometric = async () => {
+        const status = await biometricService.checkAvailability();
+        setIsBiometricAvailable(status.available && biometricEnabled);
+    };
+
+    const handleBiometricLogin = async () => {
+        hapticService.light();
+        const success = await biometricService.authenticate();
+        if (success) {
+            showToast('Biyometrik doğrulama başarılı! (Credential storage not implemented yet)', 'success');
+        }
+    };
 
     const handleCheckEmail = async () => {
+        hapticService.light();
         if (!email) {
             showToast('Lütfen e-posta adresinizi girin', 'error');
             return;
@@ -133,10 +154,6 @@ export default function LoginScreen({ navigation }: any) {
                 }
 
                 setTenants(tenantsList);
-
-                // If only one tenant, auto-select? 
-                // Next.js app shows selection even for one, but let's be efficient.
-                // Actually, let's show selection to confirm.
                 setStep('tenant-selection');
             } else {
                 showToast(response.data.message || 'E-posta kontrolü başarısız', 'error');
@@ -149,11 +166,13 @@ export default function LoginScreen({ navigation }: any) {
     };
 
     const handleTenantSelect = (tenant: TenantInfo) => {
+        hapticService.selection();
         setSelectedTenant(tenant);
         setStep('password');
     };
 
     const handleLogin = async () => {
+        hapticService.light();
         if (!password || !selectedTenant) return;
 
         setIsLoading(true);
@@ -239,6 +258,16 @@ export default function LoginScreen({ navigation }: any) {
             >
                 <Text style={styles.buttonText}>Devam Et</Text>
             </TouchableOpacity>
+
+            {isBiometricAvailable && (
+                <TouchableOpacity
+                    style={[styles.biometricButton, { borderColor: colors.primary }]}
+                    onPress={handleBiometricLogin}
+                >
+                    <Ionicons name="finger-print" size={24} color={colors.primary} style={{ marginRight: 8 }} />
+                    <Text style={[styles.biometricButtonText, { color: colors.primary }]}>Biyometrik Giriş</Text>
+                </TouchableOpacity>
+            )}
         </Animated.View>
     );
 
@@ -593,5 +622,18 @@ const styles = StyleSheet.create({
     } as TextStyle,
     selectedTenantDomain: {
         fontSize: 12,
+    } as TextStyle,
+    biometricButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.m,
+        borderRadius: 12,
+        borderWidth: 1,
+        marginTop: spacing.m,
+    } as ViewStyle,
+    biometricButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
     } as TextStyle,
 });
