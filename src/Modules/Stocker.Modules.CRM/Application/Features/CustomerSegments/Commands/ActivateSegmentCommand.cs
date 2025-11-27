@@ -1,5 +1,7 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -20,5 +22,32 @@ public class ActivateSegmentCommandValidator : AbstractValidator<ActivateSegment
 
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Segment ID is required");
+    }
+}
+
+public class ActivateSegmentCommandHandler : IRequestHandler<ActivateSegmentCommand, Result>
+{
+    private readonly CRMDbContext _context;
+
+    public ActivateSegmentCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result> Handle(ActivateSegmentCommand request, CancellationToken cancellationToken)
+    {
+        var segment = await _context.CustomerSegments
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == request.TenantId, cancellationToken);
+
+        if (segment == null)
+        {
+            return Result.Failure(
+                Error.NotFound("CustomerSegment.NotFound", $"Segment with ID {request.Id} not found"));
+        }
+
+        segment.Activate();
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }

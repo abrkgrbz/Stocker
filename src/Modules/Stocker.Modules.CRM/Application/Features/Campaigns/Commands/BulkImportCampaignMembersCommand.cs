@@ -1,6 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -93,5 +96,90 @@ public class BulkImportCampaignMembersCommandValidator : AbstractValidator<BulkI
                 .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Added date cannot be in the future")
                 .When(m => m.AddedDate.HasValue);
         });
+    }
+}
+
+public class BulkImportCampaignMembersCommandHandler : IRequestHandler<BulkImportCampaignMembersCommand, Result<BulkImportResultDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public BulkImportCampaignMembersCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<BulkImportResultDto>> Handle(BulkImportCampaignMembersCommand request, CancellationToken cancellationToken)
+    {
+        var campaign = await _context.Campaigns
+            .Include(c => c.Members)
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+
+        if (campaign == null)
+            return Result<BulkImportResultDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
+
+        var result = new BulkImportResultDto
+        {
+            TotalRecords = request.Members.Count
+        };
+
+        var existingEmails = campaign.Members
+            .Where(m => m.Lead != null)
+            .Select(m => m.Lead!.Email?.ToLowerInvariant())
+            .Where(e => e != null)
+            .ToHashSet();
+
+        foreach (var memberDto in request.Members)
+        {
+            try
+            {
+                var emailLower = memberDto.Email.ToLowerInvariant();
+
+                if (request.SkipDuplicates && existingEmails.Contains(emailLower))
+                {
+                    result.FailedImports++;
+                    result.Errors.Add($"Duplicate email: {memberDto.Email}");
+                    continue;
+                }
+
+                // Create a new lead from the import data
+                var leadResult = Lead.Create(
+                    request.TenantId,
+                    memberDto.FirstName ?? "Unknown",
+                    memberDto.LastName ?? "Unknown",
+                    memberDto.Email,
+                    memberDto.CompanyName,
+                    memberDto.Phone,
+                    memberDto.Source ?? request.DefaultSource ?? "Campaign Import");
+
+                if (leadResult.IsFailure)
+                {
+                    result.FailedImports++;
+                    result.Errors.Add($"Error creating lead for {memberDto.Email}: {leadResult.Error.Description}");
+                    continue;
+                }
+
+                var lead = leadResult.Value;
+                _context.Leads.Add(lead);
+
+                var member = new CampaignMember(
+                    request.TenantId,
+                    request.CampaignId,
+                    null,
+                    lead.Id);
+
+                campaign.AddMember(member);
+                existingEmails.Add(emailLower);
+                result.SuccessfulImports++;
+            }
+            catch (Exception ex)
+            {
+                result.FailedImports++;
+                result.Errors.Add($"Error importing {memberDto.Email}: {ex.Message}");
+            }
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result<BulkImportResultDto>.Success(result);
     }
 }

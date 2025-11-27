@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -83,7 +85,71 @@ public class GetOpportunityActivitiesQueryValidator : AbstractValidator<GetOppor
         if (string.IsNullOrEmpty(sortDirection))
             return true;
 
-        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) || 
+        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) ||
                sortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public class GetOpportunityActivitiesQueryHandler : IRequestHandler<GetOpportunityActivitiesQuery, Result<IEnumerable<ActivityDto>>>
+{
+    private readonly CRMDbContext _context;
+
+    public GetOpportunityActivitiesQueryHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<IEnumerable<ActivityDto>>> Handle(GetOpportunityActivitiesQuery request, CancellationToken cancellationToken)
+    {
+        var opportunity = await _context.Opportunities
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+
+        if (opportunity == null)
+            return Result<IEnumerable<ActivityDto>>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
+
+        var query = _context.Activities
+            .Where(a => a.TenantId == request.TenantId && a.OpportunityId == request.OpportunityId);
+
+        if (request.Type.HasValue)
+            query = query.Where(a => a.Type == request.Type.Value);
+
+        if (request.Status.HasValue)
+            query = query.Where(a => a.Status == request.Status.Value);
+
+        if (request.FromDate.HasValue)
+            query = query.Where(a => a.DueDate >= request.FromDate.Value);
+
+        if (request.ToDate.HasValue)
+            query = query.Where(a => a.DueDate <= request.ToDate.Value);
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            query = query.Where(a => a.Subject.Contains(request.Search) ||
+                                      (a.Description != null && a.Description.Contains(request.Search)));
+        }
+
+        var activities = await query
+            .OrderByDescending(a => a.DueDate)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = activities.Select(a => new ActivityDto
+        {
+            Id = a.Id,
+            Subject = a.Subject,
+            Description = a.Description,
+            Type = a.Type,
+            Status = a.Status,
+            Priority = a.Priority,
+            DueAt = a.DueDate,
+            CompletedAt = a.CompletedDate,
+            Duration = a.Duration,
+            OwnerId = a.OwnerId,
+            OpportunityId = a.OpportunityId,
+            IsOverdue = a.IsOverdue()
+        });
+
+        return Result<IEnumerable<ActivityDto>>.Success(dtos);
     }
 }

@@ -1,6 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -54,5 +56,54 @@ public class UpdatePipelineStageCommandValidator : AbstractValidator<UpdatePipel
 
         RuleFor(x => x.Color)
             .NotEmpty().WithMessage("Stage color is required");
+    }
+}
+
+public class UpdatePipelineStageCommandHandler : IRequestHandler<UpdatePipelineStageCommand, Result<PipelineStageDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public UpdatePipelineStageCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<PipelineStageDto>> Handle(UpdatePipelineStageCommand request, CancellationToken cancellationToken)
+    {
+        var stage = await _context.Set<Domain.Entities.PipelineStage>()
+            .FirstOrDefaultAsync(s => s.Id == request.StageId && s.PipelineId == request.PipelineId && s.TenantId == request.TenantId, cancellationToken);
+
+        if (stage == null)
+            return Result<PipelineStageDto>.Failure(Error.NotFound("PipelineStage.NotFound", $"Pipeline stage with ID {request.StageId} not found"));
+
+        stage.UpdateDetails(request.Name, request.Description, request.Probability);
+        stage.SetColor(request.Color);
+        stage.SetDisplayOrder(request.Order);
+
+        if (request.IsWon)
+            stage.MarkAsWon();
+        else if (request.IsLost)
+            stage.MarkAsLost();
+        else
+            stage.MarkAsActive();
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new PipelineStageDto
+        {
+            Id = stage.Id,
+            PipelineId = stage.PipelineId,
+            Name = stage.Name,
+            Description = stage.Description,
+            Probability = stage.Probability,
+            DisplayOrder = stage.DisplayOrder,
+            IsWon = stage.IsWon,
+            IsLost = stage.IsLost,
+            IsActive = stage.IsActive,
+            Color = stage.Color,
+            RottenDays = stage.RottenDays
+        };
+
+        return Result<PipelineStageDto>.Success(dto);
     }
 }

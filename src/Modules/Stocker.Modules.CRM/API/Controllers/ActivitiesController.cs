@@ -254,13 +254,13 @@ public class ActivitiesController : ControllerBase
     public async Task<ActionResult<ActivityStatisticsDto>> GetActivityStatistics(
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate,
-        [FromQuery] Guid? assignedToId = null)
+        [FromQuery] int? ownerId = null)
     {
         var query = new GetActivityStatisticsQuery
         {
             FromDate = fromDate,
             ToDate = toDate,
-            AssignedToId = assignedToId
+            OwnerId = ownerId
         };
 
         var result = await _mediator.Send(query);

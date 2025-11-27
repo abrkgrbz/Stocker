@@ -767,6 +767,55 @@ export function useSalesForecast(fromDate: DateTime, toDate: DateTime) {
   });
 }
 
+export function useUpdateOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: any }) =>
+      CRMService.updateOpportunity(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      showSuccess('Fırsat güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fırsat güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteOpportunity(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      showSuccess('Fırsat silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fırsat silinemedi');
+    },
+  });
+}
+
+export function useMoveOpportunityStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, stageId }: { id: Guid; stageId: Guid }) =>
+      CRMService.moveOpportunityStage(id, stageId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunity(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.opportunities });
+      showSuccess('Fırsat aşaması güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Aşama değiştirilemedi');
+    },
+  });
+}
+
 // =====================================
 // DOCUMENTS HOOKS (NEW)
 // =====================================
@@ -943,6 +992,184 @@ export function usePipelineStatistics(pipelineId: string) {
   });
 }
 
+export function usePipeline(id: string) {
+  return useQuery({
+    queryKey: crmKeys.pipeline(id),
+    queryFn: () => CRMService.getPipeline(id),
+    enabled: !!id,
+  });
+}
+
+export function usePipelineStages(pipelineId: string) {
+  return useQuery({
+    queryKey: crmKeys.pipelineStages(pipelineId),
+    queryFn: () => CRMService.getPipelineStages(pipelineId),
+    enabled: !!pipelineId,
+  });
+}
+
+export function useCreatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createPipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showSuccess('Pipeline oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Pipeline oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updatePipeline(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showSuccess('Pipeline güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Pipeline güncellenemedi');
+    },
+  });
+}
+
+export function useDeletePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deletePipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showSuccess('Pipeline silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Pipeline silinemedi');
+    },
+  });
+}
+
+export function useActivatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.activatePipeline,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showSuccess('Pipeline aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Pipeline aktifleştirilemedi');
+    },
+  });
+}
+
+export function useDeactivatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deactivatePipeline,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showInfo('Pipeline devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Pipeline devre dışı bırakılamadı');
+    },
+  });
+}
+
+export function useSetDefaultPipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.setDefaultPipeline,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
+      showSuccess('Varsayılan pipeline ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Varsayılan pipeline ayarlanamadı');
+    },
+  });
+}
+
+export function useAddPipelineStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ pipelineId, stage }: { pipelineId: string; stage: any }) =>
+      CRMService.addPipelineStage(pipelineId, stage),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.pipelineId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelineStages(variables.pipelineId) });
+      showSuccess('Aşama eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Aşama eklenemedi');
+    },
+  });
+}
+
+export function useUpdatePipelineStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ pipelineId, stageId, data }: { pipelineId: string; stageId: string; data: any }) =>
+      CRMService.updatePipelineStage(pipelineId, stageId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.pipelineId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelineStages(variables.pipelineId) });
+      showSuccess('Aşama güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Aşama güncellenemedi');
+    },
+  });
+}
+
+export function useRemovePipelineStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ pipelineId, stageId }: { pipelineId: string; stageId: string }) =>
+      CRMService.removePipelineStage(pipelineId, stageId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.pipelineId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelineStages(variables.pipelineId) });
+      showSuccess('Aşama kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Aşama kaldırılamadı');
+    },
+  });
+}
+
+export function useReorderPipelineStages() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ pipelineId, stageOrders }: { pipelineId: string; stageOrders: { stageId: string; order: number }[] }) =>
+      CRMService.reorderPipelineStages(pipelineId, stageOrders),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(variables.pipelineId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.pipelineStages(variables.pipelineId) });
+      showSuccess('Aşamalar yeniden sıralandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sıralama başarısız');
+    },
+  });
+}
+
 // =====================================
 // CAMPAIGNS HOOKS
 // =====================================
@@ -978,15 +1205,331 @@ export function useCampaignMembers(id: string) {
   });
 }
 
+export function useCampaign(id: string) {
+  return useQuery({
+    queryKey: crmKeys.campaign(id),
+    queryFn: () => CRMService.getCampaign(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showSuccess('Kampanya oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateCampaign(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showSuccess('Kampanya güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteCampaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showSuccess('Kampanya silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya silinemedi');
+    },
+  });
+}
+
+export function useStartCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.startCampaign,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showSuccess('Kampanya başlatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya başlatılamadı');
+    },
+  });
+}
+
+export function usePauseCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.pauseCampaign,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showInfo('Kampanya duraklatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya duraklatılamadı');
+    },
+  });
+}
+
+export function useCompleteCampaign() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.completeCampaign,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
+      showSuccess('Kampanya tamamlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kampanya tamamlanamadı');
+    },
+  });
+}
+
+export function useAddCampaignMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, data }: { campaignId: string; data: any }) =>
+      CRMService.addCampaignMember(campaignId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaignMembers(variables.campaignId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(variables.campaignId) });
+      showSuccess('Üye eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye eklenemedi');
+    },
+  });
+}
+
+export function useRemoveCampaignMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, memberId }: { campaignId: string; memberId: string }) =>
+      CRMService.removeCampaignMember(campaignId, memberId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaignMembers(variables.campaignId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(variables.campaignId) });
+      showSuccess('Üye kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye kaldırılamadı');
+    },
+  });
+}
+
+export function useBulkImportCampaignMembers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, data }: { campaignId: string; data: any }) =>
+      CRMService.bulkImportCampaignMembers(campaignId, data),
+    onSuccess: (result, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaignMembers(variables.campaignId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaign(variables.campaignId) });
+      showSuccess(`${result.successCount} üye eklendi`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Toplu import başarısız');
+    },
+  });
+}
+
+export function useConvertCampaignMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, memberId }: { campaignId: string; memberId: string }) =>
+      CRMService.convertCampaignMember(campaignId, memberId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaignMembers(variables.campaignId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.campaignStats(variables.campaignId) });
+      showSuccess('Üye dönüştürüldü');
+    },
+    onError: (error) => {
+      showApiError(error, 'Dönüştürme başarısız');
+    },
+  });
+}
+
 // =====================================
 // SEGMENTS HOOKS
 // =====================================
+
+export function useSegments() {
+  return useQuery({
+    queryKey: crmKeys.segments,
+    queryFn: () => CRMService.getSegments(),
+  });
+}
+
+export function useSegment(id: string) {
+  return useQuery({
+    queryKey: crmKeys.segment(id),
+    queryFn: () => CRMService.getSegment(id),
+    enabled: !!id,
+  });
+}
 
 export function useSegmentMembers(id: string) {
   return useQuery({
     queryKey: crmKeys.segmentMembers(id),
     queryFn: () => CRMService.getSegmentMembers(id),
     enabled: !!id,
+  });
+}
+
+export function useCreateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.createSegment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments });
+      showSuccess('Segment oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      CRMService.updateSegment(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments });
+      showSuccess('Segment güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deleteSegment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments });
+      showSuccess('Segment silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment silinemedi');
+    },
+  });
+}
+
+export function useActivateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.activateSegment,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments });
+      showSuccess('Segment aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment aktifleştirilemedi');
+    },
+  });
+}
+
+export function useDeactivateSegment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: CRMService.deactivateSegment,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segments });
+      showInfo('Segment devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Segment devre dışı bırakılamadı');
+    },
+  });
+}
+
+export function useAddSegmentMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ segmentId, customerId }: { segmentId: string; customerId: string }) =>
+      CRMService.addSegmentMember(segmentId, customerId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(variables.segmentId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.segmentId) });
+      showSuccess('Üye eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye eklenemedi');
+    },
+  });
+}
+
+export function useRemoveSegmentMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ segmentId, customerId }: { segmentId: string; customerId: string }) =>
+      CRMService.removeSegmentMember(segmentId, customerId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(variables.segmentId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.segmentId) });
+      showSuccess('Üye kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Üye kaldırılamadı');
+    },
+  });
+}
+
+export function useUpdateSegmentCriteria() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ segmentId, criteria }: { segmentId: string; criteria: ScoringCriteria }) =>
+      CRMService.updateSegmentCriteria(segmentId, criteria),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(variables.segmentId) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(variables.segmentId) });
+      showSuccess('Segment kriterleri güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kriterler güncellenemedi');
+    },
   });
 }
 
@@ -997,10 +1540,11 @@ export function useRecalculateSegment() {
     mutationFn: (id: string) => CRMService.recalculateSegmentMembers(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segmentMembers(id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.segment(id) });
       showSuccess('Segment yeniden hesaplandı');
     },
     onError: (error) => {
-      showApiError(error,'Hesaplama başarısız');
+      showApiError(error, 'Hesaplama başarısız');
     },
   });
 }

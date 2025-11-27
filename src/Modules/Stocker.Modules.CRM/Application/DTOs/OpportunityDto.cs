@@ -47,8 +47,6 @@ public class OpportunityProductDto
     public decimal DiscountAmount { get; set; }
     public decimal TotalPrice { get; set; }
     public int SortOrder { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }
 
 public class CreateOpportunityProductDto

@@ -27,6 +27,8 @@ import {
   StopOutlined,
   BarChartOutlined,
   UserOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import {
   useOpportunities,
@@ -34,6 +36,9 @@ import {
   useWinOpportunity,
   useLoseOpportunity,
   usePipelines,
+  useMoveOpportunityStage,
+  useUpdateOpportunity,
+  useDeleteOpportunity,
 } from '@/lib/api/hooks/useCRM';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
 import { OpportunityModal } from '@/features/opportunities/components/OpportunityModal';
@@ -57,6 +62,7 @@ export default function OpportunitiesPage() {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityDto | null>(null);
+  const [viewMode, setViewMode] = useState<'kanban' | 'grid'>('kanban');
 
   // API Hooks
   const { data, isLoading, refetch } = useOpportunities();
@@ -64,8 +70,15 @@ export default function OpportunitiesPage() {
   const createOpportunity = useCreateOpportunity();
   const winOpportunity = useWinOpportunity();
   const loseOpportunity = useLoseOpportunity();
+  const moveOpportunityStage = useMoveOpportunityStage();
+  const updateOpportunity = useUpdateOpportunity();
+  const deleteOpportunity = useDeleteOpportunity();
 
   const opportunities = data?.items || [];
+
+  // Get default pipeline's stages for kanban view
+  const defaultPipeline = pipelines.find((p: any) => p.isDefault) || pipelines[0];
+  const stages = defaultPipeline?.stages || [];
 
   // Calculate statistics
   const stats = {
@@ -82,6 +95,20 @@ export default function OpportunitiesPage() {
   const handleCreate = () => {
     setSelectedOpportunity(null);
     setModalOpen(true);
+  };
+
+  const handleMoveStage = async (opportunityId: string, newStageId: string) => {
+    try {
+      await moveOpportunityStage.mutateAsync({
+        id: opportunityId,
+        stageId: newStageId,
+      });
+      message.success('Fırsat aşaması güncellendi');
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'Aşama değiştirme başarısız';
+      message.error(errorMessage);
+    }
   };
 
   const handleSubmit = async (values: any) => {
@@ -280,6 +307,151 @@ export default function OpportunitiesPage() {
     return acc;
   }, {} as Record<OpportunityStatus, OpportunityDto[]>);
 
+  // Group opportunities by stage for Kanban view (active opportunities only)
+  const activeOpportunities = opportunities.filter(
+    (o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost'
+  );
+
+  const opportunitiesByStage = stages.reduce((acc: Record<string, OpportunityDto[]>, stage: any) => {
+    acc[stage.id] = activeOpportunities.filter((o: OpportunityDto) => o.currentStageId === stage.id);
+    return acc;
+  }, {} as Record<string, OpportunityDto[]>);
+
+  // Get closed opportunities for special columns
+  const wonOpportunities = opportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon');
+  const lostOpportunities = opportunities.filter((o: OpportunityDto) => o.status === 'ClosedLost');
+
+  // Kanban View Component
+  const KanbanView = () => (
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {stages.map((stage: any) => {
+        const stageOpps = opportunitiesByStage[stage.id] || [];
+        const stageAmount = stageOpps.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0);
+
+        return (
+          <div key={stage.id} className="flex-shrink-0" style={{ width: 320 }}>
+            <Card
+              title={
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: stage.color }}
+                    />
+                    <span className="font-medium">{stage.name}</span>
+                    <Tag>{stageOpps.length}</Tag>
+                  </div>
+                  <div className="text-sm font-normal text-gray-500 mt-1">
+                    ₺{stageAmount.toLocaleString('tr-TR')}
+                  </div>
+                </div>
+              }
+              className="h-full"
+              bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto' }}
+            >
+              {stageOpps.map((opportunity: OpportunityDto) => (
+                <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+              ))}
+              {stageOpps.length === 0 && (
+                <div className="text-center text-gray-400 py-8">Fırsat yok</div>
+              )}
+            </Card>
+          </div>
+        );
+      })}
+
+      {/* Won Column */}
+      <div className="flex-shrink-0" style={{ width: 320 }}>
+        <Card
+          title={
+            <div>
+              <div className="flex items-center gap-2">
+                <TrophyOutlined className="text-green-500" />
+                <span className="font-medium">Kazanıldı</span>
+                <Tag color="green">{wonOpportunities.length}</Tag>
+              </div>
+              <div className="text-sm font-normal text-green-600 mt-1">
+                ₺{wonOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
+              </div>
+            </div>
+          }
+          className="h-full border-2 border-green-400"
+          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#f6ffed' }}
+        >
+          {wonOpportunities.map((opportunity: OpportunityDto) => (
+            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+          ))}
+          {wonOpportunities.length === 0 && (
+            <div className="text-center text-gray-400 py-8">Kazanılan fırsat yok</div>
+          )}
+        </Card>
+      </div>
+
+      {/* Lost Column */}
+      <div className="flex-shrink-0" style={{ width: 320 }}>
+        <Card
+          title={
+            <div>
+              <div className="flex items-center gap-2">
+                <StopOutlined className="text-red-500" />
+                <span className="font-medium">Kaybedildi</span>
+                <Tag color="red">{lostOpportunities.length}</Tag>
+              </div>
+              <div className="text-sm font-normal text-red-600 mt-1">
+                ₺{lostOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
+              </div>
+            </div>
+          }
+          className="h-full border-2 border-red-400"
+          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#fff1f0' }}
+        >
+          {lostOpportunities.map((opportunity: OpportunityDto) => (
+            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+          ))}
+          {lostOpportunities.length === 0 && (
+            <div className="text-center text-gray-400 py-8">Kaybedilen fırsat yok</div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Grid View Component (existing status-based grouping)
+  const GridView = () => (
+    <div className="space-y-6">
+      {Object.entries(opportunitiesByStatus).map(([status, opps]) => {
+        if (opps.length === 0) return null;
+        const config = statusConfig[status as OpportunityStatus];
+
+        return (
+          <motion.div
+            key={status}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card
+              title={
+                <div className="flex items-center gap-2">
+                  {config.icon}
+                  <span>{config.label}</span>
+                  <Tag color={config.color}>{opps.length}</Tag>
+                </div>
+              }
+            >
+              <Row gutter={[16, 16]}>
+                {opps.map((opportunity: OpportunityDto) => (
+                  <Col key={opportunity.id} xs={24} sm={12} lg={8} xl={6}>
+                    <OpportunityCard opportunity={opportunity} />
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -289,13 +461,31 @@ export default function OpportunitiesPage() {
         className="mb-8"
       >
         <div className="flex justify-between items-center">
-          <div>
-            <Title level={2} className="!mb-2 !text-gray-800">
-              Fırsatlar
-            </Title>
-            <Text className="text-gray-500 text-base">
-              Satış fırsatlarınızı yönetin ve takip edin
-            </Text>
+          <div className="flex items-center gap-4">
+            <div>
+              <Title level={2} className="!mb-2 !text-gray-800">
+                Fırsatlar
+              </Title>
+              <Text className="text-gray-500 text-base">
+                Satış fırsatlarınızı yönetin ve takip edin
+              </Text>
+            </div>
+            <Button.Group>
+              <Button
+                type={viewMode === 'kanban' ? 'primary' : 'default'}
+                icon={<AppstoreOutlined />}
+                onClick={() => setViewMode('kanban')}
+              >
+                Kanban
+              </Button>
+              <Button
+                type={viewMode === 'grid' ? 'primary' : 'default'}
+                icon={<UnorderedListOutlined />}
+                onClick={() => setViewMode('grid')}
+              >
+                Grid
+              </Button>
+            </Button.Group>
           </div>
           <Space size="middle">
             <Button
@@ -389,39 +579,17 @@ export default function OpportunitiesPage() {
         </Col>
       </Row>
 
-      {/* Opportunities Grid by Status */}
-      <div className="space-y-6">
-        {Object.entries(opportunitiesByStatus).map(([status, opps]) => {
-          if (opps.length === 0) return null;
-          const config = statusConfig[status as OpportunityStatus];
-
-          return (
-            <motion.div
-              key={status}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card
-                title={
-                  <div className="flex items-center gap-2">
-                    {config.icon}
-                    <span>{config.label}</span>
-                    <Tag color={config.color}>{opps.length}</Tag>
-                  </div>
-                }
-              >
-                <Row gutter={[16, 16]}>
-                  {opps.map(opportunity => (
-                    <Col key={opportunity.id} xs={24} sm={12} lg={8} xl={6}>
-                      <OpportunityCard opportunity={opportunity} />
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+      {/* Opportunities View */}
+      {isLoading ? (
+        <Card className="text-center py-16">
+          <div className="text-4xl mb-4">⏳</div>
+          <div className="text-gray-500">Fırsatlar yükleniyor...</div>
+        </Card>
+      ) : viewMode === 'kanban' ? (
+        <KanbanView />
+      ) : (
+        <GridView />
+      )}
 
       {opportunities.length === 0 && !isLoading && (
         <Card className="text-center py-12">

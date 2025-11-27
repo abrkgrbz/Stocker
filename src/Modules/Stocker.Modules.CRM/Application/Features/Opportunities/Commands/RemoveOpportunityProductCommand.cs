@@ -1,5 +1,7 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -30,5 +32,34 @@ public class RemoveOpportunityProductCommandValidator : AbstractValidator<Remove
 
         RuleFor(x => x.ProductId)
             .NotEmpty().WithMessage("Product ID is required");
+    }
+}
+
+public class RemoveOpportunityProductCommandHandler : IRequestHandler<RemoveOpportunityProductCommand, Result<Unit>>
+{
+    private readonly CRMDbContext _context;
+
+    public RemoveOpportunityProductCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<Unit>> Handle(RemoveOpportunityProductCommand request, CancellationToken cancellationToken)
+    {
+        var opportunity = await _context.Opportunities
+            .Include(o => o.Products)
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+
+        if (opportunity == null)
+            return Result<Unit>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
+
+        var product = opportunity.Products.FirstOrDefault(p => p.Id == request.ProductId);
+        if (product == null)
+            return Result<Unit>.Failure(Error.NotFound("OpportunityProduct.NotFound", $"Product with ID {request.ProductId} not found in opportunity"));
+
+        opportunity.RemoveProduct(product);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result<Unit>.Success(Unit.Value);
     }
 }

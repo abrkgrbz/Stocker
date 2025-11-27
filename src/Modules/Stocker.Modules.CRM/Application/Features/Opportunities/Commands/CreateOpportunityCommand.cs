@@ -1,7 +1,11 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -68,5 +72,86 @@ public class CreateOpportunityCommandValidator : AbstractValidator<CreateOpportu
 
         RuleFor(x => x.Score)
             .InclusiveBetween(0, 100).WithMessage("Score must be between 0 and 100");
+    }
+}
+
+public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunityCommand, Result<OpportunityDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public CreateOpportunityCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<OpportunityDto>> Handle(CreateOpportunityCommand request, CancellationToken cancellationToken)
+    {
+        Guid pipelineId;
+        Guid stageId;
+
+        if (request.PipelineId.HasValue && request.CurrentStageId.HasValue)
+        {
+            pipelineId = request.PipelineId.Value;
+            stageId = request.CurrentStageId.Value;
+
+            var stage = await _context.PipelineStages
+                .FirstOrDefaultAsync(s => s.Id == stageId && s.PipelineId == pipelineId, cancellationToken);
+
+            if (stage == null)
+                return Result<OpportunityDto>.Failure(Error.NotFound("Stage.NotFound", "Stage not found in the specified pipeline"));
+        }
+        else
+        {
+            var defaultPipeline = await _context.Pipelines
+                .Include(p => p.Stages)
+                .FirstOrDefaultAsync(p => p.TenantId == request.TenantId && p.IsActive, cancellationToken);
+
+            if (defaultPipeline == null)
+                return Result<OpportunityDto>.Failure(Error.NotFound("Pipeline.NotFound", "No active pipeline found"));
+
+            var firstStage = defaultPipeline.Stages.OrderBy(s => s.DisplayOrder).FirstOrDefault();
+            if (firstStage == null)
+                return Result<OpportunityDto>.Failure(Error.NotFound("Stage.NotFound", "Pipeline has no stages"));
+
+            pipelineId = defaultPipeline.Id;
+            stageId = firstStage.Id;
+        }
+
+        var ownerId = int.TryParse(request.OwnerId, out var id) ? id : 0;
+        var amount = Money.Create(request.Amount, request.Currency);
+
+        var opportunity = new Opportunity(
+            request.TenantId,
+            request.Name,
+            pipelineId,
+            stageId,
+            amount,
+            request.ExpectedCloseDate,
+            ownerId);
+
+        opportunity.AssignToCustomer(request.CustomerId);
+
+        _context.Opportunities.Add(opportunity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new OpportunityDto
+        {
+            Id = opportunity.Id,
+            Name = opportunity.Name,
+            Description = opportunity.Description,
+            CustomerId = opportunity.CustomerId ?? Guid.Empty,
+            Amount = opportunity.Amount.Amount,
+            Currency = opportunity.Amount.Currency,
+            Probability = opportunity.Probability,
+            ExpectedCloseDate = opportunity.ExpectedCloseDate,
+            Status = opportunity.Status,
+            PipelineId = opportunity.PipelineId,
+            CurrentStageId = opportunity.StageId,
+            OwnerId = opportunity.OwnerId.ToString(),
+            CreatedAt = opportunity.CreatedAt,
+            UpdatedAt = opportunity.UpdatedAt
+        };
+
+        return Result<OpportunityDto>.Success(dto);
     }
 }

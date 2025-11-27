@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -75,5 +77,72 @@ public class CreateActivityCommandValidator : AbstractValidator<CreateActivityCo
                command.ContactId.HasValue ||
                command.OpportunityId.HasValue ||
                command.DealId.HasValue;
+    }
+}
+
+public class CreateActivityCommandHandler : IRequestHandler<CreateActivityCommand, Result<ActivityDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public CreateActivityCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<ActivityDto>> Handle(CreateActivityCommand request, CancellationToken cancellationToken)
+    {
+        var activity = new Activity(
+            request.TenantId,
+            request.Subject,
+            request.Type,
+            1); // Default OwnerId - should come from current user context
+
+        activity.UpdateDetails(request.Subject, request.Description, request.Priority);
+        activity.SetDueDate(request.DueDate);
+
+        if (!string.IsNullOrEmpty(request.AssignedToId) && int.TryParse(request.AssignedToId, out var assignedToId))
+        {
+            activity.AssignTo(assignedToId);
+        }
+
+        // Set relationship based on provided IDs
+        if (request.LeadId.HasValue)
+            activity.RelateToLead(request.LeadId.Value);
+        else if (request.CustomerId.HasValue)
+            activity.RelateToCustomer(request.CustomerId.Value);
+        else if (request.ContactId.HasValue)
+            activity.RelateToContact(request.ContactId.Value);
+        else if (request.OpportunityId.HasValue)
+            activity.RelateToOpportunity(request.OpportunityId.Value);
+        else if (request.DealId.HasValue)
+            activity.RelateToDeal(request.DealId.Value);
+
+        _context.Activities.Add(activity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new ActivityDto
+        {
+            Id = activity.Id,
+            Subject = activity.Subject,
+            Description = activity.Description,
+            Type = activity.Type,
+            Status = activity.Status,
+            Priority = activity.Priority,
+            DueAt = activity.DueDate,
+            CompletedAt = activity.CompletedDate,
+            Duration = activity.Duration,
+            Location = activity.Location,
+            LeadId = activity.LeadId,
+            CustomerId = activity.CustomerId,
+            ContactId = activity.ContactId,
+            OpportunityId = activity.OpportunityId,
+            DealId = activity.DealId,
+            OwnerId = activity.OwnerId,
+            IsOverdue = activity.IsOverdue(),
+            Outcome = activity.TaskOutcome,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return Result<ActivityDto>.Success(dto);
     }
 }

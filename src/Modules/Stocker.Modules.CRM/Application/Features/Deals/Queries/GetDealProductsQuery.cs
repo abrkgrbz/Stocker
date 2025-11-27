@@ -1,6 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -48,7 +50,7 @@ public class GetDealProductsQueryValidator : AbstractValidator<GetDealProductsQu
         if (string.IsNullOrEmpty(sortBy))
             return true;
 
-        var validFields = new[] { "ProductName", "ProductCode", "Quantity", "UnitPrice", "TotalPrice", "SortOrder", "CreatedAt" };
+        var validFields = new[] { "ProductName", "ProductCode", "Quantity", "UnitPrice", "TotalPrice", "SortOrder" };
         return validFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -57,7 +59,80 @@ public class GetDealProductsQueryValidator : AbstractValidator<GetDealProductsQu
         if (string.IsNullOrEmpty(sortDirection))
             return true;
 
-        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) || 
+        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) ||
                sortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public class GetDealProductsQueryHandler : IRequestHandler<GetDealProductsQuery, Result<IEnumerable<DealProductDto>>>
+{
+    private readonly CRMDbContext _context;
+
+    public GetDealProductsQueryHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<IEnumerable<DealProductDto>>> Handle(GetDealProductsQuery request, CancellationToken cancellationToken)
+    {
+        var deal = await _context.Deals
+            .Include(d => d.Products)
+            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == request.TenantId, cancellationToken);
+
+        if (deal == null)
+            return Result<IEnumerable<DealProductDto>>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.DealId} not found"));
+
+        var products = deal.Products.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            products = products.Where(p =>
+                p.ProductName.Contains(request.Search, StringComparison.OrdinalIgnoreCase) ||
+                (p.ProductCode != null && p.ProductCode.Contains(request.Search, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        products = request.SortBy?.ToLowerInvariant() switch
+        {
+            "productname" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.ProductName)
+                : products.OrderBy(p => p.ProductName),
+            "productcode" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.ProductCode)
+                : products.OrderBy(p => p.ProductCode),
+            "quantity" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.Quantity)
+                : products.OrderBy(p => p.Quantity),
+            "unitprice" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.UnitPrice.Amount)
+                : products.OrderBy(p => p.UnitPrice.Amount),
+            "totalprice" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.TotalPrice.Amount)
+                : products.OrderBy(p => p.TotalPrice.Amount),
+            _ => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.SortOrder)
+                : products.OrderBy(p => p.SortOrder)
+        };
+
+        var dtos = products.Select(p => new DealProductDto
+        {
+            Id = p.Id,
+            ProductName = p.ProductName,
+            ProductCode = p.ProductCode,
+            Description = p.Description,
+            Quantity = p.Quantity,
+            UnitPrice = p.UnitPrice.Amount,
+            Currency = p.UnitPrice.Currency,
+            DiscountPercent = p.DiscountPercent,
+            DiscountAmount = p.DiscountAmount.Amount,
+            TotalPrice = p.TotalPrice.Amount,
+            Tax = p.Tax,
+            TaxAmount = p.TaxAmount.Amount,
+            SortOrder = p.SortOrder,
+            IsRecurring = p.IsRecurring,
+            RecurringPeriod = p.RecurringPeriod,
+            RecurringCycles = p.RecurringCycles
+        });
+
+        return Result<IEnumerable<DealProductDto>>.Success(dtos);
     }
 }

@@ -25,8 +25,6 @@ public class CampaignDto
     public decimal ROI => ActualCost > 0 ? (ActualRevenue - ActualCost) / ActualCost * 100 : 0;
     public int MemberCount { get; set; }
     public List<CampaignMemberDto> TopMembers { get; set; } = new();
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }
 
 public class CampaignMemberDto
@@ -45,7 +43,6 @@ public class CampaignMemberDto
     public DateTime? ConvertedDate { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
-    public DateTime AddedAt { get; set; }
 }
 
 public class CampaignRoiDto

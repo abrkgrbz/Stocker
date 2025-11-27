@@ -54,8 +54,6 @@ public class DealProductDto
     public bool IsRecurring { get; set; }
     public string? RecurringPeriod { get; set; }
     public int? RecurringCycles { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }
 
 public class CreateDealProductDto

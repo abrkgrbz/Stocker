@@ -1,6 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -74,5 +78,75 @@ public class AddDealProductCommandValidator : AbstractValidator<AddDealProductCo
                 .GreaterThan(0).WithMessage("Recurring cycles must be greater than 0")
                 .When(x => x.ProductData.IsRecurring && x.ProductData.RecurringCycles.HasValue);
         });
+    }
+}
+
+public class AddDealProductCommandHandler : IRequestHandler<AddDealProductCommand, Result<DealProductDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public AddDealProductCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<DealProductDto>> Handle(AddDealProductCommand request, CancellationToken cancellationToken)
+    {
+        var deal = await _context.Deals
+            .Include(d => d.Products)
+            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == request.TenantId, cancellationToken);
+
+        if (deal == null)
+            return Result<DealProductDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.DealId} not found"));
+
+        var unitPrice = Money.Create(request.ProductData.UnitPrice, request.ProductData.Currency);
+
+        var dealProduct = new DealProduct(
+            request.TenantId,
+            request.DealId,
+            request.ProductData.ProductId,
+            request.ProductData.ProductName,
+            request.ProductData.Quantity,
+            unitPrice,
+            request.ProductData.Tax,
+            request.ProductData.SortOrder);
+
+        if (!string.IsNullOrEmpty(request.ProductData.ProductCode))
+            dealProduct.SetProductCode(request.ProductData.ProductCode);
+
+        if (!string.IsNullOrEmpty(request.ProductData.Description))
+            dealProduct.SetDescription(request.ProductData.Description);
+
+        if (request.ProductData.DiscountPercent > 0)
+            dealProduct.ApplyDiscountPercent(request.ProductData.DiscountPercent);
+
+        if (request.ProductData.IsRecurring && !string.IsNullOrEmpty(request.ProductData.RecurringPeriod))
+            dealProduct.SetAsRecurring(request.ProductData.RecurringPeriod, request.ProductData.RecurringCycles);
+
+        deal.AddProduct(dealProduct);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new DealProductDto
+        {
+            Id = dealProduct.Id,
+            ProductId = dealProduct.ProductId,
+            ProductName = dealProduct.ProductName,
+            ProductCode = dealProduct.ProductCode,
+            Description = dealProduct.Description,
+            Quantity = dealProduct.Quantity,
+            UnitPrice = dealProduct.UnitPrice.Amount,
+            Currency = dealProduct.UnitPrice.Currency,
+            DiscountPercent = dealProduct.DiscountPercent,
+            DiscountAmount = dealProduct.DiscountAmount.Amount,
+            TotalPrice = dealProduct.TotalPrice.Amount,
+            Tax = dealProduct.Tax,
+            TaxAmount = dealProduct.TaxAmount.Amount,
+            SortOrder = dealProduct.SortOrder,
+            IsRecurring = dealProduct.IsRecurring,
+            RecurringPeriod = dealProduct.RecurringPeriod,
+            RecurringCycles = dealProduct.RecurringCycles
+        };
+
+        return Result<DealProductDto>.Success(dto);
     }
 }
