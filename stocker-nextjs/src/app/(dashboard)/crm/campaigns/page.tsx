@@ -38,7 +38,7 @@ import {
   useAbortCampaign,
   useCreateCampaign,
   useUpdateCampaign,
-} from '@/hooks/useCRM';
+} from '@/lib/api/hooks/useCRM';
 import { CampaignsStats } from '@/components/crm/campaigns/CampaignsStats';
 import { CampaignModal } from '@/components/crm/campaigns/CampaignModal';
 

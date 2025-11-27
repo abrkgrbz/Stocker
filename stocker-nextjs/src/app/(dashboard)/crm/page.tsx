@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Space, Button, Row, Col, Card, Table, List, Tag, Empty } from 'antd';
 import { TrophyOutlined, PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { useCustomers, useLeads, useDeals, useActivities, useCampaigns, usePipelines } from '@/hooks/useCRM';
+import { useCustomers, useLeads, useDeals, useActivities, useCampaigns, usePipelines } from '@/lib/api/hooks/useCRM';
 import {
   MetricsOverview,
   SalesFunnel,

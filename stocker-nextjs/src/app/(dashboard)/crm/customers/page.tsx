@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Space, Typography, Alert } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { useCustomers } from '@/hooks/useCRM';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
 import CustomerModal from '@/features/customers/components/CustomerModal';
 import { CustomersStats, CustomersTable, CustomersFilters } from '@/components/crm/customers';

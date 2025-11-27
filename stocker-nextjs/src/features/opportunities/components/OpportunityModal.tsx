@@ -15,7 +15,7 @@ import {
   CheckOutlined,
 } from '@ant-design/icons';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
-import { useCustomers } from '@/hooks/useCRM';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;

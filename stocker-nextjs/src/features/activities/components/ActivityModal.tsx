@@ -39,7 +39,7 @@ import {
   MinusOutlined,
 } from '@ant-design/icons';
 import type { Activity } from '@/lib/api/services/crm.service';
-import { useCustomers, useLeads, useDeals } from '@/hooks/useCRM';
+import { useCustomers, useLeads, useDeals } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
