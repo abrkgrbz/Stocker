@@ -1,7 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -43,5 +46,58 @@ public class AddCampaignMemberCommandValidator : AbstractValidator<AddCampaignMe
     private static bool HaveLeadOrContact(AddCampaignMemberCommand command)
     {
         return command.LeadId.HasValue || command.ContactId.HasValue;
+    }
+}
+
+public class AddCampaignMemberCommandHandler : IRequestHandler<AddCampaignMemberCommand, Result<CampaignMemberDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public AddCampaignMemberCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<CampaignMemberDto>> Handle(AddCampaignMemberCommand request, CancellationToken cancellationToken)
+    {
+        var campaign = await _context.Campaigns
+            .Include(c => c.Members)
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+
+        if (campaign == null)
+            return Result<CampaignMemberDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
+
+        // Check if member already exists
+        var existingMember = campaign.Members.FirstOrDefault(m =>
+            (request.LeadId.HasValue && m.LeadId == request.LeadId) ||
+            (request.ContactId.HasValue && m.ContactId == request.ContactId));
+
+        if (existingMember != null)
+            return Result<CampaignMemberDto>.Failure(Error.Conflict("CampaignMember.AlreadyExists", "Member already exists in this campaign"));
+
+        var member = new CampaignMember(
+            request.TenantId,
+            request.CampaignId,
+            request.ContactId,
+            request.LeadId);
+
+        campaign.AddMember(member);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result<CampaignMemberDto>.Success(new CampaignMemberDto
+        {
+            Id = member.Id,
+            CampaignId = member.CampaignId,
+            CampaignName = campaign.Name,
+            LeadId = member.LeadId,
+            ContactId = member.ContactId,
+            Status = member.Status,
+            HasResponded = member.RespondedDate.HasValue,
+            RespondedDate = member.RespondedDate,
+            IsConverted = member.HasConverted,
+            ConvertedDate = member.ConvertedDate,
+            Email = request.Email,
+            Phone = request.Phone
+        });
     }
 }

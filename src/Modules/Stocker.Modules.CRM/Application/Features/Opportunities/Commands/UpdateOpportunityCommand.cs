@@ -1,7 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -75,5 +78,65 @@ public class UpdateOpportunityCommandValidator : AbstractValidator<UpdateOpportu
 
         RuleFor(x => x.Score)
             .InclusiveBetween(0, 100).WithMessage("Score must be between 0 and 100");
+    }
+}
+
+public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunityCommand, Result<OpportunityDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public UpdateOpportunityCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<OpportunityDto>> Handle(UpdateOpportunityCommand request, CancellationToken cancellationToken)
+    {
+        var opportunity = await _context.Opportunities
+            .Include(o => o.Pipeline)
+            .Include(o => o.Stage)
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == request.TenantId, cancellationToken);
+
+        if (opportunity == null)
+            return Result<OpportunityDto>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.Id} not found"));
+
+        var amount = Money.Create(request.Amount, request.Currency);
+        opportunity.UpdateDetails(request.Name, request.Description, amount, request.ExpectedCloseDate);
+        opportunity.AssignToCustomer(request.CustomerId);
+
+        if (request.CurrentStageId.HasValue && request.CurrentStageId.Value != opportunity.StageId)
+        {
+            var stage = await _context.PipelineStages
+                .FirstOrDefaultAsync(s => s.Id == request.CurrentStageId.Value && s.PipelineId == opportunity.PipelineId, cancellationToken);
+
+            if (stage != null)
+                opportunity.MoveToStage(request.CurrentStageId.Value, stage.Probability);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new OpportunityDto
+        {
+            Id = opportunity.Id,
+            Name = opportunity.Name,
+            Description = opportunity.Description,
+            CustomerId = opportunity.CustomerId ?? Guid.Empty,
+            Amount = opportunity.Amount.Amount,
+            Currency = opportunity.Amount.Currency,
+            Probability = opportunity.Probability,
+            ExpectedCloseDate = opportunity.ExpectedCloseDate,
+            Status = opportunity.Status,
+            PipelineId = opportunity.PipelineId,
+            PipelineName = opportunity.Pipeline?.Name,
+            CurrentStageId = opportunity.StageId,
+            CurrentStageName = opportunity.Stage?.Name,
+            LostReason = opportunity.LostReason,
+            CompetitorName = opportunity.CompetitorName,
+            OwnerId = opportunity.OwnerId.ToString(),
+            CreatedAt = opportunity.CreatedAt,
+            UpdatedAt = opportunity.UpdatedAt
+        };
+
+        return Result<OpportunityDto>.Success(dto);
     }
 }

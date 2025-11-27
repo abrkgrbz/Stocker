@@ -10,9 +10,10 @@ public class ActivityDto
     public ActivityType Type { get; set; }
     public ActivityStatus Status { get; set; }
     public ActivityPriority Priority { get; set; }
-    public DateTime DueDate { get; set; }
+    public DateTime? ScheduledAt { get; set; }
+    public DateTime? DueAt { get; set; }
     public DateTime? CompletedAt { get; set; }
-    public int? Duration { get; set; }
+    public TimeSpan? Duration { get; set; }
     public string? Location { get; set; }
     public Guid? LeadId { get; set; }
     public string? LeadName { get; set; }
@@ -26,18 +27,18 @@ public class ActivityDto
     public string? DealTitle { get; set; }
     public int OwnerId { get; set; }
     public string? OwnerName { get; set; }
-    public string? AssignedToId { get; set; }
+    public Guid? AssignedToUserId { get; set; }
     public string? AssignedToName { get; set; }
     public string? Outcome { get; set; }
     public string? Notes { get; set; }
-    public bool IsOverdue => !CompletedAt.HasValue && DueDate < DateTime.UtcNow;
+    public bool IsOverdue { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    
+
     // Frontend compatibility aliases
     public string Title => Subject;
-    public DateTime StartTime => DueDate;
-    public DateTime? EndTime => Duration.HasValue ? DueDate.AddMinutes(Duration.Value) : null;
+    public DateTime? StartTime => ScheduledAt ?? DueAt;
+    public DateTime? EndTime => Duration.HasValue && DueAt.HasValue ? DueAt.Value.Add(Duration.Value) : null;
 }
 
 public class ActivityStatisticsDto

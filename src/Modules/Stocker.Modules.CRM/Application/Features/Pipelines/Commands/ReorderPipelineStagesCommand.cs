@@ -1,6 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -49,5 +51,53 @@ public class ReorderPipelineStagesCommandValidator : AbstractValidator<ReorderPi
             order.RuleFor(o => o.Order)
                 .GreaterThanOrEqualTo(0).WithMessage("Order must be greater than or equal to 0");
         });
+    }
+}
+
+public class ReorderPipelineStagesCommandHandler : IRequestHandler<ReorderPipelineStagesCommand, Result<IEnumerable<PipelineStageDto>>>
+{
+    private readonly CRMDbContext _context;
+
+    public ReorderPipelineStagesCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<IEnumerable<PipelineStageDto>>> Handle(ReorderPipelineStagesCommand request, CancellationToken cancellationToken)
+    {
+        var pipeline = await _context.Pipelines
+            .Include(p => p.Stages)
+            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == request.TenantId, cancellationToken);
+
+        if (pipeline == null)
+            return Result<IEnumerable<PipelineStageDto>>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.PipelineId} not found"));
+
+        try
+        {
+            var stageIds = request.StageOrders.OrderBy(s => s.Order).Select(s => s.StageId).ToList();
+            pipeline.ReorderStages(stageIds);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var stages = pipeline.Stages.Select(s => new PipelineStageDto
+            {
+                Id = s.Id,
+                PipelineId = s.PipelineId,
+                Name = s.Name,
+                Description = s.Description,
+                Probability = s.Probability,
+                DisplayOrder = s.DisplayOrder,
+                IsWon = s.IsWon,
+                IsLost = s.IsLost,
+                IsActive = s.IsActive,
+                Color = s.Color,
+                RottenDays = s.RottenDays
+            }).OrderBy(s => s.DisplayOrder).ToList();
+
+            return Result<IEnumerable<PipelineStageDto>>.Success(stages);
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<IEnumerable<PipelineStageDto>>.Failure(Error.Validation("PipelineStage.ReorderFailed", ex.Message));
+        }
     }
 }

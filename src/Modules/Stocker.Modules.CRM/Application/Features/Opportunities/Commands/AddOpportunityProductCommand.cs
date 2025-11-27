@@ -1,6 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -63,5 +67,65 @@ public class AddOpportunityProductCommandValidator : AbstractValidator<AddOpport
             RuleFor(x => x.ProductData.SortOrder)
                 .GreaterThanOrEqualTo(0).WithMessage("Sort order must be greater than or equal to 0");
         });
+    }
+}
+
+public class AddOpportunityProductCommandHandler : IRequestHandler<AddOpportunityProductCommand, Result<OpportunityProductDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public AddOpportunityProductCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<OpportunityProductDto>> Handle(AddOpportunityProductCommand request, CancellationToken cancellationToken)
+    {
+        var opportunity = await _context.Opportunities
+            .Include(o => o.Products)
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+
+        if (opportunity == null)
+            return Result<OpportunityProductDto>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
+
+        var unitPrice = Money.Create(request.ProductData.UnitPrice, request.ProductData.Currency);
+
+        var product = new OpportunityProduct(
+            request.TenantId,
+            request.OpportunityId,
+            request.ProductData.ProductId,
+            request.ProductData.ProductName,
+            request.ProductData.Quantity,
+            unitPrice,
+            request.ProductData.SortOrder);
+
+        if (!string.IsNullOrEmpty(request.ProductData.ProductCode))
+            product.SetProductCode(request.ProductData.ProductCode);
+
+        if (!string.IsNullOrEmpty(request.ProductData.Description))
+            product.SetDescription(request.ProductData.Description);
+
+        if (request.ProductData.DiscountPercent > 0)
+            product.ApplyDiscountPercent(request.ProductData.DiscountPercent);
+
+        opportunity.AddProduct(product);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new OpportunityProductDto
+        {
+            Id = product.Id,
+            ProductName = product.ProductName,
+            ProductCode = product.ProductCode,
+            Description = product.Description,
+            Quantity = product.Quantity,
+            UnitPrice = product.UnitPrice.Amount,
+            Currency = product.UnitPrice.Currency,
+            DiscountPercent = product.DiscountPercent,
+            DiscountAmount = product.DiscountAmount.Amount,
+            TotalPrice = product.TotalPrice.Amount,
+            SortOrder = product.SortOrder
+        };
+
+        return Result<OpportunityProductDto>.Success(dto);
     }
 }

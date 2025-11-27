@@ -1,7 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -73,5 +76,55 @@ public class UpdateCampaignCommandValidator : AbstractValidator<UpdateCampaignCo
 
         RuleFor(x => x.TargetLeads)
             .GreaterThan(0).WithMessage("Target leads must be greater than 0");
+    }
+}
+
+public class UpdateCampaignCommandHandler : IRequestHandler<UpdateCampaignCommand, Result<CampaignDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public UpdateCampaignCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<CampaignDto>> Handle(UpdateCampaignCommand request, CancellationToken cancellationToken)
+    {
+        var campaign = await _context.Campaigns
+            .FirstOrDefaultAsync(c => c.Id == request.Id && c.TenantId == request.TenantId, cancellationToken);
+
+        if (campaign == null)
+            return Result<CampaignDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.Id} not found"));
+
+        campaign.UpdateDetails(request.Name, request.Description, request.TargetAudience, null);
+        campaign.UpdateDates(request.StartDate, request.EndDate);
+        campaign.UpdateBudget(
+            Money.Create(request.BudgetedCost, "USD"),
+            Money.Create(request.ExpectedRevenue, "USD"),
+            request.TargetLeads);
+        campaign.RecordActualResults(
+            Money.Create(request.ActualCost, "USD"),
+            Money.Create(request.ActualRevenue, "USD"),
+            0);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Result<CampaignDto>.Success(new CampaignDto
+        {
+            Id = campaign.Id,
+            Name = campaign.Name,
+            Description = campaign.Description,
+            Type = campaign.Type,
+            Status = campaign.Status,
+            StartDate = campaign.StartDate,
+            EndDate = campaign.EndDate,
+            BudgetedCost = campaign.BudgetedCost.Amount,
+            ActualCost = campaign.ActualCost.Amount,
+            ExpectedRevenue = campaign.ExpectedRevenue.Amount,
+            ActualRevenue = campaign.ActualRevenue.Amount,
+            TargetAudience = campaign.TargetAudience,
+            TargetLeads = campaign.ExpectedResponse,
+            OwnerId = campaign.OwnerId.ToString()
+        });
     }
 }

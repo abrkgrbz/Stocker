@@ -1,7 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -79,5 +82,65 @@ public class UpdateDealCommandValidator : AbstractValidator<UpdateDealCommand>
 
         RuleFor(x => x.Source)
             .MaximumLength(100).WithMessage("Source must not exceed 100 characters");
+    }
+}
+
+public class UpdateDealCommandHandler : IRequestHandler<UpdateDealCommand, Result<DealDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public UpdateDealCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<DealDto>> Handle(UpdateDealCommand request, CancellationToken cancellationToken)
+    {
+        var deal = await _context.Deals
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId, cancellationToken);
+
+        if (deal == null)
+            return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.Id} not found"));
+
+        var value = Money.Create(request.Amount, request.Currency);
+        deal.UpdateDetails(request.Title, request.Description, value);
+        deal.SetExpectedCloseDate(request.ExpectedCloseDate);
+        deal.SetPriority(request.Priority);
+
+        if (request.CustomerId != Guid.Empty)
+        {
+            deal.AssignToCustomer(request.CustomerId);
+        }
+
+        if (request.StageId.HasValue)
+        {
+            deal.MoveToStage(request.StageId.Value, request.Probability);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new DealDto
+        {
+            Id = deal.Id,
+            Title = deal.Name,
+            Description = deal.Description,
+            CustomerId = deal.CustomerId ?? Guid.Empty,
+            Amount = deal.Value.Amount,
+            Currency = deal.Value.Currency,
+            Status = deal.Status,
+            Priority = deal.Priority,
+            PipelineId = deal.PipelineId,
+            StageId = deal.StageId,
+            ExpectedCloseDate = deal.ExpectedCloseDate ?? DateTime.UtcNow,
+            ActualCloseDate = deal.ActualCloseDate,
+            Probability = deal.Probability,
+            LostReason = deal.LostReason,
+            CompetitorName = deal.CompetitorName,
+            OwnerId = deal.OwnerId.ToString(),
+            CreatedAt = deal.CreatedAt,
+            UpdatedAt = deal.UpdatedAt
+        };
+
+        return Result<DealDto>.Success(dto);
     }
 }

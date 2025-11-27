@@ -1,6 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -57,7 +59,78 @@ public class GetOpportunityProductsQueryValidator : AbstractValidator<GetOpportu
         if (string.IsNullOrEmpty(sortDirection))
             return true;
 
-        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) || 
+        return sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) ||
                sortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public class GetOpportunityProductsQueryHandler : IRequestHandler<GetOpportunityProductsQuery, Result<IEnumerable<OpportunityProductDto>>>
+{
+    private readonly CRMDbContext _context;
+
+    public GetOpportunityProductsQueryHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<IEnumerable<OpportunityProductDto>>> Handle(GetOpportunityProductsQuery request, CancellationToken cancellationToken)
+    {
+        var opportunity = await _context.Opportunities
+            .Include(o => o.Products)
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+
+        if (opportunity == null)
+            return Result<IEnumerable<OpportunityProductDto>>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
+
+        var products = opportunity.Products.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            products = products.Where(p =>
+                p.ProductName.Contains(request.Search, StringComparison.OrdinalIgnoreCase) ||
+                (p.ProductCode != null && p.ProductCode.Contains(request.Search, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        products = request.SortBy?.ToLowerInvariant() switch
+        {
+            "productname" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.ProductName)
+                : products.OrderBy(p => p.ProductName),
+            "productcode" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.ProductCode)
+                : products.OrderBy(p => p.ProductCode),
+            "quantity" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.Quantity)
+                : products.OrderBy(p => p.Quantity),
+            "unitprice" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.UnitPrice.Amount)
+                : products.OrderBy(p => p.UnitPrice.Amount),
+            "totalprice" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.TotalPrice.Amount)
+                : products.OrderBy(p => p.TotalPrice.Amount),
+            "sortorder" => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.SortOrder)
+                : products.OrderBy(p => p.SortOrder),
+            _ => request.SortDirection?.ToLowerInvariant() == "desc"
+                ? products.OrderByDescending(p => p.SortOrder)
+                : products.OrderBy(p => p.SortOrder)
+        };
+
+        var dtos = products.Select(p => new OpportunityProductDto
+        {
+            Id = p.Id,
+            ProductName = p.ProductName,
+            ProductCode = p.ProductCode,
+            Description = p.Description,
+            Quantity = p.Quantity,
+            UnitPrice = p.UnitPrice.Amount,
+            Currency = p.UnitPrice.Currency,
+            DiscountPercent = p.DiscountPercent,
+            DiscountAmount = p.DiscountAmount.Amount,
+            TotalPrice = p.TotalPrice.Amount,
+            SortOrder = p.SortOrder
+        });
+
+        return Result<IEnumerable<OpportunityProductDto>>.Success(dtos);
     }
 }

@@ -1,6 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Infrastructure.Persistence;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -35,5 +37,53 @@ public class CloseDealLostCommandValidator : AbstractValidator<CloseDealLostComm
 
         RuleFor(x => x.CompetitorName)
             .MaximumLength(200).WithMessage("Competitor name must not exceed 200 characters");
+    }
+}
+
+public class CloseDealLostCommandHandler : IRequestHandler<CloseDealLostCommand, Result<DealDto>>
+{
+    private readonly CRMDbContext _context;
+
+    public CloseDealLostCommandHandler(CRMDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Result<DealDto>> Handle(CloseDealLostCommand request, CancellationToken cancellationToken)
+    {
+        var deal = await _context.Deals
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId, cancellationToken);
+
+        if (deal == null)
+            return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.Id} not found"));
+
+        var closeDate = request.ActualCloseDate ?? DateTime.UtcNow;
+        deal.MarkAsLost(closeDate, request.LostReason, request.CompetitorName);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var dto = new DealDto
+        {
+            Id = deal.Id,
+            Title = deal.Name,
+            Description = deal.Description,
+            CustomerId = deal.CustomerId ?? Guid.Empty,
+            Amount = deal.Value.Amount,
+            Currency = deal.Value.Currency,
+            Status = deal.Status,
+            Priority = deal.Priority,
+            PipelineId = deal.PipelineId,
+            StageId = deal.StageId,
+            ExpectedCloseDate = deal.ExpectedCloseDate ?? DateTime.UtcNow,
+            ActualCloseDate = deal.ActualCloseDate,
+            Probability = deal.Probability,
+            LostReason = deal.LostReason,
+            CompetitorName = deal.CompetitorName,
+            OwnerId = deal.OwnerId.ToString(),
+            CreatedAt = deal.CreatedAt,
+            UpdatedAt = deal.UpdatedAt
+        };
+
+        return Result<DealDto>.Success(dto);
     }
 }
