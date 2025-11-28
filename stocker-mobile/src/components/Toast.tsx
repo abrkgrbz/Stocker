@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
-import { colors, spacing, typography } from '../theme/colors';
+import { spacing, typography } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { hapticService } from '../services/haptic';
 
 const { width } = Dimensions.get('window');
 
@@ -21,14 +23,29 @@ export const Toast: React.FC<ToastProps> = ({
     onHide,
     duration = 3000
 }) => {
+    const { colors } = useTheme();
+
     useEffect(() => {
         if (visible) {
+            // Trigger haptic feedback based on type
+            switch (type) {
+                case 'success':
+                    hapticService.success();
+                    break;
+                case 'error':
+                    hapticService.error();
+                    break;
+                case 'info':
+                    hapticService.selection();
+                    break;
+            }
+
             const timer = setTimeout(() => {
                 onHide();
             }, duration);
             return () => clearTimeout(timer);
         }
-    }, [visible, duration, onHide]);
+    }, [visible, duration, onHide, type]);
 
     if (!visible) return null;
 

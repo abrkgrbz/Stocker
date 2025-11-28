@@ -130,6 +130,7 @@ api.interceptors.response.use(
 
 // API methods
 export const apiService = {
+    getBaseUrl: () => API_URL,
     // Auth endpoints
     auth: {
         login: (data: { email: string; password: string; tenantCode: string; tenantSignature: string; tenantTimestamp: number }) =>
@@ -210,6 +211,9 @@ export const apiService = {
         updateCustomer: (id: string, data: any) =>
             api.put<ApiResponse>(`/api/crm/customers/${id}`, data),
 
+        deleteCustomers: (ids: string[]) =>
+            api.post<ApiResponse>('/api/crm/customers/bulk-delete', { ids }),
+
         // Leads
         getLeads: (params?: any) =>
             api.get<ApiResponse>('/api/crm/leads', { params }),
@@ -218,13 +222,47 @@ export const apiService = {
         getDeals: (params?: any) =>
             api.get<ApiResponse>('/api/crm/deals', { params }),
 
+        getDeal: (id: string) =>
+            api.get<ApiResponse>(`/api/crm/deals/${id}`),
+
+        deleteDeals: (ids: string[]) =>
+            api.post<ApiResponse>('/api/crm/deals/bulk-delete', { ids }),
+
+        // Quotes
+        getQuotes: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/quotes', { params }),
+
+        getQuoteDetail: (id: string) =>
+            api.get<ApiResponse>(`/api/crm/quotes/${id}`),
+
         // Activities
         getActivities: (params?: any) =>
             api.get<ApiResponse>('/api/crm/activities', { params }),
 
         // Stats
         getStats: () =>
-            api.get<ApiResponse>('/api/crm/stats'), // Assuming this exists, or we use tenant stats
+            api.get<ApiResponse>('/api/crm/stats'),
+    },
+
+    // Sales endpoints
+    sales: {
+        // Dashboard Stats
+        getDashboardStats: () =>
+            api.get<ApiResponse>('/api/sales/stats'),
+
+        // Orders
+        getOrders: (params?: any) =>
+            api.get<ApiResponse>('/api/sales/orders', { params }),
+
+        getOrderDetail: (id: string) =>
+            api.get<ApiResponse>(`/api/sales/orders/${id}`),
+
+        // Invoices
+        getInvoices: (params?: any) =>
+            api.get<ApiResponse>('/api/sales/invoices', { params }),
+
+        getInvoiceDetail: (id: string) =>
+            api.get<ApiResponse>(`/api/sales/invoices/${id}`),
     },
 };
 

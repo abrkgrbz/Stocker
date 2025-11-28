@@ -21,9 +21,9 @@ export const colors = {
     info: '#1890ff',
 
     // Gradients (represented as arrays for LinearGradient if needed, or solid fallbacks)
-    gradientViolet: ['#7c3aed', '#c026d3'], // Violet to Fuchsia
-    gradientCyan: ['#06b6d4', '#3b82f6'], // Cyan to Blue
-    gradientGreen: ['#22c55e', '#10b981'], // Green to Emerald
+    gradientViolet: ['#7c3aed', '#c026d3'] as const, // Violet to Fuchsia
+    gradientCyan: ['#06b6d4', '#3b82f6'] as const, // Cyan to Blue
+    gradientGreen: ['#22c55e', '#10b981'] as const, // Green to Emerald
 };
 
 export const spacing = {

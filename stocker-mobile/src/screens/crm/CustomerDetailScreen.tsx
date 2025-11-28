@@ -14,6 +14,7 @@ import { colors, spacing, typography } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
 import { Loading } from '../../components/Loading';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function CustomerDetailScreen({ route, navigation }: any) {
     const { id, name } = route.params;
@@ -58,11 +59,19 @@ export default function CustomerDetailScreen({ route, navigation }: any) {
 
     if (!customer) return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Müşteri</Text>
+                    <View style={{ width: 40 }} />
                 </View>
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>Müşteri bilgileri yüklenemedi.</Text>
@@ -73,15 +82,24 @@ export default function CustomerDetailScreen({ route, navigation }: any) {
 
     return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle} numberOfLines={1}>{name}</Text>
-                    <TouchableOpacity style={styles.editButton}>
-                        <Ionicons name="create-outline" size={24} color={colors.primary} />
+                    <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => navigation.navigate('AddCustomer', { id: customer.id })}
+                    >
+                        <Ionicons name="create-outline" size={24} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
@@ -99,25 +117,40 @@ export default function CustomerDetailScreen({ route, navigation }: any) {
                         <View style={styles.actionButtons}>
                             {customer.phone && (
                                 <TouchableOpacity style={styles.actionButton} onPress={() => handleCall(customer.phone)}>
-                                    <View style={[styles.iconCircle, { backgroundColor: colors.success + '20' }]}>
-                                        <Ionicons name="call" size={20} color={colors.success} />
-                                    </View>
+                                    <LinearGradient
+                                        colors={colors.gradientGreen as [string, string]}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={styles.iconCircle}
+                                    >
+                                        <Ionicons name="call" size={20} color="#fff" />
+                                    </LinearGradient>
                                     <Text style={styles.actionText}>Ara</Text>
                                 </TouchableOpacity>
                             )}
                             {customer.email && (
                                 <TouchableOpacity style={styles.actionButton} onPress={() => handleEmail(customer.email)}>
-                                    <View style={[styles.iconCircle, { backgroundColor: colors.primary + '20' }]}>
-                                        <Ionicons name="mail" size={20} color={colors.primary} />
-                                    </View>
+                                    <LinearGradient
+                                        colors={colors.gradientViolet as [string, string]}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={styles.iconCircle}
+                                    >
+                                        <Ionicons name="mail" size={20} color="#fff" />
+                                    </LinearGradient>
                                     <Text style={styles.actionText}>E-posta</Text>
                                 </TouchableOpacity>
                             )}
                             {customer.website && (
                                 <TouchableOpacity style={styles.actionButton} onPress={() => handleWebsite(customer.website)}>
-                                    <View style={[styles.iconCircle, { backgroundColor: colors.warning + '20' }]}>
-                                        <Ionicons name="globe" size={20} color={colors.warning} />
-                                    </View>
+                                    <LinearGradient
+                                        colors={colors.gradientCyan as [string, string]}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={styles.iconCircle}
+                                    >
+                                        <Ionicons name="globe" size={20} color="#fff" />
+                                    </LinearGradient>
                                     <Text style={styles.actionText}>Web</Text>
                                 </TouchableOpacity>
                             )}
@@ -161,7 +194,7 @@ const InfoRow = ({ icon, label, value }: any) => {
     if (!value) return null;
     return (
         <View style={styles.infoRow}>
-            <Ionicons name={icon} size={20} color={colors.textMuted} style={styles.infoIcon} />
+            <Ionicons name={icon} size={20} color={colors.textMuted} style={styles.infoIcon as TextStyle} />
             <View>
                 <Text style={styles.infoLabel}>{label}</Text>
                 <Text style={styles.infoValue}>{value}</Text>
@@ -173,7 +206,6 @@ const InfoRow = ({ icon, label, value }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -184,19 +216,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.l,
         paddingVertical: spacing.m,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
     } as ViewStyle,
     backButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     editButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        color: '#fff',
         flex: 1,
         textAlign: 'center',
         marginHorizontal: spacing.m,
@@ -254,7 +288,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.s,
     } as ViewStyle,
     actionText: {
         fontSize: 12,

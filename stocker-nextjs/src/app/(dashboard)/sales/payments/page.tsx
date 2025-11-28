@@ -43,6 +43,8 @@ import {
   useRejectPayment,
   useCreatePayment,
 } from '@/lib/api/hooks/usePayments';
+import { useCustomers } from '@/lib/api/hooks/useCRM';
+import type { Customer } from '@/lib/api/services/crm.service';
 import type { PaymentListItem, PaymentStatus, PaymentMethod, GetPaymentsParams, CreatePaymentCommand } from '@/lib/api/services/payment.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -108,9 +110,15 @@ export default function PaymentsPage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
 
   // API hooks
   const { data, isLoading, refetch } = usePayments(filters);
+  const { data: customersData, isLoading: customersLoading } = useCustomers({
+    searchTerm: customerSearch,
+    status: 'Active',
+    pageSize: 50
+  });
   const deletePayment = useDeletePayment();
   const confirmPayment = useConfirmPayment();
   const completePayment = useCompletePayment();
@@ -119,6 +127,13 @@ export default function PaymentsPage() {
 
   const payments = data?.items || [];
   const totalCount = data?.totalCount || 0;
+
+  // Get customers list for select options
+  const customerOptions = customersData?.items?.map((customer: Customer) => ({
+    value: customer.id.toString(),
+    label: customer.companyName || `${customer.contactPerson}`,
+    customer: customer,
+  })) || [];
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: value, page: 1 }));
@@ -229,9 +244,15 @@ export default function PaymentsPage() {
 
   const handleCreatePayment = async (values: any) => {
     try {
+      // Find selected customer from options
+      const selectedCustomer = customerOptions.find(
+        (opt: { value: string; customer: Customer }) => opt.value === values.customerId
+      )?.customer;
+
       const paymentData: CreatePaymentCommand = {
         paymentDate: values.paymentDate.toISOString(),
-        customerName: values.customerName,
+        customerId: selectedCustomer?.id?.toString() || undefined,
+        customerName: selectedCustomer?.companyName || selectedCustomer?.contactPerson || values.customerName,
         method: values.method,
         currency: values.currency || 'TRY',
         amount: values.amount,
@@ -530,11 +551,19 @@ export default function PaymentsPage() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="customerName"
-                label="Müşteri Adı"
-                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
+                name="customerId"
+                label="Müşteri"
+                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
               >
-                <Input placeholder="Müşteri adını giriniz" />
+                <Select
+                  showSearch
+                  placeholder="Müşteri seçiniz"
+                  loading={customersLoading}
+                  filterOption={false}
+                  onSearch={(value) => setCustomerSearch(value)}
+                  options={customerOptions}
+                  notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>

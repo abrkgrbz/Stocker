@@ -18,7 +18,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { apiService } from '../services/api';
-import { colors, spacing, typography } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../theme/theme';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
     FadeInDown,
@@ -34,6 +35,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
+import { biometricService } from '../services/biometric';
+import { hapticService } from '../services/haptic';
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +51,7 @@ interface TenantInfo {
 }
 
 export default function LoginScreen({ navigation }: any) {
+    const { colors } = useTheme();
     const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -56,6 +60,7 @@ export default function LoginScreen({ navigation }: any) {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
+    const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'error') => {
         setToast({ visible: true, message, type });
@@ -109,9 +114,27 @@ export default function LoginScreen({ navigation }: any) {
         transform: [{ translateY: blob3TranslateY.value }],
     }));
 
-    const { login } = useAuthStore();
+    const { login, biometricEnabled } = useAuthStore();
+
+    React.useEffect(() => {
+        checkBiometric();
+    }, []);
+
+    const checkBiometric = async () => {
+        const status = await biometricService.checkAvailability();
+        setIsBiometricAvailable(status.available && biometricEnabled);
+    };
+
+    const handleBiometricLogin = async () => {
+        hapticService.light();
+        const success = await biometricService.authenticate();
+        if (success) {
+            showToast('Biyometrik doğrulama başarılı! (Credential storage not implemented yet)', 'success');
+        }
+    };
 
     const handleCheckEmail = async () => {
+        hapticService.light();
         if (!email) {
             showToast('Lütfen e-posta adresinizi girin', 'error');
             return;
@@ -131,10 +154,6 @@ export default function LoginScreen({ navigation }: any) {
                 }
 
                 setTenants(tenantsList);
-
-                // If only one tenant, auto-select? 
-                // Next.js app shows selection even for one, but let's be efficient.
-                // Actually, let's show selection to confirm.
                 setStep('tenant-selection');
             } else {
                 showToast(response.data.message || 'E-posta kontrolü başarısız', 'error');
@@ -147,11 +166,13 @@ export default function LoginScreen({ navigation }: any) {
     };
 
     const handleTenantSelect = (tenant: TenantInfo) => {
+        hapticService.selection();
         setSelectedTenant(tenant);
         setStep('password');
     };
 
     const handleLogin = async () => {
+        hapticService.light();
         if (!password || !selectedTenant) return;
 
         setIsLoading(true);
@@ -212,13 +233,13 @@ export default function LoginScreen({ navigation }: any) {
     };
 
     const renderEmailStep = () => (
-        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
+        <Animated.View entering={FadeInRight.springify().delay(300)} exiting={FadeOutLeft}>
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>E-posta</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>E-posta</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
                     <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { color: colors.textPrimary }]}
                         placeholder="ornek@sirket.com"
                         placeholderTextColor={colors.textMuted}
                         value={email}
@@ -231,35 +252,45 @@ export default function LoginScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
                 onPress={handleCheckEmail}
                 disabled={isLoading}
             >
                 <Text style={styles.buttonText}>Devam Et</Text>
             </TouchableOpacity>
+
+            {isBiometricAvailable && (
+                <TouchableOpacity
+                    style={[styles.biometricButton, { borderColor: colors.primary }]}
+                    onPress={handleBiometricLogin}
+                >
+                    <Ionicons name="finger-print" size={24} color={colors.primary} style={{ marginRight: 8 }} />
+                    <Text style={[styles.biometricButtonText, { color: colors.primary }]}>Biyometrik Giriş</Text>
+                </TouchableOpacity>
+            )}
         </Animated.View>
     );
 
     const renderTenantSelectionStep = () => (
-        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
-            <Text style={styles.stepTitle}>Çalışma Alanı Seçin</Text>
-            <Text style={styles.stepSubtitle}>{email} için bulunan hesaplar:</Text>
+        <Animated.View entering={FadeInRight.springify().delay(300)} exiting={FadeOutLeft}>
+            <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Çalışma Alanı Seçin</Text>
+            <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>{email} için bulunan hesaplar:</Text>
 
             <ScrollView style={{ maxHeight: 300 }}>
                 {tenants.map((tenant) => (
                     <TouchableOpacity
                         key={tenant.code}
-                        style={styles.tenantCard}
+                        style={[styles.tenantCard, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}
                         onPress={() => handleTenantSelect(tenant)}
                     >
                         <View style={styles.tenantIcon}>
-                            <Text style={styles.tenantIconText}>
+                            <Text style={[styles.tenantIconText, { color: colors.primary }]}>
                                 {tenant.name?.[0]?.toUpperCase() || tenant.code?.[0]?.toUpperCase()}
                             </Text>
                         </View>
                         <View style={styles.tenantInfo}>
-                            <Text style={styles.tenantName}>{tenant.name || tenant.code}</Text>
-                            <Text style={styles.tenantDomain}>{tenant.code}.stoocker.app</Text>
+                            <Text style={[styles.tenantName, { color: colors.textPrimary }]}>{tenant.name || tenant.code}</Text>
+                            <Text style={[styles.tenantDomain, { color: colors.textSecondary }]}>{tenant.code}.stoocker.app</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                     </TouchableOpacity>
@@ -267,22 +298,22 @@ export default function LoginScreen({ navigation }: any) {
             </ScrollView>
 
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Text style={styles.backButtonText}>Farklı bir e-posta kullan</Text>
+                <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Farklı bir e-posta kullan</Text>
             </TouchableOpacity>
         </Animated.View>
     );
 
     const renderPasswordStep = () => (
-        <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft}>
-            <View style={styles.selectedTenantContainer}>
-                <View style={styles.tenantIconSmall}>
-                    <Text style={styles.tenantIconTextSmall}>
+        <Animated.View entering={FadeInRight.springify().delay(300)} exiting={FadeOutLeft}>
+            <View style={[styles.selectedTenantContainer, { backgroundColor: colors.surfaceLight + '20', borderColor: colors.primary + '40' }]}>
+                <View style={[styles.tenantIconSmall, { backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[styles.tenantIconTextSmall, { color: colors.primary }]}>
                         {selectedTenant?.name?.[0]?.toUpperCase() || selectedTenant?.code?.[0]?.toUpperCase()}
                     </Text>
                 </View>
                 <View>
-                    <Text style={styles.selectedTenantName}>{selectedTenant?.name || selectedTenant?.code}</Text>
-                    <Text style={styles.selectedTenantDomain}>{selectedTenant?.code}.stoocker.app</Text>
+                    <Text style={[styles.selectedTenantName, { color: colors.textPrimary }]}>{selectedTenant?.name || selectedTenant?.code}</Text>
+                    <Text style={[styles.selectedTenantDomain, { color: colors.textSecondary }]}>{selectedTenant?.code}.stoocker.app</Text>
                 </View>
                 <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => setStep('tenant-selection')}>
                     <Text style={{ color: colors.primary, fontSize: 12 }}>Değiştir</Text>
@@ -290,12 +321,12 @@ export default function LoginScreen({ navigation }: any) {
             </View>
 
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>Şifre</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.textPrimary }]}>Şifre</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
                     <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                     <TextInput
                         key={showPassword ? 'text' : 'password'}
-                        style={styles.input}
+                        style={[styles.input, { color: colors.textPrimary }]}
                         placeholder="******"
                         placeholderTextColor={colors.textMuted}
                         value={password}
@@ -313,7 +344,7 @@ export default function LoginScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
                 onPress={handleLogin}
                 disabled={isLoading}
             >
@@ -321,13 +352,13 @@ export default function LoginScreen({ navigation }: any) {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Text style={styles.backButtonText}>Geri Dön</Text>
+                <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Geri Dön</Text>
             </TouchableOpacity>
         </Animated.View>
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <Loading visible={isLoading} text="İşlem yapılıyor..." />
             <Toast
                 visible={toast.visible}
@@ -336,9 +367,9 @@ export default function LoginScreen({ navigation }: any) {
                 onHide={hideToast}
             />
             {/* Background Elements */}
-            <Animated.View style={[styles.bgGradientTop, blob1Style]} />
-            <Animated.View style={[styles.bgGradientBottom, blob2Style]} />
-            <Animated.View style={[styles.bgGradientCenter, blob3Style]} />
+            <Animated.View style={[styles.bgGradientTop, blob1Style, { backgroundColor: colors.primary }]} />
+            <Animated.View style={[styles.bgGradientBottom, blob2Style, { backgroundColor: colors.secondary }]} />
+            <Animated.View style={[styles.bgGradientCenter, blob3Style, { backgroundColor: colors.accent }]} />
 
             <SafeAreaView style={styles.safeArea}>
                 <KeyboardAvoidingView
@@ -359,13 +390,13 @@ export default function LoginScreen({ navigation }: any) {
                             </Animated.View>
                             <Animated.Text
                                 entering={FadeInDown.delay(400).duration(1000).springify()}
-                                style={styles.title}
+                                style={[styles.title, { color: colors.textPrimary }]}
                             >
                                 Stocker
                             </Animated.Text>
                             <Animated.Text
                                 entering={FadeInDown.delay(600).duration(1000).springify()}
-                                style={styles.subtitle}
+                                style={[styles.subtitle, { color: colors.textSecondary }]}
                             >
                                 Modern İşletme Yönetimi
                             </Animated.Text>
@@ -378,9 +409,9 @@ export default function LoginScreen({ navigation }: any) {
 
                             {step === 'email' && (
                                 <View style={styles.footer}>
-                                    <Text style={styles.footerText}>Hesabınız yok mu? </Text>
+                                    <Text style={[styles.footerText, { color: colors.textSecondary }]}>Hesabınız yok mu? </Text>
                                     <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                                        <Text style={styles.linkText}>Kayıt Olun</Text>
+                                        <Text style={[styles.linkText, { color: colors.primary }]}>Kayıt Olun</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -395,7 +426,6 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     bgGradientTop: {
         position: 'absolute',
@@ -404,7 +434,6 @@ const styles = StyleSheet.create({
         width: width * 1.2,
         height: width * 1.2,
         borderRadius: width * 0.6,
-        backgroundColor: colors.primary,
         opacity: 0.08,
         transform: [{ scale: 1.2 }],
     } as ViewStyle,
@@ -415,7 +444,6 @@ const styles = StyleSheet.create({
         width: width,
         height: width,
         borderRadius: width * 0.5,
-        backgroundColor: colors.secondary,
         opacity: 0.08,
         transform: [{ scale: 1.2 }],
     } as ViewStyle,
@@ -426,7 +454,6 @@ const styles = StyleSheet.create({
         width: 200,
         height: 200,
         borderRadius: 100,
-        backgroundColor: colors.accent,
         opacity: 0.05,
         transform: [{ scale: 1.5 }],
     } as ViewStyle,
@@ -458,12 +485,10 @@ const styles = StyleSheet.create({
     } as ImageStyle,
     title: {
         ...typography.h1,
-        color: colors.textPrimary,
         marginBottom: spacing.xs,
     } as TextStyle,
     subtitle: {
         ...typography.body,
-        color: colors.textSecondary,
     } as TextStyle,
     form: {
         width: '100%',
@@ -473,7 +498,6 @@ const styles = StyleSheet.create({
         marginBottom: spacing.l,
     } as ViewStyle,
     label: {
-        color: colors.textPrimary,
         marginBottom: spacing.s,
         fontSize: 14,
         fontWeight: '500',
@@ -481,10 +505,8 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#333',
     } as ViewStyle,
     inputIcon: {
         marginLeft: spacing.m,
@@ -493,7 +515,6 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         padding: spacing.m,
-        color: colors.textPrimary,
         fontSize: 16,
     } as TextStyle,
     passwordToggle: {
@@ -501,12 +522,10 @@ const styles = StyleSheet.create({
         marginRight: spacing.xs,
     } as ViewStyle,
     button: {
-        backgroundColor: colors.accent,
         borderRadius: 12,
         padding: spacing.m,
         alignItems: 'center',
         marginTop: spacing.s,
-        shadowColor: colors.accent,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -523,33 +542,27 @@ const styles = StyleSheet.create({
         marginTop: spacing.xl,
     } as ViewStyle,
     footerText: {
-        color: colors.textSecondary,
         fontSize: 14,
     } as TextStyle,
     linkText: {
-        color: colors.primary,
         fontSize: 14,
         fontWeight: 'bold',
     } as TextStyle,
     stepTitle: {
         ...typography.h3,
-        color: colors.textPrimary,
         marginBottom: spacing.xs,
     } as TextStyle,
     stepSubtitle: {
         ...typography.body,
-        color: colors.textSecondary,
         marginBottom: spacing.l,
     } as TextStyle,
     tenantCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         padding: spacing.m,
         borderRadius: 12,
         marginBottom: spacing.m,
         borderWidth: 1,
-        borderColor: colors.surfaceLight,
     } as ViewStyle,
     tenantIcon: {
         width: 48,
@@ -561,7 +574,6 @@ const styles = StyleSheet.create({
         marginRight: spacing.m,
     } as ViewStyle,
     tenantIconText: {
-        color: colors.primary,
         fontSize: 20,
         fontWeight: 'bold',
     } as TextStyle,
@@ -569,13 +581,11 @@ const styles = StyleSheet.create({
         flex: 1,
     } as ViewStyle,
     tenantName: {
-        color: colors.textPrimary,
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 2,
     } as TextStyle,
     tenantDomain: {
-        color: colors.textSecondary,
         fontSize: 12,
     } as TextStyle,
     backButton: {
@@ -584,40 +594,46 @@ const styles = StyleSheet.create({
         marginTop: spacing.s,
     } as ViewStyle,
     backButtonText: {
-        color: colors.textSecondary,
         fontSize: 14,
     } as TextStyle,
     selectedTenantContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(24, 144, 255, 0.05)',
         padding: spacing.m,
         borderRadius: 12,
         marginBottom: spacing.l,
         borderWidth: 1,
-        borderColor: 'rgba(24, 144, 255, 0.2)',
     } as ViewStyle,
     tenantIconSmall: {
         width: 32,
         height: 32,
         borderRadius: 8,
-        backgroundColor: 'rgba(24, 144, 255, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.m,
     } as ViewStyle,
     tenantIconTextSmall: {
-        color: colors.primary,
         fontSize: 14,
         fontWeight: 'bold',
     } as TextStyle,
     selectedTenantName: {
-        color: colors.textPrimary,
         fontSize: 14,
         fontWeight: 'bold',
     } as TextStyle,
     selectedTenantDomain: {
-        color: colors.textSecondary,
         fontSize: 12,
+    } as TextStyle,
+    biometricButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.m,
+        borderRadius: 12,
+        borderWidth: 1,
+        marginTop: spacing.m,
+    } as ViewStyle,
+    biometricButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
     } as TextStyle,
 });

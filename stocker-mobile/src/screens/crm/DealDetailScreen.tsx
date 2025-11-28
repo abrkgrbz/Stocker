@@ -13,6 +13,7 @@ import { colors, spacing, typography } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
 import { Loading } from '../../components/Loading';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function DealDetailScreen({ route, navigation }: any) {
     const { id, title } = route.params;
@@ -22,11 +23,9 @@ export default function DealDetailScreen({ route, navigation }: any) {
     useEffect(() => {
         const loadDeal = async () => {
             try {
-                const response = await apiService.crm.getDeals();
+                const response = await apiService.crm.getDeal(id);
                 if (response.data && response.data.success) {
-                    const items = response.data.data || [];
-                    const foundDeal = items.find((d: any) => d.id === id);
-                    setDeal(foundDeal);
+                    setDeal(response.data.data);
                 }
             } catch (error) {
                 console.error('Failed to load deal details:', error);
@@ -42,11 +41,19 @@ export default function DealDetailScreen({ route, navigation }: any) {
 
     if (!deal) return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Fırsat</Text>
+                    <View style={{ width: 40 }} />
                 </View>
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>Fırsat bilgileri yüklenemedi.</Text>
@@ -66,15 +73,24 @@ export default function DealDetailScreen({ route, navigation }: any) {
 
     return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
-                    <TouchableOpacity style={styles.editButton}>
-                        <Ionicons name="create-outline" size={24} color={colors.primary} />
+                    <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => navigation.navigate('AddDeal', { id: deal.id })}
+                    >
+                        <Ionicons name="create-outline" size={24} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
@@ -130,7 +146,6 @@ export default function DealDetailScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -141,19 +156,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.l,
         paddingVertical: spacing.m,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
     } as ViewStyle,
     backButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     editButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        color: '#fff',
         flex: 1,
         textAlign: 'center',
         marginHorizontal: spacing.m,

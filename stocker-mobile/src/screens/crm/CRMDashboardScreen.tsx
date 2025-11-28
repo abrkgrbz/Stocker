@@ -13,14 +13,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, typography } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
+import { spacing } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { StandardCard } from '../../components/StandardCard';
 
 const { width } = Dimensions.get('window');
 
 export default function CRMDashboardScreen({ navigation }: any) {
+    const { colors, theme } = useTheme();
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<any>(null);
@@ -28,8 +30,6 @@ export default function CRMDashboardScreen({ navigation }: any) {
 
     const loadData = async () => {
         try {
-            // In a real app, we would fetch specific CRM stats
-            // For now, we'll fetch tenant dashboard stats as a proxy
             const [statsRes, activitiesRes] = await Promise.all([
                 apiService.tenant.getDashboardStats(),
                 apiService.crm.getActivities({ pageSize: 5 })
@@ -59,150 +59,126 @@ export default function CRMDashboardScreen({ navigation }: any) {
         loadData();
     };
 
-    const StatCard = ({ title, value, icon, color, delay }: any) => (
-        <Animated.View
-            entering={FadeInDown.delay(delay).duration(600)}
-            style={[styles.statCard, { borderLeftColor: color }]}
-        >
-            <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
-                <Ionicons name={icon} size={24} color={color} />
-            </View>
-            <View>
-                <Text style={styles.statValue}>{value}</Text>
-                <Text style={styles.statTitle}>{title}</Text>
-            </View>
-        </Animated.View>
-    );
-
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <LinearGradient
-                colors={['#7c3aed', '#4c1d95']}
-                style={styles.headerBackground}
+                colors={theme === 'dark' ? ['#28002D', '#1A315A'] : ['#f0f9ff', '#e0f2fe']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
             />
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                        <Ionicons name="arrow-back" size={24} color={theme === 'dark' ? "#fff" : colors.textPrimary} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>CRM</Text>
+                    <Text style={[styles.headerTitle, { color: theme === 'dark' ? "#fff" : colors.textPrimary }]}>CRM</Text>
                     <View style={{ width: 40 }} />
                 </View>
 
                 <ScrollView
                     contentContainerStyle={styles.content}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
                     }
                 >
                     {/* Stats Grid */}
                     <View style={styles.statsGrid}>
                         <StatCard
                             title="Müşteriler"
-                            value={stats?.totalCustomers || 0}
+                            value={stats?.totalCustomers?.toString() || "0"}
                             icon="people"
                             color={colors.primary}
-                            delay={100}
+                            onPress={() => navigation.navigate('CustomerList')}
+                            theme={theme}
+                            colors={colors}
                         />
                         <StatCard
                             title="Fırsatlar"
-                            value={stats?.activeDeals || 0}
+                            value={stats?.activeDeals?.toString() || "0"}
                             icon="trophy"
                             color={colors.warning}
-                            delay={200}
+                            onPress={() => navigation.navigate('DealList')}
+                            theme={theme}
+                            colors={colors}
                         />
                         <StatCard
                             title="Bekleyen"
-                            value={stats?.pendingTasks || 0}
+                            value={stats?.pendingTasks?.toString() || "0"}
                             icon="time"
                             color={colors.error}
-                            delay={300}
+                            onPress={() => navigation.navigate('ActivityList', { type: 'Task' })}
+                            theme={theme}
+                            colors={colors}
                         />
                         <StatCard
                             title="Tamamlanan"
-                            value={stats?.completedTasks || 0}
+                            value={stats?.completedTasks?.toString() || "0"}
                             icon="checkmark-circle"
                             color={colors.success}
-                            delay={400}
+                            onPress={() => navigation.navigate('ActivityList', { type: 'Task' })}
+                            theme={theme}
+                            colors={colors}
                         />
                     </View>
 
-                    {/* Quick Actions */}
-                    <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsContainer}>
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => navigation.navigate('CustomerList')}
-                        >
-                            <LinearGradient
-                                colors={[colors.primary, '#60a5fa']}
-                                style={styles.actionGradient}
-                            >
-                                <Ionicons name="people" size={24} color="#fff" />
-                                <Text style={styles.actionText}>Müşteriler</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.actionButton}
+                    {/* Quick Actions Grid */}
+                    <Text style={[styles.sectionTitle, { color: theme === 'dark' ? "#fff" : colors.textPrimary }]}>Hızlı İşlemler</Text>
+                    <View style={styles.quickActionsGrid}>
+                        <ActionCard
+                            title="Yeni Müşteri"
+                            icon="person-add"
                             onPress={() => navigation.navigate('AddCustomer')}
-                        >
-                            <LinearGradient
-                                colors={[colors.success, '#4ade80']}
-                                style={styles.actionGradient}
-                            >
-                                <Ionicons name="add-circle" size={24} color="#fff" />
-                                <Text style={styles.actionText}>Yeni Müşteri</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.actionButton}
+                            theme={theme}
+                            colors={colors}
+                        />
+                        <ActionCard
+                            title="Yeni Fırsat"
+                            icon="briefcase"
                             onPress={() => navigation.navigate('DealList')}
-                        >
-                            <LinearGradient
-                                colors={[colors.warning, '#fbbf24']}
-                                style={styles.actionGradient}
-                            >
-                                <Ionicons name="trophy" size={24} color="#fff" />
-                                <Text style={styles.actionText}>Fırsatlar</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
-                    </ScrollView>
+                            theme={theme}
+                            colors={colors}
+                        />
+                    </View>
 
                     {/* Recent Activities */}
-                    <Text style={styles.sectionTitle}>Son Aktiviteler</Text>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, { color: theme === 'dark' ? "#fff" : colors.textPrimary }]}>Son Aktiviteler</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('ActivityList')}>
+                            <Text style={[styles.viewAllText, { color: colors.accent }]}>Tümünü Gör</Text>
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.activitiesList}>
                         {isLoading ? (
                             <ActivityIndicator color={colors.primary} />
                         ) : recentActivities.length > 0 ? (
                             recentActivities.map((activity, index) => (
-                                <Animated.View
+                                <StandardCard
                                     key={activity.id}
-                                    entering={FadeInDown.delay(500 + (index * 100)).duration(500)}
-                                    style={styles.activityItem}
-                                >
-                                    <View style={[styles.activityIcon, { backgroundColor: colors.surfaceLight }]}>
-                                        <Ionicons
-                                            name={
-                                                activity.type === 'Call' ? 'call' :
-                                                    activity.type === 'Email' ? 'mail' :
-                                                        activity.type === 'Meeting' ? 'people' : 'document-text'
-                                            }
-                                            size={16}
-                                            color={colors.textSecondary}
-                                        />
-                                    </View>
-                                    <View style={styles.activityContent}>
-                                        <Text style={styles.activityTitle}>{activity.title}</Text>
-                                        <Text style={styles.activityDate}>
-                                            {new Date(activity.createdAt).toLocaleDateString('tr-TR')}
-                                        </Text>
-                                    </View>
-                                </Animated.View>
+                                    title={activity.title}
+                                    subtitle={new Date(activity.createdAt).toLocaleDateString('tr-TR')}
+                                    icon={
+                                        activity.type === 'Call' ? 'call' :
+                                            activity.type === 'Email' ? 'mail' :
+                                                activity.type === 'Meeting' ? 'people' : 'document-text'
+                                    }
+                                    iconColor={colors.accent}
+                                />
                             ))
                         ) : (
-                            <Text style={styles.emptyText}>Henüz aktivite bulunmuyor.</Text>
+                            <View style={styles.emptyContainer}>
+                                <View style={styles.emptyIconContainer}>
+                                    <Ionicons name="file-tray-outline" size={32} color={colors.textMuted} />
+                                </View>
+                                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Henüz aktivite bulunmuyor.</Text>
+                                <TouchableOpacity
+                                    style={styles.emptyButton}
+                                    onPress={() => navigation.navigate('AddCustomer')}
+                                >
+                                    <Text style={[styles.emptyButtonText, { color: colors.primary }]}>İlk Müşterini Ekle</Text>
+                                </TouchableOpacity>
+                            </View>
                         )}
                     </View>
                 </ScrollView>
@@ -214,14 +190,6 @@ export default function CRMDashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
-    } as ViewStyle,
-    headerBackground: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 200,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -235,7 +203,7 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     backButton: {
         padding: 8,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 12,
     } as ViewStyle,
     headerTitle: {
@@ -244,25 +212,76 @@ const styles = StyleSheet.create({
         color: '#fff',
     } as TextStyle,
     content: {
-        padding: spacing.l,
+        paddingHorizontal: spacing.l,
+        paddingBottom: spacing.xl,
     } as ViewStyle,
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: spacing.m,
-        marginBottom: spacing.xl,
+        justifyContent: 'space-between',
+        marginTop: spacing.m,
     } as ViewStyle,
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: spacing.l,
+        marginBottom: spacing.m,
+    } as TextStyle,
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: spacing.l,
+        marginBottom: spacing.m,
+    } as ViewStyle,
+    viewAllText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    } as TextStyle,
+    quickActionsGrid: {
+        flexDirection: 'row',
+        gap: spacing.m,
+    } as ViewStyle,
+    activitiesList: {
+        minHeight: 100,
+    } as ViewStyle,
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.xl,
+        backgroundColor: 'rgba(30, 30, 46, 0.5)',
+        borderRadius: 16,
+    } as ViewStyle,
+    emptyIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.m,
+    } as ViewStyle,
+    emptyText: {
+        textAlign: 'center',
+        marginBottom: spacing.m,
+    } as TextStyle,
+    emptyButton: {
+        paddingVertical: spacing.s,
+        paddingHorizontal: spacing.m,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 8,
+    } as ViewStyle,
+    emptyButtonText: {
+        fontWeight: 'bold',
+        fontSize: 14,
+    } as TextStyle,
     statCard: {
-        width: (width - (spacing.l * 2) - spacing.m) / 2,
-        backgroundColor: colors.surface,
+        width: '48%',
         padding: spacing.m,
         borderRadius: 16,
-        borderLeftWidth: 4,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        marginBottom: spacing.m,
+        borderWidth: 1,
     } as ViewStyle,
     iconContainer: {
         width: 40,
@@ -275,74 +294,66 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        marginBottom: 4,
     } as TextStyle,
     statTitle: {
-        fontSize: 12,
-        color: colors.textSecondary,
-    } as TextStyle,
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: colors.textPrimary,
-        marginBottom: spacing.m,
-    } as TextStyle,
-    actionsContainer: {
-        marginBottom: spacing.xl,
-    } as ViewStyle,
-    actionButton: {
-        marginRight: spacing.m,
-        width: 120,
-        height: 100,
-        borderRadius: 16,
-        overflow: 'hidden',
-    } as ViewStyle,
-    actionGradient: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: spacing.m,
-    } as ViewStyle,
-    actionText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        marginTop: spacing.s,
-    } as TextStyle,
-    activitiesList: {
-        backgroundColor: colors.surface,
-        borderRadius: 16,
-        padding: spacing.m,
-    } as ViewStyle,
-    activityItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: spacing.s,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
-    } as ViewStyle,
-    activityIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: spacing.m,
-    } as ViewStyle,
-    activityContent: {
-        flex: 1,
-    } as ViewStyle,
-    activityTitle: {
         fontSize: 14,
-        color: colors.textPrimary,
-        fontWeight: '500',
     } as TextStyle,
-    activityDate: {
-        fontSize: 12,
-        color: colors.textSecondary,
-    } as TextStyle,
-    emptyText: {
-        textAlign: 'center',
-        color: colors.textSecondary,
+    actionCard: {
+        flex: 1,
         padding: spacing.m,
+        borderRadius: 16,
+        borderWidth: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    } as ViewStyle,
+    actionIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.s,
+    } as ViewStyle,
+    actionTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
     } as TextStyle,
 });
+
+const StatCard = ({ title, value, icon, color, onPress, theme, colors }: any) => (
+    <TouchableOpacity
+        style={[
+            styles.statCard,
+            {
+                backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : colors.surface,
+                borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : colors.surfaceLight,
+            }
+        ]}
+        onPress={onPress}
+    >
+        <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+            <Ionicons name={icon} size={24} color={color} />
+        </View>
+        <Text style={[styles.statValue, { color: theme === 'dark' ? '#fff' : colors.textPrimary }]}>{value}</Text>
+        <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
+    </TouchableOpacity>
+);
+
+const ActionCard = ({ title, icon, onPress, theme, colors }: any) => (
+    <TouchableOpacity
+        style={[
+            styles.actionCard,
+            {
+                backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : colors.surface,
+                borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : colors.surfaceLight,
+            }
+        ]}
+        onPress={onPress}
+    >
+        <View style={[styles.actionIconContainer, { backgroundColor: colors.primary + '20' }]}>
+            <Ionicons name={icon} size={24} color={colors.primary} />
+        </View>
+        <Text style={[styles.actionTitle, { color: theme === 'dark' ? '#fff' : colors.textPrimary }]}>{title}</Text>
+    </TouchableOpacity>
+);

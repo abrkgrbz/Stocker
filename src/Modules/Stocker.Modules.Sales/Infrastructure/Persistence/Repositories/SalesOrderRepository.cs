@@ -1,0 +1,71 @@
+using Microsoft.EntityFrameworkCore;
+using Stocker.Modules.Sales.Domain.Entities;
+using Stocker.Modules.Sales.Domain.Repositories;
+
+namespace Stocker.Modules.Sales.Infrastructure.Persistence.Repositories;
+
+/// <summary>
+/// Repository implementation for SalesOrder entity
+/// </summary>
+public class SalesOrderRepository : BaseRepository<SalesOrder>, ISalesOrderRepository
+{
+    public SalesOrderRepository(SalesDbContext context) : base(context)
+    {
+    }
+
+    public async Task<SalesOrder?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber, cancellationToken);
+    }
+
+    public async Task<SalesOrder?> GetWithItemsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<SalesOrder>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(o => o.Items)
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<SalesOrder>> GetByStatusAsync(SalesOrderStatus status, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(o => o.Items)
+            .Where(o => o.Status == status)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<string> GenerateOrderNumberAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow;
+        var prefix = $"SO-{today:yyyyMMdd}-";
+
+        var lastOrder = await _dbSet
+            .Where(o => o.OrderNumber.StartsWith(prefix))
+            .OrderByDescending(o => o.OrderNumber)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastOrder == null)
+        {
+            return $"{prefix}0001";
+        }
+
+        var lastNumber = lastOrder.OrderNumber.Replace(prefix, "");
+        if (int.TryParse(lastNumber, out var number))
+        {
+            return $"{prefix}{(number + 1):D4}";
+        }
+
+        return $"{prefix}0001";
+    }
+}

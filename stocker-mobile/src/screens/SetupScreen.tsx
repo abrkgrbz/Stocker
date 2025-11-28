@@ -21,6 +21,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAlert } from '../context/AlertContext';
 
 const { width } = Dimensions.get('window');
 
@@ -43,6 +45,7 @@ interface PackageOption {
 }
 
 export default function SetupScreen({ navigation }: any) {
+    const { showAlert } = useAlert();
     const { user, updateUser, logout } = useAuthStore();
     const [currentStep, setCurrentStep] = useState<SetupStep>('package');
     const [isLoading, setIsLoading] = useState(false);
@@ -146,10 +149,11 @@ export default function SetupScreen({ navigation }: any) {
     };
 
     const handleLogout = async () => {
-        Alert.alert(
-            'Çıkış Yap',
-            'Kurulumu iptal edip çıkış yapmak istediğinize emin misiniz?',
-            [
+        showAlert({
+            title: 'Çıkış Yap',
+            message: 'Kurulumu iptal edip çıkış yapmak istediğinize emin misiniz?',
+            type: 'warning',
+            buttons: [
                 { text: 'İptal', style: 'cancel' },
                 {
                     text: 'Çıkış Yap',
@@ -163,7 +167,7 @@ export default function SetupScreen({ navigation }: any) {
                     }
                 }
             ]
-        );
+        });
     };
 
     const renderStepIndicator = () => {
@@ -191,7 +195,7 @@ export default function SetupScreen({ navigation }: any) {
                                 <Ionicons
                                     name={step.icon as any}
                                     size={20}
-                                    color={isActive || isCompleted ? '#fff' : colors.textMuted}
+                                    color={isActive || isCompleted ? '#fff' : 'rgba(255,255,255,0.5)'}
                                 />
                             </View>
                             <Text style={[
@@ -283,7 +287,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={companyName}
                         onChangeText={setCompanyName}
                         placeholder="Örn: ABC Teknoloji"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                     />
                 </View>
 
@@ -294,7 +298,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={companyCode}
                         onChangeText={setCompanyCode}
                         placeholder="Örn: ABC123"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                         autoCapitalize="characters"
                     />
                 </View>
@@ -306,7 +310,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={contactPhone}
                         onChangeText={setContactPhone}
                         placeholder="05XX XXX XX XX"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                         keyboardType="phone-pad"
                     />
                 </View>
@@ -318,7 +322,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={taxOffice}
                         onChangeText={setTaxOffice}
                         placeholder="Vergi Dairesi"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                     />
                 </View>
 
@@ -329,7 +333,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={taxNumber}
                         onChangeText={setTaxNumber}
                         placeholder="Vergi Numarası"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                         keyboardType="number-pad"
                     />
                 </View>
@@ -341,7 +345,7 @@ export default function SetupScreen({ navigation }: any) {
                         value={address}
                         onChangeText={setAddress}
                         placeholder="Firma adresi"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
                         multiline
                         numberOfLines={3}
                     />
@@ -383,7 +387,10 @@ export default function SetupScreen({ navigation }: any) {
     );
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#28002D', '#1A315A']}
+            style={styles.container}
+        >
             <Loading visible={isLoading} text="İşlem yapılıyor..." />
             <Toast
                 visible={toast.visible}
@@ -412,14 +419,13 @@ export default function SetupScreen({ navigation }: any) {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -433,12 +439,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
+        borderBottomColor: 'rgba(255,255,255,0.1)',
         position: 'relative',
     } as ViewStyle,
     headerTitle: {
         ...typography.h3,
-        color: colors.textPrimary,
+        color: '#fff',
     } as TextStyle,
     logoutButton: {
         position: 'absolute',
@@ -449,7 +455,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         padding: spacing.m,
-        backgroundColor: colors.surface,
+        backgroundColor: 'rgba(255,255,255,0.05)',
     } as ViewStyle,
     stepItem: {
         alignItems: 'center',
@@ -459,7 +465,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: colors.surfaceLight,
+        backgroundColor: 'rgba(255,255,255,0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.xs,
@@ -472,7 +478,7 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     stepLabel: {
         fontSize: 12,
-        color: colors.textMuted,
+        color: 'rgba(255,255,255,0.5)',
     } as TextStyle,
     stepLabelActive: {
         color: colors.primary,
@@ -484,7 +490,7 @@ const styles = StyleSheet.create({
         left: 50,
         width: 60,
         height: 2,
-        backgroundColor: colors.surfaceLight,
+        backgroundColor: 'rgba(255,255,255,0.1)',
         zIndex: -1,
     } as ViewStyle,
     stepLineCompleted: {
@@ -495,12 +501,12 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     title: {
         ...typography.h2,
-        color: colors.textPrimary,
+        color: '#fff',
         marginBottom: spacing.xs,
     } as TextStyle,
     subtitle: {
         ...typography.body,
-        color: colors.textSecondary,
+        color: 'rgba(255,255,255,0.7)',
         marginBottom: spacing.l,
     } as TextStyle,
     loadingContainer: {
@@ -508,12 +514,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     } as ViewStyle,
     packageCard: {
-        backgroundColor: colors.surface,
+        backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: 12,
         padding: spacing.m,
         marginBottom: spacing.m,
         borderWidth: 2,
-        borderColor: 'transparent',
+        borderColor: 'rgba(255,255,255,0.05)',
     } as ViewStyle,
     packageCardSelected: {
         borderColor: colors.primary,
@@ -528,7 +534,7 @@ const styles = StyleSheet.create({
     packageName: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        color: '#fff',
     } as TextStyle,
     priceContainer: {
         flexDirection: 'row',
@@ -541,7 +547,7 @@ const styles = StyleSheet.create({
     } as TextStyle,
     priceCurrency: {
         fontSize: 14,
-        color: colors.textSecondary,
+        color: 'rgba(255,255,255,0.7)',
         marginLeft: 2,
     } as TextStyle,
     trialText: {
@@ -551,7 +557,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.s,
     } as TextStyle,
     packageDescription: {
-        color: colors.textSecondary,
+        color: 'rgba(255,255,255,0.7)',
         marginBottom: spacing.m,
     } as TextStyle,
     featuresList: {
@@ -563,7 +569,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     } as ViewStyle,
     featureText: {
-        color: colors.textSecondary,
+        color: 'rgba(255,255,255,0.7)',
         marginLeft: spacing.s,
         fontSize: 14,
     } as TextStyle,
@@ -597,18 +603,18 @@ const styles = StyleSheet.create({
         marginBottom: spacing.s,
     } as ViewStyle,
     label: {
-        color: colors.textPrimary,
+        color: '#fff',
         marginBottom: spacing.xs,
         fontSize: 14,
         fontWeight: '500',
     } as TextStyle,
     input: {
-        backgroundColor: colors.surface,
+        backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: 8,
         padding: spacing.m,
-        color: colors.textPrimary,
+        color: '#fff',
         borderWidth: 1,
-        borderColor: colors.surfaceLight,
+        borderColor: 'rgba(255,255,255,0.1)',
     } as TextStyle,
     textArea: {
         height: 80,
@@ -621,15 +627,15 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     secondaryButton: {
         flex: 1,
-        backgroundColor: colors.surface,
+        backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: colors.surfaceLight,
+        borderColor: 'rgba(255,255,255,0.2)',
     } as ViewStyle,
     primaryButton: {
         flex: 2,
     } as ViewStyle,
     secondaryButtonText: {
-        color: colors.textPrimary,
+        color: '#fff',
         fontSize: 16,
         fontWeight: '600',
     } as TextStyle,

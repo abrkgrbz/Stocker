@@ -17,8 +17,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { useCustomerStore } from '../../stores/customerStore';
+
+import { useAlert } from '../../context/AlertContext';
 
 export default function AddCustomerScreen({ navigation }: any) {
+    const { showAlert } = useAlert();
+    const addCustomer = useCustomerStore((state) => state.addCustomer);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         companyName: '',
@@ -35,21 +42,32 @@ export default function AddCustomerScreen({ navigation }: any) {
 
     const handleSave = async () => {
         if (!formData.companyName || !formData.contactPerson) {
-            Alert.alert('Hata', 'Şirket adı ve yetkili kişi alanları zorunludur.');
+            showAlert({
+                title: 'Hata',
+                message: 'Şirket adı ve yetkili kişi alanları zorunludur.',
+                type: 'error'
+            });
             return;
         }
 
         setIsLoading(true);
         try {
-            const response = await apiService.crm.createCustomer(formData);
-            if (response.data) {
-                Alert.alert('Başarılı', 'Müşteri başarıyla oluşturuldu.', [
+            await addCustomer(formData);
+            showAlert({
+                title: 'Başarılı',
+                message: 'Müşteri başarıyla oluşturuldu.',
+                type: 'success',
+                buttons: [
                     { text: 'Tamam', onPress: () => navigation.goBack() }
-                ]);
-            }
+                ]
+            });
         } catch (error) {
             console.error('Create customer error:', error);
-            Alert.alert('Hata', 'Müşteri oluşturulurken bir hata oluştu.');
+            showAlert({
+                title: 'Hata',
+                message: 'Müşteri oluşturulurken bir hata oluştu.',
+                type: 'error'
+            });
         } finally {
             setIsLoading(false);
         }
@@ -57,22 +75,34 @@ export default function AddCustomerScreen({ navigation }: any) {
 
     return (
         <View style={styles.container}>
+            <LinearGradient
+                colors={['#28002D', '#1A315A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Yeni Müşteri</Text>
                     <TouchableOpacity
                         onPress={handleSave}
-                        style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <ActivityIndicator size="small" color="#fff" />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Kaydet</Text>
-                        )}
+                        <LinearGradient
+                            colors={colors.gradientGreen}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                                <Text style={styles.saveButtonText}>Kaydet</Text>
+                            )}
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
 
@@ -199,7 +229,6 @@ export default function AddCustomerScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
     } as ViewStyle,
     safeArea: {
         flex: 1,
@@ -210,22 +239,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.l,
         paddingVertical: spacing.m,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.surfaceLight,
     } as ViewStyle,
     backButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
     } as ViewStyle,
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: colors.textPrimary,
+        color: '#fff',
     } as TextStyle,
     saveButton: {
-        backgroundColor: colors.primary,
         paddingHorizontal: spacing.m,
         paddingVertical: spacing.xs,
         borderRadius: 8,
+        minWidth: 80,
+        alignItems: 'center',
+        justifyContent: 'center',
     } as ViewStyle,
     saveButtonDisabled: {
         opacity: 0.7,
