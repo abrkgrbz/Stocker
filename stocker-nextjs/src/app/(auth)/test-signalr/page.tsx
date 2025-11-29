@@ -29,6 +29,7 @@ export default function TestSignalRPage() {
           transport: signalR.HttpTransportType.WebSockets |
                      signalR.HttpTransportType.ServerSentEvents |
                      signalR.HttpTransportType.LongPolling,
+          withCredentials: true,
         })
         .withAutomaticReconnect()
         .configureLogging(signalR.LogLevel.Information)

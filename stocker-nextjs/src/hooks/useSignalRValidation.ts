@@ -41,7 +41,8 @@ export function useSignalRValidation() {
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         // Don't skip negotiation - let SignalR choose the best transport
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling,
+        withCredentials: true,
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
