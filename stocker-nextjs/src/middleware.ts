@@ -33,8 +33,14 @@ export function middleware(request: NextRequest) {
   const tenantCodeCookie = request.cookies.get('tenant-code')
   const isAuthenticated = !!tenantCodeCookie
 
+  // Check if this is an RSC prefetch request (skip cross-origin redirects for these)
+  const isRSCPrefetch = request.nextUrl.searchParams.has('_rsc') ||
+                        request.headers.get('RSC') === '1' ||
+                        request.headers.get('Next-Router-Prefetch') === '1'
+
   // Redirect unauthenticated users from protected routes to login
-  if (isProtectedRoute && !isAuthenticated) {
+  // Skip cross-origin redirect for RSC prefetch to avoid CORS errors
+  if (isProtectedRoute && !isAuthenticated && !isRSCPrefetch) {
     const url = request.nextUrl.clone()
     if (isDev) {
       url.pathname = '/login'
@@ -65,8 +71,9 @@ export function middleware(request: NextRequest) {
   }
 
   // Root domain: redirect auth routes to auth subdomain
-  if (isRootDomain && !isDev) {
-    // Redirect /login, /register to auth subdomain
+  // Skip redirect for RSC prefetch requests to avoid CORS errors
+  if (isRootDomain && !isDev && !isRSCPrefetch) {
+    // Redirect /login, /register to auth subdomain (only for full page navigations)
     if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/login/') || pathname.startsWith('/register/')) {
       const url = request.nextUrl.clone()
       url.protocol = 'https:'
