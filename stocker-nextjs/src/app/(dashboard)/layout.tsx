@@ -77,13 +77,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      // Redirect to auth subdomain for login
-      const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
-      if (isProduction) {
-        window.location.href = 'https://auth.stoocker.app/login';
-      } else {
-        router.push('/login');
-      }
+      // Redirect to login page on same domain
+      router.push('/login');
     }
   }, [authLoading, isAuthenticated, router]);
 
