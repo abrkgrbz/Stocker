@@ -64,8 +64,17 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // Note: Auth routes (/login, /register) are now handled on the same domain
-  // No redirect to auth subdomain - this simplifies CORS and improves UX
+  // Root domain: redirect auth routes to auth subdomain
+  if (isRootDomain && !isDev) {
+    // Redirect /login, /register to auth subdomain
+    if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/login/') || pathname.startsWith('/register/')) {
+      const url = request.nextUrl.clone()
+      url.protocol = 'https:'
+      url.host = authHostname
+      url.port = '' // Remove port for production (default HTTPS 443)
+      return NextResponse.redirect(url, 307) // Temporary redirect (preserves method)
+    }
+  }
 
   // Handle CORS for all routes (not just API)
   const origin = request.headers.get('origin')
