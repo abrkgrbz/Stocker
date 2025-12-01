@@ -1,0 +1,149 @@
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Stocker.Modules.Inventory.Application.DTOs;
+using Stocker.Modules.Inventory.Application.Features.Categories.Commands;
+using Stocker.Modules.Inventory.Application.Features.Categories.Queries;
+using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Results;
+
+namespace Stocker.Modules.Inventory.API.Controllers;
+
+[ApiController]
+[Authorize]
+[Route("api/inventory/categories")]
+[RequireModule("Inventory")]
+[ApiExplorerSettings(GroupName = "inventory")]
+public class CategoriesController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public CategoriesController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Get all categories
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<CategoryDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<CategoryDto>>> GetCategories(
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] int? parentCategoryId = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetCategoriesQuery
+        {
+            TenantId = tenantId,
+            IncludeInactive = includeInactive,
+            ParentCategoryId = parentCategoryId
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get category tree with hierarchy
+    /// </summary>
+    [HttpGet("tree")]
+    [ProducesResponseType(typeof(List<CategoryTreeDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<CategoryTreeDto>>> GetCategoryTree()
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetCategoryTreeQuery
+        {
+            TenantId = tenantId
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get category by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(CategoryDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<CategoryDto>> GetCategory(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetCategoryByIdQuery
+        {
+            TenantId = tenantId,
+            CategoryId = id
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Create a new category
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(CategoryDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto dto)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new CreateCategoryCommand
+        {
+            TenantId = tenantId,
+            CategoryData = dto
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return CreatedAtAction(nameof(GetCategory), new { id = result.Value.Id }, result.Value);
+    }
+
+    private int GetTenantId()
+    {
+        if (HttpContext.Items["TenantId"] is int tenantId)
+            return tenantId;
+        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
+            return guidTenantId.GetHashCode();
+        return 0;
+    }
+
+    private static Error CreateTenantError()
+    {
+        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+    }
+}

@@ -1,0 +1,315 @@
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Stocker.Modules.Inventory.Application.DTOs;
+using Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
+using Stocker.Modules.Inventory.Application.Features.StockTransfers.Queries;
+using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Results;
+
+namespace Stocker.Modules.Inventory.API.Controllers;
+
+[ApiController]
+[Authorize]
+[Route("api/inventory/stock-transfers")]
+[RequireModule("Inventory")]
+[ApiExplorerSettings(GroupName = "inventory")]
+public class StockTransfersController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public StockTransfersController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Get all stock transfers with optional filters
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<StockTransferListDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<StockTransferListDto>>> GetStockTransfers(
+        [FromQuery] int? sourceWarehouseId = null,
+        [FromQuery] int? destinationWarehouseId = null,
+        [FromQuery] TransferStatus? status = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetStockTransfersQuery
+        {
+            TenantId = tenantId,
+            SourceWarehouseId = sourceWarehouseId,
+            DestinationWarehouseId = destinationWarehouseId,
+            Status = status,
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get stock transfer by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(StockTransferDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<StockTransferDto>> GetStockTransfer(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetStockTransferByIdQuery
+        {
+            TenantId = tenantId,
+            TransferId = id
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Create a new stock transfer
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(StockTransferDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<StockTransferDto>> CreateStockTransfer([FromBody] CreateStockTransferDto data)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new CreateStockTransferCommand
+        {
+            TenantId = tenantId,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(nameof(GetStockTransfer), new { id = result.Value.Id }, result.Value);
+    }
+
+    /// <summary>
+    /// Submit a stock transfer for approval
+    /// </summary>
+    [HttpPost("{id}/submit")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> SubmitStockTransfer(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new SubmitStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Approve a stock transfer
+    /// </summary>
+    [HttpPost("{id}/approve")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ApproveStockTransfer(int id, [FromBody] ApproveTransferRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new ApproveStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            ApprovedByUserId = request.ApprovedByUserId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Ship a stock transfer
+    /// </summary>
+    [HttpPost("{id}/ship")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ShipStockTransfer(int id, [FromBody] ShipTransferRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new ShipStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            ShippedByUserId = request.ShippedByUserId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Receive a stock transfer
+    /// </summary>
+    [HttpPost("{id}/receive")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> ReceiveStockTransfer(int id, [FromBody] ReceiveTransferRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new ReceiveStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            ReceivedByUserId = request.ReceivedByUserId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Cancel a stock transfer
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> CancelStockTransfer(int id, [FromBody] CancelTransferRequest? request = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new CancelStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            Reason = request?.Reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    private int GetTenantId()
+    {
+        if (HttpContext.Items["TenantId"] is int tenantId)
+            return tenantId;
+        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
+            return guidTenantId.GetHashCode();
+        return 0;
+    }
+
+    private static Error CreateTenantError()
+    {
+        return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
+    }
+}
+
+public class ApproveTransferRequest
+{
+    public int ApprovedByUserId { get; set; }
+}
+
+public class ShipTransferRequest
+{
+    public int ShippedByUserId { get; set; }
+}
+
+public class ReceiveTransferRequest
+{
+    public int ReceivedByUserId { get; set; }
+}
+
+public class CancelTransferRequest
+{
+    public string? Reason { get; set; }
+}

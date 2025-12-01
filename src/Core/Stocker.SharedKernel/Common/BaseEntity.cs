@@ -1,19 +1,27 @@
+using Stocker.SharedKernel.MultiTenancy;
+
 namespace Stocker.SharedKernel.Common;
 
-public abstract class BaseEntity
+public abstract class BaseEntity : ITenantEntity
 {
     public int Id { get; protected set; }
+    public Guid TenantId { get; protected set; }
     public DateTime CreatedDate { get; protected set; }
     public DateTime? UpdatedDate { get; protected set; }
     public string? CreatedBy { get; protected set; }
     public string? UpdatedBy { get; protected set; }
     public bool IsDeleted { get; protected set; }
     public DateTime? DeletedDate { get; protected set; }
-    
+
     protected BaseEntity()
     {
         CreatedDate = DateTime.UtcNow;
         IsDeleted = false;
+    }
+
+    public void SetTenantId(Guid tenantId)
+    {
+        TenantId = tenantId;
     }
     
     public void SetCreatedInfo(string createdBy)

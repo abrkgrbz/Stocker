@@ -313,7 +313,7 @@ export default function OpportunitiesPage() {
   );
 
   const opportunitiesByStage = stages.reduce((acc: Record<string, OpportunityDto[]>, stage: any) => {
-    acc[stage.id] = activeOpportunities.filter((o: OpportunityDto) => o.currentStageId === stage.id);
+    acc[stage.id] = activeOpportunities.filter((o: OpportunityDto) => o.stageId === stage.id);
     return acc;
   }, {} as Record<string, OpportunityDto[]>);
 

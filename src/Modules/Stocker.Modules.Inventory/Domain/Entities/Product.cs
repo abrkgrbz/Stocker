@@ -23,13 +23,22 @@ public class Product : BaseEntity
     public bool IsStockTracked { get; private set; }
     public bool IsSerialTracked { get; private set; }
     public bool IsLotTracked { get; private set; }
-    public string? ImageUrl { get; private set; }
-    
+
+    // Computed property - ana görsel Images collection'dan alınır
+    public string? PrimaryImageUrl => Images?.FirstOrDefault(i => i.IsPrimary && i.IsActive)?.Url
+                                      ?? Images?.FirstOrDefault(i => i.IsActive)?.Url;
+
     public virtual Category Category { get; private set; }
     public virtual Brand? Brand { get; private set; }
     public virtual Supplier? Supplier { get; private set; }
     public virtual ICollection<Stock> Stocks { get; private set; }
     public virtual ICollection<StockMovement> StockMovements { get; private set; }
+    public virtual ICollection<ProductImage> Images { get; private set; }
+    public virtual ICollection<ProductVariant> Variants { get; private set; }
+    public virtual ICollection<SupplierProduct> SupplierProducts { get; private set; }
+    public virtual ICollection<ProductAttributeValue> AttributeValues { get; private set; }
+    public virtual ICollection<SerialNumber> SerialNumbers { get; private set; }
+    public virtual ICollection<LotBatch> LotBatches { get; private set; }
     
     protected Product() { }
     
@@ -54,6 +63,12 @@ public class Product : BaseEntity
         ReorderPoint = 0;
         Stocks = new List<Stock>();
         StockMovements = new List<StockMovement>();
+        Images = new List<ProductImage>();
+        Variants = new List<ProductVariant>();
+        SupplierProducts = new List<SupplierProduct>();
+        AttributeValues = new List<ProductAttributeValue>();
+        SerialNumbers = new List<SerialNumber>();
+        LotBatches = new List<LotBatch>();
     }
     
     public void UpdateProductInfo(

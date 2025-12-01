@@ -1,0 +1,42 @@
+using MediatR;
+using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Results;
+
+namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
+
+public class CancelStockCountCommand : IRequest<Result<bool>>
+{
+    public int TenantId { get; set; }
+    public int StockCountId { get; set; }
+    public string? Reason { get; set; }
+}
+
+public class CancelStockCountCommandHandler : IRequestHandler<CancelStockCountCommand, Result<bool>>
+{
+    private readonly IStockCountRepository _stockCountRepository;
+
+    public CancelStockCountCommandHandler(IStockCountRepository stockCountRepository)
+    {
+        _stockCountRepository = stockCountRepository;
+    }
+
+    public async Task<Result<bool>> Handle(CancelStockCountCommand request, CancellationToken cancellationToken)
+    {
+        var stockCount = await _stockCountRepository.GetByIdAsync(request.StockCountId, cancellationToken);
+        if (stockCount == null)
+        {
+            return Result<bool>.Failure(new Error("StockCount.NotFound", $"Stock count with ID {request.StockCountId} not found", ErrorType.NotFound));
+        }
+
+        try
+        {
+            stockCount.Cancel(request.Reason);
+            await _stockCountRepository.UpdateAsync(stockCount, cancellationToken);
+            return Result<bool>.Success(true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<bool>.Failure(new Error("StockCount.InvalidOperation", ex.Message, ErrorType.Validation));
+        }
+    }
+}

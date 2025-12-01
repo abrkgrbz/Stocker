@@ -28,7 +28,9 @@
       "Bash(nslookup:*)",
       "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@95.217.219.4 \"ls -la /data/coolify/proxy/dynamic/\")",
       "Bash(ssh root@95.217.219.4 \"cat /data/coolify/proxy/dynamic/stocker-wildcard.yml && echo ''---SEPARATOR---'' && cat /data/coolify/proxy/dynamic/coolify.yaml && echo ''---SEPARATOR---'' && docker ps --format ''{{.Names}}'' | grep -i api\")",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(dir:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,50 @@
+using Stocker.Modules.Inventory.Domain.Entities;
+using Stocker.Modules.Inventory.Domain.Enums;
+
+namespace Stocker.Modules.Inventory.Domain.Repositories;
+
+/// <summary>
+/// Repository interface for StockMovement entity
+/// </summary>
+public interface IStockMovementRepository : IInventoryRepository<StockMovement>
+{
+    /// <summary>
+    /// Gets movements by product
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByProductAsync(int productId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets movements by warehouse
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByWarehouseAsync(int warehouseId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets movements by date range
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets movements by type
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByTypeAsync(StockMovementType movementType, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets movements by document number
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByDocumentNumberAsync(string documentNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets movements by reference document
+    /// </summary>
+    Task<IReadOnlyList<StockMovement>> GetByReferenceAsync(string referenceDocumentType, string referenceDocumentNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the last movement for a product
+    /// </summary>
+    Task<StockMovement?> GetLastMovementAsync(int productId, int warehouseId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generates a unique document number
+    /// </summary>
+    Task<string> GenerateDocumentNumberAsync(StockMovementType movementType, CancellationToken cancellationToken = default);
+}

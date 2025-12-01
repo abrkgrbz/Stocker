@@ -104,10 +104,6 @@ export const crmKeys = {
   // Workflows
   workflows: ['crm', 'workflows'] as const,
   workflow: (id: number) => ['crm', 'workflows', id] as const,
-
-  // Customers
-  customers: ['crm', 'customers'] as const,
-  customer: (id: string) => ['crm', 'customers', id] as const,
 };
 
 // =====================================

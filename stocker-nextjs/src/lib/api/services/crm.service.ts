@@ -215,6 +215,26 @@ export interface PipelineStage {
   totalValue: number;
 }
 
+// Input types for creating pipelines
+export interface CreatePipelineStageInput {
+  name: string;
+  order: number;
+  probability: number;
+  description?: string | null;
+  color?: string;
+  isWon?: boolean;
+  isLost?: boolean;
+}
+
+export interface CreatePipelineInput {
+  name: string;
+  description?: string | null;
+  type: 'Sales' | 'Lead' | 'Deal' | 'Custom';
+  isActive: boolean;
+  isDefault: boolean;
+  stages: CreatePipelineStageInput[];
+}
+
 export interface CustomerSegment {
   id: string;
   tenantId: string;
@@ -615,7 +635,7 @@ export class CRMService {
   /**
    * Create new pipeline
    */
-  static async createPipeline(data: Omit<Pipeline, 'id' | 'opportunityCount' | 'dealCount' | 'totalValue' | 'createdAt' | 'updatedAt'>): Promise<Pipeline> {
+  static async createPipeline(data: CreatePipelineInput): Promise<Pipeline> {
     return ApiService.post<Pipeline>(this.getPath('pipelines'), data);
   }
 

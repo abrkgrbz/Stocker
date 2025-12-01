@@ -125,6 +125,7 @@ export default function PipelinesPage() {
         description: pipeline.description,
         type: pipeline.type,
         isActive: false, // Cloned pipelines start as inactive
+        isDefault: false, // Cloned pipelines are not default
         stages: pipeline.stages?.map((stage) => ({
           name: stage.name,
           order: stage.order,
