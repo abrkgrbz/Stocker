@@ -41,6 +41,90 @@ interface ModuleCard {
   disabled?: boolean;
 }
 
+// Define module configurations outside component to avoid recreating on each render
+const MODULE_CONFIGS = [
+  {
+    id: 'crm',
+    title: 'CRM',
+    icon: <TeamOutlined />,
+    color: '#7c3aed',
+    gradient: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 100%)',
+    path: '/crm',
+    description: 'Müşteri ilişkileri yönetimi',
+    moduleCode: 'crm',
+  },
+  {
+    id: 'sales',
+    title: 'Satış',
+    icon: <ShoppingCartOutlined />,
+    color: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    path: '/sales',
+    description: 'Sipariş, fatura ve ödeme',
+    moduleCode: 'sales',
+  },
+  {
+    id: 'inventory',
+    title: 'Stok',
+    icon: <InboxOutlined />,
+    color: '#10b981',
+    gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+    path: '/inventory',
+    description: 'Envanter yönetimi',
+    moduleCode: 'inventory',
+  },
+  {
+    id: 'dashboards',
+    title: 'Dashboards',
+    icon: <DashboardOutlined />,
+    color: '#c026d3',
+    gradient: 'linear-gradient(135deg, #c026d3 0%, #0891b2 100%)',
+    path: '/dashboard',
+    description: 'Analiz ve raporlar',
+    alwaysEnabled: true,
+  },
+  {
+    id: 'apps',
+    title: 'Uygulamalar',
+    icon: <AppstoreOutlined />,
+    color: '#0891b2',
+    gradient: 'linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)',
+    path: '/modules',
+    description: 'Modül yönetimi',
+    alwaysEnabled: true,
+  },
+  {
+    id: 'settings',
+    title: 'Ayarlar',
+    icon: <SettingOutlined />,
+    color: '#6b7280',
+    gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+    path: '/settings',
+    description: 'Sistem ayarları',
+    alwaysEnabled: true,
+  },
+  {
+    id: 'messaging',
+    title: 'Mesajlaşma',
+    icon: <MessageOutlined />,
+    color: '#c026d3',
+    gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
+    path: '/messaging',
+    description: 'İletişim ve mesajlaşma',
+    comingSoon: true,
+  },
+  {
+    id: 'calendar',
+    title: 'Takvim',
+    icon: <CalendarOutlined />,
+    color: '#7c3aed',
+    gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+    path: '/calendar',
+    description: 'Etkinlik ve toplantılar',
+    comingSoon: true,
+  },
+];
+
 export default function AppHomePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -60,6 +144,54 @@ export default function AppHomePage() {
     });
     return codes;
   }, [modulesData]);
+
+  // Build modules list with dynamic enabled status - MUST be before any early returns
+  const modules: ModuleCard[] = useMemo(() => {
+    return MODULE_CONFIGS.map(config => {
+      // Always-enabled modules (dashboard, settings, apps)
+      if (config.alwaysEnabled) {
+        return {
+          id: config.id,
+          title: config.title,
+          icon: config.icon,
+          color: config.color,
+          gradient: config.gradient,
+          path: config.path,
+          description: config.description,
+          disabled: false,
+        };
+      }
+
+      // Coming soon features (not implemented yet)
+      if (config.comingSoon) {
+        return {
+          id: config.id,
+          title: config.title,
+          icon: config.icon,
+          color: config.color,
+          gradient: config.gradient,
+          path: config.path,
+          description: config.description,
+          badge: 'Yakında',
+          disabled: true,
+        };
+      }
+
+      // Subscription-based modules - check if tenant has access
+      const hasAccess = config.moduleCode && activeModuleCodes.has(config.moduleCode.toLowerCase());
+      return {
+        id: config.id,
+        title: config.title,
+        icon: config.icon,
+        color: config.color,
+        gradient: config.gradient,
+        path: config.path,
+        description: config.description,
+        badge: hasAccess ? 'Aktif' : 'Abonelik Gerekli',
+        disabled: !hasAccess,
+      };
+    });
+  }, [activeModuleCodes]);
 
   // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
@@ -124,138 +256,6 @@ export default function AppHomePage() {
       </div>
     );
   }
-
-  // Define module configurations
-  const moduleConfigs = [
-    {
-      id: 'crm',
-      title: 'CRM',
-      icon: <TeamOutlined />,
-      color: '#7c3aed',
-      gradient: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 100%)',
-      path: '/crm',
-      description: 'Müşteri ilişkileri yönetimi',
-      moduleCode: 'crm', // Used to check subscription
-    },
-    {
-      id: 'sales',
-      title: 'Satış',
-      icon: <ShoppingCartOutlined />,
-      color: '#f59e0b',
-      gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-      path: '/sales',
-      description: 'Sipariş, fatura ve ödeme',
-      moduleCode: 'sales',
-    },
-    {
-      id: 'inventory',
-      title: 'Stok',
-      icon: <InboxOutlined />,
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-      path: '/inventory',
-      description: 'Envanter yönetimi',
-      moduleCode: 'inventory',
-    },
-    {
-      id: 'dashboards',
-      title: 'Dashboards',
-      icon: <DashboardOutlined />,
-      color: '#c026d3',
-      gradient: 'linear-gradient(135deg, #c026d3 0%, #0891b2 100%)',
-      path: '/dashboard',
-      description: 'Analiz ve raporlar',
-      alwaysEnabled: true, // Always available
-    },
-    {
-      id: 'apps',
-      title: 'Uygulamalar',
-      icon: <AppstoreOutlined />,
-      color: '#0891b2',
-      gradient: 'linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)',
-      path: '/modules',
-      description: 'Modül yönetimi',
-      alwaysEnabled: true,
-    },
-    {
-      id: 'settings',
-      title: 'Ayarlar',
-      icon: <SettingOutlined />,
-      color: '#6b7280',
-      gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-      path: '/settings',
-      description: 'Sistem ayarları',
-      alwaysEnabled: true,
-    },
-    {
-      id: 'messaging',
-      title: 'Mesajlaşma',
-      icon: <MessageOutlined />,
-      color: '#c026d3',
-      gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
-      path: '/messaging',
-      description: 'İletişim ve mesajlaşma',
-      comingSoon: true, // Feature not implemented yet
-    },
-    {
-      id: 'calendar',
-      title: 'Takvim',
-      icon: <CalendarOutlined />,
-      color: '#7c3aed',
-      gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
-      path: '/calendar',
-      description: 'Etkinlik ve toplantılar',
-      comingSoon: true,
-    },
-  ];
-
-  // Build modules list with dynamic enabled status
-  const modules: ModuleCard[] = useMemo(() => {
-    return moduleConfigs.map(config => {
-      // Always-enabled modules (dashboard, settings, apps)
-      if (config.alwaysEnabled) {
-        return {
-          id: config.id,
-          title: config.title,
-          icon: config.icon,
-          color: config.color,
-          gradient: config.gradient,
-          path: config.path,
-          description: config.description,
-          disabled: false,
-        };
-      }
-
-      // Coming soon features (not implemented yet)
-      if (config.comingSoon) {
-        return {
-          id: config.id,
-          title: config.title,
-          icon: config.icon,
-          color: config.color,
-          gradient: config.gradient,
-          path: config.path,
-          description: config.description,
-          badge: 'Yakında',
-          disabled: true,
-        };
-      }
-
-      // Subscription-based modules - check if tenant has access
-      const hasAccess = config.moduleCode && activeModuleCodes.has(config.moduleCode.toLowerCase());
-      return {
-        id: config.id,
-        title: config.title,
-        icon: config.icon,
-        color: config.color,
-        gradient: config.gradient,
-        path: config.path,
-        description: config.description,
-        badge: hasAccess ? 'Aktif' : 'Abonelik Gerekli',
-        disabled: !hasAccess,
-      };
-    });
-  }, [activeModuleCodes]);
 
   const handleModuleClick = (module: ModuleCard) => {
     if (module.disabled) return;

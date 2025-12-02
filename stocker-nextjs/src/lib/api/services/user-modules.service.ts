@@ -23,7 +23,8 @@ export interface UserModulesResponse {
  * Service for fetching user/tenant module information
  */
 export class UserModulesService {
-  private static readonly BASE_URL = '/api/tenant/user-modules';
+  // Note: /api prefix is already in axios baseURL, so we use /tenant/... directly
+  private static readonly BASE_URL = '/tenant/user-modules';
 
   /**
    * Get current user's active modules based on subscription
