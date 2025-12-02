@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Stocker.Application.Common.Behaviors;
 using Stocker.Application.Common.Models;
 using Stocker.Application.Common.Localization;
+using Stocker.Application.Services;
 using System.Reflection;
 using System.Globalization;
 // Alias for settings from SharedKernel
@@ -50,7 +51,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(assembly);
-            
+
             // Register behaviors in the correct order - they execute in reverse order of registration
             // Execution order (reverse of registration):
             // 1. Logging (outermost - logs the entire request/response)
@@ -64,6 +65,9 @@ public static class DependencyInjection
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         });
+
+        // Add Application Services
+        services.AddScoped<IModuleActivationService, ModuleActivationService>();
 
         return services;
     }
