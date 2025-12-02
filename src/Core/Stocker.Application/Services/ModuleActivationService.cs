@@ -188,30 +188,50 @@ public class ModuleActivationService : IModuleActivationService
 
             // Check if module is in package
             var subscriptionRepo = masterUnitOfWork.Repository<Subscription>();
-            var hasModuleInPackage = await subscriptionRepo
+
+            // Get subscription info for debugging - use most recent subscription
+            var subscription = await subscriptionRepo
                 .AsQueryable()
                 .AsNoTracking()
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.Modules)
                 .Where(s => s.TenantId == tenantId &&
                            (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
                             s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme))
-                .SelectMany(s => s.Package.Modules)
-                .AnyAsync(pm => pm.ModuleCode == moduleName && pm.IsIncluded, cancellationToken);
+                .OrderByDescending(s => s.StartDate)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (!hasModuleInPackage)
+            if (subscription == null)
             {
-                _logger.LogWarning("Module {Module} is not included in tenant's package", moduleName);
+                _logger.LogWarning("No active subscription found for tenant {TenantId}", tenantId);
                 return false;
             }
 
-            // Get package module info for limits
-            var packageModule = await subscriptionRepo
-                .AsQueryable()
-                .AsNoTracking()
-                .Where(s => s.TenantId == tenantId &&
-                           (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
-                            s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme))
-                .SelectMany(s => s.Package.Modules)
-                .FirstOrDefaultAsync(pm => pm.ModuleCode == moduleName, cancellationToken);
+            _logger.LogInformation(
+                "Tenant {TenantId} has subscription {SubscriptionId} with package {PackageId} ({PackageName}). Package has {ModuleCount} modules: {Modules}",
+                tenantId,
+                subscription.Id,
+                subscription.PackageId,
+                subscription.Package?.Name ?? "N/A",
+                subscription.Package?.Modules?.Count ?? 0,
+                string.Join(", ", subscription.Package?.Modules?.Select(m => $"{m.ModuleCode}(IsIncluded={m.IsIncluded})") ?? Array.Empty<string>()));
+
+            var hasModuleInPackage = subscription.Package?.Modules?
+                .Any(pm => pm.ModuleCode == moduleName && pm.IsIncluded) ?? false;
+
+            if (!hasModuleInPackage)
+            {
+                _logger.LogWarning(
+                    "Module {Module} is not included in tenant's package {PackageId}. Available modules: {AvailableModules}",
+                    moduleName,
+                    subscription.PackageId,
+                    string.Join(", ", subscription.Package?.Modules?.Where(m => m.IsIncluded).Select(m => m.ModuleCode) ?? Array.Empty<string>()));
+                return false;
+            }
+
+            // Get package module info for limits (from already loaded subscription)
+            var packageModule = subscription.Package?.Modules?
+                .FirstOrDefault(pm => pm.ModuleCode == moduleName);
 
             // Create or update TenantModules record
             await using var tenantDbContext = await tenantDbContextFactory.CreateDbContextAsync(tenantId);

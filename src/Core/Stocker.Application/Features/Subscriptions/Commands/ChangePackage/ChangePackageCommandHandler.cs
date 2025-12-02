@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Stocker.SharedKernel.Results;
 using Stocker.Application.Common.Interfaces;
@@ -11,13 +12,16 @@ public class ChangePackageCommandHandler : IRequestHandler<ChangePackageCommand,
 {
     private readonly IMasterDbContext _context;
     private readonly ILogger<ChangePackageCommandHandler> _logger;
+    private readonly IMemoryCache _cache;
 
     public ChangePackageCommandHandler(
         IMasterDbContext context,
-        ILogger<ChangePackageCommandHandler> logger)
+        ILogger<ChangePackageCommandHandler> logger,
+        IMemoryCache cache)
     {
         _context = context;
         _logger = logger;
+        _cache = cache;
     }
 
     public async Task<Result<bool>> Handle(ChangePackageCommand request, CancellationToken cancellationToken)
@@ -64,8 +68,11 @@ public class ChangePackageCommandHandler : IRequestHandler<ChangePackageCommand,
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            // Invalidate all module-related caches for this tenant
+            InvalidateTenantModuleCache(request.TenantId);
+
             _logger.LogInformation(
-                "Package changed for tenant {TenantId} from subscription {SubscriptionId} to package {PackageId}",
+                "Package changed for tenant {TenantId} from subscription {SubscriptionId} to package {PackageId}. Cache invalidated.",
                 request.TenantId, subscription.Id, request.NewPackageId);
 
             return Result<bool>.Success(true);
@@ -80,5 +87,21 @@ public class ChangePackageCommandHandler : IRequestHandler<ChangePackageCommand,
             _logger.LogError(ex, "Error changing package for tenant {TenantId}", request.TenantId);
             return Result<bool>.Failure(Error.Failure("Subscription.ChangePackageFailed", "Failed to change package"));
         }
+    }
+
+    private void InvalidateTenantModuleCache(Guid tenantId)
+    {
+        // Cache keys used by TenantModuleService
+        _cache.Remove($"tenant_modules:{tenantId}");
+        _cache.Remove($"active_modules:{tenantId}");
+
+        // Cache keys used by ModuleActivationService
+        var moduleNames = new[] { "Inventory", "CRM", "Sales", "Purchasing", "Accounting", "HRM", "Manufacturing", "Logistics" };
+        foreach (var moduleName in moduleNames)
+        {
+            _cache.Remove($"module_active:{tenantId}:{moduleName}");
+        }
+
+        _logger.LogDebug("Invalidated module caches for tenant {TenantId}", tenantId);
     }
 }
