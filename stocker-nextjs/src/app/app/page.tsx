@@ -5,9 +5,9 @@
  * Standalone page without sidebar/header
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown } from 'antd';
+import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown, Spin } from 'antd';
 import {
   MessageOutlined,
   CalendarOutlined,
@@ -20,10 +20,12 @@ import {
   RocketOutlined,
   LogoutOutlined,
   ShoppingCartOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import SetupWizardModal from '@/components/setup/SetupWizardModal';
+import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 
 const { Title, Text } = Typography;
 
@@ -43,9 +45,21 @@ export default function AppHomePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { tenant } = useTenant();
+  const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
 
   // Setup modal state
   const [setupModalOpen, setSetupModalOpen] = useState(false);
+
+  // Create a Set of active module codes for fast lookup
+  const activeModuleCodes = useMemo(() => {
+    const codes = new Set<string>();
+    modulesData?.modules?.forEach(m => {
+      if (m.isActive) {
+        codes.add(m.code.toLowerCase());
+      }
+    });
+    return codes;
+  }, [modulesData]);
 
   // Redirect to login if not authenticated (after loading completes)
   useEffect(() => {
@@ -94,7 +108,25 @@ export default function AppHomePage() {
     return null;
   }
 
-  const modules: ModuleCard[] = [
+  // Show loading while fetching modules
+  if (modulesLoading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // Define module configurations
+  const moduleConfigs = [
     {
       id: 'crm',
       title: 'CRM',
@@ -103,7 +135,7 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 100%)',
       path: '/crm',
       description: 'Müşteri ilişkileri yönetimi',
-      badge: 'Aktif',
+      moduleCode: 'crm', // Used to check subscription
     },
     {
       id: 'sales',
@@ -113,7 +145,17 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
       path: '/sales',
       description: 'Sipariş, fatura ve ödeme',
-      badge: 'Aktif',
+      moduleCode: 'sales',
+    },
+    {
+      id: 'inventory',
+      title: 'Stok',
+      icon: <InboxOutlined />,
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+      path: '/inventory',
+      description: 'Envanter yönetimi',
+      moduleCode: 'inventory',
     },
     {
       id: 'dashboards',
@@ -123,6 +165,7 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #c026d3 0%, #0891b2 100%)',
       path: '/dashboard',
       description: 'Analiz ve raporlar',
+      alwaysEnabled: true, // Always available
     },
     {
       id: 'apps',
@@ -132,6 +175,7 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)',
       path: '/modules',
       description: 'Modül yönetimi',
+      alwaysEnabled: true,
     },
     {
       id: 'settings',
@@ -141,6 +185,7 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
       path: '/settings',
       description: 'Sistem ayarları',
+      alwaysEnabled: true,
     },
     {
       id: 'messaging',
@@ -150,8 +195,7 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
       path: '/messaging',
       description: 'İletişim ve mesajlaşma',
-      badge: 'Yakında',
-      disabled: true,
+      comingSoon: true, // Feature not implemented yet
     },
     {
       id: 'calendar',
@@ -161,21 +205,57 @@ export default function AppHomePage() {
       gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
       path: '/calendar',
       description: 'Etkinlik ve toplantılar',
-      badge: 'Yakında',
-      disabled: true,
-    },
-    {
-      id: 'inventory',
-      title: 'Stok',
-      icon: <RocketOutlined />,
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-      path: '/inventory',
-      description: 'Envanter yönetimi',
-      badge: 'Yakında',
-      disabled: true,
+      comingSoon: true,
     },
   ];
+
+  // Build modules list with dynamic enabled status
+  const modules: ModuleCard[] = useMemo(() => {
+    return moduleConfigs.map(config => {
+      // Always-enabled modules (dashboard, settings, apps)
+      if (config.alwaysEnabled) {
+        return {
+          id: config.id,
+          title: config.title,
+          icon: config.icon,
+          color: config.color,
+          gradient: config.gradient,
+          path: config.path,
+          description: config.description,
+          disabled: false,
+        };
+      }
+
+      // Coming soon features (not implemented yet)
+      if (config.comingSoon) {
+        return {
+          id: config.id,
+          title: config.title,
+          icon: config.icon,
+          color: config.color,
+          gradient: config.gradient,
+          path: config.path,
+          description: config.description,
+          badge: 'Yakında',
+          disabled: true,
+        };
+      }
+
+      // Subscription-based modules - check if tenant has access
+      const hasAccess = config.moduleCode && activeModuleCodes.has(config.moduleCode.toLowerCase());
+      return {
+        id: config.id,
+        title: config.title,
+        icon: config.icon,
+        color: config.color,
+        gradient: config.gradient,
+        path: config.path,
+        description: config.description,
+        badge: hasAccess ? 'Aktif' : 'Abonelik Gerekli',
+        disabled: !hasAccess,
+      };
+    });
+  }, [activeModuleCodes]);
 
   const handleModuleClick = (module: ModuleCard) => {
     if (module.disabled) return;

@@ -1,7 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stocker.API.Controllers.Base;
+using Stocker.Application.Common.Interfaces;
+using Stocker.Domain.Master.Enums;
 
 namespace Stocker.API.Controllers.Tenant;
 
@@ -14,6 +17,16 @@ namespace Stocker.API.Controllers.Tenant;
 [Route("api/tenant/user-modules")]
 public class UserModulesController : ApiController
 {
+    private readonly IMasterDbContext _masterDbContext;
+    private readonly ILogger<UserModulesController> _logger;
+
+    public UserModulesController(
+        IMasterDbContext masterDbContext,
+        ILogger<UserModulesController> logger)
+    {
+        _masterDbContext = masterDbContext;
+        _logger = logger;
+    }
 
     /// <summary>
     /// Get current user's active modules based on subscription
@@ -25,38 +38,95 @@ public class UserModulesController : ApiController
     {
         try
         {
-            // Get tenant's active subscription from master database
             var tenantId = GetTenantId() ?? Guid.Empty;
-            
-            // TODO: Create MediatR query to get subscription modules
-            // For now, return hardcoded response based on common packages
-            
+
+            if (tenantId == Guid.Empty)
+            {
+                _logger.LogWarning("No tenant ID found in request");
+                return BadRequest("Tenant ID not found");
+            }
+
+            // Get active subscription with package and modules
+            var subscription = await _masterDbContext.Subscriptions
+                .AsNoTracking()
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.Modules)
+                .Where(s => s.TenantId == tenantId &&
+                           (s.Status == SubscriptionStatus.Aktif ||
+                            s.Status == SubscriptionStatus.Deneme))
+                .OrderByDescending(s => s.StartDate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (subscription == null)
+            {
+                _logger.LogWarning("No active subscription found for tenant {TenantId}", tenantId);
+                return Ok(new UserModulesResponse
+                {
+                    TenantId = tenantId,
+                    Modules = new List<ModuleInfo>(),
+                    PackageName = "None",
+                    PackageType = "None",
+                    SubscriptionStatus = "Inactive",
+                    SubscriptionExpiryDate = null
+                });
+            }
+
+            // Get included modules from package
+            var modules = subscription.Package?.Modules?
+                .Where(pm => pm.IsIncluded)
+                .Select(pm => new ModuleInfo
+                {
+                    Code = pm.ModuleCode.ToLower(),
+                    Name = pm.ModuleName,
+                    IsActive = true,
+                    Category = GetModuleCategory(pm.ModuleCode)
+                })
+                .ToList() ?? new List<ModuleInfo>();
+
+            _logger.LogInformation(
+                "Tenant {TenantId} has package '{PackageName}' with {ModuleCount} modules: {Modules}",
+                tenantId,
+                subscription.Package?.Name ?? "Unknown",
+                modules.Count,
+                string.Join(", ", modules.Select(m => m.Code)));
+
             var response = new UserModulesResponse
             {
                 TenantId = tenantId,
-                Modules = new List<ModuleInfo>
-                {
-                    new() { Code = "crm", Name = "CRM", IsActive = true, Category = "core" },
-                    new() { Code = "sales", Name = "Satış", IsActive = true, Category = "core" },
-                    new() { Code = "inventory", Name = "Stok", IsActive = true, Category = "operations" },
-                    new() { Code = "accounting", Name = "Muhasebe", IsActive = true, Category = "finance" }
-                },
-                PackageName = "Professional",
-                PackageType = "Professional",
-                SubscriptionStatus = "Active",
-                SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(1)
+                Modules = modules,
+                PackageName = subscription.Package?.Name ?? "Unknown",
+                PackageType = subscription.Package?.PackageType.ToString() ?? "Unknown",
+                SubscriptionStatus = subscription.Status.ToString(),
+                SubscriptionExpiryDate = subscription.EndDate
             };
 
             return Ok(response);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error retrieving modules for tenant");
             return Problem(
                 title: "Module Retrieval Failed",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError
             );
         }
+    }
+
+    private static string GetModuleCategory(string moduleCode)
+    {
+        return moduleCode.ToUpper() switch
+        {
+            "CRM" => "core",
+            "SALES" => "core",
+            "INVENTORY" => "operations",
+            "ACCOUNTING" => "finance",
+            "HR" => "hr",
+            "PROJECTS" => "operations",
+            "PURCHASE" => "operations",
+            "FINANCE" => "finance",
+            _ => "other"
+        };
     }
 }
 
