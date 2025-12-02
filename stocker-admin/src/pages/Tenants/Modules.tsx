@@ -96,10 +96,12 @@ const TenantModulesPage: React.FC = () => {
   const loadTenants = async () => {
     setLoading(true);
     try {
-      const response = await tenantService.getAll({ pageNumber: 1, pageSize: 1000 });
-      setTenants(response.items);
-      if (response.items.length > 0 && !selectedTenantId) {
-        setSelectedTenantId(response.items[0].id);
+      const tenantList = await tenantService.getAll({ pageNumber: 1, pageSize: 1000 });
+      // Response is directly an array, not { items: ... }
+      const items = Array.isArray(tenantList) ? tenantList : [];
+      setTenants(items as unknown as TenantDto[]);
+      if (items.length > 0 && !selectedTenantId) {
+        setSelectedTenantId(items[0].id);
       }
     } catch (error: any) {
       message.error(error.message || 'Tenantlar yüklenirken hata oluştu');
