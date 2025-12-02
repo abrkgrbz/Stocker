@@ -19,6 +19,9 @@ import {
   Descriptions,
   Progress,
   Empty,
+  Modal,
+  List,
+  Divider,
 } from 'antd';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -39,15 +42,19 @@ import {
   DatabaseOutlined,
   BarChartOutlined,
   SettingOutlined,
+  SwapOutlined,
+  UpCircleOutlined,
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import {
   tenantModuleService,
   tenantService,
+  subscriptionService,
   type AvailableModuleDto,
   type TenantModuleStatusDto,
   type TenantDto,
 } from '../../services/api/index';
+import { packageService, type PackageDto } from '../../services/api/packageService';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -82,6 +89,13 @@ const TenantModulesPage: React.FC = () => {
   const [moduleStatus, setModuleStatus] = useState<TenantModuleStatusDto | null>(null);
   const [loadingModules, setLoadingModules] = useState(false);
   const [activatingModule, setActivatingModule] = useState<string | null>(null);
+
+  // Package change modal states
+  const [packageModalVisible, setPackageModalVisible] = useState(false);
+  const [packages, setPackages] = useState<PackageDto[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [changingPackage, setChangingPackage] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTenants();
@@ -120,6 +134,78 @@ const TenantModulesPage: React.FC = () => {
       setModuleStatus(null);
     } finally {
       setLoadingModules(false);
+    }
+  };
+
+  const loadPackages = async () => {
+    setLoadingPackages(true);
+    try {
+      const packageList = await packageService.getActivePackages();
+      setPackages(packageList);
+    } catch (error: any) {
+      message.error(error.message || 'Paketler yüklenirken hata oluştu');
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const openPackageModal = () => {
+    setPackageModalVisible(true);
+    setSelectedPackageId(null);
+    loadPackages();
+  };
+
+  const handlePackageChange = async () => {
+    if (!selectedTenantId || !selectedPackageId) {
+      message.warning('Lütfen bir paket seçin');
+      return;
+    }
+
+    const selectedPackage = packages.find(p => p.id === selectedPackageId);
+    const selectedTenant = tenants.find(t => t.id === selectedTenantId);
+
+    const result = await Swal.fire({
+      title: 'Paket Değiştir',
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Tenant:</strong> ${selectedTenant?.name || '-'}</p>
+          <p><strong>Yeni Paket:</strong> ${selectedPackage?.name || '-'}</p>
+          <p><strong>Fiyat:</strong> ${selectedPackage?.basePrice?.amount?.toLocaleString()} ${selectedPackage?.basePrice?.currency || 'TRY'}</p>
+          <hr style="margin: 10px 0;" />
+          <p style="color: #faad14;">⚠️ Paket değişikliği hemen uygulanacaktır.</p>
+          <p>Bu işlem geri alınamaz. Devam etmek istiyor musunuz?</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Paketi Değiştir',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#667eea',
+    });
+
+    if (result.isConfirmed) {
+      setChangingPackage(true);
+      try {
+        await subscriptionService.changePackage(selectedTenantId, {
+          newPackageId: selectedPackageId,
+        });
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Başarılı!',
+          text: 'Paket başarıyla değiştirildi.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setPackageModalVisible(false);
+        // Reload module status to reflect new package modules
+        await loadModuleStatus(selectedTenantId);
+      } catch (error: any) {
+        message.error(error.message || 'Paket değiştirme işlemi başarısız oldu');
+      } finally {
+        setChangingPackage(false);
+      }
     }
   };
 
@@ -402,19 +488,32 @@ const TenantModulesPage: React.FC = () => {
             </Space>
           }
           description={
-            <Space size="large">
-              <Text>
-                <CheckCircleOutlined style={{ color: '#52c41a' }} /> {activeModulesCount} aktif modül
-              </Text>
-              <Text>
-                <CrownOutlined style={{ color: '#faad14' }} /> {availableModulesCount} pakette mevcut
-              </Text>
-              {availableModulesCount < totalModulesCount && (
-                <Text type="secondary">
-                  <InfoCircleOutlined /> Diğer modüller için paket yükseltmesi gerekiyor
-                </Text>
-              )}
-            </Space>
+            <Row justify="space-between" align="middle">
+              <Col>
+                <Space size="large">
+                  <Text>
+                    <CheckCircleOutlined style={{ color: '#52c41a' }} /> {activeModulesCount} aktif modül
+                  </Text>
+                  <Text>
+                    <CrownOutlined style={{ color: '#faad14' }} /> {availableModulesCount} pakette mevcut
+                  </Text>
+                  {availableModulesCount < totalModulesCount && (
+                    <Text type="secondary">
+                      <InfoCircleOutlined /> Diğer modüller için paket yükseltmesi gerekiyor
+                    </Text>
+                  )}
+                </Space>
+              </Col>
+              <Col>
+                <Button
+                  type="primary"
+                  icon={<SwapOutlined />}
+                  onClick={openPackageModal}
+                >
+                  Paket Değiştir
+                </Button>
+              </Col>
+            </Row>
           }
           type="info"
           showIcon
@@ -475,6 +574,145 @@ const TenantModulesPage: React.FC = () => {
           </Col>
         </Row>
       </Card>
+
+      {/* Package Change Modal */}
+      <Modal
+        title={
+          <Space>
+            <SwapOutlined style={{ color: '#667eea' }} />
+            <span>Paket Değiştir</span>
+          </Space>
+        }
+        open={packageModalVisible}
+        onCancel={() => setPackageModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setPackageModalVisible(false)}>
+            İptal
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={changingPackage}
+            disabled={!selectedPackageId}
+            onClick={handlePackageChange}
+            icon={<SwapOutlined />}
+          >
+            Paketi Değiştir
+          </Button>,
+        ]}
+        width={700}
+      >
+        {loadingPackages ? (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>Paketler yükleniyor...</div>
+          </div>
+        ) : (
+          <>
+            <Alert
+              message="Paket değişikliği hakkında"
+              description={
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  <li>Yeni paket hemen uygulanacaktır</li>
+                  <li>Fiyat farkı bir sonraki faturalandırmaya yansıyacaktır</li>
+                  <li>Mevcut modüller yeni pakete göre güncellenecektir</li>
+                </ul>
+              }
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            <Divider orientation="left">Mevcut Paketler</Divider>
+
+            <List
+              grid={{ gutter: 16, column: 2 }}
+              dataSource={packages}
+              renderItem={(pkg) => (
+                <List.Item>
+                  <Card
+                    hoverable
+                    style={{
+                      borderColor: selectedPackageId === pkg.id ? '#667eea' : '#d9d9d9',
+                      borderWidth: selectedPackageId === pkg.id ? 2 : 1,
+                      backgroundColor: selectedPackageId === pkg.id ? '#f0f5ff' : '#fff',
+                    }}
+                    onClick={() => setSelectedPackageId(pkg.id)}
+                  >
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Row justify="space-between" align="middle">
+                        <Col>
+                          <Text strong style={{ fontSize: 16 }}>
+                            {pkg.name}
+                          </Text>
+                        </Col>
+                        <Col>
+                          {selectedPackageId === pkg.id && (
+                            <CheckCircleOutlined style={{ color: '#667eea', fontSize: 18 }} />
+                          )}
+                        </Col>
+                      </Row>
+
+                      <Text type="secondary" ellipsis>
+                        {pkg.description || 'Açıklama yok'}
+                      </Text>
+
+                      <Divider style={{ margin: '8px 0' }} />
+
+                      <Row justify="space-between">
+                        <Col>
+                          <Text strong style={{ fontSize: 18, color: '#667eea' }}>
+                            {pkg.basePrice?.amount?.toLocaleString()} {pkg.basePrice?.currency || 'TRY'}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            /{pkg.billingCycle === 'Yearly' ? 'yıl' : 'ay'}
+                          </Text>
+                        </Col>
+                        <Col>
+                          <Tag color={pkg.isActive ? 'green' : 'default'}>
+                            {pkg.isActive ? 'Aktif' : 'Pasif'}
+                          </Tag>
+                        </Col>
+                      </Row>
+
+                      <Space wrap size={[4, 4]} style={{ marginTop: 8 }}>
+                        <Tag icon={<TeamOutlined />}>{pkg.maxUsers} kullanıcı</Tag>
+                        <Tag icon={<DatabaseOutlined />}>{pkg.maxStorage} GB</Tag>
+                      </Space>
+
+                      {pkg.modules && pkg.modules.length > 0 && (
+                        <div style={{ marginTop: 8 }}>
+                          <Text type="secondary" style={{ fontSize: 12 }}>Modüller:</Text>
+                          <br />
+                          <Space wrap size={[4, 4]}>
+                            {pkg.modules
+                              .filter(m => m.isIncluded)
+                              .slice(0, 5)
+                              .map(m => (
+                                <Tag key={m.moduleCode} color="blue" style={{ fontSize: 11 }}>
+                                  {m.moduleName}
+                                </Tag>
+                              ))}
+                            {pkg.modules.filter(m => m.isIncluded).length > 5 && (
+                              <Tag color="default" style={{ fontSize: 11 }}>
+                                +{pkg.modules.filter(m => m.isIncluded).length - 5} daha
+                              </Tag>
+                            )}
+                          </Space>
+                        </div>
+                      )}
+                    </Space>
+                  </Card>
+                </List.Item>
+              )}
+            />
+
+            {packages.length === 0 && (
+              <Empty description="Aktif paket bulunamadı" />
+            )}
+          </>
+        )}
+      </Modal>
 
       <style>{`
         .disabled-row {

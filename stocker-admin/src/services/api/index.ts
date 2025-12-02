@@ -13,6 +13,7 @@ export { systemManagementService } from './systemManagementService';
 export { activityLogService } from './activityLogService';
 export { roleService } from './roleService';
 export { settingsService } from './settingsService';
+export { subscriptionService } from './subscriptionService';
 
 // Re-export types
 export type {

@@ -5,6 +5,7 @@ using Stocker.Application.Features.Subscriptions.Commands.CreateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.UpdateSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.CancelSubscription;
 using Stocker.Application.Features.Subscriptions.Commands.RenewSubscription;
+using Stocker.Application.Features.Subscriptions.Commands.ChangePackage;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptions;
 using Stocker.Application.Features.Subscriptions.Queries.GetSubscriptionById;
 using Swashbuckle.AspNetCore.Annotations;
@@ -169,6 +170,30 @@ public class SubscriptionsController : MasterControllerBase
             return StatusCode(500, "An error occurred while reactivating the subscription");
         }
     }
+
+    /// <summary>
+    /// Change subscription package for a tenant
+    /// </summary>
+    [HttpPost("tenant/{tenantId}/change-package")]
+    public async Task<IActionResult> ChangePackage(Guid tenantId, [FromBody] ChangePackageRequest request)
+    {
+        try
+        {
+            var command = new ChangePackageCommand
+            {
+                TenantId = tenantId,
+                NewPackageId = request.NewPackageId
+            };
+
+            var result = await _mediator.Send(command);
+            return HandleResult(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex, "Error changing package for tenant {TenantId}", tenantId);
+            return StatusCode(500, "An error occurred while changing the package");
+        }
+    }
 }
 
 public class CancelSubscriptionRequest
@@ -184,4 +209,9 @@ public class RenewSubscriptionRequest
 public class SuspendSubscriptionRequest
 {
     public string Reason { get; set; } = string.Empty;
+}
+
+public class ChangePackageRequest
+{
+    public Guid NewPackageId { get; set; }
 }

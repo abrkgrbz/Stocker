@@ -86,6 +86,10 @@ export interface RenewSubscriptionCommand {
   newPackageId?: string;
 }
 
+export interface ChangePackageCommand {
+  newPackageId: string;
+}
+
 class SubscriptionService {
   private readonly basePath = '/api/master/subscriptions';
 
@@ -171,6 +175,22 @@ class SubscriptionService {
       return response === true;
     } catch (error) {
       console.error(`Failed to renew subscription ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Change subscription package for a tenant
+   */
+  async changePackage(tenantId: string, command: ChangePackageCommand): Promise<boolean> {
+    try {
+      const response = await apiClient.post<boolean>(
+        `${this.basePath}/tenant/${tenantId}/change-package`,
+        command
+      );
+      return response === true;
+    } catch (error) {
+      console.error(`Failed to change package for tenant ${tenantId}:`, error);
       throw error;
     }
   }

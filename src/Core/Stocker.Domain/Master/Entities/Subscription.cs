@@ -185,6 +185,20 @@ public sealed class Subscription : AggregateRoot
         CurrentPeriodEnd = CalculateNextBillingDate(CurrentPeriodStart, newCycle);
     }
 
+    public void ChangePackage(Guid newPackageId, Money newPrice)
+    {
+        if (Status == SubscriptionStatus.IptalEdildi || Status == SubscriptionStatus.SuresiDoldu)
+        {
+            throw new InvalidOperationException("Cannot change package for cancelled or expired subscriptions.");
+        }
+
+        var oldPackageId = PackageId;
+        PackageId = newPackageId;
+        Price = newPrice;
+
+        RaiseDomainEvent(new SubscriptionPackageChangedDomainEvent(Id, TenantId, oldPackageId, newPackageId));
+    }
+
     public void SetAutoRenew(bool autoRenew)
     {
         AutoRenew = autoRenew;
