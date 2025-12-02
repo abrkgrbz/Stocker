@@ -72,9 +72,26 @@ import type {
   ReservationStatus,
   TransferStatus,
   StockCountStatus,
+  SerialNumberStatus,
+  LotBatchStatus,
   // Filters
   ProductFilterDto,
   PaginatedResponse,
+  // Serial Numbers
+  SerialNumberDto,
+  SerialNumberListDto,
+  CreateSerialNumberDto,
+  SerialNumberFilterDto,
+  ReceiveSerialNumberRequest,
+  ReserveSerialNumberRequest,
+  SellSerialNumberRequest,
+  ReasonRequest,
+  // Lot Batches
+  LotBatchDto,
+  LotBatchListDto,
+  CreateLotBatchDto,
+  LotBatchFilterDto,
+  QuarantineRequest,
 } from './inventory.types';
 
 // =====================================
@@ -885,6 +902,116 @@ export class InventoryService {
     return ApiService.get<ProductPriceDto>(this.getPath(`price-lists/product-price/${productId}`), {
       params: { priceListId, quantity },
     });
+  }
+
+  // =====================================
+  // SERIAL NUMBERS
+  // =====================================
+
+  /**
+   * Get all serial numbers with optional filters
+   */
+  static async getSerialNumbers(filter?: SerialNumberFilterDto): Promise<SerialNumberListDto[]> {
+    return ApiService.get<SerialNumberListDto[]>(this.getPath('serial-numbers'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get serial number by ID
+   */
+  static async getSerialNumber(id: number): Promise<SerialNumberDto> {
+    return ApiService.get<SerialNumberDto>(this.getPath(`serial-numbers/${id}`));
+  }
+
+  /**
+   * Create a new serial number
+   */
+  static async createSerialNumber(data: CreateSerialNumberDto): Promise<SerialNumberDto> {
+    return ApiService.post<SerialNumberDto>(this.getPath('serial-numbers'), data);
+  }
+
+  /**
+   * Receive a serial number into inventory
+   */
+  static async receiveSerialNumber(id: number, request?: ReceiveSerialNumberRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/receive`), request || {});
+  }
+
+  /**
+   * Reserve a serial number for a sales order
+   */
+  static async reserveSerialNumber(id: number, request: ReserveSerialNumberRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/reserve`), request);
+  }
+
+  /**
+   * Release a reserved serial number
+   */
+  static async releaseSerialNumber(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/release`), {});
+  }
+
+  /**
+   * Sell a serial number to a customer
+   */
+  static async sellSerialNumber(id: number, request: SellSerialNumberRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/sell`), request);
+  }
+
+  /**
+   * Mark a serial number as defective
+   */
+  static async markSerialNumberDefective(id: number, request?: ReasonRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/defective`), request || {});
+  }
+
+  /**
+   * Scrap a serial number
+   */
+  static async scrapSerialNumber(id: number, request?: ReasonRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`serial-numbers/${id}/scrap`), request || {});
+  }
+
+  // =====================================
+  // LOT BATCHES
+  // =====================================
+
+  /**
+   * Get all lot batches with optional filters
+   */
+  static async getLotBatches(filter?: LotBatchFilterDto): Promise<LotBatchListDto[]> {
+    return ApiService.get<LotBatchListDto[]>(this.getPath('lot-batches'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get lot batch by ID
+   */
+  static async getLotBatch(id: number): Promise<LotBatchDto> {
+    return ApiService.get<LotBatchDto>(this.getPath(`lot-batches/${id}`));
+  }
+
+  /**
+   * Create a new lot batch
+   */
+  static async createLotBatch(data: CreateLotBatchDto): Promise<LotBatchDto> {
+    return ApiService.post<LotBatchDto>(this.getPath('lot-batches'), data);
+  }
+
+  /**
+   * Approve a lot batch
+   */
+  static async approveLotBatch(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`lot-batches/${id}/approve`), {});
+  }
+
+  /**
+   * Quarantine a lot batch
+   */
+  static async quarantineLotBatch(id: number, request: QuarantineRequest): Promise<void> {
+    return ApiService.post<void>(this.getPath(`lot-batches/${id}/quarantine`), request);
   }
 }
 

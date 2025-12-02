@@ -110,6 +110,17 @@ export enum SerialNumberStatus {
   InTransit = 'InTransit'
 }
 
+export enum LotBatchStatus {
+  Pending = 'Pending',
+  Received = 'Received',
+  Approved = 'Approved',
+  Quarantined = 'Quarantined',
+  Rejected = 'Rejected',
+  Exhausted = 'Exhausted',
+  Expired = 'Expired',
+  Recalled = 'Recalled'
+}
+
 // =====================================
 // PRODUCT
 // =====================================
@@ -1272,4 +1283,155 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+}
+
+// =====================================
+// SERIAL NUMBERS
+// =====================================
+
+export interface SerialNumberListDto {
+  id: number;
+  serial: string;
+  productId: number;
+  productCode: string;
+  productName: string;
+  warehouseName?: string;
+  status: SerialNumberStatus;
+  isUnderWarranty: boolean;
+  remainingWarrantyDays?: number;
+}
+
+export interface SerialNumberDto {
+  id: number;
+  serial: string;
+  productId: number;
+  productCode: string;
+  productName: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  locationId?: number;
+  locationName?: string;
+  status: SerialNumberStatus;
+  manufacturedDate?: DateTime;
+  receivedDate?: DateTime;
+  soldDate?: DateTime;
+  warrantyStartDate?: DateTime;
+  warrantyEndDate?: DateTime;
+  customerId?: string;
+  salesOrderId?: string;
+  purchaseOrderId?: string;
+  notes?: string;
+  batchNumber?: string;
+  supplierSerial?: string;
+  isUnderWarranty: boolean;
+  remainingWarrantyDays?: number;
+  createdAt: DateTime;
+}
+
+export interface CreateSerialNumberDto {
+  serial: string;
+  productId: number;
+  warehouseId?: number;
+  locationId?: number;
+  manufacturedDate?: DateTime;
+  batchNumber?: string;
+  supplierSerial?: string;
+  notes?: string;
+}
+
+export interface SerialNumberFilterDto {
+  productId?: number;
+  warehouseId?: number;
+  status?: SerialNumberStatus;
+  underWarrantyOnly?: boolean;
+}
+
+export interface ReceiveSerialNumberRequest {
+  purchaseOrderId?: string;
+}
+
+export interface ReserveSerialNumberRequest {
+  salesOrderId: string;
+}
+
+export interface SellSerialNumberRequest {
+  customerId: string;
+  salesOrderId: string;
+  warrantyMonths?: number;
+}
+
+export interface ReasonRequest {
+  reason?: string;
+}
+
+// =====================================
+// LOT BATCHES
+// =====================================
+
+export interface LotBatchListDto {
+  id: number;
+  lotNumber: string;
+  productId: number;
+  productCode: string;
+  productName: string;
+  status: LotBatchStatus;
+  expiryDate?: DateTime;
+  currentQuantity: number;
+  availableQuantity: number;
+  isQuarantined: boolean;
+  isExpired: boolean;
+  daysUntilExpiry?: number;
+}
+
+export interface LotBatchDto {
+  id: number;
+  lotNumber: string;
+  productId: number;
+  productCode: string;
+  productName: string;
+  supplierId?: number;
+  supplierName?: string;
+  status: LotBatchStatus;
+  manufacturedDate?: DateTime;
+  expiryDate?: DateTime;
+  receivedDate?: DateTime;
+  initialQuantity: number;
+  currentQuantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  supplierLotNumber?: string;
+  certificateNumber?: string;
+  notes?: string;
+  isQuarantined: boolean;
+  quarantinedDate?: DateTime;
+  quarantineReason?: string;
+  inspectedDate?: DateTime;
+  inspectionNotes?: string;
+  isExpired: boolean;
+  daysUntilExpiry?: number;
+  remainingShelfLifePercentage?: number;
+  createdAt: DateTime;
+}
+
+export interface CreateLotBatchDto {
+  lotNumber: string;
+  productId: number;
+  initialQuantity: number;
+  supplierId?: number;
+  supplierLotNumber?: string;
+  manufacturedDate?: DateTime;
+  expiryDate?: DateTime;
+  certificateNumber?: string;
+  notes?: string;
+}
+
+export interface LotBatchFilterDto {
+  productId?: number;
+  status?: LotBatchStatus;
+  expiredOnly?: boolean;
+  expiringWithinDays?: number;
+}
+
+export interface QuarantineRequest {
+  reason: string;
 }

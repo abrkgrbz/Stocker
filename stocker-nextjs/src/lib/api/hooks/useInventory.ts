@@ -51,6 +51,23 @@ import type {
   ReservationStatus,
   TransferStatus,
   StockCountStatus,
+  // Serial Numbers
+  SerialNumberDto,
+  SerialNumberListDto,
+  CreateSerialNumberDto,
+  SerialNumberFilterDto,
+  ReceiveSerialNumberRequest,
+  ReserveSerialNumberRequest,
+  SellSerialNumberRequest,
+  ReasonRequest,
+  SerialNumberStatus,
+  // Lot Batches
+  LotBatchDto,
+  LotBatchListDto,
+  CreateLotBatchDto,
+  LotBatchFilterDto,
+  QuarantineRequest,
+  LotBatchStatus,
 } from '../services/inventory.types';
 
 // =====================================
@@ -119,6 +136,14 @@ export const inventoryKeys = {
   priceList: (id: number) => ['inventory', 'price-lists', id] as const,
   productPrice: (productId: number, priceListId?: number) =>
     ['inventory', 'product-price', productId, priceListId] as const,
+
+  // Serial Numbers
+  serialNumbers: (filter?: SerialNumberFilterDto) => ['inventory', 'serial-numbers', filter] as const,
+  serialNumber: (id: number) => ['inventory', 'serial-numbers', id] as const,
+
+  // Lot Batches
+  lotBatches: (filter?: LotBatchFilterDto) => ['inventory', 'lot-batches', filter] as const,
+  lotBatch: (id: number) => ['inventory', 'lot-batches', id] as const,
 };
 
 // =====================================
@@ -1425,6 +1450,210 @@ export function useBulkUpdatePriceListItems() {
     },
     onError: (error) => {
       showApiError(error, 'Fiyat listesi toplu güncellenemedi');
+    },
+  });
+}
+
+// =====================================
+// SERIAL NUMBERS HOOKS
+// =====================================
+
+export function useSerialNumbers(filter?: SerialNumberFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.serialNumbers(filter),
+    queryFn: () => InventoryService.getSerialNumbers(filter),
+    staleTime: 30000,
+  });
+}
+
+export function useSerialNumber(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.serialNumber(id),
+    queryFn: () => InventoryService.getSerialNumber(id),
+    enabled: !!id && id > 0,
+  });
+}
+
+export function useCreateSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSerialNumberDto) => InventoryService.createSerialNumber(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      showSuccess('Seri numarası oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası oluşturulamadı');
+    },
+  });
+}
+
+export function useReceiveSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request?: ReceiveSerialNumberRequest }) =>
+      InventoryService.receiveSerialNumber(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası teslim alındı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası teslim alınamadı');
+    },
+  });
+}
+
+export function useReserveSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request: ReserveSerialNumberRequest }) =>
+      InventoryService.reserveSerialNumber(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası rezerve edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası rezerve edilemedi');
+    },
+  });
+}
+
+export function useReleaseSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.releaseSerialNumber(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası rezervasyonu kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası rezervasyonu kaldırılamadı');
+    },
+  });
+}
+
+export function useSellSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request: SellSerialNumberRequest }) =>
+      InventoryService.sellSerialNumber(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası satıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası satılamadı');
+    },
+  });
+}
+
+export function useMarkSerialNumberDefective() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request?: ReasonRequest }) =>
+      InventoryService.markSerialNumberDefective(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası arızalı olarak işaretlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası arızalı olarak işaretlenemedi');
+    },
+  });
+}
+
+export function useScrapSerialNumber() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request?: ReasonRequest }) =>
+      InventoryService.scrapSerialNumber(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'serial-numbers'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.serialNumber(id) });
+      showSuccess('Seri numarası hurda olarak işaretlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Seri numarası hurda olarak işaretlenemedi');
+    },
+  });
+}
+
+// =====================================
+// LOT BATCHES HOOKS
+// =====================================
+
+export function useLotBatches(filter?: LotBatchFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.lotBatches(filter),
+    queryFn: () => InventoryService.getLotBatches(filter),
+    staleTime: 30000,
+  });
+}
+
+export function useLotBatch(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.lotBatch(id),
+    queryFn: () => InventoryService.getLotBatch(id),
+    enabled: !!id && id > 0,
+  });
+}
+
+export function useCreateLotBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateLotBatchDto) => InventoryService.createLotBatch(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'lot-batches'] });
+      showSuccess('Lot/Parti oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Lot/Parti oluşturulamadı');
+    },
+  });
+}
+
+export function useApproveLotBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.approveLotBatch(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'lot-batches'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lotBatch(id) });
+      showSuccess('Lot/Parti onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Lot/Parti onaylanamadı');
+    },
+  });
+}
+
+export function useQuarantineLotBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, request }: { id: number; request: QuarantineRequest }) =>
+      InventoryService.quarantineLotBatch(id, request),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'lot-batches'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.lotBatch(id) });
+      showSuccess('Lot/Parti karantinaya alındı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Lot/Parti karantinaya alınamadı');
     },
   });
 }
