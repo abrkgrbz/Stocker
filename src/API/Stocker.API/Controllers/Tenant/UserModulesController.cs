@@ -46,11 +46,10 @@ public class UserModulesController : ApiController
                 return BadRequest("Tenant ID not found");
             }
 
-            // Get active subscription with package and modules
+            // Get active subscription with package
             var subscription = await _masterDbContext.Subscriptions
                 .AsNoTracking()
                 .Include(s => s.Package)
-                    .ThenInclude(p => p.Modules)
                 .Where(s => s.TenantId == tenantId &&
                            (s.Status == SubscriptionStatus.Aktif ||
                             s.Status == SubscriptionStatus.Deneme))
@@ -71,17 +70,24 @@ public class UserModulesController : ApiController
                 });
             }
 
-            // Get included modules from package
-            var modules = subscription.Package?.Modules?
-                .Where(pm => pm.IsIncluded)
-                .Select(pm => new ModuleInfo
+            // Query PackageModules directly (more reliable than ThenInclude with private backing fields)
+            var modules = new List<ModuleInfo>();
+
+            if (subscription.Package != null)
+            {
+                var packageModules = await _masterDbContext.PackageModules
+                    .AsNoTracking()
+                    .Where(pm => pm.PackageId == subscription.Package.Id && pm.IsIncluded)
+                    .ToListAsync(cancellationToken);
+
+                modules = packageModules.Select(pm => new ModuleInfo
                 {
                     Code = pm.ModuleCode.ToLower(),
                     Name = pm.ModuleName,
                     IsActive = true,
                     Category = GetModuleCategory(pm.ModuleCode)
-                })
-                .ToList() ?? new List<ModuleInfo>();
+                }).ToList();
+            }
 
             _logger.LogInformation(
                 "Tenant {TenantId} has package '{PackageName}' with {ModuleCount} modules: {Modules}",
