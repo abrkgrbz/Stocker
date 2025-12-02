@@ -95,9 +95,9 @@ public class UserModulesController : ApiController
                 TenantId = tenantId,
                 Modules = modules,
                 PackageName = subscription.Package?.Name ?? "Unknown",
-                PackageType = subscription.Package?.PackageType.ToString() ?? "Unknown",
+                PackageType = subscription.Package?.Type.ToString() ?? "Unknown",
                 SubscriptionStatus = subscription.Status.ToString(),
-                SubscriptionExpiryDate = subscription.EndDate
+                SubscriptionExpiryDate = subscription.CurrentPeriodEnd
             };
 
             return Ok(response);
