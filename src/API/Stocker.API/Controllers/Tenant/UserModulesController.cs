@@ -82,7 +82,7 @@ public class UserModulesController : ApiController
 
                 modules = packageModules.Select(pm => new ModuleInfo
                 {
-                    Code = pm.ModuleCode.ToLower(),
+                    Code = NormalizeModuleCode(pm.ModuleCode),
                     Name = pm.ModuleName,
                     IsActive = true,
                     Category = GetModuleCategory(pm.ModuleCode)
@@ -121,7 +121,8 @@ public class UserModulesController : ApiController
 
     private static string GetModuleCategory(string moduleCode)
     {
-        return moduleCode.ToUpper() switch
+        var normalized = NormalizeModuleCode(moduleCode).ToUpperInvariant();
+        return normalized switch
         {
             "CRM" => "core",
             "SALES" => "core",
@@ -133,6 +134,33 @@ public class UserModulesController : ApiController
             "FINANCE" => "finance",
             _ => "other"
         };
+    }
+
+    /// <summary>
+    /// Normalizes module code by replacing Turkish characters with English equivalents
+    /// and converting to lowercase. This handles cases where module codes were entered
+    /// with Turkish characters (e.g., "ınventory" instead of "inventory").
+    /// </summary>
+    private static string NormalizeModuleCode(string moduleCode)
+    {
+        if (string.IsNullOrEmpty(moduleCode))
+            return string.Empty;
+
+        // Replace Turkish characters with English equivalents
+        return moduleCode
+            .Replace('ı', 'i')  // Turkish dotless i -> English i
+            .Replace('İ', 'I')  // Turkish capital I with dot -> English I
+            .Replace('ğ', 'g')
+            .Replace('Ğ', 'G')
+            .Replace('ü', 'u')
+            .Replace('Ü', 'U')
+            .Replace('ş', 's')
+            .Replace('Ş', 'S')
+            .Replace('ö', 'o')
+            .Replace('Ö', 'O')
+            .Replace('ç', 'c')
+            .Replace('Ç', 'C')
+            .ToLowerInvariant();
     }
 }
 
