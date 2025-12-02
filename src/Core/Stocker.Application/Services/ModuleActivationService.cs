@@ -217,7 +217,7 @@ public class ModuleActivationService : IModuleActivationService
                 string.Join(", ", subscription.Package?.Modules?.Select(m => $"{m.ModuleCode}(IsIncluded={m.IsIncluded})") ?? Array.Empty<string>()));
 
             var hasModuleInPackage = subscription.Package?.Modules?
-                .Any(pm => pm.ModuleCode == moduleName && pm.IsIncluded) ?? false;
+                .Any(pm => pm.ModuleCode.Equals(moduleName, StringComparison.OrdinalIgnoreCase) && pm.IsIncluded) ?? false;
 
             if (!hasModuleInPackage)
             {
@@ -231,7 +231,7 @@ public class ModuleActivationService : IModuleActivationService
 
             // Get package module info for limits (from already loaded subscription)
             var packageModule = subscription.Package?.Modules?
-                .FirstOrDefault(pm => pm.ModuleCode == moduleName);
+                .FirstOrDefault(pm => pm.ModuleCode.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
 
             // Create or update TenantModules record
             await using var tenantDbContext = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
