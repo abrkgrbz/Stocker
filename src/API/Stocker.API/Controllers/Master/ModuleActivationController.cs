@@ -6,7 +6,7 @@ namespace Stocker.API.Controllers.Master;
 
 [ApiController]
 [Route("api/master/[controller]")]
-[Authorize(Policy = "MasterOnly")]
+[Authorize(Policy = "RequireMasterAccess")]
 public class ModuleActivationController : ControllerBase
 {
     private readonly IModuleActivationService _moduleActivationService;
