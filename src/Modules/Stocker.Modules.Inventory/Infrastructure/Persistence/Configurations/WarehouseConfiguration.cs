@@ -32,6 +32,9 @@ public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
         builder.OwnsOne(w => w.Address, a =>
         {
             a.Property(ad => ad.Street).HasColumnName("Street").HasMaxLength(200);
+            a.Property(ad => ad.Building).HasColumnName("Building").HasMaxLength(50);
+            a.Property(ad => ad.Floor).HasColumnName("Floor").HasMaxLength(20);
+            a.Property(ad => ad.Apartment).HasColumnName("Apartment").HasMaxLength(20);
             a.Property(ad => ad.City).HasColumnName("City").HasMaxLength(100);
             a.Property(ad => ad.State).HasColumnName("State").HasMaxLength(100);
             a.Property(ad => ad.Country).HasColumnName("Country").HasMaxLength(100);

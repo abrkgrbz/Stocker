@@ -4,23 +4,31 @@ namespace Stocker.Domain.Common.ValueObjects;
 
 public sealed class Address : ValueObject
 {
-    public string Street { get; }
-    public string? Building { get; }
-    public string? Floor { get; }
-    public string? Apartment { get; }
-    public string City { get; }
-    public string? State { get; }
-    public string Country { get; }
-    public string? PostalCode { get; }
+    public string Street { get; private set; }
+    public string? Building { get; private set; }
+    public string? Floor { get; private set; }
+    public string? Apartment { get; private set; }
+    public string City { get; private set; }
+    public string? State { get; private set; }
+    public string Country { get; private set; }
+    public string? PostalCode { get; private set; }
+
+    // EF Core requires parameterless constructor for owned types
+    private Address()
+    {
+        Street = string.Empty;
+        City = string.Empty;
+        Country = string.Empty;
+    }
 
     private Address(
-        string street, 
+        string street,
         string? building,
         string? floor,
         string? apartment,
-        string city, 
-        string? state, 
-        string country, 
+        string city,
+        string? state,
+        string country,
         string? postalCode)
     {
         Street = street;
