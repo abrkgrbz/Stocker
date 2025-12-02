@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Typography, Button, Space, Form, Spin, Alert, Affix, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CloseOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { ProductForm } from '@/components/inventory/products';
 import { useProduct, useUpdateProduct } from '@/lib/api/hooks/useInventory';
 import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
-
-const { Title, Text } = Typography;
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -30,7 +28,7 @@ export default function EditProductPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-white flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -38,7 +36,7 @@ export default function EditProductPage() {
 
   if (error || !product) {
     return (
-      <div className="p-6">
+      <div className="p-8">
         <Alert
           message="Ürün Bulunamadı"
           description="İstenen ürün bulunamadı veya bir hata oluştu."
@@ -55,58 +53,69 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <Affix offsetTop={0}>
-        <div className="bg-white border-b shadow-sm px-6 py-4">
-          <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-            <div className="flex items-center gap-4">
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => router.back()}
-                type="text"
-              />
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
+      <div
+        className="sticky top-0 z-50 px-8 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div className="flex items-center gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <Title level={4} style={{ margin: 0 }}>Ürünü Düzenle</Title>
-                  {product.isActive ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
-                  ) : (
-                    <Tag color="default" icon={<StopOutlined />}>Pasif</Tag>
-                  )}
+                  <h1 className="text-xl font-semibold text-gray-900 m-0">
+                    {product.name}
+                  </h1>
+                  <Tag
+                    icon={product.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    color={product.isActive ? 'success' : 'default'}
+                    className="ml-2"
+                  >
+                    {product.isActive ? 'Aktif' : 'Taslak'}
+                  </Tag>
                 </div>
-                <Text type="secondary">{product.code} - {product.name}</Text>
+                <p className="text-sm text-gray-400 m-0">{product.code}</p>
               </div>
             </div>
-            <Space>
-              <Button
-                icon={<CloseOutlined />}
-                onClick={() => router.push(`/inventory/products/${productId}`)}
-              >
-                İptal
-              </Button>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                loading={updateProduct.isPending}
-                onClick={() => form.submit()}
-                size="large"
-              >
-                Kaydet
-              </Button>
-            </Space>
           </div>
+          <Space>
+            <Button onClick={() => router.push(`/inventory/products/${productId}`)}>
+              Vazgeç
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={updateProduct.isPending}
+              onClick={() => form.submit()}
+              style={{
+                background: '#1a1a1a',
+                borderColor: '#1a1a1a',
+              }}
+            >
+              Kaydet
+            </Button>
+          </Space>
         </div>
-      </Affix>
+      </div>
 
       {/* Page Content */}
-      <div className="p-6 max-w-screen-2xl mx-auto">
+      <div className="px-8 py-8 max-w-7xl mx-auto">
         <ProductForm
           form={form}
           initialValues={product}
           onFinish={handleSubmit}
           loading={updateProduct.isPending}
-          onCancel={() => router.push(`/inventory/products/${productId}`)}
         />
       </div>
     </div>

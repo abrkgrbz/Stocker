@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Typography, Button, Space, Form, Affix } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Button, Space, Form } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { ProductForm } from '@/components/inventory/products';
 import { useCreateProduct } from '@/lib/api/hooks/useInventory';
 import type { CreateProductDto } from '@/lib/api/services/inventory.types';
-
-const { Title } = Typography;
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -25,50 +23,57 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <Affix offsetTop={0}>
-        <div className="bg-white border-b shadow-sm px-6 py-4">
-          <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-            <div className="flex items-center gap-4">
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => router.back()}
-                type="text"
-              />
-              <div>
-                <Title level={4} style={{ margin: 0 }}>Yeni Ürün</Title>
-                <span className="text-gray-500 text-sm">Yeni ürün oluşturun</span>
-              </div>
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
+      <div
+        className="sticky top-0 z-50 px-8 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">
+                Yeni Ürün
+              </h1>
+              <p className="text-sm text-gray-400 m-0">Envantere yeni ürün ekleyin</p>
             </div>
-            <Space>
-              <Button
-                icon={<CloseOutlined />}
-                onClick={() => router.push('/inventory/products')}
-              >
-                İptal
-              </Button>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                loading={createProduct.isPending}
-                onClick={() => form.submit()}
-                size="large"
-              >
-                Kaydet
-              </Button>
-            </Space>
           </div>
+          <Space>
+            <Button onClick={() => router.push('/inventory/products')}>
+              Vazgeç
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={createProduct.isPending}
+              onClick={() => form.submit()}
+              style={{
+                background: '#1a1a1a',
+                borderColor: '#1a1a1a',
+              }}
+            >
+              Kaydet
+            </Button>
+          </Space>
         </div>
-      </Affix>
+      </div>
 
       {/* Page Content */}
-      <div className="p-6 max-w-screen-2xl mx-auto">
+      <div className="px-8 py-8 max-w-7xl mx-auto">
         <ProductForm
           form={form}
           onFinish={handleSubmit}
           loading={createProduct.isPending}
-          onCancel={() => router.push('/inventory/products')}
         />
       </div>
     </div>
