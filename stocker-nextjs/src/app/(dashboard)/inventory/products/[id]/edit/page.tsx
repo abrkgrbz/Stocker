@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Typography, Button, Space, Form, Spin, Alert } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { Typography, Button, Space, Form, Spin, Alert, Affix, Tag } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined, CloseOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { ProductForm } from '@/components/inventory/products';
 import { useProduct, useUpdateProduct } from '@/lib/api/hooks/useInventory';
 import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
@@ -55,43 +55,60 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.back()}
-          >
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>Ürünü Düzenle</Title>
-            <Text type="secondary">{product.code} - {product.name}</Text>
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header */}
+      <Affix offsetTop={0}>
+        <div className="bg-white border-b shadow-sm px-6 py-4">
+          <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+            <div className="flex items-center gap-4">
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => router.back()}
+                type="text"
+              />
+              <div>
+                <div className="flex items-center gap-2">
+                  <Title level={4} style={{ margin: 0 }}>Ürünü Düzenle</Title>
+                  {product.isActive ? (
+                    <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
+                  ) : (
+                    <Tag color="default" icon={<StopOutlined />}>Pasif</Tag>
+                  )}
+                </div>
+                <Text type="secondary">{product.code} - {product.name}</Text>
+              </div>
+            </div>
+            <Space>
+              <Button
+                icon={<CloseOutlined />}
+                onClick={() => router.push(`/inventory/products/${productId}`)}
+              >
+                İptal
+              </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                loading={updateProduct.isPending}
+                onClick={() => form.submit()}
+                size="large"
+              >
+                Kaydet
+              </Button>
+            </Space>
           </div>
         </div>
-        <Space>
-          <Button onClick={() => router.push(`/inventory/products/${productId}`)}>
-            İptal
-          </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={updateProduct.isPending}
-            onClick={() => form.submit()}
-          >
-            Kaydet
-          </Button>
-        </Space>
-      </div>
+      </Affix>
 
-      {/* Product Form */}
-      <ProductForm
-        form={form}
-        initialValues={product}
-        onFinish={handleSubmit}
-        loading={updateProduct.isPending}
-      />
+      {/* Page Content */}
+      <div className="p-6 max-w-screen-2xl mx-auto">
+        <ProductForm
+          form={form}
+          initialValues={product}
+          onFinish={handleSubmit}
+          loading={updateProduct.isPending}
+          onCancel={() => router.push(`/inventory/products/${productId}`)}
+        />
+      </div>
     </div>
   );
 }
