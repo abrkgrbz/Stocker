@@ -14,6 +14,7 @@ using Stocker.SharedKernel.Exceptions;
 using Stocker.SharedKernel.DTOs.Migration;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Extensions;
+using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Npgsql;
 
 namespace Stocker.Persistence.Migrations;
@@ -282,6 +283,63 @@ public partial class MigrationService : IMigrationService
             {
                 _logger.LogError(crmEx, "Error applying CRM migrations for tenant {TenantId}. CRM module may not be fully functional.", tenantId);
                 // Don't fail the overall migration if CRM migrations fail
+            }
+
+            // Apply Inventory module migrations if tenant's package includes Inventory module
+            try
+            {
+                _logger.LogInformation("Checking Inventory module access for tenant {TenantId} from package...", tenantId);
+
+                var hasInventoryInPackage = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                        .ThenInclude(p => p.Modules)
+                    .Where(s => s.TenantId == tenantId)
+                    .SelectMany(s => s.Package.Modules)
+                    .AnyAsync(m => m.ModuleCode == "Inventory" && m.IsIncluded);
+
+                if (!hasInventoryInPackage)
+                {
+                    var tenantModuleService = scope.ServiceProvider.GetService<ITenantModuleService>();
+                    if (tenantModuleService != null)
+                    {
+                        hasInventoryInPackage = await tenantModuleService.HasModuleAccessAsync(tenantId, "Inventory", CancellationToken.None);
+                    }
+                }
+
+                _logger.LogInformation("Tenant {TenantId} Inventory module access check result: {HasInventoryAccess}", tenantId, hasInventoryInPackage);
+
+                if (hasInventoryInPackage)
+                {
+                    _logger.LogInformation("Tenant {TenantId} has Inventory module in package. Applying Inventory migrations...", tenantId);
+
+                    var inventoryConnectionString = tenantDbContext.Database.GetConnectionString();
+
+                    var inventoryOptionsBuilder = new DbContextOptionsBuilder<InventoryDbContext>();
+                    inventoryOptionsBuilder.UseNpgsql(inventoryConnectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(InventoryDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(30);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    var mockTenantServiceForInventory = new MockTenantService(tenantId, inventoryConnectionString);
+
+                    using var inventoryDbContext = new InventoryDbContext(
+                        inventoryOptionsBuilder.Options,
+                        mockTenantServiceForInventory);
+
+                    await inventoryDbContext.Database.MigrateAsync();
+                    _logger.LogInformation("Inventory module migrations completed successfully for tenant {TenantId}.", tenantId);
+                }
+                else
+                {
+                    _logger.LogInformation("Tenant {TenantId} does not have Inventory module in package. Inventory migrations skipped.", tenantId);
+                }
+            }
+            catch (Exception inventoryEx)
+            {
+                _logger.LogError(inventoryEx, "Error applying Inventory migrations for tenant {TenantId}. Inventory module may not be fully functional.", tenantId);
+                // Don't fail the overall migration if Inventory migrations fail
             }
         }
         catch (DbUpdateException ex)
@@ -585,6 +643,39 @@ public partial class MigrationService
                     _logger.LogWarning(crmEx, "Failed to check CRM migrations for tenant {TenantId}", tenant.Id);
                 }
 
+                // Check Inventory module migrations if tenant has Inventory access
+                List<string> inventoryPendingMigrations = new();
+                List<string> inventoryAppliedMigrations = new();
+
+                try
+                {
+                    var hasInventoryAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "Inventory", cancellationToken);
+
+                    if (hasInventoryAccess)
+                    {
+                        var inventoryOptionsBuilder = new DbContextOptionsBuilder<InventoryDbContext>();
+                        inventoryOptionsBuilder.UseNpgsql(tenant.ConnectionString);
+                        inventoryOptionsBuilder.ConfigureWarnings(warnings =>
+                            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                        var mockTenantService = new MockTenantService(tenant.Id, tenant.ConnectionString);
+
+                        using var inventoryDbContext = new InventoryDbContext(
+                            inventoryOptionsBuilder.Options,
+                            mockTenantService);
+
+                        var inventoryPending = await inventoryDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                        var inventoryApplied = await inventoryDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+                        inventoryPendingMigrations = inventoryPending.ToList();
+                        inventoryAppliedMigrations = inventoryApplied.ToList();
+                    }
+                }
+                catch (Exception inventoryEx)
+                {
+                    _logger.LogWarning(inventoryEx, "Failed to check Inventory migrations for tenant {TenantId}", tenant.Id);
+                }
+
                 var allPendingMigrations = new List<MigrationModuleDto>();
                 if (pendingList.Any())
                 {
@@ -600,6 +691,14 @@ public partial class MigrationService
                     {
                         Module = "CRM",
                         Migrations = crmPendingMigrations
+                    });
+                }
+                if (inventoryPendingMigrations.Any())
+                {
+                    allPendingMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Inventory",
+                        Migrations = inventoryPendingMigrations
                     });
                 }
 
@@ -620,6 +719,14 @@ public partial class MigrationService
                         Migrations = crmAppliedMigrations
                     });
                 }
+                if (inventoryAppliedMigrations.Any())
+                {
+                    allAppliedMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Inventory",
+                        Migrations = inventoryAppliedMigrations
+                    });
+                }
 
                 results.Add(new TenantMigrationStatusDto
                 {
@@ -628,7 +735,7 @@ public partial class MigrationService
                     TenantCode = tenant.Code,
                     PendingMigrations = allPendingMigrations,
                     AppliedMigrations = allAppliedMigrations,
-                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any()
+                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any() || inventoryPendingMigrations.Any()
                 });
             }
             catch (Exception ex)
@@ -747,6 +854,62 @@ public partial class MigrationService
         {
             _logger.LogError(crmEx, "Error applying CRM migrations for tenant {TenantId}. Continuing...", tenant.Id);
             // Don't fail the overall migration if CRM migrations fail
+        }
+
+        // Check Inventory module migrations if tenant has Inventory access
+        List<string> inventoryPendingMigrations = new();
+        try
+        {
+            var hasInventoryAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "Inventory", cancellationToken);
+            _logger.LogWarning("DEBUG ApplyMigration: Tenant {TenantId} has Inventory access: {HasInventoryAccess}", tenant.Id, hasInventoryAccess);
+
+            if (hasInventoryAccess)
+            {
+                _logger.LogInformation("Tenant {TenantId} has Inventory module access. Checking Inventory migrations...", tenant.Id);
+
+                var inventoryOptionsBuilder = new DbContextOptionsBuilder<InventoryDbContext>();
+                inventoryOptionsBuilder.UseNpgsql(tenant.ConnectionString.Value, sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(InventoryDbContext).Assembly.FullName);
+                    sqlOptions.CommandTimeout(30);
+                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                });
+                inventoryOptionsBuilder.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                var mockTenantServiceInventory = new MockTenantService(tenant.Id, tenant.ConnectionString.Value);
+
+                using var inventoryDbContext = new InventoryDbContext(
+                    inventoryOptionsBuilder.Options,
+                    mockTenantServiceInventory);
+
+                var inventoryPending = await inventoryDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                inventoryPendingMigrations = inventoryPending.ToList();
+
+                _logger.LogWarning("DEBUG ApplyMigration: Inventory pending migrations count: {Count}, Migrations: {Migrations}",
+                    inventoryPendingMigrations.Count, string.Join(", ", inventoryPendingMigrations));
+
+                if (inventoryPendingMigrations.Any())
+                {
+                    _logger.LogInformation("Applying {Count} Inventory migrations to tenant {TenantId}", inventoryPendingMigrations.Count, tenant.Id);
+                    await inventoryDbContext.Database.MigrateAsync(cancellationToken);
+                    allAppliedMigrations.AddRange(inventoryPendingMigrations.Select(m => $"Inventory:{m}"));
+                    _logger.LogInformation("Inventory migrations applied successfully. Applied: {Migrations}", string.Join(", ", inventoryPendingMigrations));
+                }
+                else
+                {
+                    _logger.LogInformation("No Inventory migrations to apply for tenant {TenantId}", tenant.Id);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Tenant {TenantId} does not have Inventory module access. Inventory migrations skipped.", tenant.Id);
+            }
+        }
+        catch (Exception inventoryEx)
+        {
+            _logger.LogError(inventoryEx, "Error applying Inventory migrations for tenant {TenantId}. Continuing...", tenant.Id);
+            // Don't fail the overall migration if Inventory migrations fail
         }
 
         // Return result
