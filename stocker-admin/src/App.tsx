@@ -120,7 +120,7 @@ function App() {
               <TenantRegistrationsPage />
             </Suspense>
           } />
-          <Route path="tenants/create" element={
+          <Route path="tenants/migrations" element={
             <Suspense fallback={<PageLoader />}>
               <TenantMigrations />
             </Suspense>
