@@ -13,11 +13,10 @@ import {
   Collapse,
   Upload,
   Button,
-  Tag,
   Divider,
   Typography,
   Space,
-  Affix,
+  Segmented,
 } from 'antd';
 import {
   InboxOutlined,
@@ -29,6 +28,9 @@ import {
   BoxPlotOutlined,
   DollarOutlined,
   BarcodeOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import { useCategories, useBrands, useUnits } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
@@ -46,13 +48,28 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
-const productTypeOptions: { value: ProductType; label: string }[] = [
+// Main product types for segmented control (most common)
+const mainProductTypes = [
+  { value: ProductType.Finished, label: 'Mamul' },
+  { value: ProductType.Raw, label: 'Hammadde' },
+  { value: ProductType.Service, label: 'Hizmet' },
+];
+
+// All product types for dropdown (including less common)
+const allProductTypeOptions: { value: ProductType; label: string }[] = [
   { value: ProductType.Raw, label: 'Hammadde' },
   { value: ProductType.SemiFinished, label: 'Yarı Mamul' },
   { value: ProductType.Finished, label: 'Mamul' },
   { value: ProductType.Service, label: 'Hizmet' },
   { value: ProductType.Consumable, label: 'Sarf Malzeme' },
   { value: ProductType.FixedAsset, label: 'Duran Varlık' },
+];
+
+// Status options for the status selector
+const statusOptions = [
+  { value: 'active', label: '🟢 Aktif', icon: <CheckCircleOutlined style={{ color: '#52c41a' }} /> },
+  { value: 'draft', label: '⚪ Taslak', icon: <ClockCircleOutlined style={{ color: '#8c8c8c' }} /> },
+  { value: 'archived', label: '🔴 Arşiv', icon: <StopOutlined style={{ color: '#ff4d4f' }} /> },
 ];
 
 const currencyOptions = [
@@ -106,7 +123,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading, on
           <Card className="mb-4 shadow-sm">
             <Form.Item
               name="name"
-              label={<Text strong>Ürün Adı</Text>}
+              label={<Text strong style={{ fontSize: '15px' }}>Ürün Adı</Text>}
               rules={[
                 { required: true, message: 'Ürün adı zorunludur' },
                 { max: 200, message: 'En fazla 200 karakter' },
@@ -115,7 +132,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading, on
               <Input
                 placeholder="Örn: iPhone 15 Pro Max 256GB"
                 size="large"
-                className="text-lg"
+                style={{ fontSize: '18px', fontWeight: 500 }}
               />
             </Form.Item>
 
@@ -451,29 +468,50 @@ export default function ProductForm({ form, initialValues, onFinish, loading, on
         <Col xs={24} lg={8}>
           {/* Status Card */}
           <Card className="mb-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <Text strong className="block mb-1">Durum</Text>
-                <Text type="secondary" className="text-xs">
-                  Ürünün yayın durumunu belirle
-                </Text>
-              </div>
-              <Tag
-                color={isActive ? 'success' : 'default'}
-                className="px-3 py-1 text-sm font-medium"
-              >
-                {isActive ? 'Aktif' : 'Taslak'}
-              </Tag>
+            <div className="mb-3">
+              <Text strong className="block mb-1">Durum</Text>
+              <Text type="secondary" className="text-xs">
+                Ürünün yayın durumunu belirle
+              </Text>
             </div>
-            <Divider className="my-3" />
-            <Form.Item name="isActive" valuePropName="checked" noStyle>
-              <Switch
-                checked={isActive}
-                onChange={setIsActive}
-                checkedChildren="Aktif"
-                unCheckedChildren="Taslak"
-                className="w-full"
+            <Form.Item name="isActive" noStyle>
+              <Select
+                size="large"
+                value={isActive ? 'active' : 'draft'}
+                onChange={(val) => {
+                  setIsActive(val === 'active');
+                  form.setFieldValue('isActive', val === 'active');
+                }}
                 style={{ width: '100%' }}
+                options={[
+                  {
+                    value: 'active',
+                    label: (
+                      <Space>
+                        <span style={{ color: '#52c41a', fontSize: '16px' }}>●</span>
+                        <span>Aktif</span>
+                      </Space>
+                    )
+                  },
+                  {
+                    value: 'draft',
+                    label: (
+                      <Space>
+                        <span style={{ color: '#8c8c8c', fontSize: '16px' }}>●</span>
+                        <span>Taslak</span>
+                      </Space>
+                    )
+                  },
+                  {
+                    value: 'archived',
+                    label: (
+                      <Space>
+                        <span style={{ color: '#ff4d4f', fontSize: '16px' }}>●</span>
+                        <span>Arşiv</span>
+                      </Space>
+                    )
+                  },
+                ]}
               />
             </Form.Item>
           </Card>
@@ -493,12 +531,24 @@ export default function ProductForm({ form, initialValues, onFinish, loading, on
               label={<Text strong>Ürün Türü</Text>}
               rules={[{ required: true, message: 'Ürün türü seçin' }]}
             >
-              <Select
-                options={productTypeOptions}
-                placeholder="Tür seçin"
-                size="large"
+              <Segmented
+                block
+                options={mainProductTypes}
+                className="mb-2"
               />
             </Form.Item>
+            <div className="text-right">
+              <Select
+                size="small"
+                variant="borderless"
+                placeholder="Diğer türler..."
+                style={{ width: 140 }}
+                options={allProductTypeOptions.filter(
+                  opt => !mainProductTypes.find(m => m.value === opt.value)
+                )}
+                onChange={(val) => form.setFieldValue('productType', val)}
+              />
+            </div>
 
             <Form.Item
               name="categoryId"
