@@ -6,6 +6,7 @@ export { tenantRegistrationService } from './tenantRegistrationService';
 export { userService } from './userService';
 export { featureService } from './featureService';
 export { moduleService } from './moduleService';
+export { tenantModuleService } from './tenantModuleService';
 export { migrationService } from './migrationService';
 export { systemMonitoringService } from './systemMonitoringService';
 export { systemManagementService } from './systemManagementService';
@@ -67,6 +68,12 @@ export type {
   CreateModuleDto,
   UpdateModuleDto,
 } from './moduleService';
+
+export type {
+  AvailableModuleDto,
+  TenantModuleStatusDto,
+  ModuleActivationResult,
+} from './tenantModuleService';
 
 export type {
   MigrationModuleDto,

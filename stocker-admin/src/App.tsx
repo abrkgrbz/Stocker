@@ -23,6 +23,7 @@ const TenantBackupRestore = lazy(() => import('./pages/Tenants/BackupRestore'));
 const TenantUsers = lazy(() => import('./pages/Tenants/Users'));
 const TenantDomains = lazy(() => import('./pages/Tenants/Domains'));
 const TenantMigrations = lazy(() => import('./pages/Tenants/Migrations/index'));
+const TenantModules = lazy(() => import('./pages/Tenants/Modules'));
 const TenantSecurity = lazy(() => import('./pages/Tenants/Security'));
 const TenantAnalytics = lazy(() => import('./pages/Tenants/Analytics'));
 const TenantIntegrations = lazy(() => import('./pages/Tenants/Integrations'));
@@ -123,6 +124,11 @@ function App() {
           <Route path="tenants/migrations" element={
             <Suspense fallback={<PageLoader />}>
               <TenantMigrations />
+            </Suspense>
+          } />
+          <Route path="tenants/modules" element={
+            <Suspense fallback={<PageLoader />}>
+              <TenantModules />
             </Suspense>
           } />
           <Route path="tenants/:id" element={

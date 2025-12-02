@@ -204,6 +204,14 @@ const MasterLayout: React.FC = () => {
     },
     {
       type: 'page',
+      title: locale === 'tr' ? 'Modül Yönetimi' : 'Module Management',
+      description: locale === 'tr' ? 'Tenant modül aktivasyonu ve yönetimi' : 'Tenant module activation and management',
+      path: '/tenants/modules',
+      icon: <AppstoreOutlined />,
+      keywords: ['module', 'modül', 'activation', 'aktivasyon', 'crm', 'inventory', 'sales', 'hr', 'package', 'paket']
+    },
+    {
+      type: 'page',
       title: locale === 'tr' ? 'Ayarlar' : 'Settings',
       description: locale === 'tr' ? 'Sistem ayarları ve konfigürasyon' : 'System settings and configuration',
       path: '/settings',
@@ -337,6 +345,11 @@ const MasterLayout: React.FC = () => {
           path: '/tenants/migrations',
           name: locale === 'tr' ? 'Migration Yönetimi' : 'Migration Management',
           icon: <DatabaseOutlined />,
+        },
+        {
+          path: '/tenants/modules',
+          name: locale === 'tr' ? 'Modül Yönetimi' : 'Module Management',
+          icon: <AppstoreOutlined />,
         },
       ],
     },
