@@ -100,10 +100,11 @@ public class TenantModuleService : ITenantModuleService
         if (subscription.PackageId != Guid.Empty)
         {
             // Get package modules from PackageModules table
+            // Use ModuleCode (not ModuleName) and filter by IsIncluded
             var packageModules = await dbContext.PackageModules
                 .AsNoTracking()
-                .Where(pm => pm.PackageId == subscription.PackageId)
-                .Select(pm => pm.ModuleName)
+                .Where(pm => pm.PackageId == subscription.PackageId && pm.IsIncluded)
+                .Select(pm => pm.ModuleCode)
                 .ToListAsync(cancellationToken);
 
             subscribedModules = packageModules;

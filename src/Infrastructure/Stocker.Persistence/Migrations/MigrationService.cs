@@ -233,7 +233,7 @@ public partial class MigrationService : IMigrationService
                         .ThenInclude(p => p.Modules)
                     .Where(s => s.TenantId == tenantId)
                     .SelectMany(s => s.Package.Modules)
-                    .AnyAsync(m => m.ModuleCode == "CRM" && m.IsIncluded);
+                    .AnyAsync(m => m.ModuleCode.ToUpper() == "CRM" && m.IsIncluded);
 
                 // Also check TenantModules as a fallback (for existing tenants with already populated modules)
                 if (!hasCrmInPackage)
@@ -295,7 +295,7 @@ public partial class MigrationService : IMigrationService
                         .ThenInclude(p => p.Modules)
                     .Where(s => s.TenantId == tenantId)
                     .SelectMany(s => s.Package.Modules)
-                    .AnyAsync(m => m.ModuleCode == "Inventory" && m.IsIncluded);
+                    .AnyAsync(m => m.ModuleCode.ToUpper() == "INVENTORY" && m.IsIncluded);
 
                 if (!hasInventoryInPackage)
                 {
