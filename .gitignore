@@ -203,6 +203,9 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# except stocker-admin/src/pages/Packages/ (React page, not NuGet)
+!stocker-admin/src/pages/[Pp]ackages/
+!stocker-admin/src/pages/[Pp]ackages/*
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
