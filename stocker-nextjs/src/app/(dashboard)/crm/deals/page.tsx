@@ -11,25 +11,21 @@ import {
   Typography,
   Row,
   Col,
-  Avatar,
   Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
-  DollarOutlined,
   TrophyOutlined,
   CloseCircleOutlined,
   ReloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
-  ArrowRightOutlined,
   CheckCircleOutlined,
   StopOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import {
-  showCreateSuccess,
   showUpdateSuccess,
   showDeleteSuccess,
   showError,
@@ -40,16 +36,12 @@ import {
 import type { Deal } from '@/lib/api/services/crm.service';
 import {
   useDeals,
-  useCreateDeal,
-  useUpdateDeal,
   useDeleteDeal,
-  useMoveDealStage,
   useCloseDealWon,
   useCloseDealLost,
   usePipelines,
 } from '@/lib/api/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
-import { DealModal } from '@/features/deals/components';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -65,16 +57,11 @@ export default function DealsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 
   // API Hooks
   const { data, isLoading, refetch } = useDeals({});
-  const { data: pipelines = [], isLoading: pipelinesLoading } = usePipelines();
-  const createDeal = useCreateDeal();
-  const updateDeal = useUpdateDeal();
+  const { data: pipelines = [] } = usePipelines();
   const deleteDeal = useDeleteDeal();
-  const moveDealStage = useMoveDealStage();
   const closeDealWon = useCloseDealWon();
   const closeDealLost = useCloseDealLost();
 
@@ -94,13 +81,11 @@ export default function DealsPage() {
   };
 
   const handleCreate = () => {
-    setSelectedDeal(null);
-    setModalOpen(true);
+    router.push('/crm/deals/new');
   };
 
   const handleEdit = (deal: Deal) => {
-    setSelectedDeal(deal);
-    setModalOpen(true);
+    router.push(`/crm/deals/${deal.id}/edit`);
   };
 
   const handleDelete = async (id: string, deal: Deal) => {
@@ -113,20 +98,6 @@ export default function DealsPage() {
       } catch (error) {
         showError('Silme işlemi başarısız');
       }
-    }
-  };
-
-  const handleMoveStage = async (dealId: string, newStageId: string) => {
-    try {
-      await moveDealStage.mutateAsync({
-        id: dealId.toString(),
-        newStageId: newStageId.toString(),
-      });
-      showUpdateSuccess('fırsat aşaması', 'değiştirildi');
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'Aşama değiştirme başarısız';
-      showError(errorMessage);
     }
   };
 
@@ -173,91 +144,6 @@ export default function DealsPage() {
         const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
         showError(errorMessage);
       }
-    }
-  };
-
-  const handleSubmit = async (values: any) => {
-    try {
-      // Validation: CustomerId is required by backend
-      if (!values.customerId) {
-        showError('Müşteri seçimi zorunludur');
-        return;
-      }
-
-      // Validation: ExpectedCloseDate is required and must be in future
-      if (!values.expectedCloseDate) {
-        showError('Tahmini kapanış tarihi zorunludur');
-        return;
-      }
-
-      // Ensure the date is in the future
-      const now = new Date();
-      const selectedDate = new Date(values.expectedCloseDate);
-      if (selectedDate <= now) {
-        showError('Tahmini kapanış tarihi gelecekte olmalıdır');
-        return;
-      }
-
-      const dealData: any = {
-        title: values.title,
-        customerId: values.customerId,
-        amount: values.amount,
-        probability: values.probability || 50,
-        expectedCloseDate: values.expectedCloseDate.toISOString(),
-        status: values.status || 'Open',
-        priority: values.priority || 'Medium',
-      };
-
-      // Add optional fields only if they have values (avoid sending undefined)
-      if (values.description) dealData.description = values.description;
-      if (values.pipelineId) dealData.pipelineId = values.pipelineId;
-      if (values.stageId) dealData.stageId = values.stageId;
-
-      if (selectedDeal) {
-        await updateDeal.mutateAsync({ id: selectedDeal.id, data: dealData });
-        showUpdateSuccess('fırsat');
-      } else {
-        await createDeal.mutateAsync(dealData);
-        showCreateSuccess('fırsat');
-      }
-      setModalOpen(false);
-    } catch (error: any) {
-      // Extract API error details
-      const apiError = error.response?.data;
-      let errorMessage = 'İşlem başarısız';
-
-      if (apiError) {
-        errorMessage = apiError.detail ||
-                      apiError.errors?.[0]?.message ||
-                      apiError.title ||
-                      errorMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showError(errorMessage);
-    }
-  };
-
-  const handleDragEnd = async (dealId: string, newStageId: string) => {
-    try {
-      await updateDeal.mutateAsync({ id: dealId, data: { stageId: newStageId } });
-      showUpdateSuccess('fırsat aşaması');
-    } catch (error: any) {
-      // Extract API error details
-      const apiError = error.response?.data;
-      let errorMessage = 'Güncelleme başarısız';
-
-      if (apiError) {
-        errorMessage = apiError.detail ||
-                      apiError.errors?.[0]?.message ||
-                      apiError.title ||
-                      errorMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showError(errorMessage);
     }
   };
 
@@ -621,17 +507,6 @@ export default function DealsPage() {
       ) : (
         <ListView />
       )}
-
-      {/* Create/Edit Modal */}
-      <DealModal
-        open={modalOpen}
-        deal={selectedDeal}
-        loading={createDeal.isPending || updateDeal.isPending || pipelinesLoading}
-        pipelines={pipelines}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-        onDelete={handleDelete}
-      />
     </div>
   );
 }

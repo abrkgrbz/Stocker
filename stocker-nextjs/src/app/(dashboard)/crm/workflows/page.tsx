@@ -13,13 +13,10 @@ import {
   Empty,
   Tooltip,
   Modal,
-  Input,
-  Select,
 } from 'antd';
 import {
   ThunderboltOutlined,
   PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
@@ -27,115 +24,23 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
+import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
 import type {
   WorkflowDto,
   WorkflowTriggerType,
   WorkflowActionType,
-  CreateWorkflowCommand,
 } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { useRouter } from 'next/navigation';
-import CreateWorkflowDrawer, { type Step1FormData } from '@/components/crm/workflows/CreateWorkflowDrawer';
-import ConfigureTriggerDrawer, { type TriggerConfiguration } from '@/components/crm/workflows/ConfigureTriggerDrawer';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
-const { TextArea } = Input;
-const { Option } = Select;
-
-// Entity types from backend - only entities that exist in the system
-const entityTypes = [
-  { value: 'Account', label: 'Hesap' },
-  { value: 'Contact', label: 'İletişim' },
-  { value: 'Customer', label: 'Müşteri' },
-  { value: 'Lead', label: 'Potansiyel Müşteri' },
-  { value: 'Opportunity', label: 'Fırsat' },
-  { value: 'Deal', label: 'Anlaşma' },
-  { value: 'Quote', label: 'Teklif' },
-  { value: 'Contract', label: 'Sözleşme' },
-  { value: 'Ticket', label: 'Destek Talebi' },
-  { value: 'Campaign', label: 'Kampanya' },
-];
-
-// Common fields for entities with Turkish labels
-const entityFields: Record<string, Array<{ value: string; label: string }>> = {
-  Account: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Rating', label: 'Değerlendirme' },
-    { value: 'Industry', label: 'Sektör' },
-    { value: 'Revenue', label: 'Gelir' },
-  ],
-  Contact: [
-    { value: 'FirstName', label: 'Ad' },
-    { value: 'LastName', label: 'Soyad' },
-    { value: 'Email', label: 'E-posta' },
-    { value: 'Phone', label: 'Telefon' },
-    { value: 'Title', label: 'Ünvan' },
-    { value: 'Department', label: 'Departman' },
-  ],
-  Lead: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Source', label: 'Kaynak' },
-    { value: 'Score', label: 'Puan' },
-    { value: 'Industry', label: 'Sektör' },
-    { value: 'Budget', label: 'Bütçe' },
-  ],
-  Opportunity: [
-    { value: 'Stage', label: 'Aşama' },
-    { value: 'Amount', label: 'Tutar' },
-    { value: 'Probability', label: 'Olasılık' },
-    { value: 'CloseDate', label: 'Kapanış Tarihi' },
-    { value: 'Source', label: 'Kaynak' },
-  ],
-  Deal: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Value', label: 'Değer' },
-    { value: 'Stage', label: 'Aşama' },
-    { value: 'CloseDate', label: 'Kapanış Tarihi' },
-    { value: 'Priority', label: 'Öncelik' },
-  ],
-  Customer: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Email', label: 'E-posta' },
-    { value: 'Phone', label: 'Telefon' },
-    { value: 'CompanyName', label: 'Şirket Adı' },
-  ],
-  Quote: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'TotalAmount', label: 'Toplam Tutar' },
-    { value: 'ValidUntil', label: 'Geçerlilik Tarihi' },
-    { value: 'ApprovalStatus', label: 'Onay Durumu' },
-  ],
-  Contract: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'StartDate', label: 'Başlangıç Tarihi' },
-    { value: 'EndDate', label: 'Bitiş Tarihi' },
-    { value: 'Value', label: 'Değer' },
-  ],
-  Ticket: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Priority', label: 'Öncelik' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Category', label: 'Kategori' },
-    { value: 'AssignedTo', label: 'Atanan Kişi' },
-  ],
-  Campaign: [
-    { value: 'Status', label: 'Durum' },
-    { value: 'Type', label: 'Tip' },
-    { value: 'Budget', label: 'Bütçe' },
-    { value: 'StartDate', label: 'Başlangıç Tarihi' },
-    { value: 'EndDate', label: 'Bitiş Tarihi' },
-  ],
-};
 
 // Trigger type labels
 const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
@@ -163,12 +68,6 @@ export default function WorkflowsPage() {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<WorkflowDto[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Wizard state
-  const [step1DrawerOpen, setStep1DrawerOpen] = useState(false);
-  const [step2DrawerOpen, setStep2DrawerOpen] = useState(false);
-  const [step1Data, setStep1Data] = useState<Step1FormData | null>(null);
-  const [triggerConfig, setTriggerConfig] = useState<TriggerConfiguration | null>(null);
 
   // Load all workflows
   const loadWorkflows = async () => {
@@ -235,72 +134,9 @@ export default function WorkflowsPage() {
     router.push(`/crm/workflows/${id}`);
   };
 
-  // Wizard navigation handlers
-  const handleOpenStep1 = () => {
-    setStep1DrawerOpen(true);
-  };
-
-  const handleStep1Next = (data: Step1FormData) => {
-    setStep1Data(data);
-    setStep1DrawerOpen(false);
-    setStep2DrawerOpen(true);
-  };
-
-  const handleStep2Back = () => {
-    setStep2DrawerOpen(false);
-    setStep1DrawerOpen(true);
-  };
-
-  const handleStep2Next = (config: TriggerConfiguration) => {
-    setTriggerConfig(config);
-    setStep2DrawerOpen(false);
-
-    // Navigate to builder page (Adım 3)
-    // For now, we'll create a draft workflow and redirect to builder
-    handleCreateDraftWorkflow(config);
-  };
-
-  const handleCloseAllDrawers = () => {
-    setStep1DrawerOpen(false);
-    setStep2DrawerOpen(false);
-    setStep1Data(null);
-    setTriggerConfig(null);
-  };
-
-  // Create draft workflow and redirect to builder
-  const handleCreateDraftWorkflow = async (config: TriggerConfiguration) => {
-    if (!step1Data) return;
-
-    setLoading(true);
-    try {
-      // Build trigger conditions JSON with new structure
-      const triggerConditions = JSON.stringify(config.config);
-
-      // Create workflow without actions (will be added in builder)
-      const command: CreateWorkflowCommand = {
-        name: step1Data.name,
-        description: step1Data.description,
-        trigger: {
-          type: step1Data.triggerType as any,
-          entityType: step1Data.entityType || 'Lead',
-          conditions: triggerConditions,
-        } as any,
-        actions: [], // Empty for now, will be added in builder
-        isActive: false,
-      };
-
-      const workflowId = await CRMService.createWorkflow(command);
-      showSuccess('Workflow taslak olarak oluşturuldu. Şimdi aksiyonları ekleyebilirsiniz.');
-      handleCloseAllDrawers();
-      loadWorkflows();
-
-      // Navigate to workflow detail page where user can add actions
-      router.push(`/crm/workflows/${workflowId}`);
-    } catch (error) {
-      showApiError(error, 'Workflow oluşturulamadı');
-    } finally {
-      setLoading(false);
-    }
+  // Navigation handlers
+  const handleCreate = () => {
+    router.push('/crm/workflows/new');
   };
 
   // Table columns
@@ -426,7 +262,7 @@ export default function WorkflowsPage() {
                   <Button icon={<ReloadOutlined />} onClick={loadWorkflows}>
                     Yenile
                   </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenStep1}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
                     Yeni Workflow
                   </Button>
                 </Space>
@@ -449,8 +285,8 @@ export default function WorkflowsPage() {
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Henüz workflow bulunmuyor"
                   >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenStep1}>
-                      İlk Workflow'u Oluştur
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                      Ilk Workflow'u Olustur
                     </Button>
                   </Empty>
                 ),
@@ -459,23 +295,6 @@ export default function WorkflowsPage() {
           </Card>
         </Col>
       </Row>
-
-      {/* Wizard Drawers */}
-      <CreateWorkflowDrawer
-        open={step1DrawerOpen}
-        onClose={handleCloseAllDrawers}
-        onNext={handleStep1Next}
-      />
-
-      {step1Data && (
-        <ConfigureTriggerDrawer
-          open={step2DrawerOpen}
-          step1Data={step1Data}
-          onClose={handleCloseAllDrawers}
-          onBack={handleStep2Back}
-          onNext={handleStep2Next}
-        />
-      )}
     </div>
   );
 }

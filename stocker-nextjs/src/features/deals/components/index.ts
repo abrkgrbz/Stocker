@@ -1,1 +1,0 @@
-export { DealModal } from './DealModal';

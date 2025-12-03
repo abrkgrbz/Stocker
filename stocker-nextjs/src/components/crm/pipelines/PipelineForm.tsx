@@ -317,7 +317,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                           <div className="flex items-center gap-2">
                             <Tag color="blue">#{index + 1}</Tag>
                             <span className="text-sm font-medium">
-                              {Form.useWatch(['stages', field.name, 'name'], form) || `Aşama ${index + 1}`}
+                              {stages[field.name]?.name || `Aşama ${index + 1}`}
                             </span>
                           </div>
                         }
