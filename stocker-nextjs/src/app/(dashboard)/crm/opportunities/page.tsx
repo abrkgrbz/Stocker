@@ -14,7 +14,6 @@ import {
   message,
   Statistic,
   Progress,
-  Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
@@ -22,7 +21,6 @@ import {
   DollarOutlined,
   TrophyOutlined,
   RiseOutlined,
-  FallOutlined,
   CheckCircleOutlined,
   StopOutlined,
   BarChartOutlined,
@@ -32,16 +30,11 @@ import {
 } from '@ant-design/icons';
 import {
   useOpportunities,
-  useCreateOpportunity,
   useWinOpportunity,
   useLoseOpportunity,
   usePipelines,
-  useMoveOpportunityStage,
-  useUpdateOpportunity,
-  useDeleteOpportunity,
 } from '@/lib/api/hooks/useCRM';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
-import { OpportunityModal } from '@/features/opportunities/components/OpportunityModal';
 import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 
@@ -60,19 +53,13 @@ const statusConfig: Record<OpportunityStatus, { color: string; label: string; ic
 
 export default function OpportunitiesPage() {
   const router = useRouter();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityDto | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'grid'>('kanban');
 
   // API Hooks
   const { data, isLoading, refetch } = useOpportunities();
-  const { data: pipelines = [], isLoading: pipelinesLoading } = usePipelines();
-  const createOpportunity = useCreateOpportunity();
+  const { data: pipelines = [] } = usePipelines();
   const winOpportunity = useWinOpportunity();
   const loseOpportunity = useLoseOpportunity();
-  const moveOpportunityStage = useMoveOpportunityStage();
-  const updateOpportunity = useUpdateOpportunity();
-  const deleteOpportunity = useDeleteOpportunity();
 
   const opportunities = data?.items || [];
 
@@ -93,72 +80,7 @@ export default function OpportunitiesPage() {
   };
 
   const handleCreate = () => {
-    setSelectedOpportunity(null);
-    setModalOpen(true);
-  };
-
-  const handleMoveStage = async (opportunityId: string, newStageId: string) => {
-    try {
-      await moveOpportunityStage.mutateAsync({
-        id: opportunityId,
-        stageId: newStageId,
-      });
-      message.success('Fırsat aşaması güncellendi');
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'Aşama değiştirme başarısız';
-      message.error(errorMessage);
-    }
-  };
-
-  const handleSubmit = async (values: any) => {
-    try {
-      if (selectedOpportunity) {
-        // Update logic - if needed in the future
-        message.info('Güncelleme özelliği yakında eklenecek');
-      } else {
-        // Validation: CustomerId is required by backend
-        if (!values.customerId) {
-          message.error('Müşteri seçimi zorunludur');
-          return;
-        }
-
-        // Validation: ExpectedCloseDate is required and must be in future
-        if (!values.expectedCloseDate) {
-          message.error('Tahmini kapanış tarihi zorunludur');
-          return;
-        }
-
-        // Validation: Pipeline and stage are required by backend
-        if (!values.pipelineId) {
-          message.error('Pipeline seçimi zorunludur');
-          return;
-        }
-        if (!values.stageId) {
-          message.error('Aşama seçimi zorunludur');
-          return;
-        }
-
-        const payload = {
-          name: values.name,
-          customerId: values.customerId,
-          pipelineId: values.pipelineId,
-          stageId: values.stageId,
-          amount: values.amount,
-          probability: values.probability,
-          expectedCloseDate: values.expectedCloseDate?.toISOString(),
-          description: values.description,
-        };
-
-        await createOpportunity.mutateAsync(payload as any);
-      }
-      setModalOpen(false);
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || 'İşlem başarısız';
-      message.error(errorMessage);
-      console.error('❌ Opportunity creation error:', error);
-    }
+    router.push('/crm/opportunities/new');
   };
 
   const handleWin = async (opportunity: OpportunityDto) => {
@@ -604,16 +526,6 @@ export default function OpportunitiesPage() {
           </div>
         </Card>
       )}
-
-      {/* Opportunity Modal */}
-      <OpportunityModal
-        open={modalOpen}
-        opportunity={selectedOpportunity}
-        loading={createOpportunity.isPending || pipelinesLoading}
-        pipelines={pipelines}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-      />
     </div>
   );
 }

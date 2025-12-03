@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Statistic, Avatar, Dropdown, Empty } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown, Empty } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -9,8 +10,6 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   FunnelPlotOutlined,
-  DollarOutlined,
-  LineChartOutlined,
   ReloadOutlined,
   MoreOutlined,
   EyeOutlined,
@@ -20,8 +19,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
-import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useUpdatePipeline, useSetDefaultPipeline } from '@/lib/api/hooks/useCRM';
-import { PipelineModal } from '@/components/crm/pipelines/PipelineModal';
+import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useSetDefaultPipeline } from '@/lib/api/hooks/useCRM';
 import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
 
 const { Title } = Typography;
@@ -34,8 +32,7 @@ const pipelineTypeLabels: Record<string, string> = {
 };
 
 export default function PipelinesPage() {
-  const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
   const [stagesModalOpen, setStagesModalOpen] = useState(false);
   const [viewingPipeline, setViewingPipeline] = useState<Pipeline | null>(null);
 
@@ -45,7 +42,6 @@ export default function PipelinesPage() {
   const activatePipeline = useActivatePipeline();
   const deactivatePipeline = useDeactivatePipeline();
   const createPipeline = useCreatePipeline();
-  const updatePipeline = useUpdatePipeline();
   const setDefaultPipeline = useSetDefaultPipeline();
 
   const handleDelete = (id: string) => {
@@ -81,36 +77,12 @@ export default function PipelinesPage() {
     }
   };
 
-  const handleCreateOrUpdate = async (values: any) => {
-    console.log('🟢 handleCreateOrUpdate called with:', values);
-    console.log('🔍 selectedPipeline:', selectedPipeline);
-
-    try {
-      if (selectedPipeline) {
-        console.log('🔄 Updating pipeline...');
-        await updatePipeline.mutateAsync({ id: selectedPipeline.id, ...values });
-      } else {
-        console.log('➕ Creating new pipeline...');
-        await createPipeline.mutateAsync(values);
-      }
-      setIsModalOpen(false);
-      setSelectedPipeline(null);
-    } catch (error: any) {
-      console.error('❌ Pipeline operation failed:', error);
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-      message.error(errorMessage);
-    }
-  };
-
   const handleEdit = (pipeline: Pipeline) => {
-    setSelectedPipeline(pipeline);
-    setIsModalOpen(true);
+    router.push(`/crm/pipelines/${pipeline.id}/edit`);
   };
 
   const handleCreate = () => {
-    setSelectedPipeline(null);
-    setIsModalOpen(true);
+    router.push('/crm/pipelines/new');
   };
 
   const handleViewStages = (pipeline: Pipeline) => {
@@ -365,18 +337,6 @@ export default function PipelinesPage() {
           }}
         />
       </Card>
-
-      {/* Pipeline Modal */}
-      <PipelineModal
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setSelectedPipeline(null);
-        }}
-        onSubmit={handleCreateOrUpdate}
-        initialData={selectedPipeline}
-        loading={createPipeline.isPending || updatePipeline.isPending}
-      />
 
       {/* Stages Quick View Modal */}
       <Modal

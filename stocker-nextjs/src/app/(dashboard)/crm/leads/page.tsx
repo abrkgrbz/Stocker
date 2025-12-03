@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Space, Typography } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
-  showCreateSuccess,
   showUpdateSuccess,
   showDeleteSuccess,
   showError,
@@ -15,29 +15,27 @@ import {
 import type { Lead } from '@/lib/api/services/crm.service';
 import {
   useLeads,
-  useCreateLead,
   useUpdateLead,
   useDeleteLead,
   useConvertLead,
   useQualifyLead,
   useDisqualifyLead,
-  useUpdateLeadScore,
 } from '@/lib/api/hooks/useCRM';
 import { LeadsStats, LeadsTable, LeadsFilters } from '@/components/crm/leads';
 import BulkActionsToolbar from '@/components/crm/leads/BulkActionsToolbar';
 import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
-import { LeadModal, ConvertLeadModal } from '@/features/leads/components';
+import { ConvertLeadModal } from '@/features/leads/components';
 
 const { Title } = Typography;
 
 export default function LeadsPage() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [modalOpen, setModalOpen] = useState(false);
   const [convertModalOpen, setConvertModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -47,13 +45,11 @@ export default function LeadsPage() {
     pageSize,
     search: debouncedSearch || undefined,
   });
-  const createLead = useCreateLead();
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
   const convertLead = useConvertLead();
   const qualifyLead = useQualifyLead();
   const disqualifyLead = useDisqualifyLead();
-  const updateLeadScore = useUpdateLeadScore();
 
   const leads = data?.items || [];
   const totalCount = data?.totalCount || 0;
@@ -73,13 +69,11 @@ export default function LeadsPage() {
   }, [searchText]);
 
   const handleCreate = () => {
-    setSelectedLead(null);
-    setModalOpen(true);
+    router.push('/crm/leads/new');
   };
 
   const handleEdit = (lead: Lead) => {
-    setSelectedLead(lead);
-    setModalOpen(true);
+    router.push(`/crm/leads/${lead.id}/edit`);
   };
 
   const handleDelete = async (id: string, lead: Lead) => {
@@ -99,7 +93,7 @@ export default function LeadsPage() {
   };
 
   const handleConvert = (lead: Lead) => {
-    setSelectedLead(lead);
+    setLeadToConvert(lead);
     setConvertModalOpen(true);
   };
 
@@ -144,41 +138,12 @@ export default function LeadsPage() {
     }
   };
 
-  const handleSubmit = async (values: any) => {
-    try {
-      if (selectedLead) {
-        await updateLead.mutateAsync({ id: selectedLead.id, data: values });
-        showUpdateSuccess('potansiyel müşteri');
-      } else {
-        await createLead.mutateAsync(values);
-        showCreateSuccess('potansiyel müşteri');
-      }
-      setModalOpen(false);
-    } catch (error: any) {
-      // Extract API error details
-      const apiError = error.response?.data;
-      let errorMessage = 'İşlem başarısız';
-
-      if (apiError) {
-        // Use API error detail or first error message
-        errorMessage = apiError.detail ||
-                      apiError.errors?.[0]?.message ||
-                      apiError.title ||
-                      errorMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showError(errorMessage);
-    }
-  };
-
   const handleConvertSubmit = async (values: any) => {
-    if (!selectedLead) return;
+    if (!leadToConvert) return;
 
     try {
       await convertLead.mutateAsync({
-        leadId: selectedLead.id,
+        leadId: leadToConvert.id,
         customerData: values,
       });
       showUpdateSuccess('potansiyel müşteri', 'müşteriye dönüştürüldü');
@@ -316,7 +281,7 @@ export default function LeadsPage() {
           <LeadsTable
             leads={filteredLeads}
             loading={
-              isLoading || createLead.isPending || updateLead.isPending || deleteLead.isPending
+              isLoading || updateLead.isPending || deleteLead.isPending
             }
             currentPage={currentPage}
             pageSize={pageSize}
@@ -336,26 +301,17 @@ export default function LeadsPage() {
         </Space>
       </AnimatedCard>
 
-      {/* Create/Edit Modal */}
-      <LeadModal
-        open={modalOpen}
-        lead={selectedLead}
-        loading={createLead.isPending || updateLead.isPending}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-      />
-
       {/* Convert to Customer Modal */}
       <ConvertLeadModal
         open={convertModalOpen}
         loading={convertLead.isPending}
         initialValues={
-          selectedLead
+          leadToConvert
             ? {
-                companyName: selectedLead.company,
-                contactPerson: `${selectedLead.firstName} ${selectedLead.lastName}`,
-                email: selectedLead.email,
-                phone: selectedLead.phone,
+                companyName: leadToConvert.company,
+                contactPerson: `${leadToConvert.firstName} ${leadToConvert.lastName}`,
+                email: leadToConvert.email,
+                phone: leadToConvert.phone,
               }
             : undefined
         }

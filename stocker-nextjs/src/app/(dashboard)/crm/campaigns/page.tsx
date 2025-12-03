@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, Button, Table, Space, Tag, Typography, Row, Col, Progress, Avatar, Dropdown, Empty } from 'antd';
 import {
   showCreateSuccess,
-  showUpdateSuccess,
   showDeleteSuccess,
+  showUpdateSuccess,
   showError,
   confirmDelete,
-  showInfo,
 } from '@/lib/utils/sweetalert';
 import {
   PlusOutlined,
@@ -37,10 +36,8 @@ import {
   useCompleteCampaign,
   useAbortCampaign,
   useCreateCampaign,
-  useUpdateCampaign,
 } from '@/lib/api/hooks/useCRM';
 import { CampaignsStats } from '@/components/crm/campaigns/CampaignsStats';
-import { CampaignModal } from '@/components/crm/campaigns/CampaignModal';
 
 const { Title } = Typography;
 
@@ -65,9 +62,8 @@ const campaignStatusLabels: Record<string, { label: string; color: string }> = {
 };
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API Hooks
   const { data: campaigns = [], isLoading, refetch } = useCampaigns();
@@ -76,7 +72,6 @@ export default function CampaignsPage() {
   const completeCampaign = useCompleteCampaign();
   const abortCampaign = useAbortCampaign();
   const createCampaign = useCreateCampaign();
-  const updateCampaign = useUpdateCampaign();
 
   // Handle query parameters for segment integration
   useEffect(() => {
@@ -85,11 +80,10 @@ export default function CampaignsPage() {
     const targetSegmentName = searchParams.get('targetSegmentName');
 
     if (createNew === 'true' && targetSegmentId) {
-      setIsModalOpen(true);
-      showInfo('Hedef Segment', `Hedef segment: ${targetSegmentName || 'Seçili Segment'}`);
-      // Note: The modal will need to be updated to accept and display the target segment
+      // Redirect to new campaign page with segment params
+      router.push(`/crm/campaigns/new?targetSegmentId=${targetSegmentId}&targetSegmentName=${encodeURIComponent(targetSegmentName || '')}`);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleDelete = async (id: string, campaign: Campaign) => {
     const confirmed = await confirmDelete('Kampanya', campaign.name);
@@ -139,32 +133,12 @@ export default function CampaignsPage() {
     }
   };
 
-  const handleCreateOrUpdate = async (values: any) => {
-    try {
-      if (selectedCampaign) {
-        await updateCampaign.mutateAsync({ id: selectedCampaign.id, ...values });
-        showUpdateSuccess('kampanya');
-      } else {
-        await createCampaign.mutateAsync(values);
-        showCreateSuccess('kampanya');
-      }
-      setIsModalOpen(false);
-      setSelectedCampaign(null);
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-      showError(errorMessage);
-    }
-  };
-
   const handleEdit = (campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setIsModalOpen(true);
+    router.push(`/crm/campaigns/${campaign.id}/edit`);
   };
 
   const handleCreate = () => {
-    setSelectedCampaign(null);
-    setIsModalOpen(true);
+    router.push('/crm/campaigns/new');
   };
 
   const handleClone = async (campaign: Campaign) => {
@@ -478,17 +452,6 @@ export default function CampaignsPage() {
         />
       </Card>
 
-      {/* Campaign Modal */}
-      <CampaignModal
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setSelectedCampaign(null);
-        }}
-        onSubmit={handleCreateOrUpdate}
-        initialData={selectedCampaign}
-        loading={createCampaign.isPending || updateCampaign.isPending}
-      />
     </div>
   );
 }

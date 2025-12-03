@@ -20,9 +20,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
-import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment, useUpdateCustomerSegment } from '@/lib/api/hooks/useCRM';
+import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment } from '@/lib/api/hooks/useCRM';
 import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
-import { CustomerSegmentModal } from '@/components/crm/segments/CustomerSegmentModal';
 
 const { Title } = Typography;
 
@@ -46,14 +45,11 @@ const segmentColors: Record<string, string> = {
 
 export default function CustomerSegmentsPage() {
   const router = useRouter();
-  const [selectedSegment, setSelectedSegment] = useState<CustomerSegment | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API Hooks
   const { data: segments = [], isLoading, refetch } = useCustomerSegments();
   const deleteSegment = useDeleteCustomerSegment();
   const createSegment = useCreateCustomerSegment();
-  const updateSegment = useUpdateCustomerSegment();
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -74,30 +70,12 @@ export default function CustomerSegmentsPage() {
     });
   };
 
-  const handleCreateOrUpdate = async (values: any) => {
-    try {
-      if (selectedSegment) {
-        await updateSegment.mutateAsync({ id: selectedSegment.id, data: values });
-      } else {
-        await createSegment.mutateAsync(values);
-      }
-      setIsModalOpen(false);
-      setSelectedSegment(null);
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
-      message.error(errorMessage);
-    }
-  };
-
   const handleEdit = (segment: CustomerSegment) => {
-    setSelectedSegment(segment);
-    setIsModalOpen(true);
+    router.push(`/crm/segments/${segment.id}/edit`);
   };
 
   const handleCreate = () => {
-    setSelectedSegment(null);
-    setIsModalOpen(true);
+    router.push('/crm/segments/new');
   };
 
   const handleClone = async (segment: CustomerSegment) => {
@@ -359,17 +337,6 @@ export default function CustomerSegmentsPage() {
         />
       </Card>
 
-      {/* Segment Modal */}
-      <CustomerSegmentModal
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setSelectedSegment(null);
-        }}
-        onSubmit={handleCreateOrUpdate}
-        initialData={selectedSegment}
-        loading={createSegment.isPending || updateSegment.isPending}
-      />
     </div>
   );
 }

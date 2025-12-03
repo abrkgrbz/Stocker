@@ -1,23 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Space, Typography, Alert } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
-import CustomerModal from '@/features/customers/components/CustomerModal';
 import { CustomersStats, CustomersTable, CustomersFilters } from '@/components/crm/customers';
 import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 
 const { Title } = Typography;
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -38,24 +37,16 @@ export default function CustomersPage() {
   const customers = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
-  const handleModalSuccess = () => {
-    setModalOpen(false);
-    setSelectedCustomer(null);
-    refetch();
-  };
-
-  const handleModalCancel = () => {
-    setModalOpen(false);
-    setSelectedCustomer(null);
+  const handleCreate = () => {
+    router.push('/crm/customers/new');
   };
 
   const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setModalOpen(true);
+    router.push(`/crm/customers/${customer.id}/edit`);
   };
 
   const handleView = (customerId: number) => {
-    window.location.href = `/crm/customers/${customerId}`;
+    router.push(`/crm/customers/${customerId}`);
   };
 
   return (
@@ -76,10 +67,7 @@ export default function CustomersPage() {
             type="primary"
             icon={<PlusOutlined />}
             size="large"
-            onClick={() => {
-              setSelectedCustomer(null);
-              setModalOpen(true);
-            }}
+            onClick={handleCreate}
           >
             Müşteri Ekle
           </Button>
@@ -134,13 +122,6 @@ export default function CustomersPage() {
         />
       </AnimatedCard>
 
-      {/* Customer Modal */}
-      <CustomerModal
-        open={modalOpen}
-        customer={selectedCustomer}
-        onCancel={handleModalCancel}
-        onSuccess={handleModalSuccess}
-      />
     </div>
   );
 }
