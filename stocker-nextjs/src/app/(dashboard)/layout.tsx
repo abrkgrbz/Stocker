@@ -98,7 +98,9 @@ const MODULE_MENUS = {
       { key: '/sales', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: '/sales/orders', icon: <ShoppingCartOutlined />, label: 'Siparişler' },
       { key: '/sales/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
+      { key: '/sales/e-invoices', icon: <SafetyCertificateOutlined />, label: 'E-Fatura' },
       { key: '/sales/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
+      { key: '/sales/customers', icon: <ContactsOutlined />, label: 'Müşteri Bakiyeleri' },
     ],
   },
   settings: {
@@ -206,7 +208,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/inventory/units': '/inventory/units',
       '/sales/orders': '/sales/orders',
       '/sales/invoices': '/sales/invoices',
+      '/sales/e-invoices': '/sales/e-invoices',
       '/sales/payments': '/sales/payments',
+      '/sales/customers': '/sales/customers',
     };
 
     for (const [prefix, key] of Object.entries(routeMappings)) {

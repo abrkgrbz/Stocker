@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Typography,
@@ -17,6 +17,11 @@ import {
   Row,
   Col,
   Statistic,
+  Form,
+  InputNumber,
+  DatePicker,
+  Input,
+  Select,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -28,6 +33,7 @@ import {
   DollarOutlined,
   MailOutlined,
   PrinterOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -35,11 +41,13 @@ import {
   useIssueInvoice,
   useSendInvoice,
   useCancelInvoice,
+  useRecordInvoicePayment,
 } from '@/lib/api/hooks/useInvoices';
 import { usePaymentsByInvoice } from '@/lib/api/hooks/usePayments';
 import type { InvoiceItem, InvoiceStatus, InvoiceType } from '@/lib/api/services/invoice.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { generateInvoicePDF } from '@/lib/utils/pdf-export';
 
 const { Title, Text } = Typography;
 
@@ -70,6 +78,19 @@ export default function InvoiceDetailPage() {
   const issueInvoice = useIssueInvoice();
   const sendInvoice = useSendInvoice();
   const cancelInvoice = useCancelInvoice();
+  const recordPayment = useRecordInvoicePayment();
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentForm] = Form.useForm();
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const paymentMethods = [
+    { value: 'Cash', label: 'Nakit' },
+    { value: 'BankTransfer', label: 'Banka Transferi' },
+    { value: 'CreditCard', label: 'Kredi Kartı' },
+    { value: 'Check', label: 'Çek' },
+    { value: 'Other', label: 'Diğer' },
+  ];
 
   const handleIssue = async () => {
     try {
@@ -105,6 +126,47 @@ export default function InvoiceDetailPage() {
         }
       },
     });
+  };
+
+  const handleOpenPaymentModal = () => {
+    paymentForm.setFieldsValue({
+      amount: invoice?.balanceDue || 0,
+      paymentDate: dayjs(),
+      paymentMethod: 'BankTransfer',
+    });
+    setPaymentModalOpen(true);
+  };
+
+  const handleExportPDF = async () => {
+    if (!invoice) return;
+    setPdfLoading(true);
+    try {
+      await generateInvoicePDF(invoice);
+      message.success('PDF başarıyla oluşturuldu');
+    } catch (error) {
+      message.error('PDF oluşturulurken hata oluştu');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleRecordPayment = async (values: any) => {
+    try {
+      await recordPayment.mutateAsync({
+        id,
+        data: {
+          amount: values.amount,
+          paymentDate: values.paymentDate?.toISOString(),
+          paymentMethod: values.paymentMethod,
+          reference: values.reference,
+        },
+      });
+      message.success('Ödeme kaydedildi');
+      setPaymentModalOpen(false);
+      paymentForm.resetFields();
+    } catch (error: any) {
+      message.error(error.response?.data?.error || 'Ödeme kaydedilemedi');
+    }
   };
 
   const itemColumns: ColumnsType<InvoiceItem> = [
@@ -226,7 +288,9 @@ export default function InvoiceDetailPage() {
           {invoice.isEInvoice && <Tag color="blue">E-Fatura</Tag>}
         </div>
         <Space>
-          <Button icon={<PrinterOutlined />}>Yazdır</Button>
+          <Button icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
+            PDF İndir
+          </Button>
           {invoice.status === 'Draft' && (
             <>
               <Link href={`/sales/invoices/${id}/edit`}>
@@ -250,6 +314,15 @@ export default function InvoiceDetailPage() {
               loading={sendInvoice.isPending}
             >
               Gönder
+            </Button>
+          )}
+          {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && invoice.balanceDue > 0 && (
+            <Button
+              type="primary"
+              icon={<DollarOutlined />}
+              onClick={handleOpenPaymentModal}
+            >
+              Ödeme Kaydet
             </Button>
           )}
           {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && (
@@ -508,6 +581,80 @@ export default function InvoiceDetailPage() {
           )}
         </Descriptions>
       </Card>
+
+      {/* Record Payment Modal */}
+      <Modal
+        title="Ödeme Kaydet"
+        open={paymentModalOpen}
+        onCancel={() => setPaymentModalOpen(false)}
+        onOk={() => paymentForm.submit()}
+        okText="Kaydet"
+        cancelText="Vazgeç"
+        confirmLoading={recordPayment.isPending}
+      >
+        <Form
+          form={paymentForm}
+          layout="vertical"
+          onFinish={handleRecordPayment}
+        >
+          <Form.Item
+            name="amount"
+            label="Ödeme Tutarı"
+            rules={[
+              { required: true, message: 'Ödeme tutarı gereklidir' },
+              { type: 'number', min: 0.01, message: 'Tutar 0\'dan büyük olmalıdır' },
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              min={0.01}
+              max={invoice?.balanceDue}
+              precision={2}
+              addonAfter={invoice?.currency}
+              placeholder="Ödeme tutarını giriniz"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="paymentDate"
+            label="Ödeme Tarihi"
+            rules={[{ required: true, message: 'Ödeme tarihi gereklidir' }]}
+          >
+            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+          </Form.Item>
+
+          <Form.Item
+            name="paymentMethod"
+            label="Ödeme Yöntemi"
+            rules={[{ required: true, message: 'Ödeme yöntemi seçiniz' }]}
+          >
+            <Select options={paymentMethods} placeholder="Ödeme yöntemi seçiniz" />
+          </Form.Item>
+
+          <Form.Item
+            name="reference"
+            label="Referans No"
+          >
+            <Input placeholder="Dekont no, çek no vb." />
+          </Form.Item>
+
+          <div className="bg-gray-50 p-3 rounded-md">
+            <div className="flex justify-between mb-1">
+              <Text type="secondary">Fatura Toplamı:</Text>
+              <Text>{invoice?.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
+            </div>
+            <div className="flex justify-between mb-1">
+              <Text type="secondary">Ödenen:</Text>
+              <Text className="text-green-600">{invoice?.paidAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
+            </div>
+            <Divider className="my-2" />
+            <div className="flex justify-between">
+              <Text strong>Kalan Tutar:</Text>
+              <Text strong className="text-red-600">{invoice?.balanceDue.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice?.currency}</Text>
+            </div>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

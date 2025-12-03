@@ -1,19 +1,25 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Progress } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Progress, Alert, List, Badge, Tooltip } from 'antd';
 import {
   ShoppingCartOutlined,
   FileTextOutlined,
   WalletOutlined,
   DollarOutlined,
   RightOutlined,
+  WarningOutlined,
+  ClockCircleOutlined,
+  TrendingUpOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useSalesStatistics, useSalesOrders } from '@/lib/api/hooks/useSales';
-import { useInvoiceStatistics } from '@/lib/api/hooks/useInvoices';
+import { useInvoiceStatistics, useInvoices } from '@/lib/api/hooks/useInvoices';
 import { usePaymentStatistics } from '@/lib/api/hooks/usePayments';
 import type { SalesOrderListItem, SalesOrderStatus } from '@/lib/api/services/sales.service';
+import type { InvoiceListItem } from '@/lib/api/services/invoice.service';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -44,6 +50,10 @@ export default function SalesDashboardPage() {
   const { data: invoiceStats, isLoading: invoiceStatsLoading } = useInvoiceStatistics();
   const { data: paymentStats, isLoading: paymentStatsLoading } = usePaymentStatistics();
   const { data: recentOrders, isLoading: ordersLoading } = useSalesOrders({ pageSize: 5 });
+  const { data: overdueInvoices, isLoading: overdueLoading } = useInvoices({ status: 'Overdue', pageSize: 5 });
+
+  const hasOverdueInvoices = (invoiceStats?.overdueInvoices ?? 0) > 0;
+  const overdueAmount = overdueInvoices?.items?.reduce((sum, inv) => sum + inv.grandTotal, 0) ?? 0;
 
   const columns = [
     {
@@ -154,6 +164,27 @@ export default function SalesDashboardPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* Overdue Invoices Alert */}
+      {hasOverdueInvoices && (
+        <Alert
+          message={
+            <span>
+              <WarningOutlined style={{ marginRight: 8 }} />
+              <strong>{invoiceStats?.overdueInvoices ?? 0} adet vadesi geçmiş fatura</strong> bulunmaktadır.
+              Toplam tutar: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(overdueAmount)}
+            </span>
+          }
+          type="warning"
+          showIcon={false}
+          action={
+            <Button size="small" type="primary" danger onClick={() => router.push('/sales/invoices?status=Overdue')}>
+              Faturaları Görüntüle
+            </Button>
+          }
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
       {/* Quick Stats Row */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
@@ -303,24 +334,83 @@ export default function SalesDashboardPage() {
         </Col>
       </Row>
 
-      {/* Recent Orders */}
-      <Card
-        title="Son Siparişler"
-        extra={
-          <Button type="link" onClick={() => router.push('/sales/orders')}>
-            Tümünü Gör <RightOutlined />
-          </Button>
-        }
-      >
-        <Table
-          columns={columns}
-          dataSource={recentOrders?.items ?? []}
-          rowKey="id"
-          loading={ordersLoading}
-          pagination={false}
-          size="small"
-        />
-      </Card>
+      {/* Recent Orders and Overdue Invoices */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={16}>
+          <Card
+            title="Son Siparişler"
+            extra={
+              <Button type="link" onClick={() => router.push('/sales/orders')}>
+                Tümünü Gör <RightOutlined />
+              </Button>
+            }
+          >
+            <Table
+              columns={columns}
+              dataSource={recentOrders?.items ?? []}
+              rowKey="id"
+              loading={ordersLoading}
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <span>
+                <ClockCircleOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
+                Vadesi Geçmiş Faturalar
+              </span>
+            }
+            extra={
+              <Button type="link" onClick={() => router.push('/sales/invoices?status=Overdue')}>
+                Tümü <RightOutlined />
+              </Button>
+            }
+          >
+            {overdueLoading ? (
+              <div style={{ textAlign: 'center', padding: 24 }}>Yükleniyor...</div>
+            ) : overdueInvoices?.items?.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: '#52c41a' }}>
+                <Badge status="success" text="Vadesi geçmiş fatura yok" />
+              </div>
+            ) : (
+              <List
+                size="small"
+                dataSource={overdueInvoices?.items ?? []}
+                renderItem={(invoice: InvoiceListItem) => {
+                  const daysOverdue = dayjs().diff(dayjs(invoice.dueDate), 'day');
+                  return (
+                    <List.Item
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => router.push(`/sales/invoices/${invoice.id}`)}
+                    >
+                      <List.Item.Meta
+                        title={
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Text strong>{invoice.invoiceNumber}</Text>
+                            <Tag color="error">{daysOverdue} gün gecikmiş</Tag>
+                          </div>
+                        }
+                        description={
+                          <div>
+                            <Text type="secondary">{invoice.customerName}</Text>
+                            <br />
+                            <Text strong style={{ color: '#ff4d4f' }}>
+                              {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: invoice.currency }).format(invoice.grandTotal)}
+                            </Text>
+                          </div>
+                        }
+                      />
+                    </List.Item>
+                  );
+                }}
+              />
+            )}
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

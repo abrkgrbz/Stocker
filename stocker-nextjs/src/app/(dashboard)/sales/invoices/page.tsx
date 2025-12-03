@@ -17,10 +17,6 @@ import {
   Dropdown,
   Modal,
   message,
-  Drawer,
-  Form,
-  InputNumber,
-  Divider,
 } from 'antd';
 import {
   PlusOutlined,
@@ -36,7 +32,8 @@ import {
   SendOutlined,
   DollarOutlined,
   MailOutlined,
-  MinusCircleOutlined,
+  FilePdfOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -45,15 +42,14 @@ import {
   useIssueInvoice,
   useSendInvoice,
   useCancelInvoice,
-  useCreateInvoice,
 } from '@/lib/api/hooks/useInvoices';
-import { useCustomers } from '@/lib/api/hooks/useCRM';
-import type { Customer } from '@/lib/api/services/crm.service';
-import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams, CreateInvoiceCommand, CreateInvoiceItemCommand } from '@/lib/api/services/invoice.service';
+import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams, Invoice } from '@/lib/api/services/invoice.service';
+import { InvoiceService } from '@/lib/api/services/invoice.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { generateInvoicePDF } from '@/lib/utils/pdf-export';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const statusConfig: Record<InvoiceStatus, { color: string; label: string; icon: React.ReactNode }> = {
@@ -88,7 +84,6 @@ const typeOptions = [
 export default function InvoicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [form] = Form.useForm();
 
   // Filter state
   const [filters, setFilters] = useState<GetInvoicesParams>({
@@ -101,32 +96,19 @@ export default function InvoicesPage() {
     sortDescending: true,
   });
 
-  // Drawer state
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState('');
+  // Bulk operations state
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // API hooks
   const { data, isLoading, refetch } = useInvoices(filters);
-  const { data: customersData, isLoading: customersLoading } = useCustomers({
-    searchTerm: customerSearch,
-    status: 'Active',
-    pageSize: 50
-  });
   const deleteInvoice = useDeleteInvoice();
   const issueInvoice = useIssueInvoice();
   const sendInvoice = useSendInvoice();
   const cancelInvoice = useCancelInvoice();
-  const createInvoice = useCreateInvoice();
 
   const invoices = data?.items || [];
   const totalCount = data?.totalCount || 0;
-
-  // Get customers list for select options
-  const customerOptions = customersData?.items?.map((customer: Customer) => ({
-    value: customer.id.toString(),
-    label: customer.companyName || `${customer.contactPerson}`,
-    customer: customer,
-  })) || [];
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, searchTerm: value, page: 1 }));
@@ -222,55 +204,144 @@ export default function InvoicesPage() {
     });
   };
 
-  const openCreateDrawer = () => {
-    form.resetFields();
-    form.setFieldsValue({
-      invoiceDate: dayjs(),
-      dueDate: dayjs().add(30, 'day'),
-      currency: 'TRY',
-      type: 'Sales',
-      items: [{ quantity: 1, vatRate: 18, unit: 'Adet' }],
-    });
-    setCreateDrawerOpen(true);
+  // Bulk operations
+  const handleBulkPdfExport = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('Lütfen PDF oluşturmak için fatura seçiniz');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      for (const id of selectedRowKeys) {
+        const invoice = await InvoiceService.getInvoiceById(id);
+        await generateInvoicePDF(invoice);
+      }
+      message.success(`${selectedRowKeys.length} fatura PDF olarak indirildi`);
+    } catch (error) {
+      message.error('PDF oluşturulurken hata oluştu');
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
-  const handleCreateInvoice = async (values: any) => {
-    try {
-      // Find selected customer from options
-      const selectedCustomer = customerOptions.find(
-        (opt: { value: string; customer: Customer }) => opt.value === values.customerId
-      )?.customer;
+  const handleBulkIssue = async () => {
+    const draftInvoices = selectedRowKeys.filter(id => {
+      const inv = invoices.find(i => i.id === id);
+      return inv?.status === 'Draft';
+    });
 
-      const invoiceData: CreateInvoiceCommand = {
-        invoiceDate: values.invoiceDate.toISOString(),
-        dueDate: values.dueDate.toISOString(),
-        customerId: selectedCustomer?.id?.toString() || undefined,
-        customerName: selectedCustomer?.companyName || selectedCustomer?.contactPerson || values.customerName,
-        customerEmail: selectedCustomer?.email || values.customerEmail,
-        customerTaxNumber: selectedCustomer?.taxId || values.customerTaxNumber,
-        customerAddress: selectedCustomer?.address || values.customerAddress,
-        type: values.type || 'Sales',
-        currency: values.currency || 'TRY',
-        notes: values.notes,
-        paymentTerms: selectedCustomer?.paymentTerms || values.paymentTerms,
-        items: values.items.map((item: any) => ({
-          productCode: item.productCode,
-          productName: item.productName,
-          unit: item.unit || 'Adet',
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          vatRate: item.vatRate || 18,
-          description: item.description,
-          discountRate: item.discountRate || 0,
-        })),
-      };
-      await createInvoice.mutateAsync(invoiceData);
-      message.success('Fatura oluşturuldu');
-      setCreateDrawerOpen(false);
-      form.resetFields();
-    } catch {
-      message.error('Fatura oluşturulamadı');
+    if (draftInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında kesilebilecek taslak fatura bulunamadı');
+      return;
     }
+
+    Modal.confirm({
+      title: 'Toplu Fatura Kesme',
+      content: `${draftInvoices.length} adet taslak fatura kesilecek. Devam etmek istiyor musunuz?`,
+      okText: 'Kes',
+      cancelText: 'Vazgeç',
+      onOk: async () => {
+        setBulkLoading(true);
+        let successCount = 0;
+        try {
+          for (const id of draftInvoices) {
+            try {
+              await issueInvoice.mutateAsync(id);
+              successCount++;
+            } catch {
+              // Continue with others
+            }
+          }
+          message.success(`${successCount} fatura başarıyla kesildi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkSend = async () => {
+    const issuedInvoices = selectedRowKeys.filter(id => {
+      const inv = invoices.find(i => i.id === id);
+      return inv?.status === 'Issued';
+    });
+
+    if (issuedInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında gönderilebilecek fatura bulunamadı');
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Toplu Fatura Gönderimi',
+      content: `${issuedInvoices.length} adet fatura gönderilecek. Devam etmek istiyor musunuz?`,
+      okText: 'Gönder',
+      cancelText: 'Vazgeç',
+      onOk: async () => {
+        setBulkLoading(true);
+        let successCount = 0;
+        try {
+          for (const id of issuedInvoices) {
+            try {
+              await sendInvoice.mutateAsync(id);
+              successCount++;
+            } catch {
+              // Continue with others
+            }
+          }
+          message.success(`${successCount} fatura başarıyla gönderildi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    const deletableInvoices = selectedRowKeys.filter(id => {
+      const inv = invoices.find(i => i.id === id);
+      return inv?.status === 'Draft' || inv?.status === 'Cancelled';
+    });
+
+    if (deletableInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında silinebilecek fatura bulunamadı (sadece taslak veya iptal edilmiş faturalar silinebilir)');
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Toplu Fatura Silme',
+      content: `${deletableInvoices.length} adet fatura silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
+      okText: 'Sil',
+      okType: 'danger',
+      cancelText: 'Vazgeç',
+      onOk: async () => {
+        setBulkLoading(true);
+        let successCount = 0;
+        try {
+          for (const id of deletableInvoices) {
+            try {
+              await deleteInvoice.mutateAsync(id);
+              successCount++;
+            } catch {
+              // Continue with others
+            }
+          }
+          message.success(`${successCount} fatura başarıyla silindi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
   };
 
   const getActionItems = (record: InvoiceListItem) => {
@@ -457,10 +528,49 @@ export default function InvoicesPage() {
           </Title>
         </div>
         <Space>
+          {selectedRowKeys.length > 0 && (
+            <>
+              <span style={{ color: '#1890ff' }}>
+                {selectedRowKeys.length} fatura seçildi
+              </span>
+              <Button
+                icon={<FilePdfOutlined />}
+                onClick={handleBulkPdfExport}
+                loading={bulkLoading}
+              >
+                PDF İndir
+              </Button>
+              <Button
+                icon={<CheckCircleOutlined />}
+                onClick={handleBulkIssue}
+                loading={bulkLoading}
+              >
+                Kes
+              </Button>
+              <Button
+                icon={<SendOutlined />}
+                onClick={handleBulkSend}
+                loading={bulkLoading}
+              >
+                Gönder
+              </Button>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={handleBulkDelete}
+                loading={bulkLoading}
+              >
+                Sil
+              </Button>
+              <Button onClick={() => setSelectedRowKeys([])}>
+                Seçimi Temizle
+              </Button>
+            </>
+          )}
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreateDrawer}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/sales/invoices/new')}>
             Yeni Fatura
           </Button>
         </Space>
@@ -510,6 +620,7 @@ export default function InvoicesPage() {
       {/* Table */}
       <Card>
         <Table
+          rowSelection={rowSelection}
           columns={columns}
           dataSource={invoices}
           rowKey="id"
@@ -525,255 +636,6 @@ export default function InvoicesPage() {
           scroll={{ x: 1200 }}
         />
       </Card>
-
-      {/* Create Invoice Drawer */}
-      <Drawer
-        title="Yeni Fatura Oluştur"
-        width={720}
-        open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setCreateDrawerOpen(false)}>İptal</Button>
-            <Button type="primary" onClick={() => form.submit()} loading={createInvoice.isPending}>
-              Oluştur
-            </Button>
-          </Space>
-        }
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateInvoice}
-          initialValues={{
-            invoiceDate: dayjs(),
-            dueDate: dayjs().add(30, 'day'),
-            currency: 'TRY',
-            type: 'Sales',
-            items: [{ quantity: 1, vatRate: 18, unit: 'Adet' }],
-          }}
-        >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="customerId"
-                label="Müşteri"
-                rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Müşteri seçiniz"
-                  loading={customersLoading}
-                  filterOption={false}
-                  onSearch={(value) => setCustomerSearch(value)}
-                  options={customerOptions}
-                  onChange={(value) => {
-                    const customer = customerOptions.find(
-                      (opt: { value: string; customer: Customer }) => opt.value === value
-                    )?.customer;
-                    if (customer) {
-                      form.setFieldsValue({
-                        customerEmail: customer.email,
-                        customerTaxNumber: customer.taxId,
-                        customerAddress: customer.address,
-                        paymentTerms: customer.paymentTerms,
-                      });
-                    }
-                  }}
-                  notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="customerEmail" label="Müşteri E-posta">
-                <Input placeholder="E-posta adresi" type="email" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="customerTaxNumber" label="Vergi No">
-                <Input placeholder="Vergi numarası" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="type" label="Fatura Tipi">
-                <Select>
-                  <Select.Option value="Sales">Satış</Select.Option>
-                  <Select.Option value="Return">İade</Select.Option>
-                  <Select.Option value="Credit">Alacak</Select.Option>
-                  <Select.Option value="Debit">Borç</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name="invoiceDate"
-                label="Fatura Tarihi"
-                rules={[{ required: true, message: 'Fatura tarihi zorunludur' }]}
-              >
-                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="dueDate"
-                label="Vade Tarihi"
-                rules={[{ required: true, message: 'Vade tarihi zorunludur' }]}
-              >
-                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="currency" label="Para Birimi">
-                <Select>
-                  <Select.Option value="TRY">TRY - Türk Lirası</Select.Option>
-                  <Select.Option value="USD">USD - Amerikan Doları</Select.Option>
-                  <Select.Option value="EUR">EUR - Euro</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item name="customerAddress" label="Müşteri Adresi">
-                <Input.TextArea rows={2} placeholder="Müşteri adresi" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="paymentTerms" label="Ödeme Koşulları">
-                <Input placeholder="Ödeme koşulları" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="notes" label="Notlar">
-                <Input.TextArea rows={2} placeholder="Fatura notları" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Divider>Fatura Kalemleri</Divider>
-
-          <Form.List name="items">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Card
-                    key={key}
-                    size="small"
-                    style={{ marginBottom: 16 }}
-                    extra={
-                      fields.length > 1 && (
-                        <Button
-                          type="text"
-                          danger
-                          icon={<MinusCircleOutlined />}
-                          onClick={() => remove(name)}
-                        />
-                      )
-                    }
-                  >
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'productCode']}
-                          label="Ürün Kodu"
-                          rules={[{ required: true, message: 'Zorunlu' }]}
-                        >
-                          <Input placeholder="Ürün kodu" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={16}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'productName']}
-                          label="Ürün Adı"
-                          rules={[{ required: true, message: 'Zorunlu' }]}
-                        >
-                          <Input placeholder="Ürün adı" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'quantity']}
-                          label="Miktar"
-                          rules={[{ required: true, message: 'Zorunlu' }]}
-                        >
-                          <InputNumber min={1} style={{ width: '100%' }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={6}>
-                        <Form.Item {...restField} name={[name, 'unit']} label="Birim">
-                          <Select>
-                            <Select.Option value="Adet">Adet</Select.Option>
-                            <Select.Option value="Kg">Kg</Select.Option>
-                            <Select.Option value="Lt">Lt</Select.Option>
-                            <Select.Option value="M">M</Select.Option>
-                            <Select.Option value="M2">M2</Select.Option>
-                            <Select.Option value="Paket">Paket</Select.Option>
-                            <Select.Option value="Kutu">Kutu</Select.Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'unitPrice']}
-                          label="Birim Fiyat"
-                          rules={[{ required: true, message: 'Zorunlu' }]}
-                        >
-                          <InputNumber min={0} precision={2} style={{ width: '100%' }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={6}>
-                        <Form.Item {...restField} name={[name, 'vatRate']} label="KDV %">
-                          <Select>
-                            <Select.Option value={0}>%0</Select.Option>
-                            <Select.Option value={1}>%1</Select.Option>
-                            <Select.Option value={8}>%8</Select.Option>
-                            <Select.Option value={10}>%10</Select.Option>
-                            <Select.Option value={18}>%18</Select.Option>
-                            <Select.Option value={20}>%20</Select.Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item {...restField} name={[name, 'discountRate']} label="İndirim %">
-                          <InputNumber min={0} max={100} style={{ width: '100%' }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item {...restField} name={[name, 'description']} label="Açıklama">
-                          <Input placeholder="Kalem açıklaması" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
-                <Form.Item>
-                  <Button type="dashed" onClick={() => add({ quantity: 1, vatRate: 18, unit: 'Adet' })} block icon={<PlusOutlined />}>
-                    Kalem Ekle
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Form>
-      </Drawer>
     </div>
   );
 }

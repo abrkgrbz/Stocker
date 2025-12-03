@@ -181,3 +181,67 @@ export function useDeleteSalesOrder() {
     },
   });
 }
+
+/**
+ * Hook to confirm a sales order
+ */
+export function useConfirmSalesOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.confirmOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.order(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.orders });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'statistics'] });
+    },
+  });
+}
+
+/**
+ * Hook to ship a sales order
+ */
+export function useShipSalesOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.shipOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.order(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.orders });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'statistics'] });
+    },
+  });
+}
+
+/**
+ * Hook to deliver a sales order
+ */
+export function useDeliverSalesOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.deliverOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.order(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.orders });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'statistics'] });
+    },
+  });
+}
+
+/**
+ * Hook to complete a sales order
+ */
+export function useCompleteSalesOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.completeOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.order(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.orders });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'statistics'] });
+    },
+  });
+}

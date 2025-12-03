@@ -27,11 +27,25 @@ import {
   PrinterOutlined,
   FileTextOutlined,
   MoreOutlined,
+  SendOutlined,
+  CarOutlined,
+  CheckCircleOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import { useRouter, useParams } from 'next/navigation';
-import { useSalesOrder, useApproveSalesOrder, useCancelSalesOrder } from '@/lib/api/hooks/useSales';
+import {
+  useSalesOrder,
+  useApproveSalesOrder,
+  useCancelSalesOrder,
+  useConfirmSalesOrder,
+  useShipSalesOrder,
+  useDeliverSalesOrder,
+  useCompleteSalesOrder,
+} from '@/lib/api/hooks/useSales';
+import { useCreateInvoiceFromOrder } from '@/lib/api/hooks/useInvoices';
 import type { SalesOrderItem, SalesOrderStatus } from '@/lib/api/services/sales.service';
 import dayjs from 'dayjs';
+import { generateSalesOrderPDF } from '@/lib/utils/pdf-export';
 
 const { Title, Text } = Typography;
 
@@ -63,9 +77,15 @@ export default function SalesOrderDetailPage() {
   const { data: order, isLoading } = useSalesOrder(id);
   const approveMutation = useApproveSalesOrder();
   const cancelMutation = useCancelSalesOrder();
+  const confirmMutation = useConfirmSalesOrder();
+  const shipMutation = useShipSalesOrder();
+  const deliverMutation = useDeliverSalesOrder();
+  const completeMutation = useCompleteSalesOrder();
+  const createInvoiceMutation = useCreateInvoiceFromOrder();
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const handleApprove = async () => {
     try {
@@ -87,6 +107,69 @@ export default function SalesOrderDetailPage() {
       setCancelModalOpen(false);
     } catch {
       message.error('Sipariş iptal edilemedi');
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    try {
+      const invoice = await createInvoiceMutation.mutateAsync({
+        salesOrderId: id,
+        invoiceDate: new Date().toISOString(),
+        dueDate: dayjs().add(30, 'day').toISOString(),
+      });
+      message.success('Fatura başarıyla oluşturuldu');
+      router.push(`/sales/invoices/${invoice.id}`);
+    } catch {
+      message.error('Fatura oluşturulamadı');
+    }
+  };
+
+  const handleConfirm = async () => {
+    try {
+      await confirmMutation.mutateAsync(id);
+      message.success('Sipariş müşteri tarafından onaylandı');
+    } catch {
+      message.error('Sipariş onaylanamadı');
+    }
+  };
+
+  const handleShip = async () => {
+    try {
+      await shipMutation.mutateAsync(id);
+      message.success('Sipariş gönderildi');
+    } catch {
+      message.error('Sipariş gönderilemedi');
+    }
+  };
+
+  const handleDeliver = async () => {
+    try {
+      await deliverMutation.mutateAsync(id);
+      message.success('Sipariş teslim edildi');
+    } catch {
+      message.error('Sipariş teslim edilemedi');
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      await completeMutation.mutateAsync(id);
+      message.success('Sipariş tamamlandı');
+    } catch {
+      message.error('Sipariş tamamlanamadı');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!order) return;
+    setPdfLoading(true);
+    try {
+      await generateSalesOrderPDF(order);
+      message.success('PDF başarıyla oluşturuldu');
+    } catch (error) {
+      message.error('PDF oluşturulurken hata oluştu');
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -206,16 +289,42 @@ export default function SalesOrderDetailPage() {
               </Button>
             </>
           )}
+          {order.status === 'Approved' && (
+            <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleConfirm} loading={confirmMutation.isPending}>
+              Müşteri Onayı
+            </Button>
+          )}
+          {order.status === 'Confirmed' && (
+            <Button type="primary" icon={<SendOutlined />} onClick={handleShip} loading={shipMutation.isPending}>
+              Gönderildi
+            </Button>
+          )}
+          {order.status === 'Shipped' && (
+            <Button type="primary" icon={<CarOutlined />} onClick={handleDeliver} loading={deliverMutation.isPending}>
+              Teslim Edildi
+            </Button>
+          )}
+          {order.status === 'Delivered' && (
+            <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleComplete} loading={completeMutation.isPending}>
+              Tamamla
+            </Button>
+          )}
           {order.status !== 'Cancelled' && order.status !== 'Completed' && (
             <Button danger icon={<CloseOutlined />} onClick={() => setCancelModalOpen(true)}>
               İptal Et
             </Button>
           )}
-          <Button icon={<FileTextOutlined />} onClick={() => message.info('Fatura oluşturma özelliği yakında')}>
-            Fatura Oluştur
-          </Button>
-          <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
-            Yazdır
+          {order.status !== 'Cancelled' && order.status !== 'Draft' && (
+            <Button
+              icon={<FileTextOutlined />}
+              onClick={handleCreateInvoice}
+              loading={createInvoiceMutation.isPending}
+            >
+              Fatura Oluştur
+            </Button>
+          )}
+          <Button icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
+            PDF İndir
           </Button>
         </Space>
       </div>
@@ -425,10 +534,17 @@ export default function SalesOrderDetailPage() {
           {/* Quick Actions */}
           <Card title="Hızlı İşlemler">
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button block icon={<FileTextOutlined />} onClick={() => message.info('Fatura oluşturma özelliği yakında')}>
-                Fatura Oluştur
-              </Button>
-              <Button block icon={<PrinterOutlined />} onClick={() => window.print()}>
+              {order.status !== 'Cancelled' && order.status !== 'Draft' && (
+                <Button
+                  block
+                  icon={<FileTextOutlined />}
+                  onClick={handleCreateInvoice}
+                  loading={createInvoiceMutation.isPending}
+                >
+                  Fatura Oluştur
+                </Button>
+              )}
+              <Button block icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
                 PDF İndir
               </Button>
             </Space>
