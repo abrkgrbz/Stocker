@@ -37,6 +37,9 @@ import {
   TrademarkOutlined,
   ColumnWidthOutlined,
   ArrowLeftOutlined,
+  BarcodeOutlined,
+  WarningOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -81,7 +84,11 @@ const MODULE_MENUS = {
       { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
       { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Stok Hareketleri' },
       { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Stok Transferleri' },
+      { key: '/inventory/stock-adjustments', icon: <EditOutlined />, label: 'Stok Düzeltme' },
       { key: '/inventory/stock-counts', icon: <CalculatorOutlined />, label: 'Sayımlar' },
+      { key: '/inventory/lot-batches', icon: <InboxOutlined />, label: 'Lot/Parti Yönetimi' },
+      { key: '/inventory/serial-numbers', icon: <BarcodeOutlined />, label: 'Seri Numaraları' },
+      { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Stok Uyarıları' },
       { type: 'divider' as const },
       { type: 'group' as const, label: 'Tanımlar', children: [
         { key: '/inventory/categories', icon: <TagsOutlined />, label: 'Kategoriler' },

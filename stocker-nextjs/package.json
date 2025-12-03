@@ -33,6 +33,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",
     "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lightningcss": "^1.30.2",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
