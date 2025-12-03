@@ -49,6 +49,9 @@ public static class DependencyInjection
             return new InventoryDbContext(optionsBuilder.Options, tenantService);
         });
 
+        // Register IUnitOfWork for Inventory module (resolves to InventoryDbContext)
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
+
         // Register specific repositories
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();

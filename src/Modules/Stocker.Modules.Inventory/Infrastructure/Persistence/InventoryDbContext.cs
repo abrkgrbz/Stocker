@@ -8,9 +8,10 @@ namespace Stocker.Modules.Inventory.Infrastructure.Persistence;
 /// <summary>
 /// Database context for the Inventory module
 /// </summary>
-public class InventoryDbContext : DbContext
+public class InventoryDbContext : DbContext, IUnitOfWork
 {
     private readonly ITenantService _tenantService;
+    private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _currentTransaction;
 
     // Product Management
     public DbSet<Product> Products { get; set; } = null!;
@@ -146,4 +147,66 @@ public class InventoryDbContext : DbContext
 
         return await base.SaveChangesAsync(cancellationToken);
     }
+
+    #region IUnitOfWork Implementation
+
+    /// <inheritdoc />
+    public bool HasActiveTransaction => _currentTransaction != null;
+
+    /// <inheritdoc />
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction != null)
+        {
+            throw new InvalidOperationException("A transaction is already in progress.");
+        }
+
+        _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction == null)
+        {
+            throw new InvalidOperationException("No transaction is in progress.");
+        }
+
+        try
+        {
+            await SaveChangesAsync(cancellationToken);
+            await _currentTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _currentTransaction.RollbackAsync(cancellationToken);
+        }
+        finally
+        {
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
+    }
+
+    #endregion
 }
