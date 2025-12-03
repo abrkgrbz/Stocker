@@ -279,6 +279,68 @@ public class StockCountsController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Update a stock count (draft or in-progress only)
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(StockCountDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<StockCountDto>> UpdateStockCount(int id, [FromBody] UpdateStockCountDto data)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new UpdateStockCountCommand
+        {
+            TenantId = tenantId,
+            StockCountId = id,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get stock count summary/report
+    /// </summary>
+    [HttpGet("{id}/summary")]
+    [ProducesResponseType(typeof(StockCountSummaryDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<StockCountSummaryDto>> GetStockCountSummary(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetStockCountSummaryQuery
+        {
+            TenantId = tenantId,
+            StockCountId = id
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

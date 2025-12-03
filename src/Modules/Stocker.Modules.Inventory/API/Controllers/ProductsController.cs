@@ -199,6 +199,68 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Activate a product
+    /// </summary>
+    [HttpPost("{id}/activate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ActivateProduct(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new ActivateProductCommand
+        {
+            TenantId = tenantId,
+            ProductId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Deactivate a product
+    /// </summary>
+    [HttpPost("{id}/deactivate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeactivateProduct(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new DeactivateProductCommand
+        {
+            TenantId = tenantId,
+            ProductId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

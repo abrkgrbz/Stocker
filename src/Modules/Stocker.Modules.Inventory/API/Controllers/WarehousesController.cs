@@ -138,6 +138,130 @@ public class WarehousesController : ControllerBase
         return CreatedAtAction(nameof(GetWarehouse), new { id = result.Value.Id }, result.Value);
     }
 
+    /// <summary>
+    /// Update a warehouse
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(WarehouseDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<WarehouseDto>> UpdateWarehouse(int id, UpdateWarehouseDto dto)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new UpdateWarehouseCommand
+        {
+            TenantId = tenantId,
+            WarehouseId = id,
+            WarehouseData = dto
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Delete a warehouse
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteWarehouse(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new DeleteWarehouseCommand
+        {
+            TenantId = tenantId,
+            WarehouseId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Set a warehouse as default
+    /// </summary>
+    [HttpPost("{id}/set-default")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> SetDefaultWarehouse(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new SetDefaultWarehouseCommand
+        {
+            TenantId = tenantId,
+            WarehouseId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get warehouse stock summary
+    /// </summary>
+    [HttpGet("{id}/stock-summary")]
+    [ProducesResponseType(typeof(WarehouseStockSummaryDto), 200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<WarehouseStockSummaryDto>> GetWarehouseStockSummary(int id)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetWarehouseStockSummaryQuery
+        {
+            TenantId = tenantId,
+            WarehouseId = id
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

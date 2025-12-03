@@ -269,6 +269,140 @@ public class PriceListsController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Add an item to a price list
+    /// </summary>
+    [HttpPost("{id}/items")]
+    [ProducesResponseType(typeof(PriceListItemDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<PriceListItemDto>> AddPriceListItem(int id, [FromBody] CreatePriceListItemDto data)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new AddPriceListItemCommand
+        {
+            TenantId = tenantId,
+            PriceListId = id,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(nameof(GetPriceList), new { id }, result.Value);
+    }
+
+    /// <summary>
+    /// Update an item in a price list
+    /// </summary>
+    [HttpPut("{id}/items/{itemId}")]
+    [ProducesResponseType(typeof(PriceListItemDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<PriceListItemDto>> UpdatePriceListItem(int id, int itemId, [FromBody] CreatePriceListItemDto data)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new UpdatePriceListItemCommand
+        {
+            TenantId = tenantId,
+            PriceListId = id,
+            ItemId = itemId,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Remove an item from a price list
+    /// </summary>
+    [HttpDelete("{id}/items/{itemId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> RemovePriceListItem(int id, int itemId)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new RemovePriceListItemCommand
+        {
+            TenantId = tenantId,
+            PriceListId = id,
+            ItemId = itemId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Get price for a product from price lists
+    /// </summary>
+    [HttpGet("product-price/{productId}")]
+    [ProducesResponseType(typeof(ProductPriceDto), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<ProductPriceDto>> GetProductPrice(
+        int productId,
+        [FromQuery] int? priceListId = null,
+        [FromQuery] int? customerGroupId = null,
+        [FromQuery] decimal? quantity = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetProductPriceQuery
+        {
+            TenantId = tenantId,
+            ProductId = productId,
+            PriceListId = priceListId,
+            CustomerGroupId = customerGroupId,
+            Quantity = quantity
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

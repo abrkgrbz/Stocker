@@ -174,6 +174,35 @@ public class StockController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Get stock items that are expiring within specified days
+    /// </summary>
+    [HttpGet("expiring")]
+    [ProducesResponseType(typeof(List<ExpiringStockDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<ExpiringStockDto>>> GetExpiringStock(
+        [FromQuery] int daysUntilExpiry = 30,
+        [FromQuery] int? warehouseId = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetExpiringStockQuery
+        {
+            TenantId = tenantId,
+            DaysUntilExpiry = daysUntilExpiry,
+            WarehouseId = warehouseId
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

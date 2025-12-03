@@ -153,6 +153,39 @@ public class StockMovementsController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Get stock movement summary for a period
+    /// </summary>
+    [HttpGet("summary")]
+    [ProducesResponseType(typeof(StockMovementSummaryDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<StockMovementSummaryDto>> GetStockMovementSummary(
+        [FromQuery] int? warehouseId = null,
+        [FromQuery] int? productId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetStockMovementSummaryQuery
+        {
+            TenantId = tenantId,
+            WarehouseId = warehouseId,
+            ProductId = productId,
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)

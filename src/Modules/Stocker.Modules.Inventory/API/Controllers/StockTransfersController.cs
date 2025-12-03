@@ -279,6 +279,71 @@ public class StockTransfersController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Update a stock transfer (draft only)
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(StockTransferDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<StockTransferDto>> UpdateStockTransfer(int id, [FromBody] UpdateStockTransferDto data)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new UpdateStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            Data = data
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Reject a stock transfer
+    /// </summary>
+    [HttpPost("{id}/reject")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> RejectStockTransfer(int id, [FromBody] RejectTransferRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new RejectStockTransferCommand
+        {
+            TenantId = tenantId,
+            TransferId = id,
+            RejectedByUserId = request.RejectedByUserId,
+            Reason = request.Reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
     private int GetTenantId()
     {
         if (HttpContext.Items["TenantId"] is int tenantId)
@@ -311,5 +376,11 @@ public class ReceiveTransferRequest
 
 public class CancelTransferRequest
 {
+    public string? Reason { get; set; }
+}
+
+public class RejectTransferRequest
+{
+    public int RejectedByUserId { get; set; }
     public string? Reason { get; set; }
 }
