@@ -27,10 +27,11 @@ public class ProductImage : BaseEntity
 
     protected ProductImage() { }
 
-    public ProductImage(int productId, string url, ImageType imageType = ImageType.Gallery)
+    public ProductImage(int productId, string url, Guid tenantId, ImageType imageType = ImageType.Gallery)
     {
         ProductId = productId;
         Url = url;
+        TenantId = tenantId;
         ImageType = imageType;
         DisplayOrder = 0;
         IsPrimary = false;

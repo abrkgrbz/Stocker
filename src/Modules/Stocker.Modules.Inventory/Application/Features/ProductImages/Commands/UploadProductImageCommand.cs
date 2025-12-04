@@ -76,15 +76,18 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
     private readonly IProductRepository _productRepository;
     private readonly IProductImageStorageService _storageService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantService _tenantService;
 
     public UploadProductImageCommandHandler(
         IProductRepository productRepository,
         IProductImageStorageService storageService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ITenantService tenantService)
     {
         _productRepository = productRepository;
         _storageService = storageService;
         _unitOfWork = unitOfWork;
+        _tenantService = tenantService;
     }
 
     public async Task<Result<ProductImageDto>> Handle(UploadProductImageCommand request, CancellationToken cancellationToken)
@@ -113,8 +116,10 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
 
         var storage = uploadResult.Value;
 
-        // Create ProductImage entity
-        var productImage = new ProductImage(request.ProductId, storage.Url, request.ImageType);
+        // Create ProductImage entity with actual Guid TenantId from tenant service
+        var tenantId = _tenantService.GetCurrentTenantId()
+            ?? throw new InvalidOperationException("Tenant ID is not available");
+        var productImage = new ProductImage(request.ProductId, storage.Url, tenantId, request.ImageType);
         productImage.SetMetadata(request.AltText, request.Title);
         productImage.SetFileInfo(
             storage.FileSize,
