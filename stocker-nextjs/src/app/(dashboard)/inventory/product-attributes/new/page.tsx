@@ -47,8 +47,13 @@ import type { Color } from 'antd/es/color-picker';
 const { Text } = Typography;
 const { TextArea } = Input;
 
-interface AttributeOption extends CreateProductAttributeOptionDto {
+interface AttributeOption {
   key: string;
+  value: string;
+  label: string;
+  colorCode?: string;
+  imageUrl?: string;
+  displayOrder?: number;
 }
 
 const mainAttributeTypes = [
@@ -104,22 +109,22 @@ export default function NewProductAttributePage() {
     const newOption: AttributeOption = {
       key: `option-${Date.now()}`,
       value: '',
+      label: '',
       displayOrder: options.length + 1,
-      isDefault: options.length === 0,
     };
     setOptions([...options, newOption]);
   };
 
   const handleAddPresetOptions = (presets: { value: string; colorCode?: string }[]) => {
     const existingValues = options.map((o) => o.value.toLowerCase());
-    const newOptions = presets
+    const newOptions: AttributeOption[] = presets
       .filter((p) => !existingValues.includes(p.value.toLowerCase()))
       .map((preset, index) => ({
         key: `option-${Date.now()}-${index}`,
         value: preset.value,
+        label: preset.value,
         colorCode: preset.colorCode,
         displayOrder: options.length + index + 1,
-        isDefault: options.length === 0 && index === 0,
       }));
     setOptions([...options, ...newOptions]);
   };
@@ -132,13 +137,11 @@ export default function NewProductAttributePage() {
     setOptions(
       options.map((opt) => {
         if (opt.key === key) {
-          if (field === 'isDefault' && value === true) {
-            return { ...opt, isDefault: true };
+          // If value changes, also update label to match
+          if (field === 'value') {
+            return { ...opt, value: value as string, label: value as string };
           }
           return { ...opt, [field]: value };
-        }
-        if (field === 'isDefault' && value === true) {
-          return { ...opt, isDefault: false };
         }
         return opt;
       })
@@ -176,20 +179,18 @@ export default function NewProductAttributePage() {
         attributeType: attributeType,
         isRequired: isRequired,
         isFilterable: isFilterable,
-        isVisible: isVisible,
+        isSearchable: false,
+        showInList: isVisible,
         displayOrder: values.displayOrder || 0,
-        groupName: values.groupName,
         validationPattern: values.validationPattern,
-        minValue: values.minValue,
-        maxValue: values.maxValue,
         defaultValue: values.defaultValue,
         options: hasOptions
           ? options.map((opt, index) => ({
               value: opt.value,
+              label: opt.value, // Use value as label if not specified
               displayOrder: index + 1,
               colorCode: opt.colorCode,
               imageUrl: opt.imageUrl,
-              isDefault: opt.isDefault,
             }))
           : undefined,
       };
@@ -240,20 +241,6 @@ export default function NewProductAttributePage() {
         ) : (
           <Text type="secondary">-</Text>
         ),
-    },
-    {
-      title: 'Varsayılan',
-      dataIndex: 'isDefault',
-      key: 'isDefault',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Switch
-          size="small"
-          checked={record.isDefault}
-          onChange={(checked) => handleOptionChange(record.key, 'isDefault', checked)}
-        />
-      ),
     },
     {
       title: '',

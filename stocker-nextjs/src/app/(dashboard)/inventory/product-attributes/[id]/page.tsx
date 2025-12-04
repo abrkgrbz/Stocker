@@ -91,9 +91,9 @@ export default function ProductAttributeDetailPage() {
         attributeId,
         data: {
           value: newOptionValue.trim(),
+          label: newOptionValue.trim(),
           colorCode: attribute?.attributeType === AttributeType.Color ? newOptionColorCode : undefined,
           displayOrder: (attribute?.options?.length || 0) + 1,
-          isDefault: false,
         },
       });
       setNewOptionValue('');
@@ -115,9 +115,9 @@ export default function ProductAttributeDetailPage() {
         optionId: editingOption.id,
         data: {
           value: editValue.trim(),
+          label: editValue.trim(),
           colorCode: attribute?.attributeType === AttributeType.Color ? editColorCode : undefined,
           displayOrder: editingOption.displayOrder,
-          isDefault: editingOption.isDefault,
         },
       });
       setEditingOption(null);
@@ -136,22 +136,7 @@ export default function ProductAttributeDetailPage() {
     }
   };
 
-  const handleSetDefault = async (option: ProductAttributeOptionDto) => {
-    try {
-      await updateOption.mutateAsync({
-        attributeId,
-        optionId: option.id,
-        data: {
-          value: option.value,
-          colorCode: option.colorCode,
-          displayOrder: option.displayOrder,
-          isDefault: true,
-        },
-      });
-    } catch {
-      // Error handled by mutation
-    }
-  };
+  // handleSetDefault removed - isDefault not supported by backend
 
   const startEdit = (option: ProductAttributeOptionDto) => {
     setEditingOption(option);
@@ -232,21 +217,6 @@ export default function ProductAttributeDetailPage() {
         }
         return colorCode || <Text type="secondary">-</Text>;
       },
-    },
-    {
-      title: 'Varsayılan',
-      dataIndex: 'isDefault',
-      key: 'isDefault',
-      width: 100,
-      align: 'center',
-      render: (isDefault, record) => (
-        <Switch
-          size="small"
-          checked={isDefault}
-          onChange={() => handleSetDefault(record)}
-          disabled={isDefault}
-        />
-      ),
     },
     {
       title: 'İşlemler',

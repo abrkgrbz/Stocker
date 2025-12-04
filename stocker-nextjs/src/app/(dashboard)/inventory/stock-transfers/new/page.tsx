@@ -31,7 +31,7 @@ import {
   useProducts,
   useCreateStockTransfer,
 } from '@/lib/api/hooks/useInventory';
-import type { CreateStockTransferDto, CreateStockTransferItemDto } from '@/lib/api/services/inventory.types';
+import { TransferType, type CreateStockTransferDto, type CreateStockTransferItemDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -44,13 +44,13 @@ interface TransferItem extends CreateStockTransferItemDto {
 }
 
 const transferTypes = [
-  { value: 'Standard', label: 'Standart' },
-  { value: 'Urgent', label: 'Acil' },
-  { value: 'Replenishment', label: 'İkmal' },
-  { value: 'Return', label: 'İade' },
-  { value: 'Internal', label: 'Dahili' },
-  { value: 'CrossDock', label: 'Cross-Dock' },
-  { value: 'Consolidation', label: 'Konsolidasyon' },
+  { value: TransferType.Standard, label: 'Standart' },
+  { value: TransferType.Urgent, label: 'Acil' },
+  { value: TransferType.Replenishment, label: 'İkmal' },
+  { value: TransferType.Return, label: 'İade' },
+  { value: TransferType.Internal, label: 'Dahili' },
+  { value: TransferType.CrossDock, label: 'Cross-Dock' },
+  { value: TransferType.Consolidation, label: 'Konsolidasyon' },
 ];
 
 export default function NewStockTransferPage() {
@@ -59,7 +59,7 @@ export default function NewStockTransferPage() {
   const [items, setItems] = useState<TransferItem[]>([]);
   const [selectedSourceWarehouse, setSelectedSourceWarehouse] = useState<number | undefined>();
   const [selectedDestWarehouse, setSelectedDestWarehouse] = useState<number | undefined>();
-  const [transferType, setTransferType] = useState<string>('Standard');
+  const [transferType, setTransferType] = useState<TransferType>(TransferType.Standard);
 
   const { data: warehouses = [] } = useWarehouses();
   const { data: sourceLocations = [] } = useLocations(selectedSourceWarehouse);
@@ -355,7 +355,7 @@ export default function NewStockTransferPage() {
                 </label>
                 <Segmented
                   value={transferType}
-                  onChange={(val) => setTransferType(val as string)}
+                  onChange={(val) => setTransferType(val as TransferType)}
                   options={transferTypes}
                   block
                 />

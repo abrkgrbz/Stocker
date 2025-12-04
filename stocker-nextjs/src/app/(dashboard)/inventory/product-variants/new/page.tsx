@@ -157,7 +157,7 @@ export default function NewProductVariantPage() {
         productId: selectedProduct.id,
         sku: values.sku,
         barcode: values.barcode,
-        name: values.name,
+        variantName: values.name,
         price: values.price,
         priceCurrency: values.priceCurrency || 'TRY',
         costPrice: values.costPrice,
@@ -165,10 +165,14 @@ export default function NewProductVariantPage() {
         weight: values.weight,
         imageUrl: values.imageUrl,
         isDefault: isDefault,
-        options: validOptions.map((opt) => ({
+        trackInventory: true,
+        allowBackorder: false,
+        displayOrder: 0,
+        options: validOptions.map((opt, index) => ({
           productAttributeId: opt.productAttributeId,
           productAttributeOptionId: opt.productAttributeOptionId,
           value: opt.value,
+          displayOrder: index,
         })),
       };
 

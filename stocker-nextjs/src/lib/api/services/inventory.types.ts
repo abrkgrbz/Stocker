@@ -1505,13 +1505,11 @@ export interface CreateProductAttributeDto {
   attributeType: AttributeType;
   isRequired?: boolean;
   isFilterable?: boolean;
-  isVisible?: boolean;
+  isSearchable?: boolean;
+  showInList?: boolean;
   displayOrder?: number;
-  groupName?: string;
-  validationPattern?: string;
-  minValue?: number;
-  maxValue?: number;
   defaultValue?: string;
+  validationPattern?: string;
   options?: CreateProductAttributeOptionDto[];
 }
 
@@ -1531,18 +1529,18 @@ export interface UpdateProductAttributeDto {
 
 export interface CreateProductAttributeOptionDto {
   value: string;
-  displayOrder?: number;
+  label: string;
   colorCode?: string;
   imageUrl?: string;
-  isDefault?: boolean;
+  displayOrder?: number;
 }
 
 export interface UpdateProductAttributeOptionDto {
   value: string;
-  displayOrder: number;
+  label: string;
   colorCode?: string;
   imageUrl?: string;
-  isDefault: boolean;
+  displayOrder: number;
 }
 
 export interface ProductAttributeValueDto {
@@ -1596,14 +1594,22 @@ export interface CreateProductVariantDto {
   productId: number;
   sku: string;
   barcode?: string;
-  name: string;
+  variantName: string;
   price?: number;
   priceCurrency?: string;
   costPrice?: number;
   costPriceCurrency?: string;
+  compareAtPrice?: number;
+  compareAtPriceCurrency?: string;
   weight?: number;
+  weightUnit?: string;
+  dimensions?: string;
   imageUrl?: string;
   isDefault?: boolean;
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
+  displayOrder?: number;
   options?: CreateProductVariantOptionDto[];
 }
 
@@ -1624,6 +1630,7 @@ export interface CreateProductVariantOptionDto {
   productAttributeId: number;
   productAttributeOptionId?: number;
   value: string;
+  displayOrder?: number;
 }
 
 // =====================================

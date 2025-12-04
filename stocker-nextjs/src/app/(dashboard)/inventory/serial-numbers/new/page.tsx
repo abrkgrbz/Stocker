@@ -65,7 +65,7 @@ export default function NewSerialNumberPage() {
 
   const handleWarehouseChange = (value: number) => {
     setSelectedWarehouse(value);
-    form.setFieldsValues({ locationId: undefined });
+    form.setFieldsValue({ locationId: undefined });
   };
 
   const handleAddSerial = () => {
