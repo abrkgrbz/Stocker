@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
@@ -13,10 +14,12 @@ public class DeleteLocationCommand : IRequest<Result<bool>>
 public class DeleteLocationCommandHandler : IRequestHandler<DeleteLocationCommand, Result<bool>>
 {
     private readonly ILocationRepository _locationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteLocationCommandHandler(ILocationRepository locationRepository)
+    public DeleteLocationCommandHandler(ILocationRepository locationRepository, IUnitOfWork unitOfWork)
     {
         _locationRepository = locationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteLocationCommand request, CancellationToken cancellationToken)
@@ -34,6 +37,7 @@ public class DeleteLocationCommandHandler : IRequestHandler<DeleteLocationComman
 
         location.Deactivate();
         await _locationRepository.UpdateAsync(location, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

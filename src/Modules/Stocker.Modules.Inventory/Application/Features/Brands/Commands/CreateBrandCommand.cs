@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
@@ -39,10 +40,12 @@ public class CreateBrandCommandValidator : AbstractValidator<CreateBrandCommand>
 public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Result<BrandDto>>
 {
     private readonly IBrandRepository _brandRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateBrandCommandHandler(IBrandRepository brandRepository)
+    public CreateBrandCommandHandler(IBrandRepository brandRepository, IUnitOfWork unitOfWork)
     {
         _brandRepository = brandRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<BrandDto>> Handle(CreateBrandCommand request, CancellationToken cancellationToken)
@@ -65,6 +68,7 @@ public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Res
         }
 
         await _brandRepository.AddAsync(brand, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new BrandDto
         {

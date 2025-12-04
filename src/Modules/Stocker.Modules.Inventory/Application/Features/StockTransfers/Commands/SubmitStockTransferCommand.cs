@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -13,10 +14,12 @@ public class SubmitStockTransferCommand : IRequest<Result<bool>>
 public class SubmitStockTransferCommandHandler : IRequestHandler<SubmitStockTransferCommand, Result<bool>>
 {
     private readonly IStockTransferRepository _stockTransferRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public SubmitStockTransferCommandHandler(IStockTransferRepository stockTransferRepository)
+    public SubmitStockTransferCommandHandler(IStockTransferRepository stockTransferRepository, IUnitOfWork unitOfWork)
     {
         _stockTransferRepository = stockTransferRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(SubmitStockTransferCommand request, CancellationToken cancellationToken)
@@ -31,6 +34,7 @@ public class SubmitStockTransferCommandHandler : IRequestHandler<SubmitStockTran
         {
             transfer.Submit();
             await _stockTransferRepository.UpdateAsync(transfer, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

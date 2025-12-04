@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
@@ -24,10 +25,12 @@ public class QuarantineLotBatchCommandValidator : AbstractValidator<QuarantineLo
 public class QuarantineLotBatchCommandHandler : IRequestHandler<QuarantineLotBatchCommand, Result<bool>>
 {
     private readonly ILotBatchRepository _lotBatchRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public QuarantineLotBatchCommandHandler(ILotBatchRepository lotBatchRepository)
+    public QuarantineLotBatchCommandHandler(ILotBatchRepository lotBatchRepository, IUnitOfWork unitOfWork)
     {
         _lotBatchRepository = lotBatchRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(QuarantineLotBatchCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class QuarantineLotBatchCommandHandler : IRequestHandler<QuarantineLotBat
         {
             lotBatch.Quarantine(request.Reason);
             await _lotBatchRepository.UpdateAsync(lotBatch, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

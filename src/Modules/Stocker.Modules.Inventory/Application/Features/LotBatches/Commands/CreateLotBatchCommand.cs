@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.Features.LotBatches.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
@@ -42,11 +43,13 @@ public class CreateLotBatchCommandHandler : IRequestHandler<CreateLotBatchComman
 {
     private readonly ILotBatchRepository _lotBatchRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateLotBatchCommandHandler(ILotBatchRepository lotBatchRepository, IProductRepository productRepository)
+    public CreateLotBatchCommandHandler(ILotBatchRepository lotBatchRepository, IProductRepository productRepository, IUnitOfWork unitOfWork)
     {
         _lotBatchRepository = lotBatchRepository;
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LotBatchDto>> Handle(CreateLotBatchCommand request, CancellationToken cancellationToken)
@@ -71,6 +74,7 @@ public class CreateLotBatchCommandHandler : IRequestHandler<CreateLotBatchComman
         lotBatch.SetNotes(data.Notes);
 
         await _lotBatchRepository.AddAsync(lotBatch, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LotBatchDto>.Success(new LotBatchDto
         {

@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -34,10 +35,12 @@ public class CreatePriceListCommandValidator : AbstractValidator<CreatePriceList
 public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListCommand, Result<PriceListDto>>
 {
     private readonly IPriceListRepository _priceListRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePriceListCommandHandler(IPriceListRepository priceListRepository)
+    public CreatePriceListCommandHandler(IPriceListRepository priceListRepository, IUnitOfWork unitOfWork)
     {
         _priceListRepository = priceListRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PriceListDto>> Handle(CreatePriceListCommand request, CancellationToken cancellationToken)
@@ -67,6 +70,7 @@ public class CreatePriceListCommandHandler : IRequestHandler<CreatePriceListComm
         priceList.SetPriority(data.Priority);
 
         await _priceListRepository.AddAsync(priceList, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PriceListDto>.Success(new PriceListDto
         {

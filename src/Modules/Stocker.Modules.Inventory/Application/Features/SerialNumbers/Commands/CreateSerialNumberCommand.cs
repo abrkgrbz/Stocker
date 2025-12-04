@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.Features.SerialNumbers.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -40,11 +41,13 @@ public class CreateSerialNumberCommandHandler : IRequestHandler<CreateSerialNumb
 {
     private readonly ISerialNumberRepository _serialNumberRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IProductRepository productRepository)
+    public CreateSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IProductRepository productRepository, IUnitOfWork unitOfWork)
     {
         _serialNumberRepository = serialNumberRepository;
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<SerialNumberDto>> Handle(CreateSerialNumberCommand request, CancellationToken cancellationToken)
@@ -69,6 +72,7 @@ public class CreateSerialNumberCommandHandler : IRequestHandler<CreateSerialNumb
         serialNumber.SetNotes(data.Notes);
 
         await _serialNumberRepository.AddAsync(serialNumber, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SerialNumberDto>.Success(new SerialNumberDto
         {

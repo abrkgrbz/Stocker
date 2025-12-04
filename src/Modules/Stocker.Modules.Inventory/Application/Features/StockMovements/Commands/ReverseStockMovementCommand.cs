@@ -1,6 +1,7 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands;
@@ -16,10 +17,12 @@ public class ReverseStockMovementCommand : IRequest<Result<int>>
 public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMovementCommand, Result<int>>
 {
     private readonly IStockMovementRepository _stockMovementRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ReverseStockMovementCommandHandler(IStockMovementRepository stockMovementRepository)
+    public ReverseStockMovementCommandHandler(IStockMovementRepository stockMovementRepository, IUnitOfWork unitOfWork)
     {
         _stockMovementRepository = stockMovementRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<int>> Handle(ReverseStockMovementCommand request, CancellationToken cancellationToken)
@@ -60,6 +63,8 @@ public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMo
         // Mark original movement as reversed
         movement.Reverse(reversalMovement.Id);
         await _stockMovementRepository.UpdateAsync(movement, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<int>.Success(reversalMovement.Id);
     }

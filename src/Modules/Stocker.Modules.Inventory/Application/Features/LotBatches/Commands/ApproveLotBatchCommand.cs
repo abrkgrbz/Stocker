@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
@@ -13,10 +14,12 @@ public class ApproveLotBatchCommand : IRequest<Result<bool>>
 public class ApproveLotBatchCommandHandler : IRequestHandler<ApproveLotBatchCommand, Result<bool>>
 {
     private readonly ILotBatchRepository _lotBatchRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ApproveLotBatchCommandHandler(ILotBatchRepository lotBatchRepository)
+    public ApproveLotBatchCommandHandler(ILotBatchRepository lotBatchRepository, IUnitOfWork unitOfWork)
     {
         _lotBatchRepository = lotBatchRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ApproveLotBatchCommand request, CancellationToken cancellationToken)
@@ -31,6 +34,7 @@ public class ApproveLotBatchCommandHandler : IRequestHandler<ApproveLotBatchComm
         {
             lotBatch.Approve();
             await _lotBatchRepository.UpdateAsync(lotBatch, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

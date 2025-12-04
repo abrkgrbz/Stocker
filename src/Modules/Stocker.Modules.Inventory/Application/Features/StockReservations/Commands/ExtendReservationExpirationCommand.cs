@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -24,10 +25,12 @@ public class ExtendReservationExpirationCommandValidator : AbstractValidator<Ext
 public class ExtendReservationExpirationCommandHandler : IRequestHandler<ExtendReservationExpirationCommand, Result<bool>>
 {
     private readonly IStockReservationRepository _stockReservationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ExtendReservationExpirationCommandHandler(IStockReservationRepository stockReservationRepository)
+    public ExtendReservationExpirationCommandHandler(IStockReservationRepository stockReservationRepository, IUnitOfWork unitOfWork)
     {
         _stockReservationRepository = stockReservationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ExtendReservationExpirationCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class ExtendReservationExpirationCommandHandler : IRequestHandler<ExtendR
         {
             reservation.ExtendExpiration(request.NewExpirationDate);
             await _stockReservationRepository.UpdateAsync(reservation, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

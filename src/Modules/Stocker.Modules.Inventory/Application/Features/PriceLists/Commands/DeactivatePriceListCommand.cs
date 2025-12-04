@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
@@ -13,10 +14,12 @@ public class DeactivatePriceListCommand : IRequest<Result<bool>>
 public class DeactivatePriceListCommandHandler : IRequestHandler<DeactivatePriceListCommand, Result<bool>>
 {
     private readonly IPriceListRepository _priceListRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeactivatePriceListCommandHandler(IPriceListRepository priceListRepository)
+    public DeactivatePriceListCommandHandler(IPriceListRepository priceListRepository, IUnitOfWork unitOfWork)
     {
         _priceListRepository = priceListRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeactivatePriceListCommand request, CancellationToken cancellationToken)
@@ -34,6 +37,7 @@ public class DeactivatePriceListCommandHandler : IRequestHandler<DeactivatePrice
 
         priceList.Deactivate();
         await _priceListRepository.UpdateAsync(priceList, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

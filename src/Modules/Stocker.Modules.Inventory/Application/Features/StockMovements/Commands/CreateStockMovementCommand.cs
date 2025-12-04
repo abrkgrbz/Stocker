@@ -4,6 +4,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands;
@@ -34,15 +35,18 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
     private readonly IStockMovementRepository _stockMovementRepository;
     private readonly IProductRepository _productRepository;
     private readonly IWarehouseRepository _warehouseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateStockMovementCommandHandler(
         IStockMovementRepository stockMovementRepository,
         IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository)
+        IWarehouseRepository warehouseRepository,
+        IUnitOfWork unitOfWork)
     {
         _stockMovementRepository = stockMovementRepository;
         _productRepository = productRepository;
         _warehouseRepository = warehouseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockMovementDto>> Handle(CreateStockMovementCommand request, CancellationToken cancellationToken)
@@ -86,6 +90,7 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
             movement.SetDescription(data.Description);
 
         await _stockMovementRepository.AddAsync(movement, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockMovementDto>.Success(new StockMovementDto
         {

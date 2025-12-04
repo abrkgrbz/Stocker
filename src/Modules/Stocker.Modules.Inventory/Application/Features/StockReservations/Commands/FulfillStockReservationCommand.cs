@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -24,10 +25,12 @@ public class FulfillStockReservationCommandValidator : AbstractValidator<Fulfill
 public class FulfillStockReservationCommandHandler : IRequestHandler<FulfillStockReservationCommand, Result<bool>>
 {
     private readonly IStockReservationRepository _stockReservationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public FulfillStockReservationCommandHandler(IStockReservationRepository stockReservationRepository)
+    public FulfillStockReservationCommandHandler(IStockReservationRepository stockReservationRepository, IUnitOfWork unitOfWork)
     {
         _stockReservationRepository = stockReservationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(FulfillStockReservationCommand request, CancellationToken cancellationToken)
@@ -50,6 +53,7 @@ public class FulfillStockReservationCommandHandler : IRequestHandler<FulfillStoc
             }
 
             await _stockReservationRepository.UpdateAsync(reservation, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

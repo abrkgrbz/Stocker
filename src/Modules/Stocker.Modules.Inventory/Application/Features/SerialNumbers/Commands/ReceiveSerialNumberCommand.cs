@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -14,10 +15,12 @@ public class ReceiveSerialNumberCommand : IRequest<Result<bool>>
 public class ReceiveSerialNumberCommandHandler : IRequestHandler<ReceiveSerialNumberCommand, Result<bool>>
 {
     private readonly ISerialNumberRepository _serialNumberRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ReceiveSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository)
+    public ReceiveSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IUnitOfWork unitOfWork)
     {
         _serialNumberRepository = serialNumberRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ReceiveSerialNumberCommand request, CancellationToken cancellationToken)
@@ -32,6 +35,7 @@ public class ReceiveSerialNumberCommandHandler : IRequestHandler<ReceiveSerialNu
         {
             serialNumber.Receive(request.PurchaseOrderId);
             await _serialNumberRepository.UpdateAsync(serialNumber, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

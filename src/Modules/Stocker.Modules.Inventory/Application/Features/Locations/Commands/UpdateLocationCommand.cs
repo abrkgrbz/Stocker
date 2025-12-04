@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
@@ -28,10 +29,12 @@ public class UpdateLocationCommandValidator : AbstractValidator<UpdateLocationCo
 public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationCommand, Result<LocationDto>>
 {
     private readonly ILocationRepository _locationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateLocationCommandHandler(ILocationRepository locationRepository)
+    public UpdateLocationCommandHandler(ILocationRepository locationRepository, IUnitOfWork unitOfWork)
     {
         _locationRepository = locationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LocationDto>> Handle(UpdateLocationCommand request, CancellationToken cancellationToken)
@@ -48,6 +51,7 @@ public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComman
         location.SetCapacity(data.Capacity);
 
         await _locationRepository.UpdateAsync(location, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LocationDto>.Success(new LocationDto
         {

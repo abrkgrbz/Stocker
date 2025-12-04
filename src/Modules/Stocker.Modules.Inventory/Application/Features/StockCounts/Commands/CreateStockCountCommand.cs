@@ -4,6 +4,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
@@ -30,13 +31,16 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
 {
     private readonly IStockCountRepository _stockCountRepository;
     private readonly IWarehouseRepository _warehouseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateStockCountCommandHandler(
         IStockCountRepository stockCountRepository,
-        IWarehouseRepository warehouseRepository)
+        IWarehouseRepository warehouseRepository,
+        IUnitOfWork unitOfWork)
     {
         _stockCountRepository = stockCountRepository;
         _warehouseRepository = warehouseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockCountDto>> Handle(CreateStockCountCommand request, CancellationToken cancellationToken)
@@ -76,6 +80,7 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
         }
 
         await _stockCountRepository.AddAsync(stockCount, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockCountDto>.Success(new StockCountDto
         {

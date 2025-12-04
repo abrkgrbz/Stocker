@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -28,10 +29,12 @@ public class SellSerialNumberCommandValidator : AbstractValidator<SellSerialNumb
 public class SellSerialNumberCommandHandler : IRequestHandler<SellSerialNumberCommand, Result<bool>>
 {
     private readonly ISerialNumberRepository _serialNumberRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public SellSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository)
+    public SellSerialNumberCommandHandler(ISerialNumberRepository serialNumberRepository, IUnitOfWork unitOfWork)
     {
         _serialNumberRepository = serialNumberRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(SellSerialNumberCommand request, CancellationToken cancellationToken)
@@ -46,6 +49,7 @@ public class SellSerialNumberCommandHandler : IRequestHandler<SellSerialNumberCo
         {
             serialNumber.Sell(request.CustomerId, request.SalesOrderId, request.WarrantyMonths);
             await _serialNumberRepository.UpdateAsync(serialNumber, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

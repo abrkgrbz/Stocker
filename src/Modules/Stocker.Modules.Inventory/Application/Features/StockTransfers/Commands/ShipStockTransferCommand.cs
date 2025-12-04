@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -24,10 +25,12 @@ public class ShipStockTransferCommandValidator : AbstractValidator<ShipStockTran
 public class ShipStockTransferCommandHandler : IRequestHandler<ShipStockTransferCommand, Result<bool>>
 {
     private readonly IStockTransferRepository _stockTransferRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ShipStockTransferCommandHandler(IStockTransferRepository stockTransferRepository)
+    public ShipStockTransferCommandHandler(IStockTransferRepository stockTransferRepository, IUnitOfWork unitOfWork)
     {
         _stockTransferRepository = stockTransferRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ShipStockTransferCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ public class ShipStockTransferCommandHandler : IRequestHandler<ShipStockTransfer
         {
             transfer.Ship(request.ShippedByUserId);
             await _stockTransferRepository.UpdateAsync(transfer, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

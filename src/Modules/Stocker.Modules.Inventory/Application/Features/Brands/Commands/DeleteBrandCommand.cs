@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
@@ -32,10 +33,12 @@ public class DeleteBrandCommandValidator : AbstractValidator<DeleteBrandCommand>
 public class DeleteBrandCommandHandler : IRequestHandler<DeleteBrandCommand, Result<bool>>
 {
     private readonly IBrandRepository _brandRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteBrandCommandHandler(IBrandRepository brandRepository)
+    public DeleteBrandCommandHandler(IBrandRepository brandRepository, IUnitOfWork unitOfWork)
     {
         _brandRepository = brandRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteBrandCommand request, CancellationToken cancellationToken)
@@ -56,6 +59,7 @@ public class DeleteBrandCommandHandler : IRequestHandler<DeleteBrandCommand, Res
         // Soft delete
         brand.Delete("system");
         await _brandRepository.UpdateAsync(brand, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

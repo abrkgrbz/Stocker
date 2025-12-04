@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -14,10 +15,12 @@ public class CancelStockReservationCommand : IRequest<Result<bool>>
 public class CancelStockReservationCommandHandler : IRequestHandler<CancelStockReservationCommand, Result<bool>>
 {
     private readonly IStockReservationRepository _stockReservationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CancelStockReservationCommandHandler(IStockReservationRepository stockReservationRepository)
+    public CancelStockReservationCommandHandler(IStockReservationRepository stockReservationRepository, IUnitOfWork unitOfWork)
     {
         _stockReservationRepository = stockReservationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(CancelStockReservationCommand request, CancellationToken cancellationToken)
@@ -32,6 +35,7 @@ public class CancelStockReservationCommandHandler : IRequestHandler<CancelStockR
         {
             reservation.Cancel(request.Reason);
             await _stockReservationRepository.UpdateAsync(reservation, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)

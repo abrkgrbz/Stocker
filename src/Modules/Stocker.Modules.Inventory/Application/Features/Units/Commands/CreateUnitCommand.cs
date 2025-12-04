@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using InventoryUnit = Stocker.Modules.Inventory.Domain.Entities.Unit;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Units.Commands;
@@ -38,10 +39,12 @@ public class CreateUnitCommandValidator : AbstractValidator<CreateUnitCommand>
 public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Result<UnitDto>>
 {
     private readonly IUnitRepository _unitRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateUnitCommandHandler(IUnitRepository unitRepository)
+    public CreateUnitCommandHandler(IUnitRepository unitRepository, IUnitOfWork unitOfWork)
     {
         _unitRepository = unitRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<UnitDto>> Handle(CreateUnitCommand request, CancellationToken cancellationToken)
@@ -74,6 +77,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
         }
 
         await _unitRepository.AddAsync(unit, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new UnitDto
         {

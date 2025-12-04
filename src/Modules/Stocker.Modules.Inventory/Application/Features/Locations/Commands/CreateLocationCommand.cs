@@ -3,6 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
@@ -30,11 +31,13 @@ public class CreateLocationCommandHandler : IRequestHandler<CreateLocationComman
 {
     private readonly ILocationRepository _locationRepository;
     private readonly IWarehouseRepository _warehouseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateLocationCommandHandler(ILocationRepository locationRepository, IWarehouseRepository warehouseRepository)
+    public CreateLocationCommandHandler(ILocationRepository locationRepository, IWarehouseRepository warehouseRepository, IUnitOfWork unitOfWork)
     {
         _locationRepository = locationRepository;
         _warehouseRepository = warehouseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LocationDto>> Handle(CreateLocationCommand request, CancellationToken cancellationToken)
@@ -58,6 +61,7 @@ public class CreateLocationCommandHandler : IRequestHandler<CreateLocationComman
         location.SetCapacity(data.Capacity);
 
         await _locationRepository.AddAsync(location, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LocationDto>.Success(new LocationDto
         {

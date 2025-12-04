@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
@@ -27,10 +28,12 @@ public class CountItemCommandValidator : AbstractValidator<CountItemCommand>
 public class CountItemCommandHandler : IRequestHandler<CountItemCommand, Result<bool>>
 {
     private readonly IStockCountRepository _stockCountRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CountItemCommandHandler(IStockCountRepository stockCountRepository)
+    public CountItemCommandHandler(IStockCountRepository stockCountRepository, IUnitOfWork unitOfWork)
     {
         _stockCountRepository = stockCountRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(CountItemCommand request, CancellationToken cancellationToken)
@@ -54,6 +57,7 @@ public class CountItemCommandHandler : IRequestHandler<CountItemCommand, Result<
 
         item.Count(request.CountedQuantity, request.Notes);
         await _stockCountRepository.UpdateAsync(stockCount, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);
     }

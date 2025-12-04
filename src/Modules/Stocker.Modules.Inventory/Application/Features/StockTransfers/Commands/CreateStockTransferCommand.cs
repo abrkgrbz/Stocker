@@ -4,6 +4,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -33,13 +34,16 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
 {
     private readonly IStockTransferRepository _stockTransferRepository;
     private readonly IWarehouseRepository _warehouseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateStockTransferCommandHandler(
         IStockTransferRepository stockTransferRepository,
-        IWarehouseRepository warehouseRepository)
+        IWarehouseRepository warehouseRepository,
+        IUnitOfWork unitOfWork)
     {
         _stockTransferRepository = stockTransferRepository;
         _warehouseRepository = warehouseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockTransferDto>> Handle(CreateStockTransferCommand request, CancellationToken cancellationToken)
@@ -89,6 +93,7 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
         }
 
         await _stockTransferRepository.AddAsync(transfer, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockTransferDto>.Success(new StockTransferDto
         {

@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
@@ -14,10 +15,12 @@ public class MarkDefectiveCommand : IRequest<Result<bool>>
 public class MarkDefectiveCommandHandler : IRequestHandler<MarkDefectiveCommand, Result<bool>>
 {
     private readonly ISerialNumberRepository _serialNumberRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public MarkDefectiveCommandHandler(ISerialNumberRepository serialNumberRepository)
+    public MarkDefectiveCommandHandler(ISerialNumberRepository serialNumberRepository, IUnitOfWork unitOfWork)
     {
         _serialNumberRepository = serialNumberRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(MarkDefectiveCommand request, CancellationToken cancellationToken)
@@ -30,6 +33,7 @@ public class MarkDefectiveCommandHandler : IRequestHandler<MarkDefectiveCommand,
 
         serialNumber.MarkDefective(request.Reason);
         await _serialNumberRepository.UpdateAsync(serialNumber, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result<bool>.Success(true);
     }
 }

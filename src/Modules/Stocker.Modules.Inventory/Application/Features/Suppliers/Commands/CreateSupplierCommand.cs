@@ -4,6 +4,7 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Suppliers.Commands;
@@ -39,10 +40,12 @@ public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCo
 public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierCommand, Result<SupplierDto>>
 {
     private readonly ISupplierRepository _supplierRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateSupplierCommandHandler(ISupplierRepository supplierRepository)
+    public CreateSupplierCommandHandler(ISupplierRepository supplierRepository, IUnitOfWork unitOfWork)
     {
         _supplierRepository = supplierRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<SupplierDto>> Handle(CreateSupplierCommand request, CancellationToken cancellationToken)
@@ -86,6 +89,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
         supplier.SetCreditInfo(data.CreditLimit, data.PaymentTermDays ?? 30);
 
         await _supplierRepository.AddAsync(supplier, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new SupplierDto
         {

@@ -4,6 +4,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -33,15 +34,18 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
     private readonly IStockReservationRepository _stockReservationRepository;
     private readonly IProductRepository _productRepository;
     private readonly IWarehouseRepository _warehouseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateStockReservationCommandHandler(
         IStockReservationRepository stockReservationRepository,
         IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository)
+        IWarehouseRepository warehouseRepository,
+        IUnitOfWork unitOfWork)
     {
         _stockReservationRepository = stockReservationRepository;
         _productRepository = productRepository;
         _warehouseRepository = warehouseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockReservationDto>> Handle(CreateStockReservationCommand request, CancellationToken cancellationToken)
@@ -78,6 +82,7 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
             reservation.SetNotes(data.Notes);
 
         await _stockReservationRepository.AddAsync(reservation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockReservationDto>.Success(new StockReservationDto
         {
