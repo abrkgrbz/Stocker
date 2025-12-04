@@ -1,0 +1,851 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  Tag,
+  Button,
+  Space,
+  Select,
+  Tabs,
+  Progress,
+  Typography,
+  Tooltip,
+  Badge,
+  Alert,
+  Modal,
+  Descriptions,
+  Spin,
+  Empty,
+} from 'antd';
+import {
+  LineChartOutlined,
+  WarningOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SyncOutlined,
+  ShoppingCartOutlined,
+  BarChartOutlined,
+  SafetyCertificateOutlined,
+  BulbOutlined,
+  ExclamationCircleOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  MinusOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import {
+  useForecastSummary,
+  useStockoutRiskProducts,
+  useReorderSuggestions,
+  useBulkStockOptimizations,
+  useProductForecast,
+  useDemandAnalysis,
+  useSafetyStockCalculation,
+  useStockOptimization,
+  useGenerateReorderSuggestions,
+  useProcessReorderSuggestion,
+  useCategories,
+  useWarehouses,
+} from '@/lib/api/hooks/useInventory';
+import type {
+  ProductForecastDto,
+  ReorderSuggestionDto,
+  StockOptimizationDto,
+  ForecastSummaryDto,
+  StockForecastFilterDto,
+  ReorderSuggestionStatus,
+} from '@/lib/api/services/inventory.types';
+import { ForecastingMethod } from '@/lib/api/services/inventory.types';
+
+const { Title, Text } = Typography;
+const { TabPane } = Tabs;
+
+// Risk level helpers
+const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
+  if (daysUntilStockout <= 0) return { color: 'red', text: 'Stokta Yok', icon: <ExclamationCircleOutlined /> };
+  if (daysUntilStockout < leadTime) return { color: 'red', text: 'Yüksek Risk', icon: <WarningOutlined /> };
+  if (daysUntilStockout < leadTime * 2) return { color: 'orange', text: 'Orta Risk', icon: <ClockCircleOutlined /> };
+  return { color: 'green', text: 'Düşük Risk', icon: <CheckCircleOutlined /> };
+};
+
+const getTrendIcon = (trend: number) => {
+  if (trend > 0.05) return <ArrowUpOutlined style={{ color: '#52c41a' }} />;
+  if (trend < -0.05) return <ArrowDownOutlined style={{ color: '#f5222d' }} />;
+  return <MinusOutlined style={{ color: '#8c8c8c' }} />;
+};
+
+const getStatusColor = (status: ReorderSuggestionStatus) => {
+  switch (status) {
+    case 'Pending': return 'processing';
+    case 'Approved': return 'success';
+    case 'Rejected': return 'error';
+    case 'Ordered': return 'cyan';
+    case 'Expired': return 'default';
+    default: return 'default';
+  }
+};
+
+const getStatusText = (status: ReorderSuggestionStatus) => {
+  switch (status) {
+    case 'Pending': return 'Beklemede';
+    case 'Approved': return 'Onaylandı';
+    case 'Rejected': return 'Reddedildi';
+    case 'Ordered': return 'Sipariş Verildi';
+    case 'Expired': return 'Süresi Doldu';
+    default: return status;
+  }
+};
+
+export default function ForecastingPage() {
+  const [activeTab, setActiveTab] = useState('summary');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | undefined>();
+  const [forecastDays, setForecastDays] = useState(30);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+
+  // Queries
+  const { data: categories } = useCategories();
+  const { data: warehouses } = useWarehouses();
+
+  const filter: StockForecastFilterDto = {
+    categoryId: selectedCategoryId,
+    warehouseId: selectedWarehouseId,
+    forecastDays,
+    method: ForecastingMethod.ExponentialSmoothing,
+  };
+
+  const { data: forecastSummary, isLoading: summaryLoading, refetch: refetchSummary } = useForecastSummary(filter);
+  const { data: riskProducts, isLoading: riskLoading } = useStockoutRiskProducts(7, selectedWarehouseId);
+  const { data: suggestions, isLoading: suggestionsLoading, refetch: refetchSuggestions } = useReorderSuggestions({
+    categoryId: selectedCategoryId,
+    warehouseId: selectedWarehouseId,
+    status: 'Pending' as ReorderSuggestionStatus,
+    pageSize: 50,
+  });
+  const { data: optimizations, isLoading: optimizationsLoading } = useBulkStockOptimizations(selectedCategoryId, selectedWarehouseId);
+
+  // Detail queries (only when modal is open)
+  const { data: productForecast } = useProductForecast(selectedProductId || 0, selectedWarehouseId, forecastDays);
+  const { data: demandAnalysis } = useDemandAnalysis(selectedProductId || 0, selectedWarehouseId);
+  const { data: safetyStock } = useSafetyStockCalculation(selectedProductId || 0);
+  const { data: optimization } = useStockOptimization(selectedProductId || 0);
+
+  // Mutations
+  const generateSuggestions = useGenerateReorderSuggestions();
+  const processSuggestion = useProcessReorderSuggestion();
+
+  // Columns for risk products table
+  const riskColumns: ColumnsType<ProductForecastDto> = [
+    {
+      title: 'Ürün',
+      key: 'product',
+      render: (_, record) => (
+        <div>
+          <Text strong>{record.productCode}</Text>
+          <br />
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Kategori',
+      dataIndex: 'categoryName',
+      key: 'categoryName',
+    },
+    {
+      title: 'Mevcut Stok',
+      key: 'stock',
+      render: (_, record) => (
+        <div>
+          <Text>{record.availableStock.toFixed(0)}</Text>
+          {record.reservedStock > 0 && (
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {' '}({record.reservedStock.toFixed(0)} rezerve)
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Günlük Talep',
+      dataIndex: 'averageDailyDemand',
+      key: 'averageDailyDemand',
+      render: (value: number) => value.toFixed(1),
+    },
+    {
+      title: 'Stok Bitiş',
+      key: 'stockout',
+      render: (_, record) => {
+        const risk = getRiskLevel(record.estimatedDaysUntilStockout, record.leadTimeDays);
+        return (
+          <Space>
+            <Tag color={risk.color} icon={risk.icon}>
+              {record.estimatedDaysUntilStockout} gün
+            </Tag>
+          </Space>
+        );
+      },
+    },
+    {
+      title: 'Risk',
+      key: 'risk',
+      render: (_, record) => {
+        const risk = getRiskLevel(record.estimatedDaysUntilStockout, record.leadTimeDays);
+        return <Tag color={risk.color}>{risk.text}</Tag>;
+      },
+    },
+    {
+      title: 'Önerilen Sipariş',
+      key: 'suggestion',
+      render: (_, record) => (
+        <div>
+          <Text strong style={{ color: '#1890ff' }}>{record.suggestedReorderQuantity.toFixed(0)}</Text>
+          {record.suggestedOrderDate && (
+            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+              {new Date(record.suggestedOrderDate).toLocaleDateString('tr-TR')}
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            setSelectedProductId(record.productId);
+            setDetailModalVisible(true);
+          }}
+        >
+          Detay
+        </Button>
+      ),
+    },
+  ];
+
+  // Columns for suggestions table
+  const suggestionColumns: ColumnsType<ReorderSuggestionDto> = [
+    {
+      title: 'Ürün',
+      key: 'product',
+      render: (_, record) => (
+        <div>
+          <Text strong>{record.productCode}</Text>
+          <br />
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Mevcut Stok',
+      dataIndex: 'availableStock',
+      key: 'availableStock',
+      render: (value: number) => value.toFixed(0),
+    },
+    {
+      title: 'Önerilen Miktar',
+      dataIndex: 'suggestedQuantity',
+      key: 'suggestedQuantity',
+      render: (value: number) => <Text strong style={{ color: '#1890ff' }}>{value.toFixed(0)}</Text>,
+    },
+    {
+      title: 'Tahmini Maliyet',
+      key: 'cost',
+      render: (_, record) => (
+        <Text>{record.estimatedCost.toLocaleString('tr-TR')} {record.currency}</Text>
+      ),
+    },
+    {
+      title: 'Stok Bitiş',
+      key: 'stockout',
+      render: (_, record) => (
+        record.estimatedDaysUntilStockout !== undefined ? (
+          <Tag color={record.estimatedDaysUntilStockout <= 7 ? 'red' : 'orange'}>
+            {record.estimatedDaysUntilStockout} gün
+          </Tag>
+        ) : '-'
+      ),
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: ReorderSuggestionStatus) => (
+        <Badge status={getStatusColor(status) as any} text={getStatusText(status)} />
+      ),
+    },
+    {
+      title: 'İşlem',
+      key: 'actions',
+      render: (_, record) => (
+        record.status === 'Pending' && (
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => processSuggestion.mutate({
+                id: record.id,
+                dto: { newStatus: 'Approved' as ReorderSuggestionStatus }
+              })}
+              loading={processSuggestion.isPending}
+            >
+              Onayla
+            </Button>
+            <Button
+              size="small"
+              danger
+              onClick={() => processSuggestion.mutate({
+                id: record.id,
+                dto: { newStatus: 'Rejected' as ReorderSuggestionStatus, reason: 'Manuel red' }
+              })}
+              loading={processSuggestion.isPending}
+            >
+              Reddet
+            </Button>
+          </Space>
+        )
+      ),
+    },
+  ];
+
+  // Columns for optimizations table
+  const optimizationColumns: ColumnsType<StockOptimizationDto> = [
+    {
+      title: 'Ürün',
+      key: 'product',
+      render: (_, record) => (
+        <div>
+          <Text strong>{record.productCode}</Text>
+          <br />
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Mevcut Min',
+      dataIndex: 'currentMinStock',
+      key: 'currentMinStock',
+      render: (value: number) => value.toFixed(0),
+    },
+    {
+      title: 'Önerilen Min',
+      dataIndex: 'recommendedMinStock',
+      key: 'recommendedMinStock',
+      render: (value: number, record) => (
+        <Text type={value !== record.currentMinStock ? 'warning' : undefined}>
+          {value.toFixed(0)}
+        </Text>
+      ),
+    },
+    {
+      title: 'Mevcut Reorder',
+      dataIndex: 'currentReorderLevel',
+      key: 'currentReorderLevel',
+      render: (value: number) => value.toFixed(0),
+    },
+    {
+      title: 'Önerilen Reorder',
+      dataIndex: 'recommendedReorderLevel',
+      key: 'recommendedReorderLevel',
+      render: (value: number, record) => (
+        <Text type={value !== record.currentReorderLevel ? 'warning' : undefined}>
+          {value.toFixed(0)}
+        </Text>
+      ),
+    },
+    {
+      title: 'Envanter Azalma',
+      key: 'reduction',
+      render: (_, record) => (
+        record.inventoryReductionPercent > 0 ? (
+          <Tag color="green">{record.inventoryReductionPercent.toFixed(1)}%</Tag>
+        ) : (
+          <Tag color="orange">{Math.abs(record.inventoryReductionPercent).toFixed(1)}% artış</Tag>
+        )
+      ),
+    },
+    {
+      title: 'Yıllık Tasarruf',
+      dataIndex: 'estimatedAnnualSavings',
+      key: 'estimatedAnnualSavings',
+      render: (value: number) => (
+        value > 0 ? (
+          <Text type="success">{value.toLocaleString('tr-TR')} TRY</Text>
+        ) : '-'
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col flex="auto">
+          <Title level={4} style={{ margin: 0 }}>
+            <LineChartOutlined /> Stok Tahminleme & Otomatik Yeniden Sipariş
+          </Title>
+        </Col>
+        <Col>
+          <Space>
+            <Select
+              placeholder="Kategori"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedCategoryId}
+              onChange={setSelectedCategoryId}
+            >
+              {categories?.map((cat) => (
+                <Select.Option key={cat.id} value={cat.id}>{cat.name}</Select.Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Depo"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedWarehouseId}
+              onChange={setSelectedWarehouseId}
+            >
+              {warehouses?.map((wh) => (
+                <Select.Option key={wh.id} value={wh.id}>{wh.name}</Select.Option>
+              ))}
+            </Select>
+            <Select
+              value={forecastDays}
+              onChange={setForecastDays}
+              style={{ width: 140 }}
+            >
+              <Select.Option value={7}>7 Gün</Select.Option>
+              <Select.Option value={14}>14 Gün</Select.Option>
+              <Select.Option value={30}>30 Gün</Select.Option>
+              <Select.Option value={60}>60 Gün</Select.Option>
+              <Select.Option value={90}>90 Gün</Select.Option>
+            </Select>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                refetchSummary();
+                refetchSuggestions();
+              }}
+            >
+              Yenile
+            </Button>
+          </Space>
+        </Col>
+      </Row>
+
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane
+          tab={<span><BarChartOutlined /> Özet</span>}
+          key="summary"
+        >
+          {summaryLoading ? (
+            <div style={{ textAlign: 'center', padding: 50 }}>
+              <Spin size="large" />
+            </div>
+          ) : forecastSummary ? (
+            <>
+              {/* KPI Cards */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="Analiz Edilen Ürün"
+                      value={forecastSummary.totalProductsAnalyzed}
+                      prefix={<BarChartOutlined />}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="Sipariş Gerekli"
+                      value={forecastSummary.productsNeedingReorder}
+                      prefix={<ShoppingCartOutlined />}
+                      valueStyle={{ color: forecastSummary.productsNeedingReorder > 0 ? '#faad14' : '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="Risk Altında"
+                      value={forecastSummary.productsAtRisk}
+                      prefix={<WarningOutlined />}
+                      valueStyle={{ color: forecastSummary.productsAtRisk > 0 ? '#f5222d' : '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="Stokta Yok"
+                      value={forecastSummary.productsInStockout}
+                      prefix={<ExclamationCircleOutlined />}
+                      valueStyle={{ color: forecastSummary.productsInStockout > 0 ? '#f5222d' : '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* Risk Distribution */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} lg={12}>
+                  <Card title="Risk Dağılımı">
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Statistic
+                          title="Yüksek Risk"
+                          value={forecastSummary.highRiskProducts}
+                          valueStyle={{ color: '#f5222d' }}
+                        />
+                        <Progress
+                          percent={forecastSummary.totalProductsAnalyzed > 0
+                            ? Math.round((forecastSummary.highRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
+                            : 0}
+                          strokeColor="#f5222d"
+                          size="small"
+                        />
+                      </Col>
+                      <Col span={8}>
+                        <Statistic
+                          title="Orta Risk"
+                          value={forecastSummary.mediumRiskProducts}
+                          valueStyle={{ color: '#faad14' }}
+                        />
+                        <Progress
+                          percent={forecastSummary.totalProductsAnalyzed > 0
+                            ? Math.round((forecastSummary.mediumRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
+                            : 0}
+                          strokeColor="#faad14"
+                          size="small"
+                        />
+                      </Col>
+                      <Col span={8}>
+                        <Statistic
+                          title="Düşük Risk"
+                          value={forecastSummary.lowRiskProducts}
+                          valueStyle={{ color: '#52c41a' }}
+                        />
+                        <Progress
+                          percent={forecastSummary.totalProductsAnalyzed > 0
+                            ? Math.round((forecastSummary.lowRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
+                            : 0}
+                          strokeColor="#52c41a"
+                          size="small"
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                </Col>
+                <Col xs={24} lg={12}>
+                  <Card title="Tahmin Değerleri">
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Statistic
+                          title={`${forecastDays} Günlük Talep Tahmini`}
+                          value={forecastSummary.totalForecastedDemandValue}
+                          precision={0}
+                          suffix="adet"
+                        />
+                      </Col>
+                      <Col span={12}>
+                        <Statistic
+                          title="Önerilen Sipariş Değeri"
+                          value={forecastSummary.totalSuggestedReorderValue}
+                          precision={0}
+                          suffix="adet"
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* Category Breakdown */}
+              {forecastSummary.byCategory && forecastSummary.byCategory.length > 0 && (
+                <Card title="Kategori Bazında Analiz" style={{ marginBottom: 24 }}>
+                  <Table
+                    dataSource={forecastSummary.byCategory}
+                    rowKey="categoryName"
+                    pagination={false}
+                    size="small"
+                    columns={[
+                      { title: 'Kategori', dataIndex: 'categoryName', key: 'categoryName' },
+                      { title: 'Ürün Sayısı', dataIndex: 'productCount', key: 'productCount' },
+                      {
+                        title: 'Sipariş Gerekli',
+                        dataIndex: 'productsNeedingReorder',
+                        key: 'productsNeedingReorder',
+                        render: (value: number) => (
+                          <Tag color={value > 0 ? 'orange' : 'green'}>{value}</Tag>
+                        ),
+                      },
+                      {
+                        title: 'Tahmini Talep',
+                        dataIndex: 'totalForecastedDemand',
+                        key: 'totalForecastedDemand',
+                        render: (value: number) => value.toFixed(0),
+                      },
+                    ]}
+                  />
+                </Card>
+              )}
+
+              {/* Top Reorder Products */}
+              {forecastSummary.topReorderProducts && forecastSummary.topReorderProducts.length > 0 && (
+                <Card title="En Acil Siparişler">
+                  <Table
+                    dataSource={forecastSummary.topReorderProducts}
+                    columns={riskColumns}
+                    rowKey="productId"
+                    pagination={false}
+                    size="small"
+                  />
+                </Card>
+              )}
+            </>
+          ) : (
+            <Empty description="Tahmin verisi bulunamadı" />
+          )}
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <WarningOutlined />
+              Stok Tükenme Riski
+              {riskProducts && riskProducts.length > 0 && (
+                <Badge count={riskProducts.length} style={{ marginLeft: 8 }} />
+              )}
+            </span>
+          }
+          key="risk"
+        >
+          {riskProducts && riskProducts.length > 0 ? (
+            <>
+              <Alert
+                message="Stok Tükenme Uyarısı"
+                description={`${riskProducts.length} ürün önümüzdeki 7 gün içinde stok tükenme riski altında.`}
+                type="warning"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+              <Table
+                dataSource={riskProducts}
+                columns={riskColumns}
+                rowKey="productId"
+                loading={riskLoading}
+                pagination={{ pageSize: 20 }}
+              />
+            </>
+          ) : (
+            <Empty description="Stok tükenme riski olan ürün bulunmamaktadır" />
+          )}
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <ShoppingCartOutlined />
+              Sipariş Önerileri
+              {suggestions?.pendingCount && suggestions.pendingCount > 0 && (
+                <Badge count={suggestions.pendingCount} style={{ marginLeft: 8 }} />
+              )}
+            </span>
+          }
+          key="suggestions"
+        >
+          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+            <Col>
+              <Button
+                type="primary"
+                icon={<SyncOutlined />}
+                onClick={() => generateSuggestions.mutate({
+                  categoryId: selectedCategoryId,
+                  warehouseId: selectedWarehouseId,
+                })}
+                loading={generateSuggestions.isPending}
+              >
+                Önerileri Yeniden Oluştur
+              </Button>
+            </Col>
+            {suggestions && (
+              <Col flex="auto">
+                <Space>
+                  <Tag color="blue">Bekleyen: {suggestions.pendingCount}</Tag>
+                  <Tag color="green">Onaylanan: {suggestions.approvedCount}</Tag>
+                  <Tag>Toplam Değer: {suggestions.totalPendingValue.toLocaleString('tr-TR')} TRY</Tag>
+                </Space>
+              </Col>
+            )}
+          </Row>
+
+          <Table
+            dataSource={suggestions?.items || []}
+            columns={suggestionColumns}
+            rowKey="id"
+            loading={suggestionsLoading}
+            pagination={{
+              total: suggestions?.totalCount,
+              pageSize: suggestions?.pageSize || 20,
+              showTotal: (total) => `Toplam ${total} öneri`,
+            }}
+          />
+        </TabPane>
+
+        <TabPane
+          tab={<span><BulbOutlined /> Optimizasyon Önerileri</span>}
+          key="optimization"
+        >
+          {optimizationsLoading ? (
+            <div style={{ textAlign: 'center', padding: 50 }}>
+              <Spin size="large" />
+            </div>
+          ) : optimizations && optimizations.length > 0 ? (
+            <>
+              <Alert
+                message="Stok Optimizasyonu"
+                description="Aşağıdaki tabloda ürünleriniz için önerilen stok seviyesi optimizasyonları gösterilmektedir."
+                type="info"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+              <Table
+                dataSource={optimizations}
+                columns={optimizationColumns}
+                rowKey="productId"
+                pagination={{ pageSize: 20 }}
+                expandable={{
+                  expandedRowRender: (record) => (
+                    <div style={{ padding: 16 }}>
+                      <Title level={5}>Öneriler</Title>
+                      <ul>
+                        {record.recommendations.map((rec, index) => (
+                          <li key={index}>{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ),
+                }}
+              />
+            </>
+          ) : (
+            <Empty description="Optimizasyon önerisi bulunamadı" />
+          )}
+        </TabPane>
+      </Tabs>
+
+      {/* Product Detail Modal */}
+      <Modal
+        title="Ürün Tahmin Detayı"
+        open={detailModalVisible}
+        onCancel={() => {
+          setDetailModalVisible(false);
+          setSelectedProductId(null);
+        }}
+        width={800}
+        footer={null}
+      >
+        {selectedProductId && productForecast ? (
+          <>
+            <Descriptions bordered size="small" column={2} style={{ marginBottom: 16 }}>
+              <Descriptions.Item label="Ürün Kodu">{productForecast.productCode}</Descriptions.Item>
+              <Descriptions.Item label="Ürün Adı">{productForecast.productName}</Descriptions.Item>
+              <Descriptions.Item label="Mevcut Stok">{productForecast.currentStock.toFixed(0)}</Descriptions.Item>
+              <Descriptions.Item label="Kullanılabilir">{productForecast.availableStock.toFixed(0)}</Descriptions.Item>
+              <Descriptions.Item label="Günlük Ortalama Talep">{productForecast.averageDailyDemand.toFixed(2)}</Descriptions.Item>
+              <Descriptions.Item label="Standart Sapma">{productForecast.demandStandardDeviation.toFixed(2)}</Descriptions.Item>
+              <Descriptions.Item label="Stok Bitiş Süresi">
+                <Tag color={productForecast.estimatedDaysUntilStockout <= 7 ? 'red' : 'orange'}>
+                  {productForecast.estimatedDaysUntilStockout} gün
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Trend">
+                {getTrendIcon(productForecast.trendDirection)}
+                {' '}
+                {productForecast.trendDirection > 0.05 ? 'Artıyor' :
+                  productForecast.trendDirection < -0.05 ? 'Azalıyor' : 'Sabit'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tahmin Doğruluğu">
+                <Progress
+                  percent={Math.round(productForecast.forecastAccuracy * 100)}
+                  size="small"
+                  status={productForecast.forecastAccuracy > 0.8 ? 'success' : 'normal'}
+                />
+              </Descriptions.Item>
+              <Descriptions.Item label="Yöntem">{productForecast.methodUsed}</Descriptions.Item>
+            </Descriptions>
+
+            {productForecast.needsReorder && (
+              <Alert
+                message="Sipariş Önerisi"
+                description={
+                  <div>
+                    <p><strong>Önerilen Miktar:</strong> {productForecast.suggestedReorderQuantity.toFixed(0)}</p>
+                    {productForecast.suggestedOrderDate && (
+                      <p><strong>Önerilen Sipariş Tarihi:</strong> {new Date(productForecast.suggestedOrderDate).toLocaleDateString('tr-TR')}</p>
+                    )}
+                    <p><strong>Sebep:</strong> {productForecast.reorderReason}</p>
+                  </div>
+                }
+                type="warning"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+            )}
+
+            {safetyStock && (
+              <Card title="Emniyet Stoğu Hesabı" size="small" style={{ marginBottom: 16 }}>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Statistic
+                      title="Mevcut Emniyet Stoğu"
+                      value={safetyStock.currentSafetyStock}
+                      precision={0}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title="Önerilen Emniyet Stoğu"
+                      value={safetyStock.recommendedSafetyStock}
+                      precision={0}
+                      valueStyle={{
+                        color: safetyStock.recommendedSafetyStock !== safetyStock.currentSafetyStock ? '#faad14' : '#52c41a'
+                      }}
+                    />
+                  </Col>
+                </Row>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                  {safetyStock.formula}
+                </Text>
+              </Card>
+            )}
+
+            {optimization && optimization.recommendations.length > 0 && (
+              <Card title="Optimizasyon Önerileri" size="small">
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {optimization.recommendations.map((rec, index) => (
+                    <li key={index}>{rec}</li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 50 }}>
+            <Spin />
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}

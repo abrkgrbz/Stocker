@@ -111,7 +111,81 @@ import type {
   UpdateProductBundleDto,
   CreateProductBundleItemDto,
   UpdateProductBundleItemDto,
+  // Analytics
+  InventoryDashboardDto,
+  StockValuationDto,
+  InventoryKPIsReportDto,
+  // Barcode
+  GenerateBarcodeRequest,
+  GenerateBarcodeResponse,
+  GenerateProductLabelRequest,
+  GenerateProductLabelResponse,
+  BulkLabelGenerationRequest,
+  BulkLabelGenerationResponse,
+  BarcodeLookupRequest,
+  BarcodeLookupResponse,
+  AutoGenerateBarcodeRequest,
+  AutoGenerateBarcodeResponse,
+  BarcodeValidationResult,
+  BarcodeUniquenessResult,
+  BarcodeFormatInfo,
+  LabelSizeInfo,
+  // Audit Trail
+  InventoryAuditFilterDto,
+  InventoryAuditLogDto,
+  InventoryAuditDashboardDto,
+  EntityHistoryDto,
+  PaginatedAuditLogsDto,
+  // Stock Forecasting & Auto-Reorder
+  ForecastingMethod,
+  ReorderRuleStatus,
+  ReorderSuggestionStatus,
+  StockForecastFilterDto,
+  ProductForecastDto,
+  ForecastSummaryDto,
+  DemandAnalysisDto,
+  SeasonalPatternDto,
+  SafetyStockCalculationDto,
+  StockOptimizationDto,
+  AbcClassificationDto,
+  ReorderRuleDto,
+  CreateReorderRuleDto,
+  ReorderSuggestionDto,
+  ReorderSuggestionFilterDto,
+  PaginatedReorderSuggestionsDto,
+  ProcessReorderSuggestionDto,
+  // Inventory Costing (FIFO/LIFO/WAC)
+  CostingMethod,
+  CostLayerDto,
+  CostLayerFilterDto,
+  PaginatedCostLayersDto,
+  ProductCostingSummaryDto,
+  CostCalculationRequestDto,
+  CostCalculationResultDto,
+  CreateCostLayerDto,
+  CostMethodComparisonDto,
+  InventoryValuationReportDto,
+  InventoryValuationFilterDto,
+  TotalInventoryValueResponse,
+  COGSReportDto,
+  COGSReportFilterDto,
+  SetStandardCostDto,
+  CostVarianceAnalysisDto,
+  CostAdjustmentDto,
+  CostingMethodsResponse,
 } from './inventory.types';
+
+// Import enums as values (not types) for use as default parameters
+import {
+  BarcodeFormat,
+  LabelSize,
+  ForecastingMethod as ForecastingMethodEnum,
+  CostingMethod as CostingMethodEnum,
+} from './inventory.types';
+
+// Re-export for convenience
+export { ForecastingMethodEnum as ForecastingMethod };
+export { CostingMethodEnum as CostingMethod };
 
 // =====================================
 // INVENTORY API SERVICE
@@ -1290,6 +1364,619 @@ export class InventoryService {
    */
   static async removeProductBundleItem(bundleId: number, itemId: number): Promise<void> {
     return ApiService.delete<void>(this.getPath(`product-bundles/${bundleId}/items/${itemId}`));
+  }
+
+  // =====================================
+  // ANALYTICS
+  // =====================================
+
+  /**
+   * Get inventory dashboard data
+   */
+  static async getInventoryDashboard(
+    warehouseId?: number,
+    days: number = 30
+  ): Promise<InventoryDashboardDto> {
+    return ApiService.get<InventoryDashboardDto>(this.getPath('analytics/dashboard'), {
+      params: { warehouseId, days },
+    });
+  }
+
+  /**
+   * Get stock valuation report
+   */
+  static async getStockValuation(
+    warehouseId?: number,
+    categoryId?: number,
+    asOfDate?: string
+  ): Promise<StockValuationDto> {
+    return ApiService.get<StockValuationDto>(this.getPath('analytics/valuation'), {
+      params: { warehouseId, categoryId, asOfDate },
+    });
+  }
+
+  /**
+   * Get inventory KPIs report
+   */
+  static async getInventoryKPIs(
+    startDate: string,
+    endDate: string,
+    warehouseId?: number
+  ): Promise<InventoryKPIsReportDto> {
+    return ApiService.get<InventoryKPIsReportDto>(this.getPath('analytics/kpis'), {
+      params: { startDate, endDate, warehouseId },
+    });
+  }
+
+  // =====================================
+  // BARCODES
+  // =====================================
+
+  /**
+   * Generate a barcode image
+   */
+  static async generateBarcode(request: GenerateBarcodeRequest): Promise<GenerateBarcodeResponse> {
+    return ApiService.post<GenerateBarcodeResponse>(this.getPath('barcodes/generate'), request);
+  }
+
+  /**
+   * Generate a barcode image (GET - returns file)
+   */
+  static async generateBarcodeImage(
+    content: string,
+    format: BarcodeFormat = BarcodeFormat.Code128,
+    width: number = 300,
+    height: number = 100
+  ): Promise<Blob> {
+    const response = await ApiService.get<Blob>(this.getPath('barcodes/generate'), {
+      params: { content, format, width, height },
+      responseType: 'blob',
+    });
+    return response;
+  }
+
+  /**
+   * Generate a product label with barcode
+   */
+  static async generateProductLabel(request: GenerateProductLabelRequest): Promise<GenerateProductLabelResponse> {
+    return ApiService.post<GenerateProductLabelResponse>(this.getPath('barcodes/labels/product'), request);
+  }
+
+  /**
+   * Download product label as image
+   */
+  static async downloadProductLabel(
+    productId: number,
+    size: LabelSize = LabelSize.Medium,
+    format: BarcodeFormat = BarcodeFormat.Code128
+  ): Promise<Blob> {
+    const response = await ApiService.get<Blob>(this.getPath(`barcodes/labels/product/${productId}`), {
+      params: { size, format },
+      responseType: 'blob',
+    });
+    return response;
+  }
+
+  /**
+   * Generate multiple product labels (bulk)
+   */
+  static async generateBulkLabels(request: BulkLabelGenerationRequest): Promise<BulkLabelGenerationResponse> {
+    return ApiService.post<BulkLabelGenerationResponse>(this.getPath('barcodes/labels/bulk'), request);
+  }
+
+  /**
+   * Download bulk labels as ZIP file
+   */
+  static async downloadBulkLabels(request: BulkLabelGenerationRequest): Promise<Blob> {
+    const response = await ApiService.post<Blob>(this.getPath('barcodes/labels/bulk/download'), request, {
+      responseType: 'blob',
+    });
+    return response;
+  }
+
+  /**
+   * Lookup product/variant/serial by barcode (scan)
+   */
+  static async lookupBarcode(
+    barcode: string,
+    includeStock: boolean = true,
+    warehouseId?: number
+  ): Promise<BarcodeLookupResponse> {
+    return ApiService.get<BarcodeLookupResponse>(this.getPath(`barcodes/lookup/${encodeURIComponent(barcode)}`), {
+      params: { includeStock, warehouseId },
+    });
+  }
+
+  /**
+   * Lookup barcode (POST for complex barcodes)
+   */
+  static async lookupBarcodePost(request: BarcodeLookupRequest): Promise<BarcodeLookupResponse> {
+    return ApiService.post<BarcodeLookupResponse>(this.getPath('barcodes/lookup'), request);
+  }
+
+  /**
+   * Auto-generate a unique barcode for a product
+   */
+  static async autoGenerateBarcode(request: AutoGenerateBarcodeRequest): Promise<AutoGenerateBarcodeResponse> {
+    return ApiService.post<AutoGenerateBarcodeResponse>(this.getPath('barcodes/auto-generate'), request);
+  }
+
+  /**
+   * Validate barcode format and checksum
+   */
+  static async validateBarcode(
+    barcode: string,
+    format: BarcodeFormat = BarcodeFormat.Code128
+  ): Promise<BarcodeValidationResult> {
+    return ApiService.get<BarcodeValidationResult>(this.getPath('barcodes/validate'), {
+      params: { barcode, format },
+    });
+  }
+
+  /**
+   * Check if barcode is unique
+   */
+  static async checkBarcodeUnique(
+    barcode: string,
+    excludeProductId?: number
+  ): Promise<BarcodeUniquenessResult> {
+    return ApiService.get<BarcodeUniquenessResult>(this.getPath('barcodes/check-unique'), {
+      params: { barcode, excludeProductId },
+    });
+  }
+
+  /**
+   * Get supported barcode formats
+   */
+  static async getBarcodeFormats(): Promise<BarcodeFormatInfo[]> {
+    return ApiService.get<BarcodeFormatInfo[]>(this.getPath('barcodes/formats'));
+  }
+
+  /**
+   * Get label size presets
+   */
+  static async getLabelSizes(): Promise<LabelSizeInfo[]> {
+    return ApiService.get<LabelSizeInfo[]>(this.getPath('barcodes/label-sizes'));
+  }
+
+  // =====================================
+  // AUDIT TRAIL
+  // =====================================
+
+  /**
+   * Get paginated audit logs with filtering
+   */
+  static async getAuditLogs(filter?: InventoryAuditFilterDto): Promise<PaginatedAuditLogsDto> {
+    return ApiService.get<PaginatedAuditLogsDto>(this.getPath('audit'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get audit dashboard with summaries and trends
+   */
+  static async getAuditDashboard(days: number = 30): Promise<InventoryAuditDashboardDto> {
+    return ApiService.get<InventoryAuditDashboardDto>(this.getPath('audit/dashboard'), {
+      params: { days },
+    });
+  }
+
+  /**
+   * Get complete history for a specific entity
+   */
+  static async getEntityHistory(entityType: string, entityId: string): Promise<EntityHistoryDto | null> {
+    return ApiService.get<EntityHistoryDto | null>(this.getPath(`audit/history/${entityType}/${entityId}`));
+  }
+
+  /**
+   * Get a specific audit log entry by ID
+   */
+  static async getAuditLogById(id: string): Promise<InventoryAuditLogDto | null> {
+    return ApiService.get<InventoryAuditLogDto | null>(this.getPath(`audit/${id}`));
+  }
+
+  /**
+   * Get supported entity types with labels
+   */
+  static async getAuditEntityTypes(): Promise<Record<string, string>> {
+    return ApiService.get<Record<string, string>>(this.getPath('audit/entity-types'));
+  }
+
+  /**
+   * Get supported action types with labels
+   */
+  static async getAuditActionTypes(): Promise<Record<string, string>> {
+    return ApiService.get<Record<string, string>>(this.getPath('audit/action-types'));
+  }
+
+  // =====================================
+  // STOCK FORECASTING & AUTO-REORDER
+  // =====================================
+
+  /**
+   * Get demand forecast for a single product
+   */
+  static async getProductForecast(
+    productId: number,
+    warehouseId?: number,
+    forecastDays: number = 30,
+    method: ForecastingMethod = ForecastingMethodEnum.ExponentialSmoothing
+  ): Promise<ProductForecastDto | null> {
+    return ApiService.get<ProductForecastDto | null>(this.getPath(`forecasting/products/${productId}`), {
+      params: { warehouseId, forecastDays, method },
+    });
+  }
+
+  /**
+   * Get forecasts for multiple products
+   */
+  static async getProductForecasts(filter?: StockForecastFilterDto): Promise<ProductForecastDto[]> {
+    return ApiService.get<ProductForecastDto[]>(this.getPath('forecasting/products'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get aggregate forecast summary with risk analysis
+   */
+  static async getForecastSummary(filter?: StockForecastFilterDto): Promise<ForecastSummaryDto> {
+    return ApiService.get<ForecastSummaryDto>(this.getPath('forecasting/summary'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get products at risk of stockout
+   */
+  static async getStockoutRiskProducts(riskDays: number = 7, warehouseId?: number): Promise<ProductForecastDto[]> {
+    return ApiService.get<ProductForecastDto[]>(this.getPath('forecasting/stockout-risk'), {
+      params: { riskDays, warehouseId },
+    });
+  }
+
+  /**
+   * Analyze historical demand patterns for a product
+   */
+  static async getDemandAnalysis(
+    productId: number,
+    warehouseId?: number,
+    analysisDays: number = 90
+  ): Promise<DemandAnalysisDto | null> {
+    return ApiService.get<DemandAnalysisDto | null>(this.getPath(`forecasting/demand-analysis/${productId}`), {
+      params: { warehouseId, analysisDays },
+    });
+  }
+
+  /**
+   * Get seasonal patterns for a product
+   */
+  static async getSeasonalPatterns(productId: number): Promise<SeasonalPatternDto[]> {
+    return ApiService.get<SeasonalPatternDto[]>(this.getPath(`forecasting/seasonal-patterns/${productId}`));
+  }
+
+  /**
+   * Get ABC classification for products
+   */
+  static async getAbcClassification(categoryId?: number, analysisDays: number = 365): Promise<AbcClassificationDto> {
+    return ApiService.get<AbcClassificationDto>(this.getPath('forecasting/abc-classification'), {
+      params: { categoryId, analysisDays },
+    });
+  }
+
+  /**
+   * Calculate recommended safety stock levels
+   */
+  static async getSafetyStockCalculation(
+    productId: number,
+    serviceLevel: number = 0.95
+  ): Promise<SafetyStockCalculationDto | null> {
+    return ApiService.get<SafetyStockCalculationDto | null>(this.getPath(`forecasting/safety-stock/${productId}`), {
+      params: { serviceLevel },
+    });
+  }
+
+  /**
+   * Get stock optimization recommendations for a product
+   */
+  static async getStockOptimization(productId: number): Promise<StockOptimizationDto | null> {
+    return ApiService.get<StockOptimizationDto | null>(this.getPath(`forecasting/optimization/${productId}`));
+  }
+
+  /**
+   * Get bulk stock optimization recommendations
+   */
+  static async getBulkStockOptimizations(categoryId?: number, warehouseId?: number): Promise<StockOptimizationDto[]> {
+    return ApiService.get<StockOptimizationDto[]>(this.getPath('forecasting/optimization'), {
+      params: { categoryId, warehouseId },
+    });
+  }
+
+  // =====================================
+  // REORDER RULES
+  // =====================================
+
+  /**
+   * Get all reorder rules
+   */
+  static async getReorderRules(
+    productId?: number,
+    categoryId?: number,
+    warehouseId?: number,
+    status?: ReorderRuleStatus
+  ): Promise<ReorderRuleDto[]> {
+    return ApiService.get<ReorderRuleDto[]>(this.getPath('forecasting/reorder-rules'), {
+      params: { productId, categoryId, warehouseId, status },
+    });
+  }
+
+  /**
+   * Get a specific reorder rule by ID
+   */
+  static async getReorderRuleById(id: number): Promise<ReorderRuleDto | null> {
+    return ApiService.get<ReorderRuleDto | null>(this.getPath(`forecasting/reorder-rules/${id}`));
+  }
+
+  /**
+   * Create a new reorder rule
+   */
+  static async createReorderRule(dto: CreateReorderRuleDto): Promise<ReorderRuleDto> {
+    return ApiService.post<ReorderRuleDto>(this.getPath('forecasting/reorder-rules'), dto);
+  }
+
+  /**
+   * Update an existing reorder rule
+   */
+  static async updateReorderRule(id: number, dto: CreateReorderRuleDto): Promise<ReorderRuleDto | null> {
+    return ApiService.put<ReorderRuleDto | null>(this.getPath(`forecasting/reorder-rules/${id}`), dto);
+  }
+
+  /**
+   * Delete a reorder rule
+   */
+  static async deleteReorderRule(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`forecasting/reorder-rules/${id}`));
+  }
+
+  /**
+   * Activate a reorder rule
+   */
+  static async activateReorderRule(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`forecasting/reorder-rules/${id}/activate`), {});
+  }
+
+  /**
+   * Pause a reorder rule
+   */
+  static async pauseReorderRule(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`forecasting/reorder-rules/${id}/pause`), {});
+  }
+
+  /**
+   * Disable a reorder rule
+   */
+  static async disableReorderRule(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`forecasting/reorder-rules/${id}/disable`), {});
+  }
+
+  /**
+   * Execute a reorder rule manually
+   */
+  static async executeReorderRule(id: number): Promise<ReorderSuggestionDto[]> {
+    return ApiService.post<ReorderSuggestionDto[]>(this.getPath(`forecasting/reorder-rules/${id}/execute`), {});
+  }
+
+  // =====================================
+  // REORDER SUGGESTIONS
+  // =====================================
+
+  /**
+   * Get paginated reorder suggestions
+   */
+  static async getReorderSuggestions(filter?: ReorderSuggestionFilterDto): Promise<PaginatedReorderSuggestionsDto> {
+    return ApiService.get<PaginatedReorderSuggestionsDto>(this.getPath('forecasting/suggestions'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get a specific reorder suggestion by ID
+   */
+  static async getReorderSuggestionById(id: number): Promise<ReorderSuggestionDto | null> {
+    return ApiService.get<ReorderSuggestionDto | null>(this.getPath(`forecasting/suggestions/${id}`));
+  }
+
+  /**
+   * Generate new reorder suggestions
+   */
+  static async generateReorderSuggestions(categoryId?: number, warehouseId?: number): Promise<ReorderSuggestionDto[]> {
+    return ApiService.post<ReorderSuggestionDto[]>(this.getPath('forecasting/suggestions/generate'), {}, {
+      params: { categoryId, warehouseId },
+    });
+  }
+
+  /**
+   * Process a reorder suggestion (approve/reject)
+   */
+  static async processReorderSuggestion(id: number, dto: ProcessReorderSuggestionDto): Promise<ReorderSuggestionDto | null> {
+    return ApiService.post<ReorderSuggestionDto | null>(this.getPath(`forecasting/suggestions/${id}/process`), dto);
+  }
+
+  /**
+   * Bulk process reorder suggestions
+   */
+  static async bulkProcessReorderSuggestions(ids: number[], dto: ProcessReorderSuggestionDto): Promise<{ processedCount: number }> {
+    return ApiService.post<{ processedCount: number }>(this.getPath('forecasting/suggestions/bulk-process'), {
+      ids,
+      processDto: dto,
+    });
+  }
+
+  /**
+   * Expire old pending suggestions
+   */
+  static async expireOldSuggestions(daysOld: number = 7): Promise<{ expiredCount: number }> {
+    return ApiService.post<{ expiredCount: number }>(this.getPath('forecasting/suggestions/expire-old'), {}, {
+      params: { daysOld },
+    });
+  }
+
+  // =====================================
+  // INVENTORY COSTING (FIFO/LIFO/WAC)
+  // =====================================
+
+  /**
+   * Get paginated cost layers with filtering
+   */
+  static async getCostLayers(filter?: CostLayerFilterDto): Promise<PaginatedCostLayersDto> {
+    return ApiService.get<PaginatedCostLayersDto>(this.getPath('costing/layers'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get cost layers for a specific product
+   */
+  static async getProductCostLayers(
+    productId: number,
+    warehouseId?: number,
+    includeFullyConsumed: boolean = false
+  ): Promise<CostLayerDto[]> {
+    return ApiService.get<CostLayerDto[]>(this.getPath(`costing/layers/product/${productId}`), {
+      params: { warehouseId, includeFullyConsumed },
+    });
+  }
+
+  /**
+   * Create a new cost layer (when receiving inventory)
+   */
+  static async createCostLayer(dto: CreateCostLayerDto): Promise<CostLayerDto> {
+    return ApiService.post<CostLayerDto>(this.getPath('costing/layers'), dto);
+  }
+
+  /**
+   * Consume from cost layers (when issuing inventory)
+   */
+  static async consumeFromCostLayers(request: CostCalculationRequestDto): Promise<CostCalculationResultDto> {
+    return ApiService.post<CostCalculationResultDto>(this.getPath('costing/layers/consume'), request);
+  }
+
+  /**
+   * Get costing summary for a specific product
+   */
+  static async getProductCostingSummary(productId: number, warehouseId?: number): Promise<ProductCostingSummaryDto | null> {
+    return ApiService.get<ProductCostingSummaryDto | null>(this.getPath(`costing/products/${productId}`), {
+      params: { warehouseId },
+    });
+  }
+
+  /**
+   * Get costing summaries for multiple products
+   */
+  static async getProductCostingSummaries(categoryId?: number, warehouseId?: number): Promise<ProductCostingSummaryDto[]> {
+    return ApiService.get<ProductCostingSummaryDto[]>(this.getPath('costing/products'), {
+      params: { categoryId, warehouseId },
+    });
+  }
+
+  /**
+   * Calculate COGS for a quantity using specific method
+   */
+  static async calculateCOGS(request: CostCalculationRequestDto): Promise<CostCalculationResultDto> {
+    return ApiService.post<CostCalculationResultDto>(this.getPath('costing/calculate-cogs'), request);
+  }
+
+  /**
+   * Compare costs across different methods
+   */
+  static async compareCostMethods(productId: number, quantity: number, warehouseId?: number): Promise<CostMethodComparisonDto> {
+    return ApiService.get<CostMethodComparisonDto>(this.getPath(`costing/products/${productId}/compare`), {
+      params: { quantity, warehouseId },
+    });
+  }
+
+  /**
+   * Generate inventory valuation report
+   */
+  static async getInventoryValuation(filter?: InventoryValuationFilterDto): Promise<InventoryValuationReportDto> {
+    return ApiService.get<InventoryValuationReportDto>(this.getPath('costing/valuation'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get total inventory value
+   */
+  static async getTotalInventoryValue(
+    method: CostingMethod = CostingMethodEnum.WeightedAverageCost,
+    warehouseId?: number
+  ): Promise<TotalInventoryValueResponse> {
+    return ApiService.get<TotalInventoryValueResponse>(this.getPath('costing/valuation/total'), {
+      params: { method, warehouseId },
+    });
+  }
+
+  /**
+   * Generate COGS report for a period
+   */
+  static async getCOGSReport(filter: COGSReportFilterDto): Promise<COGSReportDto> {
+    return ApiService.get<COGSReportDto>(this.getPath('costing/cogs-report'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Set standard cost for a product
+   */
+  static async setStandardCost(productId: number, dto: SetStandardCostDto): Promise<void> {
+    return ApiService.post<void>(this.getPath(`costing/products/${productId}/standard-cost`), dto);
+  }
+
+  /**
+   * Get cost variance analysis
+   */
+  static async getCostVarianceAnalysis(categoryId?: number): Promise<CostVarianceAnalysisDto[]> {
+    return ApiService.get<CostVarianceAnalysisDto[]>(this.getPath('costing/variance-analysis'), {
+      params: { categoryId },
+    });
+  }
+
+  /**
+   * Adjust cost for inventory
+   */
+  static async adjustCost(dto: CostAdjustmentDto): Promise<void> {
+    return ApiService.post<void>(this.getPath('costing/adjust'), dto);
+  }
+
+  /**
+   * Recalculate weighted average cost for a product
+   */
+  static async recalculateWAC(productId: number, warehouseId?: number): Promise<{ productId: number; weightedAverageCost: number; currency: string }> {
+    return ApiService.post<{ productId: number; weightedAverageCost: number; currency: string }>(
+      this.getPath(`costing/products/${productId}/recalculate-wac`),
+      {},
+      { params: { warehouseId } }
+    );
+  }
+
+  /**
+   * Get current costing method for a product
+   */
+  static async getProductCostingMethod(productId: number): Promise<{ productId: number; costingMethod: string }> {
+    return ApiService.get<{ productId: number; costingMethod: string }>(this.getPath(`costing/products/${productId}/method`));
+  }
+
+  /**
+   * Set costing method for a product
+   */
+  static async setProductCostingMethod(productId: number, method: CostingMethod): Promise<void> {
+    return ApiService.put<void>(this.getPath(`costing/products/${productId}/method`), { method });
+  }
+
+  /**
+   * Get supported costing methods
+   */
+  static async getCostingMethods(): Promise<CostingMethodsResponse> {
+    return ApiService.get<CostingMethodsResponse>(this.getPath('costing/methods'));
   }
 }
 

@@ -1751,3 +1751,1313 @@ export interface UpdateProductBundleItemDto {
   minQuantity?: number;
   maxQuantity?: number;
 }
+
+// =====================================
+// INVENTORY ANALYTICS
+// =====================================
+
+export interface InventoryKPIDto {
+  totalProducts: number;
+  activeProducts: number;
+  totalStockValue: number;
+  totalStockQuantity: number;
+  lowStockProductsCount: number;
+  outOfStockProductsCount: number;
+  expiringStockCount: number;
+  activeReservationsCount: number;
+  pendingTransfersCount: number;
+  activeStockCountsCount: number;
+}
+
+export interface StockBreakdownByCategoryDto {
+  categoryId: number;
+  categoryName: string;
+  productCount: number;
+  totalQuantity: number;
+  stockValue: number;
+}
+
+export interface StockBreakdownByWarehouseDto {
+  warehouseId: number;
+  warehouseName: string;
+  productCount: number;
+  totalQuantity: number;
+  stockValue: number;
+  utilizationPercentage: number;
+}
+
+export interface StockBreakdownByStatusDto {
+  status: string;
+  productCount: number;
+  totalQuantity: number;
+  stockValue: number;
+}
+
+export interface MovementTrendDto {
+  date: DateTime;
+  inbound: number;
+  outbound: number;
+  netChange: number;
+  inboundValue: number;
+  outboundValue: number;
+}
+
+export interface TopProductByValueDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  totalQuantity: number;
+  unitPrice: number;
+  totalValue: number;
+  categoryName?: string;
+}
+
+export interface InventoryAlertDto {
+  alertType: string;
+  severity: string;
+  message: string;
+  productId?: number;
+  productName?: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  currentValue?: number;
+  thresholdValue?: number;
+  createdAt: DateTime;
+}
+
+export interface InventoryDashboardDto {
+  kpis: InventoryKPIDto;
+  byCategory: StockBreakdownByCategoryDto[];
+  byWarehouse: StockBreakdownByWarehouseDto[];
+  byStatus: StockBreakdownByStatusDto[];
+  movementTrend: MovementTrendDto[];
+  topProductsByValue: TopProductByValueDto[];
+  alerts: InventoryAlertDto[];
+  lastUpdated: DateTime;
+}
+
+// Stock Valuation Report
+export interface ValuationSummaryDto {
+  averageUnitCost: number;
+  highestValueProduct: number;
+  lowestValueProduct: number;
+  medianProductValue: number;
+  valueChangePercent: number;
+}
+
+export interface ProductValuationDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  sku?: string;
+  categoryName?: string;
+  quantity: number;
+  unitCost: number;
+  totalValue: number;
+  percentageOfTotal: number;
+}
+
+export interface CategoryValuationDto {
+  categoryId: number;
+  categoryName: string;
+  productCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  percentageOfTotal: number;
+}
+
+export interface WarehouseValuationDto {
+  warehouseId: number;
+  warehouseName: string;
+  warehouseCode?: string;
+  productCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  percentageOfTotal: number;
+}
+
+export interface StockValuationDto {
+  asOfDate: DateTime;
+  totalValue: number;
+  totalQuantity: number;
+  totalProducts: number;
+  totalSKUs: number;
+  currency: string;
+  summary: ValuationSummaryDto;
+  products: ProductValuationDto[];
+  byCategory: CategoryValuationDto[];
+  byWarehouse: WarehouseValuationDto[];
+}
+
+// Inventory KPIs Report
+export interface KPIComparisonDto {
+  turnoverChange: number;
+  stockValueChange: number;
+  movementsChange: number;
+  turnoverTrend: string;
+  stockValueTrend: string;
+  movementsTrend: string;
+}
+
+export interface TurnoverByCategoryDto {
+  categoryId: number;
+  categoryName: string;
+  turnoverRatio: number;
+  daysOfInventory: number;
+  productCount: number;
+}
+
+export interface MonthlyKPIDto {
+  year: number;
+  month: number;
+  monthName: string;
+  turnoverRatio: number;
+  stockValue: number;
+  movementsCount: number;
+}
+
+export interface InventoryKPIsReportDto {
+  startDate: DateTime;
+  endDate: DateTime;
+  inventoryTurnoverRatio: number;
+  daysOfInventory: number;
+  stockoutRate: number;
+  fillRate: number;
+  orderAccuracyRate: number;
+  receivingEfficiency: number;
+  grossMarginReturnOnInventory: number;
+  carryingCostPercentage: number;
+  shrinkageRate: number;
+  deadStockPercentage: number;
+  totalInboundMovements: number;
+  totalOutboundMovements: number;
+  totalInboundQuantity: number;
+  totalOutboundQuantity: number;
+  averageMovementsPerDay: number;
+  comparison: KPIComparisonDto;
+  turnoverByCategory: TurnoverByCategoryDto[];
+  monthlyTrend: MonthlyKPIDto[];
+}
+
+// =====================================
+// BARCODE / QR CODE
+// =====================================
+
+export enum BarcodeFormat {
+  EAN13 = 'EAN13',
+  EAN8 = 'EAN8',
+  UPC_A = 'UPC_A',
+  UPC_E = 'UPC_E',
+  Code128 = 'Code128',
+  Code39 = 'Code39',
+  QRCode = 'QRCode',
+  DataMatrix = 'DataMatrix',
+  PDF417 = 'PDF417',
+  ITF14 = 'ITF14'
+}
+
+export enum LabelSize {
+  Small = 'Small',
+  Medium = 'Medium',
+  Large = 'Large',
+  Wide = 'Wide',
+  Square = 'Square',
+  Custom = 'Custom'
+}
+
+// Generate Barcode
+export interface GenerateBarcodeRequest {
+  content: string;
+  format: BarcodeFormat;
+  width?: number;
+  height?: number;
+  includeText?: boolean;
+}
+
+export interface GenerateBarcodeResponse {
+  content: string;
+  format: BarcodeFormat;
+  imageBase64: string;
+  imageUrl: string;
+  contentType: string;
+  width: number;
+  height: number;
+}
+
+// Generate Product Label
+export interface GenerateProductLabelRequest {
+  productId: number;
+  labelSize: LabelSize;
+  barcodeFormat?: BarcodeFormat;
+  includeProductName?: boolean;
+  includePrice?: boolean;
+  includeSKU?: boolean;
+  includeQRCode?: boolean;
+  customWidth?: number;
+  customHeight?: number;
+}
+
+export interface GenerateProductLabelResponse {
+  productId: number;
+  productCode: string;
+  productName: string;
+  barcode?: string;
+  price?: number;
+  priceCurrency?: string;
+  labelImageBase64: string;
+  labelImageUrl: string;
+  contentType: string;
+  labelSize: LabelSize;
+  width: number;
+  height: number;
+}
+
+// Bulk Label Generation
+export interface BulkLabelProductItem {
+  productId: number;
+  quantity: number;
+}
+
+export interface BulkLabelGenerationRequest {
+  products: BulkLabelProductItem[];
+  labelSize: LabelSize;
+  barcodeFormat?: BarcodeFormat;
+  includeProductName?: boolean;
+  includePrice?: boolean;
+}
+
+export interface BulkLabelGenerationResponse {
+  totalLabels: number;
+  totalProducts: number;
+  fileBase64: string;
+  fileUrl: string;
+  contentType: string;
+  fileName: string;
+}
+
+// Barcode Lookup (Scan)
+export interface BarcodeLookupRequest {
+  barcode: string;
+  includeStock?: boolean;
+  warehouseId?: number;
+}
+
+export interface WarehouseStockInfo {
+  warehouseId: number;
+  warehouseName: string;
+  quantity: number;
+  availableQuantity: number;
+  reservedQuantity: number;
+}
+
+export interface ProductLookupResult {
+  id: number;
+  code: string;
+  name: string;
+  barcode?: string;
+  sku?: string;
+  categoryName?: string;
+  unitPrice?: number;
+  unitPriceCurrency?: string;
+  unitName?: string;
+  primaryImageUrl?: string;
+  totalStockQuantity: number;
+  availableStockQuantity: number;
+  stockByWarehouse?: WarehouseStockInfo[];
+}
+
+export interface ProductVariantLookupResult {
+  id: number;
+  productId: number;
+  productName: string;
+  variantCode: string;
+  barcode?: string;
+  sku: string;
+  variantName: string;
+  unitPrice?: number;
+  totalStockQuantity: number;
+}
+
+export interface SerialNumberLookupResult {
+  id: number;
+  serialNumber: string;
+  productId: number;
+  productName: string;
+  status: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  receivedDate?: DateTime;
+  soldDate?: DateTime;
+}
+
+export interface LotBatchLookupResult {
+  id: number;
+  lotNumber: string;
+  productId: number;
+  productName: string;
+  status: string;
+  quantity: number;
+  availableQuantity: number;
+  manufactureDate?: DateTime;
+  expiryDate?: DateTime;
+  daysUntilExpiry?: number;
+}
+
+export interface BarcodeLookupResponse {
+  searchedBarcode: string;
+  found: boolean;
+  matchType?: 'Product' | 'ProductVariant' | 'SerialNumber' | 'LotBatch';
+  product?: ProductLookupResult;
+  variant?: ProductVariantLookupResult;
+  serialNumber?: SerialNumberLookupResult;
+  lotBatch?: LotBatchLookupResult;
+}
+
+// Auto Generate Barcode
+export interface AutoGenerateBarcodeRequest {
+  productId: number;
+  format: BarcodeFormat;
+  updateProduct?: boolean;
+}
+
+export interface AutoGenerateBarcodeResponse {
+  productId: number;
+  generatedBarcode: string;
+  format: BarcodeFormat;
+  productUpdated: boolean;
+  validationMessage?: string;
+}
+
+// Barcode Validation
+export interface BarcodeValidationResult {
+  isValid: boolean;
+  errorMessage?: string;
+}
+
+export interface BarcodeUniquenessResult {
+  isUnique: boolean;
+  conflictingProductCode?: string;
+}
+
+// Barcode Format Info
+export interface BarcodeFormatInfo {
+  value: string;
+  label: string;
+  description: string;
+  isLinear: boolean;
+}
+
+export interface LabelSizeInfo {
+  value: string;
+  label: string;
+  width: number;
+  height: number;
+}
+
+// =====================================
+// INVENTORY AUDIT TRAIL
+// =====================================
+
+// Entity types tracked for audit
+export const InventoryEntityTypes = {
+  Product: 'Product',
+  Category: 'Category',
+  Brand: 'Brand',
+  Unit: 'Unit',
+  Warehouse: 'Warehouse',
+  Location: 'Location',
+  Supplier: 'Supplier',
+  Stock: 'Stock',
+  StockMovement: 'StockMovement',
+  StockReservation: 'StockReservation',
+  StockTransfer: 'StockTransfer',
+  StockCount: 'StockCount',
+  PriceList: 'PriceList',
+  SerialNumber: 'SerialNumber',
+  LotBatch: 'LotBatch',
+  ProductAttribute: 'ProductAttribute',
+  ProductVariant: 'ProductVariant',
+  ProductBundle: 'ProductBundle',
+} as const;
+
+export type InventoryEntityType = typeof InventoryEntityTypes[keyof typeof InventoryEntityTypes];
+
+// Entity type labels (Turkish)
+export const InventoryEntityTypeLabels: Record<InventoryEntityType, string> = {
+  Product: 'Ürün',
+  Category: 'Kategori',
+  Brand: 'Marka',
+  Unit: 'Birim',
+  Warehouse: 'Depo',
+  Location: 'Konum',
+  Supplier: 'Tedarikçi',
+  Stock: 'Stok',
+  StockMovement: 'Stok Hareketi',
+  StockReservation: 'Stok Rezervasyonu',
+  StockTransfer: 'Stok Transferi',
+  StockCount: 'Stok Sayımı',
+  PriceList: 'Fiyat Listesi',
+  SerialNumber: 'Seri Numarası',
+  LotBatch: 'Parti/Lot',
+  ProductAttribute: 'Ürün Özelliği',
+  ProductVariant: 'Ürün Varyantı',
+  ProductBundle: 'Ürün Paketi',
+};
+
+// Action types for audit
+export const InventoryAuditActions = {
+  Created: 'Created',
+  Updated: 'Updated',
+  Deleted: 'Deleted',
+  Activated: 'Activated',
+  Deactivated: 'Deactivated',
+  StatusChanged: 'StatusChanged',
+  QuantityAdjusted: 'QuantityAdjusted',
+  PriceChanged: 'PriceChanged',
+  Transferred: 'Transferred',
+  Reserved: 'Reserved',
+  Released: 'Released',
+  Counted: 'Counted',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  Received: 'Received',
+  Shipped: 'Shipped',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+} as const;
+
+export type InventoryAuditAction = typeof InventoryAuditActions[keyof typeof InventoryAuditActions];
+
+// Action labels (Turkish)
+export const InventoryAuditActionLabels: Record<InventoryAuditAction, string> = {
+  Created: 'Oluşturuldu',
+  Updated: 'Güncellendi',
+  Deleted: 'Silindi',
+  Activated: 'Aktifleştirildi',
+  Deactivated: 'Deaktifleştirildi',
+  StatusChanged: 'Durum Değişti',
+  QuantityAdjusted: 'Miktar Ayarlandı',
+  PriceChanged: 'Fiyat Değişti',
+  Transferred: 'Transfer Edildi',
+  Reserved: 'Rezerve Edildi',
+  Released: 'Serbest Bırakıldı',
+  Counted: 'Sayıldı',
+  Approved: 'Onaylandı',
+  Rejected: 'Reddedildi',
+  Received: 'Teslim Alındı',
+  Shipped: 'Gönderildi',
+  Completed: 'Tamamlandı',
+  Cancelled: 'İptal Edildi',
+};
+
+// Filter for inventory audit logs
+export interface InventoryAuditFilterDto {
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  userId?: number;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+// Field change details
+export interface FieldChangeDto {
+  fieldName: string;
+  fieldLabel: string;
+  oldValue?: string;
+  newValue?: string;
+}
+
+// Inventory audit log entry
+export interface InventoryAuditLogDto {
+  id: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  action: string;
+  actionLabel: string;
+  oldValues?: string;
+  newValues?: string;
+  changes?: FieldChangeDto[];
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: DateTime;
+  additionalData?: string;
+}
+
+// Summary of audit logs by entity type
+export interface AuditSummaryByEntityDto {
+  entityType: string;
+  entityTypeLabel: string;
+  totalCount: number;
+  createdCount: number;
+  updatedCount: number;
+  deletedCount: number;
+  lastActivityDate?: DateTime;
+}
+
+// Summary of audit logs by user
+export interface AuditSummaryByUserDto {
+  userId: string;
+  userName: string;
+  totalActions: number;
+  lastActivityDate?: DateTime;
+}
+
+// Summary of audit activity by date
+export interface AuditActivityByDateDto {
+  date: DateTime;
+  createdCount: number;
+  updatedCount: number;
+  deletedCount: number;
+  totalCount: number;
+}
+
+// Overall audit dashboard
+export interface InventoryAuditDashboardDto {
+  totalAuditLogs: number;
+  todayCount: number;
+  thisWeekCount: number;
+  thisMonthCount: number;
+  byEntityType: AuditSummaryByEntityDto[];
+  topUsers: AuditSummaryByUserDto[];
+  activityTrend: AuditActivityByDateDto[];
+  recentActivities: InventoryAuditLogDto[];
+}
+
+// Entity history - all changes for a specific entity
+export interface EntityHistoryDto {
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  createdAt: DateTime;
+  createdBy: string;
+  lastModifiedAt?: DateTime;
+  lastModifiedBy?: string;
+  totalChanges: number;
+  changes: InventoryAuditLogDto[];
+}
+
+// Paginated response for audit logs
+export interface PaginatedAuditLogsDto {
+  items: InventoryAuditLogDto[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+// =====================================
+// STOCK FORECASTING & AUTO-REORDER
+// =====================================
+
+// Forecasting method types
+export enum ForecastingMethod {
+  SimpleMovingAverage = 'SimpleMovingAverage',
+  WeightedMovingAverage = 'WeightedMovingAverage',
+  ExponentialSmoothing = 'ExponentialSmoothing',
+  LinearRegression = 'LinearRegression',
+  SeasonalDecomposition = 'SeasonalDecomposition'
+}
+
+// Auto-reorder rule status
+export enum ReorderRuleStatus {
+  Active = 'Active',
+  Paused = 'Paused',
+  Disabled = 'Disabled'
+}
+
+// Reorder suggestion status
+export enum ReorderSuggestionStatus {
+  Pending = 'Pending',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Ordered = 'Ordered',
+  Expired = 'Expired'
+}
+
+// Filter for stock forecasting
+export interface StockForecastFilterDto {
+  productId?: number;
+  categoryId?: number;
+  warehouseId?: number;
+  forecastDays?: number;
+  method?: ForecastingMethod;
+  includeSeasonality?: boolean;
+  historicalDays?: number;
+}
+
+// Daily forecast data point
+export interface DailyForecastDto {
+  date: DateTime;
+  forecastedDemand: number;
+  lowerBound: number;
+  upperBound: number;
+  confidenceLevel: number;
+}
+
+// Product stock forecast
+export interface ProductForecastDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+
+  // Current Stock Status
+  currentStock: number;
+  availableStock: number;
+  reservedStock: number;
+  minStockLevel: number;
+  reorderLevel: number;
+  reorderQuantity: number;
+  leadTimeDays: number;
+
+  // Historical Analysis
+  averageDailyDemand: number;
+  demandStandardDeviation: number;
+  seasonalityFactor: number;
+  trendDirection: number; // Positive = increasing, Negative = decreasing
+
+  // Forecast Results
+  methodUsed: ForecastingMethod;
+  forecastAccuracy: number; // MAPE (Mean Absolute Percentage Error)
+  estimatedDaysUntilStockout: number;
+  expectedStockoutDate?: DateTime;
+  totalForecastedDemand: number;
+
+  // Daily Forecasts
+  dailyForecasts: DailyForecastDto[];
+
+  // Recommendations
+  needsReorder: boolean;
+  suggestedReorderQuantity: number;
+  suggestedOrderDate?: DateTime;
+  reorderReason?: string;
+}
+
+// Aggregate forecast summary
+export interface ForecastSummaryDto {
+  generatedAt: DateTime;
+  forecastPeriodDays: number;
+  methodUsed: ForecastingMethod;
+
+  // Overall Stats
+  totalProductsAnalyzed: number;
+  productsNeedingReorder: number;
+  productsAtRisk: number; // Within lead time of stockout
+  productsInStockout: number;
+
+  // Value Projections
+  totalForecastedDemandValue: number;
+  totalSuggestedReorderValue: number;
+  currency: string;
+
+  // Risk Distribution
+  highRiskProducts: number; // Days until stockout < lead time
+  mediumRiskProducts: number; // Days until stockout < 2x lead time
+  lowRiskProducts: number; // Days until stockout >= 2x lead time
+
+  // Category Breakdown
+  byCategory: CategoryForecastSummaryDto[];
+
+  // Top Products to Reorder
+  topReorderProducts: ProductForecastDto[];
+}
+
+// Category-level forecast summary
+export interface CategoryForecastSummaryDto {
+  categoryId: number;
+  categoryName: string;
+  productCount: number;
+  productsNeedingReorder: number;
+  totalForecastedDemand: number;
+  totalSuggestedReorderValue: number;
+}
+
+// Auto-reorder rule configuration
+export interface ReorderRuleDto {
+  id: number;
+  name: string;
+  description?: string;
+
+  // Scope
+  productId?: number;
+  productCode?: string;
+  productName?: string;
+  categoryId?: number;
+  categoryName?: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  supplierId?: number;
+  supplierName?: string;
+
+  // Trigger Conditions
+  triggerBelowQuantity?: number;
+  triggerBelowDaysOfStock?: number;
+  triggerOnForecast: boolean;
+  forecastLeadTimeDays?: number;
+
+  // Reorder Settings
+  fixedReorderQuantity?: number;
+  reorderUpToQuantity?: number; // Order up to this level
+  useEconomicOrderQuantity: boolean;
+  minimumOrderQuantity?: number;
+  maximumOrderQuantity?: number;
+  roundToPackSize: boolean;
+  packSize?: number;
+
+  // Schedule
+  isScheduled: boolean;
+  cronExpression?: string; // e.g., "0 8 * * 1" for every Monday 8am
+  nextScheduledRun?: DateTime;
+
+  // Status
+  status: ReorderRuleStatus;
+  requiresApproval: boolean;
+  approverUserId?: number;
+
+  // Audit
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  lastExecutedAt?: DateTime;
+  executionCount: number;
+}
+
+// Create/Update reorder rule
+export interface CreateReorderRuleDto {
+  name: string;
+  description?: string;
+
+  // Scope
+  productId?: number;
+  categoryId?: number;
+  warehouseId?: number;
+  supplierId?: number;
+
+  // Trigger Conditions
+  triggerBelowQuantity?: number;
+  triggerBelowDaysOfStock?: number;
+  triggerOnForecast: boolean;
+  forecastLeadTimeDays?: number;
+
+  // Reorder Settings
+  fixedReorderQuantity?: number;
+  reorderUpToQuantity?: number;
+  useEconomicOrderQuantity: boolean;
+  minimumOrderQuantity?: number;
+  maximumOrderQuantity?: number;
+  roundToPackSize: boolean;
+  packSize?: number;
+
+  // Schedule
+  isScheduled: boolean;
+  cronExpression?: string;
+
+  // Settings
+  requiresApproval: boolean;
+  approverUserId?: number;
+}
+
+// Reorder suggestion generated by the system
+export interface ReorderSuggestionDto {
+  id: number;
+  generatedAt: DateTime;
+
+  // Product Info
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+
+  // Warehouse
+  warehouseId?: number;
+  warehouseName?: string;
+
+  // Current Status
+  currentStock: number;
+  availableStock: number;
+  minStockLevel: number;
+  reorderLevel: number;
+
+  // Suggestion Details
+  suggestedQuantity: number;
+  estimatedCost: number;
+  currency: string;
+  suggestedSupplierId?: number;
+  suggestedSupplierName?: string;
+
+  // Trigger Info
+  triggeredByRuleId?: number;
+  triggerReason?: string;
+  estimatedDaysUntilStockout?: number;
+  expectedStockoutDate?: DateTime;
+
+  // Status
+  status: ReorderSuggestionStatus;
+  statusReason?: string;
+  processedByUserId?: number;
+  processedByUserName?: string;
+  processedAt?: DateTime;
+  purchaseOrderId?: number;
+  purchaseOrderNumber?: string;
+
+  // Validity
+  expiresAt: DateTime;
+  isExpired: boolean;
+}
+
+// Filter for reorder suggestions
+export interface ReorderSuggestionFilterDto {
+  productId?: number;
+  categoryId?: number;
+  warehouseId?: number;
+  supplierId?: number;
+  status?: ReorderSuggestionStatus;
+  showExpired?: boolean;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+// Paginated reorder suggestions response
+export interface PaginatedReorderSuggestionsDto {
+  items: ReorderSuggestionDto[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+
+  // Summary
+  pendingCount: number;
+  approvedCount: number;
+  totalPendingValue: number;
+}
+
+// Process reorder suggestion (approve/reject)
+export interface ProcessReorderSuggestionDto {
+  newStatus: ReorderSuggestionStatus;
+  reason?: string;
+  adjustedQuantity?: number;
+  alternateSupplierId?: number;
+}
+
+// Safety stock calculation parameters
+export interface SafetyStockCalculationDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+
+  // Input Parameters
+  averageDailyDemand: number;
+  demandStandardDeviation: number;
+  leadTimeDays: number;
+  leadTimeVariationDays: number;
+  serviceLevel: number; // e.g., 0.95 for 95%
+
+  // Calculated Values
+  currentSafetyStock: number;
+  recommendedSafetyStock: number;
+  recommendedReorderPoint: number;
+  economicOrderQuantity: number;
+
+  // Explanation
+  calculationMethod: string;
+  formula: string;
+}
+
+// Demand analysis result
+export interface DemandAnalysisDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  analysisPeriodDays: number;
+
+  // Demand Statistics
+  totalDemand: number;
+  averageDailyDemand: number;
+  medianDailyDemand: number;
+  maxDailyDemand: number;
+  minDailyDemand: number;
+  standardDeviation: number;
+  coefficientOfVariation: number;
+
+  // Trend Analysis
+  trendDirection: string; // "Increasing", "Decreasing", "Stable"
+  trendPercentage: number;
+
+  // Seasonality
+  hasSeasonality: boolean;
+  seasonalPatterns?: SeasonalPatternDto[];
+
+  // ABC Classification
+  abcClass: string; // "A", "B", "C"
+  revenueContribution: number;
+
+  // Daily Breakdown
+  dailyDemand: DailyDemandDto[];
+}
+
+// Seasonal pattern data
+export interface SeasonalPatternDto {
+  periodType: string; // "Weekly", "Monthly", "Quarterly"
+  period: string; // "Monday", "January", "Q1"
+  indexValue: number; // 1.0 = average, >1 = above average
+  averageDemand: number;
+}
+
+// Daily demand data point
+export interface DailyDemandDto {
+  date: DateTime;
+  demand: number;
+  isOutlier: boolean;
+}
+
+// Stock optimization recommendations
+export interface StockOptimizationDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+
+  // Current Settings
+  currentMinStock: number;
+  currentMaxStock: number;
+  currentReorderLevel: number;
+  currentReorderQuantity: number;
+
+  // Recommended Settings
+  recommendedMinStock: number;
+  recommendedMaxStock: number;
+  recommendedReorderLevel: number;
+  recommendedReorderQuantity: number;
+  recommendedSafetyStock: number;
+
+  // Impact Analysis
+  currentAverageInventory: number;
+  recommendedAverageInventory: number;
+  inventoryReductionPercent: number;
+  currentServiceLevel: number;
+  recommendedServiceLevel: number;
+  estimatedAnnualSavings: number;
+
+  // Recommendations
+  recommendations: string[];
+}
+
+// ABC Classification response
+export interface AbcClassificationDto {
+  A: number[];
+  B: number[];
+  C: number[];
+}
+
+// Bulk process request
+export interface BulkProcessSuggestionsRequest {
+  ids: number[];
+  processDto: ProcessReorderSuggestionDto;
+}
+
+// =====================================
+// INVENTORY COSTING TYPES
+// (FIFO / LIFO / WAC)
+// =====================================
+
+// Costing method types
+export enum CostingMethod {
+  FIFO = 'FIFO',
+  LIFO = 'LIFO',
+  WeightedAverageCost = 'WeightedAverageCost',
+  SpecificIdentification = 'SpecificIdentification',
+  StandardCost = 'StandardCost'
+}
+
+// Cost layer for FIFO/LIFO tracking
+export interface CostLayerDto {
+  id: number;
+  productId: number;
+  productCode: string;
+  productName: string;
+  warehouseId?: number;
+  warehouseName?: string;
+  layerDate: DateTime;
+  referenceNumber?: string;
+  referenceType?: string;
+  originalQuantity: number;
+  remainingQuantity: number;
+  unitCost: number;
+  totalCost: number;
+  currency: string;
+  isFullyConsumed: boolean;
+  layerOrder: number;
+  createdAt: DateTime;
+}
+
+// Filter for cost layers
+export interface CostLayerFilterDto {
+  productId?: number;
+  warehouseId?: number;
+  includeFullyConsumed?: boolean;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+// Paginated cost layers response
+export interface PaginatedCostLayersDto {
+  items: CostLayerDto[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  totalQuantity: number;
+  totalValue: number;
+  weightedAverageCost: number;
+}
+
+// Product costing summary
+export interface ProductCostingSummaryDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+  costingMethod: CostingMethod;
+  totalQuantity: number;
+  totalValue: number;
+  weightedAverageCost: number;
+  fifoUnitCost?: number;
+  lifoUnitCost?: number;
+  standardCost?: number;
+  activeLayerCount: number;
+  oldestLayerDate?: DateTime;
+  newestLayerDate?: DateTime;
+  currency: string;
+  lastCalculatedAt?: DateTime;
+}
+
+// Cost calculation request
+export interface CostCalculationRequestDto {
+  productId: number;
+  warehouseId?: number;
+  quantity: number;
+  method: CostingMethod;
+}
+
+// Cost calculation result
+export interface CostCalculationResultDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  requestedQuantity: number;
+  methodUsed: CostingMethod;
+  totalCOGS: number;
+  averageUnitCost: number;
+  layersConsumed: CostLayerConsumptionDto[];
+  remainingInventoryQuantity: number;
+  remainingInventoryValue: number;
+  currency: string;
+  notes: string[];
+}
+
+// Cost layer consumption detail
+export interface CostLayerConsumptionDto {
+  layerId: number;
+  layerDate: DateTime;
+  referenceNumber?: string;
+  unitCost: number;
+  quantityConsumed: number;
+  totalCost: number;
+  remainingAfterConsumption: number;
+}
+
+// Create cost layer request
+export interface CreateCostLayerDto {
+  productId: number;
+  warehouseId?: number;
+  quantity: number;
+  unitCost: number;
+  referenceNumber?: string;
+  referenceType?: string;
+  layerDate?: DateTime;
+}
+
+// Cost comparison across methods
+export interface CostMethodComparisonDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  fifo: CostMethodResultDto;
+  lifo: CostMethodResultDto;
+  weightedAverage: CostMethodResultDto;
+  standardCost?: CostMethodResultDto;
+  cogsVariance: number;
+  currency: string;
+}
+
+// Individual cost method result
+export interface CostMethodResultDto {
+  method: CostingMethod;
+  totalCOGS: number;
+  averageUnitCost: number;
+  remainingInventoryValue: number;
+  notes?: string;
+}
+
+// Inventory valuation report
+export interface InventoryValuationReportDto {
+  reportDate: DateTime;
+  method: CostingMethod;
+  currency: string;
+  totalInventoryValue: number;
+  totalQuantity: number;
+  productCount: number;
+  byCategory: CategoryValuationDto[];
+  byWarehouse: WarehouseValuationDto[];
+  products: ProductValuationDto[];
+}
+
+// Category valuation summary
+export interface CategoryValuationDto {
+  categoryId: number;
+  categoryName: string;
+  productCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  percentageOfTotal: number;
+}
+
+// Warehouse valuation summary
+export interface WarehouseValuationDto {
+  warehouseId: number;
+  warehouseName: string;
+  productCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  percentageOfTotal: number;
+}
+
+// Product valuation detail
+export interface ProductValuationDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+  quantity: number;
+  unitCost: number;
+  totalValue: number;
+  layerCount: number;
+}
+
+// Cost adjustment request
+export interface CostAdjustmentDto {
+  productId: number;
+  warehouseId?: number;
+  newUnitCost: number;
+  reason: string;
+  applyToAllLayers: boolean;
+  specificLayerId?: number;
+}
+
+// Standard cost setting
+export interface SetStandardCostDto {
+  productId: number;
+  standardCost: number;
+  effectiveFrom?: DateTime;
+  reason?: string;
+}
+
+// Cost variance analysis
+export interface CostVarianceAnalysisDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  standardCost: number;
+  actualCost: number;
+  varianceAmount: number;
+  variancePercentage: number;
+  varianceType: string; // "Favorable", "Unfavorable"
+  totalQuantity: number;
+  totalVarianceImpact: number;
+  currency: string;
+}
+
+// COGS report for a period
+export interface COGSReportDto {
+  startDate: DateTime;
+  endDate: DateTime;
+  method: CostingMethod;
+  currency: string;
+  totalCOGS: number;
+  totalQuantitySold: number;
+  beginningInventoryValue: number;
+  purchasesDuringPeriod: number;
+  endingInventoryValue: number;
+  calculatedCOGS: number;
+  cogsVariance: number;
+  byCategory: CategoryCOGSDto[];
+  monthlyBreakdown: MonthlyCOGSDto[];
+}
+
+// Category COGS
+export interface CategoryCOGSDto {
+  categoryId: number;
+  categoryName: string;
+  cogs: number;
+  quantitySold: number;
+  percentageOfTotal: number;
+}
+
+// Monthly COGS breakdown
+export interface MonthlyCOGSDto {
+  year: number;
+  month: number;
+  monthName: string;
+  cogs: number;
+  quantitySold: number;
+  averageUnitCost: number;
+}
+
+// Filter for inventory valuation
+export interface InventoryValuationFilterDto {
+  categoryId?: number;
+  warehouseId?: number;
+  method?: CostingMethod;
+  asOfDate?: DateTime;
+  includeZeroQuantity?: boolean;
+}
+
+// Filter for COGS report
+export interface COGSReportFilterDto {
+  startDate: DateTime;
+  endDate: DateTime;
+  categoryId?: number;
+  warehouseId?: number;
+  method?: CostingMethod;
+}
+
+// Request for setting costing method
+export interface SetCostingMethodRequest {
+  method: CostingMethod;
+}
+
+// Total inventory value response
+export interface TotalInventoryValueResponse {
+  totalValue: number;
+  method: string;
+  currency: string;
+}
+
+// Costing methods dictionary response
+export type CostingMethodsResponse = Record<string, string>;

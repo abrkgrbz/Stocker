@@ -37,6 +37,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
     <PackageReference Include="Minio" Version="6.0.4" />
+    <PackageReference Include="ZXing.Net" Version="0.16.9" />
+    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
   </ItemGroup>
 
 </Project>

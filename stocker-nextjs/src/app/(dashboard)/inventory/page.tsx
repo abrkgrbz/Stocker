@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Typography, Space, Button, Row, Col, Card, Statistic, Table, Tag, List, Empty, Progress, Tooltip } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { Typography, Space, Button, Row, Col, Card, Statistic, Table, Tag, List, Empty, Progress, Tooltip, Select, Spin, DatePicker, Tabs, Alert } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
@@ -17,6 +17,12 @@ import {
   RiseOutlined,
   FallOutlined,
   EditOutlined,
+  BarChartOutlined,
+  LineChartOutlined,
+  PieChartOutlined,
+  DashboardOutlined,
+  SyncOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -28,10 +34,13 @@ import {
   useExpiringStock,
   useStockMovements,
   useCategories,
+  useInventoryDashboard,
+  useStockValuation,
+  useInventoryKPIs,
 } from '@/lib/api/hooks/useInventory';
 import { TransferStatus, StockCountStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import type { ProductDto, StockMovementDto, CategoryDto } from '@/lib/api/services/inventory.types';
+import type { ProductDto, StockMovementDto, CategoryDto, InventoryAlertDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 import {
   BarChart,
@@ -49,10 +58,12 @@ import {
   Legend,
   AreaChart,
   Area,
+  ComposedChart,
 } from 'recharts';
 import InventoryAlertsWidget from '@/components/inventory/InventoryAlertsWidget';
 
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
 // Color palette
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
@@ -66,10 +77,74 @@ const productTypeLabels: Record<string, string> = {
   FixedAsset: 'Duran Varlık',
 };
 
+const alertSeverityColors: Record<string, string> = {
+  Critical: 'red',
+  High: 'orange',
+  Medium: 'gold',
+  Low: 'blue',
+  Info: 'default',
+};
+
+// Format currency
+const formatCurrency = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return '₺0';
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+// Format number
+const formatNumber = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return '0';
+  return new Intl.NumberFormat('tr-TR').format(value);
+};
+
+// Format percentage
+const formatPercentage = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return '%0';
+  return `%${value.toFixed(1)}`;
+};
+
 export default function InventoryDashboardPage() {
-  // Fetch inventory data
+  // State for filters
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | undefined>(undefined);
+  const [trendDays, setTrendDays] = useState<number>(30);
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [kpiDateRange, setKpiDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
+    dayjs().subtract(30, 'day'),
+    dayjs(),
+  ]);
+
+  // Fetch inventory data - Backend Analytics API
+  const {
+    data: dashboardData,
+    isLoading: dashboardLoading,
+    refetch: refetchDashboard,
+    error: dashboardError
+  } = useInventoryDashboard(selectedWarehouseId, trendDays);
+
+  // Stock valuation for detailed reporting
+  const {
+    data: valuationData,
+    isLoading: valuationLoading
+  } = useStockValuation(selectedWarehouseId);
+
+  // KPIs report
+  const {
+    data: kpisData,
+    isLoading: kpisLoading
+  } = useInventoryKPIs(
+    kpiDateRange[0].format('YYYY-MM-DD'),
+    kpiDateRange[1].format('YYYY-MM-DD'),
+    selectedWarehouseId
+  );
+
+  // Legacy data fetching for fallback and additional features
   const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useProducts(true);
-  const { data: lowStockProducts = [], isLoading: lowStockLoading } = useLowStockProducts();
+  const { data: lowStockProducts = [], isLoading: lowStockLoading } = useLowStockProducts(selectedWarehouseId);
   const { data: warehouses = [], isLoading: warehousesLoading } = useWarehouses();
   const { data: transfers = [], isLoading: transfersLoading } = useStockTransfers(
     undefined,
@@ -84,28 +159,46 @@ export default function InventoryDashboardPage() {
   const { data: stockMovements = [], isLoading: movementsLoading } = useStockMovements();
   const { data: categories = [] } = useCategories();
 
-  // Calculate stats
-  const activeProducts = products.filter((p: ProductDto) => p.isActive).length;
-  const totalProducts = products.length;
+  // Use backend data if available, otherwise fallback to client-side calculation
+  const kpis = dashboardData?.kpis;
+  const byCategory = dashboardData?.byCategory || [];
+  const byWarehouse = dashboardData?.byWarehouse || [];
+  const byStatus = dashboardData?.byStatus || [];
+  const movementTrend = dashboardData?.movementTrend || [];
+  const topProducts = dashboardData?.topProductsByValue || [];
+  const alerts = dashboardData?.alerts || [];
+
+  // Calculate stats from backend or fallback
+  const totalProducts = kpis?.totalProducts ?? products.length;
+  const activeProducts = kpis?.activeProducts ?? products.filter((p: ProductDto) => p.isActive).length;
   const totalWarehouses = warehouses.length;
   const activeWarehouses = warehouses.filter((w: any) => w.isActive).length;
-  const pendingTransfers = transfers.length;
-  const activeStockCounts = stockCounts.length;
-  const lowStockCount = lowStockProducts.length;
-  const expiringCount = expiringStock.length;
+  const pendingTransfers = kpis?.pendingTransfersCount ?? transfers.length;
+  const activeStockCounts = kpis?.activeStockCountsCount ?? stockCounts.length;
+  const lowStockCount = kpis?.lowStockProductsCount ?? lowStockProducts.length;
+  const expiringCount = kpis?.expiringStockCount ?? expiringStock.length;
 
-  // Calculate total stock value
+  // Calculate total stock value from backend or fallback
   const totalStockValue = useMemo(() => {
+    if (kpis?.totalStockValue !== undefined) return kpis.totalStockValue;
     return products.reduce((sum: number, p: ProductDto) => sum + (p.unitPrice || 0) * p.totalStockQuantity, 0);
-  }, [products]);
+  }, [kpis, products]);
 
-  // Calculate total stock quantity
+  // Calculate total stock quantity from backend or fallback
   const totalStockQuantity = useMemo(() => {
+    if (kpis?.totalStockQuantity !== undefined) return kpis.totalStockQuantity;
     return products.reduce((sum: number, p: ProductDto) => sum + p.totalStockQuantity, 0);
-  }, [products]);
+  }, [kpis, products]);
 
-  // Product type distribution
+  // Product type distribution - use backend byStatus or fallback
   const productTypeData = useMemo(() => {
+    if (byStatus.length > 0) {
+      return byStatus.map(s => ({
+        name: s.status,
+        value: s.productCount,
+        color: s.status === 'Active' ? '#10b981' : '#6b7280',
+      }));
+    }
     const typeMap = new Map<string, number>();
     products.forEach((p: ProductDto) => {
       const type = p.productType || 'Other';
@@ -115,10 +208,18 @@ export default function InventoryDashboardPage() {
       name: productTypeLabels[name] || name,
       value,
     }));
-  }, [products]);
+  }, [byStatus, products]);
 
-  // Category distribution by value
+  // Category distribution by value - use backend or fallback
   const categoryValueData = useMemo(() => {
+    if (byCategory.length > 0) {
+      return byCategory.map(c => ({
+        name: c.categoryName,
+        value: c.stockValue,
+        quantity: c.totalQuantity,
+        productCount: c.productCount,
+      })).slice(0, 8);
+    }
     const categoryMap = new Map<string, number>();
     products.forEach((p: ProductDto) => {
       const cat = p.categoryName || 'Kategorisiz';
@@ -129,10 +230,20 @@ export default function InventoryDashboardPage() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [products]);
+  }, [byCategory, products]);
 
-  // Stock movement trend (last 7 days)
+  // Stock movement trend - use backend or fallback
   const movementTrendData = useMemo(() => {
+    if (movementTrend.length > 0) {
+      return movementTrend.map(m => ({
+        date: dayjs(m.date).format('DD/MM'),
+        giren: m.inbound,
+        cikan: m.outbound,
+        net: m.netChange,
+        girenDeger: m.inboundValue,
+        cikanDeger: m.outboundValue,
+      }));
+    }
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = dayjs().subtract(6 - i, 'day');
       return {
@@ -147,7 +258,7 @@ export default function InventoryDashboardPage() {
       const moveDate = dayjs(m.movementDate).format('YYYY-MM-DD');
       const dayData = last7Days.find((d) => d.fullDate === moveDate);
       if (dayData) {
-        const isIncoming = ['Purchase', 'Return', 'TransferIn', 'AdjustmentIncrease', 'Production'].includes(m.movementType);
+        const isIncoming = ['Purchase', 'SalesReturn', 'Production', 'AdjustmentIncrease', 'Opening', 'Found'].includes(m.movementType);
         if (isIncoming) {
           dayData.giren += m.quantity;
         } else {
@@ -157,10 +268,20 @@ export default function InventoryDashboardPage() {
     });
 
     return last7Days;
-  }, [stockMovements]);
+  }, [movementTrend, stockMovements]);
 
-  // Top products by value
+  // Top products by value - use backend or fallback
   const topProductsByValue = useMemo(() => {
+    if (topProducts.length > 0) {
+      return topProducts.map(p => ({
+        name: p.productName.length > 20 ? p.productName.substring(0, 20) + '...' : p.productName,
+        fullName: p.productName,
+        value: p.totalValue,
+        quantity: p.totalQuantity,
+        code: p.productCode,
+        category: p.categoryName,
+      }));
+    }
     return [...products]
       .map((p: ProductDto) => ({
         name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
@@ -170,10 +291,17 @@ export default function InventoryDashboardPage() {
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
-  }, [products]);
+  }, [topProducts, products]);
 
-  // Stock health overview
+  // Stock health overview - use backend byStatus or fallback
   const stockHealthData = useMemo(() => {
+    if (byStatus.length > 0) {
+      return byStatus.map(s => ({
+        name: s.status === 'Active' ? 'Aktif' : s.status === 'Inactive' ? 'Pasif' : s.status,
+        value: s.productCount,
+        color: s.status === 'Active' ? '#10b981' : '#6b7280',
+      }));
+    }
     let healthy = 0;
     let warning = 0;
     let critical = 0;
@@ -197,7 +325,16 @@ export default function InventoryDashboardPage() {
       { name: 'Kritik', value: critical, color: '#ef4444' },
       { name: 'Stok Yok', value: outOfStock, color: '#6b7280' },
     ];
-  }, [products]);
+  }, [byStatus, products]);
+
+  // Combined loading state
+  const isLoading = dashboardLoading || productsLoading;
+
+  // Refresh all data
+  const handleRefresh = () => {
+    refetchDashboard();
+    refetchProducts();
+  };
 
   // Low stock table columns
   const lowStockColumns: ColumnsType<any> = [
@@ -338,11 +475,52 @@ export default function InventoryDashboardPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          Envanter Yönetimi
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetchProducts()} loading={productsLoading}>
+        <div>
+          <Title level={2} style={{ margin: 0 }}>
+            <DashboardOutlined className="mr-2" />
+            Envanter Yönetimi
+          </Title>
+          {dashboardData?.lastUpdated && (
+            <Text type="secondary" className="text-sm">
+              Son güncelleme: {dayjs(dashboardData.lastUpdated).format('DD/MM/YYYY HH:mm')}
+            </Text>
+          )}
+        </div>
+        <Space wrap>
+          {/* Warehouse Filter */}
+          <Select
+            placeholder="Tüm Depolar"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedWarehouseId}
+            onChange={setSelectedWarehouseId}
+            loading={warehousesLoading}
+          >
+            {warehouses.map((w: any) => (
+              <Select.Option key={w.id} value={w.id}>
+                {w.name}
+              </Select.Option>
+            ))}
+          </Select>
+
+          {/* Trend Period Filter */}
+          <Select
+            value={trendDays}
+            onChange={setTrendDays}
+            style={{ width: 120 }}
+          >
+            <Select.Option value={7}>Son 7 Gün</Select.Option>
+            <Select.Option value={14}>Son 14 Gün</Select.Option>
+            <Select.Option value={30}>Son 30 Gün</Select.Option>
+            <Select.Option value={60}>Son 60 Gün</Select.Option>
+            <Select.Option value={90}>Son 90 Gün</Select.Option>
+          </Select>
+
+          <Button
+            icon={<SyncOutlined spin={isLoading} />}
+            onClick={handleRefresh}
+            loading={isLoading}
+          >
             Yenile
           </Button>
           <Link href="/inventory/products">
@@ -357,6 +535,18 @@ export default function InventoryDashboardPage() {
         </Space>
       </div>
 
+      {/* Error Alert */}
+      {dashboardError && (
+        <Alert
+          message="Veri yükleme hatası"
+          description="Dashboard verileri yüklenirken bir hata oluştu. Yedek veriler gösteriliyor."
+          type="warning"
+          showIcon
+          className="mb-4"
+          closable
+        />
+      )}
+
       {/* Main Stats Cards */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
@@ -366,7 +556,7 @@ export default function InventoryDashboardPage() {
               value={totalProducts}
               prefix={<AppstoreOutlined className="text-blue-500" />}
               suffix={<Text type="secondary" className="text-sm">/ {activeProducts} aktif</Text>}
-              loading={productsLoading}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -376,9 +566,8 @@ export default function InventoryDashboardPage() {
               title="Toplam Stok Değeri"
               value={totalStockValue}
               prefix={<DollarOutlined className="text-green-500" />}
-              suffix="₺"
-              precision={0}
-              loading={productsLoading}
+              formatter={(value) => formatCurrency(Number(value))}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -388,7 +577,8 @@ export default function InventoryDashboardPage() {
               title="Toplam Stok Miktarı"
               value={totalStockQuantity}
               prefix={<InboxOutlined className="text-purple-500" />}
-              loading={productsLoading}
+              formatter={(value) => formatNumber(Number(value))}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -467,7 +657,7 @@ export default function InventoryDashboardPage() {
       <Row gutter={[16, 16]} className="mb-6">
         {/* Stock Movement Trend */}
         <Col xs={24} lg={16}>
-          <Card title={<><RiseOutlined className="text-blue-500 mr-2" />Stok Hareket Trendi (Son 7 Gün)</>}>
+          <Card title={<><RiseOutlined className="text-blue-500 mr-2" />Stok Hareket Trendi (Son {trendDays} Gün)</>}>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={movementTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -701,6 +891,296 @@ export default function InventoryDashboardPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* Advanced KPIs Section */}
+      {kpisData && (
+        <Row gutter={[16, 16]} className="mt-6">
+          <Col span={24}>
+            <Card
+              title={
+                <div className="flex items-center justify-between">
+                  <span><BarChartOutlined className="text-indigo-500 mr-2" />Envanter KPI Metrikleri</span>
+                  <RangePicker
+                    value={kpiDateRange}
+                    onChange={(dates) => dates && setKpiDateRange([dates[0]!, dates[1]!])}
+                    format="DD/MM/YYYY"
+                    style={{ width: 240 }}
+                  />
+                </div>
+              }
+            >
+              <Spin spinning={kpisLoading}>
+                <Row gutter={[16, 16]}>
+                  {/* Inventory Turnover */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Stokların ne kadar hızlı döndüğünü gösterir. Yüksek değer, iyi stok yönetimini ifade eder.">
+                          <span>Stok Devir Hızı</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.inventoryTurnoverRatio}
+                      precision={2}
+                      suffix="x"
+                      valueStyle={{ color: kpisData.inventoryTurnoverRatio >= 4 ? '#3f8600' : '#cf1322' }}
+                    />
+                  </Col>
+
+                  {/* Days of Inventory */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Mevcut stokun kaç günlük satışa yeteceğini gösterir.">
+                          <span>Stok Gün Sayısı</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.daysOfInventory}
+                      precision={0}
+                      suffix="gün"
+                    />
+                  </Col>
+
+                  {/* Stockout Rate */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Stok tükenen ürünlerin oranı. Düşük değer daha iyi.">
+                          <span>Stok Tükenme Oranı</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.stockoutRate}
+                      precision={1}
+                      suffix="%"
+                      valueStyle={{ color: kpisData.stockoutRate <= 5 ? '#3f8600' : '#cf1322' }}
+                    />
+                  </Col>
+
+                  {/* Fill Rate */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Siparişlerin stoktan karşılanma oranı. Yüksek değer daha iyi.">
+                          <span>Karşılama Oranı</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.fillRate}
+                      precision={1}
+                      suffix="%"
+                      valueStyle={{ color: kpisData.fillRate >= 95 ? '#3f8600' : '#cf1322' }}
+                    />
+                  </Col>
+
+                  {/* GMROI */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Stok yatırımından elde edilen brüt kar getirisi.">
+                          <span>GMROI</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.grossMarginReturnOnInventory}
+                      precision={2}
+                      suffix="₺"
+                    />
+                  </Col>
+
+                  {/* Dead Stock */}
+                  <Col xs={12} sm={8} lg={4}>
+                    <Statistic
+                      title={
+                        <Tooltip title="Hareketsiz (ölü) stok oranı. Düşük değer daha iyi.">
+                          <span>Ölü Stok Oranı</span>
+                        </Tooltip>
+                      }
+                      value={kpisData.deadStockPercentage}
+                      precision={1}
+                      suffix="%"
+                      valueStyle={{ color: kpisData.deadStockPercentage <= 10 ? '#3f8600' : '#cf1322' }}
+                    />
+                  </Col>
+                </Row>
+
+                {/* Movement Summary */}
+                <Row gutter={[16, 16]} className="mt-4">
+                  <Col xs={24} lg={12}>
+                    <Card size="small" title="Hareket Özeti">
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Statistic
+                            title="Toplam Giriş"
+                            value={kpisData.totalInboundMovements}
+                            prefix={<ArrowDownOutlined className="text-green-500" />}
+                            suffix={`(${formatNumber(kpisData.totalInboundQuantity)} adet)`}
+                          />
+                        </Col>
+                        <Col span={12}>
+                          <Statistic
+                            title="Toplam Çıkış"
+                            value={kpisData.totalOutboundMovements}
+                            prefix={<ArrowUpOutlined className="text-red-500" />}
+                            suffix={`(${formatNumber(kpisData.totalOutboundQuantity)} adet)`}
+                          />
+                        </Col>
+                      </Row>
+                      <div className="mt-2 text-center text-gray-500">
+                        Günlük Ortalama: {kpisData.averageMovementsPerDay.toFixed(1)} hareket
+                      </div>
+                    </Card>
+                  </Col>
+
+                  {/* Comparison with Previous Period */}
+                  {kpisData.comparison && (
+                    <Col xs={24} lg={12}>
+                      <Card size="small" title="Önceki Dönem Karşılaştırması">
+                        <Row gutter={16}>
+                          <Col span={8}>
+                            <div className="text-center">
+                              <div className="text-gray-500 text-sm">Devir Hızı</div>
+                              <div className={`text-lg font-semibold ${kpisData.comparison.turnoverChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {kpisData.comparison.turnoverChange >= 0 ? '+' : ''}{kpisData.comparison.turnoverChange.toFixed(1)}%
+                                {kpisData.comparison.turnoverTrend === 'Up' ? <ArrowUpOutlined /> : kpisData.comparison.turnoverTrend === 'Down' ? <ArrowDownOutlined /> : null}
+                              </div>
+                            </div>
+                          </Col>
+                          <Col span={8}>
+                            <div className="text-center">
+                              <div className="text-gray-500 text-sm">Stok Değeri</div>
+                              <div className={`text-lg font-semibold ${kpisData.comparison.stockValueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {kpisData.comparison.stockValueChange >= 0 ? '+' : ''}{kpisData.comparison.stockValueChange.toFixed(1)}%
+                                {kpisData.comparison.stockValueTrend === 'Up' ? <ArrowUpOutlined /> : kpisData.comparison.stockValueTrend === 'Down' ? <ArrowDownOutlined /> : null}
+                              </div>
+                            </div>
+                          </Col>
+                          <Col span={8}>
+                            <div className="text-center">
+                              <div className="text-gray-500 text-sm">Hareketler</div>
+                              <div className={`text-lg font-semibold ${kpisData.comparison.movementsChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {kpisData.comparison.movementsChange >= 0 ? '+' : ''}{kpisData.comparison.movementsChange.toFixed(1)}%
+                                {kpisData.comparison.movementsTrend === 'Up' ? <ArrowUpOutlined /> : kpisData.comparison.movementsTrend === 'Down' ? <ArrowDownOutlined /> : null}
+                              </div>
+                            </div>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+
+                {/* Monthly Trend Chart */}
+                {kpisData.monthlyTrend && kpisData.monthlyTrend.length > 0 && (
+                  <Row className="mt-4">
+                    <Col span={24}>
+                      <Card size="small" title="Aylık Trend">
+                        <ResponsiveContainer width="100%" height={250}>
+                          <ComposedChart data={kpisData.monthlyTrend}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="monthName" />
+                            <YAxis yAxisId="left" />
+                            <YAxis yAxisId="right" orientation="right" />
+                            <RechartsTooltip />
+                            <Legend />
+                            <Bar yAxisId="left" dataKey="movementsCount" name="Hareket Sayısı" fill="#8884d8" />
+                            <Line yAxisId="right" type="monotone" dataKey="turnoverRatio" name="Devir Hızı" stroke="#82ca9d" />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </Card>
+                    </Col>
+                  </Row>
+                )}
+
+                {/* Turnover by Category */}
+                {kpisData.turnoverByCategory && kpisData.turnoverByCategory.length > 0 && (
+                  <Row className="mt-4">
+                    <Col span={24}>
+                      <Card size="small" title="Kategori Bazlı Devir Hızı">
+                        <Table
+                          dataSource={kpisData.turnoverByCategory}
+                          rowKey="categoryId"
+                          pagination={false}
+                          size="small"
+                          columns={[
+                            {
+                              title: 'Kategori',
+                              dataIndex: 'categoryName',
+                              key: 'categoryName',
+                            },
+                            {
+                              title: 'Ürün Sayısı',
+                              dataIndex: 'productCount',
+                              key: 'productCount',
+                              align: 'right',
+                            },
+                            {
+                              title: 'Devir Hızı',
+                              dataIndex: 'turnoverRatio',
+                              key: 'turnoverRatio',
+                              align: 'right',
+                              render: (value: number) => (
+                                <span className={value >= 4 ? 'text-green-600' : value >= 2 ? 'text-orange-500' : 'text-red-600'}>
+                                  {value.toFixed(2)}x
+                                </span>
+                              ),
+                            },
+                            {
+                              title: 'Stok Günü',
+                              dataIndex: 'daysOfInventory',
+                              key: 'daysOfInventory',
+                              align: 'right',
+                              render: (value: number) => `${value.toFixed(0)} gün`,
+                            },
+                          ]}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+                )}
+              </Spin>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Backend Alerts Section */}
+      {alerts.length > 0 && (
+        <Row gutter={[16, 16]} className="mt-6">
+          <Col span={24}>
+            <Card
+              title={<><ExclamationCircleOutlined className="text-orange-500 mr-2" />Sistem Uyarıları ({alerts.length})</>}
+            >
+              <List
+                dataSource={alerts.slice(0, 10)}
+                renderItem={(alert: InventoryAlertDto) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Tag color={alertSeverityColors[alert.severity] || 'default'}>
+                          {alert.severity}
+                        </Tag>
+                      }
+                      title={
+                        <div className="flex items-center gap-2">
+                          <span>{alert.alertType}</span>
+                          {alert.productName && (
+                            <Text type="secondary">- {alert.productName}</Text>
+                          )}
+                        </div>
+                      }
+                      description={
+                        <div>
+                          <div>{alert.message}</div>
+                          <Text type="secondary" className="text-xs">
+                            {dayjs(alert.createdAt).format('DD/MM/YYYY HH:mm')}
+                          </Text>
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
 }

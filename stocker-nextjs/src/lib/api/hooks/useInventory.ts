@@ -87,6 +87,62 @@ import type {
   UpdateProductBundleDto,
   CreateProductBundleItemDto,
   UpdateProductBundleItemDto,
+  // Barcodes
+  BarcodeFormat,
+  LabelSize,
+  GenerateBarcodeRequest,
+  GenerateBarcodeResponse,
+  GenerateProductLabelRequest,
+  GenerateProductLabelResponse,
+  BulkLabelGenerationRequest,
+  BulkLabelGenerationResponse,
+  BarcodeLookupRequest,
+  BarcodeLookupResponse,
+  AutoGenerateBarcodeRequest,
+  AutoGenerateBarcodeResponse,
+  BarcodeFormatInfo,
+  LabelSizeInfo,
+  // Audit Trail
+  InventoryAuditFilterDto,
+  InventoryAuditLogDto,
+  InventoryAuditDashboardDto,
+  EntityHistoryDto,
+  PaginatedAuditLogsDto,
+  // Stock Forecasting & Auto-Reorder
+  ForecastingMethod,
+  ReorderRuleStatus,
+  ReorderSuggestionStatus,
+  StockForecastFilterDto,
+  ProductForecastDto,
+  ForecastSummaryDto,
+  DemandAnalysisDto,
+  SeasonalPatternDto,
+  SafetyStockCalculationDto,
+  StockOptimizationDto,
+  AbcClassificationDto,
+  ReorderRuleDto,
+  CreateReorderRuleDto,
+  ReorderSuggestionDto,
+  ReorderSuggestionFilterDto,
+  PaginatedReorderSuggestionsDto,
+  ProcessReorderSuggestionDto,
+  // Inventory Costing (FIFO/LIFO/WAC)
+  CostingMethod,
+  CostLayerDto,
+  CostLayerFilterDto,
+  PaginatedCostLayersDto,
+  ProductCostingSummaryDto,
+  CostCalculationRequestDto,
+  CostCalculationResultDto,
+  CreateCostLayerDto,
+  CostMethodComparisonDto,
+  InventoryValuationReportDto,
+  InventoryValuationFilterDto,
+  COGSReportDto,
+  COGSReportFilterDto,
+  SetStandardCostDto,
+  CostVarianceAnalysisDto,
+  CostAdjustmentDto,
 } from '../services/inventory.types';
 
 // =====================================
@@ -176,6 +232,89 @@ export const inventoryKeys = {
   // Product Bundles
   productBundles: ['inventory', 'product-bundles'] as const,
   productBundle: (id: number) => ['inventory', 'product-bundles', id] as const,
+
+  // Analytics
+  analytics: ['inventory', 'analytics'] as const,
+  analyticsDashboard: (warehouseId?: number, days?: number) =>
+    ['inventory', 'analytics', 'dashboard', warehouseId, days] as const,
+  analyticsValuation: (warehouseId?: number, categoryId?: number, asOfDate?: string) =>
+    ['inventory', 'analytics', 'valuation', warehouseId, categoryId, asOfDate] as const,
+  analyticsKPIs: (startDate: string, endDate: string, warehouseId?: number) =>
+    ['inventory', 'analytics', 'kpis', startDate, endDate, warehouseId] as const,
+
+  // Barcodes
+  barcodeFormats: ['inventory', 'barcodes', 'formats'] as const,
+  labelSizes: ['inventory', 'barcodes', 'label-sizes'] as const,
+  barcodeLookup: (barcode: string, warehouseId?: number) =>
+    ['inventory', 'barcodes', 'lookup', barcode, warehouseId] as const,
+
+  // Audit Trail
+  auditLogs: (filter?: InventoryAuditFilterDto) => ['inventory', 'audit', 'logs', filter] as const,
+  auditDashboard: (days: number) => ['inventory', 'audit', 'dashboard', days] as const,
+  entityHistory: (entityType: string, entityId: string) =>
+    ['inventory', 'audit', 'history', entityType, entityId] as const,
+  auditLogById: (id: string) => ['inventory', 'audit', 'log', id] as const,
+  auditEntityTypes: ['inventory', 'audit', 'entity-types'] as const,
+  auditActionTypes: ['inventory', 'audit', 'action-types'] as const,
+
+  // Stock Forecasting
+  forecasting: ['inventory', 'forecasting'] as const,
+  productForecast: (productId: number, warehouseId?: number, forecastDays?: number, method?: ForecastingMethod) =>
+    ['inventory', 'forecasting', 'product', productId, { warehouseId, forecastDays, method }] as const,
+  productForecasts: (filter?: StockForecastFilterDto) =>
+    ['inventory', 'forecasting', 'products', filter] as const,
+  forecastSummary: (filter?: StockForecastFilterDto) =>
+    ['inventory', 'forecasting', 'summary', filter] as const,
+  stockoutRisk: (riskDays?: number, warehouseId?: number) =>
+    ['inventory', 'forecasting', 'stockout-risk', { riskDays, warehouseId }] as const,
+  demandAnalysis: (productId: number, warehouseId?: number, analysisDays?: number) =>
+    ['inventory', 'forecasting', 'demand-analysis', productId, { warehouseId, analysisDays }] as const,
+  seasonalPatterns: (productId: number) =>
+    ['inventory', 'forecasting', 'seasonal-patterns', productId] as const,
+  abcClassification: (categoryId?: number, analysisDays?: number) =>
+    ['inventory', 'forecasting', 'abc-classification', { categoryId, analysisDays }] as const,
+  safetyStock: (productId: number, serviceLevel?: number) =>
+    ['inventory', 'forecasting', 'safety-stock', productId, serviceLevel] as const,
+  stockOptimization: (productId: number) =>
+    ['inventory', 'forecasting', 'optimization', productId] as const,
+  bulkStockOptimizations: (categoryId?: number, warehouseId?: number) =>
+    ['inventory', 'forecasting', 'optimization', 'bulk', { categoryId, warehouseId }] as const,
+
+  // Reorder Rules
+  reorderRules: (productId?: number, categoryId?: number, warehouseId?: number, status?: ReorderRuleStatus) =>
+    ['inventory', 'forecasting', 'reorder-rules', { productId, categoryId, warehouseId, status }] as const,
+  reorderRule: (id: number) =>
+    ['inventory', 'forecasting', 'reorder-rules', id] as const,
+
+  // Reorder Suggestions
+  reorderSuggestions: (filter?: ReorderSuggestionFilterDto) =>
+    ['inventory', 'forecasting', 'suggestions', filter] as const,
+  reorderSuggestion: (id: number) =>
+    ['inventory', 'forecasting', 'suggestions', id] as const,
+
+  // Inventory Costing (FIFO/LIFO/WAC)
+  costing: ['inventory', 'costing'] as const,
+  costLayers: (filter?: CostLayerFilterDto) =>
+    ['inventory', 'costing', 'layers', filter] as const,
+  productCostLayers: (productId: number, warehouseId?: number, includeFullyConsumed?: boolean) =>
+    ['inventory', 'costing', 'layers', 'product', productId, { warehouseId, includeFullyConsumed }] as const,
+  productCostingSummary: (productId: number, warehouseId?: number) =>
+    ['inventory', 'costing', 'products', productId, { warehouseId }] as const,
+  productCostingSummaries: (categoryId?: number, warehouseId?: number) =>
+    ['inventory', 'costing', 'products', { categoryId, warehouseId }] as const,
+  costMethodComparison: (productId: number, quantity: number, warehouseId?: number) =>
+    ['inventory', 'costing', 'products', productId, 'compare', { quantity, warehouseId }] as const,
+  inventoryValuation: (filter?: InventoryValuationFilterDto) =>
+    ['inventory', 'costing', 'valuation', filter] as const,
+  totalInventoryValue: (method?: CostingMethod, warehouseId?: number) =>
+    ['inventory', 'costing', 'valuation', 'total', { method, warehouseId }] as const,
+  cogsReport: (filter: COGSReportFilterDto) =>
+    ['inventory', 'costing', 'cogs-report', filter] as const,
+  costVarianceAnalysis: (categoryId?: number) =>
+    ['inventory', 'costing', 'variance-analysis', categoryId] as const,
+  productCostingMethod: (productId: number) =>
+    ['inventory', 'costing', 'products', productId, 'method'] as const,
+  costingMethods: ['inventory', 'costing', 'methods'] as const,
 };
 
 // =====================================
@@ -2102,5 +2241,916 @@ export function useRemoveProductBundleItem() {
     onError: (error) => {
       showApiError(error, 'Paket ürünü kaldırılamadı');
     },
+  });
+}
+
+// =====================================
+// ANALYTICS HOOKS
+// =====================================
+
+/**
+ * Get inventory dashboard data with KPIs, breakdowns, trends, and alerts
+ */
+export function useInventoryDashboard(warehouseId?: number, days: number = 30) {
+  return useQuery({
+    queryKey: inventoryKeys.analyticsDashboard(warehouseId, days),
+    queryFn: () => InventoryService.getInventoryDashboard(warehouseId, days),
+    staleTime: 60000, // 1 minute cache
+    refetchInterval: 300000, // Auto-refresh every 5 minutes
+  });
+}
+
+/**
+ * Get stock valuation report
+ */
+export function useStockValuation(
+  warehouseId?: number,
+  categoryId?: number,
+  asOfDate?: string
+) {
+  return useQuery({
+    queryKey: inventoryKeys.analyticsValuation(warehouseId, categoryId, asOfDate),
+    queryFn: () => InventoryService.getStockValuation(warehouseId, categoryId, asOfDate),
+    staleTime: 120000, // 2 minute cache
+  });
+}
+
+/**
+ * Get inventory KPIs report for a specific period
+ */
+export function useInventoryKPIs(
+  startDate: string,
+  endDate: string,
+  warehouseId?: number
+) {
+  return useQuery({
+    queryKey: inventoryKeys.analyticsKPIs(startDate, endDate, warehouseId),
+    queryFn: () => InventoryService.getInventoryKPIs(startDate, endDate, warehouseId),
+    staleTime: 120000, // 2 minute cache
+    enabled: !!startDate && !!endDate,
+  });
+}
+
+// =====================================
+// BARCODE HOOKS
+// =====================================
+
+/**
+ * Get supported barcode formats
+ */
+export function useBarcodeFormats() {
+  return useQuery({
+    queryKey: inventoryKeys.barcodeFormats,
+    queryFn: () => InventoryService.getBarcodeFormats(),
+    staleTime: Infinity, // Static data, never stale
+  });
+}
+
+/**
+ * Get label size presets
+ */
+export function useLabelSizes() {
+  return useQuery({
+    queryKey: inventoryKeys.labelSizes,
+    queryFn: () => InventoryService.getLabelSizes(),
+    staleTime: Infinity, // Static data, never stale
+  });
+}
+
+/**
+ * Lookup product by barcode
+ */
+export function useBarcodeLookup(
+  barcode: string,
+  includeStock: boolean = true,
+  warehouseId?: number,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: inventoryKeys.barcodeLookup(barcode, warehouseId),
+    queryFn: () => InventoryService.lookupBarcode(barcode, includeStock, warehouseId),
+    enabled: enabled && !!barcode && barcode.length > 0,
+    staleTime: 5000, // 5 seconds cache
+    retry: false, // Don't retry on 404
+  });
+}
+
+/**
+ * Generate barcode mutation
+ */
+export function useGenerateBarcode() {
+  return useMutation({
+    mutationFn: (request: GenerateBarcodeRequest) => InventoryService.generateBarcode(request),
+    onError: (error) => {
+      showApiError(error, 'Barkod oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Generate product label mutation
+ */
+export function useGenerateProductLabel() {
+  return useMutation({
+    mutationFn: (request: GenerateProductLabelRequest) => InventoryService.generateProductLabel(request),
+    onError: (error) => {
+      showApiError(error, 'Ürün etiketi oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Generate bulk labels mutation
+ */
+export function useGenerateBulkLabels() {
+  return useMutation({
+    mutationFn: (request: BulkLabelGenerationRequest) => InventoryService.generateBulkLabels(request),
+    onSuccess: (data) => {
+      showSuccess(`${data.totalLabels} etiket oluşturuldu`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Toplu etiket oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Download bulk labels as ZIP mutation
+ */
+export function useDownloadBulkLabels() {
+  return useMutation({
+    mutationFn: (request: BulkLabelGenerationRequest) => InventoryService.downloadBulkLabels(request),
+    onError: (error) => {
+      showApiError(error, 'Etiketler indirilemedi');
+    },
+  });
+}
+
+/**
+ * Auto-generate barcode for product mutation
+ */
+export function useAutoGenerateBarcode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: AutoGenerateBarcodeRequest) => InventoryService.autoGenerateBarcode(request),
+    onSuccess: (data) => {
+      if (data.productUpdated) {
+        queryClient.invalidateQueries({ queryKey: inventoryKeys.products });
+        queryClient.invalidateQueries({ queryKey: inventoryKeys.product(data.productId) });
+        showSuccess(`Barkod oluşturuldu ve ürüne kaydedildi: ${data.generatedBarcode}`);
+      } else {
+        showSuccess(`Barkod oluşturuldu: ${data.generatedBarcode}`);
+      }
+    },
+    onError: (error) => {
+      showApiError(error, 'Barkod oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Validate barcode mutation
+ */
+export function useValidateBarcode() {
+  return useMutation({
+    mutationFn: ({ barcode, format }: { barcode: string; format?: BarcodeFormat }) =>
+      InventoryService.validateBarcode(barcode, format),
+  });
+}
+
+/**
+ * Check barcode uniqueness mutation
+ */
+export function useCheckBarcodeUnique() {
+  return useMutation({
+    mutationFn: ({ barcode, excludeProductId }: { barcode: string; excludeProductId?: number }) =>
+      InventoryService.checkBarcodeUnique(barcode, excludeProductId),
+  });
+}
+
+// =====================================
+// AUDIT TRAIL HOOKS
+// =====================================
+
+/**
+ * Get paginated audit logs with filtering
+ */
+export function useAuditLogs(filter?: InventoryAuditFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.auditLogs(filter),
+    queryFn: () => InventoryService.getAuditLogs(filter),
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Get audit dashboard with summaries and trends
+ */
+export function useAuditDashboard(days: number = 30) {
+  return useQuery({
+    queryKey: inventoryKeys.auditDashboard(days),
+    queryFn: () => InventoryService.getAuditDashboard(days),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get complete history for a specific entity
+ */
+export function useEntityHistory(entityType: string, entityId: string) {
+  return useQuery({
+    queryKey: inventoryKeys.entityHistory(entityType, entityId),
+    queryFn: () => InventoryService.getEntityHistory(entityType, entityId),
+    enabled: !!entityType && !!entityId,
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Get a specific audit log entry by ID
+ */
+export function useAuditLogById(id: string) {
+  return useQuery({
+    queryKey: inventoryKeys.auditLogById(id),
+    queryFn: () => InventoryService.getAuditLogById(id),
+    enabled: !!id,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get supported entity types with labels
+ */
+export function useAuditEntityTypes() {
+  return useQuery({
+    queryKey: inventoryKeys.auditEntityTypes,
+    queryFn: () => InventoryService.getAuditEntityTypes(),
+    staleTime: 300000, // 5 minutes - static data
+  });
+}
+
+/**
+ * Get supported action types with labels
+ */
+export function useAuditActionTypes() {
+  return useQuery({
+    queryKey: inventoryKeys.auditActionTypes,
+    queryFn: () => InventoryService.getAuditActionTypes(),
+    staleTime: 300000, // 5 minutes - static data
+  });
+}
+
+// =====================================
+// STOCK FORECASTING HOOKS
+// =====================================
+
+/**
+ * Get demand forecast for a single product
+ */
+export function useProductForecast(
+  productId: number,
+  warehouseId?: number,
+  forecastDays: number = 30,
+  method?: ForecastingMethod
+) {
+  return useQuery({
+    queryKey: inventoryKeys.productForecast(productId, warehouseId, forecastDays, method),
+    queryFn: () => InventoryService.getProductForecast(productId, warehouseId, forecastDays, method),
+    enabled: productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get forecasts for multiple products
+ */
+export function useProductForecasts(filter?: StockForecastFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.productForecasts(filter),
+    queryFn: () => InventoryService.getProductForecasts(filter),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get aggregate forecast summary with risk analysis
+ */
+export function useForecastSummary(filter?: StockForecastFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.forecastSummary(filter),
+    queryFn: () => InventoryService.getForecastSummary(filter),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get products at risk of stockout
+ */
+export function useStockoutRiskProducts(riskDays: number = 7, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.stockoutRisk(riskDays, warehouseId),
+    queryFn: () => InventoryService.getStockoutRiskProducts(riskDays, warehouseId),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Analyze historical demand patterns for a product
+ */
+export function useDemandAnalysis(productId: number, warehouseId?: number, analysisDays: number = 90) {
+  return useQuery({
+    queryKey: inventoryKeys.demandAnalysis(productId, warehouseId, analysisDays),
+    queryFn: () => InventoryService.getDemandAnalysis(productId, warehouseId, analysisDays),
+    enabled: productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get seasonal patterns for a product
+ */
+export function useSeasonalPatterns(productId: number) {
+  return useQuery({
+    queryKey: inventoryKeys.seasonalPatterns(productId),
+    queryFn: () => InventoryService.getSeasonalPatterns(productId),
+    enabled: productId > 0,
+    staleTime: 300000,
+  });
+}
+
+/**
+ * Get ABC classification for products
+ */
+export function useAbcClassification(categoryId?: number, analysisDays: number = 365) {
+  return useQuery({
+    queryKey: inventoryKeys.abcClassification(categoryId, analysisDays),
+    queryFn: () => InventoryService.getAbcClassification(categoryId, analysisDays),
+    staleTime: 300000,
+  });
+}
+
+/**
+ * Calculate recommended safety stock levels
+ */
+export function useSafetyStockCalculation(productId: number, serviceLevel: number = 0.95) {
+  return useQuery({
+    queryKey: inventoryKeys.safetyStock(productId, serviceLevel),
+    queryFn: () => InventoryService.getSafetyStockCalculation(productId, serviceLevel),
+    enabled: productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get stock optimization recommendations for a product
+ */
+export function useStockOptimization(productId: number) {
+  return useQuery({
+    queryKey: inventoryKeys.stockOptimization(productId),
+    queryFn: () => InventoryService.getStockOptimization(productId),
+    enabled: productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get bulk stock optimization recommendations
+ */
+export function useBulkStockOptimizations(categoryId?: number, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.bulkStockOptimizations(categoryId, warehouseId),
+    queryFn: () => InventoryService.getBulkStockOptimizations(categoryId, warehouseId),
+    staleTime: 60000,
+  });
+}
+
+// =====================================
+// REORDER RULES HOOKS
+// =====================================
+
+/**
+ * Get all reorder rules
+ */
+export function useReorderRules(
+  productId?: number,
+  categoryId?: number,
+  warehouseId?: number,
+  status?: ReorderRuleStatus
+) {
+  return useQuery({
+    queryKey: inventoryKeys.reorderRules(productId, categoryId, warehouseId, status),
+    queryFn: () => InventoryService.getReorderRules(productId, categoryId, warehouseId, status),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get a specific reorder rule by ID
+ */
+export function useReorderRule(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.reorderRule(id),
+    queryFn: () => InventoryService.getReorderRuleById(id),
+    enabled: id > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Create a new reorder rule
+ */
+export function useCreateReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateReorderRuleDto) => InventoryService.createReorderRule(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı başarıyla oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Yeniden sipariş kuralı oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Update an existing reorder rule
+ */
+export function useUpdateReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: CreateReorderRuleDto }) =>
+      InventoryService.updateReorderRule(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.reorderRule(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Yeniden sipariş kuralı güncellenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Delete a reorder rule
+ */
+export function useDeleteReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteReorderRule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı başarıyla silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Yeniden sipariş kuralı silinirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Activate a reorder rule
+ */
+export function useActivateReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.activateReorderRule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.reorderRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kural aktifleştirilirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Pause a reorder rule
+ */
+export function usePauseReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.pauseReorderRule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.reorderRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı duraklatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kural duraklatılırken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Disable a reorder rule
+ */
+export function useDisableReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.disableReorderRule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.reorderRule(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kural devre dışı bırakılırken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Execute a reorder rule manually
+ */
+export function useExecuteReorderRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.executeReorderRule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess('Yeniden sipariş kuralı çalıştırıldı, öneriler oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kural çalıştırılırken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// REORDER SUGGESTIONS HOOKS
+// =====================================
+
+/**
+ * Get paginated reorder suggestions
+ */
+export function useReorderSuggestions(filter?: ReorderSuggestionFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.reorderSuggestions(filter),
+    queryFn: () => InventoryService.getReorderSuggestions(filter),
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Get a specific reorder suggestion by ID
+ */
+export function useReorderSuggestion(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.reorderSuggestion(id),
+    queryFn: () => InventoryService.getReorderSuggestionById(id),
+    enabled: id > 0,
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Generate new reorder suggestions
+ */
+export function useGenerateReorderSuggestions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ categoryId, warehouseId }: { categoryId?: number; warehouseId?: number }) =>
+      InventoryService.generateReorderSuggestions(categoryId, warehouseId),
+    onSuccess: (suggestions) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess(`${suggestions.length} yeniden sipariş önerisi oluşturuldu`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Öneriler oluşturulurken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Process a reorder suggestion (approve/reject)
+ */
+export function useProcessReorderSuggestion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: ProcessReorderSuggestionDto }) =>
+      InventoryService.processReorderSuggestion(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.reorderSuggestion(variables.id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      const statusText = variables.dto.newStatus === 'Approved' ? 'onaylandı' : 'reddedildi';
+      showSuccess(`Yeniden sipariş önerisi ${statusText}`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Öneri işlenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Bulk process reorder suggestions
+ */
+export function useBulkProcessReorderSuggestions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ids, dto }: { ids: number[]; dto: ProcessReorderSuggestionDto }) =>
+      InventoryService.bulkProcessReorderSuggestions(ids, dto),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess(`${result.processedCount} öneri başarıyla işlendi`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Öneriler toplu işlenirken hata oluştu');
+    },
+  });
+}
+
+/**
+ * Expire old pending suggestions
+ */
+export function useExpireOldSuggestions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (daysOld: number = 7) => InventoryService.expireOldSuggestions(daysOld),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.forecasting });
+      showSuccess(`${result.expiredCount} eski öneri süresi doldu olarak işaretlendi`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Eski öneriler işlenirken hata oluştu');
+    },
+  });
+}
+
+// =====================================
+// INVENTORY COSTING HOOKS (FIFO/LIFO/WAC)
+// =====================================
+
+/**
+ * Get paginated cost layers with filtering
+ */
+export function useCostLayers(filter?: CostLayerFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.costLayers(filter),
+    queryFn: () => InventoryService.getCostLayers(filter),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get cost layers for a specific product
+ */
+export function useProductCostLayers(
+  productId: number,
+  warehouseId?: number,
+  includeFullyConsumed: boolean = false
+) {
+  return useQuery({
+    queryKey: inventoryKeys.productCostLayers(productId, warehouseId, includeFullyConsumed),
+    queryFn: () => InventoryService.getProductCostLayers(productId, warehouseId, includeFullyConsumed),
+    enabled: !!productId && productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Create a new cost layer
+ */
+export function useCreateCostLayer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CreateCostLayerDto) => InventoryService.createCostLayer(dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostLayers(variables.productId) });
+      showSuccess('Maliyet katmanı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Maliyet katmanı oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Consume from cost layers
+ */
+export function useConsumeFromCostLayers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: CostCalculationRequestDto) => InventoryService.consumeFromCostLayers(request),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostLayers(variables.productId) });
+      showSuccess('Maliyet katmanlarından tüketim yapıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Maliyet tüketimi başarısız');
+    },
+  });
+}
+
+/**
+ * Get costing summary for a specific product
+ */
+export function useProductCostingSummary(productId: number, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productCostingSummary(productId, warehouseId),
+    queryFn: () => InventoryService.getProductCostingSummary(productId, warehouseId),
+    enabled: !!productId && productId > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get costing summaries for multiple products
+ */
+export function useProductCostingSummaries(categoryId?: number, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productCostingSummaries(categoryId, warehouseId),
+    queryFn: () => InventoryService.getProductCostingSummaries(categoryId, warehouseId),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Calculate COGS for a quantity using specific method
+ */
+export function useCalculateCOGS() {
+  return useMutation({
+    mutationFn: (request: CostCalculationRequestDto) => InventoryService.calculateCOGS(request),
+    onError: (error) => {
+      showApiError(error, 'SMM hesaplanamadı');
+    },
+  });
+}
+
+/**
+ * Compare costs across different methods
+ */
+export function useCostMethodComparison(productId: number, quantity: number, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.costMethodComparison(productId, quantity, warehouseId),
+    queryFn: () => InventoryService.compareCostMethods(productId, quantity, warehouseId),
+    enabled: !!productId && productId > 0 && quantity > 0,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Generate inventory valuation report
+ */
+export function useInventoryValuation(filter?: InventoryValuationFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.inventoryValuation(filter),
+    queryFn: () => InventoryService.getInventoryValuation(filter),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Get total inventory value
+ */
+export function useTotalInventoryValue(method?: CostingMethod, warehouseId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.totalInventoryValue(method, warehouseId),
+    queryFn: () => InventoryService.getTotalInventoryValue(method, warehouseId),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Generate COGS report for a period
+ */
+export function useCOGSReport(filter: COGSReportFilterDto) {
+  return useQuery({
+    queryKey: inventoryKeys.cogsReport(filter),
+    queryFn: () => InventoryService.getCOGSReport(filter),
+    enabled: !!filter.startDate && !!filter.endDate,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Set standard cost for a product
+ */
+export function useSetStandardCost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, dto }: { productId: number; dto: SetStandardCostDto }) =>
+      InventoryService.setStandardCost(productId, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostingSummary(variables.productId) });
+      showSuccess('Standart maliyet güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Standart maliyet güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Get cost variance analysis
+ */
+export function useCostVarianceAnalysis(categoryId?: number) {
+  return useQuery({
+    queryKey: inventoryKeys.costVarianceAnalysis(categoryId),
+    queryFn: () => InventoryService.getCostVarianceAnalysis(categoryId),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Adjust cost for inventory
+ */
+export function useAdjustCost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CostAdjustmentDto) => InventoryService.adjustCost(dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostLayers(variables.productId) });
+      showSuccess('Maliyet düzeltmesi yapıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Maliyet düzeltmesi başarısız');
+    },
+  });
+}
+
+/**
+ * Recalculate weighted average cost for a product
+ */
+export function useRecalculateWAC() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, warehouseId }: { productId: number; warehouseId?: number }) =>
+      InventoryService.recalculateWAC(productId, warehouseId),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostingSummary(result.productId) });
+      showSuccess(`Ağırlıklı ortalama maliyet yeniden hesaplandı: ${result.weightedAverageCost.toFixed(2)} ${result.currency}`);
+    },
+    onError: (error) => {
+      showApiError(error, 'AOM yeniden hesaplanamadı');
+    },
+  });
+}
+
+/**
+ * Get current costing method for a product
+ */
+export function useProductCostingMethod(productId: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productCostingMethod(productId),
+    queryFn: () => InventoryService.getProductCostingMethod(productId),
+    enabled: !!productId && productId > 0,
+    staleTime: 300000, // 5 minutes
+  });
+}
+
+/**
+ * Set costing method for a product
+ */
+export function useSetProductCostingMethod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, method }: { productId: number; method: CostingMethod }) =>
+      InventoryService.setProductCostingMethod(productId, method),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productCostingMethod(variables.productId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.costing });
+      showSuccess('Maliyetlendirme yöntemi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Maliyetlendirme yöntemi güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Get supported costing methods
+ */
+export function useCostingMethods() {
+  return useQuery({
+    queryKey: inventoryKeys.costingMethods,
+    queryFn: () => InventoryService.getCostingMethods(),
+    staleTime: Infinity, // Static data
   });
 }

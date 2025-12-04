@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Minio;
 using Stocker.Modules.Inventory.Application.Contracts;
+using Stocker.Modules.Inventory.Application.Services;
 using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.Modules.Inventory.Infrastructure.Configuration;
 using Stocker.Modules.Inventory.Infrastructure.EventConsumers;
@@ -97,6 +98,18 @@ public static class DependencyInjection
 
         // Register Product Image Storage Service
         services.AddScoped<IProductImageStorageService, MinioProductImageStorageService>();
+
+        // Register Barcode Service
+        services.AddScoped<IBarcodeService, BarcodeService>();
+
+        // Register Inventory Audit Service
+        services.AddScoped<IInventoryAuditService, InventoryAuditService>();
+
+        // Register Stock Forecasting Service
+        services.AddScoped<IStockForecastingService, StockForecastingService>();
+
+        // Register Inventory Costing Service (FIFO/LIFO/WAC)
+        services.AddScoped<IInventoryCostingService, InventoryCostingService>();
 
         return services;
     }
