@@ -43,6 +43,9 @@ import {
   ShopOutlined,
   EnvironmentOutlined,
   LockOutlined,
+  AuditOutlined,
+  LineChartOutlined,
+  AccountBookOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -93,6 +96,13 @@ const MODULE_MENUS = {
       { key: '/inventory/serial-numbers', icon: <BarcodeOutlined />, label: 'Seri Numaraları' },
       { key: '/inventory/stock-reservations', icon: <LockOutlined />, label: 'Stok Rezervasyonları' },
       { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Stok Uyarıları' },
+      { type: 'divider' as const },
+      { type: 'group' as const, label: 'Analiz & Raporlar', children: [
+        { key: '/inventory/barcodes', icon: <BarcodeOutlined />, label: 'Barkod Yönetimi' },
+        { key: '/inventory/audit-trail', icon: <AuditOutlined />, label: 'Denetim İzi' },
+        { key: '/inventory/forecasting', icon: <LineChartOutlined />, label: 'Stok Tahminleme' },
+        { key: '/inventory/costing', icon: <AccountBookOutlined />, label: 'Maliyet Yönetimi' },
+      ]},
       { type: 'divider' as const },
       { type: 'group' as const, label: 'Tanımlar', children: [
         { key: '/inventory/categories', icon: <TagsOutlined />, label: 'Kategoriler' },
@@ -222,6 +232,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/inventory/serial-numbers': '/inventory/serial-numbers',
       '/inventory/stock-reservations': '/inventory/stock-reservations',
       '/inventory/stock-alerts': '/inventory/stock-alerts',
+      '/inventory/barcodes': '/inventory/barcodes',
+      '/inventory/audit-trail': '/inventory/audit-trail',
+      '/inventory/forecasting': '/inventory/forecasting',
+      '/inventory/costing': '/inventory/costing',
       '/inventory/categories': '/inventory/categories',
       '/inventory/brands': '/inventory/brands',
       '/inventory/units': '/inventory/units',
