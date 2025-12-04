@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -16,15 +16,24 @@ import {
   message,
   AutoComplete,
   Switch,
-  Divider,
   Table,
+  Alert,
+  Tooltip,
+  Steps,
+  Divider,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  AppstoreOutlined,
+  SkinOutlined,
   PlusOutlined,
   DeleteOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  ShoppingOutlined,
+  TagOutlined,
+  DollarOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import {
   useProducts,
@@ -33,7 +42,6 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type {
   CreateProductVariantDto,
-  CreateProductVariantOptionDto,
 } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -51,6 +59,7 @@ interface VariantOption {
 export default function NewProductVariantPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<{
     id: number;
     name: string;
@@ -63,11 +72,14 @@ export default function NewProductVariantPage() {
   const createVariant = useCreateProductVariant();
 
   // Filter attributes that have options (Select, MultiSelect, Color, Size)
-  const selectableAttributes = attributes.filter(
-    (attr) =>
-      ['Select', 'MultiSelect', 'Color', 'Size'].includes(attr.attributeType) &&
-      attr.options &&
-      attr.options.length > 0
+  const selectableAttributes = useMemo(() =>
+    attributes.filter(
+      (attr) =>
+        ['Select', 'MultiSelect', 'Color', 'Size'].includes(attr.attributeType) &&
+        attr.options &&
+        attr.options.length > 0
+    ),
+    [attributes]
   );
 
   const handleProductSelect = (value: string) => {
@@ -76,6 +88,7 @@ export default function NewProductVariantPage() {
     if (product) {
       setSelectedProduct({ id: product.id, name: product.name, code: product.code });
       form.setFieldsValue({ productId: product.id });
+      setCurrentStep(1);
     }
   };
 
@@ -234,241 +247,419 @@ export default function NewProductVariantPage() {
     },
   ];
 
+  // Generate variant name preview from options
+  const variantNamePreview = useMemo(() => {
+    if (!selectedProduct) return '';
+    const optionNames = variantOptions
+      .filter((opt) => opt.optionValue)
+      .map((opt) => opt.optionValue)
+      .join(' - ');
+    return optionNames ? `${selectedProduct.name} - ${optionNames}` : selectedProduct.name;
+  }, [selectedProduct, variantOptions]);
+
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
-              Geri
-            </Button>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
             <div className="h-6 w-px bg-gray-200" />
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
                 style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
               >
-                <AppstoreOutlined style={{ fontSize: 20, color: 'white' }} />
+                <SkinOutlined style={{ fontSize: 20, color: 'white' }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Ürün Varyantı</h1>
-                <p className="text-sm text-gray-500 m-0">SKU ve özellik bazlı varyant oluşturun</p>
+                <p className="text-sm text-gray-400 m-0">SKU ve özellik bazlı varyant oluşturun</p>
               </div>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.back()}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
               onClick={handleSubmit}
               loading={createVariant.isPending}
-              style={{ background: '#6366f1', borderColor: '#6366f1' }}
+              disabled={!selectedProduct}
+              style={{
+                background: selectedProduct ? '#6366f1' : undefined,
+                borderColor: selectedProduct ? '#6366f1' : undefined
+              }}
             >
-              Kaydet
+              Varyantı Kaydet
             </Button>
           </Space>
         </div>
       </div>
 
-      {/* Form */}
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          priceCurrency: 'TRY',
-          costPriceCurrency: 'TRY',
-          isDefault: false,
-        }}
-      >
-        <Row gutter={24}>
-          <Col xs={24} md={16}>
-            {/* Product Selection */}
-            <Card title="Ürün Seçimi" className="mb-6">
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçiniz' }]}
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-6xl mx-auto">
+        {/* Progress Steps */}
+        <Card className="mb-6" styles={{ body: { padding: '16px 24px' } }}>
+          <Steps
+            current={currentStep}
+            size="small"
+            items={[
+              {
+                title: 'Ürün Seçimi',
+                icon: <ShoppingOutlined />,
+                status: selectedProduct ? 'finish' : 'process',
+              },
+              {
+                title: 'Varyant Bilgileri',
+                icon: <TagOutlined />,
+                status: currentStep >= 1 ? (currentStep > 1 ? 'finish' : 'process') : 'wait',
+              },
+              {
+                title: 'Fiyatlandırma',
+                icon: <DollarOutlined />,
+                status: currentStep >= 2 ? 'process' : 'wait',
+              },
+            ]}
+          />
+        </Card>
+
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            priceCurrency: 'TRY',
+            costPriceCurrency: 'TRY',
+            isDefault: false,
+          }}
+        >
+          <Row gutter={24}>
+            <Col xs={24} lg={16}>
+              {/* Product Selection Card */}
+              <Card
+                className="mb-6"
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <ShoppingOutlined className="text-indigo-500" />
+                    <span>Ürün Seçimi</span>
+                  </div>
+                }
               >
-                <AutoComplete
-                  placeholder="Ürün ara..."
-                  value={selectedProduct?.name || ''}
-                  options={products.map((p) => ({
-                    value: String(p.id),
-                    label: `${p.code} - ${p.name}`,
-                  }))}
-                  onSelect={handleProductSelect}
-                  filterOption={(inputValue, option) =>
-                    option?.label?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-                  }
-                />
-              </Form.Item>
-
-              {selectedProduct && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Text type="secondary" className="text-xs">
-                    Seçilen Ürün
-                  </Text>
-                  <div className="font-medium">{selectedProduct.name}</div>
-                  <Text type="secondary" className="text-xs">
-                    {selectedProduct.code}
-                  </Text>
-                </div>
-              )}
-            </Card>
-
-            {/* Variant Info */}
-            <Card title="Varyant Bilgileri" className="mb-6">
-              <Form.Item
-                name="name"
-                label="Varyant Adı"
-                rules={[{ required: true, message: 'Varyant adı gerekli' }]}
-              >
-                <Input placeholder="Kırmızı - XL" />
-              </Form.Item>
-
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item
-                    name="sku"
-                    label="SKU"
-                    rules={[{ required: true, message: 'SKU gerekli' }]}
-                  >
-                    <Input placeholder="PRD-001-RED-XL" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item name="barcode" label="Barkod">
-                    <Input placeholder="1234567890123" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Form.Item name="imageUrl" label="Görsel URL">
-                <Input placeholder="https://..." />
-              </Form.Item>
-            </Card>
-
-            {/* Variant Options */}
-            <Card
-              title="Varyant Özellikleri"
-              className="mb-6"
-              extra={
-                <Button
-                  type="dashed"
-                  icon={<PlusOutlined />}
-                  onClick={handleAddOption}
-                  disabled={variantOptions.length >= selectableAttributes.length}
+                <Form.Item
+                  name="productId"
+                  rules={[{ required: true, message: 'Ürün seçiniz' }]}
                 >
-                  Özellik Ekle
-                </Button>
-              }
-            >
-              {selectableAttributes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Text type="secondary">
-                    Henüz seçilebilir özellik tanımlanmamış. Önce ürün özellikleri oluşturun.
-                  </Text>
+                  <AutoComplete
+                    placeholder="Ürün kodu veya adı ile arayın..."
+                    size="large"
+                    value={selectedProduct?.name || ''}
+                    options={products.map((p) => ({
+                      value: String(p.id),
+                      label: (
+                        <div className="flex items-center justify-between py-1">
+                          <div>
+                            <span className="font-medium">{p.name}</span>
+                            <span className="text-gray-400 ml-2">({p.code})</span>
+                          </div>
+                        </div>
+                      ),
+                    }))}
+                    onSelect={handleProductSelect}
+                    filterOption={(inputValue, option) =>
+                      products.find(p => String(p.id) === option?.value)?.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      products.find(p => String(p.id) === option?.value)?.code?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      false
+                    }
+                  />
+                </Form.Item>
+
+                {selectedProduct && (
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                        <ShoppingOutlined className="text-xl text-indigo-500" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
+                        <div className="text-sm text-gray-500">Kod: {selectedProduct.code}</div>
+                      </div>
+                      <CheckCircleOutlined className="ml-auto text-green-500 text-xl" />
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Variant Info Card */}
+              <Card
+                className="mb-6"
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <TagOutlined className="text-indigo-500" />
+                    <span>Varyant Bilgileri</span>
+                  </div>
+                }
+              >
+                {variantNamePreview && (
+                  <Alert
+                    message={
+                      <div className="flex items-center gap-2">
+                        <Text strong>Önizleme:</Text>
+                        <Text>{variantNamePreview}</Text>
+                      </div>
+                    }
+                    type="info"
+                    showIcon
+                    className="mb-4"
+                  />
+                )}
+
+                <Form.Item
+                  name="name"
+                  label="Varyant Adı"
+                  rules={[{ required: true, message: 'Varyant adı gerekli' }]}
+                  extra="Örn: Kırmızı - XL veya iPhone 15 Pro - 256GB - Siyah"
+                >
+                  <Input
+                    placeholder="Varyant adını girin"
+                    size="large"
+                    prefix={<SkinOutlined className="text-gray-400" />}
+                  />
+                </Form.Item>
+
+                <Row gutter={16}>
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="sku"
+                      label={
+                        <span className="flex items-center gap-1">
+                          SKU
+                          <Tooltip title="Stok Tutma Birimi - Benzersiz ürün kodu">
+                            <InfoCircleOutlined className="text-gray-400" />
+                          </Tooltip>
+                        </span>
+                      }
+                      rules={[{ required: true, message: 'SKU gerekli' }]}
+                    >
+                      <Input placeholder="PRD-001-RED-XL" />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="barcode" label="Barkod">
+                      <Input placeholder="1234567890123" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item name="imageUrl" label="Görsel URL">
+                  <Input placeholder="https://example.com/image.jpg" />
+                </Form.Item>
+              </Card>
+
+              {/* Variant Options Card */}
+              <Card
+                className="mb-6"
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <SettingOutlined className="text-indigo-500" />
+                    <span>Varyant Özellikleri</span>
+                  </div>
+                }
+                extra={
+                  <Button
+                    type="dashed"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddOption}
+                    disabled={variantOptions.length >= selectableAttributes.length}
+                  >
+                    Özellik Ekle
+                  </Button>
+                }
+              >
+                {selectableAttributes.length === 0 ? (
+                  <Alert
+                    message="Seçilebilir özellik bulunamadı"
+                    description="Varyant oluşturmak için önce Renk, Beden, Seçim veya Çoklu Seçim tipinde ürün özellikleri tanımlamanız gerekiyor."
+                    type="warning"
+                    showIcon
+                    action={
+                      <Button
+                        size="small"
+                        onClick={() => router.push('/inventory/product-attributes/new')}
+                      >
+                        Özellik Ekle
+                      </Button>
+                    }
+                  />
+                ) : variantOptions.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                    <SkinOutlined className="text-4xl text-gray-300 mb-2" />
+                    <div className="text-gray-500 mb-3">
+                      Henüz varyant özelliği eklenmedi
+                    </div>
+                    <Button
+                      type="dashed"
+                      icon={<PlusOutlined />}
+                      onClick={handleAddOption}
+                    >
+                      İlk Özelliği Ekle
+                    </Button>
+                  </div>
+                ) : (
+                  <Table
+                    columns={optionColumns}
+                    dataSource={variantOptions}
+                    rowKey="key"
+                    pagination={false}
+                    size="middle"
+                  />
+                )}
+              </Card>
+            </Col>
+
+            <Col xs={24} lg={8}>
+              {/* Pricing Card */}
+              <Card
+                className="mb-6"
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <DollarOutlined className="text-green-500" />
+                    <span>Fiyatlandırma</span>
+                  </div>
+                }
+              >
+                <Form.Item name="price" label="Satış Fiyatı">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    size="large"
+                    min={0}
+                    precision={2}
+                    placeholder="0.00"
+                    prefix="₺"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  />
+                </Form.Item>
+
+                <Form.Item name="costPrice" label="Maliyet Fiyatı">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    precision={2}
+                    placeholder="0.00"
+                    prefix="₺"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  />
+                </Form.Item>
+
+                <Divider className="my-4" />
+
+                <Row gutter={8}>
+                  <Col span={12}>
+                    <Form.Item name="priceCurrency" label="Satış P.B.">
+                      <Select
+                        options={[
+                          { value: 'TRY', label: '₺ TRY' },
+                          { value: 'USD', label: '$ USD' },
+                          { value: 'EUR', label: '€ EUR' },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="costPriceCurrency" label="Maliyet P.B.">
+                      <Select
+                        options={[
+                          { value: 'TRY', label: '₺ TRY' },
+                          { value: 'USD', label: '$ USD' },
+                          { value: 'EUR', label: '€ EUR' },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+
+              {/* Physical Properties Card */}
+              <Card
+                className="mb-6"
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <InfoCircleOutlined className="text-blue-500" />
+                    <span>Fiziksel Özellikler</span>
+                  </div>
+                }
+              >
+                <Form.Item name="weight" label="Ağırlık">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    precision={3}
+                    placeholder="0.000"
+                    addonAfter="kg"
+                  />
+                </Form.Item>
+              </Card>
+
+              {/* Settings Card */}
+              <Card
+                styles={{
+                  header: { borderBottom: 'none', paddingBottom: 0 },
+                  body: { paddingTop: 16 }
+                }}
+                title={
+                  <div className="flex items-center gap-2">
+                    <SettingOutlined className="text-gray-500" />
+                    <span>Ayarlar</span>
+                  </div>
+                }
+              >
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <div className="font-medium text-gray-700">Varsayılan Varyant</div>
+                    <div className="text-xs text-gray-400">
+                      Ürün görüntülendiğinde bu varyant gösterilir
+                    </div>
+                  </div>
+                  <Form.Item name="isDefault" valuePropName="checked" noStyle>
+                    <Switch />
+                  </Form.Item>
                 </div>
-              ) : (
-                <Table
-                  columns={optionColumns}
-                  dataSource={variantOptions}
-                  rowKey="key"
-                  pagination={false}
-                  size="small"
-                  locale={{ emptyText: 'Henüz özellik eklenmedi' }}
-                />
-              )}
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            {/* Pricing */}
-            <Card title="Fiyatlandırma" className="mb-6">
-              <Row gutter={8}>
-                <Col span={16}>
-                  <Form.Item name="price" label="Satış Fiyatı">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                      placeholder="0.00"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="priceCurrency" label="Para Birimi">
-                    <Select
-                      options={[
-                        { value: 'TRY', label: '₺ TRY' },
-                        { value: 'USD', label: '$ USD' },
-                        { value: 'EUR', label: '€ EUR' },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={8}>
-                <Col span={16}>
-                  <Form.Item name="costPrice" label="Maliyet">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                      placeholder="0.00"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="costPriceCurrency" label="Para Birimi">
-                    <Select
-                      options={[
-                        { value: 'TRY', label: '₺ TRY' },
-                        { value: 'USD', label: '$ USD' },
-                        { value: 'EUR', label: '€ EUR' },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* Physical */}
-            <Card title="Fiziksel Özellikler" className="mb-6">
-              <Form.Item name="weight" label="Ağırlık (kg)">
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  precision={3}
-                  placeholder="0.000"
-                />
-              </Form.Item>
-            </Card>
-
-            {/* Settings */}
-            <Card title="Ayarlar">
-              <Form.Item name="isDefault" label="Varsayılan Varyant" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-              <Text type="secondary" className="text-xs">
-                Bu varyant, ürünün varsayılan gösterimi olarak kullanılır.
-              </Text>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
+              </Card>
+            </Col>
+          </Row>
+        </Form>
+      </div>
     </div>
   );
 }
