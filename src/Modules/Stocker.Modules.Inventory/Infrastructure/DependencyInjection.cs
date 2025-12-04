@@ -2,10 +2,14 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Minio;
+using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.Configuration;
 using Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.Inventory.Infrastructure.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.Services;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure;
@@ -71,6 +75,25 @@ public static class DependencyInjection
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Inventory.IInventoryService, Application.Services.InventoryService>();
+
+        // Register MinIO Storage Configuration
+        services.Configure<MinioSettings>(configuration.GetSection(MinioSettings.SectionName));
+
+        // Register MinIO Client (if not already registered by another module)
+        services.AddSingleton<IMinioClient>(serviceProvider =>
+        {
+            var settings = configuration.GetSection(MinioSettings.SectionName).Get<MinioSettings>()
+                ?? throw new InvalidOperationException("MinioStorage configuration section is missing");
+
+            return new MinioClient()
+                .WithEndpoint(settings.Endpoint)
+                .WithCredentials(settings.AccessKey, settings.SecretKey)
+                .WithSSL(settings.UseSSL)
+                .Build();
+        });
+
+        // Register Product Image Storage Service
+        services.AddScoped<IProductImageStorageService, MinioProductImageStorageService>();
 
         return services;
     }

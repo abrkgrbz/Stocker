@@ -1,9 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Products.Commands;
 using Stocker.Modules.Inventory.Application.Features.Products.Queries;
+using Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
+using Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
+using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Results;
 
@@ -247,6 +251,191 @@ public class ProductsController : ControllerBase
         {
             TenantId = tenantId,
             ProductId = id
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    // ============================
+    // PRODUCT IMAGES
+    // ============================
+
+    /// <summary>
+    /// Get all images for a product
+    /// </summary>
+    [HttpGet("{id}/images")]
+    [ProducesResponseType(typeof(List<ProductImageDto>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<List<ProductImageDto>>> GetProductImages(
+        int id,
+        [FromQuery] bool includeInactive = false)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var query = new GetProductImagesQuery
+        {
+            TenantId = tenantId,
+            ProductId = id,
+            IncludeInactive = includeInactive
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Upload a new image for a product
+    /// </summary>
+    [HttpPost("{id}/images")]
+    [ProducesResponseType(typeof(ProductImageDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    [RequestSizeLimit(10 * 1024 * 1024)] // 10MB limit
+    public async Task<ActionResult<ProductImageDto>> UploadProductImage(
+        int id,
+        IFormFile file,
+        [FromForm] string? altText = null,
+        [FromForm] string? title = null,
+        [FromForm] ImageType imageType = ImageType.Gallery,
+        [FromForm] bool setAsPrimary = false)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new Error("Image.Required", "Image file is required", ErrorType.Validation));
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+
+        var command = new UploadProductImageCommand
+        {
+            TenantId = tenantId,
+            ProductId = id,
+            ImageData = memoryStream.ToArray(),
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            AltText = altText,
+            Title = title,
+            ImageType = imageType,
+            SetAsPrimary = setAsPrimary
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(nameof(GetProductImages), new { id }, result.Value);
+    }
+
+    /// <summary>
+    /// Delete a product image
+    /// </summary>
+    [HttpDelete("{id}/images/{imageId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteProductImage(int id, int imageId)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new DeleteProductImageCommand
+        {
+            TenantId = tenantId,
+            ProductId = id,
+            ImageId = imageId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Set an image as the primary image for a product
+    /// </summary>
+    [HttpPost("{id}/images/{imageId}/set-primary")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> SetPrimaryImage(int id, int imageId)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new SetPrimaryImageCommand
+        {
+            TenantId = tenantId,
+            ProductId = id,
+            ImageId = imageId
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            if (result.Error.Type == ErrorType.NotFound)
+                return NotFound(result.Error);
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Reorder product images
+    /// </summary>
+    [HttpPost("{id}/images/reorder")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ReorderProductImages(int id, [FromBody] List<int> imageIds)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == 0) return BadRequest(CreateTenantError());
+
+        var command = new ReorderProductImagesCommand
+        {
+            TenantId = tenantId,
+            ProductId = id,
+            ImageIds = imageIds
         };
 
         var result = await _mediator.Send(command);

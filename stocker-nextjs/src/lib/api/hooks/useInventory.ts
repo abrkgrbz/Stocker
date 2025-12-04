@@ -10,6 +10,7 @@ import type {
   ProductDto,
   CreateProductDto,
   UpdateProductDto,
+  ProductImageDto,
   CategoryDto,
   CreateCategoryDto,
   UpdateCategoryDto,
@@ -68,6 +69,8 @@ import type {
   LotBatchFilterDto,
   QuarantineRequest,
   LotBatchStatus,
+  // Image Types
+  ImageType,
 } from '../services/inventory.types';
 
 // =====================================
@@ -79,6 +82,7 @@ export const inventoryKeys = {
   products: ['inventory', 'products'] as const,
   product: (id: number) => ['inventory', 'products', id] as const,
   productsLowStock: (warehouseId?: number) => ['inventory', 'products', 'low-stock', warehouseId] as const,
+  productImages: (productId: number) => ['inventory', 'products', productId, 'images'] as const,
 
   // Categories
   categories: ['inventory', 'categories'] as const,
@@ -1654,6 +1658,98 @@ export function useQuarantineLotBatch() {
     },
     onError: (error) => {
       showApiError(error, 'Lot/Parti karantinaya alınamadı');
+    },
+  });
+}
+
+// =====================================
+// PRODUCT IMAGES HOOKS
+// =====================================
+
+export function useProductImages(productId: number, includeInactive: boolean = false) {
+  return useQuery({
+    queryKey: [...inventoryKeys.productImages(productId), { includeInactive }],
+    queryFn: () => InventoryService.getProductImages(productId, includeInactive),
+    enabled: !!productId && productId > 0,
+    staleTime: 30000,
+  });
+}
+
+export function useUploadProductImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      productId,
+      file,
+      options,
+    }: {
+      productId: number;
+      file: File;
+      options?: {
+        altText?: string;
+        title?: string;
+        imageType?: ImageType;
+        setAsPrimary?: boolean;
+      };
+    }) => InventoryService.uploadProductImage(productId, file, options),
+    onSuccess: (_, { productId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productImages(productId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.product(productId) });
+      showSuccess('Ürün resmi yüklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün resmi yüklenemedi');
+    },
+  });
+}
+
+export function useDeleteProductImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, imageId }: { productId: number; imageId: number }) =>
+      InventoryService.deleteProductImage(productId, imageId),
+    onSuccess: (_, { productId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productImages(productId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.product(productId) });
+      showSuccess('Ürün resmi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün resmi silinemedi');
+    },
+  });
+}
+
+export function useSetProductImageAsPrimary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, imageId }: { productId: number; imageId: number }) =>
+      InventoryService.setProductImageAsPrimary(productId, imageId),
+    onSuccess: (_, { productId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productImages(productId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.product(productId) });
+      showSuccess('Ana resim ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ana resim ayarlanamadı');
+    },
+  });
+}
+
+export function useReorderProductImages() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, imageIds }: { productId: number; imageIds: number[] }) =>
+      InventoryService.reorderProductImages(productId, imageIds),
+    onSuccess: (_, { productId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productImages(productId) });
+      showSuccess('Resim sıralaması güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Resim sıralaması güncellenemedi');
     },
   });
 }

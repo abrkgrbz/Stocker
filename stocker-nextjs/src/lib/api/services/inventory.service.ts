@@ -2,6 +2,7 @@ import { ApiService } from '../api-service';
 import type {
   // DTOs
   ProductDto,
+  ProductImageDto,
   CreateProductDto,
   UpdateProductDto,
   ProductListDto,
@@ -177,6 +178,71 @@ export class InventoryService {
    */
   static async deactivateProduct(id: number): Promise<void> {
     return ApiService.post<void>(this.getPath(`products/${id}/deactivate`), {});
+  }
+
+  // =====================================
+  // PRODUCT IMAGES
+  // =====================================
+
+  /**
+   * Get all images for a product
+   */
+  static async getProductImages(productId: number, includeInactive: boolean = false): Promise<ProductImageDto[]> {
+    return ApiService.get<ProductImageDto[]>(this.getPath(`products/${productId}/images`), {
+      params: { includeInactive },
+    });
+  }
+
+  /**
+   * Upload a product image
+   */
+  static async uploadProductImage(
+    productId: number,
+    file: File,
+    options?: {
+      altText?: string;
+      title?: string;
+      imageType?: number;
+      setAsPrimary?: boolean;
+    }
+  ): Promise<ProductImageDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (options?.altText) formData.append('altText', options.altText);
+    if (options?.title) formData.append('title', options.title);
+    if (options?.imageType !== undefined) formData.append('imageType', String(options.imageType));
+    if (options?.setAsPrimary) formData.append('setAsPrimary', 'true');
+
+    return ApiService.post<ProductImageDto>(
+      this.getPath(`products/${productId}/images`),
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+  }
+
+  /**
+   * Delete a product image
+   */
+  static async deleteProductImage(productId: number, imageId: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`products/${productId}/images/${imageId}`));
+  }
+
+  /**
+   * Set an image as the primary image for a product
+   */
+  static async setProductImageAsPrimary(productId: number, imageId: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`products/${productId}/images/${imageId}/set-primary`), {});
+  }
+
+  /**
+   * Reorder product images
+   */
+  static async reorderProductImages(productId: number, imageIds: number[]): Promise<void> {
+    return ApiService.post<void>(this.getPath(`products/${productId}/images/reorder`), imageIds);
   }
 
   // =====================================

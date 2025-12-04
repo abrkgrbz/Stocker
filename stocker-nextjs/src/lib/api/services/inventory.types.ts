@@ -96,6 +96,14 @@ export enum StockCountStatus {
   Cancelled = 'Cancelled'
 }
 
+export enum ImageType {
+  Primary = 1,
+  Gallery = 2,
+  Thumbnail = 3,
+  Technical = 4,
+  Packaging = 5
+}
+
 export enum SerialNumberStatus {
   Available = 'Available',
   InStock = 'InStock',
@@ -152,6 +160,7 @@ export interface ProductDto {
   brandName?: string;
   unitId: number;
   unitName?: string;
+  unitSymbol?: string;
   productType: ProductType;
   unitPrice?: number;
   unitPriceCurrency?: string;
@@ -241,8 +250,11 @@ export interface ProductListDto {
   code: string;
   name: string;
   barcode?: string;
+  sku?: string;
   categoryName?: string;
   brandName?: string;
+  unitName?: string;
+  productType: ProductType;
   unitPrice?: number;
   totalStockQuantity: number;
   isActive: boolean;
