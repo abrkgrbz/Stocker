@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
   Form,
   Input,
   Select,
@@ -16,11 +15,17 @@ import {
   Col,
   message,
   AutoComplete,
+  Segmented,
+  Collapse,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   LockOutlined,
+  ShoppingOutlined,
+  EnvironmentOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import {
   useWarehouses,
@@ -28,28 +33,41 @@ import {
   useProducts,
   useCreateStockReservation,
 } from '@/lib/api/hooks/useInventory';
-import type { CreateStockReservationDto, ReservationType } from '@/lib/api/services/inventory.types';
+import type { CreateStockReservationDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
-const reservationTypes: { value: string; label: string }[] = [
+const mainReservationTypes = [
   { value: 'SalesOrder', label: 'Satış Siparişi' },
   { value: 'Production', label: 'Üretim' },
-  { value: 'Transfer', label: 'Transfer' },
   { value: 'Manual', label: 'Manuel' },
+];
+
+const otherReservationTypes = [
+  { value: 'Transfer', label: 'Transfer' },
   { value: 'Project', label: 'Proje' },
   { value: 'Assembly', label: 'Montaj' },
   { value: 'Service', label: 'Servis' },
+];
+
+const documentTypes = [
+  { value: 'SalesOrder', label: 'Satış Siparişi' },
+  { value: 'PurchaseOrder', label: 'Satın Alma Siparişi' },
+  { value: 'ProductionOrder', label: 'Üretim Emri' },
+  { value: 'TransferOrder', label: 'Transfer Emri' },
 ];
 
 export default function NewStockReservationPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
-  const [productSearch, setProductSearch] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; code: string } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{
+    id: number;
+    name: string;
+    code: string;
+  } | null>(null);
 
   const { data: warehouses = [] } = useWarehouses();
   const { data: locations = [] } = useLocations(selectedWarehouse);
@@ -85,60 +103,50 @@ export default function NewStockReservationPage() {
         referenceDocumentNumber: values.referenceDocumentNumber,
         expirationDate: values.expirationDate?.toISOString(),
         notes: values.notes,
-        createdByUserId: 1, // TODO: Get from auth context
+        createdByUserId: 1,
       };
 
       await createReservation.mutateAsync(data);
+      message.success('Rezervasyon başarıyla oluşturuldu');
       router.push('/inventory/stock-reservations');
-    } catch (error) {
-      // Validation or API error handled
+    } catch {
+      // Validation error
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => router.back()}
-            >
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
-              >
-                <LockOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Stok Rezervasyonu</h1>
-                <p className="text-sm text-gray-500 m-0">Stok için rezervasyon oluşturun</p>
-              </div>
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Stok Rezervasyonu</h1>
+              <p className="text-sm text-gray-400 m-0">Stok için rezervasyon oluşturun</p>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.push('/inventory/stock-reservations')}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={createReservation.isPending}
-              style={{ background: '#f97316', borderColor: '#f97316' }}
+              onClick={handleSubmit}
+              disabled={!selectedProduct}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
             >
               Kaydet
             </Button>
@@ -146,133 +154,261 @@ export default function NewStockReservationPage() {
         </div>
       </div>
 
-      {/* Form */}
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          reservationType: 'Manual',
-          quantity: 1,
-        }}
-      >
-        <Row gutter={24}>
-          <Col xs={24} md={12}>
-            <Card title="Rezervasyon Bilgileri" className="mb-6">
-              <Form.Item
-                name="reservationNumber"
-                label="Rezervasyon No"
-                rules={[{ required: true, message: 'Rezervasyon numarası gerekli' }]}
-              >
-                <Input placeholder="RES-2024-001" />
-              </Form.Item>
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            reservationType: 'Manual',
+            quantity: 1,
+          }}
+        >
+          <Row gutter={48}>
+            {/* Left Panel - Product & Location (40%) */}
+            <Col xs={24} lg={10}>
+              {/* Product Selection */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <ShoppingOutlined className="mr-1" /> Ürün Seçimi
+                </Text>
+                <Form.Item
+                  name="productId"
+                  rules={[{ required: true, message: 'Ürün seçiniz' }]}
+                  className="mb-2"
+                >
+                  <AutoComplete
+                    placeholder="Ürün kodu veya adı ile arayın..."
+                    size="large"
+                    value={selectedProduct?.name || ''}
+                    options={products.map((p) => ({
+                      value: String(p.id),
+                      label: (
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-gray-400">({p.code})</span>
+                        </div>
+                      ),
+                    }))}
+                    onSelect={handleProductSelect}
+                    filterOption={(inputValue, option) =>
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.name?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.code?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      false
+                    }
+                  />
+                </Form.Item>
+                {selectedProduct && (
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
+                        <ShoppingOutlined className="text-white text-xl" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
+                        <div className="text-sm text-gray-500">Kod: {selectedProduct.code}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              <Form.Item
-                name="reservationType"
-                label="Rezervasyon Türü"
-                rules={[{ required: true, message: 'Tür seçiniz' }]}
-              >
-                <Select options={reservationTypes} />
-              </Form.Item>
+              {/* Quantity */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  Rezerve Miktarı
+                </Text>
+                <Form.Item
+                  name="quantity"
+                  rules={[{ required: true, message: 'Miktar gerekli' }]}
+                  className="mb-0"
+                >
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={1}
+                    size="large"
+                    variant="filled"
+                    placeholder="1"
+                  />
+                </Form.Item>
+              </div>
 
-              <Form.Item name="expirationDate" label="Son Geçerlilik Tarihi">
-                <DatePicker
-                  style={{ width: '100%' }}
-                  format="DD/MM/YYYY"
-                  disabledDate={(current) => current && current < dayjs().startOf('day')}
-                />
-              </Form.Item>
-            </Card>
+              {/* Location */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <EnvironmentOutlined className="mr-1" /> Depo & Lokasyon
+                </Text>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <div className="text-xs text-gray-400 mb-1">Depo *</div>
+                    <Form.Item
+                      name="warehouseId"
+                      rules={[{ required: true, message: 'Depo seçiniz' }]}
+                      className="mb-0"
+                    >
+                      <Select
+                        placeholder="Depo seçin"
+                        variant="filled"
+                        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                        onChange={setSelectedWarehouse}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <div className="text-xs text-gray-400 mb-1">Lokasyon</div>
+                    <Form.Item name="locationId" className="mb-0">
+                      <Select
+                        placeholder="Lokasyon"
+                        allowClear
+                        variant="filled"
+                        options={locations.map((l) => ({ value: l.id, label: l.code }))}
+                        disabled={!selectedWarehouse}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
 
-            <Card title="Referans Dökümanı">
-              <Form.Item name="referenceDocumentType" label="Döküman Türü">
+              {/* Expiration */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <CalendarOutlined className="mr-1" /> Son Geçerlilik
+                </Text>
+                <Form.Item name="expirationDate" className="mb-0">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                    placeholder="Süresiz"
+                    variant="filled"
+                    disabledDate={(current) => current && current < dayjs().startOf('day')}
+                  />
+                </Form.Item>
+              </div>
+            </Col>
+
+            {/* Right Panel - Form Content (60%) */}
+            <Col xs={24} lg={14}>
+              {/* Reservation Number - Hero Input */}
+              <div className="mb-8">
+                <Form.Item
+                  name="reservationNumber"
+                  rules={[{ required: true, message: 'Rezervasyon numarası zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Rezervasyon numarası"
+                    variant="borderless"
+                    style={{
+                      fontSize: '28px',
+                      fontWeight: 600,
+                      padding: '0',
+                      color: '#1a1a1a',
+                    }}
+                    className="placeholder:text-gray-300"
+                  />
+                </Form.Item>
+                <div className="text-sm text-gray-400 mt-2">Örn: RES-2024-001</div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+
+              {/* Reservation Type */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <LockOutlined className="mr-1" /> Rezervasyon Türü
+                </Text>
+                <Form.Item
+                  name="reservationType"
+                  rules={[{ required: true }]}
+                  className="mb-2"
+                >
+                  <Segmented
+                    block
+                    options={mainReservationTypes}
+                    className="bg-gray-100/50"
+                    style={{ padding: '4px' }}
+                  />
+                </Form.Item>
                 <Select
-                  allowClear
-                  placeholder="Seçiniz"
-                  options={[
-                    { value: 'SalesOrder', label: 'Satış Siparişi' },
-                    { value: 'PurchaseOrder', label: 'Satın Alma Siparişi' },
-                    { value: 'ProductionOrder', label: 'Üretim Emri' },
-                    { value: 'TransferOrder', label: 'Transfer Emri' },
-                  ]}
+                  size="small"
+                  variant="borderless"
+                  placeholder="+ Diğer türler"
+                  className="text-gray-400 text-xs"
+                  style={{ width: 140 }}
+                  options={otherReservationTypes}
+                  onChange={(val) => form.setFieldValue('reservationType', val)}
                 />
-              </Form.Item>
+              </div>
 
-              <Form.Item name="referenceDocumentNumber" label="Döküman No">
-                <Input placeholder="SO-2024-001" />
-              </Form.Item>
-            </Card>
-          </Col>
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-          <Col xs={24} md={12}>
-            <Card title="Ürün ve Stok" className="mb-6">
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçiniz' }]}
-              >
-                <AutoComplete
-                  placeholder="Ürün ara..."
-                  value={selectedProduct?.name || ''}
-                  options={products.map((p) => ({
-                    value: String(p.id),
-                    label: `${p.code} - ${p.name}`,
-                  }))}
-                  onSearch={setProductSearch}
-                  onSelect={handleProductSelect}
-                  filterOption={(inputValue, option) =>
-                    option?.label?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-                  }
-                />
-              </Form.Item>
+              {/* Reference Document */}
+              <Collapse
+                ghost
+                expandIconPosition="end"
+                items={[
+                  {
+                    key: 'reference',
+                    label: (
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <FileTextOutlined className="mr-1" /> Referans Dökümanı
+                      </Text>
+                    ),
+                    children: (
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <div className="text-xs text-gray-400 mb-1">Döküman Türü</div>
+                          <Form.Item name="referenceDocumentType" className="mb-0">
+                            <Select
+                              allowClear
+                              placeholder="Seçiniz"
+                              variant="filled"
+                              options={documentTypes}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <div className="text-xs text-gray-400 mb-1">Döküman No</div>
+                          <Form.Item name="referenceDocumentNumber" className="mb-0">
+                            <Input placeholder="SO-2024-001" variant="filled" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    ),
+                  },
+                ]}
+              />
 
-              {selectedProduct && (
-                <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                  <Text type="secondary" className="text-xs">Seçilen Ürün</Text>
-                  <div className="font-medium">{selectedProduct.name}</div>
-                  <Text type="secondary" className="text-xs">{selectedProduct.code}</Text>
-                </div>
-              )}
+              {/* Notes */}
+              <div className="mt-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  Notlar
+                </Text>
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    rows={4}
+                    placeholder="Rezervasyon hakkında notlar..."
+                    variant="filled"
+                  />
+                </Form.Item>
+              </div>
+            </Col>
+          </Row>
 
-              <Form.Item
-                name="quantity"
-                label="Rezerve Miktar"
-                rules={[{ required: true, message: 'Miktar gerekli' }]}
-              >
-                <InputNumber min={1} style={{ width: '100%' }} />
-              </Form.Item>
-            </Card>
-
-            <Card title="Depo Bilgileri" className="mb-6">
-              <Form.Item
-                name="warehouseId"
-                label="Depo"
-                rules={[{ required: true, message: 'Depo seçiniz' }]}
-              >
-                <Select
-                  placeholder="Depo seçin"
-                  options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-                  onChange={setSelectedWarehouse}
-                />
-              </Form.Item>
-
-              <Form.Item name="locationId" label="Lokasyon">
-                <Select
-                  placeholder="Lokasyon seçin (opsiyonel)"
-                  allowClear
-                  options={locations.map((l) => ({ value: l.id, label: l.code }))}
-                  disabled={!selectedWarehouse}
-                />
-              </Form.Item>
-            </Card>
-
-            <Card title="Notlar">
-              <Form.Item name="notes">
-                <TextArea rows={3} placeholder="Rezervasyon notları..." />
-              </Form.Item>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
+          {/* Hidden submit button */}
+          <Form.Item hidden>
+            <Button htmlType="submit" />
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 }

@@ -3,10 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
   Form,
   Input,
-  Select,
   DatePicker,
   Button,
   Space,
@@ -16,16 +14,18 @@ import {
   Col,
   message,
   AutoComplete,
+  Collapse,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   InboxOutlined,
+  ShoppingOutlined,
+  CalendarOutlined,
+  TruckOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import {
-  useProducts,
-  useCreateLotBatch,
-} from '@/lib/api/hooks/useInventory';
+import { useProducts, useCreateLotBatch } from '@/lib/api/hooks/useInventory';
 import type { CreateLotBatchDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
@@ -75,6 +75,7 @@ export default function NewLotBatchPage() {
       };
 
       await createLotBatch.mutateAsync(data);
+      message.success('Lot/Parti başarıyla oluşturuldu');
       router.push('/inventory/lot-batches');
     } catch {
       // Validation error
@@ -85,49 +86,43 @@ export default function NewLotBatchPage() {
   const generateLotNumber = () => {
     const date = dayjs().format('YYYYMMDD');
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    form.setFieldsValue({ lotNumber: `LOT-${date}-${random}` });
+    const prefix = selectedProduct?.code?.substring(0, 3).toUpperCase() || 'LOT';
+    form.setFieldsValue({ lotNumber: `${prefix}-${date}-${random}` });
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
-              >
-                <InboxOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Lot/Parti</h1>
-                <p className="text-sm text-gray-500 m-0">Ürün partisi veya lot numarası oluşturun</p>
-              </div>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Lot/Parti</h1>
+              <p className="text-sm text-gray-400 m-0">Ürün partisi veya lot numarası oluşturun</p>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.push('/inventory/lot-batches')}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={createLotBatch.isPending}
-              style={{ background: '#10b981', borderColor: '#10b981' }}
+              onClick={handleSubmit}
+              disabled={!selectedProduct}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
             >
               Kaydet
             </Button>
@@ -135,124 +130,213 @@ export default function NewLotBatchPage() {
         </div>
       </div>
 
-      {/* Form */}
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          initialQuantity: 1,
-        }}
-      >
-        <Row gutter={24}>
-          <Col xs={24} md={16}>
-            {/* Product Selection */}
-            <Card title="Ürün Seçimi" className="mb-6">
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçiniz' }]}
-              >
-                <AutoComplete
-                  placeholder="Ürün ara..."
-                  value={selectedProduct?.name || ''}
-                  options={products.map((p) => ({
-                    value: String(p.id),
-                    label: `${p.code} - ${p.name}`,
-                  }))}
-                  onSelect={handleProductSelect}
-                  filterOption={(inputValue, option) =>
-                    option?.label?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-                  }
-                />
-              </Form.Item>
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            initialQuantity: 1,
+          }}
+        >
+          <Row gutter={48}>
+            {/* Left Panel - Product & Quantity (40%) */}
+            <Col xs={24} lg={10}>
+              {/* Product Selection */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <ShoppingOutlined className="mr-1" /> Ürün Seçimi
+                </Text>
+                <Form.Item
+                  name="productId"
+                  rules={[{ required: true, message: 'Ürün seçiniz' }]}
+                  className="mb-2"
+                >
+                  <AutoComplete
+                    placeholder="Ürün kodu veya adı ile arayın..."
+                    size="large"
+                    value={selectedProduct?.name || ''}
+                    options={products.map((p) => ({
+                      value: String(p.id),
+                      label: (
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-gray-400">({p.code})</span>
+                        </div>
+                      ),
+                    }))}
+                    onSelect={handleProductSelect}
+                    filterOption={(inputValue, option) =>
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.name?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.code?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      false
+                    }
+                  />
+                </Form.Item>
+                {selectedProduct && (
+                  <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <InboxOutlined className="text-white text-xl" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
+                        <div className="text-sm text-gray-500">Kod: {selectedProduct.code}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              {selectedProduct && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Text type="secondary" className="text-xs">
-                    Seçilen Ürün
-                  </Text>
-                  <div className="font-medium">{selectedProduct.name}</div>
-                  <Text type="secondary" className="text-xs">
-                    {selectedProduct.code}
-                  </Text>
+              {/* Quantity */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  Başlangıç Miktarı
+                </Text>
+                <Form.Item
+                  name="initialQuantity"
+                  rules={[{ required: true, message: 'Miktar gerekli' }]}
+                  className="mb-0"
+                >
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={1}
+                    size="large"
+                    variant="filled"
+                    placeholder="1"
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Dates */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <CalendarOutlined className="mr-1" /> Tarihler
+                </Text>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <div className="text-xs text-gray-400 mb-1">Üretim Tarihi</div>
+                    <Form.Item name="manufacturedDate" className="mb-0">
+                      <DatePicker
+                        style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        placeholder="Seçin"
+                        variant="filled"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <div className="text-xs text-gray-400 mb-1">Son Kullanma</div>
+                    <Form.Item name="expiryDate" className="mb-0">
+                      <DatePicker
+                        style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        placeholder="SKT"
+                        variant="filled"
+                        disabledDate={(current) => current && current < dayjs().startOf('day')}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  Notlar
+                </Text>
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea rows={4} placeholder="Lot hakkında notlar..." variant="filled" />
+                </Form.Item>
+              </div>
+            </Col>
+
+            {/* Right Panel - Form Content (60%) */}
+            <Col xs={24} lg={14}>
+              {/* Lot Number - Hero Input */}
+              <div className="mb-8">
+                <Form.Item
+                  name="lotNumber"
+                  rules={[{ required: true, message: 'Lot numarası zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Lot numarası"
+                    variant="borderless"
+                    style={{
+                      fontSize: '28px',
+                      fontWeight: 600,
+                      padding: '0',
+                      color: '#1a1a1a',
+                    }}
+                    className="placeholder:text-gray-300"
+                  />
+                </Form.Item>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="text-sm text-gray-400">Örn: LOT-20240101-ABCD</span>
+                  <Button type="link" size="small" onClick={generateLotNumber} className="p-0">
+                    Otomatik Oluştur
+                  </Button>
                 </div>
-              )}
-            </Card>
+              </div>
 
-            {/* Lot Info */}
-            <Card title="Lot Bilgileri" className="mb-6">
-              <Row gutter={16}>
-                <Col xs={24} md={16}>
-                  <Form.Item
-                    name="lotNumber"
-                    label="Lot Numarası"
-                    rules={[{ required: true, message: 'Lot numarası gerekli' }]}
-                  >
-                    <Input placeholder="LOT-20240101-ABCD" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label=" ">
-                    <Button onClick={generateLotNumber} block>
-                      Otomatik Oluştur
-                    </Button>
-                  </Form.Item>
-                </Col>
-              </Row>
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-              <Form.Item
-                name="initialQuantity"
-                label="Başlangıç Miktarı"
-                rules={[{ required: true, message: 'Miktar gerekli' }]}
-              >
-                <InputNumber style={{ width: '100%' }} min={1} />
-              </Form.Item>
+              {/* Supplier Info */}
+              <Collapse
+                ghost
+                expandIconPosition="end"
+                defaultActiveKey={['supplier']}
+                items={[
+                  {
+                    key: 'supplier',
+                    label: (
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <TruckOutlined className="mr-1" /> Tedarikçi Bilgileri
+                      </Text>
+                    ),
+                    children: (
+                      <Row gutter={16}>
+                        <Col span={24}>
+                          <div className="text-xs text-gray-400 mb-1">Tedarikçi Lot Numarası</div>
+                          <Form.Item name="supplierLotNumber" className="mb-4">
+                            <Input placeholder="Tedarikçinin lot numarası" variant="filled" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    ),
+                  },
+                  {
+                    key: 'certificate',
+                    label: (
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <SafetyCertificateOutlined className="mr-1" /> Sertifika Bilgileri
+                      </Text>
+                    ),
+                    children: (
+                      <Form.Item name="certificateNumber" className="mb-0">
+                        <Input placeholder="Kalite sertifikası numarası" variant="filled" />
+                      </Form.Item>
+                    ),
+                  },
+                ]}
+              />
+            </Col>
+          </Row>
 
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item name="manufacturedDate" label="Üretim Tarihi">
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD/MM/YYYY"
-                      placeholder="Üretim tarihi seçin"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item name="expiryDate" label="Son Kullanma Tarihi">
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD/MM/YYYY"
-                      placeholder="SKT seçin"
-                      disabledDate={(current) => current && current < dayjs().startOf('day')}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* Supplier Info */}
-            <Card title="Tedarikçi Bilgileri" className="mb-6">
-              <Form.Item name="supplierLotNumber" label="Tedarikçi Lot Numarası">
-                <Input placeholder="Tedarikçinin lot numarası" />
-              </Form.Item>
-
-              <Form.Item name="certificateNumber" label="Sertifika Numarası">
-                <Input placeholder="Kalite sertifikası numarası" />
-              </Form.Item>
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            {/* Notes */}
-            <Card title="Notlar">
-              <Form.Item name="notes">
-                <TextArea rows={6} placeholder="Lot hakkında notlar..." />
-              </Form.Item>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
+          {/* Hidden submit button */}
+          <Form.Item hidden>
+            <Button htmlType="submit" />
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 }

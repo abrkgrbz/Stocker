@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
   Form,
   Input,
   Select,
@@ -19,11 +18,8 @@ import {
   AutoComplete,
   Switch,
   Divider,
-  Alert,
-  Steps,
-  Tag,
-  Tooltip,
-  Progress,
+  Collapse,
+  Segmented,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -31,17 +27,12 @@ import {
   GiftOutlined,
   PlusOutlined,
   DeleteOutlined,
-  ShoppingOutlined,
   DollarOutlined,
   CalendarOutlined,
   SettingOutlined,
-  InfoCircleOutlined,
   PercentageOutlined,
 } from '@ant-design/icons';
-import {
-  useProducts,
-  useCreateProductBundle,
-} from '@/lib/api/hooks/useInventory';
+import { useProducts, useCreateProductBundle } from '@/lib/api/hooks/useInventory';
 import {
   BundleType,
   BundlePricingType,
@@ -60,19 +51,22 @@ interface BundleItem extends CreateProductBundleItemDto {
   productPrice?: number;
 }
 
-const bundleTypes: { value: BundleType; label: string; description: string; color: string }[] = [
-  { value: BundleType.Fixed, label: 'Sabit Paket', description: 'Tüm ürünler birlikte satılır', color: 'blue' },
-  { value: BundleType.Configurable, label: 'Yapılandırılabilir', description: 'Müşteri seçim yapabilir', color: 'purple' },
-  { value: BundleType.Kit, label: 'Kit', description: 'Montaj veya set ürünleri', color: 'cyan' },
-  { value: BundleType.Package, label: 'Paket', description: 'Promosyon paketi', color: 'green' },
-  { value: BundleType.Combo, label: 'Kombo', description: 'İndirimli kombinasyon', color: 'orange' },
+const mainBundleTypes = [
+  { value: BundleType.Fixed, label: 'Sabit Paket' },
+  { value: BundleType.Kit, label: 'Kit' },
+  { value: BundleType.Combo, label: 'Kombo' },
 ];
 
-const pricingTypes: { value: BundlePricingType; label: string; description: string }[] = [
-  { value: BundlePricingType.FixedPrice, label: 'Sabit Fiyat', description: 'Belirlenen sabit fiyat' },
-  { value: BundlePricingType.DynamicSum, label: 'Dinamik Toplam', description: 'Ürün fiyatları toplamı' },
-  { value: BundlePricingType.DiscountedSum, label: 'İndirimli Toplam', description: 'Toplam üzerinden indirim' },
-  { value: BundlePricingType.PercentageDiscount, label: 'Yüzde İndirim', description: 'Yüzdelik indirim' },
+const otherBundleTypes = [
+  { value: BundleType.Configurable, label: 'Yapılandırılabilir' },
+  { value: BundleType.Package, label: 'Paket' },
+];
+
+const pricingTypes = [
+  { value: BundlePricingType.FixedPrice, label: 'Sabit Fiyat' },
+  { value: BundlePricingType.DynamicSum, label: 'Dinamik Toplam' },
+  { value: BundlePricingType.DiscountedSum, label: 'İndirimli Toplam' },
+  { value: BundlePricingType.PercentageDiscount, label: 'Yüzde İndirim' },
 ];
 
 export default function NewProductBundlePage() {
@@ -80,7 +74,7 @@ export default function NewProductBundlePage() {
   const [form] = Form.useForm();
   const [items, setItems] = useState<BundleItem[]>([]);
   const [pricingType, setPricingType] = useState<BundlePricingType>(BundlePricingType.FixedPrice);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [requireAllItems, setRequireAllItems] = useState(true);
 
   const { data: products = [] } = useProducts();
   const createBundle = useCreateProductBundle();
@@ -142,12 +136,12 @@ export default function NewProductBundlePage() {
         name: values.name,
         description: values.description,
         bundleType: values.bundleType,
-        pricingType: values.pricingType,
+        pricingType: pricingType,
         fixedPrice: values.fixedPrice,
         fixedPriceCurrency: 'TRY',
         discountPercentage: values.discountPercentage,
         discountAmount: values.discountAmount,
-        requireAllItems: values.requireAllItems,
+        requireAllItems: requireAllItems,
         minSelectableItems: values.minSelectableItems,
         maxSelectableItems: values.maxSelectableItems,
         validFrom: values.validFrom?.toISOString(),
@@ -169,6 +163,7 @@ export default function NewProductBundlePage() {
       };
 
       await createBundle.mutateAsync(data);
+      message.success('Paket başarıyla oluşturuldu');
       router.push('/inventory/product-bundles');
     } catch {
       // Validation error
@@ -215,24 +210,26 @@ export default function NewProductBundlePage() {
         <AutoComplete
           placeholder="Ürün ara..."
           value={record.productName || ''}
+          variant="filled"
           options={products.map((p) => ({
             value: String(p.id),
             label: (
               <div className="flex items-center justify-between py-1">
-                <div>
-                  <span className="font-medium">{p.name}</span>
-                  <span className="text-gray-400 ml-2">({p.code})</span>
-                </div>
-                <span className="text-green-600 font-medium">
-                  {p.unitPrice?.toLocaleString('tr-TR')} ₺
-                </span>
+                <span className="font-medium">{p.name}</span>
+                <span className="text-green-600">{p.unitPrice?.toLocaleString('tr-TR')} ₺</span>
               </div>
             ),
           }))}
           onSelect={(value) => handleItemChange(record.key, 'productId', Number(value))}
           filterOption={(input, option) =>
-            products.find(p => String(p.id) === option?.value)?.name?.toLowerCase().includes(input.toLowerCase()) ||
-            products.find(p => String(p.id) === option?.value)?.code?.toLowerCase().includes(input.toLowerCase()) ||
+            products
+              .find((p) => String(p.id) === option?.value)
+              ?.name?.toLowerCase()
+              .includes(input.toLowerCase()) ||
+            products
+              .find((p) => String(p.id) === option?.value)
+              ?.code?.toLowerCase()
+              .includes(input.toLowerCase()) ||
             false
           }
           style={{ width: '100%' }}
@@ -250,6 +247,7 @@ export default function NewProductBundlePage() {
           value={record.quantity}
           onChange={(value) => handleItemChange(record.key, 'quantity', value || 1)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
@@ -263,8 +261,8 @@ export default function NewProductBundlePage() {
           value={record.overridePrice}
           onChange={(value) => handleItemChange(record.key, 'overridePrice', value)}
           style={{ width: '100%' }}
+          variant="filled"
           prefix="₺"
-          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
         />
       ),
     },
@@ -275,13 +273,11 @@ export default function NewProductBundlePage() {
       width: 70,
       align: 'center',
       render: (_, record) => (
-        <Tooltip title={record.isRequired ? 'Zorunlu ürün' : 'Opsiyonel ürün'}>
-          <Switch
-            size="small"
-            checked={record.isRequired}
-            onChange={(checked) => handleItemChange(record.key, 'isRequired', checked)}
-          />
-        </Tooltip>
+        <Switch
+          size="small"
+          checked={record.isRequired}
+          onChange={(checked) => handleItemChange(record.key, 'isRequired', checked)}
+        />
       ),
     },
     {
@@ -292,11 +288,7 @@ export default function NewProductBundlePage() {
       render: (_, record) => {
         const price = record.overridePrice || record.productPrice || 0;
         const subtotal = price * (record.quantity || 1);
-        return (
-          <Text strong className="text-green-600">
-            {subtotal.toLocaleString('tr-TR')} ₺
-          </Text>
-        );
+        return <Text strong>{subtotal.toLocaleString('tr-TR')} ₺</Text>;
       },
     },
     {
@@ -315,17 +307,17 @@ export default function NewProductBundlePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-white">
       {/* Glass Effect Sticky Header */}
       <div
         className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.85)',
+          background: 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
               icon={<ArrowLeftOutlined />}
@@ -333,73 +325,35 @@ export default function NewProductBundlePage() {
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
-            <div className="h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
-                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
-              >
-                <GiftOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Ürün Paketi</h1>
-                <p className="text-sm text-gray-400 m-0">Ürün paketi veya kombo oluşturun</p>
-              </div>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">Yeni Ürün Paketi</h1>
+              <p className="text-sm text-gray-400 m-0">Ürün paketi veya kombo oluşturun</p>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>Vazgeç</Button>
+            <Button onClick={() => router.push('/inventory/product-bundles')}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={createBundle.isPending}
+              onClick={handleSubmit}
               disabled={items.length === 0}
-              style={{
-                background: items.length > 0 ? '#f59e0b' : undefined,
-                borderColor: items.length > 0 ? '#f59e0b' : undefined
-              }}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
             >
-              Paketi Kaydet
+              Kaydet
             </Button>
           </Space>
         </div>
       </div>
 
       {/* Page Content */}
-      <div className="px-8 py-8 max-w-6xl mx-auto">
-        {/* Progress Steps */}
-        <Card className="mb-6" styles={{ body: { padding: '16px 24px' } }}>
-          <Steps
-            current={currentStep}
-            size="small"
-            items={[
-              {
-                title: 'Paket Bilgileri',
-                icon: <GiftOutlined />,
-                status: currentStep >= 0 ? 'process' : 'wait',
-              },
-              {
-                title: 'Ürün Seçimi',
-                icon: <ShoppingOutlined />,
-                status: items.length > 0 ? 'finish' : (currentStep >= 1 ? 'process' : 'wait'),
-              },
-              {
-                title: 'Fiyatlandırma',
-                icon: <DollarOutlined />,
-                status: currentStep >= 2 ? 'process' : 'wait',
-              },
-            ]}
-          />
-        </Card>
-
+      <div className="px-8 py-8 max-w-7xl mx-auto">
         <Form
           form={form}
           layout="vertical"
           initialValues={{
             bundleType: BundleType.Fixed,
             pricingType: BundlePricingType.FixedPrice,
-            requireAllItems: true,
             displayOrder: 0,
           }}
           onValuesChange={(_, allValues) => {
@@ -408,329 +362,295 @@ export default function NewProductBundlePage() {
             }
           }}
         >
-          <Row gutter={24}>
-            <Col xs={24} lg={16}>
-              {/* Bundle Info Card */}
-              <Card
-                className="mb-6"
-                styles={{
-                  header: { borderBottom: 'none', paddingBottom: 0 },
-                  body: { paddingTop: 16 }
-                }}
-                title={
-                  <div className="flex items-center gap-2">
-                    <GiftOutlined className="text-amber-500" />
-                    <span>Paket Bilgileri</span>
+          <Row gutter={48}>
+            {/* Left Panel - Summary & Settings (40%) */}
+            <Col xs={24} lg={10}>
+              {/* Price Summary */}
+              {items.length > 0 && (
+                <div className="mb-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                        Ürün Toplamı
+                      </div>
+                      <div className="text-2xl font-semibold text-gray-700">
+                        {calculatedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                        Paket Fiyatı
+                      </div>
+                      <div className="text-2xl font-bold text-amber-600">
+                        {discountedPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </div>
+                    </div>
                   </div>
-                }
-              >
-                <Row gutter={16}>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="code"
-                      label="Paket Kodu"
-                      rules={[{ required: true, message: 'Kod gerekli' }]}
-                    >
-                      <Input placeholder="BND-001" prefix={<GiftOutlined className="text-gray-400" />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={16}>
-                    <Form.Item
-                      name="name"
-                      label="Paket Adı"
-                      rules={[{ required: true, message: 'Ad gerekli' }]}
-                    >
-                      <Input placeholder="Başlangıç Paketi" size="large" />
-                    </Form.Item>
-                  </Col>
-                </Row>
+                  {savingsPercentage > 0 && (
+                    <div className="mt-4 pt-4 border-t border-amber-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Tasarruf</span>
+                        <span className="text-lg font-semibold text-green-600">
+                          %{savingsPercentage.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                <Form.Item name="description" label="Açıklama">
-                  <TextArea
-                    rows={3}
-                    placeholder="Paket açıklaması... Müşterilere gösterilecek bilgi"
+              {/* Bundle Type Selection */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <GiftOutlined className="mr-1" /> Paket Türü
+                </Text>
+                <Form.Item name="bundleType" rules={[{ required: true }]} className="mb-2">
+                  <Segmented
+                    block
+                    options={mainBundleTypes}
+                    className="bg-gray-100/50"
+                    style={{ padding: '4px' }}
                   />
                 </Form.Item>
+                <Select
+                  size="small"
+                  variant="borderless"
+                  placeholder="+ Diğer türler"
+                  className="text-gray-400 text-xs"
+                  style={{ width: 140 }}
+                  options={otherBundleTypes}
+                  onChange={(val) => form.setFieldValue('bundleType', val)}
+                />
+              </div>
 
+              {/* Pricing Type */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <DollarOutlined className="mr-1" /> Fiyatlandırma
+                </Text>
+                <Form.Item name="pricingType" rules={[{ required: true }]} className="mb-4">
+                  <Select options={pricingTypes} variant="filled" size="large" />
+                </Form.Item>
+
+                {pricingType === BundlePricingType.FixedPrice && (
+                  <Form.Item name="fixedPrice" className="mb-0">
+                    <InputNumber
+                      style={{ width: '100%' }}
+                      size="large"
+                      min={0}
+                      precision={2}
+                      placeholder="Sabit fiyat girin"
+                      variant="filled"
+                      addonBefore="₺"
+                    />
+                  </Form.Item>
+                )}
+
+                {(pricingType === BundlePricingType.PercentageDiscount ||
+                  pricingType === BundlePricingType.DiscountedSum) && (
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item name="discountPercentage" className="mb-0">
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          min={0}
+                          max={100}
+                          precision={2}
+                          placeholder="İndirim %"
+                          variant="filled"
+                          addonAfter={<PercentageOutlined />}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item name="discountAmount" className="mb-0">
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          min={0}
+                          precision={2}
+                          placeholder="İndirim ₺"
+                          variant="filled"
+                          addonBefore="₺"
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                )}
+
+                {pricingType === BundlePricingType.DynamicSum && (
+                  <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-lg">
+                    Paket fiyatı ürün toplamından otomatik hesaplanır.
+                  </div>
+                )}
+              </div>
+
+              {/* Settings */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  <SettingOutlined className="mr-1" /> Seçenekler
+                </Text>
+                <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
+                  <div>
+                    <Text strong className="text-gray-700">
+                      Tüm Ürünler Zorunlu
+                    </Text>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      Müşteri opsiyonel ürünleri çıkarabilir
+                    </div>
+                  </div>
+                  <Switch checked={requireAllItems} onChange={setRequireAllItems} />
+                </div>
+              </div>
+
+              {/* Validity */}
+              <Collapse
+                ghost
+                expandIconPosition="end"
+                items={[
+                  {
+                    key: 'validity',
+                    label: (
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <CalendarOutlined className="mr-1" /> Geçerlilik Tarihleri
+                      </Text>
+                    ),
+                    children: (
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <div className="text-xs text-gray-400 mb-1">Başlangıç</div>
+                          <Form.Item name="validFrom" className="mb-0">
+                            <DatePicker
+                              style={{ width: '100%' }}
+                              format="DD/MM/YYYY"
+                              placeholder="Hemen"
+                              variant="filled"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <div className="text-xs text-gray-400 mb-1">Bitiş</div>
+                          <Form.Item name="validTo" className="mb-0">
+                            <DatePicker
+                              style={{ width: '100%' }}
+                              format="DD/MM/YYYY"
+                              placeholder="Süresiz"
+                              variant="filled"
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    ),
+                  },
+                ]}
+              />
+            </Col>
+
+            {/* Right Panel - Form Content (60%) */}
+            <Col xs={24} lg={14}>
+              {/* Bundle Name - Hero Input */}
+              <div className="mb-8">
+                <Form.Item
+                  name="name"
+                  rules={[{ required: true, message: 'Paket adı zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Paket adı"
+                    variant="borderless"
+                    style={{
+                      fontSize: '28px',
+                      fontWeight: 600,
+                      padding: '0',
+                      color: '#1a1a1a',
+                    }}
+                    className="placeholder:text-gray-300"
+                  />
+                </Form.Item>
+                <Form.Item name="description" className="mb-0 mt-2">
+                  <TextArea
+                    placeholder="Paket açıklaması ekleyin..."
+                    variant="borderless"
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    style={{
+                      fontSize: '15px',
+                      padding: '0',
+                      color: '#666',
+                      resize: 'none',
+                    }}
+                    className="placeholder:text-gray-300"
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+
+              {/* Bundle Code */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+                  Paket Kodu
+                </Text>
                 <Row gutter={16}>
-                  <Col xs={24} md={12}>
+                  <Col span={12}>
                     <Form.Item
-                      name="bundleType"
-                      label="Paket Tipi"
-                      rules={[{ required: true, message: 'Tip seçin' }]}
+                      name="code"
+                      rules={[{ required: true, message: 'Kod gerekli' }]}
+                      className="mb-0"
                     >
-                      <Select>
-                        {bundleTypes.map((type) => (
-                          <Select.Option key={type.value} value={type.value}>
-                            <div className="flex items-center gap-2">
-                              <Tag color={type.color} className="m-0">{type.label}</Tag>
-                              <Text type="secondary" className="text-xs">{type.description}</Text>
-                            </div>
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="pricingType"
-                      label="Fiyatlandırma Tipi"
-                      rules={[{ required: true, message: 'Fiyatlandırma tipi seçin' }]}
-                    >
-                      <Select>
-                        {pricingTypes.map((type) => (
-                          <Select.Option key={type.value} value={type.value}>
-                            <div>
-                              <span className="font-medium">{type.label}</span>
-                              <Text type="secondary" className="text-xs ml-2">{type.description}</Text>
-                            </div>
-                          </Select.Option>
-                        ))}
-                      </Select>
+                      <Input placeholder="BND-001" variant="filled" />
                     </Form.Item>
                   </Col>
                 </Row>
-              </Card>
+              </div>
 
-              {/* Bundle Items Card */}
-              <Card
-                className="mb-6"
-                styles={{
-                  header: { borderBottom: 'none', paddingBottom: 0 },
-                  body: { paddingTop: 16 }
-                }}
-                title={
-                  <div className="flex items-center gap-2">
-                    <ShoppingOutlined className="text-amber-500" />
-                    <span>Paket Ürünleri</span>
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+
+              {/* Bundle Items */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Paket Ürünleri
                     {items.length > 0 && (
-                      <Tag color="orange">{items.length} ürün</Tag>
+                      <span className="ml-2 text-gray-400">({items.length} ürün)</span>
                     )}
-                  </div>
-                }
-                extra={
+                  </Text>
                   <Button
-                    type="dashed"
+                    type="text"
+                    size="small"
                     icon={<PlusOutlined />}
                     onClick={handleAddItem}
+                    className="text-blue-500"
                   >
                     Ürün Ekle
                   </Button>
-                }
-              >
+                </div>
+
                 {items.length === 0 ? (
-                  <div className="text-center py-12 bg-gradient-to-b from-amber-50 to-orange-50 rounded-xl border-2 border-dashed border-amber-200">
-                    <GiftOutlined className="text-5xl text-amber-300 mb-3" />
-                    <div className="text-gray-600 mb-2 font-medium">Henüz ürün eklenmedi</div>
-                    <div className="text-gray-400 text-sm mb-4">
-                      Pakete eklemek istediğiniz ürünleri seçin
-                    </div>
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={handleAddItem}
-                      style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
-                    >
+                  <div className="p-12 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
+                    <GiftOutlined className="text-5xl text-gray-300 mb-3" />
+                    <div className="text-gray-500 mb-3 font-medium">Henüz ürün eklenmedi</div>
+                    <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem}>
                       İlk Ürünü Ekle
                     </Button>
                   </div>
                 ) : (
-                  <>
-                    <Table
-                      columns={itemColumns}
-                      dataSource={items}
-                      rowKey="key"
-                      pagination={false}
-                      size="middle"
-                    />
-
-                    <Divider className="my-4" />
-
-                    {/* Summary */}
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl">
-                      <Row gutter={24} align="middle">
-                        <Col span={8}>
-                          <div className="text-gray-500 text-sm">Ürün Toplamı</div>
-                          <div className="text-xl font-semibold text-gray-700">
-                            {calculatedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                          </div>
-                        </Col>
-                        <Col span={8}>
-                          {savingsPercentage > 0 && (
-                            <>
-                              <div className="text-gray-500 text-sm">Tasarruf</div>
-                              <div className="text-xl font-semibold text-green-600">
-                                %{savingsPercentage.toFixed(1)}
-                              </div>
-                            </>
-                          )}
-                        </Col>
-                        <Col span={8} className="text-right">
-                          <div className="text-gray-500 text-sm">Paket Fiyatı</div>
-                          <div className="text-2xl font-bold text-amber-600">
-                            {discountedPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                          </div>
-                        </Col>
-                      </Row>
-                    </div>
-                  </>
-                )}
-              </Card>
-            </Col>
-
-            <Col xs={24} lg={8}>
-              {/* Pricing Card */}
-              <Card
-                className="mb-6"
-                styles={{
-                  header: { borderBottom: 'none', paddingBottom: 0 },
-                  body: { paddingTop: 16 }
-                }}
-                title={
-                  <div className="flex items-center gap-2">
-                    <DollarOutlined className="text-green-500" />
-                    <span>Fiyatlandırma</span>
-                  </div>
-                }
-              >
-                {pricingType === BundlePricingType.FixedPrice && (
-                  <Form.Item name="fixedPrice" label="Sabit Fiyat">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      size="large"
-                      min={0}
-                      precision={2}
-                      prefix="₺"
-                      placeholder="0.00"
-                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    />
-                  </Form.Item>
-                )}
-
-                {(pricingType === BundlePricingType.PercentageDiscount || pricingType === BundlePricingType.DiscountedSum) && (
-                  <Form.Item name="discountPercentage" label="İndirim Yüzdesi">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      size="large"
-                      min={0}
-                      max={100}
-                      precision={2}
-                      addonAfter="%"
-                      placeholder="0"
-                    />
-                  </Form.Item>
-                )}
-
-                {pricingType === BundlePricingType.DiscountedSum && (
-                  <Form.Item name="discountAmount" label="İndirim Tutarı">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                      prefix="₺"
-                      placeholder="0.00"
-                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    />
-                  </Form.Item>
-                )}
-
-                {pricingType === BundlePricingType.DynamicSum && (
-                  <Alert
-                    message="Dinamik Fiyatlandırma"
-                    description="Paket fiyatı, içindeki ürünlerin fiyatları toplamından otomatik hesaplanır."
-                    type="info"
-                    showIcon
-                    icon={<InfoCircleOutlined />}
+                  <Table
+                    columns={itemColumns}
+                    dataSource={items}
+                    rowKey="key"
+                    pagination={false}
+                    size="small"
                   />
                 )}
-              </Card>
-
-              {/* Options Card */}
-              <Card
-                className="mb-6"
-                styles={{
-                  header: { borderBottom: 'none', paddingBottom: 0 },
-                  body: { paddingTop: 16 }
-                }}
-                title={
-                  <div className="flex items-center gap-2">
-                    <SettingOutlined className="text-gray-500" />
-                    <span>Seçenekler</span>
-                  </div>
-                }
-              >
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
-                  <div>
-                    <div className="font-medium text-gray-700">Tüm Ürünler Zorunlu</div>
-                    <div className="text-xs text-gray-400">
-                      Devre dışı bırakılırsa müşteri seçim yapabilir
-                    </div>
-                  </div>
-                  <Form.Item name="requireAllItems" valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="minSelectableItems" label="Min Seçim">
-                      <InputNumber style={{ width: '100%' }} min={0} placeholder="0" />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="maxSelectableItems" label="Max Seçim">
-                      <InputNumber style={{ width: '100%' }} min={0} placeholder="∞" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Validity Card */}
-              <Card
-                styles={{
-                  header: { borderBottom: 'none', paddingBottom: 0 },
-                  body: { paddingTop: 16 }
-                }}
-                title={
-                  <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-blue-500" />
-                    <span>Geçerlilik</span>
-                  </div>
-                }
-              >
-                <Form.Item name="validFrom" label="Başlangıç Tarihi">
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    format="DD/MM/YYYY"
-                    placeholder="Hemen başlasın"
-                  />
-                </Form.Item>
-
-                <Form.Item name="validTo" label="Bitiş Tarihi">
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    format="DD/MM/YYYY"
-                    placeholder="Süresiz"
-                    disabledDate={(current) => {
-                      const validFrom = form.getFieldValue('validFrom');
-                      return validFrom && current && current < validFrom;
-                    }}
-                  />
-                </Form.Item>
-
-                <Divider className="my-4" />
-
-                <Form.Item name="displayOrder" label="Görüntüleme Sırası">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    placeholder="0"
-                    addonBefore={<InfoCircleOutlined />}
-                  />
-                </Form.Item>
-              </Card>
+              </div>
             </Col>
           </Row>
+
+          {/* Hidden submit button */}
+          <Form.Item hidden>
+            <Button htmlType="submit" />
+          </Form.Item>
         </Form>
       </div>
     </div>
