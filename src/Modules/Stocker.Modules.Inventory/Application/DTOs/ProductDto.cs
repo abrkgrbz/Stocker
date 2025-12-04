@@ -19,6 +19,7 @@ public class ProductDto
     public string? BrandName { get; set; }
     public int UnitId { get; set; }
     public string? UnitName { get; set; }
+    public string? UnitSymbol { get; set; }
     public ProductType ProductType { get; set; }
     public decimal? UnitPrice { get; set; }
     public string? UnitPriceCurrency { get; set; }
@@ -42,7 +43,7 @@ public class ProductDto
     public DateTime? UpdatedAt { get; set; }
     public decimal TotalStockQuantity { get; set; }
     public decimal AvailableStockQuantity { get; set; }
-    public List<ProductAttributeDto> Attributes { get; set; } = new();
+    public List<ProductAttributeSimpleDto> Attributes { get; set; } = new();
     public List<ProductImageDto> Images { get; set; } = new();
 }
 
@@ -120,17 +121,20 @@ public class ProductListDto
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Barcode { get; set; }
+    public string? SKU { get; set; }
     public string? CategoryName { get; set; }
     public string? BrandName { get; set; }
+    public string? UnitName { get; set; }
+    public ProductType ProductType { get; set; }
     public decimal? UnitPrice { get; set; }
     public decimal TotalStockQuantity { get; set; }
     public bool IsActive { get; set; }
 }
 
 /// <summary>
-/// DTO for product attributes
+/// Simple DTO for product attribute values (used in product listing)
 /// </summary>
-public class ProductAttributeDto
+public class ProductAttributeSimpleDto
 {
     public int Id { get; set; }
     public string AttributeName { get; set; } = string.Empty;

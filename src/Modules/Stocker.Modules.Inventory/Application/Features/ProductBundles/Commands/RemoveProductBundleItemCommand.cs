@@ -1,0 +1,77 @@
+using FluentValidation;
+using MediatR;
+using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Results;
+
+namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
+
+/// <summary>
+/// Command to remove an item from a product bundle
+/// </summary>
+public class RemoveProductBundleItemCommand : IRequest<Result>
+{
+    public int TenantId { get; set; }
+    public int BundleId { get; set; }
+    public int ItemId { get; set; }
+}
+
+/// <summary>
+/// Validator for RemoveProductBundleItemCommand
+/// </summary>
+public class RemoveProductBundleItemCommandValidator : AbstractValidator<RemoveProductBundleItemCommand>
+{
+    public RemoveProductBundleItemCommandValidator()
+    {
+        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.BundleId).GreaterThan(0);
+        RuleFor(x => x.ItemId).GreaterThan(0);
+    }
+}
+
+/// <summary>
+/// Handler for RemoveProductBundleItemCommand
+/// </summary>
+public class RemoveProductBundleItemCommandHandler : IRequestHandler<RemoveProductBundleItemCommand, Result>
+{
+    private readonly IProductBundleRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RemoveProductBundleItemCommandHandler(IProductBundleRepository repository, IUnitOfWork unitOfWork)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Result> Handle(RemoveProductBundleItemCommand request, CancellationToken cancellationToken)
+    {
+        var bundle = await _repository.GetWithItemsAsync(request.BundleId, cancellationToken);
+
+        if (bundle == null)
+        {
+            return Result.Failure(
+                new Error("ProductBundle.NotFound", $"Product bundle with ID {request.BundleId} not found", ErrorType.NotFound));
+        }
+
+        var item = bundle.Items?.FirstOrDefault(i => i.Id == request.ItemId);
+        if (item == null)
+        {
+            return Result.Failure(
+                new Error("ProductBundleItem.NotFound", $"Bundle item with ID {request.ItemId} not found", ErrorType.NotFound));
+        }
+
+        // Check minimum items for bundle validity
+        if (bundle.Items?.Count <= 1)
+        {
+            return Result.Failure(
+                new Error("ProductBundle.MinimumItems", "Cannot remove the last item from a bundle", ErrorType.Validation));
+        }
+
+        bundle.RemoveItem(item.ProductId);
+
+        _repository.Update(bundle);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}

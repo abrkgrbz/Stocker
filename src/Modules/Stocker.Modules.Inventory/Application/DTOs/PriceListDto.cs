@@ -117,6 +117,9 @@ public class PriceListListDto
     public bool IsActive { get; set; }
     public bool IsDefault { get; set; }
     public bool IsValid { get; set; } // Currently within valid date range
+    public decimal? GlobalDiscountPercentage { get; set; }
+    public decimal? GlobalMarkupPercentage { get; set; }
+    public int Priority { get; set; }
     public int ItemCount { get; set; }
 }
 

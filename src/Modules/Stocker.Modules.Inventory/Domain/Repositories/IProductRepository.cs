@@ -23,6 +23,11 @@ public interface IProductRepository : IInventoryRepository<Product>
     Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a product by SKU
+    /// </summary>
+    Task<Product?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets products by category
     /// </summary>
     Task<IReadOnlyList<Product>> GetByCategoryAsync(int categoryId, CancellationToken cancellationToken = default);

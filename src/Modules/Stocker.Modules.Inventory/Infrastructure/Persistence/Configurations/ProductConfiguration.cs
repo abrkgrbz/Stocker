@@ -36,6 +36,39 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired()
             .HasMaxLength(20);
 
+        builder.Property(p => p.SKU)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.ProductType)
+            .IsRequired()
+            .HasConversion<int>();
+
+        builder.Property(p => p.UnitId)
+            .IsRequired();
+
+        builder.Property(p => p.ReorderQuantity)
+            .HasPrecision(18, 4);
+
+        builder.Property(p => p.LeadTimeDays);
+
+        builder.Property(p => p.Weight)
+            .HasPrecision(18, 4);
+
+        builder.Property(p => p.WeightUnit)
+            .HasMaxLength(10);
+
+        builder.Property(p => p.Length)
+            .HasPrecision(18, 4);
+
+        builder.Property(p => p.Width)
+            .HasPrecision(18, 4);
+
+        builder.Property(p => p.Height)
+            .HasPrecision(18, 4);
+
+        builder.Property(p => p.DimensionUnit)
+            .HasMaxLength(10);
+
         builder.OwnsOne(p => p.UnitPrice, up =>
         {
             up.Property(m => m.Amount)
@@ -86,6 +119,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(p => p.SupplierId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(p => p.UnitEntity)
+            .WithMany()
+            .HasForeignKey(p => p.UnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(p => p.Stocks)
             .WithOne(s => s.Product)
             .HasForeignKey(s => s.ProductId)
@@ -114,5 +152,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => new { p.TenantId, p.BrandId });
         builder.HasIndex(p => new { p.TenantId, p.IsActive });
         builder.HasIndex(p => new { p.TenantId, p.Name });
+        builder.HasIndex(p => new { p.TenantId, p.SKU })
+            .IsUnique()
+            .HasFilter("[SKU] IS NOT NULL");
     }
 }

@@ -1222,6 +1222,9 @@ export interface PriceListListDto {
   isActive: boolean;
   isDefault: boolean;
   isValid: boolean;
+  globalDiscountPercentage?: number;
+  globalMarkupPercentage?: number;
+  priority: number;
   itemCount: number;
 }
 
@@ -1446,4 +1449,305 @@ export interface LotBatchFilterDto {
 
 export interface QuarantineRequest {
   reason: string;
+}
+
+// =====================================
+// PRODUCT ATTRIBUTES (EAV System)
+// =====================================
+
+export enum AttributeType {
+  Text = 'Text',
+  Number = 'Number',
+  Boolean = 'Boolean',
+  Date = 'Date',
+  Select = 'Select',
+  MultiSelect = 'MultiSelect',
+  Color = 'Color',
+  Size = 'Size'
+}
+
+export interface ProductAttributeOptionDto {
+  id: number;
+  productAttributeId: number;
+  value: string;
+  displayOrder: number;
+  colorCode?: string;
+  imageUrl?: string;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
+export interface ProductAttributeDetailDto {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  attributeType: AttributeType;
+  isRequired: boolean;
+  isFilterable: boolean;
+  isVisible: boolean;
+  displayOrder: number;
+  isActive: boolean;
+  groupName?: string;
+  validationPattern?: string;
+  minValue?: number;
+  maxValue?: number;
+  defaultValue?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  options: ProductAttributeOptionDto[];
+}
+
+export interface CreateProductAttributeDto {
+  code: string;
+  name: string;
+  description?: string;
+  attributeType: AttributeType;
+  isRequired?: boolean;
+  isFilterable?: boolean;
+  isVisible?: boolean;
+  displayOrder?: number;
+  groupName?: string;
+  validationPattern?: string;
+  minValue?: number;
+  maxValue?: number;
+  defaultValue?: string;
+  options?: CreateProductAttributeOptionDto[];
+}
+
+export interface UpdateProductAttributeDto {
+  name: string;
+  description?: string;
+  isRequired: boolean;
+  isFilterable: boolean;
+  isVisible: boolean;
+  displayOrder: number;
+  groupName?: string;
+  validationPattern?: string;
+  minValue?: number;
+  maxValue?: number;
+  defaultValue?: string;
+}
+
+export interface CreateProductAttributeOptionDto {
+  value: string;
+  displayOrder?: number;
+  colorCode?: string;
+  imageUrl?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateProductAttributeOptionDto {
+  value: string;
+  displayOrder: number;
+  colorCode?: string;
+  imageUrl?: string;
+  isDefault: boolean;
+}
+
+export interface ProductAttributeValueDto {
+  id: number;
+  productId: number;
+  productAttributeId: number;
+  attributeCode: string;
+  attributeName: string;
+  attributeType: AttributeType;
+  value: string;
+  optionId?: number;
+}
+
+// =====================================
+// PRODUCT VARIANTS
+// =====================================
+
+export interface ProductVariantOptionDto {
+  id: number;
+  productVariantId: number;
+  productAttributeId: number;
+  attributeCode: string;
+  attributeName: string;
+  productAttributeOptionId?: number;
+  value: string;
+}
+
+export interface ProductVariantDto {
+  id: number;
+  productId: number;
+  productCode?: string;
+  productName?: string;
+  sku: string;
+  barcode?: string;
+  name: string;
+  price?: number;
+  priceCurrency?: string;
+  costPrice?: number;
+  costPriceCurrency?: string;
+  weight?: number;
+  imageUrl?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  stockQuantity: number;
+  options: ProductVariantOptionDto[];
+}
+
+export interface CreateProductVariantDto {
+  productId: number;
+  sku: string;
+  barcode?: string;
+  name: string;
+  price?: number;
+  priceCurrency?: string;
+  costPrice?: number;
+  costPriceCurrency?: string;
+  weight?: number;
+  imageUrl?: string;
+  isDefault?: boolean;
+  options?: CreateProductVariantOptionDto[];
+}
+
+export interface UpdateProductVariantDto {
+  sku: string;
+  barcode?: string;
+  name: string;
+  price?: number;
+  priceCurrency?: string;
+  costPrice?: number;
+  costPriceCurrency?: string;
+  weight?: number;
+  imageUrl?: string;
+  isDefault: boolean;
+}
+
+export interface CreateProductVariantOptionDto {
+  productAttributeId: number;
+  productAttributeOptionId?: number;
+  value: string;
+}
+
+// =====================================
+// PRODUCT BUNDLES
+// =====================================
+
+export enum BundleType {
+  Fixed = 'Fixed',
+  Configurable = 'Configurable',
+  Kit = 'Kit',
+  Package = 'Package',
+  Combo = 'Combo'
+}
+
+export enum BundlePricingType {
+  FixedPrice = 'FixedPrice',
+  DynamicSum = 'DynamicSum',
+  DiscountedSum = 'DiscountedSum',
+  PercentageDiscount = 'PercentageDiscount'
+}
+
+export interface ProductBundleItemDto {
+  id: number;
+  productBundleId: number;
+  productId: number;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  isRequired: boolean;
+  isDefault: boolean;
+  overridePrice?: number;
+  overridePriceCurrency?: string;
+  discountPercentage?: number;
+  displayOrder: number;
+  minQuantity?: number;
+  maxQuantity?: number;
+  productPrice?: number;
+  productPriceCurrency?: string;
+}
+
+export interface ProductBundleDto {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  bundleType: BundleType;
+  pricingType: BundlePricingType;
+  fixedPrice?: number;
+  fixedPriceCurrency?: string;
+  discountPercentage?: number;
+  discountAmount?: number;
+  requireAllItems: boolean;
+  minSelectableItems?: number;
+  maxSelectableItems?: number;
+  validFrom?: DateTime;
+  validTo?: DateTime;
+  isActive: boolean;
+  imageUrl?: string;
+  displayOrder: number;
+  isValid: boolean;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  items: ProductBundleItemDto[];
+  calculatedPrice: number;
+}
+
+export interface CreateProductBundleDto {
+  code: string;
+  name: string;
+  description?: string;
+  bundleType: BundleType;
+  pricingType: BundlePricingType;
+  fixedPrice?: number;
+  fixedPriceCurrency?: string;
+  discountPercentage?: number;
+  discountAmount?: number;
+  requireAllItems?: boolean;
+  minSelectableItems?: number;
+  maxSelectableItems?: number;
+  validFrom?: DateTime;
+  validTo?: DateTime;
+  imageUrl?: string;
+  displayOrder?: number;
+  items?: CreateProductBundleItemDto[];
+}
+
+export interface UpdateProductBundleDto {
+  name: string;
+  description?: string;
+  pricingType: BundlePricingType;
+  fixedPrice?: number;
+  fixedPriceCurrency?: string;
+  discountPercentage?: number;
+  discountAmount?: number;
+  requireAllItems: boolean;
+  minSelectableItems?: number;
+  maxSelectableItems?: number;
+  validFrom?: DateTime;
+  validTo?: DateTime;
+  imageUrl?: string;
+  displayOrder: number;
+}
+
+export interface CreateProductBundleItemDto {
+  productId: number;
+  quantity: number;
+  isRequired?: boolean;
+  isDefault?: boolean;
+  overridePrice?: number;
+  overridePriceCurrency?: string;
+  discountPercentage?: number;
+  displayOrder?: number;
+  minQuantity?: number;
+  maxQuantity?: number;
+}
+
+export interface UpdateProductBundleItemDto {
+  quantity: number;
+  isRequired: boolean;
+  isDefault: boolean;
+  overridePrice?: number;
+  overridePriceCurrency?: string;
+  discountPercentage?: number;
+  displayOrder: number;
+  minQuantity?: number;
+  maxQuantity?: number;
 }

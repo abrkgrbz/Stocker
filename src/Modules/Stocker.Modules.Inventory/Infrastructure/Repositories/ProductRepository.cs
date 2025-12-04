@@ -43,6 +43,13 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<Product?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(p => !p.IsDeleted && p.SKU == sku)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Product>> GetByCategoryAsync(int categoryId, CancellationToken cancellationToken = default)
     {
         return await DbSet

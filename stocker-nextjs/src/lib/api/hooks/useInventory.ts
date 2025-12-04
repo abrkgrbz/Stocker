@@ -71,6 +71,22 @@ import type {
   LotBatchStatus,
   // Image Types
   ImageType,
+  // Product Attributes
+  ProductAttributeDetailDto,
+  CreateProductAttributeDto,
+  UpdateProductAttributeDto,
+  CreateProductAttributeOptionDto,
+  UpdateProductAttributeOptionDto,
+  // Product Variants
+  ProductVariantDto,
+  CreateProductVariantDto,
+  UpdateProductVariantDto,
+  // Product Bundles
+  ProductBundleDto,
+  CreateProductBundleDto,
+  UpdateProductBundleDto,
+  CreateProductBundleItemDto,
+  UpdateProductBundleItemDto,
 } from '../services/inventory.types';
 
 // =====================================
@@ -148,6 +164,18 @@ export const inventoryKeys = {
   // Lot Batches
   lotBatches: (filter?: LotBatchFilterDto) => ['inventory', 'lot-batches', filter] as const,
   lotBatch: (id: number) => ['inventory', 'lot-batches', id] as const,
+
+  // Product Attributes
+  productAttributes: ['inventory', 'product-attributes'] as const,
+  productAttribute: (id: number) => ['inventory', 'product-attributes', id] as const,
+
+  // Product Variants
+  productVariants: (productId?: number) => ['inventory', 'product-variants', productId] as const,
+  productVariant: (id: number) => ['inventory', 'product-variants', 'detail', id] as const,
+
+  // Product Bundles
+  productBundles: ['inventory', 'product-bundles'] as const,
+  productBundle: (id: number) => ['inventory', 'product-bundles', id] as const,
 };
 
 // =====================================
@@ -1750,6 +1778,329 @@ export function useReorderProductImages() {
     },
     onError: (error) => {
       showApiError(error, 'Resim sıralaması güncellenemedi');
+    },
+  });
+}
+
+// =====================================
+// PRODUCT ATTRIBUTES HOOKS
+// =====================================
+
+export function useProductAttributes(includeInactive: boolean = false, filterableOnly: boolean = false) {
+  return useQuery({
+    queryKey: [...inventoryKeys.productAttributes, { includeInactive, filterableOnly }],
+    queryFn: () => InventoryService.getProductAttributes(includeInactive, filterableOnly),
+    staleTime: 60000,
+  });
+}
+
+export function useProductAttribute(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productAttribute(id),
+    queryFn: () => InventoryService.getProductAttribute(id),
+    enabled: !!id && id > 0,
+  });
+}
+
+export function useCreateProductAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProductAttributeDto) => InventoryService.createProductAttribute(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Ürün özelliği oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün özelliği oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateProductAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateProductAttributeDto }) =>
+      InventoryService.updateProductAttribute(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttribute(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Ürün özelliği güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün özelliği güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteProductAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteProductAttribute(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Ürün özelliği silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün özelliği silinemedi');
+    },
+  });
+}
+
+export function useAddProductAttributeOption() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ attributeId, data }: { attributeId: number; data: CreateProductAttributeOptionDto }) =>
+      InventoryService.addProductAttributeOption(attributeId, data),
+    onSuccess: (_, { attributeId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttribute(attributeId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Özellik seçeneği eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Özellik seçeneği eklenemedi');
+    },
+  });
+}
+
+export function useUpdateProductAttributeOption() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      attributeId,
+      optionId,
+      data,
+    }: {
+      attributeId: number;
+      optionId: number;
+      data: UpdateProductAttributeOptionDto;
+    }) => InventoryService.updateProductAttributeOption(attributeId, optionId, data),
+    onSuccess: (_, { attributeId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttribute(attributeId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Özellik seçeneği güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Özellik seçeneği güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteProductAttributeOption() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ attributeId, optionId }: { attributeId: number; optionId: number }) =>
+      InventoryService.deleteProductAttributeOption(attributeId, optionId),
+    onSuccess: (_, { attributeId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttribute(attributeId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productAttributes });
+      showSuccess('Özellik seçeneği silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Özellik seçeneği silinemedi');
+    },
+  });
+}
+
+// =====================================
+// PRODUCT VARIANTS HOOKS
+// =====================================
+
+export function useProductVariants(productId: number, includeInactive: boolean = false) {
+  return useQuery({
+    queryKey: [...inventoryKeys.productVariants(productId), { includeInactive }],
+    queryFn: () => InventoryService.getProductVariants(productId, includeInactive),
+    enabled: !!productId && productId > 0,
+    staleTime: 30000,
+  });
+}
+
+export function useProductVariant(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productVariant(id),
+    queryFn: () => InventoryService.getProductVariant(id),
+    enabled: !!id && id > 0,
+  });
+}
+
+export function useCreateProductVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProductVariantDto) => InventoryService.createProductVariant(data),
+    onSuccess: (_, data) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productVariants(data.productId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productVariants(undefined) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.product(data.productId) });
+      showSuccess('Ürün varyantı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün varyantı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateProductVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateProductVariantDto }) =>
+      InventoryService.updateProductVariant(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productVariant(id) });
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'product-variants'] });
+      showSuccess('Ürün varyantı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün varyantı güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteProductVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteProductVariant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'product-variants'] });
+      showSuccess('Ürün varyantı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün varyantı silinemedi');
+    },
+  });
+}
+
+// =====================================
+// PRODUCT BUNDLES HOOKS
+// =====================================
+
+export function useProductBundles(
+  includeInactive: boolean = false,
+  validOnly: boolean = false
+) {
+  return useQuery({
+    queryKey: [...inventoryKeys.productBundles, { includeInactive, validOnly }],
+    queryFn: () => InventoryService.getProductBundles(includeInactive, validOnly),
+    staleTime: 30000,
+  });
+}
+
+export function useProductBundle(id: number) {
+  return useQuery({
+    queryKey: inventoryKeys.productBundle(id),
+    queryFn: () => InventoryService.getProductBundle(id),
+    enabled: !!id && id > 0,
+  });
+}
+
+export function useCreateProductBundle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProductBundleDto) => InventoryService.createProductBundle(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Ürün paketi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün paketi oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateProductBundle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateProductBundleDto }) =>
+      InventoryService.updateProductBundle(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundle(id) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Ürün paketi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün paketi güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteProductBundle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => InventoryService.deleteProductBundle(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Ürün paketi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün paketi silinemedi');
+    },
+  });
+}
+
+export function useAddProductBundleItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ bundleId, data }: { bundleId: number; data: CreateProductBundleItemDto }) =>
+      InventoryService.addProductBundleItem(bundleId, data),
+    onSuccess: (_, { bundleId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundle(bundleId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Paket ürünü eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Paket ürünü eklenemedi');
+    },
+  });
+}
+
+export function useUpdateProductBundleItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      bundleId,
+      itemId,
+      data,
+    }: {
+      bundleId: number;
+      itemId: number;
+      data: UpdateProductBundleItemDto;
+    }) => InventoryService.updateProductBundleItem(bundleId, itemId, data),
+    onSuccess: (_, { bundleId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundle(bundleId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Paket ürünü güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Paket ürünü güncellenemedi');
+    },
+  });
+}
+
+export function useRemoveProductBundleItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ bundleId, itemId }: { bundleId: number; itemId: number }) =>
+      InventoryService.removeProductBundleItem(bundleId, itemId),
+    onSuccess: (_, { bundleId }) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundle(bundleId) });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.productBundles });
+      showSuccess('Paket ürünü kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Paket ürünü kaldırılamadı');
     },
   });
 }

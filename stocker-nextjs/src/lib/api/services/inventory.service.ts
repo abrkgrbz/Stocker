@@ -93,6 +93,24 @@ import type {
   CreateLotBatchDto,
   LotBatchFilterDto,
   QuarantineRequest,
+  // Product Attributes
+  ProductAttributeDetailDto,
+  ProductAttributeOptionDto,
+  CreateProductAttributeDto,
+  UpdateProductAttributeDto,
+  CreateProductAttributeOptionDto,
+  UpdateProductAttributeOptionDto,
+  // Product Variants
+  ProductVariantDto,
+  CreateProductVariantDto,
+  UpdateProductVariantDto,
+  // Product Bundles
+  ProductBundleDto,
+  ProductBundleItemDto,
+  CreateProductBundleDto,
+  UpdateProductBundleDto,
+  CreateProductBundleItemDto,
+  UpdateProductBundleItemDto,
 } from './inventory.types';
 
 // =====================================
@@ -1078,6 +1096,200 @@ export class InventoryService {
    */
   static async quarantineLotBatch(id: number, request: QuarantineRequest): Promise<void> {
     return ApiService.post<void>(this.getPath(`lot-batches/${id}/quarantine`), request);
+  }
+
+  // =====================================
+  // PRODUCT ATTRIBUTES
+  // =====================================
+
+  /**
+   * Get all product attributes
+   */
+  static async getProductAttributes(
+    includeInactive: boolean = false,
+    filterableOnly: boolean = false
+  ): Promise<ProductAttributeDetailDto[]> {
+    return ApiService.get<ProductAttributeDetailDto[]>(this.getPath('product-attributes'), {
+      params: { includeInactive, filterableOnly },
+    });
+  }
+
+  /**
+   * Get product attribute by ID
+   */
+  static async getProductAttribute(id: number): Promise<ProductAttributeDetailDto> {
+    return ApiService.get<ProductAttributeDetailDto>(this.getPath(`product-attributes/${id}`));
+  }
+
+  /**
+   * Create a product attribute
+   */
+  static async createProductAttribute(data: CreateProductAttributeDto): Promise<ProductAttributeDetailDto> {
+    return ApiService.post<ProductAttributeDetailDto>(this.getPath('product-attributes'), data);
+  }
+
+  /**
+   * Update a product attribute
+   */
+  static async updateProductAttribute(id: number, data: UpdateProductAttributeDto): Promise<ProductAttributeDetailDto> {
+    return ApiService.put<ProductAttributeDetailDto>(this.getPath(`product-attributes/${id}`), data);
+  }
+
+  /**
+   * Delete a product attribute
+   */
+  static async deleteProductAttribute(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-attributes/${id}`));
+  }
+
+  /**
+   * Add option to product attribute
+   */
+  static async addProductAttributeOption(
+    attributeId: number,
+    data: CreateProductAttributeOptionDto
+  ): Promise<ProductAttributeOptionDto> {
+    return ApiService.post<ProductAttributeOptionDto>(
+      this.getPath(`product-attributes/${attributeId}/options`),
+      data
+    );
+  }
+
+  /**
+   * Update product attribute option
+   */
+  static async updateProductAttributeOption(
+    attributeId: number,
+    optionId: number,
+    data: UpdateProductAttributeOptionDto
+  ): Promise<ProductAttributeOptionDto> {
+    return ApiService.put<ProductAttributeOptionDto>(
+      this.getPath(`product-attributes/${attributeId}/options/${optionId}`),
+      data
+    );
+  }
+
+  /**
+   * Delete product attribute option
+   */
+  static async deleteProductAttributeOption(attributeId: number, optionId: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-attributes/${attributeId}/options/${optionId}`));
+  }
+
+  // =====================================
+  // PRODUCT VARIANTS
+  // =====================================
+
+  /**
+   * Get all product variants
+   */
+  static async getProductVariants(
+    productId: number,
+    includeInactive: boolean = false
+  ): Promise<ProductVariantDto[]> {
+    return ApiService.get<ProductVariantDto[]>(this.getPath('product-variants'), {
+      params: { productId, includeInactive },
+    });
+  }
+
+  /**
+   * Get product variant by ID
+   */
+  static async getProductVariant(id: number): Promise<ProductVariantDto> {
+    return ApiService.get<ProductVariantDto>(this.getPath(`product-variants/${id}`));
+  }
+
+  /**
+   * Create a product variant
+   */
+  static async createProductVariant(data: CreateProductVariantDto): Promise<ProductVariantDto> {
+    return ApiService.post<ProductVariantDto>(this.getPath('product-variants'), data);
+  }
+
+  /**
+   * Update a product variant
+   */
+  static async updateProductVariant(id: number, data: UpdateProductVariantDto): Promise<ProductVariantDto> {
+    return ApiService.put<ProductVariantDto>(this.getPath(`product-variants/${id}`), data);
+  }
+
+  /**
+   * Delete a product variant
+   */
+  static async deleteProductVariant(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-variants/${id}`));
+  }
+
+  // =====================================
+  // PRODUCT BUNDLES
+  // =====================================
+
+  /**
+   * Get all product bundles
+   */
+  static async getProductBundles(
+    includeInactive: boolean = false,
+    validOnly: boolean = false
+  ): Promise<ProductBundleDto[]> {
+    return ApiService.get<ProductBundleDto[]>(this.getPath('product-bundles'), {
+      params: { includeInactive, validOnly },
+    });
+  }
+
+  /**
+   * Get product bundle by ID
+   */
+  static async getProductBundle(id: number): Promise<ProductBundleDto> {
+    return ApiService.get<ProductBundleDto>(this.getPath(`product-bundles/${id}`));
+  }
+
+  /**
+   * Create a product bundle
+   */
+  static async createProductBundle(data: CreateProductBundleDto): Promise<ProductBundleDto> {
+    return ApiService.post<ProductBundleDto>(this.getPath('product-bundles'), data);
+  }
+
+  /**
+   * Update a product bundle
+   */
+  static async updateProductBundle(id: number, data: UpdateProductBundleDto): Promise<ProductBundleDto> {
+    return ApiService.put<ProductBundleDto>(this.getPath(`product-bundles/${id}`), data);
+  }
+
+  /**
+   * Delete a product bundle
+   */
+  static async deleteProductBundle(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-bundles/${id}`));
+  }
+
+  /**
+   * Add item to product bundle
+   */
+  static async addProductBundleItem(bundleId: number, data: CreateProductBundleItemDto): Promise<ProductBundleItemDto> {
+    return ApiService.post<ProductBundleItemDto>(this.getPath(`product-bundles/${bundleId}/items`), data);
+  }
+
+  /**
+   * Update product bundle item
+   */
+  static async updateProductBundleItem(
+    bundleId: number,
+    itemId: number,
+    data: UpdateProductBundleItemDto
+  ): Promise<ProductBundleItemDto> {
+    return ApiService.put<ProductBundleItemDto>(
+      this.getPath(`product-bundles/${bundleId}/items/${itemId}`),
+      data
+    );
+  }
+
+  /**
+   * Remove item from product bundle
+   */
+  static async removeProductBundleItem(bundleId: number, itemId: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`product-bundles/${bundleId}/items/${itemId}`));
   }
 }
 

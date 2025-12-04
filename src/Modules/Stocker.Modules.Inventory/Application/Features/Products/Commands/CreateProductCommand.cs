@@ -44,15 +44,31 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             RuleFor(x => x.ProductData.CategoryId)
                 .GreaterThan(0).WithMessage("Category is required");
 
+            RuleFor(x => x.ProductData.UnitId)
+                .GreaterThan(0).WithMessage("Unit is required");
+
             RuleFor(x => x.ProductData.UnitPrice)
                 .GreaterThanOrEqualTo(0).When(x => x.ProductData.UnitPrice.HasValue)
                 .WithMessage("Unit price cannot be negative");
 
+            RuleFor(x => x.ProductData.CostPrice)
+                .GreaterThanOrEqualTo(0).When(x => x.ProductData.CostPrice.HasValue)
+                .WithMessage("Cost price cannot be negative");
+
             RuleFor(x => x.ProductData.MinStockLevel)
                 .GreaterThanOrEqualTo(0).WithMessage("Minimum stock level cannot be negative");
 
+            RuleFor(x => x.ProductData.ReorderQuantity)
+                .GreaterThanOrEqualTo(0).WithMessage("Reorder quantity cannot be negative");
+
+            RuleFor(x => x.ProductData.LeadTimeDays)
+                .GreaterThanOrEqualTo(0).WithMessage("Lead time cannot be negative");
+
             RuleFor(x => x.ProductData.Barcode)
                 .MaximumLength(50).WithMessage("Barcode must not exceed 50 characters");
+
+            RuleFor(x => x.ProductData.SKU)
+                .MaximumLength(100).WithMessage("SKU must not exceed 100 characters");
         });
     }
 }
@@ -64,82 +80,137 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 {
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IUnitRepository _unitRepository;
+    private readonly IBrandRepository _brandRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateProductCommandHandler(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
+        IUnitRepository unitRepository,
+        IBrandRepository brandRepository,
         IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
+        _unitRepository = unitRepository;
+        _brandRepository = brandRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductDto>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
+        var data = request.ProductData;
+
         // Check if product with same code already exists
-        var existingProduct = await _productRepository.GetByCodeAsync(request.ProductData.Code, cancellationToken);
+        var existingProduct = await _productRepository.GetByCodeAsync(data.Code, cancellationToken);
         if (existingProduct != null)
         {
             return Result<ProductDto>.Failure(
                 Error.Conflict("Product.Code", "A product with this code already exists"));
         }
 
+        // Check if SKU is unique (if provided)
+        if (!string.IsNullOrEmpty(data.SKU))
+        {
+            var existingBySku = await _productRepository.GetBySkuAsync(data.SKU, cancellationToken);
+            if (existingBySku != null)
+            {
+                return Result<ProductDto>.Failure(
+                    Error.Conflict("Product.SKU", "A product with this SKU already exists"));
+            }
+        }
+
         // Check if category exists
-        var category = await _categoryRepository.GetByIdAsync(request.ProductData.CategoryId, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(data.CategoryId, cancellationToken);
         if (category == null)
         {
             return Result<ProductDto>.Failure(
-                Error.NotFound("Category", $"Category with ID {request.ProductData.CategoryId} not found"));
+                Error.NotFound("Category", $"Category with ID {data.CategoryId} not found"));
         }
 
-        // Create the product
+        // Check if unit exists
+        var unit = await _unitRepository.GetByIdAsync(data.UnitId, cancellationToken);
+        if (unit == null)
+        {
+            return Result<ProductDto>.Failure(
+                Error.NotFound("Unit", $"Unit with ID {data.UnitId} not found"));
+        }
+
+        // Check if brand exists (if provided)
+        Domain.Entities.Brand? brand = null;
+        if (data.BrandId.HasValue)
+        {
+            brand = await _brandRepository.GetByIdAsync(data.BrandId.Value, cancellationToken);
+            if (brand == null)
+            {
+                return Result<ProductDto>.Failure(
+                    Error.NotFound("Brand", $"Brand with ID {data.BrandId} not found"));
+            }
+        }
+
+        // Create the product with all fields
         var unitPrice = Money.Create(
-            request.ProductData.UnitPrice ?? 0,
-            request.ProductData.UnitPriceCurrency ?? "TRY");
+            data.UnitPrice ?? 0,
+            data.UnitPriceCurrency ?? "TRY");
 
         var product = new Product(
-            request.ProductData.Code,
-            request.ProductData.Name,
-            request.ProductData.CategoryId,
-            "PCS", // Default unit
-            unitPrice);
+            data.Code,
+            data.Name,
+            data.CategoryId,
+            unit.Code, // Use unit code as the Unit string
+            unitPrice,
+            18, // Default VAT rate
+            data.SKU,
+            data.ProductType,
+            data.UnitId,
+            data.ReorderQuantity,
+            data.LeadTimeDays);
 
-        // Set additional properties
-        if (!string.IsNullOrEmpty(request.ProductData.Description) || request.ProductData.CostPrice.HasValue)
+        // Set cost price and description
+        var costPrice = data.CostPrice.HasValue
+            ? Money.Create(data.CostPrice.Value, data.CostPriceCurrency ?? "TRY")
+            : null;
+
+        product.UpdateProductInfo(
+            data.Name,
+            data.Description,
+            unitPrice,
+            costPrice,
+            18); // Default VAT rate
+
+        // Set barcode
+        if (!string.IsNullOrEmpty(data.Barcode))
         {
-            var costPrice = request.ProductData.CostPrice.HasValue
-                ? Money.Create(request.ProductData.CostPrice.Value, request.ProductData.CostPriceCurrency ?? "TRY")
-                : null;
-
-            product.UpdateProductInfo(
-                request.ProductData.Name,
-                request.ProductData.Description,
-                unitPrice,
-                costPrice,
-                18); // Default VAT rate
+            product.SetBarcode(data.Barcode);
         }
 
-        if (!string.IsNullOrEmpty(request.ProductData.Barcode))
-        {
-            product.SetBarcode(request.ProductData.Barcode);
-        }
-
+        // Set stock levels
         product.SetStockLevels(
-            request.ProductData.MinStockLevel,
-            request.ProductData.MaxStockLevel,
-            request.ProductData.ReorderLevel);
+            data.MinStockLevel,
+            data.MaxStockLevel,
+            data.ReorderLevel);
 
+        // Set tracking options
         product.SetTrackingOptions(
             true, // IsStockTracked
-            request.ProductData.TrackSerialNumbers,
-            request.ProductData.TrackLotNumbers);
+            data.TrackSerialNumbers,
+            data.TrackLotNumbers);
 
-        if (request.ProductData.BrandId.HasValue)
+        // Set brand
+        if (data.BrandId.HasValue)
         {
-            product.SetBrand(request.ProductData.BrandId.Value);
+            product.SetBrand(data.BrandId.Value);
         }
+
+        // Set physical properties
+        product.SetPhysicalProperties(
+            data.Weight,
+            data.WeightUnit,
+            data.Length,
+            data.Width,
+            data.Height,
+            data.DimensionUnit);
 
         // Save to repository
         await _productRepository.AddAsync(product, cancellationToken);
@@ -153,16 +224,30 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             Name = product.Name,
             Description = product.Description,
             Barcode = product.Barcode,
+            SKU = product.SKU,
+            ProductType = product.ProductType,
             CategoryId = product.CategoryId,
             CategoryName = category.Name,
             BrandId = product.BrandId,
+            BrandName = brand?.Name,
+            UnitId = product.UnitId ?? data.UnitId,
+            UnitName = unit.Name,
+            UnitSymbol = unit.Symbol,
             UnitPrice = product.UnitPrice?.Amount,
             UnitPriceCurrency = product.UnitPrice?.Currency,
             CostPrice = product.CostPrice?.Amount,
             CostPriceCurrency = product.CostPrice?.Currency,
+            Weight = product.Weight,
+            WeightUnit = product.WeightUnit,
+            Length = product.Length,
+            Width = product.Width,
+            Height = product.Height,
+            DimensionUnit = product.DimensionUnit,
             MinStockLevel = product.MinimumStock,
             MaxStockLevel = product.MaximumStock,
             ReorderLevel = product.ReorderPoint,
+            ReorderQuantity = product.ReorderQuantity,
+            LeadTimeDays = product.LeadTimeDays,
             TrackSerialNumbers = product.IsSerialTracked,
             TrackLotNumbers = product.IsLotTracked,
             IsActive = product.IsActive,
