@@ -314,116 +314,123 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           theme="light"
           width={240}
           style={{
-            overflow: 'hidden',
             height: '100vh',
             position: 'fixed',
             left: 0,
             top: 0,
             bottom: 0,
             borderRight: '1px solid #f0f0f0',
-            display: 'flex',
-            flexDirection: 'column',
           }}
         >
-          {/* Module Header - Fixed */}
+          {/* Inner flex container to handle scroll properly */}
           <div
             style={{
-              height: 64,
-              minHeight: 64,
               display: 'flex',
-              alignItems: 'center',
-              padding: '0 16px',
-              borderBottom: '1px solid #f0f0f0',
-              gap: 12,
-              flexShrink: 0,
+              flexDirection: 'column',
+              height: '100%',
             }}
           >
-            <Tooltip title="Modüllere Dön">
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={handleBackToApp}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              />
-            </Tooltip>
-            {moduleConfig && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div
+            {/* Module Header - Fixed */}
+            <div
+              style={{
+                height: 64,
+                minHeight: 64,
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 16px',
+                borderBottom: '1px solid #f0f0f0',
+                gap: 12,
+                flexShrink: 0,
+              }}
+            >
+              <Tooltip title="Modüllere Dön">
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={handleBackToApp}
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    background: `${moduleConfig.color}15`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: moduleConfig.color,
-                    fontSize: 16,
                   }}
-                >
-                  {moduleConfig.icon}
+                />
+              </Tooltip>
+              {moduleConfig && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: `${moduleConfig.color}15`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: moduleConfig.color,
+                      fontSize: 16,
+                    }}
+                  >
+                    {moduleConfig.icon}
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 16, color: '#1a1a1a' }}>
+                    {moduleConfig.title}
+                  </span>
                 </div>
-                <span style={{ fontWeight: 600, fontSize: 16, color: '#1a1a1a' }}>
-                  {moduleConfig.title}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Module Menu - Scrollable */}
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-            }}
-          >
-            {moduleConfig && (
-              <Menu
-                mode="inline"
-                selectedKeys={getSelectedKeys}
-                items={moduleConfig.items}
-                onClick={({ key }) => handleMenuClick(key)}
-                style={{ borderRight: 0, paddingTop: 8, paddingBottom: 8 }}
-              />
-            )}
-          </div>
-
-          {/* Quick Module Switch - Fixed Bottom */}
-          <div
-            style={{
-              padding: 16,
-              borderTop: '1px solid #f0f0f0',
-              background: '#fafafa',
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Hızlı Geçiş
+              )}
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {Object.entries(MODULE_MENUS)
-                .filter(([key]) => key !== currentModule && key !== 'modules')
-                .slice(0, 4)
-                .map(([key, config]) => (
-                  <Tooltip key={key} title={config.title}>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={config.icon}
-                      onClick={() => router.push(config.items[0]?.key || `/${key}`)}
-                      style={{
-                        color: config.color,
-                        background: `${config.color}10`,
-                        border: 'none',
-                      }}
-                    />
-                  </Tooltip>
-                ))}
+
+            {/* Module Menu - Scrollable */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                minHeight: 0,
+              }}
+            >
+              {moduleConfig && (
+                <Menu
+                  mode="inline"
+                  selectedKeys={getSelectedKeys}
+                  items={moduleConfig.items}
+                  onClick={({ key }) => handleMenuClick(key)}
+                  style={{ borderRight: 0, paddingTop: 8, paddingBottom: 8 }}
+                />
+              )}
+            </div>
+
+            {/* Quick Module Switch - Fixed Bottom */}
+            <div
+              style={{
+                padding: 16,
+                borderTop: '1px solid #f0f0f0',
+                background: '#fafafa',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Hızlı Geçiş
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {Object.entries(MODULE_MENUS)
+                  .filter(([key]) => key !== currentModule && key !== 'modules')
+                  .slice(0, 4)
+                  .map(([key, config]) => (
+                    <Tooltip key={key} title={config.title}>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={config.icon}
+                        onClick={() => router.push(config.items[0]?.key || `/${key}`)}
+                        style={{
+                          color: config.color,
+                          background: `${config.color}10`,
+                          border: 'none',
+                        }}
+                      />
+                    </Tooltip>
+                  ))}
+              </div>
             </div>
           </div>
         </Sider>
