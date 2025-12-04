@@ -97,11 +97,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
   });
 
   // Fetch products for selection
-  const { data: productsData, isLoading: productsLoading } = useProducts({
-    searchTerm: productSearch,
-    isActive: true,
-    pageSize: 50,
-  });
+  const { data: productsData, isLoading: productsLoading } = useProducts(false);
 
   const customerOptions = useMemo(() =>
     customersData?.items?.map((customer: Customer) => ({
@@ -111,11 +107,11 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
     })) || [], [customersData]);
 
   const productOptions = useMemo(() =>
-    productsData?.items?.map((product: ProductDto) => ({
+    (productsData || []).map((product: ProductDto) => ({
       value: product.id,
       label: `${product.code} - ${product.name}`,
       product,
-    })) || [], [productsData]);
+    })), [productsData]);
 
   useEffect(() => {
     if (initialValues) {
@@ -136,7 +132,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
       if (initialValues.items) {
         setItems(initialValues.items.map((item, index) => ({
           key: `item-${index}`,
-          productId: item.productId,
+          productId: item.productId || undefined,
           productCode: item.productCode,
           productName: item.productName,
           unit: item.unit,
@@ -144,7 +140,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           unitPrice: item.unitPrice,
           vatRate: item.vatRate,
           discountRate: item.discountRate || 0,
-          description: item.description,
+          description: item.description || undefined,
         })));
       }
     } else {
@@ -178,14 +174,14 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
     }
   };
 
-  const handleProductSelect = (productId: string, itemKey: string) => {
-    const product = productOptions.find((opt: { value: string }) => opt.value === productId)?.product as ProductDto;
+  const handleProductSelect = (productId: number, itemKey: string) => {
+    const product = productOptions.find((opt) => opt.value === productId)?.product as ProductDto;
     if (product) {
       setItems(prev => prev.map(item =>
         item.key === itemKey
           ? {
               ...item,
-              productId: product.id,
+              productId: product.id.toString(),
               productCode: product.code,
               productName: product.name,
               unitPrice: product.unitPrice || 0,
@@ -253,7 +249,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
   }, [items, form]);
 
   const handleSubmit = () => {
-    form.validateFields().then(values => {
+    form.validateFields().then((values: any) => {
       const orderData = {
         ...values,
         orderDate: values.orderDate?.toISOString(),
@@ -305,7 +301,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
             loading={productsLoading}
             filterOption={false}
             onSearch={setProductSearch}
-            onChange={(value) => handleProductSelect(value, record.key)}
+            onChange={(value) => value && handleProductSelect(Number(value), record.key)}
             value={record.productId}
             options={productOptions}
             style={{ width: '100%' }}

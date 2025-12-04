@@ -26,6 +26,9 @@ import {
   ArrowDownOutlined,
   UndoOutlined,
   SyncOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import {
   useStockMovements,
@@ -37,6 +40,15 @@ import {
 import type { StockMovementDto, StockMovementType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import {
+  exportToPDF,
+  exportToExcel,
+  stockMovementColumns,
+  movementTypeLabels,
+  formatters,
+} from '@/lib/utils/export-utils';
+import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
+import { resolveDatePreset } from '@/hooks/useSavedFilters';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -88,6 +100,121 @@ export default function StockMovementsPage() {
   );
 
   const reverseMovement = useReverseStockMovement();
+
+  // Get current filters for SavedFiltersDropdown
+  const currentFilters = {
+    productId: selectedProduct,
+    warehouseId: selectedWarehouse,
+    movementType: selectedType,
+    dateRange: dateRange ? {
+      start: dateRange[0]?.toISOString(),
+      end: dateRange[1]?.toISOString(),
+    } : undefined,
+  };
+
+  // Apply saved filter
+  const handleApplyFilter = (filters: Record<string, unknown>) => {
+    // Handle date preset
+    if (filters.datePreset) {
+      const resolved = resolveDatePreset(filters.datePreset as string);
+      if (resolved) {
+        setDateRange([dayjs(resolved.start), dayjs(resolved.end)]);
+      }
+    } else if (filters.dateRange) {
+      const dr = filters.dateRange as { start?: string; end?: string };
+      setDateRange([
+        dr.start ? dayjs(dr.start) : null,
+        dr.end ? dayjs(dr.end) : null,
+      ]);
+    }
+
+    // Handle movement type
+    if (filters.movementType) {
+      setSelectedType(filters.movementType as StockMovementType);
+    } else if (filters.movementTypes && Array.isArray(filters.movementTypes)) {
+      // For multiple types, just use the first one (could enhance to support multi-select)
+      setSelectedType(filters.movementTypes[0] as StockMovementType);
+    }
+
+    // Handle warehouse
+    if (filters.warehouseId) {
+      setSelectedWarehouse(filters.warehouseId as number);
+    }
+
+    // Handle product
+    if (filters.productId) {
+      setSelectedProduct(filters.productId as number);
+    }
+  };
+
+  // Clear filters
+  const handleClearFilter = () => {
+    setSelectedProduct(undefined);
+    setSelectedWarehouse(undefined);
+    setSelectedType(undefined);
+    setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
+  };
+
+  // Export handlers
+  const handleExportPDF = () => {
+    if (movements.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak hareket bulunamadı' });
+      return;
+    }
+
+    // Transform data with Turkish labels
+    const exportData = movements.map((m) => ({
+      ...m,
+      movementType: movementTypeLabels[m.movementType] || m.movementType,
+    }));
+
+    exportToPDF({
+      columns: stockMovementColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Hareketleri Raporu',
+        filename: `stok-hareketleri-${dayjs().format('YYYY-MM-DD')}`,
+        subtitle: dateRange
+          ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}`
+          : undefined,
+        summaryData: [
+          { label: 'Toplam Hareket', value: summary?.totalMovements || movements.length },
+          { label: 'Toplam Giriş', value: summary?.totalInbound || 0 },
+          { label: 'Toplam Çıkış', value: summary?.totalOutbound || 0 },
+          { label: 'Net Değişim', value: summary?.netChange || 0 },
+        ],
+      },
+    });
+  };
+
+  const handleExportExcel = () => {
+    if (movements.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak hareket bulunamadı' });
+      return;
+    }
+
+    // Transform data with Turkish labels
+    const exportData = movements.map((m) => ({
+      ...m,
+      movementType: movementTypeLabels[m.movementType] || m.movementType,
+    }));
+
+    exportToExcel({
+      columns: stockMovementColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Hareketleri',
+        filename: `stok-hareketleri-${dayjs().format('YYYY-MM-DD')}`,
+        summaryData: [
+          { label: 'Toplam Hareket', value: summary?.totalMovements || movements.length },
+          { label: 'Toplam Giriş', value: summary?.totalInbound || 0 },
+          { label: 'Toplam Çıkış', value: summary?.totalOutbound || 0 },
+          { label: 'Net Değişim', value: summary?.netChange || 0 },
+          { label: 'Tarih Aralığı', value: dateRange ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}` : 'Tümü' },
+        ],
+      },
+    });
+  };
 
   // Handlers
   const handleView = (id: number) => {
@@ -287,6 +414,32 @@ export default function StockMovementsPage() {
           <Text type="secondary">Tüm stok giriş, çıkış ve transferlerini görüntüleyin</Text>
         </div>
         <Space>
+          <SavedFiltersDropdown
+            entityType="stock-movements"
+            currentFilters={currentFilters}
+            onApplyFilter={handleApplyFilter}
+            onClearFilter={handleClearFilter}
+          />
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'pdf',
+                  icon: <FilePdfOutlined />,
+                  label: 'PDF İndir',
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: 'excel',
+                  icon: <FileExcelOutlined />,
+                  label: 'Excel İndir',
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+          </Dropdown>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>

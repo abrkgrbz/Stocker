@@ -32,6 +32,9 @@ import {
   InboxOutlined,
   RocketOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import {
   useStockTransfers,
@@ -45,6 +48,17 @@ import {
 import type { StockTransferListDto, TransferStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import {
+  exportToPDF,
+  exportToExcel,
+  stockTransferColumns,
+  transferStatusLabels,
+  transferTypeLabels,
+} from '@/lib/utils/export-utils';
+import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
+import { resolveDatePreset } from '@/hooks/useSavedFilters';
+import BulkActionsBar, { createTransferBulkActions } from '@/components/inventory/BulkActionsBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -87,11 +101,222 @@ export default function StockTransfersPage() {
   const receiveTransfer = useReceiveStockTransfer();
   const cancelTransfer = useCancelStockTransfer();
 
+  // Bulk selection
+  const bulkSelection = useBulkSelection({
+    items: transfers,
+    getItemId: (transfer) => transfer.id,
+  });
+
   // Calculate stats
   const totalTransfers = transfers.length;
   const pendingTransfers = transfers.filter((t) => t.status === 'Pending').length;
   const inTransitTransfers = transfers.filter((t) => t.status === 'InTransit').length;
   const completedTransfers = transfers.filter((t) => t.status === 'Completed').length;
+
+  // Get current filters for SavedFiltersDropdown
+  const currentFilters = {
+    sourceWarehouseId: selectedSourceWarehouse,
+    destinationWarehouseId: selectedDestWarehouse,
+    status: selectedStatus,
+    dateRange: dateRange ? {
+      start: dateRange[0]?.toISOString(),
+      end: dateRange[1]?.toISOString(),
+    } : undefined,
+  };
+
+  // Apply saved filter
+  const handleApplyFilter = (filters: Record<string, unknown>) => {
+    // Handle date preset
+    if (filters.datePreset) {
+      const resolved = resolveDatePreset(filters.datePreset as string);
+      if (resolved) {
+        setDateRange([dayjs(resolved.start), dayjs(resolved.end)]);
+      }
+    } else if (filters.dateRange) {
+      const dr = filters.dateRange as { start?: string; end?: string };
+      setDateRange([
+        dr.start ? dayjs(dr.start) : null,
+        dr.end ? dayjs(dr.end) : null,
+      ]);
+    }
+
+    // Handle status
+    if (filters.status) {
+      setSelectedStatus(filters.status as TransferStatus);
+    }
+
+    // Handle source warehouse
+    if (filters.sourceWarehouseId) {
+      setSelectedSourceWarehouse(filters.sourceWarehouseId as number);
+    }
+
+    // Handle destination warehouse
+    if (filters.destinationWarehouseId) {
+      setSelectedDestWarehouse(filters.destinationWarehouseId as number);
+    }
+  };
+
+  // Clear filters
+  const handleClearFilter = () => {
+    setSelectedSourceWarehouse(undefined);
+    setSelectedDestWarehouse(undefined);
+    setSelectedStatus(undefined);
+    setDateRange(null);
+  };
+
+  // Bulk action handlers
+  const handleBulkApprove = async () => {
+    const pendingItems = bulkSelection.selectedItems.filter((t) => t.status === 'Pending');
+    for (const transfer of pendingItems) {
+      try {
+        await approveTransfer.mutateAsync({ id: transfer.id, approvedByUserId: 1 });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${pendingItems.length} transfer onaylandı`);
+  };
+
+  const handleBulkShip = async () => {
+    const approvedItems = bulkSelection.selectedItems.filter((t) => t.status === 'Approved');
+    for (const transfer of approvedItems) {
+      try {
+        await shipTransfer.mutateAsync({ id: transfer.id, shippedByUserId: 1 });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${approvedItems.length} transfer sevk edildi`);
+  };
+
+  const handleBulkReject = async () => {
+    const pendingItems = bulkSelection.selectedItems.filter((t) => t.status === 'Pending');
+    for (const transfer of pendingItems) {
+      try {
+        await cancelTransfer.mutateAsync({ id: transfer.id, reason: 'Toplu reddetme işlemi' });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${pendingItems.length} transfer reddedildi`);
+  };
+
+  const handleBulkCancel = async () => {
+    const cancellableItems = bulkSelection.selectedItems.filter(
+      (t) => t.status === 'Draft' || t.status === 'Pending'
+    );
+    for (const transfer of cancellableItems) {
+      try {
+        await cancelTransfer.mutateAsync({ id: transfer.id, reason: 'Toplu iptal işlemi' });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${cancellableItems.length} transfer iptal edildi`);
+  };
+
+  // Bulk export selected
+  const handleExportSelected = (format: 'pdf' | 'excel') => {
+    const exportData = bulkSelection.selectedItems.map((t) => ({
+      ...t,
+      status: transferStatusLabels[t.status] || t.status,
+      transferType: transferTypeLabels[t.transferType] || t.transferType,
+    }));
+
+    if (format === 'pdf') {
+      exportToPDF({
+        columns: stockTransferColumns,
+        data: exportData,
+        options: {
+          title: 'Seçili Stok Transferleri',
+          filename: `secili-transferler-${dayjs().format('YYYY-MM-DD')}`,
+          summaryData: [{ label: 'Seçili Transfer', value: exportData.length }],
+        },
+      });
+    } else {
+      exportToExcel({
+        columns: stockTransferColumns,
+        data: exportData,
+        options: {
+          title: 'Seçili Stok Transferleri',
+          filename: `secili-transferler-${dayjs().format('YYYY-MM-DD')}`,
+          summaryData: [{ label: 'Seçili Transfer', value: exportData.length }],
+        },
+      });
+    }
+  };
+
+  // Bulk actions
+  const bulkActions = createTransferBulkActions(
+    handleBulkApprove,
+    handleBulkReject,
+    handleBulkShip,
+    handleBulkCancel
+  );
+
+  // Export handlers
+  const handleExportPDF = () => {
+    if (transfers.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak transfer bulunamadı' });
+      return;
+    }
+
+    const exportData = transfers.map((t) => ({
+      ...t,
+      status: transferStatusLabels[t.status] || t.status,
+      transferType: transferTypeLabels[t.transferType] || t.transferType,
+    }));
+
+    exportToPDF({
+      columns: stockTransferColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Transferleri Raporu',
+        filename: `stok-transferleri-${dayjs().format('YYYY-MM-DD')}`,
+        subtitle: dateRange
+          ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}`
+          : undefined,
+        summaryData: [
+          { label: 'Toplam Transfer', value: totalTransfers },
+          { label: 'Bekleyen', value: pendingTransfers },
+          { label: 'Yolda', value: inTransitTransfers },
+          { label: 'Tamamlanan', value: completedTransfers },
+        ],
+      },
+    });
+  };
+
+  const handleExportExcel = () => {
+    if (transfers.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak transfer bulunamadı' });
+      return;
+    }
+
+    const exportData = transfers.map((t) => ({
+      ...t,
+      status: transferStatusLabels[t.status] || t.status,
+      transferType: transferTypeLabels[t.transferType] || t.transferType,
+    }));
+
+    exportToExcel({
+      columns: stockTransferColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Transferleri',
+        filename: `stok-transferleri-${dayjs().format('YYYY-MM-DD')}`,
+        summaryData: [
+          { label: 'Toplam Transfer', value: totalTransfers },
+          { label: 'Bekleyen', value: pendingTransfers },
+          { label: 'Yolda', value: inTransitTransfers },
+          { label: 'Tamamlanan', value: completedTransfers },
+        ],
+      },
+    });
+  };
 
   // Handlers
   const handleView = (id: number) => {
@@ -354,6 +579,32 @@ export default function StockTransfersPage() {
           <Text type="secondary">Depolar arası stok transferlerini yönetin</Text>
         </div>
         <Space>
+          <SavedFiltersDropdown
+            entityType="stock-transfers"
+            currentFilters={currentFilters}
+            onApplyFilter={handleApplyFilter}
+            onClearFilter={handleClearFilter}
+          />
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'pdf',
+                  icon: <FilePdfOutlined />,
+                  label: 'PDF İndir',
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: 'excel',
+                  icon: <FileExcelOutlined />,
+                  label: 'Excel İndir',
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+          </Dropdown>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
@@ -468,6 +719,15 @@ export default function StockTransfersPage() {
         </Row>
       </Card>
 
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedCount={bulkSelection.selectionCount}
+        totalCount={transfers.length}
+        actions={bulkActions}
+        onClearSelection={bulkSelection.clear}
+        onExportSelected={handleExportSelected}
+      />
+
       {/* Transfers Table */}
       <Card>
         <Table
@@ -475,6 +735,16 @@ export default function StockTransfersPage() {
           dataSource={transfers}
           rowKey="id"
           loading={isLoading}
+          rowSelection={{
+            selectedRowKeys: Array.from(bulkSelection.selectedIds),
+            onChange: (selectedRowKeys) => {
+              bulkSelection.clear();
+              selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
+            },
+            getCheckboxProps: (record) => ({
+              disabled: record.status === 'Completed' || record.status === 'Cancelled',
+            }),
+          }}
           pagination={{
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} transfer`,

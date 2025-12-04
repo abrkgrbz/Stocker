@@ -22,6 +22,7 @@ export default function EditPaymentPage() {
       const updateData: Omit<UpdatePaymentCommand, 'id'> = {
         paymentDate: values.paymentDate?.toISOString(),
         customerId: values.customerId,
+        customerName: values.customerName || payment?.customerName || '',
         invoiceId: values.invoiceId,
         method: values.method || 'BankTransfer',
         currency: values.currency || 'TRY',

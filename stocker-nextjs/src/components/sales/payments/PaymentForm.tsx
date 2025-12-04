@@ -101,7 +101,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
         transactionId: initialValues.transactionId,
       });
       setSelectedCurrency(initialValues.currency || 'TRY');
-      setSelectedCustomerId(initialValues.customerId);
+      setSelectedCustomerId(initialValues.customerId || undefined);
     } else {
       form.setFieldsValue({
         paymentDate: dayjs(),
@@ -130,7 +130,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
         currency: invoice.currency,
       });
       setSelectedCurrency(invoice.currency);
-      setSelectedCustomerId(invoice.customerId);
+      setSelectedCustomerId(invoice.customerId || undefined);
     }
   };
 

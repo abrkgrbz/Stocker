@@ -10,7 +10,7 @@ import {
   RightOutlined,
   WarningOutlined,
   ClockCircleOutlined,
-  TrendingUpOutlined,
+  RiseOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';

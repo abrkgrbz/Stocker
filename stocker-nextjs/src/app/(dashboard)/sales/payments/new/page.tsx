@@ -22,6 +22,7 @@ export default function NewPaymentPage() {
       const paymentData: CreatePaymentCommand = {
         paymentDate: values.paymentDate?.toISOString(),
         customerId: values.customerId,
+        customerName: values.customerName || '',
         invoiceId: values.invoiceId,
         method: values.method || 'BankTransfer',
         currency: values.currency || 'TRY',

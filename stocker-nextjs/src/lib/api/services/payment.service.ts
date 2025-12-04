@@ -117,10 +117,13 @@ export interface CreatePaymentCommand {
 
 export interface UpdatePaymentCommand {
   id: string;
+  invoiceId?: string;
   customerId?: string;
   customerName: string;
   paymentDate?: string;
   method?: PaymentMethod;
+  currency?: string;
+  amount?: number;
   reference?: string;
   description?: string;
   bankAccountId?: string;

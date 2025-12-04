@@ -50,6 +50,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+import InventoryAlertsWidget from '@/components/inventory/InventoryAlertsWidget';
 
 const { Title, Text } = Typography;
 
@@ -645,8 +646,13 @@ export default function InventoryDashboardPage() {
           </Card>
         </Col>
 
+        {/* Inventory Alerts Widget */}
+        <Col xs={24} lg={6}>
+          <InventoryAlertsWidget maxItems={5} />
+        </Col>
+
         {/* Warehouse Summary */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={6}>
           <Card
             title={<><ShopOutlined className="text-green-500 mr-2" />Depo Özeti</>}
             extra={<Link href="/inventory/warehouses"><Button type="link" size="small">Tümünü Gör</Button></Link>}

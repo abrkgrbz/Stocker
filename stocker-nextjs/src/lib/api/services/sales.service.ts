@@ -123,6 +123,9 @@ export interface CreateSalesOrderCommand {
   notes?: string;
   salesPersonId?: string;
   salesPersonName?: string;
+  deliveryDate?: string;
+  discountRate?: number;
+  discountAmount?: number;
   items: CreateSalesOrderItemCommand[];
 }
 
@@ -143,6 +146,7 @@ export interface UpdateSalesOrderCommand {
   customerId?: string;
   customerName: string;
   customerEmail?: string;
+  currency?: string;
   shippingAddress?: string;
   billingAddress?: string;
   notes?: string;
@@ -266,6 +270,34 @@ export class SalesService {
    */
   static async cancelOrder(id: string, reason: string): Promise<SalesOrder> {
     return ApiService.post<SalesOrder>(`${BASE_URL}/${id}/cancel`, { id, reason });
+  }
+
+  /**
+   * Confirm a sales order (customer confirmed)
+   */
+  static async confirmOrder(id: string): Promise<SalesOrder> {
+    return ApiService.post<SalesOrder>(`${BASE_URL}/${id}/confirm`);
+  }
+
+  /**
+   * Ship a sales order
+   */
+  static async shipOrder(id: string): Promise<SalesOrder> {
+    return ApiService.post<SalesOrder>(`${BASE_URL}/${id}/ship`);
+  }
+
+  /**
+   * Mark a sales order as delivered
+   */
+  static async deliverOrder(id: string): Promise<SalesOrder> {
+    return ApiService.post<SalesOrder>(`${BASE_URL}/${id}/deliver`);
+  }
+
+  /**
+   * Complete a sales order
+   */
+  static async completeOrder(id: string): Promise<SalesOrder> {
+    return ApiService.post<SalesOrder>(`${BASE_URL}/${id}/complete`);
   }
 
   /**

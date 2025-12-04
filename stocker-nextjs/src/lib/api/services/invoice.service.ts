@@ -65,6 +65,7 @@ export interface InvoiceListItem {
   invoiceNumber: string;
   invoiceDate: string;
   dueDate: string;
+  customerId: string | null;
   customerName: string;
   status: InvoiceStatus;
   type: InvoiceType;
@@ -140,6 +141,9 @@ export interface CreateInvoiceCommand {
   currency?: string;
   notes?: string;
   paymentTerms?: string;
+  discountRate?: number;
+  discountAmount?: number;
+  isEInvoice?: boolean;
   items: CreateInvoiceItemCommand[];
 }
 
@@ -166,16 +170,21 @@ export interface CreateInvoiceItemCommand {
 
 export interface UpdateInvoiceCommand {
   id: string;
+  invoiceDate?: string;
   customerId?: string;
   customerName: string;
   customerEmail?: string;
   customerTaxNumber?: string;
   customerAddress?: string;
   dueDate?: string;
+  type?: InvoiceType;
+  currency?: string;
   notes?: string;
   paymentTerms?: string;
   discountAmount?: number;
   discountRate?: number;
+  isEInvoice?: boolean;
+  items?: CreateInvoiceItemCommand[];
 }
 
 export interface AddInvoiceItemCommand {

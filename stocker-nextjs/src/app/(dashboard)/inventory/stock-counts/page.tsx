@@ -31,6 +31,9 @@ import {
   EditOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import {
   useStockCounts,
@@ -43,6 +46,18 @@ import {
 import type { StockCountListDto, StockCountStatus, StockCountType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import {
+  exportToPDF,
+  exportToExcel,
+  stockCountColumns,
+  stockCountStatusLabels,
+  stockCountTypeLabels,
+} from '@/lib/utils/export-utils';
+import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
+import { resolveDatePreset } from '@/hooks/useSavedFilters';
+import BulkActionsBar, { createCountBulkActions } from '@/components/inventory/BulkActionsBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { message } from 'antd';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -92,11 +107,218 @@ export default function StockCountsPage() {
   const approveStockCount = useApproveStockCount();
   const cancelStockCount = useCancelStockCount();
 
+  // Bulk selection
+  const bulkSelection = useBulkSelection({
+    items: stockCounts,
+    getItemId: (count) => count.id,
+  });
+
   // Calculate stats
   const totalCounts = stockCounts.length;
   const inProgressCounts = stockCounts.filter((c) => c.status === 'InProgress').length;
   const completedCounts = stockCounts.filter((c) => c.status === 'Completed' || c.status === 'Approved').length;
   const totalDifferences = stockCounts.reduce((sum, c) => sum + (c.itemsWithDifference || 0), 0);
+
+  // Get current filters for SavedFiltersDropdown
+  const currentFilters = {
+    warehouseId: selectedWarehouse,
+    status: selectedStatus,
+    dateRange: dateRange ? {
+      start: dateRange[0]?.toISOString(),
+      end: dateRange[1]?.toISOString(),
+    } : undefined,
+  };
+
+  // Apply saved filter
+  const handleApplyFilter = (filters: Record<string, unknown>) => {
+    // Handle date preset
+    if (filters.datePreset) {
+      const resolved = resolveDatePreset(filters.datePreset as string);
+      if (resolved) {
+        setDateRange([dayjs(resolved.start), dayjs(resolved.end)]);
+      }
+    } else if (filters.dateRange) {
+      const dr = filters.dateRange as { start?: string; end?: string };
+      setDateRange([
+        dr.start ? dayjs(dr.start) : null,
+        dr.end ? dayjs(dr.end) : null,
+      ]);
+    }
+
+    // Handle status
+    if (filters.status) {
+      setSelectedStatus(filters.status as StockCountStatus);
+    }
+
+    // Handle warehouse
+    if (filters.warehouseId) {
+      setSelectedWarehouse(filters.warehouseId as number);
+    }
+
+    // Handle hasDifferences (filter by items with differences)
+    // This would require backend support or client-side filtering
+  };
+
+  // Clear filters
+  const handleClearFilter = () => {
+    setSelectedWarehouse(undefined);
+    setSelectedStatus(undefined);
+    setDateRange(null);
+  };
+
+  // Bulk action handlers
+  const handleBulkStart = async () => {
+    const draftItems = bulkSelection.selectedItems.filter((c) => c.status === 'Draft');
+    for (const count of draftItems) {
+      try {
+        await startStockCount.mutateAsync({ id: count.id, countedByUserId: 1 });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${draftItems.length} sayım başlatıldı`);
+  };
+
+  const handleBulkComplete = async () => {
+    const inProgressItems = bulkSelection.selectedItems.filter((c) => c.status === 'InProgress');
+    for (const count of inProgressItems) {
+      try {
+        await completeStockCount.mutateAsync(count.id);
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${inProgressItems.length} sayım tamamlandı`);
+  };
+
+  const handleBulkApprove = async () => {
+    const completedItems = bulkSelection.selectedItems.filter((c) => c.status === 'Completed');
+    for (const count of completedItems) {
+      try {
+        await approveStockCount.mutateAsync({ id: count.id, approvedByUserId: 1 });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${completedItems.length} sayım onaylandı`);
+  };
+
+  const handleBulkCancel = async () => {
+    const cancellableItems = bulkSelection.selectedItems.filter(
+      (c) => c.status === 'Draft' || c.status === 'InProgress'
+    );
+    for (const count of cancellableItems) {
+      try {
+        await cancelStockCount.mutateAsync({ id: count.id, reason: 'Toplu iptal işlemi' });
+      } catch (error) {
+        // Continue with next item
+      }
+    }
+    bulkSelection.clear();
+    message.success(`${cancellableItems.length} sayım iptal edildi`);
+  };
+
+  // Bulk export selected
+  const handleExportSelected = (format: 'pdf' | 'excel') => {
+    const exportData = bulkSelection.selectedItems.map((c) => ({
+      ...c,
+      status: stockCountStatusLabels[c.status] || c.status,
+      countType: stockCountTypeLabels[c.countType] || c.countType,
+    }));
+
+    if (format === 'pdf') {
+      exportToPDF({
+        columns: stockCountColumns,
+        data: exportData,
+        options: {
+          title: 'Seçili Stok Sayımları',
+          filename: `secili-sayimlar-${dayjs().format('YYYY-MM-DD')}`,
+          summaryData: [{ label: 'Seçili Sayım', value: exportData.length }],
+        },
+      });
+    } else {
+      exportToExcel({
+        columns: stockCountColumns,
+        data: exportData,
+        options: {
+          title: 'Seçili Stok Sayımları',
+          filename: `secili-sayimlar-${dayjs().format('YYYY-MM-DD')}`,
+          summaryData: [{ label: 'Seçili Sayım', value: exportData.length }],
+        },
+      });
+    }
+  };
+
+  // Bulk actions
+  const bulkActions = createCountBulkActions(
+    handleBulkStart,
+    handleBulkComplete,
+    handleBulkApprove,
+    handleBulkCancel
+  );
+
+  // Export handlers
+  const handleExportPDF = () => {
+    if (stockCounts.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak sayım bulunamadı' });
+      return;
+    }
+
+    const exportData = stockCounts.map((c) => ({
+      ...c,
+      status: stockCountStatusLabels[c.status] || c.status,
+      countType: stockCountTypeLabels[c.countType] || c.countType,
+    }));
+
+    exportToPDF({
+      columns: stockCountColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Sayımları Raporu',
+        filename: `stok-sayimlari-${dayjs().format('YYYY-MM-DD')}`,
+        subtitle: dateRange
+          ? `${dayjs(dateRange[0]).format('DD/MM/YYYY')} - ${dayjs(dateRange[1]).format('DD/MM/YYYY')}`
+          : undefined,
+        summaryData: [
+          { label: 'Toplam Sayım', value: totalCounts },
+          { label: 'Devam Eden', value: inProgressCounts },
+          { label: 'Tamamlanan', value: completedCounts },
+          { label: 'Farklı Kalem', value: totalDifferences },
+        ],
+      },
+    });
+  };
+
+  const handleExportExcel = () => {
+    if (stockCounts.length === 0) {
+      Modal.warning({ title: 'Uyarı', content: 'Dışa aktarılacak sayım bulunamadı' });
+      return;
+    }
+
+    const exportData = stockCounts.map((c) => ({
+      ...c,
+      status: stockCountStatusLabels[c.status] || c.status,
+      countType: stockCountTypeLabels[c.countType] || c.countType,
+    }));
+
+    exportToExcel({
+      columns: stockCountColumns,
+      data: exportData,
+      options: {
+        title: 'Stok Sayımları',
+        filename: `stok-sayimlari-${dayjs().format('YYYY-MM-DD')}`,
+        summaryData: [
+          { label: 'Toplam Sayım', value: totalCounts },
+          { label: 'Devam Eden', value: inProgressCounts },
+          { label: 'Tamamlanan', value: completedCounts },
+          { label: 'Farklı Kalem', value: totalDifferences },
+        ],
+      },
+    });
+  };
 
   // Handlers
   const handleView = (id: number) => {
@@ -344,6 +566,32 @@ export default function StockCountsPage() {
           <Text type="secondary">Envanter sayım işlemlerini yönetin</Text>
         </div>
         <Space>
+          <SavedFiltersDropdown
+            entityType="stock-counts"
+            currentFilters={currentFilters}
+            onApplyFilter={handleApplyFilter}
+            onClearFilter={handleClearFilter}
+          />
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'pdf',
+                  icon: <FilePdfOutlined />,
+                  label: 'PDF İndir',
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: 'excel',
+                  icon: <FileExcelOutlined />,
+                  label: 'Excel İndir',
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+          </Dropdown>
           <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
@@ -448,6 +696,15 @@ export default function StockCountsPage() {
         </Row>
       </Card>
 
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedCount={bulkSelection.selectionCount}
+        totalCount={stockCounts.length}
+        actions={bulkActions}
+        onClearSelection={bulkSelection.clear}
+        onExportSelected={handleExportSelected}
+      />
+
       {/* Stock Counts Table */}
       <Card>
         <Table
@@ -455,6 +712,16 @@ export default function StockCountsPage() {
           dataSource={stockCounts}
           rowKey="id"
           loading={isLoading}
+          rowSelection={{
+            selectedRowKeys: Array.from(bulkSelection.selectedIds),
+            onChange: (selectedRowKeys) => {
+              bulkSelection.clear();
+              selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
+            },
+            getCheckboxProps: (record) => ({
+              disabled: record.status === 'Approved' || record.status === 'Cancelled' || record.status === 'Adjusted',
+            }),
+          }}
           pagination={{
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sayım`,
