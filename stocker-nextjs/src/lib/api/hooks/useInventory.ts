@@ -180,7 +180,7 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: (data: CreateProductDto) => InventoryService.createProduct(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.products });
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'products'], refetchType: 'all' });
       showSuccess('Ürün oluşturuldu');
     },
     onError: (error) => {
@@ -287,8 +287,8 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: (data: CreateCategoryDto) => InventoryService.createCategory(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.categories });
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.categoryTree });
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'categories'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.categoryTree, refetchType: 'all' });
       showSuccess('Kategori oluşturuldu');
     },
     onError: (error) => {
@@ -357,7 +357,7 @@ export function useCreateBrand() {
   return useMutation({
     mutationFn: (data: CreateBrandDto) => InventoryService.createBrand(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.brands });
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'brands'], refetchType: 'all' });
       showSuccess('Marka oluşturuldu');
     },
     onError: (error) => {
@@ -424,7 +424,7 @@ export function useCreateUnit() {
   return useMutation({
     mutationFn: (data: CreateUnitDto) => InventoryService.createUnit(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.units });
+      queryClient.invalidateQueries({ queryKey: ['inventory', 'units'], refetchType: 'all' });
       showSuccess('Birim oluşturuldu');
     },
     onError: (error) => {
