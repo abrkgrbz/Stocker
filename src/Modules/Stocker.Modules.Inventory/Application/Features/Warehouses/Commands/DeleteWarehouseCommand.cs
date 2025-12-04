@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
 /// </summary>
 public class DeleteWarehouseCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int WarehouseId { get; set; }
 }
 

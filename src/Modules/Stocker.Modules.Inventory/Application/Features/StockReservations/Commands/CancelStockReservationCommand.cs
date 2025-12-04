@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Comma
 
 public class CancelStockReservationCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ReservationId { get; set; }
     public string? Reason { get; set; }
 }

@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Stock.Queries;
 /// </summary>
 public class GetStockQuery : IRequest<Result<List<StockDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? WarehouseId { get; set; }
     public int? ProductId { get; set; }
     public int? LocationId { get; set; }

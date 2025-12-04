@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
 
 public class CreatePriceListCommand : IRequest<Result<PriceListDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreatePriceListDto Data { get; set; } = null!;
 }
 
@@ -18,7 +18,7 @@ public class CreatePriceListCommandValidator : AbstractValidator<CreatePriceList
 {
     public CreatePriceListCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);

@@ -41,7 +41,7 @@ public class SerialNumberDto
 /// </summary>
 public class GetSerialNumberByIdQuery : IRequest<Result<SerialNumberDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int SerialNumberId { get; set; }
 }
 

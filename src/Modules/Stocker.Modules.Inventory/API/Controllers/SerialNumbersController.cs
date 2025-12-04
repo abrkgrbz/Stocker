@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
 using Stocker.Modules.Inventory.Application.Features.SerialNumbers.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class SerialNumbersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public SerialNumbersController(IMediator mediator)
+    public SerialNumbersController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -36,12 +39,12 @@ public class SerialNumbersController : ControllerBase
         [FromQuery] SerialNumberStatus? status = null,
         [FromQuery] bool underWarrantyOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetSerialNumbersQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             WarehouseId = warehouseId,
             Status = status,
@@ -65,12 +68,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<SerialNumberDto>> GetSerialNumber(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetSerialNumberByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id
         };
 
@@ -96,12 +99,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(409)]
     public async Task<ActionResult<SerialNumberDto>> CreateSerialNumber([FromBody] CreateSerialNumberDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -129,12 +132,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ReceiveSerialNumber(int id, [FromBody] ReceiveSerialNumberRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ReceiveSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id,
             PurchaseOrderId = request?.PurchaseOrderId
         };
@@ -161,12 +164,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ReserveSerialNumber(int id, [FromBody] ReserveSerialNumberRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ReserveSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id,
             SalesOrderId = request.SalesOrderId
         };
@@ -193,12 +196,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ReleaseSerialNumber(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ReleaseSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id
         };
 
@@ -224,12 +227,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> SellSerialNumber(int id, [FromBody] SellSerialNumberRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new SellSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id,
             CustomerId = request.CustomerId,
             SalesOrderId = request.SalesOrderId,
@@ -258,12 +261,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> MarkDefective(int id, [FromBody] ReasonRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new MarkDefectiveCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id,
             Reason = request?.Reason
         };
@@ -290,12 +293,12 @@ public class SerialNumbersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ScrapSerialNumber(int id, [FromBody] ReasonRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ScrapSerialNumberCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SerialNumberId = id,
             Reason = request?.Reason
         };
@@ -310,15 +313,6 @@ public class SerialNumbersController : ControllerBase
         }
 
         return Ok();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

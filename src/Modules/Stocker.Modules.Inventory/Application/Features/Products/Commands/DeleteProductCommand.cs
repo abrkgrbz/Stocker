@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Products.Commands;
 /// </summary>
 public class DeleteProductCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
 }
 
@@ -23,10 +23,10 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
     public DeleteProductCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.ProductId)
-            .GreaterThan(0).WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Product ID is required");
     }
 }
 

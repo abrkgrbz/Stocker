@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
 /// </summary>
 public class AddPriceListItemCommand : IRequest<Result<PriceListItemDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int PriceListId { get; set; }
     public CreatePriceListItemDto Data { get; set; } = null!;
 }
@@ -26,10 +26,10 @@ public class AddPriceListItemCommandValidator : AbstractValidator<AddPriceListIt
     public AddPriceListItemCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.PriceListId)
-            .GreaterThan(0).WithMessage("Price list ID is required");
+            .NotEmpty().WithMessage("Price list ID is required");
 
         RuleFor(x => x.Data)
             .NotNull().WithMessage("Item data is required");
@@ -37,7 +37,7 @@ public class AddPriceListItemCommandValidator : AbstractValidator<AddPriceListIt
         When(x => x.Data != null, () =>
         {
             RuleFor(x => x.Data.ProductId)
-                .GreaterThan(0).WithMessage("Product ID is required");
+                .NotEmpty().WithMessage("Product ID is required");
 
             RuleFor(x => x.Data.Price)
                 .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative");

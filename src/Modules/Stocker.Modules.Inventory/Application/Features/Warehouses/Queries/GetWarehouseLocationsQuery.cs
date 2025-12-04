@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Queries;
 /// </summary>
 public class GetWarehouseLocationsQuery : IRequest<Result<List<LocationDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int WarehouseId { get; set; }
 }
 

@@ -9,7 +9,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
 
 public class UpdateLocationCommand : IRequest<Result<LocationDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int LocationId { get; set; }
     public UpdateLocationDto Data { get; set; } = null!;
 }
@@ -18,8 +18,8 @@ public class UpdateLocationCommandValidator : AbstractValidator<UpdateLocationCo
 {
     public UpdateLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.LocationId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.LocationId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0);

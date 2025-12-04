@@ -12,7 +12,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
 /// </summary>
 public class UpdateBrandCommand : IRequest<Result<BrandDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BrandId { get; set; }
     public UpdateBrandDto BrandData { get; set; } = null!;
 }
@@ -24,8 +24,8 @@ public class UpdateBrandCommandValidator : AbstractValidator<UpdateBrandCommand>
 {
     public UpdateBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.BrandId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.BrandId).NotEmpty();
         RuleFor(x => x.BrandData).NotNull();
         RuleFor(x => x.BrandData.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.BrandData.Description).MaximumLength(1000);

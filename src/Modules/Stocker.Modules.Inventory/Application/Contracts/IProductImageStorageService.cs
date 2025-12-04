@@ -14,7 +14,7 @@ public interface IProductImageStorageService
         byte[] imageData,
         string fileName,
         string contentType,
-        int tenantId,
+        Guid tenantId,
         int productId,
         CancellationToken cancellationToken = default);
 
@@ -25,7 +25,7 @@ public interface IProductImageStorageService
         byte[] imageData,
         string fileName,
         string contentType,
-        int tenantId,
+        Guid tenantId,
         int productId,
         int thumbnailWidth = 200,
         int thumbnailHeight = 200,

@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
 
 public class QuarantineLotBatchCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int LotBatchId { get; set; }
     public string Reason { get; set; } = string.Empty;
 }
@@ -17,7 +17,7 @@ public class QuarantineLotBatchCommandValidator : AbstractValidator<QuarantineLo
 {
     public QuarantineLotBatchCommandValidator()
     {
-        RuleFor(x => x.LotBatchId).GreaterThan(0);
+        RuleFor(x => x.LotBatchId).NotEmpty();
         RuleFor(x => x.Reason).NotEmpty().MaximumLength(500);
     }
 }

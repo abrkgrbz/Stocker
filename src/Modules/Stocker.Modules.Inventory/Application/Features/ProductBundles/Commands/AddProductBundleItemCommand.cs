@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands
 /// </summary>
 public class AddProductBundleItemCommand : IRequest<Result<ProductBundleItemDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BundleId { get; set; }
     public CreateProductBundleItemDto ItemData { get; set; } = null!;
 }
@@ -26,16 +26,16 @@ public class AddProductBundleItemCommandValidator : AbstractValidator<AddProduct
 {
     public AddProductBundleItemCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.BundleId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.BundleId).NotEmpty();
         RuleFor(x => x.ItemData).NotNull();
-        RuleFor(x => x.ItemData.ProductId).GreaterThan(0);
-        RuleFor(x => x.ItemData.Quantity).GreaterThan(0);
+        RuleFor(x => x.ItemData.ProductId).NotEmpty();
+        RuleFor(x => x.ItemData.Quantity).NotEmpty();
         RuleFor(x => x.ItemData.DiscountPercentage)
             .InclusiveBetween(0, 100)
             .When(x => x.ItemData.DiscountPercentage.HasValue);
         RuleFor(x => x.ItemData.MinQuantity)
-            .GreaterThan(0)
+            .NotEmpty()
             .When(x => x.ItemData.MinQuantity.HasValue);
         RuleFor(x => x.ItemData.MaxQuantity)
             .GreaterThanOrEqualTo(x => x.ItemData.MinQuantity ?? 1)

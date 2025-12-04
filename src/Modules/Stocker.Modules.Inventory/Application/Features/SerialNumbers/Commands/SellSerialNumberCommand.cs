@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
 
 public class SellSerialNumberCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int SerialNumberId { get; set; }
     public Guid CustomerId { get; set; }
     public Guid SalesOrderId { get; set; }
@@ -19,7 +19,7 @@ public class SellSerialNumberCommandValidator : AbstractValidator<SellSerialNumb
 {
     public SellSerialNumberCommandValidator()
     {
-        RuleFor(x => x.SerialNumberId).GreaterThan(0);
+        RuleFor(x => x.SerialNumberId).NotEmpty();
         RuleFor(x => x.CustomerId).NotEmpty();
         RuleFor(x => x.SalesOrderId).NotEmpty();
         RuleFor(x => x.WarrantyMonths).GreaterThanOrEqualTo(0).When(x => x.WarrantyMonths.HasValue);

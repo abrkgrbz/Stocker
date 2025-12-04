@@ -12,7 +12,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Units.Commands;
 /// </summary>
 public class UpdateUnitCommand : IRequest<Result<UnitDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int UnitId { get; set; }
     public UpdateUnitDto UnitData { get; set; } = null!;
 }
@@ -24,12 +24,12 @@ public class UpdateUnitCommandValidator : AbstractValidator<UpdateUnitCommand>
 {
     public UpdateUnitCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.UnitId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.UnitId).NotEmpty();
         RuleFor(x => x.UnitData).NotNull();
         RuleFor(x => x.UnitData.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.UnitData.Symbol).MaximumLength(10);
-        RuleFor(x => x.UnitData.ConversionFactor).GreaterThan(0);
+        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty();
     }
 }
 

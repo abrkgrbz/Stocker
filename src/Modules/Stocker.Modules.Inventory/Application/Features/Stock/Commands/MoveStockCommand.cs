@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Stock.Commands;
 /// </summary>
 public class MoveStockCommand : IRequest<Result<StockMovementDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public StockMoveDto MoveData { get; set; } = null!;
 }
 
@@ -26,7 +26,7 @@ public class MoveStockCommandValidator : AbstractValidator<MoveStockCommand>
     public MoveStockCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.MoveData)
             .NotNull().WithMessage("Move data is required");
@@ -34,16 +34,16 @@ public class MoveStockCommandValidator : AbstractValidator<MoveStockCommand>
         When(x => x.MoveData != null, () =>
         {
             RuleFor(x => x.MoveData.ProductId)
-                .GreaterThan(0).WithMessage("Product ID is required");
+                .NotEmpty().WithMessage("Product ID is required");
 
             RuleFor(x => x.MoveData.SourceWarehouseId)
-                .GreaterThan(0).WithMessage("Source warehouse ID is required");
+                .NotEmpty().WithMessage("Source warehouse ID is required");
 
             RuleFor(x => x.MoveData.DestinationWarehouseId)
-                .GreaterThan(0).WithMessage("Destination warehouse ID is required");
+                .NotEmpty().WithMessage("Destination warehouse ID is required");
 
             RuleFor(x => x.MoveData.Quantity)
-                .GreaterThan(0).WithMessage("Quantity must be greater than zero");
+                .NotEmpty().WithMessage("Quantity must be greater than zero");
 
             RuleFor(x => x)
                 .Must(x => !(x.MoveData.SourceWarehouseId == x.MoveData.DestinationWarehouseId

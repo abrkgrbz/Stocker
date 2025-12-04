@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Categories.Commands;
 using Stocker.Modules.Inventory.Application.Features.Categories.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public CategoriesController(IMediator mediator)
+    public CategoriesController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class CategoriesController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] int? parentCategoryId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetCategoriesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             ParentCategoryId = parentCategoryId
         };
@@ -61,12 +64,12 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<CategoryTreeDto>>> GetCategoryTree()
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetCategoryTreeQuery
         {
-            TenantId = tenantId
+            TenantId = tenantId.Value
         };
 
         var result = await _mediator.Send(query);
@@ -86,12 +89,12 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetCategoryByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             CategoryId = id
         };
 
@@ -116,12 +119,12 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateCategoryCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             CategoryData = dto
         };
 
@@ -131,15 +134,6 @@ public class CategoriesController : ControllerBase
             return BadRequest(result.Error);
 
         return CreatedAtAction(nameof(GetCategory), new { id = result.Value.Id }, result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

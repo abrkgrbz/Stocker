@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
 /// </summary>
 public class UpdateWarehouseCommand : IRequest<Result<WarehouseDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int WarehouseId { get; set; }
     public UpdateWarehouseDto WarehouseData { get; set; } = null!;
 }
@@ -26,10 +26,10 @@ public class UpdateWarehouseCommandValidator : AbstractValidator<UpdateWarehouse
     public UpdateWarehouseCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.WarehouseId)
-            .GreaterThan(0).WithMessage("Warehouse ID is required");
+            .NotEmpty().WithMessage("Warehouse ID is required");
 
         RuleFor(x => x.WarehouseData)
             .NotNull().WithMessage("Warehouse data is required");

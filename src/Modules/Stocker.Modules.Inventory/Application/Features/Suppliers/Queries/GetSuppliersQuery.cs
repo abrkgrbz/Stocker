@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Suppliers.Queries;
 /// </summary>
 public class GetSuppliersQuery : IRequest<Result<List<SupplierListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public bool IncludeInactive { get; set; }
 }
 

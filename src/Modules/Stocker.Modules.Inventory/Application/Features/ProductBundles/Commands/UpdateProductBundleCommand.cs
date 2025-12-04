@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands
 /// </summary>
 public class UpdateProductBundleCommand : IRequest<Result<ProductBundleDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BundleId { get; set; }
     public UpdateProductBundleDto BundleData { get; set; } = null!;
 }
@@ -25,8 +25,8 @@ public class UpdateProductBundleCommandValidator : AbstractValidator<UpdateProdu
 {
     public UpdateProductBundleCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.BundleId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.BundleId).NotEmpty();
         RuleFor(x => x.BundleData).NotNull();
         RuleFor(x => x.BundleData.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.BundleData.Description).MaximumLength(1000);

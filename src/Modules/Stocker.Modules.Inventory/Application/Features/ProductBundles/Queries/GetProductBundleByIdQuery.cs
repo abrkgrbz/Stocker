@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Queries;
 /// </summary>
 public class GetProductBundleByIdQuery : IRequest<Result<ProductBundleDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BundleId { get; set; }
 }
 

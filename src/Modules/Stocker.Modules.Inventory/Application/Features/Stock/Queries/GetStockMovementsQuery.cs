@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Stock.Queries;
 /// </summary>
 public class GetStockMovementsQuery : IRequest<Result<List<StockMovementDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? ProductId { get; set; }
     public int? WarehouseId { get; set; }
     public StockMovementType? MovementType { get; set; }

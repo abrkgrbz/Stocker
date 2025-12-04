@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Queri
 /// </summary>
 public class GetStockReservationsQuery : IRequest<Result<List<StockReservationListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? ProductId { get; set; }
     public int? WarehouseId { get; set; }
     public ReservationStatus? Status { get; set; }

@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.PriceLists.Commands;
 using Stocker.Modules.Inventory.Application.Features.PriceLists.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class PriceListsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public PriceListsController(IMediator mediator)
+    public PriceListsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class PriceListsController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] bool validOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetPriceListsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             ValidOnly = validOnly
         };
@@ -61,12 +64,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PriceListDto>> GetPriceList(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetPriceListByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id
         };
 
@@ -92,12 +95,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(409)]
     public async Task<ActionResult<PriceListDto>> CreatePriceList([FromBody] CreatePriceListDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreatePriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -123,12 +126,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PriceListDto>> UpdatePriceList(int id, [FromBody] UpdatePriceListDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdatePriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id,
             Data = data
         };
@@ -155,12 +158,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeletePriceList(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeletePriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id
         };
 
@@ -186,12 +189,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> SetDefaultPriceList(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new SetDefaultPriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id
         };
 
@@ -217,12 +220,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ActivatePriceList(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ActivatePriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id
         };
 
@@ -248,12 +251,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeactivatePriceList(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeactivatePriceListCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id
         };
 
@@ -279,12 +282,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PriceListItemDto>> AddPriceListItem(int id, [FromBody] CreatePriceListItemDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new AddPriceListItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id,
             Data = data
         };
@@ -311,12 +314,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PriceListItemDto>> UpdatePriceListItem(int id, int itemId, [FromBody] CreatePriceListItemDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdatePriceListItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id,
             ItemId = itemId,
             Data = data
@@ -344,12 +347,12 @@ public class PriceListsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> RemovePriceListItem(int id, int itemId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new RemovePriceListItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             PriceListId = id,
             ItemId = itemId
         };
@@ -379,12 +382,12 @@ public class PriceListsController : ControllerBase
         [FromQuery] int? customerGroupId = null,
         [FromQuery] decimal? quantity = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductPriceQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             PriceListId = priceListId,
             CustomerGroupId = customerGroupId,
@@ -401,15 +404,6 @@ public class PriceListsController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

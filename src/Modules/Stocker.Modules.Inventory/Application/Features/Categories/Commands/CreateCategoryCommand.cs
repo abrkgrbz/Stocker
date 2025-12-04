@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Categories.Commands;
 /// </summary>
 public class CreateCategoryCommand : IRequest<Result<CategoryDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateCategoryDto CategoryData { get; set; } = null!;
 }
 
@@ -25,7 +25,7 @@ public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCo
     public CreateCategoryCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.CategoryData)
             .NotNull().WithMessage("Category data is required");
@@ -94,6 +94,9 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             request.CategoryData.Code,
             request.CategoryData.Name,
             request.CategoryData.ParentCategoryId);
+
+        // Set tenant ID
+        category.SetTenantId(request.TenantId);
 
         if (!string.IsNullOrEmpty(request.CategoryData.Description))
         {

@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
 using Stocker.Modules.Inventory.Application.Features.ProductBundles.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class ProductBundlesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public ProductBundlesController(IMediator mediator)
+    public ProductBundlesController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class ProductBundlesController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] bool validOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductBundlesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             ValidOnly = validOnly
         };
@@ -61,12 +64,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductBundleDto>> GetBundle(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductBundleByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = id
         };
 
@@ -91,12 +94,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductBundleDto>> CreateBundle(CreateProductBundleDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateProductBundleCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleData = dto
         };
 
@@ -118,12 +121,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductBundleDto>> UpdateBundle(int id, UpdateProductBundleDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductBundleCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = id,
             BundleData = dto
         };
@@ -149,12 +152,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteBundle(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductBundleCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = id
         };
 
@@ -182,12 +185,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductBundleItemDto>> AddItem(int bundleId, CreateProductBundleItemDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new AddProductBundleItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = bundleId,
             ItemData = dto
         };
@@ -215,12 +218,12 @@ public class ProductBundlesController : ControllerBase
     public async Task<ActionResult<ProductBundleItemDto>> UpdateItem(
         int bundleId, int itemId, UpdateProductBundleItemDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductBundleItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = bundleId,
             ItemId = itemId,
             ItemData = dto
@@ -247,12 +250,12 @@ public class ProductBundlesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveItem(int bundleId, int itemId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new RemoveProductBundleItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BundleId = bundleId,
             ItemId = itemId
         };
@@ -270,15 +273,6 @@ public class ProductBundlesController : ControllerBase
     }
 
     #endregion
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
-    }
 
     private static Error CreateTenantError()
     {

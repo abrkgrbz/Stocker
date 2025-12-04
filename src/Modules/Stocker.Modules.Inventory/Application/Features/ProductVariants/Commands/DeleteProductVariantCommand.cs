@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductVariants.Command
 /// </summary>
 public class DeleteProductVariantCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int VariantId { get; set; }
 }
 
@@ -22,8 +22,8 @@ public class DeleteProductVariantCommandValidator : AbstractValidator<DeleteProd
 {
     public DeleteProductVariantCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.VariantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.VariantId).NotEmpty();
     }
 }
 

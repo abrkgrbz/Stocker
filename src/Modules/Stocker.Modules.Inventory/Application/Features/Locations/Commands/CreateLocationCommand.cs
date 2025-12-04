@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
 
 public class CreateLocationCommand : IRequest<Result<LocationDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateLocationDto Data { get; set; } = null!;
 }
 
@@ -18,9 +18,9 @@ public class CreateLocationCommandValidator : AbstractValidator<CreateLocationCo
 {
     public CreateLocationCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
+        RuleFor(x => x.Data.WarehouseId).NotEmpty();
         RuleFor(x => x.Data.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Data.Capacity).GreaterThanOrEqualTo(0);

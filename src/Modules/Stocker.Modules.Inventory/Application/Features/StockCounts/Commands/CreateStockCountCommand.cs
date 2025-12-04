@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 
 public class CreateStockCountCommand : IRequest<Result<StockCountDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateStockCountDto Data { get; set; } = null!;
 }
 
@@ -19,11 +19,11 @@ public class CreateStockCountCommandValidator : AbstractValidator<CreateStockCou
 {
     public CreateStockCountCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.CountNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.CreatedByUserId).GreaterThan(0);
+        RuleFor(x => x.Data.WarehouseId).NotEmpty();
+        RuleFor(x => x.Data.CreatedByUserId).NotEmpty();
     }
 }
 

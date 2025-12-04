@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Comma
 
 public class FulfillStockReservationCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ReservationId { get; set; }
     public decimal? Quantity { get; set; } // If null, fulfills entire remaining quantity
 }
@@ -17,8 +17,8 @@ public class FulfillStockReservationCommandValidator : AbstractValidator<Fulfill
 {
     public FulfillStockReservationCommandValidator()
     {
-        RuleFor(x => x.ReservationId).GreaterThan(0);
-        RuleFor(x => x.Quantity).GreaterThan(0).When(x => x.Quantity.HasValue);
+        RuleFor(x => x.ReservationId).NotEmpty();
+        RuleFor(x => x.Quantity).NotEmpty().When(x => x.Quantity.HasValue);
     }
 }
 

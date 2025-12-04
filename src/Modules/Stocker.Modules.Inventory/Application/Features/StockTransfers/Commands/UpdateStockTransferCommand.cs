@@ -12,7 +12,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands
 /// </summary>
 public class UpdateStockTransferCommand : IRequest<Result<StockTransferDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int TransferId { get; set; }
     public UpdateStockTransferDto Data { get; set; } = null!;
 }
@@ -25,10 +25,10 @@ public class UpdateStockTransferCommandValidator : AbstractValidator<UpdateStock
     public UpdateStockTransferCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.TransferId)
-            .GreaterThan(0).WithMessage("Transfer ID is required");
+            .NotEmpty().WithMessage("Transfer ID is required");
 
         RuleFor(x => x.Data)
             .NotNull().WithMessage("Update data is required");

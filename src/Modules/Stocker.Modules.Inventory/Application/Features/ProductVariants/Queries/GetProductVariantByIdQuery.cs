@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductVariants.Queries
 /// </summary>
 public class GetProductVariantByIdQuery : IRequest<Result<ProductVariantDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int VariantId { get; set; }
 }
 

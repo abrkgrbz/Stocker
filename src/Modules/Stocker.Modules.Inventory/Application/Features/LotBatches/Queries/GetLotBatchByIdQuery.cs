@@ -44,7 +44,7 @@ public class LotBatchDto
 /// </summary>
 public class GetLotBatchByIdQuery : IRequest<Result<LotBatchDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int LotBatchId { get; set; }
 }
 

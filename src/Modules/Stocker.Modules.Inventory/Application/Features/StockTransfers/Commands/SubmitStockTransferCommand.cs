@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands
 
 public class SubmitStockTransferCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int TransferId { get; set; }
 }
 

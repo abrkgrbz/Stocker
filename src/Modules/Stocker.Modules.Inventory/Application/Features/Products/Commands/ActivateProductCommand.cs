@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Products.Commands;
 /// </summary>
 public class ActivateProductCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
 }
 

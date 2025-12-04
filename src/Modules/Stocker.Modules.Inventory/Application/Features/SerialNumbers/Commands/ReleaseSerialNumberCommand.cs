@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
 
 public class ReleaseSerialNumberCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int SerialNumberId { get; set; }
 }
 

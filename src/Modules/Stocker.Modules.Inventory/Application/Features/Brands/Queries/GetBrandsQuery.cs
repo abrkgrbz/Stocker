@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Brands.Queries;
 /// </summary>
 public class GetBrandsQuery : IRequest<Result<List<BrandDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public bool IncludeInactive { get; set; }
 }
 

@@ -9,6 +9,7 @@ using Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
 using Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -21,10 +22,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public ProductsController(IMediator mediator)
+    public ProductsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -39,12 +42,12 @@ public class ProductsController : ControllerBase
         [FromQuery] int? categoryId = null,
         [FromQuery] int? brandId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             CategoryId = categoryId,
             BrandId = brandId
@@ -67,12 +70,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id
         };
 
@@ -98,12 +101,12 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<List<LowStockProductDto>>> GetLowStockProducts(
         [FromQuery] int? warehouseId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetLowStockProductsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = warehouseId
         };
 
@@ -124,12 +127,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateProductCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductData = dto
         };
 
@@ -151,12 +154,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductDto>> UpdateProduct(int id, UpdateProductDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             ProductData = dto
         };
@@ -182,12 +185,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteProduct(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id
         };
 
@@ -213,12 +216,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> ActivateProduct(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ActivateProductCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id
         };
 
@@ -244,12 +247,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeactivateProduct(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeactivateProductCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id
         };
 
@@ -281,12 +284,12 @@ public class ProductsController : ControllerBase
         int id,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductImagesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             IncludeInactive = includeInactive
         };
@@ -320,8 +323,8 @@ public class ProductsController : ControllerBase
         [FromForm] ImageType imageType = ImageType.Gallery,
         [FromForm] bool setAsPrimary = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         if (file == null || file.Length == 0)
             return BadRequest(new Error("Image.Required", "Image file is required", ErrorType.Validation));
@@ -331,7 +334,7 @@ public class ProductsController : ControllerBase
 
         var command = new UploadProductImageCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             ImageData = memoryStream.ToArray(),
             FileName = file.FileName,
@@ -364,12 +367,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteProductImage(int id, int imageId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductImageCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             ImageId = imageId
         };
@@ -396,12 +399,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> SetPrimaryImage(int id, int imageId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new SetPrimaryImageCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             ImageId = imageId
         };
@@ -428,12 +431,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> ReorderProductImages(int id, [FromBody] List<int> imageIds)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ReorderProductImagesCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = id,
             ImageIds = imageIds
         };
@@ -448,15 +451,6 @@ public class ProductsController : ControllerBase
         }
 
         return Ok();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode(); // Fallback for Guid-based tenant
-        return 0;
     }
 
     private static Error CreateTenantError()

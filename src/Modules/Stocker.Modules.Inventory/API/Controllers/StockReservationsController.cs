@@ -6,6 +6,7 @@ using Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
 using Stocker.Modules.Inventory.Application.Features.StockReservations.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -18,10 +19,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class StockReservationsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public StockReservationsController(IMediator mediator)
+    public StockReservationsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -37,12 +40,12 @@ public class StockReservationsController : ControllerBase
         [FromQuery] ReservationStatus? status = null,
         [FromQuery] bool expiredOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockReservationsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             WarehouseId = warehouseId,
             Status = status,
@@ -66,12 +69,12 @@ public class StockReservationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockReservationDto>> GetStockReservation(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockReservationByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ReservationId = id
         };
 
@@ -97,12 +100,12 @@ public class StockReservationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<StockReservationDto>> CreateStockReservation([FromBody] CreateStockReservationDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateStockReservationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -128,12 +131,12 @@ public class StockReservationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> FulfillStockReservation(int id, [FromBody] FulfillReservationRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new FulfillStockReservationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ReservationId = id,
             Quantity = request?.Quantity
         };
@@ -160,12 +163,12 @@ public class StockReservationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> CancelStockReservation(int id, [FromBody] CancelReservationRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CancelStockReservationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ReservationId = id,
             Reason = request?.Reason
         };
@@ -192,12 +195,12 @@ public class StockReservationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ExtendReservation(int id, [FromBody] ExtendReservationRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ExtendReservationExpirationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ReservationId = id,
             NewExpirationDate = request.NewExpirationDate
         };
@@ -212,15 +215,6 @@ public class StockReservationsController : ControllerBase
         }
 
         return Ok();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

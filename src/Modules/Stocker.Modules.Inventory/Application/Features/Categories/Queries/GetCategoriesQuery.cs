@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Categories.Queries;
 /// </summary>
 public class GetCategoriesQuery : IRequest<Result<List<CategoryDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public bool IncludeInactive { get; set; } = false;
     public int? ParentCategoryId { get; set; }
 }

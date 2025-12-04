@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductVariants.Command
 /// </summary>
 public class UpdateProductVariantCommand : IRequest<Result<ProductVariantDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int VariantId { get; set; }
     public UpdateProductVariantDto VariantData { get; set; } = null!;
 }
@@ -25,8 +25,8 @@ public class UpdateProductVariantCommandValidator : AbstractValidator<UpdateProd
 {
     public UpdateProductVariantCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.VariantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.VariantId).NotEmpty();
         RuleFor(x => x.VariantData).NotNull();
         RuleFor(x => x.VariantData.Sku).NotEmpty().MaximumLength(100);
         RuleFor(x => x.VariantData.VariantName).NotEmpty().MaximumLength(200);

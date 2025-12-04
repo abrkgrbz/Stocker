@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
 /// </summary>
 public class GetProductImagesQuery : IRequest<Result<List<ProductImageDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
     public bool IncludeInactive { get; set; }
 }

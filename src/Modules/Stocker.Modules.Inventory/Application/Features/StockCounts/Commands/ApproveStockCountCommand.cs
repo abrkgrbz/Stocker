@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 
 public class ApproveStockCountCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int StockCountId { get; set; }
     public int ApprovedByUserId { get; set; }
 }
@@ -17,8 +17,8 @@ public class ApproveStockCountCommandValidator : AbstractValidator<ApproveStockC
 {
     public ApproveStockCountCommandValidator()
     {
-        RuleFor(x => x.StockCountId).GreaterThan(0);
-        RuleFor(x => x.ApprovedByUserId).GreaterThan(0);
+        RuleFor(x => x.StockCountId).NotEmpty();
+        RuleFor(x => x.ApprovedByUserId).NotEmpty();
     }
 }
 

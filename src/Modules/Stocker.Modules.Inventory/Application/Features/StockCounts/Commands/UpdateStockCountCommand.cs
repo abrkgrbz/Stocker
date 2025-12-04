@@ -12,7 +12,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 /// </summary>
 public class UpdateStockCountCommand : IRequest<Result<StockCountDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int StockCountId { get; set; }
     public UpdateStockCountDto Data { get; set; } = null!;
 }
@@ -25,10 +25,10 @@ public class UpdateStockCountCommandValidator : AbstractValidator<UpdateStockCou
     public UpdateStockCountCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.StockCountId)
-            .GreaterThan(0).WithMessage("Stock count ID is required");
+            .NotEmpty().WithMessage("Stock count ID is required");
 
         RuleFor(x => x.Data)
             .NotNull().WithMessage("Update data is required");

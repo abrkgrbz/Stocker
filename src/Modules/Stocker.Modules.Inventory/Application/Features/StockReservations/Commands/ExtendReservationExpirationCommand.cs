@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Comma
 
 public class ExtendReservationExpirationCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ReservationId { get; set; }
     public DateTime NewExpirationDate { get; set; }
 }
@@ -17,7 +17,7 @@ public class ExtendReservationExpirationCommandValidator : AbstractValidator<Ext
 {
     public ExtendReservationExpirationCommandValidator()
     {
-        RuleFor(x => x.ReservationId).GreaterThan(0);
+        RuleFor(x => x.ReservationId).NotEmpty();
         RuleFor(x => x.NewExpirationDate).GreaterThan(DateTime.UtcNow).WithMessage("Expiration date must be in the future");
     }
 }

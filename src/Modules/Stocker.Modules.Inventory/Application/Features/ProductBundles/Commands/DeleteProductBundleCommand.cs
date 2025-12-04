@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands
 /// </summary>
 public class DeleteProductBundleCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BundleId { get; set; }
 }
 
@@ -22,8 +22,8 @@ public class DeleteProductBundleCommandValidator : AbstractValidator<DeleteProdu
 {
     public DeleteProductBundleCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.BundleId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.BundleId).NotEmpty();
     }
 }
 

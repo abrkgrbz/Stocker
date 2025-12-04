@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
 /// </summary>
 public class CreateBrandCommand : IRequest<Result<BrandDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateBrandDto BrandData { get; set; } = null!;
 }
 
@@ -24,7 +24,7 @@ public class CreateBrandCommandValidator : AbstractValidator<CreateBrandCommand>
 {
     public CreateBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.BrandData).NotNull();
         RuleFor(x => x.BrandData.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.BrandData.Name).NotEmpty().MaximumLength(200);

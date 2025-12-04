@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
 /// </summary>
 public class SetPrimaryImageCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
     public int ImageId { get; set; }
 }
@@ -24,13 +24,13 @@ public class SetPrimaryImageCommandValidator : AbstractValidator<SetPrimaryImage
     public SetPrimaryImageCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.ProductId)
-            .GreaterThan(0).WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Product ID is required");
 
         RuleFor(x => x.ImageId)
-            .GreaterThan(0).WithMessage("Image ID is required");
+            .NotEmpty().WithMessage("Image ID is required");
     }
 }
 

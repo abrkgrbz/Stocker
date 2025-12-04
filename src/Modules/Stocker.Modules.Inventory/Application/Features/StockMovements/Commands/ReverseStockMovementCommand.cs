@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands
 
 public class ReverseStockMovementCommand : IRequest<Result<int>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int MovementId { get; set; }
     public int UserId { get; set; }
     public string? Description { get; set; }

@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
 using Stocker.Modules.Inventory.Application.Features.ProductAttributes.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class ProductAttributesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public ProductAttributesController(IMediator mediator)
+    public ProductAttributesController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class ProductAttributesController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] bool filterableOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductAttributesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             FilterableOnly = filterableOnly
         };
@@ -61,12 +64,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductAttributeDto>> GetAttribute(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductAttributeByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = id
         };
 
@@ -91,12 +94,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductAttributeDto>> CreateAttribute(CreateProductAttributeDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateProductAttributeCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeData = dto
         };
 
@@ -118,12 +121,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductAttributeDto>> UpdateAttribute(int id, UpdateProductAttributeDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductAttributeCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = id,
             AttributeData = dto
         };
@@ -149,12 +152,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteAttribute(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductAttributeCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = id
         };
 
@@ -182,12 +185,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductAttributeOptionDto>> AddOption(int attributeId, CreateProductAttributeOptionDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new AddProductAttributeOptionCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = attributeId,
             OptionData = dto
         };
@@ -215,12 +218,12 @@ public class ProductAttributesController : ControllerBase
     public async Task<ActionResult<ProductAttributeOptionDto>> UpdateOption(
         int attributeId, int optionId, UpdateProductAttributeOptionDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductAttributeOptionCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = attributeId,
             OptionId = optionId,
             OptionData = dto
@@ -247,12 +250,12 @@ public class ProductAttributesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteOption(int attributeId, int optionId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductAttributeOptionCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AttributeId = attributeId,
             OptionId = optionId
         };
@@ -270,15 +273,6 @@ public class ProductAttributesController : ControllerBase
     }
 
     #endregion
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
-    }
 
     private static Error CreateTenantError()
     {

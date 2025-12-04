@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Suppliers.Commands;
 using Stocker.Modules.Inventory.Application.Features.Suppliers.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class SuppliersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public SuppliersController(IMediator mediator)
+    public SuppliersController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -33,12 +36,12 @@ public class SuppliersController : ControllerBase
     public async Task<ActionResult<List<SupplierListDto>>> GetSuppliers(
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetSuppliersQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive
         };
 
@@ -59,12 +62,12 @@ public class SuppliersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<SupplierDto>> GetSupplier(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetSupplierByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SupplierId = id
         };
 
@@ -89,12 +92,12 @@ public class SuppliersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<SupplierDto>> CreateSupplier(CreateSupplierDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateSupplierCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SupplierData = dto
         };
 
@@ -104,15 +107,6 @@ public class SuppliersController : ControllerBase
             return BadRequest(result.Error);
 
         return CreatedAtAction(nameof(GetSupplier), new { id = result.Value.Id }, result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

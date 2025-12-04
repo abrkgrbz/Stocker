@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Suppliers.Commands;
 /// </summary>
 public class CreateSupplierCommand : IRequest<Result<SupplierDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateSupplierDto SupplierData { get; set; } = null!;
 }
 
@@ -25,7 +25,7 @@ public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCo
 {
     public CreateSupplierCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.SupplierData).NotNull();
         RuleFor(x => x.SupplierData.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.SupplierData.Name).NotEmpty().MaximumLength(200);

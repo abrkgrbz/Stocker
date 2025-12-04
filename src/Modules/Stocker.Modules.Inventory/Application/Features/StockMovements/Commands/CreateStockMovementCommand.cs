@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands
 
 public class CreateStockMovementCommand : IRequest<Result<StockMovementDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateStockMovementDto Data { get; set; } = null!;
 }
 
@@ -19,14 +19,14 @@ public class CreateStockMovementCommandValidator : AbstractValidator<CreateStock
 {
     public CreateStockMovementCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.DocumentNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
-        RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.Quantity).GreaterThan(0);
+        RuleFor(x => x.Data.ProductId).NotEmpty();
+        RuleFor(x => x.Data.WarehouseId).NotEmpty();
+        RuleFor(x => x.Data.Quantity).NotEmpty();
         RuleFor(x => x.Data.UnitCost).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.UserId).GreaterThan(0);
+        RuleFor(x => x.Data.UserId).NotEmpty();
     }
 }
 

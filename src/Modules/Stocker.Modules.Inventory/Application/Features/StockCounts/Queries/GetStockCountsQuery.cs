@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Queries;
 /// </summary>
 public class GetStockCountsQuery : IRequest<Result<List<StockCountListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? WarehouseId { get; set; }
     public StockCountStatus? Status { get; set; }
     public DateTime? FromDate { get; set; }

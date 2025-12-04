@@ -26,7 +26,7 @@ public class SerialNumberListDto
 /// </summary>
 public class GetSerialNumbersQuery : IRequest<Result<List<SerialNumberListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? ProductId { get; set; }
     public int? WarehouseId { get; set; }
     public SerialNumberStatus? Status { get; set; }

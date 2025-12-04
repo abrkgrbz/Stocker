@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Units.Commands;
 using Stocker.Modules.Inventory.Application.Features.Units.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class UnitsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public UnitsController(IMediator mediator)
+    public UnitsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class UnitsController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] bool baseUnitsOnly = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetUnitsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             BaseUnitsOnly = baseUnitsOnly
         };
@@ -61,12 +64,12 @@ public class UnitsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<UnitDto>> GetUnit(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetUnitByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             UnitId = id
         };
 
@@ -91,12 +94,12 @@ public class UnitsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<UnitDto>> CreateUnit(CreateUnitDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateUnitCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             UnitData = dto
         };
 
@@ -118,12 +121,12 @@ public class UnitsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<UnitDto>> UpdateUnit(int id, UpdateUnitDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateUnitCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             UnitId = id,
             UnitData = dto
         };
@@ -138,15 +141,6 @@ public class UnitsController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

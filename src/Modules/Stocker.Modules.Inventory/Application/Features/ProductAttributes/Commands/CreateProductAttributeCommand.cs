@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Comma
 /// </summary>
 public class CreateProductAttributeCommand : IRequest<Result<ProductAttributeDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateProductAttributeDto AttributeData { get; set; } = null!;
 }
 
@@ -25,7 +25,7 @@ public class CreateProductAttributeCommandValidator : AbstractValidator<CreatePr
 {
     public CreateProductAttributeCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.AttributeData).NotNull();
         RuleFor(x => x.AttributeData.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.AttributeData.Name).NotEmpty().MaximumLength(100);

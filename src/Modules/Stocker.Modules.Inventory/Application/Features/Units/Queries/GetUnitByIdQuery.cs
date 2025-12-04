@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Units.Queries;
 /// </summary>
 public class GetUnitByIdQuery : IRequest<Result<UnitDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int UnitId { get; set; }
 }
 

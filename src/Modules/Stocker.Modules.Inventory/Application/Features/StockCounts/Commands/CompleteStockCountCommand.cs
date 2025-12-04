@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 
 public class CompleteStockCountCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int StockCountId { get; set; }
 }
 

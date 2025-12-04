@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Brands.Commands;
 using Stocker.Modules.Inventory.Application.Features.Brands.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class BrandsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public BrandsController(IMediator mediator)
+    public BrandsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -33,12 +36,12 @@ public class BrandsController : ControllerBase
     public async Task<ActionResult<List<BrandDto>>> GetBrands(
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetBrandsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive
         };
 
@@ -59,12 +62,12 @@ public class BrandsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<BrandDto>> GetBrand(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetBrandByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BrandId = id
         };
 
@@ -89,12 +92,12 @@ public class BrandsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<BrandDto>> CreateBrand(CreateBrandDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateBrandCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BrandData = dto
         };
 
@@ -116,12 +119,12 @@ public class BrandsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<BrandDto>> UpdateBrand(int id, UpdateBrandDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateBrandCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BrandId = id,
             BrandData = dto
         };
@@ -147,12 +150,12 @@ public class BrandsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteBrand(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteBrandCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             BrandId = id
         };
 
@@ -166,15 +169,6 @@ public class BrandsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

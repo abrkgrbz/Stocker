@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Stock.Queries;
 /// </summary>
 public class GetExpiringStockQuery : IRequest<Result<List<ExpiringStockDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int DaysUntilExpiry { get; set; } = 30;
     public int? WarehouseId { get; set; }
 }

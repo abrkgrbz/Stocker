@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
 using Stocker.Modules.Inventory.Application.Features.Warehouses.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class WarehousesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public WarehousesController(IMediator mediator)
+    public WarehousesController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class WarehousesController : ControllerBase
         [FromQuery] bool includeInactive = false,
         [FromQuery] int? branchId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetWarehousesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             IncludeInactive = includeInactive,
             BranchId = branchId
         };
@@ -61,12 +64,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<WarehouseDto>> GetWarehouse(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetWarehouseByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id
         };
 
@@ -91,12 +94,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<List<LocationDto>>> GetWarehouseLocations(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetWarehouseLocationsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id
         };
 
@@ -121,12 +124,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<WarehouseDto>> CreateWarehouse(CreateWarehouseDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateWarehouseCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseData = dto
         };
 
@@ -148,12 +151,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WarehouseDto>> UpdateWarehouse(int id, UpdateWarehouseDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateWarehouseCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id,
             WarehouseData = dto
         };
@@ -180,12 +183,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteWarehouse(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteWarehouseCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id
         };
 
@@ -211,12 +214,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> SetDefaultWarehouse(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new SetDefaultWarehouseCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id
         };
 
@@ -241,12 +244,12 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<WarehouseStockSummaryDto>> GetWarehouseStockSummary(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetWarehouseStockSummaryQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = id
         };
 
@@ -260,15 +263,6 @@ public class WarehousesController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

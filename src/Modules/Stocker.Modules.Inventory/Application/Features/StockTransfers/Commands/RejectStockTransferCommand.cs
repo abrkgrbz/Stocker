@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands
 /// </summary>
 public class RejectStockTransferCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int TransferId { get; set; }
     public int RejectedByUserId { get; set; }
     public string? Reason { get; set; }

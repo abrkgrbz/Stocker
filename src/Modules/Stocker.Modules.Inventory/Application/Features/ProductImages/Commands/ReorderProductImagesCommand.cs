@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
 /// </summary>
 public class ReorderProductImagesCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
     public List<int> ImageIds { get; set; } = new();
 }
@@ -24,10 +24,10 @@ public class ReorderProductImagesCommandValidator : AbstractValidator<ReorderPro
     public ReorderProductImagesCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.ProductId)
-            .GreaterThan(0).WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Product ID is required");
 
         RuleFor(x => x.ImageIds)
             .NotEmpty().WithMessage("Image IDs are required");

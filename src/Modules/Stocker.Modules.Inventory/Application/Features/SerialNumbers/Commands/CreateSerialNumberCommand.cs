@@ -22,7 +22,7 @@ public class CreateSerialNumberDto
 
 public class CreateSerialNumberCommand : IRequest<Result<SerialNumberDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateSerialNumberDto Data { get; set; } = null!;
 }
 
@@ -30,10 +30,10 @@ public class CreateSerialNumberCommandValidator : AbstractValidator<CreateSerial
 {
     public CreateSerialNumberCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.Serial).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
+        RuleFor(x => x.Data.ProductId).NotEmpty();
     }
 }
 

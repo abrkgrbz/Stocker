@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands
 
 public class ReceiveStockTransferCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int TransferId { get; set; }
     public int ReceivedByUserId { get; set; }
 }
@@ -17,8 +17,8 @@ public class ReceiveStockTransferCommandValidator : AbstractValidator<ReceiveSto
 {
     public ReceiveStockTransferCommandValidator()
     {
-        RuleFor(x => x.TransferId).GreaterThan(0);
-        RuleFor(x => x.ReceivedByUserId).GreaterThan(0);
+        RuleFor(x => x.TransferId).NotEmpty();
+        RuleFor(x => x.ReceivedByUserId).NotEmpty();
     }
 }
 

@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.ProductVariants.Commands;
 using Stocker.Modules.Inventory.Application.Features.ProductVariants.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class ProductVariantsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public ProductVariantsController(IMediator mediator)
+    public ProductVariantsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class ProductVariantsController : ControllerBase
         [FromQuery] int productId,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductVariantsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             IncludeInactive = includeInactive
         };
@@ -61,12 +64,12 @@ public class ProductVariantsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductVariantDto>> GetVariant(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductVariantByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             VariantId = id
         };
 
@@ -91,12 +94,12 @@ public class ProductVariantsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductVariantDto>> CreateVariant(CreateProductVariantDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateProductVariantCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             VariantData = dto
         };
 
@@ -118,12 +121,12 @@ public class ProductVariantsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<ProductVariantDto>> UpdateVariant(int id, UpdateProductVariantDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateProductVariantCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             VariantId = id,
             VariantData = dto
         };
@@ -149,12 +152,12 @@ public class ProductVariantsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteVariant(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteProductVariantCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             VariantId = id
         };
 
@@ -168,15 +171,6 @@ public class ProductVariantsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

@@ -6,6 +6,7 @@ using Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
 using Stocker.Modules.Inventory.Application.Features.StockTransfers.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -18,10 +19,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class StockTransfersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public StockTransfersController(IMediator mediator)
+    public StockTransfersController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -38,12 +41,12 @@ public class StockTransfersController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockTransfersQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             SourceWarehouseId = sourceWarehouseId,
             DestinationWarehouseId = destinationWarehouseId,
             Status = status,
@@ -68,12 +71,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockTransferDto>> GetStockTransfer(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockTransferByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id
         };
 
@@ -99,12 +102,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<StockTransferDto>> CreateStockTransfer([FromBody] CreateStockTransferDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -130,12 +133,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> SubmitStockTransfer(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new SubmitStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id
         };
 
@@ -161,12 +164,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ApproveStockTransfer(int id, [FromBody] ApproveTransferRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ApproveStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             ApprovedByUserId = request.ApprovedByUserId
         };
@@ -193,12 +196,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ShipStockTransfer(int id, [FromBody] ShipTransferRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ShipStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             ShippedByUserId = request.ShippedByUserId
         };
@@ -225,12 +228,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ReceiveStockTransfer(int id, [FromBody] ReceiveTransferRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ReceiveStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             ReceivedByUserId = request.ReceivedByUserId
         };
@@ -257,12 +260,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> CancelStockTransfer(int id, [FromBody] CancelTransferRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CancelStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             Reason = request?.Reason
         };
@@ -289,12 +292,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockTransferDto>> UpdateStockTransfer(int id, [FromBody] UpdateStockTransferDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             Data = data
         };
@@ -321,12 +324,12 @@ public class StockTransfersController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> RejectStockTransfer(int id, [FromBody] RejectTransferRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new RejectStockTransferCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             TransferId = id,
             RejectedByUserId = request.RejectedByUserId,
             Reason = request.Reason
@@ -342,15 +345,6 @@ public class StockTransfersController : ControllerBase
         }
 
         return Ok();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

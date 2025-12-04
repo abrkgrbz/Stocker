@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
 /// </summary>
 public class CreateWarehouseCommand : IRequest<Result<WarehouseDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateWarehouseDto WarehouseData { get; set; } = null!;
 }
 
@@ -26,7 +26,7 @@ public class CreateWarehouseCommandValidator : AbstractValidator<CreateWarehouse
     public CreateWarehouseCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.WarehouseData)
             .NotNull().WithMessage("Warehouse data is required");

@@ -6,6 +6,7 @@ using Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 using Stocker.Modules.Inventory.Application.Features.StockCounts.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -18,10 +19,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class StockCountsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public StockCountsController(IMediator mediator)
+    public StockCountsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -37,12 +40,12 @@ public class StockCountsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockCountsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = warehouseId,
             Status = status,
             FromDate = fromDate,
@@ -66,12 +69,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockCountDto>> GetStockCount(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockCountByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id
         };
 
@@ -97,12 +100,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<ActionResult<StockCountDto>> CreateStockCount([FromBody] CreateStockCountDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -128,12 +131,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> StartStockCount(int id, [FromBody] StartCountRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new StartStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id,
             CountedByUserId = request.CountedByUserId
         };
@@ -160,12 +163,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> CountItem(int id, int itemId, [FromBody] CountItemRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CountItemCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id,
             ItemId = itemId,
             CountedQuantity = request.CountedQuantity,
@@ -194,12 +197,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> CompleteStockCount(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CompleteStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id
         };
 
@@ -225,12 +228,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ApproveStockCount(int id, [FromBody] ApproveCountRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ApproveStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id,
             ApprovedByUserId = request.ApprovedByUserId
         };
@@ -257,12 +260,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> CancelStockCount(int id, [FromBody] CancelCountRequest? request = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CancelStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id,
             Reason = request?.Reason
         };
@@ -289,12 +292,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockCountDto>> UpdateStockCount(int id, [FromBody] UpdateStockCountDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateStockCountCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id,
             Data = data
         };
@@ -320,12 +323,12 @@ public class StockCountsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockCountSummaryDto>> GetStockCountSummary(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockCountSummaryQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             StockCountId = id
         };
 
@@ -339,15 +342,6 @@ public class StockCountsController : ControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

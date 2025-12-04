@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
 
 public class ReserveSerialNumberCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int SerialNumberId { get; set; }
     public Guid SalesOrderId { get; set; }
 }
@@ -17,7 +17,7 @@ public class ReserveSerialNumberCommandValidator : AbstractValidator<ReserveSeri
 {
     public ReserveSerialNumberCommandValidator()
     {
-        RuleFor(x => x.SerialNumberId).GreaterThan(0);
+        RuleFor(x => x.SerialNumberId).NotEmpty();
         RuleFor(x => x.SalesOrderId).NotEmpty();
     }
 }

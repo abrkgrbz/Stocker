@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Queries;
 /// </summary>
 public class GetProductBundlesQuery : IRequest<Result<List<ProductBundleDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public bool IncludeInactive { get; set; }
     public bool ValidOnly { get; set; }
     public BundleType? BundleType { get; set; }

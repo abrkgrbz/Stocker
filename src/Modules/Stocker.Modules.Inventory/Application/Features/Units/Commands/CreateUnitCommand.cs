@@ -13,7 +13,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Units.Commands;
 /// </summary>
 public class CreateUnitCommand : IRequest<Result<UnitDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateUnitDto UnitData { get; set; } = null!;
 }
 
@@ -24,12 +24,12 @@ public class CreateUnitCommandValidator : AbstractValidator<CreateUnitCommand>
 {
     public CreateUnitCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.UnitData).NotNull();
         RuleFor(x => x.UnitData.Code).NotEmpty().MaximumLength(20);
         RuleFor(x => x.UnitData.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.UnitData.Symbol).MaximumLength(10);
-        RuleFor(x => x.UnitData.ConversionFactor).GreaterThan(0);
+        RuleFor(x => x.UnitData.ConversionFactor).NotEmpty();
     }
 }
 

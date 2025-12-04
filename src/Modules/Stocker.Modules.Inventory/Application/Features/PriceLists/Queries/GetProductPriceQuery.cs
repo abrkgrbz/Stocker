@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.PriceLists.Queries;
 /// </summary>
 public class GetProductPriceQuery : IRequest<Result<ProductPriceDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
     public int? PriceListId { get; set; }
     public int? CustomerGroupId { get; set; }

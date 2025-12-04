@@ -12,7 +12,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Comma
 /// </summary>
 public class UpdateProductAttributeOptionCommand : IRequest<Result<ProductAttributeOptionDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int AttributeId { get; set; }
     public int OptionId { get; set; }
     public UpdateProductAttributeOptionDto OptionData { get; set; } = null!;
@@ -25,9 +25,9 @@ public class UpdateProductAttributeOptionCommandValidator : AbstractValidator<Up
 {
     public UpdateProductAttributeOptionCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.AttributeId).GreaterThan(0);
-        RuleFor(x => x.OptionId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.AttributeId).NotEmpty();
+        RuleFor(x => x.OptionId).NotEmpty();
         RuleFor(x => x.OptionData).NotNull();
         RuleFor(x => x.OptionData.Value).NotEmpty().MaximumLength(200);
         RuleFor(x => x.OptionData.Label).NotEmpty().MaximumLength(200);

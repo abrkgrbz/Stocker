@@ -15,7 +15,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
 /// </summary>
 public class UploadProductImageCommand : IRequest<Result<ProductImageDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int ProductId { get; set; }
     public byte[] ImageData { get; set; } = null!;
     public string FileName { get; set; } = null!;
@@ -41,10 +41,10 @@ public class UploadProductImageCommandValidator : AbstractValidator<UploadProduc
     public UploadProductImageCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.ProductId)
-            .GreaterThan(0).WithMessage("Product ID is required");
+            .NotEmpty().WithMessage("Product ID is required");
 
         RuleFor(x => x.ImageData)
             .NotEmpty().WithMessage("Image data is required")

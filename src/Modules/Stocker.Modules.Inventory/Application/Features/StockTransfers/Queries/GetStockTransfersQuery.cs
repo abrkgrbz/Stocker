@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Queries;
 /// </summary>
 public class GetStockTransfersQuery : IRequest<Result<List<StockTransferListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? SourceWarehouseId { get; set; }
     public int? DestinationWarehouseId { get; set; }
     public TransferStatus? Status { get; set; }

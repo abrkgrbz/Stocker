@@ -8,7 +8,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
 
 public class CountItemCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int StockCountId { get; set; }
     public int ItemId { get; set; }
     public decimal CountedQuantity { get; set; }
@@ -19,8 +19,8 @@ public class CountItemCommandValidator : AbstractValidator<CountItemCommand>
 {
     public CountItemCommandValidator()
     {
-        RuleFor(x => x.StockCountId).GreaterThan(0);
-        RuleFor(x => x.ItemId).GreaterThan(0);
+        RuleFor(x => x.StockCountId).NotEmpty();
+        RuleFor(x => x.ItemId).NotEmpty();
         RuleFor(x => x.CountedQuantity).GreaterThanOrEqualTo(0);
     }
 }

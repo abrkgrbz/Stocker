@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
 
 public class ApproveLotBatchCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int LotBatchId { get; set; }
 }
 

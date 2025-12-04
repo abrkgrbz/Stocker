@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Queri
 /// </summary>
 public class GetProductAttributeByIdQuery : IRequest<Result<ProductAttributeDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int AttributeId { get; set; }
 }
 

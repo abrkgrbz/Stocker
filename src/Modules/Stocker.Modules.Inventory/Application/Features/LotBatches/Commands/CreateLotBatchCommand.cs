@@ -23,7 +23,7 @@ public class CreateLotBatchDto
 
 public class CreateLotBatchCommand : IRequest<Result<LotBatchDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateLotBatchDto Data { get; set; } = null!;
 }
 
@@ -31,11 +31,11 @@ public class CreateLotBatchCommandValidator : AbstractValidator<CreateLotBatchCo
 {
     public CreateLotBatchCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.LotNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
-        RuleFor(x => x.Data.InitialQuantity).GreaterThan(0);
+        RuleFor(x => x.Data.ProductId).NotEmpty();
+        RuleFor(x => x.Data.InitialQuantity).NotEmpty();
     }
 }
 

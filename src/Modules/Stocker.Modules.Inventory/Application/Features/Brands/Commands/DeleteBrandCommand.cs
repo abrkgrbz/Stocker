@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
 /// </summary>
 public class DeleteBrandCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int BrandId { get; set; }
 }
 
@@ -22,8 +22,8 @@ public class DeleteBrandCommandValidator : AbstractValidator<DeleteBrandCommand>
 {
     public DeleteBrandCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.BrandId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.BrandId).NotEmpty();
     }
 }
 

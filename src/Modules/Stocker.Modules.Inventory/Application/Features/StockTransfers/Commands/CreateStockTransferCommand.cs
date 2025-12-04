@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands
 
 public class CreateStockTransferCommand : IRequest<Result<StockTransferDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateStockTransferDto Data { get; set; } = null!;
 }
 
@@ -19,12 +19,12 @@ public class CreateStockTransferCommandValidator : AbstractValidator<CreateStock
 {
     public CreateStockTransferCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.TransferNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.SourceWarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.DestinationWarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.CreatedByUserId).GreaterThan(0);
+        RuleFor(x => x.Data.SourceWarehouseId).NotEmpty();
+        RuleFor(x => x.Data.DestinationWarehouseId).NotEmpty();
+        RuleFor(x => x.Data.CreatedByUserId).NotEmpty();
         RuleFor(x => x.Data.SourceWarehouseId).NotEqual(x => x.Data.DestinationWarehouseId)
             .WithMessage("Source and destination warehouses must be different");
     }

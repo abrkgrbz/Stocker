@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.SerialNumbers.Commands;
 
 public class ScrapSerialNumberCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int SerialNumberId { get; set; }
     public string? Reason { get; set; }
 }

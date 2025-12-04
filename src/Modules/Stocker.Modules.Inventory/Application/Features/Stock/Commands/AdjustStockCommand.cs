@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Stock.Commands;
 /// </summary>
 public class AdjustStockCommand : IRequest<Result<StockDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public StockAdjustmentDto AdjustmentData { get; set; } = null!;
 }
 
@@ -26,7 +26,7 @@ public class AdjustStockCommandValidator : AbstractValidator<AdjustStockCommand>
     public AdjustStockCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.AdjustmentData)
             .NotNull().WithMessage("Adjustment data is required");
@@ -34,10 +34,10 @@ public class AdjustStockCommandValidator : AbstractValidator<AdjustStockCommand>
         When(x => x.AdjustmentData != null, () =>
         {
             RuleFor(x => x.AdjustmentData.ProductId)
-                .GreaterThan(0).WithMessage("Product ID is required");
+                .NotEmpty().WithMessage("Product ID is required");
 
             RuleFor(x => x.AdjustmentData.WarehouseId)
-                .GreaterThan(0).WithMessage("Warehouse ID is required");
+                .NotEmpty().WithMessage("Warehouse ID is required");
 
             RuleFor(x => x.AdjustmentData.NewQuantity)
                 .GreaterThanOrEqualTo(0).WithMessage("New quantity cannot be negative");

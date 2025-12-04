@@ -10,7 +10,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Queries;
 /// </summary>
 public class GetStockCountByIdQuery : IRequest<Result<StockCountDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int StockCountId { get; set; }
 }
 

@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Comma
 
 public class CreateStockReservationCommand : IRequest<Result<StockReservationDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateStockReservationDto Data { get; set; } = null!;
 }
 
@@ -19,13 +19,13 @@ public class CreateStockReservationCommandValidator : AbstractValidator<CreateSt
 {
     public CreateStockReservationCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.ReservationNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Data.ProductId).GreaterThan(0);
-        RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
-        RuleFor(x => x.Data.Quantity).GreaterThan(0);
-        RuleFor(x => x.Data.CreatedByUserId).GreaterThan(0);
+        RuleFor(x => x.Data.ProductId).NotEmpty();
+        RuleFor(x => x.Data.WarehouseId).NotEmpty();
+        RuleFor(x => x.Data.Quantity).NotEmpty();
+        RuleFor(x => x.Data.CreatedByUserId).NotEmpty();
     }
 }
 

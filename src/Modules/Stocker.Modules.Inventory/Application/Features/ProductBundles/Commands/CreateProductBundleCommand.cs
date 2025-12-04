@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands
 /// </summary>
 public class CreateProductBundleCommand : IRequest<Result<ProductBundleDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateProductBundleDto BundleData { get; set; } = null!;
 }
 
@@ -25,7 +25,7 @@ public class CreateProductBundleCommandValidator : AbstractValidator<CreateProdu
 {
     public CreateProductBundleCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.BundleData).NotNull();
         RuleFor(x => x.BundleData.Code).NotEmpty().MaximumLength(50);
         RuleFor(x => x.BundleData.Name).NotEmpty().MaximumLength(200);

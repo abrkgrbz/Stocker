@@ -6,6 +6,7 @@ using Stocker.Modules.Inventory.Application.Features.Stock.Commands;
 using Stocker.Modules.Inventory.Application.Features.Stock.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -18,10 +19,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class StockController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public StockController(IMediator mediator)
+    public StockController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -36,12 +39,12 @@ public class StockController : ControllerBase
         [FromQuery] int? productId = null,
         [FromQuery] int? locationId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = warehouseId,
             ProductId = productId,
             LocationId = locationId
@@ -64,12 +67,12 @@ public class StockController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ProductStockSummaryDto>> GetProductStockSummary(int productId)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetProductStockSummaryQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId
         };
 
@@ -100,12 +103,12 @@ public class StockController : ControllerBase
         [FromQuery] DateTime? endDate = null,
         [FromQuery] int? take = 100)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetStockMovementsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             WarehouseId = warehouseId,
             MovementType = movementType,
@@ -131,12 +134,12 @@ public class StockController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockDto>> AdjustStock(StockAdjustmentDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new AdjustStockCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             AdjustmentData = dto
         };
 
@@ -157,12 +160,12 @@ public class StockController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<StockMovementDto>> MoveStock(StockMoveDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new MoveStockCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             MoveData = dto
         };
 
@@ -185,12 +188,12 @@ public class StockController : ControllerBase
         [FromQuery] int daysUntilExpiry = 30,
         [FromQuery] int? warehouseId = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetExpiringStockQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             DaysUntilExpiry = daysUntilExpiry,
             WarehouseId = warehouseId
         };
@@ -201,15 +204,6 @@ public class StockController : ControllerBase
             return BadRequest(result.Error);
 
         return Ok(result.Value);
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

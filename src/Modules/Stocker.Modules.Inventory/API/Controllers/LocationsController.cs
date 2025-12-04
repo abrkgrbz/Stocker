@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Features.Locations.Commands;
 using Stocker.Modules.Inventory.Application.Features.Locations.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class LocationsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public LocationsController(IMediator mediator)
+    public LocationsController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ public class LocationsController : ControllerBase
         [FromQuery] int? warehouseId = null,
         [FromQuery] bool includeInactive = false)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetLocationsQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             WarehouseId = warehouseId,
             IncludeInactive = includeInactive
         };
@@ -61,12 +64,12 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<LocationDto>> GetLocation(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetLocationByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LocationId = id
         };
 
@@ -91,12 +94,12 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<LocationDto>> CreateLocation(CreateLocationDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateLocationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = dto
         };
 
@@ -118,12 +121,12 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<LocationDto>> UpdateLocation(int id, UpdateLocationDto dto)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new UpdateLocationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LocationId = id,
             Data = dto
         };
@@ -150,12 +153,12 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> DeleteLocation(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new DeleteLocationCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LocationId = id
         };
 
@@ -169,15 +172,6 @@ public class LocationsController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

@@ -5,6 +5,7 @@ using Stocker.Modules.Inventory.Application.Features.LotBatches.Commands;
 using Stocker.Modules.Inventory.Application.Features.LotBatches.Queries;
 using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.API.Controllers;
@@ -17,10 +18,12 @@ namespace Stocker.Modules.Inventory.API.Controllers;
 public class LotBatchesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ITenantService _tenantService;
 
-    public LotBatchesController(IMediator mediator)
+    public LotBatchesController(IMediator mediator, ITenantService tenantService)
     {
         _mediator = mediator;
+        _tenantService = tenantService;
     }
 
     /// <summary>
@@ -36,12 +39,12 @@ public class LotBatchesController : ControllerBase
         [FromQuery] bool expiredOnly = false,
         [FromQuery] int? expiringWithinDays = null)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetLotBatchesQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             ProductId = productId,
             Status = status,
             ExpiredOnly = expiredOnly,
@@ -65,12 +68,12 @@ public class LotBatchesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<LotBatchDto>> GetLotBatch(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var query = new GetLotBatchByIdQuery
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LotBatchId = id
         };
 
@@ -96,12 +99,12 @@ public class LotBatchesController : ControllerBase
     [ProducesResponseType(409)]
     public async Task<ActionResult<LotBatchDto>> CreateLotBatch([FromBody] CreateLotBatchDto data)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new CreateLotBatchCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             Data = data
         };
 
@@ -129,12 +132,12 @@ public class LotBatchesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ApproveLotBatch(int id)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new ApproveLotBatchCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LotBatchId = id
         };
 
@@ -160,12 +163,12 @@ public class LotBatchesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> QuarantineLotBatch(int id, [FromBody] QuarantineRequest request)
     {
-        var tenantId = GetTenantId();
-        if (tenantId == 0) return BadRequest(CreateTenantError());
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
 
         var command = new QuarantineLotBatchCommand
         {
-            TenantId = tenantId,
+            TenantId = tenantId.Value,
             LotBatchId = id,
             Reason = request.Reason
         };
@@ -180,15 +183,6 @@ public class LotBatchesController : ControllerBase
         }
 
         return Ok();
-    }
-
-    private int GetTenantId()
-    {
-        if (HttpContext.Items["TenantId"] is int tenantId)
-            return tenantId;
-        if (HttpContext.Items["TenantId"] is Guid guidTenantId)
-            return guidTenantId.GetHashCode();
-        return 0;
     }
 
     private static Error CreateTenantError()

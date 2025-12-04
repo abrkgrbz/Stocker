@@ -14,7 +14,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Products.Commands;
 /// </summary>
 public class CreateProductCommand : IRequest<Result<ProductDto>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public CreateProductDto ProductData { get; set; } = null!;
 }
 
@@ -26,7 +26,7 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
     public CreateProductCommandValidator()
     {
         RuleFor(x => x.TenantId)
-            .GreaterThan(0).WithMessage("Tenant ID is required");
+            .NotEmpty().WithMessage("Tenant ID is required");
 
         RuleFor(x => x.ProductData)
             .NotNull().WithMessage("Product data is required");
@@ -42,10 +42,10 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
                 .MaximumLength(200).WithMessage("Product name must not exceed 200 characters");
 
             RuleFor(x => x.ProductData.CategoryId)
-                .GreaterThan(0).WithMessage("Category is required");
+                .NotEmpty().WithMessage("Category is required");
 
             RuleFor(x => x.ProductData.UnitId)
-                .GreaterThan(0).WithMessage("Unit is required");
+                .NotEmpty().WithMessage("Unit is required");
 
             RuleFor(x => x.ProductData.UnitPrice)
                 .GreaterThanOrEqualTo(0).When(x => x.ProductData.UnitPrice.HasValue)

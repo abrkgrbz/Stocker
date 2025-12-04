@@ -7,7 +7,7 @@ namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
 
 public class DeleteLocationCommand : IRequest<Result<bool>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int LocationId { get; set; }
 }
 

@@ -11,7 +11,7 @@ namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Comma
 /// </summary>
 public class DeleteProductAttributeCommand : IRequest<Result>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int AttributeId { get; set; }
 }
 
@@ -22,8 +22,8 @@ public class DeleteProductAttributeCommandValidator : AbstractValidator<DeletePr
 {
     public DeleteProductAttributeCommandValidator()
     {
-        RuleFor(x => x.TenantId).GreaterThan(0);
-        RuleFor(x => x.AttributeId).GreaterThan(0);
+        RuleFor(x => x.TenantId).NotEmpty();
+        RuleFor(x => x.AttributeId).NotEmpty();
     }
 }
 

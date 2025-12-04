@@ -29,7 +29,7 @@ public class LotBatchListDto
 /// </summary>
 public class GetLotBatchesQuery : IRequest<Result<List<LotBatchListDto>>>
 {
-    public int TenantId { get; set; }
+    public Guid TenantId { get; set; }
     public int? ProductId { get; set; }
     public LotBatchStatus? Status { get; set; }
     public bool ExpiredOnly { get; set; }
