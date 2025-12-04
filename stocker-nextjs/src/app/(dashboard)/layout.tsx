@@ -46,6 +46,10 @@ import {
   AuditOutlined,
   LineChartOutlined,
   AccountBookOutlined,
+  GiftOutlined,
+  SlidersOutlined,
+  SkinOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -87,6 +91,9 @@ const MODULE_MENUS = {
     items: [
       { key: '/inventory', icon: <DashboardOutlined />, label: 'Dashboard' },
       { key: '/inventory/products', icon: <AppstoreOutlined />, label: 'Ürünler' },
+      { key: '/inventory/product-variants', icon: <SkinOutlined />, label: 'Ürün Varyantları' },
+      { key: '/inventory/product-bundles', icon: <GiftOutlined />, label: 'Ürün Paketleri' },
+      { key: '/inventory/product-attributes', icon: <SlidersOutlined />, label: 'Ürün Özellikleri' },
       { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
       { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Stok Hareketleri' },
       { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Stok Transferleri' },
@@ -98,6 +105,7 @@ const MODULE_MENUS = {
       { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Stok Uyarıları' },
       { type: 'divider' as const },
       { type: 'group' as const, label: 'Analiz & Raporlar', children: [
+        { key: '/inventory/reports', icon: <BarChartOutlined />, label: 'Raporlar' },
         { key: '/inventory/barcodes', icon: <BarcodeOutlined />, label: 'Barkod Yönetimi' },
         { key: '/inventory/audit-trail', icon: <AuditOutlined />, label: 'Denetim İzi' },
         { key: '/inventory/forecasting', icon: <LineChartOutlined />, label: 'Stok Tahminleme' },
@@ -223,6 +231,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     // For nested routes, match to parent
     const routeMappings: Record<string, string> = {
       '/inventory/products': '/inventory/products',
+      '/inventory/product-variants': '/inventory/product-variants',
+      '/inventory/product-bundles': '/inventory/product-bundles',
+      '/inventory/product-attributes': '/inventory/product-attributes',
       '/inventory/warehouses': '/inventory/warehouses',
       '/inventory/stock-movements': '/inventory/stock-movements',
       '/inventory/stock-transfers': '/inventory/stock-transfers',
@@ -232,6 +243,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/inventory/serial-numbers': '/inventory/serial-numbers',
       '/inventory/stock-reservations': '/inventory/stock-reservations',
       '/inventory/stock-alerts': '/inventory/stock-alerts',
+      '/inventory/reports': '/inventory/reports',
       '/inventory/barcodes': '/inventory/barcodes',
       '/inventory/audit-trail': '/inventory/audit-trail',
       '/inventory/forecasting': '/inventory/forecasting',
@@ -302,24 +314,28 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           theme="light"
           width={240}
           style={{
-            overflow: 'auto',
+            overflow: 'hidden',
             height: '100vh',
             position: 'fixed',
             left: 0,
             top: 0,
             bottom: 0,
             borderRight: '1px solid #f0f0f0',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          {/* Module Header */}
+          {/* Module Header - Fixed */}
           <div
             style={{
               height: 64,
+              minHeight: 64,
               display: 'flex',
               alignItems: 'center',
               padding: '0 16px',
               borderBottom: '1px solid #f0f0f0',
               gap: 12,
+              flexShrink: 0,
             }}
           >
             <Tooltip title="Modüllere Dön">
@@ -358,27 +374,32 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Module Menu */}
-          {moduleConfig && (
-            <Menu
-              mode="inline"
-              selectedKeys={getSelectedKeys}
-              items={moduleConfig.items}
-              onClick={({ key }) => handleMenuClick(key)}
-              style={{ borderRight: 0, paddingTop: 8 }}
-            />
-          )}
-
-          {/* Quick Module Switch - Bottom */}
+          {/* Module Menu - Scrollable */}
           <div
             style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
+              flex: 1,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+            }}
+          >
+            {moduleConfig && (
+              <Menu
+                mode="inline"
+                selectedKeys={getSelectedKeys}
+                items={moduleConfig.items}
+                onClick={({ key }) => handleMenuClick(key)}
+                style={{ borderRight: 0, paddingTop: 8, paddingBottom: 8 }}
+              />
+            )}
+          </div>
+
+          {/* Quick Module Switch - Fixed Bottom */}
+          <div
+            style={{
               padding: 16,
               borderTop: '1px solid #f0f0f0',
               background: '#fafafa',
+              flexShrink: 0,
             }}
           >
             <div style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
