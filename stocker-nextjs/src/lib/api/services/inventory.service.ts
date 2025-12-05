@@ -305,14 +305,10 @@ export class InventoryService {
     if (options?.imageType !== undefined) formData.append('imageType', String(options.imageType));
     if (options?.setAsPrimary) formData.append('setAsPrimary', 'true');
 
+    // Don't set Content-Type header manually - axios will set it with correct boundary for FormData
     return ApiService.post<ProductImageDto>(
       this.getPath(`products/${productId}/images`),
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
   }
 
