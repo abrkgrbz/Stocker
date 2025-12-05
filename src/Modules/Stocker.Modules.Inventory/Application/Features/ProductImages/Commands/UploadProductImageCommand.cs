@@ -1,10 +1,10 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.Contracts;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
 
@@ -73,28 +73,26 @@ public class UploadProductImageCommandValidator : AbstractValidator<UploadProduc
 /// </summary>
 public class UploadProductImageCommandHandler : IRequestHandler<UploadProductImageCommand, Result<ProductImageDto>>
 {
-    private readonly IProductRepository _productRepository;
     private readonly IProductImageStorageService _storageService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly InventoryDbContext _dbContext;
     private readonly ITenantService _tenantService;
 
     public UploadProductImageCommandHandler(
-        IProductRepository productRepository,
         IProductImageStorageService storageService,
-        IUnitOfWork unitOfWork,
+        InventoryDbContext dbContext,
         ITenantService tenantService)
     {
-        _productRepository = productRepository;
         _storageService = storageService;
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
         _tenantService = tenantService;
     }
 
     public async Task<Result<ProductImageDto>> Handle(UploadProductImageCommand request, CancellationToken cancellationToken)
     {
         // Verify product exists
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
-        if (product == null)
+        var productExists = await _dbContext.Set<Product>()
+            .AnyAsync(p => p.Id == request.ProductId, cancellationToken);
+        if (!productExists)
         {
             return Result<ProductImageDto>.Failure(
                 Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
@@ -128,24 +126,29 @@ public class UploadProductImageCommandHandler : IRequestHandler<UploadProductIma
             request.ContentType,
             request.FileName);
 
-        // Set display order based on existing images
-        var existingImages = product.Images?.Where(i => i.IsActive).ToList() ?? new List<ProductImage>();
-        productImage.SetDisplayOrder(existingImages.Count);
+        // Get existing images count for display order
+        var existingImagesCount = await _dbContext.Set<ProductImage>()
+            .CountAsync(i => i.ProductId == request.ProductId && i.IsActive, cancellationToken);
+        productImage.SetDisplayOrder(existingImagesCount);
 
         // Handle primary image logic
-        if (request.SetAsPrimary || !existingImages.Any())
+        if (request.SetAsPrimary || existingImagesCount == 0)
         {
             // Unset existing primary images
-            foreach (var img in existingImages.Where(i => i.IsPrimary))
+            var existingPrimaryImages = await _dbContext.Set<ProductImage>()
+                .Where(i => i.ProductId == request.ProductId && i.IsPrimary && i.IsActive)
+                .ToListAsync(cancellationToken);
+
+            foreach (var img in existingPrimaryImages)
             {
                 img.UnsetPrimary();
             }
             productImage.SetAsPrimary();
         }
 
-        // Add to product's images collection
-        product.Images.Add(productImage);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        // Add image directly to DbContext
+        await _dbContext.Set<ProductImage>().AddAsync(productImage, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         // Map to DTO
         var dto = new ProductImageDto
