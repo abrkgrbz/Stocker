@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Domain.Entities;
+using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
@@ -20,24 +22,34 @@ public class GetProductImagesQuery : IRequest<Result<List<ProductImageDto>>>
 /// </summary>
 public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuery, Result<List<ProductImageDto>>>
 {
-    private readonly IProductRepository _productRepository;
+    private readonly InventoryDbContext _dbContext;
 
-    public GetProductImagesQueryHandler(IProductRepository productRepository)
+    public GetProductImagesQueryHandler(InventoryDbContext dbContext)
     {
-        _productRepository = productRepository;
+        _dbContext = dbContext;
     }
 
     public async Task<Result<List<ProductImageDto>>> Handle(GetProductImagesQuery request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
-        if (product == null)
+        // Verify product exists
+        var productExists = await _dbContext.Set<Product>()
+            .AnyAsync(p => p.Id == request.ProductId, cancellationToken);
+        if (!productExists)
         {
             return Result<List<ProductImageDto>>.Failure(
                 Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
         }
 
-        var images = product.Images?
-            .Where(i => request.IncludeInactive || i.IsActive)
+        // Query images directly from ProductImage table
+        var query = _dbContext.Set<ProductImage>()
+            .Where(i => i.ProductId == request.ProductId);
+
+        if (!request.IncludeInactive)
+        {
+            query = query.Where(i => i.IsActive);
+        }
+
+        var images = await query
             .OrderBy(i => i.DisplayOrder)
             .Select(i => new ProductImageDto
             {
@@ -47,7 +59,7 @@ public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuer
                 IsPrimary = i.IsPrimary,
                 DisplayOrder = i.DisplayOrder
             })
-            .ToList() ?? new List<ProductImageDto>();
+            .ToListAsync(cancellationToken);
 
         return Result<List<ProductImageDto>>.Success(images);
     }
