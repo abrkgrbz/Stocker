@@ -186,7 +186,7 @@ export default function NewSerialNumberPage() {
               loading={createSerialNumber.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct || validCount === 0}
-              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
             >
               Kaydet {validCount > 0 && `(${validCount})`}
             </Button>

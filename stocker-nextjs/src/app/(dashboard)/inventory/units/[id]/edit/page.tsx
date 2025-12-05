@@ -101,6 +101,7 @@ export default function EditUnitPage() {
               style={{
                 background: '#1a1a1a',
                 borderColor: '#1a1a1a',
+                color: 'white',
               }}
             >
               Kaydet

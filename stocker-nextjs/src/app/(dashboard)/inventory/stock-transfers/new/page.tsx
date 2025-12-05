@@ -304,7 +304,7 @@ export default function NewStockTransferPage() {
               onClick={handleSubmit}
               loading={createTransfer.isPending}
               disabled={items.length === 0}
-              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
             >
               Kaydet
             </Button>
@@ -527,7 +527,7 @@ export default function NewStockTransferPage() {
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAddItem}
-                    style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+                    style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
                   >
                     Ürün Ekle
                   </Button>
