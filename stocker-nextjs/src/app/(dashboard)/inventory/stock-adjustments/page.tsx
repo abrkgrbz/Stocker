@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Typography,
   Button,
@@ -93,6 +94,7 @@ const adjustmentReasons = [
 ];
 
 export default function StockAdjustmentsPage() {
+  const router = useRouter();
   const [form] = Form.useForm();
 
   // State
@@ -473,6 +475,20 @@ export default function StockAdjustmentsPage() {
       title: 'Referans',
       dataIndex: 'referenceNumber',
       key: 'referenceNumber',
+    },
+    {
+      title: 'İşlemler',
+      key: 'actions',
+      width: 80,
+      render: (_, record) => (
+        <Tooltip title="Detay">
+          <Button
+            size="small"
+            icon={<FileTextOutlined />}
+            onClick={() => router.push(`/inventory/stock-movements/${record.id}`)}
+          />
+        </Tooltip>
+      ),
     },
   ];
 
