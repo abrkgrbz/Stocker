@@ -62,7 +62,18 @@ public class MinioProductImageStorageService : IProductImageStorageService
                 tenantId, productId, objectName, imageData.Length);
 
             // Generate public URL
-            var url = $"{(_settings.UseSSL ? "https" : "http")}://{_settings.PublicEndpoint ?? _settings.Endpoint}/{_settings.BucketName}/{objectName}";
+            string url;
+            var publicEndpoint = _settings.PublicEndpoint ?? _settings.Endpoint;
+            if (publicEndpoint.StartsWith("http://") || publicEndpoint.StartsWith("https://"))
+            {
+                // PublicEndpoint already includes protocol
+                url = $"{publicEndpoint}/{_settings.BucketName}/{objectName}";
+            }
+            else
+            {
+                // Add protocol based on UseSSL setting
+                url = $"{(_settings.UseSSL ? "https" : "http")}://{publicEndpoint}/{_settings.BucketName}/{objectName}";
+            }
 
             return Result<ImageStorageResult>.Success(new ImageStorageResult(
                 StoragePath: objectName,
