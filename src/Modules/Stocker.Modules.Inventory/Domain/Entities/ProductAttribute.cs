@@ -80,8 +80,9 @@ public class ProductAttribute : BaseEntity
 
     public ProductAttributeOption AddOption(string value, string? label = null)
     {
-        if (AttributeType != AttributeType.Select && AttributeType != AttributeType.MultiSelect)
-            throw new InvalidOperationException("Options can only be added to Select or MultiSelect attributes");
+        var allowedTypes = new[] { AttributeType.Select, AttributeType.MultiSelect, AttributeType.Color, AttributeType.Size };
+        if (!allowedTypes.Contains(AttributeType))
+            throw new InvalidOperationException("Options can only be added to Select, MultiSelect, Color or Size attributes");
 
         var option = new ProductAttributeOption(Id, value, label ?? value);
         option.SetDisplayOrder(Options.Count);

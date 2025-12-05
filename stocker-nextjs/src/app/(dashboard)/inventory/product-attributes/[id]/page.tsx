@@ -51,8 +51,8 @@ const attributeTypeConfig: Record<AttributeType, { color: string; label: string 
   [AttributeType.Size]: { color: 'gold', label: 'Beden' },
 };
 
-// Backend only allows options for Select and MultiSelect types
-const typesWithOptions: AttributeType[] = [AttributeType.Select, AttributeType.MultiSelect];
+// Types that can have predefined options
+const typesWithOptions: AttributeType[] = [AttributeType.Select, AttributeType.MultiSelect, AttributeType.Color, AttributeType.Size];
 
 export default function ProductAttributeDetailPage() {
   const params = useParams();

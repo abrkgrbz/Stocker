@@ -63,5 +63,10 @@ public enum AttributeType
     /// <summary>
     /// File/image attachment
     /// </summary>
-    File = 12
+    File = 12,
+
+    /// <summary>
+    /// Size selection (S, M, L, XL, etc.)
+    /// </summary>
+    Size = 13
 }

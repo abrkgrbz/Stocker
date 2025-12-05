@@ -59,11 +59,12 @@ public class AddProductAttributeOptionCommandHandler : IRequestHandler<AddProduc
                 new Error("ProductAttribute.NotFound", $"Product attribute with ID {request.AttributeId} not found", ErrorType.NotFound));
         }
 
-        // Only Select and MultiSelect types can have options
-        if (attribute.AttributeType != AttributeType.Select && attribute.AttributeType != AttributeType.MultiSelect)
+        // Only Select, MultiSelect, Color and Size types can have options
+        var allowedTypes = new[] { AttributeType.Select, AttributeType.MultiSelect, AttributeType.Color, AttributeType.Size };
+        if (!allowedTypes.Contains(attribute.AttributeType))
         {
             return Result<ProductAttributeOptionDto>.Failure(
-                new Error("ProductAttribute.InvalidType", "Options can only be added to Select or MultiSelect attributes", ErrorType.Validation));
+                new Error("ProductAttribute.InvalidType", "Options can only be added to Select, MultiSelect, Color or Size attributes", ErrorType.Validation));
         }
 
         var data = request.OptionData;
