@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Typography,
@@ -16,7 +16,12 @@ import {
   Alert,
   Divider,
   Modal,
+  Upload,
+  Image,
+  Empty,
+  message,
 } from 'antd';
+import type { UploadFile, RcFile } from 'antd/es/upload';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -26,14 +31,22 @@ import {
   WarningOutlined,
   BarcodeOutlined,
   TagOutlined,
+  PlusOutlined,
+  PictureOutlined,
+  StarOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import {
   useProduct,
   useDeleteProduct,
   useActivateProduct,
   useDeactivateProduct,
+  useProductImages,
+  useUploadProductImage,
+  useDeleteProductImage,
+  useSetProductImageAsPrimary,
 } from '@/lib/api/hooks/useInventory';
-import type { ProductType } from '@/lib/api/services/inventory.types';
+import type { ProductType, ProductImageDto } from '@/lib/api/services/inventory.types';
 
 const { Title, Text } = Typography;
 
@@ -50,11 +63,60 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = Number(params.id);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
 
   const { data: product, isLoading, error } = useProduct(productId);
+  const { data: images = [], isLoading: imagesLoading } = useProductImages(productId);
   const deleteProduct = useDeleteProduct();
   const activateProduct = useActivateProduct();
   const deactivateProduct = useDeactivateProduct();
+  const uploadImage = useUploadProductImage();
+  const deleteImage = useDeleteProductImage();
+  const setPrimaryImage = useSetProductImageAsPrimary();
+
+  const handleUpload = async (file: RcFile) => {
+    try {
+      await uploadImage.mutateAsync({
+        productId,
+        file,
+        options: { setAsPrimary: images.length === 0 },
+      });
+    } catch (error) {
+      // Error handled by hook
+    }
+    return false; // Prevent default upload behavior
+  };
+
+  const handleDeleteImage = async (imageId: number) => {
+    Modal.confirm({
+      title: 'Resmi Sil',
+      content: 'Bu resmi silmek istediğinizden emin misiniz?',
+      okText: 'Sil',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        try {
+          await deleteImage.mutateAsync({ productId, imageId });
+        } catch (error) {
+          // Error handled by hook
+        }
+      },
+    });
+  };
+
+  const handleSetPrimary = async (imageId: number) => {
+    try {
+      await setPrimaryImage.mutateAsync({ productId, imageId });
+    } catch (error) {
+      // Error handled by hook
+    }
+  };
+
+  const handlePreview = (imageUrl: string) => {
+    setPreviewImage(imageUrl);
+    setPreviewOpen(true);
+  };
 
   const handleDelete = () => {
     if (!product) return;
@@ -281,6 +343,88 @@ export default function ProductDetailPage() {
         </Col>
 
         <Col xs={24} lg={8}>
+          {/* Product Images */}
+          <Card
+            title={
+              <div className="flex items-center gap-2">
+                <PictureOutlined />
+                <span>Ürün Görselleri</span>
+                <Tag>{images.length}</Tag>
+              </div>
+            }
+            className="mb-4"
+          >
+            {imagesLoading ? (
+              <div className="flex justify-center py-8">
+                <Spin />
+              </div>
+            ) : images.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Henüz görsel eklenmedi"
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {images.map((img) => (
+                  <div
+                    key={img.id}
+                    className="relative group rounded-lg overflow-hidden border"
+                  >
+                    <Image
+                      src={img.imageUrl}
+                      alt={img.altText || product.name}
+                      className="w-full h-24 object-cover"
+                      preview={false}
+                      onClick={() => handlePreview(img.imageUrl)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    {img.isPrimary && (
+                      <div className="absolute top-1 left-1">
+                        <Tag color="gold" icon={<StarFilled />} className="text-xs">
+                          Ana
+                        </Tag>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      {!img.isPrimary && (
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<StarOutlined />}
+                          onClick={() => handleSetPrimary(img.id)}
+                          className="text-white hover:text-yellow-400"
+                          title="Ana görsel yap"
+                        />
+                      )}
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDeleteImage(img.id)}
+                        className="text-white hover:text-red-400"
+                        title="Sil"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              beforeUpload={handleUpload}
+              disabled={uploadImage.isPending}
+            >
+              <Button
+                icon={<PlusOutlined />}
+                loading={uploadImage.isPending}
+                block
+              >
+                Görsel Ekle
+              </Button>
+            </Upload>
+          </Card>
+
           <Card title="Fiyatlandırma" className="mb-4">
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Birim Fiyat">
@@ -310,6 +454,16 @@ export default function ProductDetailPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* Image Preview Modal */}
+      <Image
+        style={{ display: 'none' }}
+        preview={{
+          visible: previewOpen,
+          src: previewImage,
+          onVisibleChange: (visible) => setPreviewOpen(visible),
+        }}
+      />
     </div>
   );
 }
