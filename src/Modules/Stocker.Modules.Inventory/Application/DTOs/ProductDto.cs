@@ -48,6 +48,16 @@ public class ProductDto
 }
 
 /// <summary>
+/// DTO for initial stock entry when creating a product
+/// </summary>
+public class InitialStockEntryDto
+{
+    public int WarehouseId { get; set; }
+    public int? LocationId { get; set; }
+    public decimal Quantity { get; set; }
+}
+
+/// <summary>
 /// DTO for creating a product
 /// </summary>
 public class CreateProductDto
@@ -78,6 +88,11 @@ public class CreateProductDto
     public int LeadTimeDays { get; set; }
     public bool TrackSerialNumbers { get; set; }
     public bool TrackLotNumbers { get; set; }
+
+    /// <summary>
+    /// Optional initial stock entries for the product
+    /// </summary>
+    public List<InitialStockEntryDto>? InitialStock { get; set; }
 }
 
 /// <summary>

@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
+using Stocker.Modules.Inventory.Domain.Enums;
 using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
@@ -82,6 +83,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
     private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitRepository _unitRepository;
     private readonly IBrandRepository _brandRepository;
+    private readonly IStockRepository _stockRepository;
+    private readonly IStockMovementRepository _stockMovementRepository;
+    private readonly IWarehouseRepository _warehouseRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateProductCommandHandler(
@@ -89,12 +93,18 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         ICategoryRepository categoryRepository,
         IUnitRepository unitRepository,
         IBrandRepository brandRepository,
+        IStockRepository stockRepository,
+        IStockMovementRepository stockMovementRepository,
+        IWarehouseRepository warehouseRepository,
         IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _unitRepository = unitRepository;
         _brandRepository = brandRepository;
+        _stockRepository = stockRepository;
+        _stockMovementRepository = stockMovementRepository;
+        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -215,6 +225,46 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         // Save to repository
         await _productRepository.AddAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Create initial stock entries if provided
+        if (data.InitialStock != null && data.InitialStock.Count > 0)
+        {
+            foreach (var stockEntry in data.InitialStock)
+            {
+                if (stockEntry.Quantity <= 0) continue;
+
+                // Verify warehouse exists
+                var warehouse = await _warehouseRepository.GetByIdAsync(stockEntry.WarehouseId, cancellationToken);
+                if (warehouse == null) continue;
+
+                // Create stock record
+                var stock = new Domain.Entities.Stock(product.Id, stockEntry.WarehouseId, stockEntry.Quantity);
+                if (stockEntry.LocationId.HasValue)
+                {
+                    stock.SetLocation(stockEntry.LocationId.Value);
+                }
+                await _stockRepository.AddAsync(stock, cancellationToken);
+
+                // Create stock movement record for audit trail
+                var documentNumber = await _stockMovementRepository.GenerateDocumentNumberAsync(
+                    StockMovementType.AdjustmentIncrease, cancellationToken);
+
+                var movement = new StockMovement(
+                    documentNumber,
+                    DateTime.UtcNow,
+                    product.Id,
+                    stockEntry.WarehouseId,
+                    StockMovementType.AdjustmentIncrease,
+                    stockEntry.Quantity,
+                    product.CostPrice?.Amount ?? 0,
+                    0); // userId - should get from context
+
+                movement.SetReference("InitialStock", "Initial stock entry on product creation", null);
+                await _stockMovementRepository.AddAsync(movement, cancellationToken);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
 
         // Map to DTO
         var productDto = new ProductDto

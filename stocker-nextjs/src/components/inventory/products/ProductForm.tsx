@@ -25,10 +25,12 @@ import {
   DollarOutlined,
   BarcodeOutlined,
   PictureOutlined,
+  DeleteOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
-import { useCategoryTree, useBrands, useUnits } from '@/lib/api/hooks/useInventory';
+import { useCategoryTree, useBrands, useUnits, useWarehouses, useLocations } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
-import type { ProductDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
+import type { ProductDto, CategoryTreeDto, InitialStockEntryDto } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -71,11 +73,125 @@ const convertToTreeData = (categories: CategoryTreeDto[]): any[] => {
   }));
 };
 
+// Initial stock entry component
+interface StockEntryRowProps {
+  entry: InitialStockEntryDto & { key: string };
+  index: number;
+  warehouses: { id: number; name: string }[];
+  onWarehouseChange: (warehouseId: number) => void;
+  onLocationChange: (locationId: number | undefined) => void;
+  onQuantityChange: (quantity: number) => void;
+  onRemove: () => void;
+  canRemove: boolean;
+}
+
+function StockEntryRow({
+  entry,
+  index,
+  warehouses,
+  onWarehouseChange,
+  onLocationChange,
+  onQuantityChange,
+  onRemove,
+  canRemove
+}: StockEntryRowProps) {
+  const { data: locations = [] } = useLocations(entry.warehouseId || undefined);
+
+  return (
+    <Row gutter={12} align="middle" className="mb-2">
+      <Col span={9}>
+        <Select
+          placeholder="Depo seçin"
+          value={entry.warehouseId || undefined}
+          onChange={onWarehouseChange}
+          options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          variant="filled"
+          size="small"
+          className="w-full"
+        />
+      </Col>
+      <Col span={8}>
+        <Select
+          placeholder="Lokasyon (opsiyonel)"
+          value={entry.locationId || undefined}
+          onChange={onLocationChange}
+          options={locations.map((l) => ({ value: l.id, label: l.code }))}
+          variant="filled"
+          size="small"
+          className="w-full"
+          allowClear
+          disabled={!entry.warehouseId}
+        />
+      </Col>
+      <Col span={5}>
+        <InputNumber
+          placeholder="Miktar"
+          value={entry.quantity}
+          onChange={(val) => onQuantityChange(val || 0)}
+          min={0}
+          variant="filled"
+          size="small"
+          className="w-full"
+        />
+      </Col>
+      <Col span={2}>
+        {canRemove && (
+          <Button
+            type="text"
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={onRemove}
+            danger
+          />
+        )}
+      </Col>
+    </Row>
+  );
+}
+
 export default function ProductForm({ form, initialValues, onFinish, loading }: ProductFormProps) {
   const { data: categoryTree = [], isLoading: categoriesLoading } = useCategoryTree();
   const { data: brands = [], isLoading: brandsLoading } = useBrands();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
+  const { data: warehouses = [] } = useWarehouses();
   const [isActive, setIsActive] = useState(true);
+  const [stockEntries, setStockEntries] = useState<(InitialStockEntryDto & { key: string })[]>([]);
+
+  // Add new stock entry row
+  const addStockEntry = () => {
+    setStockEntries([
+      ...stockEntries,
+      { key: `stock-${Date.now()}`, warehouseId: 0, quantity: 0 }
+    ]);
+  };
+
+  // Remove stock entry row
+  const removeStockEntry = (index: number) => {
+    setStockEntries(stockEntries.filter((_, i) => i !== index));
+  };
+
+  // Update stock entry
+  const updateStockEntry = (index: number, field: keyof InitialStockEntryDto, value: any) => {
+    const updated = [...stockEntries];
+    updated[index] = { ...updated[index], [field]: value };
+    // Reset location if warehouse changes
+    if (field === 'warehouseId') {
+      updated[index].locationId = undefined;
+    }
+    setStockEntries(updated);
+  };
+
+  // Wrap onFinish to include stock entries
+  const handleFinish = (values: any) => {
+    const validStockEntries = stockEntries
+      .filter(e => e.warehouseId > 0 && e.quantity > 0)
+      .map(({ key, ...entry }) => entry);
+
+    onFinish({
+      ...values,
+      initialStock: validStockEntries.length > 0 ? validStockEntries : undefined
+    });
+  };
 
   // Convert category tree to TreeSelect format
   const categoryTreeData = convertToTreeData(categoryTree);
@@ -109,7 +225,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={handleFinish}
       disabled={loading}
       className="product-form-modern"
     >
@@ -453,6 +569,64 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
               </Col>
             </Row>
           </div>
+
+          {/* Initial Stock - Only show for new products */}
+          {!initialValues && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <InboxOutlined className="mr-1" /> Başlangıç Stoku (Opsiyonel)
+                </Text>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={addStockEntry}
+                  className="text-xs"
+                >
+                  Depo Ekle
+                </Button>
+              </div>
+              {stockEntries.length > 0 ? (
+                <div className="bg-gray-50/50 rounded-xl p-4">
+                  <div className="mb-2">
+                    <Row gutter={12}>
+                      <Col span={9}><Text className="text-xs text-gray-400">Depo</Text></Col>
+                      <Col span={8}><Text className="text-xs text-gray-400">Lokasyon</Text></Col>
+                      <Col span={5}><Text className="text-xs text-gray-400">Miktar</Text></Col>
+                      <Col span={2}></Col>
+                    </Row>
+                  </div>
+                  {stockEntries.map((entry, index) => (
+                    <StockEntryRow
+                      key={entry.key}
+                      entry={entry}
+                      index={index}
+                      warehouses={warehouses}
+                      onWarehouseChange={(val) => updateStockEntry(index, 'warehouseId', val)}
+                      onLocationChange={(val) => updateStockEntry(index, 'locationId', val)}
+                      onQuantityChange={(val) => updateStockEntry(index, 'quantity', val)}
+                      onRemove={() => removeStockEntry(index)}
+                      canRemove={stockEntries.length > 1}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-all"
+                  onClick={addStockEntry}
+                >
+                  <InboxOutlined className="text-2xl text-gray-300 mb-2" />
+                  <div className="text-sm text-gray-400">
+                    Başlangıç stoku eklemek için tıklayın
+                  </div>
+                  <div className="text-xs text-gray-300 mt-1">
+                    Ürün oluşturulduktan sonra da eklenebilir
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Advanced Settings - Collapsible */}
           <Collapse

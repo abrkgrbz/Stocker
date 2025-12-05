@@ -188,6 +188,13 @@ export interface ProductDto {
   images: ProductImageDto[];
 }
 
+// Initial stock entry for product creation
+export interface InitialStockEntryDto {
+  warehouseId: number;
+  locationId?: number;
+  quantity: number;
+}
+
 export interface CreateProductDto {
   code: string;
   name: string;
@@ -215,6 +222,7 @@ export interface CreateProductDto {
   leadTimeDays: number;
   trackSerialNumbers: boolean;
   trackLotNumbers: boolean;
+  initialStock?: InitialStockEntryDto[];
 }
 
 export interface UpdateProductDto {
