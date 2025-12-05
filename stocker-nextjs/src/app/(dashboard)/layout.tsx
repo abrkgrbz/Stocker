@@ -72,28 +72,44 @@ const MODULE_MENUS = {
     color: '#7c3aed',
     items: [
       { key: '/crm', icon: <DashboardOutlined />, label: 'Dashboard' },
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Müşteri Yönetimi', children: [
-        { key: '/crm/customers', icon: <ContactsOutlined />, label: 'Müşteriler' },
-        { key: '/crm/leads', icon: <UserAddOutlined />, label: 'Potansiyeller' },
-        { key: '/crm/segments', icon: <GroupOutlined />, label: 'Segmentler' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Satış Yönetimi', children: [
-        { key: '/crm/opportunities', icon: <RiseOutlined />, label: 'Fırsatlar' },
-        { key: '/crm/deals', icon: <DollarOutlined />, label: 'Anlaşmalar' },
-        { key: '/crm/pipelines', icon: <FunnelPlotOutlined />, label: 'Pipeline' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Aktiviteler', children: [
-        { key: '/crm/activities', icon: <CalendarOutlined />, label: 'Aktiviteler' },
-        { key: '/crm/campaigns', icon: <NotificationOutlined />, label: 'Kampanyalar' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Araçlar', children: [
-        { key: '/crm/documents', icon: <FileOutlined />, label: 'Dökümanlar' },
-        { key: '/crm/workflows', icon: <ThunderboltOutlined />, label: 'Workflows' },
-      ]},
+      {
+        key: 'crm-customers',
+        icon: <ContactsOutlined />,
+        label: 'Müşteri Yönetimi',
+        children: [
+          { key: '/crm/customers', icon: <ContactsOutlined />, label: 'Müşteriler' },
+          { key: '/crm/leads', icon: <UserAddOutlined />, label: 'Potansiyeller' },
+          { key: '/crm/segments', icon: <GroupOutlined />, label: 'Segmentler' },
+        ],
+      },
+      {
+        key: 'crm-sales',
+        icon: <RiseOutlined />,
+        label: 'Satış Yönetimi',
+        children: [
+          { key: '/crm/opportunities', icon: <RiseOutlined />, label: 'Fırsatlar' },
+          { key: '/crm/deals', icon: <DollarOutlined />, label: 'Anlaşmalar' },
+          { key: '/crm/pipelines', icon: <FunnelPlotOutlined />, label: 'Pipeline' },
+        ],
+      },
+      {
+        key: 'crm-activities',
+        icon: <CalendarOutlined />,
+        label: 'Aktiviteler',
+        children: [
+          { key: '/crm/activities', icon: <CalendarOutlined />, label: 'Aktiviteler' },
+          { key: '/crm/campaigns', icon: <NotificationOutlined />, label: 'Kampanyalar' },
+        ],
+      },
+      {
+        key: 'crm-tools',
+        icon: <SettingOutlined />,
+        label: 'Araçlar',
+        children: [
+          { key: '/crm/documents', icon: <FileOutlined />, label: 'Dökümanlar' },
+          { key: '/crm/workflows', icon: <ThunderboltOutlined />, label: 'Workflows' },
+        ],
+      },
     ],
   },
   inventory: {
@@ -102,45 +118,65 @@ const MODULE_MENUS = {
     color: '#10b981',
     items: [
       { key: '/inventory', icon: <DashboardOutlined />, label: 'Dashboard' },
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Ürün Yönetimi', children: [
-        { key: '/inventory/products', icon: <AppstoreOutlined />, label: 'Ürünler' },
-        { key: '/inventory/categories', icon: <TagsOutlined />, label: 'Kategoriler' },
-        { key: '/inventory/brands', icon: <TrademarkOutlined />, label: 'Markalar' },
-        { key: '/inventory/product-variants', icon: <SkinOutlined />, label: 'Varyantlar' },
-        { key: '/inventory/product-bundles', icon: <GiftOutlined />, label: 'Paketler' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Stok İşlemleri', children: [
-        { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
-        { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Hareketler' },
-        { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Transferler' },
-        { key: '/inventory/stock-adjustments', icon: <EditOutlined />, label: 'Düzeltmeler' },
-        { key: '/inventory/stock-counts', icon: <CalculatorOutlined />, label: 'Sayımlar' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'İzleme & Takip', children: [
-        { key: '/inventory/serial-numbers', icon: <BarcodeOutlined />, label: 'Seri Numaraları' },
-        { key: '/inventory/lot-batches', icon: <InboxOutlined />, label: 'Lot/Parti' },
-        { key: '/inventory/stock-reservations', icon: <LockOutlined />, label: 'Rezervasyonlar' },
-        { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Uyarılar' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Raporlar & Analiz', children: [
-        { key: '/inventory/reports', icon: <BarChartOutlined />, label: 'Raporlar' },
-        { key: '/inventory/forecasting', icon: <LineChartOutlined />, label: 'Tahminleme' },
-        { key: '/inventory/costing', icon: <AccountBookOutlined />, label: 'Maliyetlendirme' },
-        { key: '/inventory/audit-trail', icon: <AuditOutlined />, label: 'Denetim İzi' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Ayarlar', children: [
-        { key: '/inventory/units', icon: <ColumnWidthOutlined />, label: 'Birimler' },
-        { key: '/inventory/suppliers', icon: <ShopOutlined />, label: 'Tedarikçiler' },
-        { key: '/inventory/locations', icon: <EnvironmentOutlined />, label: 'Lokasyonlar' },
-        { key: '/inventory/price-lists', icon: <DollarOutlined />, label: 'Fiyat Listeleri' },
-        { key: '/inventory/barcodes', icon: <BarcodeOutlined />, label: 'Barkodlar' },
-        { key: '/inventory/product-attributes', icon: <SlidersOutlined />, label: 'Özellikler' },
-      ]},
+      {
+        key: 'inv-products',
+        icon: <AppstoreOutlined />,
+        label: 'Ürün Yönetimi',
+        children: [
+          { key: '/inventory/products', icon: <AppstoreOutlined />, label: 'Ürünler' },
+          { key: '/inventory/categories', icon: <TagsOutlined />, label: 'Kategoriler' },
+          { key: '/inventory/brands', icon: <TrademarkOutlined />, label: 'Markalar' },
+          { key: '/inventory/product-variants', icon: <SkinOutlined />, label: 'Varyantlar' },
+          { key: '/inventory/product-bundles', icon: <GiftOutlined />, label: 'Paketler' },
+        ],
+      },
+      {
+        key: 'inv-stock',
+        icon: <SwapOutlined />,
+        label: 'Stok İşlemleri',
+        children: [
+          { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
+          { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Hareketler' },
+          { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Transferler' },
+          { key: '/inventory/stock-adjustments', icon: <EditOutlined />, label: 'Düzeltmeler' },
+          { key: '/inventory/stock-counts', icon: <CalculatorOutlined />, label: 'Sayımlar' },
+        ],
+      },
+      {
+        key: 'inv-tracking',
+        icon: <BarcodeOutlined />,
+        label: 'İzleme & Takip',
+        children: [
+          { key: '/inventory/serial-numbers', icon: <BarcodeOutlined />, label: 'Seri Numaraları' },
+          { key: '/inventory/lot-batches', icon: <InboxOutlined />, label: 'Lot/Parti' },
+          { key: '/inventory/stock-reservations', icon: <LockOutlined />, label: 'Rezervasyonlar' },
+          { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Uyarılar' },
+        ],
+      },
+      {
+        key: 'inv-reports',
+        icon: <BarChartOutlined />,
+        label: 'Raporlar & Analiz',
+        children: [
+          { key: '/inventory/reports', icon: <BarChartOutlined />, label: 'Raporlar' },
+          { key: '/inventory/forecasting', icon: <LineChartOutlined />, label: 'Tahminleme' },
+          { key: '/inventory/costing', icon: <AccountBookOutlined />, label: 'Maliyetlendirme' },
+          { key: '/inventory/audit-trail', icon: <AuditOutlined />, label: 'Denetim İzi' },
+        ],
+      },
+      {
+        key: 'inv-settings',
+        icon: <SettingOutlined />,
+        label: 'Tanımlar',
+        children: [
+          { key: '/inventory/units', icon: <ColumnWidthOutlined />, label: 'Birimler' },
+          { key: '/inventory/suppliers', icon: <ShopOutlined />, label: 'Tedarikçiler' },
+          { key: '/inventory/locations', icon: <EnvironmentOutlined />, label: 'Lokasyonlar' },
+          { key: '/inventory/price-lists', icon: <DollarOutlined />, label: 'Fiyat Listeleri' },
+          { key: '/inventory/barcodes', icon: <BarcodeOutlined />, label: 'Barkodlar' },
+          { key: '/inventory/product-attributes', icon: <SlidersOutlined />, label: 'Özellikler' },
+        ],
+      },
     ],
   },
   sales: {
@@ -149,17 +185,25 @@ const MODULE_MENUS = {
     color: '#f59e0b',
     items: [
       { key: '/sales', icon: <DashboardOutlined />, label: 'Dashboard' },
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'İşlemler', children: [
-        { key: '/sales/orders', icon: <ShoppingCartOutlined />, label: 'Siparişler' },
-        { key: '/sales/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
-        { key: '/sales/e-invoices', icon: <SafetyCertificateOutlined />, label: 'E-Fatura' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Finans', children: [
-        { key: '/sales/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
-        { key: '/sales/customers', icon: <ContactsOutlined />, label: 'Bakiyeler' },
-      ]},
+      {
+        key: 'sales-orders',
+        icon: <ShoppingCartOutlined />,
+        label: 'İşlemler',
+        children: [
+          { key: '/sales/orders', icon: <ShoppingCartOutlined />, label: 'Siparişler' },
+          { key: '/sales/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
+          { key: '/sales/e-invoices', icon: <SafetyCertificateOutlined />, label: 'E-Fatura' },
+        ],
+      },
+      {
+        key: 'sales-finance',
+        icon: <WalletOutlined />,
+        label: 'Finans',
+        children: [
+          { key: '/sales/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
+          { key: '/sales/customers', icon: <ContactsOutlined />, label: 'Bakiyeler' },
+        ],
+      },
     ],
   },
   settings: {
@@ -168,16 +212,24 @@ const MODULE_MENUS = {
     color: '#6b7280',
     items: [
       { key: '/settings', icon: <SettingOutlined />, label: 'Genel Ayarlar' },
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Organizasyon', children: [
-        { key: '/settings/users', icon: <TeamOutlined />, label: 'Kullanıcılar' },
-        { key: '/settings/roles', icon: <SafetyCertificateOutlined />, label: 'Roller' },
-        { key: '/settings/departments', icon: <ApartmentOutlined />, label: 'Departmanlar' },
-      ]},
-      { type: 'divider' as const },
-      { type: 'group' as const, label: 'Güvenlik', children: [
-        { key: '/settings/security', icon: <SafetyOutlined />, label: 'Güvenlik Ayarları' },
-      ]},
+      {
+        key: 'settings-org',
+        icon: <TeamOutlined />,
+        label: 'Organizasyon',
+        children: [
+          { key: '/settings/users', icon: <TeamOutlined />, label: 'Kullanıcılar' },
+          { key: '/settings/roles', icon: <SafetyCertificateOutlined />, label: 'Roller' },
+          { key: '/settings/departments', icon: <ApartmentOutlined />, label: 'Departmanlar' },
+        ],
+      },
+      {
+        key: 'settings-security',
+        icon: <SafetyOutlined />,
+        label: 'Güvenlik',
+        children: [
+          { key: '/settings/security', icon: <SafetyOutlined />, label: 'Güvenlik Ayarları' },
+        ],
+      },
     ],
   },
   communication: {
