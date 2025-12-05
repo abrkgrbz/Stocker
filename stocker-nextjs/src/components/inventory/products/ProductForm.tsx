@@ -14,12 +14,9 @@ import {
   Button,
   Divider,
   Typography,
-  Space,
-  Segmented,
   TreeSelect,
 } from 'antd';
 import {
-  InboxOutlined,
   PlusOutlined,
   TagOutlined,
   ShopOutlined,
@@ -238,28 +235,23 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
           {/* Divider */}
           <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-          {/* Product Type - Segmented */}
+          {/* Product Type - Combined Select */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
               Ürün Türü
             </Text>
-            <Form.Item name="productType" rules={[{ required: true }]} className="mb-2">
-              <Segmented
-                block
-                options={mainProductTypes}
-                className="bg-gray-100/50"
-                style={{ padding: '4px' }}
+            <Form.Item name="productType" rules={[{ required: true, message: 'Ürün türü seçiniz' }]} className="mb-0">
+              <Select
+                size="large"
+                variant="filled"
+                placeholder="Ürün türü seçin"
+                className="w-full"
+                options={[
+                  { label: 'Temel Türler', options: mainProductTypes },
+                  { label: 'Diğer Türler', options: otherProductTypes },
+                ]}
               />
             </Form.Item>
-            <Select
-              size="small"
-              variant="borderless"
-              placeholder="+ Diğer türler"
-              className="text-gray-400 text-xs"
-              style={{ width: 120 }}
-              options={otherProductTypes}
-              onChange={(val) => form.setFieldValue('productType', val)}
-            />
           </div>
 
           {/* Organization Row */}

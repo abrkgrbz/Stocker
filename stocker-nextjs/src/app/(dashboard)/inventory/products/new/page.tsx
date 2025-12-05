@@ -14,6 +14,9 @@ export default function NewProductPage() {
   const createProduct = useCreateProduct();
 
   const handleSubmit = async (values: CreateProductDto) => {
+    // Debug: Log form values before submission
+    console.log('Form values being submitted:', JSON.stringify(values, null, 2));
+
     try {
       await createProduct.mutateAsync(values);
       router.push('/inventory/products');
