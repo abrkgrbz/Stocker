@@ -24,7 +24,8 @@ export class SignalRClient {
         // No accessTokenFactory needed - authentication via HttpOnly cookies
         withCredentials: true, // Send cookies for authentication
         skipNegotiation: false,
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+        // Use only SSE to avoid WebSocket issues with Cloudflare proxy
+        transport: signalR.HttpTransportType.ServerSentEvents,
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
@@ -38,11 +39,10 @@ export class SignalRClient {
           return null;
         },
       })
-      .configureLogging(
-        process.env.NODE_ENV === 'development'
-          ? signalR.LogLevel.Warning // Reduced from Information to Warning
-          : signalR.LogLevel.Error
-      );
+      // Increase timeouts to prevent Cloudflare proxy disconnects
+      .withServerTimeout(120000) // 2 minutes server timeout
+      .withKeepAliveInterval(30000) // 30 seconds keepalive ping
+      .configureLogging(signalR.LogLevel.Error); // Only show errors
 
     this.connection = connectionBuilder.build();
 
