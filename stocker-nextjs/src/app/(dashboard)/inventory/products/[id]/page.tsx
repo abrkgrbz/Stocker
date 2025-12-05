@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Typography,
@@ -63,8 +63,6 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = Number(params.id);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
 
   const { data: product, isLoading, error } = useProduct(productId);
   const { data: images = [], isLoading: imagesLoading } = useProductImages(productId);
@@ -111,11 +109,6 @@ export default function ProductDetailPage() {
     } catch (error) {
       // Error handled by hook
     }
-  };
-
-  const handlePreview = (imageUrl: string) => {
-    setPreviewImage(imageUrl);
-    setPreviewOpen(true);
   };
 
   const handleDelete = () => {
@@ -368,43 +361,50 @@ export default function ProductDetailPage() {
                 {images.map((img) => (
                   <div
                     key={img.id}
-                    className="relative group rounded-lg overflow-hidden border"
+                    className="relative rounded-lg overflow-hidden border"
                   >
                     <Image
                       src={img.imageUrl}
                       alt={img.altText || product.name}
-                      className="w-full h-24 object-cover"
-                      preview={false}
-                      onClick={() => handlePreview(img.imageUrl)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ width: '100%', height: 96, objectFit: 'cover', cursor: 'pointer' }}
+                      preview={{
+                        mask: (
+                          <div className="flex items-center justify-center gap-2">
+                            {!img.isPrimary && (
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<StarOutlined />}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetPrimary(img.id);
+                                }}
+                                style={{ color: 'white' }}
+                                title="Ana görsel yap"
+                              />
+                            )}
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteImage(img.id);
+                              }}
+                              style={{ color: 'white' }}
+                              title="Sil"
+                            />
+                          </div>
+                        ),
+                      }}
                     />
                     {img.isPrimary && (
-                      <div className="absolute top-1 left-1">
+                      <div className="absolute top-1 left-1 z-10">
                         <Tag color="gold" icon={<StarFilled />} className="text-xs">
                           Ana
                         </Tag>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                      {!img.isPrimary && (
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<StarOutlined />}
-                          onClick={() => handleSetPrimary(img.id)}
-                          className="text-white hover:text-yellow-400"
-                          title="Ana görsel yap"
-                        />
-                      )}
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDeleteImage(img.id)}
-                        className="text-white hover:text-red-400"
-                        title="Sil"
-                      />
-                    </div>
                   </div>
                 ))}
               </div>
@@ -454,16 +454,6 @@ export default function ProductDetailPage() {
           </Card>
         </Col>
       </Row>
-
-      {/* Image Preview Modal */}
-      <Image
-        style={{ display: 'none' }}
-        preview={{
-          visible: previewOpen,
-          src: previewImage,
-          onVisibleChange: (visible) => setPreviewOpen(visible),
-        }}
-      />
     </div>
   );
 }
