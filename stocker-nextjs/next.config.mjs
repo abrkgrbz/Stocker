@@ -30,6 +30,11 @@ const nextConfig = {
         hostname: 'api.stoocker.app',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 's3.stoocker.app',
+        pathname: '/**',
+      },
     ],
   },
 
