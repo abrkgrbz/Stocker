@@ -16,6 +16,7 @@ import {
   Typography,
   Space,
   Segmented,
+  TreeSelect,
 } from 'antd';
 import {
   InboxOutlined,
@@ -28,9 +29,9 @@ import {
   BarcodeOutlined,
   PictureOutlined,
 } from '@ant-design/icons';
-import { useCategories, useBrands, useUnits } from '@/lib/api/hooks/useInventory';
+import { useCategoryTree, useBrands, useUnits } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
-import type { ProductDto } from '@/lib/api/services/inventory.types';
+import type { ProductDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -64,11 +65,23 @@ const currencyOptions = [
   { value: 'EUR', label: '€' },
 ];
 
+// Convert CategoryTreeDto to TreeSelect compatible format
+const convertToTreeData = (categories: CategoryTreeDto[]): any[] => {
+  return categories.map((cat) => ({
+    value: cat.id,
+    title: cat.name,
+    children: cat.children?.length > 0 ? convertToTreeData(cat.children) : undefined,
+  }));
+};
+
 export default function ProductForm({ form, initialValues, onFinish, loading }: ProductFormProps) {
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: categoryTree = [], isLoading: categoriesLoading } = useCategoryTree();
   const { data: brands = [], isLoading: brandsLoading } = useBrands();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const [isActive, setIsActive] = useState(true);
+
+  // Convert category tree to TreeSelect format
+  const categoryTreeData = convertToTreeData(categoryTree);
 
   useEffect(() => {
     if (initialValues) {
@@ -261,14 +274,17 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                   rules={[{ required: true, message: 'Gerekli' }]}
                   className="mb-0"
                 >
-                  <Select
-                    placeholder="Kategori"
+                  <TreeSelect
+                    placeholder="Kategori seçin"
                     loading={categoriesLoading}
+                    treeData={categoryTreeData}
                     showSearch
-                    optionFilterProp="label"
+                    treeNodeFilterProp="title"
                     variant="filled"
                     suffixIcon={<TagOutlined className="text-gray-400" />}
-                    options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                    treeLine={{ showLeafIcon: false }}
+                    treeDefaultExpandAll
+                    dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                     dropdownRender={(menu) => (
                       <>
                         {menu}

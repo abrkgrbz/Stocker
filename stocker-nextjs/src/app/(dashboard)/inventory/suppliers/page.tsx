@@ -24,8 +24,8 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   MoreOutlined,
-  StarOutlined,
   StarFilled,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
 import type { SupplierDto } from '@/lib/api/services/inventory.types';
@@ -57,6 +57,12 @@ export default function SuppliersPage() {
   );
 
   const getActionMenuItems = (record: SupplierDto): MenuProps['items'] => [
+    {
+      key: 'view',
+      label: 'Detay Göster',
+      icon: <EyeOutlined />,
+      onClick: () => router.push(`/inventory/suppliers/${record.id}`),
+    },
     {
       key: 'edit',
       label: 'Düzenle',
@@ -173,13 +179,15 @@ export default function SuppliersPage() {
       align: 'right',
       width: 50,
       render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionMenuItems(record) }}
-          trigger={['click']}
-          placement="bottomRight"
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        <div onClick={(e) => e.stopPropagation()}>
+          <Dropdown
+            menu={{ items: getActionMenuItems(record) }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        </div>
       ),
     },
   ];
@@ -231,6 +239,10 @@ export default function SuppliersPage() {
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} tedarikçi`,
           }}
+          onRow={(record) => ({
+            onClick: () => router.push(`/inventory/suppliers/${record.id}`),
+            style: { cursor: 'pointer' },
+          })}
         />
       </Card>
     </div>
