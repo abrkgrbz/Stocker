@@ -148,6 +148,7 @@ public class MasterDataSeeder
         professionalPackage.AddModule("CRM", "CRM Modülü", true, 1000);
         professionalPackage.AddModule("ACCOUNTING", "Profesyonel Muhasebe", true, 500);
         professionalPackage.AddModule("INVENTORY", "Stok Yönetimi", true, 100);
+        professionalPackage.AddModule("HR", "İnsan Kaynakları", true, 50);
 
         packages.Add(professionalPackage);
 

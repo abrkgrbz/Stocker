@@ -145,4 +145,110 @@ public class ModuleActivationController : ControllerBase
             }
         });
     }
+
+    /// <summary>
+    /// Initialize HR module with default data
+    /// </summary>
+    [HttpPost("{tenantId}/modules/hr/initialize")]
+    public async Task<IActionResult> InitializeHRModule(Guid tenantId)
+    {
+        // First activate the module
+        var activationResult = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, "HR");
+
+        if (!activationResult)
+        {
+            return BadRequest(new { success = false, message = "Failed to activate HR module. Make sure HR is included in tenant's package." });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "HR module initialized successfully",
+            tenantId = tenantId,
+            module = "HR",
+            features = new[]
+            {
+                "Employee Management",
+                "Department Management",
+                "Position Management",
+                "Shift Management",
+                "Attendance Tracking",
+                "Leave Management",
+                "Payroll Processing",
+                "Performance Reviews",
+                "Training Management",
+                "Expense Management",
+                "Announcements",
+                "Holiday Calendar"
+            }
+        });
+    }
+
+    /// <summary>
+    /// Initialize Inventory module with default data
+    /// </summary>
+    [HttpPost("{tenantId}/modules/inventory/initialize")]
+    public async Task<IActionResult> InitializeInventoryModule(Guid tenantId)
+    {
+        // First activate the module
+        var activationResult = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, "Inventory");
+
+        if (!activationResult)
+        {
+            return BadRequest(new { success = false, message = "Failed to activate Inventory module. Make sure Inventory is included in tenant's package." });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Inventory module initialized successfully",
+            tenantId = tenantId,
+            module = "Inventory",
+            features = new[]
+            {
+                "Product Management",
+                "Warehouse Management",
+                "Stock Movements",
+                "Stock Transfers",
+                "Stock Adjustments",
+                "Inventory Reports",
+                "Barcode Support",
+                "Low Stock Alerts"
+            }
+        });
+    }
+
+    /// <summary>
+    /// Initialize Sales module with default data
+    /// </summary>
+    [HttpPost("{tenantId}/modules/sales/initialize")]
+    public async Task<IActionResult> InitializeSalesModule(Guid tenantId)
+    {
+        // First activate the module
+        var activationResult = await _moduleActivationService.ActivateModuleForTenantAsync(tenantId, "Sales");
+
+        if (!activationResult)
+        {
+            return BadRequest(new { success = false, message = "Failed to activate Sales module. Make sure Sales is included in tenant's package." });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Sales module initialized successfully",
+            tenantId = tenantId,
+            module = "Sales",
+            features = new[]
+            {
+                "Sales Orders",
+                "Invoicing",
+                "Quotations",
+                "Customer Management",
+                "Payment Tracking",
+                "Sales Reports",
+                "Price Lists",
+                "Discount Management"
+            }
+        });
+    }
 }

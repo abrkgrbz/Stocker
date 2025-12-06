@@ -44,6 +44,8 @@ import {
   SettingOutlined,
   SwapOutlined,
   UpCircleOutlined,
+  PlayCircleOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import {
@@ -89,6 +91,7 @@ const TenantModulesPage: React.FC = () => {
   const [moduleStatus, setModuleStatus] = useState<TenantModuleStatusDto | null>(null);
   const [loadingModules, setLoadingModules] = useState(false);
   const [activatingModule, setActivatingModule] = useState<string | null>(null);
+  const [initializingModule, setInitializingModule] = useState<string | null>(null);
 
   // Package change modal states
   const [packageModalVisible, setPackageModalVisible] = useState(false);
@@ -269,6 +272,89 @@ const TenantModulesPage: React.FC = () => {
     }
   };
 
+  const handleInitializeModule = async (module: AvailableModuleDto) => {
+    if (!selectedTenantId) return;
+
+    // Check if module is available in package
+    if (!module.isAvailableInPackage) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Modül Pakette Yok',
+        html: `
+          <p><strong>${module.moduleName}</strong> modülü tenant'ın mevcut paketinde bulunmuyor.</p>
+          <p>Bu modülü başlatmak için tenant'ın paketini yükseltmeniz gerekiyor.</p>
+        `,
+        confirmButtonText: 'Anladım',
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: `${module.moduleName} Modülünü Başlat`,
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Modül:</strong> ${module.moduleName}</p>
+          <p><strong>İşlem:</strong> Modülü aktifleştir ve varsayılan verilerle başlat</p>
+          <p style="color: #1890ff;">ℹ️ Bu işlem modülü aktifleştirecek ve gerekli tabloları oluşturacaktır.</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Başlat',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#52c41a',
+    });
+
+    if (result.isConfirmed) {
+      setInitializingModule(module.moduleCode);
+      try {
+        let response;
+        const moduleCode = module.moduleCode.toUpperCase();
+
+        if (moduleCode === 'CRM') {
+          response = await tenantModuleService.initializeCRMModule(selectedTenantId);
+        } else if (moduleCode === 'HR') {
+          response = await tenantModuleService.initializeHRModule(selectedTenantId);
+        } else if (moduleCode === 'INVENTORY') {
+          response = await tenantModuleService.initializeInventoryModule(selectedTenantId);
+        } else if (moduleCode === 'SALES') {
+          response = await tenantModuleService.initializeSalesModule(selectedTenantId);
+        } else {
+          // Fallback to simple activation for modules without initialize endpoint
+          response = await tenantModuleService.activateModule(selectedTenantId, module.moduleCode);
+        }
+
+        if (response.success) {
+          const features = (response as any).features as string[] | undefined;
+          await Swal.fire({
+            icon: 'success',
+            title: 'Modül Başlatıldı!',
+            html: features ? `
+              <div style="text-align: left;">
+                <p><strong>${module.moduleName}</strong> başarıyla başlatıldı.</p>
+                <p><strong>Aktif Özellikler:</strong></p>
+                <ul style="list-style: none; padding-left: 0;">
+                  ${features.map(f => `<li>✅ ${f}</li>`).join('')}
+                </ul>
+              </div>
+            ` : `<p><strong>${module.moduleName}</strong> başarıyla başlatıldı.</p>`,
+            confirmButtonText: 'Tamam',
+          });
+          await loadModuleStatus(selectedTenantId);
+        } else {
+          message.error(response.message);
+        }
+      } catch (error: any) {
+        message.error(error.message || 'Modül başlatılırken hata oluştu');
+      } finally {
+        setInitializingModule(null);
+      }
+    }
+  };
+
+  // Modules that support initialization
+  const initializableModules = ['CRM', 'HR', 'INVENTORY', 'SALES'];
+
   const columns: ProColumns<AvailableModuleDto>[] = [
     {
       title: 'Modül',
@@ -360,9 +446,26 @@ const TenantModulesPage: React.FC = () => {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 200,
       render: (_, record) => (
         <Space>
+          {/* Initialize button - shown for supported modules that are not yet active */}
+          {initializableModules.includes(record.moduleCode.toUpperCase()) && !record.isActive && (
+            <Tooltip title={record.isAvailableInPackage ? 'Modülü başlat ve aktifleştir' : 'Paket yükseltmesi gerekiyor'}>
+              <Button
+                type="primary"
+                size="small"
+                icon={<ThunderboltOutlined />}
+                onClick={() => handleInitializeModule(record)}
+                disabled={!record.isAvailableInPackage}
+                loading={initializingModule === record.moduleCode}
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+              >
+                Başlat
+              </Button>
+            </Tooltip>
+          )}
+          {/* Toggle button */}
           <Tooltip title={record.isAvailableInPackage ? 'Modülü aktifleştir/devre dışı bırak' : 'Paket yükseltmesi gerekiyor'}>
             <Button
               type={record.isActive ? 'default' : 'primary'}

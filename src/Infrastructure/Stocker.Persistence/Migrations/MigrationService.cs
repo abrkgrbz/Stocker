@@ -15,6 +15,7 @@ using Stocker.SharedKernel.DTOs.Migration;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Extensions;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
+using Stocker.Modules.HR.Infrastructure.Persistence;
 using Npgsql;
 
 namespace Stocker.Persistence.Migrations;
@@ -340,6 +341,63 @@ public partial class MigrationService : IMigrationService
             {
                 _logger.LogError(inventoryEx, "Error applying Inventory migrations for tenant {TenantId}. Inventory module may not be fully functional.", tenantId);
                 // Don't fail the overall migration if Inventory migrations fail
+            }
+
+            // Apply HR module migrations if tenant's package includes HR module
+            try
+            {
+                _logger.LogInformation("Checking HR module access for tenant {TenantId} from package...", tenantId);
+
+                var hasHRInPackage = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                        .ThenInclude(p => p.Modules)
+                    .Where(s => s.TenantId == tenantId)
+                    .SelectMany(s => s.Package.Modules)
+                    .AnyAsync(m => m.ModuleCode.ToUpper() == "HR" && m.IsIncluded);
+
+                if (!hasHRInPackage)
+                {
+                    var tenantModuleService = scope.ServiceProvider.GetService<ITenantModuleService>();
+                    if (tenantModuleService != null)
+                    {
+                        hasHRInPackage = await tenantModuleService.HasModuleAccessAsync(tenantId, "HR", CancellationToken.None);
+                    }
+                }
+
+                _logger.LogInformation("Tenant {TenantId} HR module access check result: {HasHRAccess}", tenantId, hasHRInPackage);
+
+                if (hasHRInPackage)
+                {
+                    _logger.LogInformation("Tenant {TenantId} has HR module in package. Applying HR migrations...", tenantId);
+
+                    var hrConnectionString = tenantDbContext.Database.GetConnectionString();
+
+                    var hrOptionsBuilder = new DbContextOptionsBuilder<HRDbContext>();
+                    hrOptionsBuilder.UseNpgsql(hrConnectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(HRDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(30);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    var mockTenantServiceForHR = new MockTenantService(tenantId, hrConnectionString);
+
+                    using var hrDbContext = new HRDbContext(
+                        hrOptionsBuilder.Options,
+                        mockTenantServiceForHR);
+
+                    await hrDbContext.Database.MigrateAsync();
+                    _logger.LogInformation("HR module migrations completed successfully for tenant {TenantId}.", tenantId);
+                }
+                else
+                {
+                    _logger.LogInformation("Tenant {TenantId} does not have HR module in package. HR migrations skipped.", tenantId);
+                }
+            }
+            catch (Exception hrEx)
+            {
+                _logger.LogError(hrEx, "Error applying HR migrations for tenant {TenantId}. HR module may not be fully functional.", tenantId);
+                // Don't fail the overall migration if HR migrations fail
             }
         }
         catch (DbUpdateException ex)
@@ -676,6 +734,39 @@ public partial class MigrationService
                     _logger.LogWarning(inventoryEx, "Failed to check Inventory migrations for tenant {TenantId}", tenant.Id);
                 }
 
+                // Check HR module migrations if tenant has HR access
+                List<string> hrPendingMigrations = new();
+                List<string> hrAppliedMigrations = new();
+
+                try
+                {
+                    var hasHRAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "HR", cancellationToken);
+
+                    if (hasHRAccess)
+                    {
+                        var hrOptionsBuilder = new DbContextOptionsBuilder<HRDbContext>();
+                        hrOptionsBuilder.UseNpgsql(tenant.ConnectionString);
+                        hrOptionsBuilder.ConfigureWarnings(warnings =>
+                            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                        var mockTenantService = new MockTenantService(tenant.Id, tenant.ConnectionString);
+
+                        using var hrDbContext = new HRDbContext(
+                            hrOptionsBuilder.Options,
+                            mockTenantService);
+
+                        var hrPending = await hrDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                        var hrApplied = await hrDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+                        hrPendingMigrations = hrPending.ToList();
+                        hrAppliedMigrations = hrApplied.ToList();
+                    }
+                }
+                catch (Exception hrEx)
+                {
+                    _logger.LogWarning(hrEx, "Failed to check HR migrations for tenant {TenantId}", tenant.Id);
+                }
+
                 var allPendingMigrations = new List<MigrationModuleDto>();
                 if (pendingList.Any())
                 {
@@ -699,6 +790,14 @@ public partial class MigrationService
                     {
                         Module = "Inventory",
                         Migrations = inventoryPendingMigrations
+                    });
+                }
+                if (hrPendingMigrations.Any())
+                {
+                    allPendingMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "HR",
+                        Migrations = hrPendingMigrations
                     });
                 }
 
@@ -727,6 +826,14 @@ public partial class MigrationService
                         Migrations = inventoryAppliedMigrations
                     });
                 }
+                if (hrAppliedMigrations.Any())
+                {
+                    allAppliedMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "HR",
+                        Migrations = hrAppliedMigrations
+                    });
+                }
 
                 results.Add(new TenantMigrationStatusDto
                 {
@@ -735,7 +842,7 @@ public partial class MigrationService
                     TenantCode = tenant.Code,
                     PendingMigrations = allPendingMigrations,
                     AppliedMigrations = allAppliedMigrations,
-                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any() || inventoryPendingMigrations.Any()
+                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any() || inventoryPendingMigrations.Any() || hrPendingMigrations.Any()
                 });
             }
             catch (Exception ex)
@@ -910,6 +1017,62 @@ public partial class MigrationService
         {
             _logger.LogError(inventoryEx, "Error applying Inventory migrations for tenant {TenantId}. Continuing...", tenant.Id);
             // Don't fail the overall migration if Inventory migrations fail
+        }
+
+        // Check HR module migrations if tenant has HR access
+        List<string> hrPendingMigrations = new();
+        try
+        {
+            var hasHRAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "HR", cancellationToken);
+            _logger.LogWarning("DEBUG ApplyMigration: Tenant {TenantId} has HR access: {HasHRAccess}", tenant.Id, hasHRAccess);
+
+            if (hasHRAccess)
+            {
+                _logger.LogInformation("Tenant {TenantId} has HR module access. Checking HR migrations...", tenant.Id);
+
+                var hrOptionsBuilder = new DbContextOptionsBuilder<HRDbContext>();
+                hrOptionsBuilder.UseNpgsql(tenant.ConnectionString.Value, sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(HRDbContext).Assembly.FullName);
+                    sqlOptions.CommandTimeout(30);
+                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                });
+                hrOptionsBuilder.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                var mockTenantServiceHR = new MockTenantService(tenant.Id, tenant.ConnectionString.Value);
+
+                using var hrDbContext = new HRDbContext(
+                    hrOptionsBuilder.Options,
+                    mockTenantServiceHR);
+
+                var hrPending = await hrDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                hrPendingMigrations = hrPending.ToList();
+
+                _logger.LogWarning("DEBUG ApplyMigration: HR pending migrations count: {Count}, Migrations: {Migrations}",
+                    hrPendingMigrations.Count, string.Join(", ", hrPendingMigrations));
+
+                if (hrPendingMigrations.Any())
+                {
+                    _logger.LogInformation("Applying {Count} HR migrations to tenant {TenantId}", hrPendingMigrations.Count, tenant.Id);
+                    await hrDbContext.Database.MigrateAsync(cancellationToken);
+                    allAppliedMigrations.AddRange(hrPendingMigrations.Select(m => $"HR:{m}"));
+                    _logger.LogInformation("HR migrations applied successfully. Applied: {Migrations}", string.Join(", ", hrPendingMigrations));
+                }
+                else
+                {
+                    _logger.LogInformation("No HR migrations to apply for tenant {TenantId}", tenant.Id);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Tenant {TenantId} does not have HR module access. HR migrations skipped.", tenant.Id);
+            }
+        }
+        catch (Exception hrEx)
+        {
+            _logger.LogError(hrEx, "Error applying HR migrations for tenant {TenantId}. Continuing...", tenant.Id);
+            // Don't fail the overall migration if HR migrations fail
         }
 
         // Return result

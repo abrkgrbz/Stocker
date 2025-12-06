@@ -107,6 +107,36 @@ class TenantModuleService {
     );
     return response;
   }
+
+  /**
+   * Initialize HR module with default data
+   */
+  async initializeHRModule(tenantId: string): Promise<ModuleActivationResult & { features?: string[] }> {
+    const response = await apiClient.post<ModuleActivationResult & { features?: string[] }>(
+      `${this.baseUrl}/${tenantId}/modules/hr/initialize`
+    );
+    return response;
+  }
+
+  /**
+   * Initialize Inventory module with default data
+   */
+  async initializeInventoryModule(tenantId: string): Promise<ModuleActivationResult & { features?: string[] }> {
+    const response = await apiClient.post<ModuleActivationResult & { features?: string[] }>(
+      `${this.baseUrl}/${tenantId}/modules/inventory/initialize`
+    );
+    return response;
+  }
+
+  /**
+   * Initialize Sales module with default data
+   */
+  async initializeSalesModule(tenantId: string): Promise<ModuleActivationResult & { features?: string[] }> {
+    const response = await apiClient.post<ModuleActivationResult & { features?: string[] }>(
+      `${this.baseUrl}/${tenantId}/modules/sales/initialize`
+    );
+    return response;
+  }
 }
 
 export const tenantModuleService = new TenantModuleService();
