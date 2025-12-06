@@ -104,7 +104,7 @@ export default function ExpenseForm({ form, initialValues, onFinish, loading }: 
                     disabled={!!initialValues}
                     options={employees.map((e) => ({
                       value: e.id,
-                      label: `${e.firstName} ${e.lastName}`,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>

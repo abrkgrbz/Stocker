@@ -108,7 +108,7 @@ export default function LeaveForm({ form, initialValues, onFinish, loading }: Le
                     disabled={!!initialValues}
                     options={employees.map((e) => ({
                       value: e.id,
-                      label: `${e.firstName} ${e.lastName}`,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>

@@ -91,7 +91,7 @@ export default function AttendanceCheckInForm({ form, initialValues, onFinish, l
                     variant="filled"
                     options={employees.map((e) => ({
                       value: e.id,
-                      label: `${e.firstName} ${e.lastName}`,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>
