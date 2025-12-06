@@ -26,11 +26,14 @@ export default function EditAnnouncementPage() {
       form.setFieldsValue({
         title: announcement.title,
         content: announcement.content,
+        summary: announcement.summary,
+        announcementType: announcement.announcementType,
         priority: announcement.priority,
         publishDate: announcement.publishDate ? dayjs(announcement.publishDate) : null,
         expiryDate: announcement.expiryDate ? dayjs(announcement.expiryDate) : null,
         isPinned: announcement.isPinned,
-        isActive: announcement.isActive,
+        requiresAcknowledgment: announcement.requiresAcknowledgment,
+        targetDepartmentId: announcement.targetDepartmentId,
       });
     }
   }, [announcement, form]);
@@ -40,11 +43,14 @@ export default function EditAnnouncementPage() {
       const data: UpdateAnnouncementDto = {
         title: values.title,
         content: values.content,
-        priority: values.priority,
+        summary: values.summary,
+        announcementType: values.announcementType || 'General',
+        priority: values.priority || 'Normal',
         publishDate: values.publishDate?.format('YYYY-MM-DD'),
         expiryDate: values.expiryDate?.format('YYYY-MM-DD'),
-        isPinned: values.isPinned,
-        isActive: values.isActive,
+        isPinned: values.isPinned || false,
+        requiresAcknowledgment: values.requiresAcknowledgment || false,
+        targetDepartmentId: values.targetDepartmentId,
       };
 
       await updateAnnouncement.mutateAsync({ id, data });
@@ -205,7 +211,7 @@ export default function EditAnnouncementPage() {
                   </Form.Item>
                 </Col>
                 <Col xs={12}>
-                  <Form.Item name="isActive" label="Aktif" valuePropName="checked">
+                  <Form.Item name="requiresAcknowledgment" label="Onay Gerekli" valuePropName="checked">
                     <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
                   </Form.Item>
                 </Col>

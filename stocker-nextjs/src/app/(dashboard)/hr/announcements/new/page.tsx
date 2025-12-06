@@ -20,11 +20,15 @@ export default function NewAnnouncementPage() {
       const data: CreateAnnouncementDto = {
         title: values.title,
         content: values.content,
-        priority: values.priority,
-        publishDate: values.publishDate?.format('YYYY-MM-DD'),
+        summary: values.summary,
+        announcementType: values.announcementType || 'General',
+        priority: values.priority || 'Normal',
+        authorId: 0, // Will be set by backend from current user
+        publishDate: values.publishDate?.format('YYYY-MM-DD') || new Date().toISOString().split('T')[0],
         expiryDate: values.expiryDate?.format('YYYY-MM-DD'),
         isPinned: values.isPinned ?? false,
-        isActive: values.isActive ?? true,
+        requiresAcknowledgment: values.requiresAcknowledgment ?? false,
+        targetDepartmentId: values.targetDepartmentId,
       };
 
       await createAnnouncement.mutateAsync(data);
@@ -86,7 +90,7 @@ export default function NewAnnouncementPage() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ priority: 'Normal', isActive: true, isPinned: false }}
+          initialValues={{ priority: 'Normal', isPinned: false, requiresAcknowledgment: false }}
         >
           <Row gutter={48}>
             <Col xs={24} lg={16}>
@@ -176,10 +180,10 @@ export default function NewAnnouncementPage() {
 
                   <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
                     <div>
-                      <div className="text-sm font-medium text-gray-700">Aktif</div>
-                      <div className="text-xs text-gray-400">Duyuru yayında mı?</div>
+                      <div className="text-sm font-medium text-gray-700">Onay Gerekli</div>
+                      <div className="text-xs text-gray-400">Çalışanların duyuruyu onaylaması gereksin mi?</div>
                     </div>
-                    <Form.Item name="isActive" valuePropName="checked" noStyle>
+                    <Form.Item name="requiresAcknowledgment" valuePropName="checked" noStyle>
                       <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
                     </Form.Item>
                   </div>

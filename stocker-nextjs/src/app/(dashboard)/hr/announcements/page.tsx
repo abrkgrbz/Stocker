@@ -52,7 +52,7 @@ export default function AnnouncementsPage() {
 
   // Stats
   const totalAnnouncements = announcements.length;
-  const activeAnnouncements = announcements.filter((a) => a.isActive).length;
+  const publishedAnnouncements = announcements.filter((a) => a.isPublished).length;
   const pinnedAnnouncements = announcements.filter((a) => a.isPinned).length;
 
   const handleDelete = (announcement: AnnouncementDto) => {
@@ -127,11 +127,11 @@ export default function AnnouncementsPage() {
     },
     {
       title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isPublished',
+      key: 'isPublished',
       width: 100,
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
+      render: (isPublished: boolean) => (
+        <Tag color={isPublished ? 'green' : 'default'}>{isPublished ? 'Yayında' : 'Taslak'}</Tag>
       ),
     },
     {
@@ -200,8 +200,8 @@ export default function AnnouncementsPage() {
         <Col xs={12} sm={8}>
           <Card size="small">
             <Statistic
-              title="Aktif Duyuru"
-              value={activeAnnouncements}
+              title="Yayında"
+              value={publishedAnnouncements}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />

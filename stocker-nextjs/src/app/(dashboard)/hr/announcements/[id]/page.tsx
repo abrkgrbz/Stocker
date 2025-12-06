@@ -29,8 +29,8 @@ import {
 import {
   useAnnouncement,
   useDeleteAnnouncement,
-  useActivateAnnouncement,
-  useDeactivateAnnouncement,
+  usePublishAnnouncement,
+  useUnpublishAnnouncement,
 } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -51,8 +51,8 @@ export default function AnnouncementDetailPage() {
   // API Hooks
   const { data: announcement, isLoading, error } = useAnnouncement(id);
   const deleteAnnouncement = useDeleteAnnouncement();
-  const activateAnnouncement = useActivateAnnouncement();
-  const deactivateAnnouncement = useDeactivateAnnouncement();
+  const publishAnnouncement = usePublishAnnouncement();
+  const unpublishAnnouncement = useUnpublishAnnouncement();
 
   const handleDelete = () => {
     if (!announcement) return;
@@ -73,13 +73,13 @@ export default function AnnouncementDetailPage() {
     });
   };
 
-  const handleToggleActive = async () => {
+  const handleTogglePublish = async () => {
     if (!announcement) return;
     try {
-      if (announcement.isActive) {
-        await deactivateAnnouncement.mutateAsync(id);
+      if (announcement.isPublished) {
+        await unpublishAnnouncement.mutateAsync(id);
       } else {
-        await activateAnnouncement.mutateAsync(id);
+        await publishAnnouncement.mutateAsync(id);
       }
     } catch (error) {
       // Error handled by hook
@@ -142,8 +142,8 @@ export default function AnnouncementDetailPage() {
             </Title>
             <Space>
               <Tag color={priority.color}>{priority.label}</Tag>
-              <Tag color={announcement.isActive ? 'green' : 'default'}>
-                {announcement.isActive ? 'Aktif' : 'Pasif'}
+              <Tag color={announcement.isPublished ? 'green' : 'default'}>
+                {announcement.isPublished ? 'Yayında' : 'Taslak'}
               </Tag>
               {expired && <Tag color="red">Süresi Dolmuş</Tag>}
             </Space>
@@ -151,10 +151,10 @@ export default function AnnouncementDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={announcement.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
-            onClick={handleToggleActive}
+            icon={announcement.isPublished ? <StopOutlined /> : <CheckCircleOutlined />}
+            onClick={handleTogglePublish}
           >
-            {announcement.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+            {announcement.isPublished ? 'Yayından Kaldır' : 'Yayınla'}
           </Button>
           <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/announcements/${id}/edit`)}>
             Düzenle
@@ -241,8 +241,8 @@ export default function AnnouncementDetailPage() {
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
-                <Tag color={announcement.isActive ? 'green' : 'default'}>
-                  {announcement.isActive ? 'Aktif' : 'Pasif'}
+                <Tag color={announcement.isPublished ? 'green' : 'default'}>
+                  {announcement.isPublished ? 'Yayında' : 'Taslak'}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>

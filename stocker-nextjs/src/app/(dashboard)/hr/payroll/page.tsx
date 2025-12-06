@@ -23,7 +23,6 @@ import {
   DollarOutlined,
   MoreOutlined,
   EditOutlined,
-  DeleteOutlined,
   EyeOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -33,9 +32,9 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import {
   usePayrolls,
-  useDeletePayroll,
+  useCancelPayroll,
   useApprovePayroll,
-  useProcessPayroll,
+  useMarkPayrollPaid,
   useEmployees,
 } from '@/lib/api/hooks/useHR';
 import type { PayrollDto, PayrollFilterDto } from '@/lib/api/services/hr.types';
@@ -50,9 +49,9 @@ export default function PayrollPage() {
   // API Hooks
   const { data: payrolls = [], isLoading } = usePayrolls(filters);
   const { data: employees = [] } = useEmployees();
-  const deletePayroll = useDeletePayroll();
+  const cancelPayroll = useCancelPayroll();
   const approvePayroll = useApprovePayroll();
-  const processPayroll = useProcessPayroll();
+  const markPaid = useMarkPayrollPaid();
 
   // Stats
   const totalPayrolls = payrolls.length;
@@ -60,16 +59,16 @@ export default function PayrollPage() {
   const approvedPayrolls = payrolls.filter((p) => p.status === 'Approved').length;
   const totalAmount = payrolls.reduce((sum, p) => sum + (p.netSalary || 0), 0);
 
-  const handleDelete = (payroll: PayrollDto) => {
+  const handleCancel = (payroll: PayrollDto) => {
     Modal.confirm({
-      title: 'Bordro Kaydını Sil',
-      content: 'Bu bordro kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
+      title: 'Bordro Kaydını İptal Et',
+      content: 'Bu bordro kaydını iptal etmek istediğinizden emin misiniz?',
+      okText: 'İptal Et',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Vazgeç',
       onOk: async () => {
         try {
-          await deletePayroll.mutateAsync(payroll.id);
+          await cancelPayroll.mutateAsync(payroll.id);
         } catch (error) {
           // Error handled by hook
         }
@@ -86,10 +85,10 @@ export default function PayrollPage() {
     }
   };
 
-  const handleProcess = async (payroll: PayrollDto) => {
+  const handleMarkPaid = async (payroll: PayrollDto) => {
     try {
-      await processPayroll.mutateAsync(payroll.id);
-      message.success('Bordro işleme alındı');
+      await markPaid.mutateAsync(payroll.id);
+      message.success('Bordro ödendi olarak işaretlendi');
     } catch (error) {
       // Error handled by hook
     }
@@ -194,21 +193,21 @@ export default function PayrollPage() {
               ...(record.status === 'Approved'
                 ? [
                     {
-                      key: 'process',
+                      key: 'markPaid',
                       icon: <SendOutlined />,
                       label: 'Öde',
-                      onClick: () => handleProcess(record),
+                      onClick: () => handleMarkPaid(record),
                     },
                   ]
                 : []),
               { type: 'divider' as const },
               {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
+                key: 'cancel',
+                icon: <CloseCircleOutlined />,
+                label: 'İptal Et',
                 danger: true,
-                onClick: () => handleDelete(record),
-                disabled: record.status === 'Processed',
+                onClick: () => handleCancel(record),
+                disabled: record.status === 'Processed' || record.status === 'Cancelled',
               },
             ],
           }}

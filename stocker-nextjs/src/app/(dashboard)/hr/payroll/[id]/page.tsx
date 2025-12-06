@@ -21,17 +21,16 @@ import {
 import {
   ArrowLeftOutlined,
   EditOutlined,
-  DollarOutlined,
-  DeleteOutlined,
+  CloseCircleOutlined,
   CheckCircleOutlined,
   SendOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import {
   usePayroll,
-  useDeletePayroll,
+  useCancelPayroll,
   useApprovePayroll,
-  useProcessPayroll,
+  useMarkPayrollPaid,
 } from '@/lib/api/hooks/useHR';
 
 const { Title, Text } = Typography;
@@ -43,21 +42,21 @@ export default function PayrollDetailPage() {
 
   // API Hooks
   const { data: payroll, isLoading, error } = usePayroll(id);
-  const deletePayroll = useDeletePayroll();
+  const cancelPayroll = useCancelPayroll();
   const approvePayroll = useApprovePayroll();
-  const processPayroll = useProcessPayroll();
+  const markPaid = useMarkPayrollPaid();
 
-  const handleDelete = () => {
+  const handleCancel = () => {
     if (!payroll) return;
     Modal.confirm({
-      title: 'Bordro Kaydını Sil',
-      content: 'Bu bordro kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
+      title: 'Bordro Kaydını İptal Et',
+      content: 'Bu bordro kaydını iptal etmek istediğinizden emin misiniz?',
+      okText: 'İptal Et',
       okType: 'danger',
-      cancelText: 'İptal',
+      cancelText: 'Vazgeç',
       onOk: async () => {
         try {
-          await deletePayroll.mutateAsync(id);
+          await cancelPayroll.mutateAsync(id);
           router.push('/hr/payroll');
         } catch (error) {
           // Error handled by hook
@@ -75,9 +74,9 @@ export default function PayrollDetailPage() {
     }
   };
 
-  const handleProcess = async () => {
+  const handleMarkPaid = async () => {
     try {
-      await processPayroll.mutateAsync(id);
+      await markPaid.mutateAsync(id);
       message.success('Bordro ödendi olarak işaretlendi');
     } catch (error) {
       // Error handled by hook
@@ -158,7 +157,7 @@ export default function PayrollDetailPage() {
             <Button
               type="primary"
               icon={<SendOutlined />}
-              onClick={handleProcess}
+              onClick={handleMarkPaid}
               style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
             >
               Öde
@@ -167,18 +166,19 @@ export default function PayrollDetailPage() {
           <Button
             icon={<EditOutlined />}
             onClick={() => router.push(`/hr/payroll/${id}/edit`)}
-            disabled={payroll.status === 'Processed'}
+            disabled={payroll.status === 'Processed' || payroll.status === 'Cancelled'}
           >
             Düzenle
           </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={handleDelete}
-            disabled={payroll.status === 'Processed'}
-          >
-            Sil
-          </Button>
+          {payroll.status !== 'Processed' && payroll.status !== 'Cancelled' && (
+            <Button
+              danger
+              icon={<CloseCircleOutlined />}
+              onClick={handleCancel}
+            >
+              İptal Et
+            </Button>
+          )}
         </Space>
       </div>
 

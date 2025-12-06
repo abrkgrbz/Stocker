@@ -14,18 +14,15 @@ import {
   Col,
   Statistic,
   Empty,
-  Modal,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
-  FieldTimeOutlined,
-  DeleteOutlined,
   ClockCircleOutlined,
   UserOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import { useAttendance, useDeleteAttendance } from '@/lib/api/hooks/useHR';
+import { useAttendanceById } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -36,27 +33,7 @@ export default function AttendanceDetailPage() {
   const id = Number(params.id);
 
   // API Hooks
-  const { data: attendance, isLoading, error } = useAttendance(id);
-  const deleteAttendance = useDeleteAttendance();
-
-  const handleDelete = () => {
-    if (!attendance) return;
-    Modal.confirm({
-      title: 'Yoklama Kaydını Sil',
-      content: 'Bu yoklama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteAttendance.mutateAsync(id);
-          router.push('/hr/attendance');
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
-  };
+  const { data: attendance, isLoading, error } = useAttendanceById(id);
 
   const formatTime = (time?: string) => {
     if (!time) return '-';
@@ -117,14 +94,9 @@ export default function AttendanceDetailPage() {
             </Space>
           </div>
         </Space>
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/attendance/${id}/edit`)}>
-            Düzenle
-          </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
-            Sil
-          </Button>
-        </Space>
+        <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/attendance/${id}/edit`)}>
+          Düzenle
+        </Button>
       </div>
 
       <Row gutter={[24, 24]}>
