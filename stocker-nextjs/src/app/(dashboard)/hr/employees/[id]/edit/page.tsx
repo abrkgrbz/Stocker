@@ -2,22 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Row,
-  Col,
-  InputNumber,
-  Spin,
-  Empty,
-} from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Select, DatePicker, Row, Col, InputNumber, Spin, Empty } from 'antd';
+import { ArrowLeftOutlined, UserOutlined } from '@ant-design/icons';
 import {
   useEmployee,
   useUpdateEmployee,
@@ -30,7 +16,6 @@ import {
 import type { UpdateEmployeeDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function EditEmployeePage() {
@@ -142,30 +127,59 @@ export default function EditEmployeePage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/hr/employees/${id}`)}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <UserOutlined className="mr-2" />
-              Çalışan Düzenle
-            </Title>
-            <Text type="secondary">
-              {employee.firstName} {employee.lastName} - {employee.employeeCode}
-            </Text>
+    <div className="min-h-screen bg-white">
+      {/* Sticky Header */}
+      <div
+        className="sticky top-0 z-10 px-6 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.push(`/hr/employees/${id}`)}
+            />
+            <div className="flex items-center gap-2">
+              <UserOutlined className="text-lg text-gray-600" />
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900 m-0">Çalışan Düzenle</h1>
+                <p className="text-sm text-gray-500 m-0">
+                  {employee.firstName} {employee.lastName} - {employee.employeeCode}
+                </p>
+              </div>
+            </div>
           </div>
-        </Space>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push(`/hr/employees/${id}`)}>Vazgeç</Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              loading={updateEmployee.isPending}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+            >
+              Kaydet
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Row gutter={24}>
+      {/* Form Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {/* Personal Information */}
-          <Col xs={24} lg={12}>
-            <Card title="Kişisel Bilgiler" className="mb-6">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Kişisel Bilgiler
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
@@ -173,7 +187,7 @@ export default function EditEmployeePage() {
                     label="Ad"
                     rules={[{ required: true, message: 'Ad gerekli' }]}
                   >
-                    <Input placeholder="Ad" />
+                    <Input placeholder="Ad" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -182,15 +196,14 @@ export default function EditEmployeePage() {
                     label="Soyad"
                     rules={[{ required: true, message: 'Soyad gerekli' }]}
                   >
-                    <Input placeholder="Soyad" />
+                    <Input placeholder="Soyad" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="nationalId" label="TC Kimlik No">
-                    <Input placeholder="TC Kimlik No" maxLength={11} />
+                    <Input placeholder="TC Kimlik No" maxLength={11} variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -198,6 +211,7 @@ export default function EditEmployeePage() {
                     <Select
                       placeholder="Cinsiyet seçin"
                       allowClear
+                      variant="filled"
                       options={[
                         { value: 'Male', label: 'Erkek' },
                         { value: 'Female', label: 'Kadın' },
@@ -207,7 +221,6 @@ export default function EditEmployeePage() {
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="birthDate" label="Doğum Tarihi">
@@ -215,22 +228,23 @@ export default function EditEmployeePage() {
                       style={{ width: '100%' }}
                       placeholder="Doğum tarihi seçin"
                       format="DD.MM.YYYY"
+                      variant="filled"
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item name="birthPlace" label="Doğum Yeri">
-                    <Input placeholder="Doğum yeri" />
+                    <Input placeholder="Doğum yeri" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="maritalStatus" label="Medeni Durum">
                     <Select
                       placeholder="Medeni durum seçin"
                       allowClear
+                      variant="filled"
                       options={[
                         { value: 'Bekar', label: 'Bekar' },
                         { value: 'Evli', label: 'Evli' },
@@ -245,6 +259,7 @@ export default function EditEmployeePage() {
                     <Select
                       placeholder="Kan grubu seçin"
                       allowClear
+                      variant="filled"
                       options={[
                         { value: 'A+', label: 'A Rh+' },
                         { value: 'A-', label: 'A Rh-' },
@@ -259,9 +274,18 @@ export default function EditEmployeePage() {
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
+            </div>
+          </div>
 
-            <Card title="İletişim Bilgileri" className="mb-6">
+          {/* Contact Information */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                İletişim Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
@@ -269,61 +293,47 @@ export default function EditEmployeePage() {
                     label="E-posta"
                     rules={[{ type: 'email', message: 'Geçerli bir e-posta girin' }]}
                   >
-                    <Input placeholder="E-posta adresi" />
+                    <Input placeholder="E-posta adresi" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item name="phone" label="Telefon">
-                    <Input placeholder="Telefon numarası" />
+                    <Input placeholder="Telefon numarası" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Form.Item name="address" label="Adres">
-                <TextArea rows={2} placeholder="Adres" />
+                <TextArea rows={2} placeholder="Adres" variant="filled" />
               </Form.Item>
-
               <Row gutter={16}>
                 <Col xs={24} sm={8}>
                   <Form.Item name="city" label="Şehir">
-                    <Input placeholder="Şehir" />
+                    <Input placeholder="Şehir" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={8}>
                   <Form.Item name="postalCode" label="Posta Kodu">
-                    <Input placeholder="Posta kodu" />
+                    <Input placeholder="Posta kodu" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={8}>
                   <Form.Item name="country" label="Ülke">
-                    <Input placeholder="Ülke" />
+                    <Input placeholder="Ülke" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
-
-            <Card title="Acil Durum İletişim" className="mb-6">
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="emergencyContactName" label="Ad Soyad">
-                    <Input placeholder="Acil durumda aranacak kişi" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="emergencyContactPhone" label="Telefon">
-                    <Input placeholder="Telefon numarası" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Form.Item name="emergencyContactRelation" label="Yakınlık Derecesi">
-                <Input placeholder="Örn: Eş, Anne, Baba" />
-              </Form.Item>
-            </Card>
-          </Col>
+            </div>
+          </div>
 
           {/* Employment Information */}
-          <Col xs={24} lg={12}>
-            <Card title="İş Bilgileri" className="mb-6">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                İş Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="hireDate" label="İşe Giriş Tarihi">
@@ -332,6 +342,7 @@ export default function EditEmployeePage() {
                       placeholder="İşe giriş tarihi seçin"
                       format="DD.MM.YYYY"
                       disabled
+                      variant="filled"
                     />
                   </Form.Item>
                 </Col>
@@ -339,6 +350,7 @@ export default function EditEmployeePage() {
                   <Form.Item name="employmentType" label="Çalışma Tipi">
                     <Select
                       placeholder="Çalışma tipi seçin"
+                      variant="filled"
                       options={[
                         { value: 'FullTime', label: 'Tam Zamanlı' },
                         { value: 'PartTime', label: 'Yarı Zamanlı' },
@@ -350,7 +362,6 @@ export default function EditEmployeePage() {
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="departmentId" label="Departman">
@@ -358,6 +369,7 @@ export default function EditEmployeePage() {
                       placeholder="Departman seçin"
                       showSearch
                       optionFilterProp="children"
+                      variant="filled"
                       options={departments.map((d) => ({ value: d.id, label: d.name }))}
                     />
                   </Form.Item>
@@ -369,12 +381,12 @@ export default function EditEmployeePage() {
                       showSearch
                       optionFilterProp="children"
                       disabled={!selectedDepartment}
+                      variant="filled"
                       options={positions.map((p) => ({ value: p.id, label: p.name }))}
                     />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="managerId" label="Yönetici">
@@ -383,6 +395,7 @@ export default function EditEmployeePage() {
                       showSearch
                       allowClear
                       optionFilterProp="children"
+                      variant="filled"
                       options={employees
                         .filter((e) => e.id !== id)
                         .map((e) => ({
@@ -397,60 +410,95 @@ export default function EditEmployeePage() {
                     <Select
                       placeholder="Lokasyon seçin"
                       allowClear
+                      variant="filled"
                       options={workLocations.map((l) => ({ value: l.id, label: l.name }))}
                     />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Form.Item name="shiftId" label="Vardiya">
                 <Select
                   placeholder="Vardiya seçin"
                   allowClear
+                  variant="filled"
                   options={shifts.map((s) => ({
                     value: s.id,
                     label: `${s.name} (${s.startTime} - ${s.endTime})`,
                   }))}
                 />
               </Form.Item>
-            </Card>
+            </div>
+          </div>
 
-            <Card title="Maaş Bilgileri" className="mb-6">
+          {/* Salary Information */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Maaş Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Form.Item name="baseSalary" label="Brüt Maaş">
                 <InputNumber
                   style={{ width: '100%' }}
                   placeholder="Brüt maaş"
                   min={0}
+                  variant="filled"
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
                   addonAfter="TRY"
                 />
               </Form.Item>
-            </Card>
+            </div>
+          </div>
 
-            <Card title="Notlar" className="mb-6">
-              <Form.Item name="notes">
-                <TextArea rows={4} placeholder="Ek notlar..." />
+          {/* Emergency Contact */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Acil Durum İletişim
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="emergencyContactName" label="Ad Soyad">
+                    <Input placeholder="Acil durumda aranacak kişi" variant="filled" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="emergencyContactPhone" label="Telefon">
+                    <Input placeholder="Telefon numarası" variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item name="emergencyContactRelation" label="Yakınlık Derecesi">
+                <Input placeholder="Örn: Eş, Anne, Baba" variant="filled" />
               </Form.Item>
-            </Card>
+            </div>
+          </div>
 
-            {/* Actions */}
-            <Card>
-              <Space className="w-full justify-end">
-                <Button onClick={() => router.push(`/hr/employees/${id}`)}>İptal</Button>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  htmlType="submit"
-                  loading={updateEmployee.isPending}
-                >
-                  Kaydet
-                </Button>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
+          {/* Notes */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Notlar
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
+              <Form.Item name="notes" className="mb-0">
+                <TextArea rows={4} placeholder="Ek notlar..." variant="filled" />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* Hidden submit button for form.submit() */}
+          <button type="submit" hidden />
+        </Form>
+      </div>
     </div>
   );
 }

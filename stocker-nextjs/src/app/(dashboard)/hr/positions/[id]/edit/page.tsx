@@ -2,16 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Typography, Button, Space, Card, Form, Input, InputNumber, Select, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import {
-  usePosition,
-  useUpdatePosition,
-  useDepartments,
-} from '@/lib/api/hooks/useHR';
+import { Button, Form, Input, InputNumber, Select, Row, Col, Spin, Empty } from 'antd';
+import { ArrowLeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { usePosition, useUpdatePosition, useDepartments } from '@/lib/api/hooks/useHR';
 import type { UpdatePositionDto } from '@/lib/api/services/hr.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function EditPositionPage() {
@@ -81,29 +76,59 @@ export default function EditPositionPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/hr/positions/${id}`)}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <SafetyCertificateOutlined className="mr-2" />
-              Pozisyon Düzenle
-            </Title>
-            <Text type="secondary">
-              {position.name} - {position.code}
-            </Text>
+    <div className="min-h-screen bg-white">
+      {/* Sticky Header */}
+      <div
+        className="sticky top-0 z-10 px-6 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.push(`/hr/positions/${id}`)}
+            />
+            <div className="flex items-center gap-2">
+              <SafetyCertificateOutlined className="text-lg text-gray-600" />
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900 m-0">Pozisyon Düzenle</h1>
+                <p className="text-sm text-gray-500 m-0">
+                  {position.name} - {position.code}
+                </p>
+              </div>
+            </div>
           </div>
-        </Space>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push(`/hr/positions/${id}`)}>Vazgeç</Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              loading={updatePosition.isPending}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+            >
+              Kaydet
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
-          <Card>
-            <Form form={form} layout="vertical" onFinish={handleSubmit}>
+      {/* Form Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          {/* Basic Information */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Pozisyon Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
@@ -111,7 +136,7 @@ export default function EditPositionPage() {
                     label="Pozisyon Adı"
                     rules={[{ required: true, message: 'Pozisyon adı gerekli' }]}
                   >
-                    <Input placeholder="Pozisyon adı" />
+                    <Input placeholder="Pozisyon adı" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -120,31 +145,42 @@ export default function EditPositionPage() {
                     label="Pozisyon Kodu"
                     rules={[{ required: true, message: 'Pozisyon kodu gerekli' }]}
                   >
-                    <Input placeholder="Örn: DEV, MGR, HR" />
+                    <Input placeholder="Örn: DEV, MGR, HR" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Form.Item name="departmentId" label="Departman">
                 <Select
                   placeholder="Departman seçin"
                   allowClear
                   showSearch
                   optionFilterProp="children"
+                  variant="filled"
                   options={departments.map((d) => ({ value: d.id, label: d.name }))}
                 />
               </Form.Item>
-
               <Form.Item name="description" label="Açıklama">
-                <TextArea rows={3} placeholder="Pozisyon açıklaması" />
+                <TextArea rows={3} placeholder="Pozisyon açıklaması" variant="filled" />
               </Form.Item>
+            </div>
+          </div>
 
+          {/* Salary Information */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Maaş Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="minSalary" label="Minimum Maaş">
                     <InputNumber
                       placeholder="Minimum maaş"
                       style={{ width: '100%' }}
+                      variant="filled"
                       formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       min={0}
@@ -156,6 +192,7 @@ export default function EditPositionPage() {
                     <InputNumber
                       placeholder="Maksimum maaş"
                       style={{ width: '100%' }}
+                      variant="filled"
                       formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       min={0}
@@ -163,30 +200,39 @@ export default function EditPositionPage() {
                   </Form.Item>
                 </Col>
               </Row>
+            </div>
+          </div>
 
+          {/* Requirements & Responsibilities */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Gereksinimler ve Sorumluluklar
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Form.Item name="requirements" label="Gereksinimler">
-                <TextArea rows={4} placeholder="Pozisyon için gerekli nitelikler ve beceriler" />
+                <TextArea
+                  rows={4}
+                  placeholder="Pozisyon için gerekli nitelikler ve beceriler"
+                  variant="filled"
+                />
               </Form.Item>
-
-              <Form.Item name="responsibilities" label="Sorumluluklar">
-                <TextArea rows={4} placeholder="Pozisyonun sorumlulukları ve görevleri" />
+              <Form.Item name="responsibilities" label="Sorumluluklar" className="mb-0">
+                <TextArea
+                  rows={4}
+                  placeholder="Pozisyonun sorumlulukları ve görevleri"
+                  variant="filled"
+                />
               </Form.Item>
+            </div>
+          </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <Button onClick={() => router.push(`/hr/positions/${id}`)}>İptal</Button>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  htmlType="submit"
-                  loading={updatePosition.isPending}
-                >
-                  Kaydet
-                </Button>
-              </div>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+          {/* Hidden submit button for form.submit() */}
+          <button type="submit" hidden />
+        </Form>
+      </div>
     </div>
   );
 }

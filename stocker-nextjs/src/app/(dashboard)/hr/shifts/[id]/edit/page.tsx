@@ -2,13 +2,12 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Typography, Button, Space, Card, Form, Input, TimePicker, InputNumber, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, Form, Input, TimePicker, InputNumber, Row, Col, Spin, Empty } from 'antd';
+import { ArrowLeftOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useShift, useUpdateShift } from '@/lib/api/hooks/useHR';
 import type { UpdateShiftDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export default function EditShiftPage() {
@@ -73,29 +72,59 @@ export default function EditShiftPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/hr/shifts/${id}`)}>
-            Geri
-          </Button>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <ClockCircleOutlined className="mr-2" />
-              Vardiya Düzenle
-            </Title>
-            <Text type="secondary">
-              {shift.name} - {shift.code}
-            </Text>
+    <div className="min-h-screen bg-white">
+      {/* Sticky Header */}
+      <div
+        className="sticky top-0 z-10 px-6 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.push(`/hr/shifts/${id}`)}
+            />
+            <div className="flex items-center gap-2">
+              <ClockCircleOutlined className="text-lg text-gray-600" />
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900 m-0">Vardiya Düzenle</h1>
+                <p className="text-sm text-gray-500 m-0">
+                  {shift.name} - {shift.code}
+                </p>
+              </div>
+            </div>
           </div>
-        </Space>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push(`/hr/shifts/${id}`)}>Vazgeç</Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              loading={updateShift.isPending}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+            >
+              Kaydet
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
-          <Card>
-            <Form form={form} layout="vertical" onFinish={handleSubmit}>
+      {/* Form Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          {/* Basic Information */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Vardiya Bilgileri
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
@@ -103,7 +132,7 @@ export default function EditShiftPage() {
                     label="Vardiya Adı"
                     rules={[{ required: true, message: 'Vardiya adı gerekli' }]}
                   >
-                    <Input placeholder="Örn: Sabah Vardiyası" />
+                    <Input placeholder="Örn: Sabah Vardiyası" variant="filled" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -112,15 +141,25 @@ export default function EditShiftPage() {
                     label="Vardiya Kodu"
                     rules={[{ required: true, message: 'Vardiya kodu gerekli' }]}
                   >
-                    <Input placeholder="Örn: SABAH, AKSAM, GECE" />
+                    <Input placeholder="Örn: SABAH, AKSAM, GECE" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <Form.Item name="description" label="Açıklama">
-                <TextArea rows={3} placeholder="Vardiya açıklaması" />
+                <TextArea rows={3} placeholder="Vardiya açıklaması" variant="filled" />
               </Form.Item>
+            </div>
+          </div>
 
+          {/* Time Settings */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Saat Ayarları
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={8}>
                   <Form.Item
@@ -128,7 +167,12 @@ export default function EditShiftPage() {
                     label="Başlangıç Saati"
                     rules={[{ required: true, message: 'Başlangıç saati gerekli' }]}
                   >
-                    <TimePicker format="HH:mm" style={{ width: '100%' }} placeholder="Saat seçin" />
+                    <TimePicker
+                      format="HH:mm"
+                      style={{ width: '100%' }}
+                      placeholder="Saat seçin"
+                      variant="filled"
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={8}>
@@ -137,31 +181,33 @@ export default function EditShiftPage() {
                     label="Bitiş Saati"
                     rules={[{ required: true, message: 'Bitiş saati gerekli' }]}
                   >
-                    <TimePicker format="HH:mm" style={{ width: '100%' }} placeholder="Saat seçin" />
+                    <TimePicker
+                      format="HH:mm"
+                      style={{ width: '100%' }}
+                      placeholder="Saat seçin"
+                      variant="filled"
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={8}>
                   <Form.Item name="breakDurationMinutes" label="Mola Süresi (dk)">
-                    <InputNumber placeholder="Dakika" style={{ width: '100%' }} min={0} max={180} />
+                    <InputNumber
+                      placeholder="Dakika"
+                      style={{ width: '100%' }}
+                      min={0}
+                      max={180}
+                      variant="filled"
+                    />
                   </Form.Item>
                 </Col>
               </Row>
+            </div>
+          </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <Button onClick={() => router.push(`/hr/shifts/${id}`)}>İptal</Button>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  htmlType="submit"
-                  loading={updateShift.isPending}
-                >
-                  Kaydet
-                </Button>
-              </div>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+          {/* Hidden submit button for form.submit() */}
+          <button type="submit" hidden />
+        </Form>
+      </div>
     </div>
   );
 }
