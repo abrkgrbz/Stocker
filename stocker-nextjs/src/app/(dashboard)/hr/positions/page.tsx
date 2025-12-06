@@ -78,7 +78,7 @@ export default function PositionsPage() {
     return positions.filter((pos) => {
       const matchesSearch =
         !debouncedSearch ||
-        pos.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        pos.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         (pos.code && pos.code.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
         (pos.description && pos.description.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
@@ -103,7 +103,7 @@ export default function PositionsPage() {
   const handleDelete = (pos: PositionDto) => {
     Modal.confirm({
       title: 'Pozisyonu Sil',
-      content: `"${pos.name}" pozisyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${pos.title}" pozisyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -153,8 +153,8 @@ export default function PositionsPage() {
     },
     {
       title: 'Pozisyon Adı',
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: 'title',
+      key: 'title',
       width: 200,
     },
     {

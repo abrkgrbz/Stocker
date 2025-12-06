@@ -206,10 +206,10 @@ export default function EmployeesPage() {
     },
     {
       title: 'Pozisyon',
-      dataIndex: 'positionName',
+      dataIndex: 'positionTitle',
       key: 'position',
       width: 150,
-      render: (name) => name || <Text type="secondary">-</Text>,
+      render: (title) => title || <Text type="secondary">-</Text>,
     },
     {
       title: 'İletişim',
@@ -389,7 +389,7 @@ export default function EmployeesPage() {
               style={{ width: '100%' }}
               value={selectedPosition}
               onChange={setSelectedPosition}
-              options={positions.map((p) => ({ value: p.id, label: p.name }))}
+              options={positions.map((p) => ({ value: p.id, label: p.title }))}
             />
           </Col>
           <Col xs={12} md={4}>

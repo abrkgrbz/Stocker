@@ -258,7 +258,7 @@ export default function EmployeeDetailPage() {
               <Title level={4} className="mt-4 mb-0">
                 {employee.firstName} {employee.lastName}
               </Title>
-              <Text type="secondary">{employee.positionName}</Text>
+              <Text type="secondary">{employee.positionTitle}</Text>
             </div>
 
             <Row gutter={[16, 16]}>
@@ -340,7 +340,7 @@ export default function EmployeeDetailPage() {
                     {employee.employmentType ? employmentTypeLabels[employee.employmentType] : '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Departman">{employee.departmentName || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="Pozisyon">{employee.positionName || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Pozisyon">{employee.positionTitle || '-'}</Descriptions.Item>
                   <Descriptions.Item label="Yönetici">{employee.managerName || '-'}</Descriptions.Item>
                   <Descriptions.Item label="Çalışma Lokasyonu">{employee.workLocationName || '-'}</Descriptions.Item>
                 </Descriptions>

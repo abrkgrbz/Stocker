@@ -56,7 +56,7 @@ export default function PositionDetailPage() {
     if (!position) return;
     Modal.confirm({
       title: 'Pozisyonu Sil',
-      content: `"${position.name}" pozisyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${position.title}" pozisyonunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -146,7 +146,7 @@ export default function PositionDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              {position.name}
+              {position.title}
             </Title>
             <Space>
               <Text type="secondary">{position.code}</Text>
@@ -215,7 +215,7 @@ export default function PositionDetailPage() {
         <Col xs={24} lg={12}>
           <Card title="Pozisyon Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Pozisyon Adı">{position.name}</Descriptions.Item>
+              <Descriptions.Item label="Pozisyon Adı">{position.title}</Descriptions.Item>
               <Descriptions.Item label="Pozisyon Kodu">{position.code}</Descriptions.Item>
               <Descriptions.Item label="Departman">{position.departmentName || '-'}</Descriptions.Item>
               <Descriptions.Item label="Açıklama">{position.description || '-'}</Descriptions.Item>
