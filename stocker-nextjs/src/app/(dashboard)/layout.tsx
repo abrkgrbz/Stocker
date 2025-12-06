@@ -296,8 +296,8 @@ const MODULE_MENUS = {
         icon: <RiseOutlined />,
         label: 'Performans',
         children: [
-          { key: '/hr/performance-reviews', icon: <RiseOutlined />, label: 'Değerlendirmeler' },
-          { key: '/hr/performance-goals', icon: <FunnelPlotOutlined />, label: 'Hedefler' },
+          { key: '/hr/performance', icon: <RiseOutlined />, label: 'Değerlendirmeler' },
+          { key: '/hr/goals', icon: <FunnelPlotOutlined />, label: 'Hedefler' },
         ],
       },
       {
@@ -449,8 +449,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/holidays': '/hr/holidays',
       '/hr/payroll': '/hr/payroll',
       '/hr/expenses': '/hr/expenses',
-      '/hr/performance-reviews': '/hr/performance-reviews',
-      '/hr/performance-goals': '/hr/performance-goals',
+      '/hr/performance': '/hr/performance',
+      '/hr/goals': '/hr/goals',
       '/hr/trainings': '/hr/trainings',
       '/hr/documents': '/hr/documents',
       '/hr/announcements': '/hr/announcements',
