@@ -103,13 +103,13 @@ export default function PositionForm({ form, initialValues, onFinish, loading }:
 
         {/* Right Panel - Form Content (60%) */}
         <Col xs={24} lg={14}>
-          {/* Position Name - Hero Input */}
+          {/* Position Title - Hero Input */}
           <div className="mb-8">
             <Form.Item
-              name="name"
+              name="title"
               rules={[
                 { required: true, message: 'Pozisyon adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
+                { max: 100, message: 'En fazla 100 karakter' },
               ]}
               className="mb-0"
             >
@@ -150,7 +150,7 @@ export default function PositionForm({ form, initialValues, onFinish, loading }:
               Temel Bilgiler
             </Text>
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={8}>
                 <div className="text-xs text-gray-400 mb-1">Pozisyon Kodu *</div>
                 <Form.Item
                   name="code"
@@ -160,7 +160,7 @@ export default function PositionForm({ form, initialValues, onFinish, loading }:
                   <Input placeholder="Örn: DEV, MGR" variant="filled" disabled={!!initialValues} />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <div className="text-xs text-gray-400 mb-1">Departman *</div>
                 <Form.Item
                   name="departmentId"
@@ -173,6 +173,21 @@ export default function PositionForm({ form, initialValues, onFinish, loading }:
                     optionFilterProp="label"
                     variant="filled"
                     options={departments.map((d) => ({ value: d.id, label: d.name }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <div className="text-xs text-gray-400 mb-1">Seviye</div>
+                <Form.Item
+                  name="level"
+                  initialValue={0}
+                  className="mb-0"
+                >
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    placeholder="0"
+                    min={0}
+                    variant="filled"
                   />
                 </Form.Item>
               </Col>
