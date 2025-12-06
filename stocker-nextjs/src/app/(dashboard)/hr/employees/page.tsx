@@ -33,7 +33,6 @@ import {
   UserOutlined,
   CheckCircleOutlined,
   StopOutlined,
-  PhoneOutlined,
   MailOutlined,
   IdcardOutlined,
 } from '@ant-design/icons';
@@ -45,7 +44,7 @@ import {
   useActivateEmployee,
   useDeactivateEmployee,
 } from '@/lib/api/hooks/useHR';
-import type { EmployeeDto, EmployeeStatus, Gender } from '@/lib/api/services/hr.types';
+import type { EmployeeSummaryDto, EmployeeStatus } from '@/lib/api/services/hr.types';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -60,12 +59,6 @@ const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: strin
   Retired: { color: 'gray', label: 'Emekli' },
 };
 
-// Gender configuration
-const genderConfig: Record<Gender, { label: string }> = {
-  Male: { label: 'Erkek' },
-  Female: { label: 'Kadın' },
-  Other: { label: 'Diğer' },
-};
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -109,11 +102,9 @@ export default function EmployeesPage() {
     return employees.filter((employee) => {
       const matchesSearch =
         !debouncedSearch ||
-        employee.firstName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        employee.lastName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        (employee.employeeCode && employee.employeeCode.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-        (employee.email && employee.email.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-        (employee.phone && employee.phone.toLowerCase().includes(debouncedSearch.toLowerCase()));
+        employee.fullName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        employee.employeeCode.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (employee.email && employee.email.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
       return matchesSearch;
     });
@@ -123,7 +114,7 @@ export default function EmployeesPage() {
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter((e) => e.status === 'Active').length;
   const onLeaveEmployees = employees.filter((e) => e.status === 'OnLeave').length;
-  const departmentCount = new Set(employees.map((e) => e.departmentId)).size;
+  const departmentCount = new Set(employees.map((e) => e.departmentName).filter(Boolean)).size;
 
   // CRUD Handlers
   const handleView = (id: number) => {
@@ -134,10 +125,10 @@ export default function EmployeesPage() {
     router.push(`/hr/employees/${id}/edit`);
   };
 
-  const handleDelete = (employee: EmployeeDto) => {
+  const handleDelete = (employee: EmployeeSummaryDto) => {
     Modal.confirm({
       title: 'Çalışanı Sil',
-      content: `"${employee.firstName} ${employee.lastName}" çalışanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${employee.fullName}" çalışanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -151,7 +142,7 @@ export default function EmployeesPage() {
     });
   };
 
-  const handleToggleActive = async (employee: EmployeeDto) => {
+  const handleToggleActive = async (employee: EmployeeSummaryDto) => {
     try {
       if (employee.status === 'Active') {
         await deactivateEmployee.mutateAsync(employee.id);
@@ -173,7 +164,7 @@ export default function EmployeesPage() {
   };
 
   // Table columns
-  const columns: ColumnsType<EmployeeDto> = [
+  const columns: ColumnsType<EmployeeSummaryDto> = [
     {
       title: 'Çalışan',
       key: 'employee',
@@ -187,9 +178,7 @@ export default function EmployeesPage() {
             style={{ backgroundColor: record.photoUrl ? undefined : '#7c3aed' }}
           />
           <div>
-            <div className="font-medium">
-              {record.firstName} {record.lastName}
-            </div>
+            <div className="font-medium">{record.fullName}</div>
             <Text type="secondary" style={{ fontSize: 12 }}>
               {record.employeeCode}
             </Text>
@@ -212,25 +201,19 @@ export default function EmployeesPage() {
       render: (title) => title || <Text type="secondary">-</Text>,
     },
     {
-      title: 'İletişim',
-      key: 'contact',
+      title: 'E-posta',
+      dataIndex: 'email',
+      key: 'email',
       width: 200,
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          {record.email && (
-            <Space size={4}>
-              <MailOutlined style={{ color: '#8c8c8c' }} />
-              <Text style={{ fontSize: 12 }}>{record.email}</Text>
-            </Space>
-          )}
-          {record.phone && (
-            <Space size={4}>
-              <PhoneOutlined style={{ color: '#8c8c8c' }} />
-              <Text style={{ fontSize: 12 }}>{record.phone}</Text>
-            </Space>
-          )}
-        </Space>
-      ),
+      render: (email) =>
+        email ? (
+          <Space size={4}>
+            <MailOutlined style={{ color: '#8c8c8c' }} />
+            <Text style={{ fontSize: 12 }}>{email}</Text>
+          </Space>
+        ) : (
+          <Text type="secondary">-</Text>
+        ),
     },
     {
       title: 'İşe Giriş',

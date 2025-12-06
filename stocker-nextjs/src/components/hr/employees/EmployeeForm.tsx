@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, DatePicker, InputNumber, Row, Col, Typography, Switch } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useDepartments, usePositions, useShifts, useWorkLocations, useEmployees } from '@/lib/api/hooks/useHR';
-import type { EmployeeDto } from '@/lib/api/services/hr.types';
+import type { EmployeeDto, EmployeeSummaryDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -456,7 +456,7 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
                       .filter((e) => !initialValues || e.id !== initialValues.id)
                       .map((e) => ({
                         value: e.id,
-                        label: `${e.firstName} ${e.lastName}`,
+                        label: e.fullName,
                       }))}
                   />
                 </Form.Item>

@@ -123,8 +123,8 @@ export class HRService {
   // EMPLOYEES
   // =====================================
 
-  static async getEmployees(filter?: EmployeeFilterDto): Promise<EmployeeDto[]> {
-    return ApiService.get<EmployeeDto[]>(this.getPath('employees'), { params: filter });
+  static async getEmployees(filter?: EmployeeFilterDto): Promise<EmployeeSummaryDto[]> {
+    return ApiService.get<EmployeeSummaryDto[]>(this.getPath('employees'), { params: filter });
   }
 
   static async getEmployee(id: number): Promise<EmployeeDto> {
