@@ -46,10 +46,16 @@ class TenantModuleService {
    * Get tenant module status with package availability info
    */
   async getTenantModuleStatus(tenantId: string): Promise<TenantModuleStatusDto> {
-    const response = await apiClient.get<{ success: boolean; data: TenantModuleStatusDto }>(
+    const response = await apiClient.get<any>(
       `${this.baseUrl}/${tenantId}/status`
     );
-    return response.data;
+    console.log('📦 getTenantModuleStatus raw response:', response);
+    console.log('📦 getTenantModuleStatus response.data:', response?.data);
+    console.log('📦 getTenantModuleStatus modules:', response?.modules || response?.data?.modules);
+    // apiClient.get returns response.data.data, so response here is already the inner data
+    // If backend returns { success: true, data: { tenantId, tenantName, modules } }
+    // apiClient.get extracts to { tenantId, tenantName, modules }
+    return response?.data || response;
   }
 
   /**

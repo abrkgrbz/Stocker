@@ -13,6 +13,7 @@ using Stocker.Modules.CRM;
 using Stocker.Modules.Sales;
 using Stocker.Modules.Finance.Infrastructure;
 using Stocker.Modules.Inventory;
+using Stocker.Modules.HR;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
@@ -218,6 +219,13 @@ if (enabledModules.GetValue<bool>("Inventory"))
 {
     Log.Information("Loading Inventory Module...");
     builder.Services.AddInventoryModule(builder.Configuration);
+}
+
+// HR Module
+if (enabledModules.GetValue<bool>("HR"))
+{
+    Log.Information("Loading HR Module...");
+    builder.Services.AddHRModule(builder.Configuration);
 }
 
 // SignalR Services

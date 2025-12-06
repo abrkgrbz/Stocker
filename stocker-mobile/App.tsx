@@ -25,12 +25,24 @@ export default function App() {
 
     useEffect(() => {
         const init = async () => {
-            await databaseService.init();
-            await checkAuth();
+            console.log('🚀 [App] Initialization started');
+            try {
+                console.log('📦 [App] Initializing database...');
+                await databaseService.init();
+                console.log('✅ [App] Database initialized');
 
-            // Register for push notifications
-            const token = await notificationService.registerForPushNotificationsAsync();
-            setExpoPushToken(token ?? undefined);
+                console.log('🔐 [App] Checking auth...');
+                await checkAuth();
+                console.log('✅ [App] Auth checked');
+
+                // Register for push notifications
+                console.log('🔔 [App] Registering for push notifications...');
+                const token = await notificationService.registerForPushNotificationsAsync();
+                setExpoPushToken(token ?? undefined);
+                console.log('✅ [App] Push token registered:', token);
+            } catch (error) {
+                console.error('❌ [App] Initialization failed:', error);
+            }
         };
         init();
 

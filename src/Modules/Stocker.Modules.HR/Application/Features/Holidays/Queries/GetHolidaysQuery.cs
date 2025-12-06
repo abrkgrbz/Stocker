@@ -1,0 +1,78 @@
+using MediatR;
+using Stocker.Modules.HR.Application.DTOs;
+using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.SharedKernel.Results;
+
+namespace Stocker.Modules.HR.Application.Features.Holidays.Queries;
+
+/// <summary>
+/// Query to get holidays with optional filters
+/// </summary>
+public class GetHolidaysQuery : IRequest<Result<List<HolidayDto>>>
+{
+    public Guid TenantId { get; set; }
+    public int? Year { get; set; }
+    public bool? IsRecurring { get; set; }
+    public bool IncludeInactive { get; set; } = false;
+}
+
+/// <summary>
+/// Handler for GetHolidaysQuery
+/// </summary>
+public class GetHolidaysQueryHandler : IRequestHandler<GetHolidaysQuery, Result<List<HolidayDto>>>
+{
+    private readonly IHolidayRepository _holidayRepository;
+
+    public GetHolidaysQueryHandler(IHolidayRepository holidayRepository)
+    {
+        _holidayRepository = holidayRepository;
+    }
+
+    public async Task<Result<List<HolidayDto>>> Handle(GetHolidaysQuery request, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Domain.Entities.Holiday> holidays;
+
+        // Get holidays by year if specified, otherwise get all
+        if (request.Year.HasValue)
+        {
+            holidays = await _holidayRepository.GetByYearAsync(request.Year.Value, cancellationToken);
+        }
+        else
+        {
+            holidays = await _holidayRepository.GetAllAsync(cancellationToken);
+        }
+
+        // Filter by recurring status if specified
+        if (request.IsRecurring.HasValue)
+        {
+            holidays = holidays.Where(h => h.IsRecurring == request.IsRecurring.Value).ToList();
+        }
+
+        // Filter out inactive holidays unless requested
+        if (!request.IncludeInactive)
+        {
+            holidays = holidays.Where(h => h.IsActive).ToList();
+        }
+
+        // Map to DTOs
+        var holidayDtos = holidays.Select(h => new HolidayDto
+        {
+            Id = h.Id,
+            Name = h.Name,
+            Description = h.Description,
+            Date = h.Date,
+            Year = h.Year,
+            IsRecurring = h.IsRecurring,
+            RecurringMonth = h.IsRecurring ? h.Date.Month : null,
+            RecurringDay = h.IsRecurring ? h.Date.Day : null,
+            HolidayType = null, // This would need to come from additional entity properties or mapping
+            IsHalfDay = h.IsHalfDay,
+            IsNational = true, // This would need to come from additional entity properties
+            AffectedRegions = null, // This would need to come from additional entity properties
+            IsActive = h.IsActive,
+            CreatedAt = h.CreatedDate
+        }).OrderBy(h => h.Date).ToList();
+
+        return Result<List<HolidayDto>>.Success(holidayDtos);
+    }
+}

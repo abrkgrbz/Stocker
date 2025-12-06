@@ -12,7 +12,8 @@ import {
     ViewStyle,
     TextStyle,
     ImageStyle,
-    Switch
+    Switch,
+    RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +27,7 @@ import { hapticService } from '../services/haptic';
 import { notificationService } from '../services/notification/NotificationService';
 import { useAlert } from '../context/AlertContext';
 import { DashboardWidget } from '../components/DashboardWidget';
+import { useDashboardStore } from '../stores/dashboardStore';
 
 const { width } = Dimensions.get('window');
 
@@ -47,8 +49,19 @@ export default function DashboardScreen({ navigation }: any) {
     const [userMenuVisible, setUserMenuVisible] = useState(false);
     const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
+    const { salesStats, crmStats, isLoading, fetchDashboardData } = useDashboardStore();
+    const [refreshing, setRefreshing] = useState(false);
+
     React.useEffect(() => {
         checkBiometric();
+        fetchDashboardData();
+    }, []);
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        hapticService.medium();
+        await fetchDashboardData();
+        setRefreshing(false);
     }, []);
 
     const checkBiometric = async () => {
@@ -145,8 +158,7 @@ export default function DashboardScreen({ navigation }: any) {
             gradient: ['#10b981', '#34d399'],
             path: 'Inventory',
             description: 'Envanter yönetimi',
-            badge: 'Yakında',
-            disabled: true,
+            badge: 'Yeni',
         },
     ];
 
@@ -161,6 +173,11 @@ export default function DashboardScreen({ navigation }: any) {
 
         if (module.id === 'sales') {
             navigation.navigate('SalesDashboard');
+            return;
+        }
+
+        if (module.id === 'inventory') {
+            navigation.navigate('InventoryDashboard');
             return;
         }
 
@@ -235,7 +252,18 @@ export default function DashboardScreen({ navigation }: any) {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.content}>
+
+
+                <ScrollView
+                    contentContainerStyle={styles.content}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={theme === 'dark' ? "#fff" : colors.primary}
+                        />
+                    }
+                >
                     {/* Welcome Section */}
                     <Animated.View
                         entering={FadeInDown.delay(100).duration(800)}
@@ -253,21 +281,21 @@ export default function DashboardScreen({ navigation }: any) {
                     <View style={styles.gridContainer}>
                         <DashboardWidget
                             title="Günlük Satış"
-                            value="₺12,450"
+                            value={salesStats ? `₺${salesStats.dailyTotal.toLocaleString('tr-TR')}` : '₺0'}
                             subtitle="Bugün"
                             icon="cash-outline"
                             color="#10b981"
-                            trend={{ value: 12.5, direction: 'up' }}
+                            trend={salesStats ? { value: salesStats.dailyTrend, direction: salesStats.dailyTrend >= 0 ? 'up' : 'down' } : undefined}
                             onPress={() => navigation.navigate('SalesDashboard')}
                             delay={200}
                         />
                         <DashboardWidget
                             title="Yeni Müşteri"
-                            value="5"
+                            value={crmStats ? crmStats.newCustomers.toString() : '0'}
                             subtitle="Bu hafta"
                             icon="person-add-outline"
                             color="#3b82f6"
-                            trend={{ value: 2, direction: 'up' }}
+                            trend={crmStats ? { value: crmStats.customerTrend, direction: crmStats.customerTrend >= 0 ? 'up' : 'down' } : undefined}
                             onPress={() => navigation.navigate('CRMDashboard')}
                             delay={300}
                         />
@@ -441,8 +469,8 @@ export default function DashboardScreen({ navigation }: any) {
                         </View>
                     </TouchableWithoutFeedback>
                 </Modal>
-            </SafeAreaView>
-        </View>
+            </SafeAreaView >
+        </View >
     );
 }
 

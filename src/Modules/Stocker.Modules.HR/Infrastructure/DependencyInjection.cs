@@ -1,0 +1,91 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.HR.Domain.Repositories;
+using Stocker.Modules.HR.Infrastructure.Persistence;
+using Stocker.Modules.HR.Infrastructure.Repositories;
+using Stocker.SharedKernel.Interfaces;
+
+namespace Stocker.Modules.HR.Infrastructure;
+
+/// <summary>
+/// Dependency injection configuration for HR Infrastructure
+/// </summary>
+public static class DependencyInjection
+{
+    /// <summary>
+    /// Adds HR infrastructure services to the service collection
+    /// </summary>
+    public static IServiceCollection AddHRInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // HRDbContext is registered dynamically per request based on tenant
+        // using ITenantService to get the current tenant's connection string
+        services.AddScoped<HRDbContext>(serviceProvider =>
+        {
+            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
+            var connectionString = tenantService.GetConnectionString();
+
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
+            }
+
+            var optionsBuilder = new DbContextOptionsBuilder<HRDbContext>();
+            optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(HRDbContext).Assembly.FullName);
+                npgsqlOptions.CommandTimeout(30);
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorCodesToAdd: null);
+            });
+
+            return new HRDbContext(optionsBuilder.Options, tenantService);
+        });
+
+        // Register IUnitOfWork for HR module (resolves to HRDbContext)
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<HRDbContext>());
+
+        // Register Core Repositories
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IPositionRepository, PositionRepository>();
+
+        // Register Work Location and Shift Repositories
+        services.AddScoped<IWorkLocationRepository, WorkLocationRepository>();
+        services.AddScoped<IShiftRepository, ShiftRepository>();
+        services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
+
+        // Register Time and Attendance Repositories
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<ILeaveRepository, LeaveRepository>();
+        services.AddScoped<ILeaveBalanceRepository, LeaveBalanceRepository>();
+        services.AddScoped<IHolidayRepository, HolidayRepository>();
+
+        // Register Performance Management Repositories
+        services.AddScoped<IPerformanceReviewRepository, PerformanceReviewRepository>();
+        services.AddScoped<IPerformanceGoalRepository, PerformanceGoalRepository>();
+
+        // Register Training and Documents Repositories
+        services.AddScoped<ITrainingRepository, TrainingRepository>();
+        services.AddScoped<IEmployeeTrainingRepository, EmployeeTrainingRepository>();
+        services.AddScoped<IEmployeeDocumentRepository, EmployeeDocumentRepository>();
+
+        // Register Payroll and Expense Repositories
+        services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
+
+        // Register Leave Type Repository
+        services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
+
+        // Register Announcement Repositories
+        services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+        services.AddScoped<IAnnouncementAcknowledgmentRepository, AnnouncementAcknowledgmentRepository>();
+
+        return services;
+    }
+}

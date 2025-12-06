@@ -126,12 +126,18 @@ export const useAuthStore = create<AuthState>()(
             },
 
             checkAuth: async () => {
+                console.log('🔐 [AuthStore] checkAuth started');
                 try {
                     const token = await tokenStorage.getToken();
+                    console.log('🔐 [AuthStore] Token retrieved:', token ? 'Yes' : 'No');
+
                     if (token) {
                         // Verify token and get latest user data
                         try {
+                            console.log('🔐 [AuthStore] Verifying token with API...');
                             const response = await apiService.auth.me();
+                            console.log('🔐 [AuthStore] API Response success:', response.data.success);
+
                             if (response.data.success) {
                                 const userData = response.data.data;
                                 // Update user store with latest data
@@ -145,20 +151,24 @@ export const useAuthStore = create<AuthState>()(
                                         requiresSetup: userData.requiresSetup
                                     }
                                 }));
+                                console.log('🔐 [AuthStore] User authenticated');
                             } else {
                                 // Token invalid or expired
+                                console.warn('🔐 [AuthStore] Token validation failed');
                                 throw new Error('Token validation failed');
                             }
                         } catch (error) {
-                            console.error('Auth check failed:', error);
+                            console.error('🔐 [AuthStore] Auth check failed:', error);
                             // If API call fails (e.g. 401), clear auth
                             await tokenStorage.clearToken();
                             set({ isAuthenticated: false, accessToken: null, user: null });
                         }
                     } else {
+                        console.log('🔐 [AuthStore] No token found');
                         set({ isAuthenticated: false, accessToken: null });
                     }
                 } finally {
+                    console.log('🔐 [AuthStore] Initialization complete');
                     set({ isInitializing: false });
                 }
             },

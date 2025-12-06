@@ -264,6 +264,39 @@ export const apiService = {
         getInvoiceDetail: (id: string) =>
             api.get<ApiResponse>(`/api/sales/invoices/${id}`),
     },
+
+    // Inventory endpoints
+    inventory: {
+        // Products
+        getProducts: (params?: any) =>
+            api.get<ApiResponse>('/api/inventory/products', { params }),
+
+        getProduct: (id: number) =>
+            api.get<ApiResponse>(`/api/inventory/products/${id}`),
+
+        getLowStockProducts: (warehouseId?: number) =>
+            api.get<ApiResponse>('/api/inventory/products/low-stock', { params: { warehouseId } }),
+
+        // Warehouses
+        getWarehouses: (includeInactive: boolean = false) =>
+            api.get<ApiResponse>('/api/inventory/warehouses', { params: { includeInactive } }),
+
+        getWarehouse: (id: number) =>
+            api.get<ApiResponse>(`/api/inventory/warehouses/${id}`),
+
+        getWarehouseStockSummary: (id: number) =>
+            api.get<ApiResponse>(`/api/inventory/warehouses/${id}/stock-summary`),
+
+        // Stock
+        getStock: (params?: { warehouseId?: number; productId?: number; locationId?: number }) =>
+            api.get<ApiResponse>('/api/inventory/stock', { params }),
+
+        getExpiringStock: (daysUntilExpiry: number = 30) =>
+            api.get<ApiResponse>('/api/inventory/stock/expiring', { params: { daysUntilExpiry } }),
+
+        getProductStockSummary: (productId: number) =>
+            api.get<ApiResponse>(`/api/inventory/stock/summary/${productId}`),
+    },
 };
 
 export default api;

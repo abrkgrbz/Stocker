@@ -18,14 +18,17 @@ import SalesDashboardScreen from '../screens/sales/SalesDashboardScreen';
 import QuoteListScreen from '../screens/sales/QuoteListScreen';
 import OrderListScreen from '../screens/sales/OrderListScreen';
 import InvoiceListScreen from '../screens/sales/InvoiceListScreen';
+import InventoryDashboardScreen from '../screens/inventory/InventoryDashboardScreen';
+import ProductListScreen from '../screens/inventory/ProductListScreen';
+import ProductDetailScreen from '../screens/inventory/ProductDetailScreen';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-    const { isAuthenticated, isLoading, user } = useAuthStore();
+    const { isAuthenticated, isLoading, isInitializing, user } = useAuthStore();
 
-    if (isLoading) {
+    if (isInitializing || isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0e27' }}>
                 <ActivityIndicator size="large" color="#667eea" />
@@ -67,6 +70,11 @@ export default function AppNavigator() {
                             <Stack.Screen name="QuoteList" component={QuoteListScreen} />
                             <Stack.Screen name="OrderList" component={OrderListScreen} />
                             <Stack.Screen name="InvoiceList" component={InvoiceListScreen} />
+
+                            {/* Inventory Module */}
+                            <Stack.Screen name="InventoryDashboard" component={InventoryDashboardScreen} />
+                            <Stack.Screen name="ProductList" component={ProductListScreen} />
+                            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
                         </Stack.Group>
                     )
                 )}
