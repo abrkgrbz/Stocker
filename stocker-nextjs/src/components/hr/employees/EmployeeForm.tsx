@@ -151,7 +151,7 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
           {/* Employee Name - Hero Input */}
           <div className="mb-8">
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={10}>
                 <Form.Item
                   name="firstName"
                   rules={[{ required: true, message: 'Ad zorunludur' }]}
@@ -170,7 +170,7 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={10}>
                 <Form.Item
                   name="lastName"
                   rules={[{ required: true, message: 'Soyad zorunludur' }]}
@@ -187,6 +187,16 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
                     }}
                     className="placeholder:text-gray-300"
                   />
+                </Form.Item>
+              </Col>
+              <Col span={4}>
+                <div className="text-xs text-gray-400 mb-1">Sicil No *</div>
+                <Form.Item
+                  name="employeeCode"
+                  rules={[{ required: true, message: 'Gerekli' }]}
+                  className="mb-0"
+                >
+                  <Input placeholder="EMP001" variant="filled" disabled={!!initialValues} />
                 </Form.Item>
               </Col>
             </Row>
@@ -409,7 +419,7 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
                     optionFilterProp="label"
                     disabled={!selectedDepartment}
                     variant="filled"
-                    options={positions.map((p) => ({ value: p.id, label: p.name }))}
+                    options={positions.map((p) => ({ value: p.id, label: p.title }))}
                   />
                 </Form.Item>
               </Col>
