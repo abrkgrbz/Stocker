@@ -40,9 +40,9 @@ public class MinioProductImageStorageService : IProductImageStorageService
             // Ensure bucket exists
             await EnsureBucketExistsAsync(cancellationToken);
 
-            // Organize folder structure: tenant/products/productId/year/month/timestamp_guid_filename
+            // Organize folder structure: tenant/module/products/productId/year/month/timestamp_guid_filename
             var now = DateTimeOffset.UtcNow;
-            var folderPath = $"{tenantId}/products/{productId}/{now:yyyy}/{now:MM}";
+            var folderPath = $"{tenantId}/inventory/products/{productId}/{now:yyyy}/{now:MM}";
             var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{SanitizeFileName(fileName)}";
             var objectName = $"{folderPath}/{uniqueFileName}";
 

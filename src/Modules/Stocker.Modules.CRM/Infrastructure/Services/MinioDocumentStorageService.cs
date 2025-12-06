@@ -42,9 +42,9 @@ public class MinioDocumentStorageService : IDocumentStorageService
             // Ensure bucket exists
             await EnsureBucketExistsAsync(cancellationToken);
 
-            // Organize folder structure: tenant/entityType/entityId/year/month/timestamp_guid_filename
+            // Organize folder structure: tenant/module/entityType/entityId/year/month/timestamp_guid_filename
             var now = DateTimeOffset.UtcNow;
-            var folderPath = $"{tenantId}/{entityType.ToLowerInvariant()}/{entityId}/{now:yyyy}/{now:MM}";
+            var folderPath = $"{tenantId}/crm/{entityType.ToLowerInvariant()}/{entityId}/{now:yyyy}/{now:MM}";
             var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{fileName}";
             var objectName = $"{folderPath}/{uniqueFileName}";
 
