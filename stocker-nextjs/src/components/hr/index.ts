@@ -13,3 +13,4 @@ export { AnnouncementForm } from './announcements';
 export { AttendanceCheckInForm } from './attendance';
 export { PayrollForm } from './payroll';
 export { EmployeeForm } from './employees';
+export { DocumentForm } from './documents';

@@ -735,6 +735,12 @@ export class HRService {
   // DOCUMENTS
   // =====================================
 
+  static async getDocuments(employeeId?: number, documentType?: number): Promise<EmployeeDocumentDto[]> {
+    return ApiService.get<EmployeeDocumentDto[]>(this.getPath('documents'), {
+      params: { employeeId, documentType },
+    });
+  }
+
   static async getEmployeeDocuments(employeeId: number): Promise<EmployeeDocumentDto[]> {
     return ApiService.get<EmployeeDocumentDto[]>(this.getPath(`documents/employee/${employeeId}`));
   }

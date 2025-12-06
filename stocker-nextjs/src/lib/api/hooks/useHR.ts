@@ -1965,6 +1965,14 @@ export function useCancelEmployeeTraining() {
 // DOCUMENTS HOOKS
 // =====================================
 
+export function useDocuments(employeeId?: number, documentType?: number) {
+  return useQuery({
+    queryKey: [...hrKeys.documents, { employeeId, documentType }],
+    queryFn: () => HRService.getDocuments(employeeId, documentType),
+    staleTime: 30000,
+  });
+}
+
 export function useEmployeeDocuments(employeeId: number) {
   return useQuery({
     queryKey: hrKeys.employeeDocuments(employeeId),
