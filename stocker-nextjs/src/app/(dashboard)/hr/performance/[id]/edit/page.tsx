@@ -32,8 +32,8 @@ export default function EditPerformancePage() {
         overallScore: review.overallScore,
         strengths: review.strengths,
         areasForImprovement: review.areasForImprovement,
-        goals: review.goals,
-        comments: review.comments,
+        developmentPlan: review.developmentPlan,
+        managerComments: review.managerComments,
       });
     }
   }, [review, form]);
@@ -41,15 +41,10 @@ export default function EditPerformancePage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: UpdatePerformanceReviewDto = {
-        employeeId: values.employeeId,
-        reviewerId: values.reviewerId,
-        reviewDate: values.reviewDate?.format('YYYY-MM-DD'),
-        reviewPeriod: values.reviewPeriod,
-        overallScore: values.overallScore,
         strengths: values.strengths,
         areasForImprovement: values.areasForImprovement,
-        goals: values.goals,
-        comments: values.comments,
+        developmentPlan: values.developmentPlan,
+        managerComments: values.managerComments,
       };
 
       await updateReview.mutateAsync({ id, data });
@@ -241,11 +236,11 @@ export default function EditPerformancePage() {
                   variant="filled"
                 />
               </Form.Item>
-              <Form.Item name="goals" label="Hedefler">
-                <TextArea rows={3} placeholder="Gelecek dönem hedeflerini yazın" variant="filled" />
+              <Form.Item name="developmentPlan" label="Gelişim Planı">
+                <TextArea rows={3} placeholder="Gelişim planını yazın" variant="filled" />
               </Form.Item>
-              <Form.Item name="comments" label="Genel Yorumlar" className="mb-0">
-                <TextArea rows={3} placeholder="Ek yorumlar" variant="filled" />
+              <Form.Item name="managerComments" label="Yönetici Yorumları" className="mb-0">
+                <TextArea rows={3} placeholder="Yönetici yorumları" variant="filled" />
               </Form.Item>
             </div>
           </div>

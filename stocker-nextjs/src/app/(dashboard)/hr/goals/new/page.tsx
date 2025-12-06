@@ -3,29 +3,32 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, TrophyOutlined } from '@ant-design/icons';
-import { PerformanceReviewForm } from '@/components/hr';
-import { useCreatePerformanceReview } from '@/lib/api/hooks/useHR';
-import type { CreatePerformanceReviewDto } from '@/lib/api/services/hr.types';
+import { ArrowLeftOutlined, SaveOutlined, AimOutlined } from '@ant-design/icons';
+import { GoalForm } from '@/components/hr';
+import { useCreatePerformanceGoal } from '@/lib/api/hooks/useHR';
+import type { CreatePerformanceGoalDto } from '@/lib/api/services/hr.types';
 
-export default function NewPerformancePage() {
+export default function NewGoalPage() {
   const router = useRouter();
   const [form] = Form.useForm();
-  const createReview = useCreatePerformanceReview();
+  const createGoal = useCreatePerformanceGoal();
 
   const handleSubmit = async (values: any) => {
     try {
-      const data: CreatePerformanceReviewDto = {
+      const data: CreatePerformanceGoalDto = {
         employeeId: values.employeeId,
-        reviewerId: values.reviewerId,
-        reviewDate: values.reviewDate?.format('YYYY-MM-DD'),
-        reviewPeriod: values.reviewPeriod,
-        dueDate: values.dueDate?.format('YYYY-MM-DD'),
-        reviewType: values.reviewType || 'Annual',
+        title: values.title,
+        description: values.description,
+        category: values.category,
+        startDate: values.startDate?.format('YYYY-MM-DD'),
+        targetDate: values.targetDate?.format('YYYY-MM-DD'),
+        weight: values.weight || 1,
+        metrics: values.metrics,
+        targetValue: values.targetValue,
       };
 
-      await createReview.mutateAsync(data);
-      router.push('/hr/performance');
+      await createGoal.mutateAsync(data);
+      router.push('/hr/goals');
     } catch (error) {
       // Error handled by hook
     }
@@ -52,18 +55,18 @@ export default function NewPerformancePage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <TrophyOutlined className="mr-2" />
-                Yeni Performans Değerlendirmesi
+                <AimOutlined className="mr-2" />
+                Yeni Hedef
               </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir performans değerlendirmesi oluşturun</p>
+              <p className="text-sm text-gray-400 m-0">Yeni bir performans hedefi oluşturun</p>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.push('/hr/performance')}>Vazgeç</Button>
+            <Button onClick={() => router.push('/hr/goals')}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              loading={createReview.isPending}
+              loading={createGoal.isPending}
               onClick={() => form.submit()}
               style={{
                 background: '#1a1a1a',
@@ -79,10 +82,10 @@ export default function NewPerformancePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <PerformanceReviewForm
+        <GoalForm
           form={form}
           onFinish={handleSubmit}
-          loading={createReview.isPending}
+          loading={createGoal.isPending}
         />
       </div>
     </div>

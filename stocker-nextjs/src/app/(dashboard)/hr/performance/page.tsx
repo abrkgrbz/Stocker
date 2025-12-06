@@ -29,7 +29,13 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { usePerformanceReviews, useDeletePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
-import type { PerformanceReviewDto, PerformanceReviewFilterDto } from '@/lib/api/services/hr.types';
+import type { PerformanceReviewDto } from '@/lib/api/services/hr.types';
+
+interface PerformanceReviewFilterDto {
+  employeeId?: number;
+  status?: string;
+  reviewPeriod?: string;
+}
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -39,7 +45,7 @@ export default function PerformancePage() {
   const [filters, setFilters] = useState<PerformanceReviewFilterDto>({});
 
   // API Hooks
-  const { data: reviews = [], isLoading } = usePerformanceReviews(filters);
+  const { data: reviews = [], isLoading } = usePerformanceReviews(filters.employeeId);
   const { data: employees = [] } = useEmployees();
   const deleteReview = useDeletePerformanceReview();
 
@@ -230,7 +236,7 @@ export default function PerformancePage() {
               showSearch
               optionFilterProp="children"
               style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
+              onChange={(value) => setFilters((prev: PerformanceReviewFilterDto) => ({ ...prev, employeeId: value }))}
               options={employees.map((e) => ({
                 value: e.id,
                 label: e.fullName,
@@ -242,7 +248,7 @@ export default function PerformancePage() {
               placeholder="Durum"
               allowClear
               style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+              onChange={(value) => setFilters((prev: PerformanceReviewFilterDto) => ({ ...prev, status: value }))}
               options={[
                 { value: 'Draft', label: 'Taslak' },
                 { value: 'InProgress', label: 'Devam Ediyor' },

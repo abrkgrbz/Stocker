@@ -217,20 +217,20 @@ export default function PerformanceDetailPage() {
           </Col>
         )}
 
-        {/* Goals */}
-        {review.goals && (
+        {/* Development Plan */}
+        {review.developmentPlan && (
           <Col xs={24} lg={12}>
-            <Card title="Hedefler">
-              <Paragraph>{review.goals}</Paragraph>
+            <Card title="Gelişim Planı">
+              <Paragraph>{review.developmentPlan}</Paragraph>
             </Card>
           </Col>
         )}
 
-        {/* Comments */}
-        {review.comments && (
+        {/* Manager Comments */}
+        {review.managerComments && (
           <Col xs={24}>
-            <Card title="Genel Yorumlar">
-              <Paragraph>{review.comments}</Paragraph>
+            <Card title="Yönetici Yorumları">
+              <Paragraph>{review.managerComments}</Paragraph>
             </Card>
           </Col>
         )}

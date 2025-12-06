@@ -96,7 +96,7 @@ export default function PerformanceReviewForm({ form, initialValues, onFinish, l
                     disabled={!!initialValues}
                     options={employees.map((e) => ({
                       value: e.id,
-                      label: `${e.firstName} ${e.lastName}`,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>
@@ -115,7 +115,7 @@ export default function PerformanceReviewForm({ form, initialValues, onFinish, l
                     variant="filled"
                     options={employees.map((e) => ({
                       value: e.id,
-                      label: `${e.firstName} ${e.lastName}`,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>
@@ -191,18 +191,18 @@ export default function PerformanceReviewForm({ form, initialValues, onFinish, l
           {/* Divider */}
           <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-          {/* Goals & Comments */}
+          {/* Development Plan & Comments */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Hedefler ve Yorumlar
+              Gelişim Planı ve Yorumlar
             </Text>
-            <div className="text-xs text-gray-400 mb-1">Hedefler</div>
-            <Form.Item name="goals" className="mb-4">
-              <TextArea rows={3} placeholder="Gelecek dönem hedefleri..." variant="filled" />
+            <div className="text-xs text-gray-400 mb-1">Gelişim Planı</div>
+            <Form.Item name="developmentPlan" className="mb-4">
+              <TextArea rows={3} placeholder="Gelişim planı..." variant="filled" />
             </Form.Item>
-            <div className="text-xs text-gray-400 mb-1">Genel Yorumlar</div>
-            <Form.Item name="comments" className="mb-0">
-              <TextArea rows={3} placeholder="Ek yorumlar..." variant="filled" />
+            <div className="text-xs text-gray-400 mb-1">Yönetici Yorumları</div>
+            <Form.Item name="managerComments" className="mb-0">
+              <TextArea rows={3} placeholder="Yönetici yorumları..." variant="filled" />
             </Form.Item>
           </div>
         </Col>
