@@ -382,7 +382,7 @@ export default function EditEmployeePage() {
                       optionFilterProp="children"
                       disabled={!selectedDepartment}
                       variant="filled"
-                      options={positions.map((p) => ({ value: p.id, label: p.name }))}
+                      options={positions.map((p) => ({ value: p.id, label: p.title }))}
                     />
                   </Form.Item>
                 </Col>

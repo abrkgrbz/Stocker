@@ -16,6 +16,7 @@ export default function NewEmployeePage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: CreateEmployeeDto = {
+        employeeCode: values.employeeCode,
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
