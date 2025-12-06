@@ -295,7 +295,7 @@ export default function LeavesPage() {
               onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
               options={employees.map((e) => ({
                 value: e.id,
-                label: `${e.firstName} ${e.lastName}`,
+                label: e.fullName,
               }))}
             />
           </Col>

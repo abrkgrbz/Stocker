@@ -177,7 +177,7 @@ export default function EditDepartmentPage() {
                       variant="filled"
                       options={employees.map((e) => ({
                         value: e.id,
-                        label: `${e.firstName} ${e.lastName}`,
+                        label: e.fullName,
                       }))}
                     />
                   </Form.Item>

@@ -96,7 +96,7 @@ export default function EmployeeDetailPage() {
     if (!employee) return;
     Modal.confirm({
       title: 'Çalışanı Sil',
-      content: `"${employee.firstName} ${employee.lastName}" çalışanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${employee.fullName}" çalışanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -220,7 +220,7 @@ export default function EmployeeDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              {employee.firstName} {employee.lastName}
+              {employee.fullName}
             </Title>
             <Space>
               <Text type="secondary">{employee.employeeCode}</Text>
@@ -256,7 +256,7 @@ export default function EmployeeDetailPage() {
                 style={{ backgroundColor: employee.photoUrl ? undefined : '#7c3aed' }}
               />
               <Title level={4} className="mt-4 mb-0">
-                {employee.firstName} {employee.lastName}
+                {employee.fullName}
               </Title>
               <Text type="secondary">{employee.positionTitle}</Text>
             </div>

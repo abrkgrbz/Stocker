@@ -107,7 +107,7 @@ export default function DepartmentDetailPage() {
     {
       title: 'Ad Soyad',
       key: 'name',
-      render: (_: any, record: any) => `${record.firstName} ${record.lastName}`,
+      render: (_: any, record: any) => record.fullName,
     },
     { title: 'Pozisyon', dataIndex: 'positionName', key: 'position' },
     { title: 'E-posta', dataIndex: 'email', key: 'email' },

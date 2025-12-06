@@ -113,7 +113,7 @@ export default function PositionDetailPage() {
     {
       title: 'Ad Soyad',
       key: 'name',
-      render: (_: any, record: any) => `${record.firstName} ${record.lastName}`,
+      render: (_: any, record: any) => record.fullName,
     },
     { title: 'Departman', dataIndex: 'departmentName', key: 'department' },
     { title: 'E-posta', dataIndex: 'email', key: 'email' },

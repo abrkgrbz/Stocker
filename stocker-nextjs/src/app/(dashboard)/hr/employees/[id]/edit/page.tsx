@@ -149,7 +149,7 @@ export default function EditEmployeePage() {
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Çalışan Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">
-                  {employee.firstName} {employee.lastName} - {employee.employeeCode}
+                  {employee.fullName} - {employee.employeeCode}
                 </p>
               </div>
             </div>
@@ -400,7 +400,7 @@ export default function EditEmployeePage() {
                         .filter((e) => e.id !== id)
                         .map((e) => ({
                           value: e.id,
-                          label: `${e.firstName} ${e.lastName}`,
+                          label: e.fullName,
                         }))}
                     />
                   </Form.Item>
