@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Typography, Button, Space, Card, Form, Input, InputNumber, Row, Col, Switch } from 'antd';
+import { Button, Space, Form, Input, InputNumber, Row, Col, Switch, Typography } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useCreateLeaveType } from '@/lib/api/hooks/useHR';
 import type { CreateLeaveTypeDto } from '@/lib/api/services/hr.types';
 
-const { Title } = Typography;
 const { TextArea } = Input;
+const { Text } = Typography;
 
 export default function NewLeaveTypePage() {
   const router = useRouter();
@@ -35,95 +35,154 @@ export default function NewLeaveTypePage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/leave-types')}>
-            Geri
-          </Button>
-          <Title level={2} style={{ margin: 0 }}>
-            <FileTextOutlined className="mr-2" />
-            Yeni İzin Türü
-          </Title>
-        </Space>
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
+      <div
+        className="sticky top-0 z-50 px-8 py-4"
+        style={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">
+                <FileTextOutlined className="mr-2" />
+                Yeni İzin Türü
+              </h1>
+              <p className="text-sm text-gray-400 m-0">Yeni bir izin türü tanımlayın</p>
+            </div>
+          </div>
+          <Space>
+            <Button onClick={() => router.push('/hr/leave-types')}>Vazgeç</Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={createLeaveType.isPending}
+              onClick={() => form.submit()}
+              style={{
+                background: '#1a1a1a',
+                borderColor: '#1a1a1a',
+                color: 'white',
+              }}
+            >
+              Kaydet
+            </Button>
+          </Space>
+        </div>
       </div>
 
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
-          <Card>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleSubmit}
-              initialValues={{ isPaid: true, requiresApproval: true, isActive: true, defaultDays: 0 }}
-            >
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="name"
-                    label="İzin Türü Adı"
-                    rules={[{ required: true, message: 'İzin türü adı gerekli' }]}
-                  >
-                    <Input placeholder="Örn: Yıllık İzin, Hastalık İzni" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="code"
-                    label="İzin Türü Kodu"
-                    rules={[{ required: true, message: 'İzin türü kodu gerekli' }]}
-                  >
-                    <Input placeholder="Örn: YILLIK, HASTALIK, DOGUM" />
-                  </Form.Item>
-                </Col>
-              </Row>
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{ isPaid: true, requiresApproval: true, isActive: true, defaultDays: 0 }}
+        >
+          <Row gutter={48}>
+            <Col xs={24} lg={16}>
+              {/* Basic Info Section */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
+                  İzin Türü Bilgileri
+                </Text>
+                <div className="bg-gray-50/50 rounded-xl p-6">
+                  <Row gutter={16}>
+                    <Col xs={24} sm={12}>
+                      <Form.Item
+                        name="name"
+                        label="İzin Türü Adı"
+                        rules={[{ required: true, message: 'İzin türü adı gerekli' }]}
+                      >
+                        <Input placeholder="Örn: Yıllık İzin, Hastalık İzni" variant="filled" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item
+                        name="code"
+                        label="İzin Türü Kodu"
+                        rules={[{ required: true, message: 'İzin türü kodu gerekli' }]}
+                      >
+                        <Input placeholder="Örn: YILLIK, HASTALIK, DOGUM" variant="filled" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-              <Form.Item name="description" label="Açıklama">
-                <TextArea rows={3} placeholder="İzin türü açıklaması" />
-              </Form.Item>
-
-              <Row gutter={16}>
-                <Col xs={24} sm={8}>
                   <Form.Item
                     name="defaultDays"
                     label="Varsayılan Gün Sayısı"
                     rules={[{ required: true, message: 'Gün sayısı gerekli' }]}
                   >
-                    <InputNumber placeholder="Gün" style={{ width: '100%' }} min={0} max={365} />
+                    <InputNumber
+                      placeholder="Gün"
+                      style={{ width: '100%' }}
+                      min={0}
+                      max={365}
+                      variant="filled"
+                    />
                   </Form.Item>
-                </Col>
-                <Col xs={24} sm={8}>
-                  <Form.Item name="isPaid" label="Ücretli İzin" valuePropName="checked">
-                    <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={8}>
-                  <Form.Item name="requiresApproval" label="Onay Gerekli" valuePropName="checked">
-                    <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-                  </Form.Item>
-                </Col>
-              </Row>
 
-              <Form.Item name="isActive" label="Durum" valuePropName="checked">
-                <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-              </Form.Item>
-
-              <div className="flex justify-end gap-2 mt-6">
-                <Button onClick={() => router.push('/hr/leave-types')}>İptal</Button>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  htmlType="submit"
-                  loading={createLeaveType.isPending}
-                >
-                  Kaydet
-                </Button>
+                  <Form.Item name="description" label="Açıklama">
+                    <TextArea rows={3} placeholder="İzin türü açıklaması" variant="filled" />
+                  </Form.Item>
+                </div>
               </div>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+
+              {/* Settings Section */}
+              <div className="mb-8">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
+                  Ayarlar
+                </Text>
+                <div className="bg-gray-50/50 rounded-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Ücretli İzin</div>
+                      <div className="text-xs text-gray-400">Bu izin türü ücretli mi?</div>
+                    </div>
+                    <Form.Item name="isPaid" valuePropName="checked" noStyle>
+                      <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                    </Form.Item>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Onay Gerekli</div>
+                      <div className="text-xs text-gray-400">İzin talebi onay sürecinden geçsin mi?</div>
+                    </div>
+                    <Form.Item name="requiresApproval" valuePropName="checked" noStyle>
+                      <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                    </Form.Item>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">Aktif</div>
+                      <div className="text-xs text-gray-400">İzin türü aktif durumda mı?</div>
+                    </div>
+                    <Form.Item name="isActive" valuePropName="checked" noStyle>
+                      <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
+                    </Form.Item>
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
+
+          {/* Hidden submit button */}
+          <Form.Item hidden>
+            <Button htmlType="submit" />
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 }
