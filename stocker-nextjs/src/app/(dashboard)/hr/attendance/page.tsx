@@ -13,7 +13,6 @@ import {
   Col,
   Statistic,
   Dropdown,
-  Modal,
   Select,
   DatePicker,
 } from 'antd';
@@ -22,14 +21,13 @@ import {
   FieldTimeOutlined,
   MoreOutlined,
   EditOutlined,
-  DeleteOutlined,
   EyeOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { useAttendances, useDeleteAttendance, useEmployees } from '@/lib/api/hooks/useHR';
+import { useAttendance, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AttendanceDto, AttendanceFilterDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
@@ -41,32 +39,14 @@ export default function AttendancePage() {
   const [filters, setFilters] = useState<AttendanceFilterDto>({});
 
   // API Hooks
-  const { data: attendances = [], isLoading } = useAttendances(filters);
+  const { data: attendances = [], isLoading } = useAttendance(filters);
   const { data: employees = [] } = useEmployees();
-  const deleteAttendance = useDeleteAttendance();
 
   // Stats
   const totalRecords = attendances.length;
   const presentCount = attendances.filter((a) => a.status === 'Present').length;
   const lateCount = attendances.filter((a) => a.status === 'Late').length;
   const absentCount = attendances.filter((a) => a.status === 'Absent').length;
-
-  const handleDelete = (attendance: AttendanceDto) => {
-    Modal.confirm({
-      title: 'Yoklama Kaydını Sil',
-      content: 'Bu yoklama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteAttendance.mutateAsync(attendance.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
-  };
 
   const formatTime = (time?: string) => {
     if (!time) return '-';
@@ -153,14 +133,6 @@ export default function AttendancePage() {
                 icon: <EditOutlined />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/attendance/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
               },
             ],
           }}
