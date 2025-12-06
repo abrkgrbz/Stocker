@@ -41,16 +41,8 @@ public class LeaveTypeConfiguration : IEntityTypeConfiguration<LeaveType>
         builder.Property(lt => lt.Color)
             .HasMaxLength(20);
 
-        // Relationships
-        builder.HasMany(lt => lt.Leaves)
-            .WithOne()
-            .HasForeignKey("LeaveTypeId")
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(lt => lt.LeaveBalances)
-            .WithOne()
-            .HasForeignKey("LeaveTypeId")
-            .OnDelete(DeleteBehavior.Restrict);
+        // Note: Relationships are configured from the other side (LeaveConfiguration, LeaveBalanceConfiguration)
+        // to avoid duplicate foreign keys
 
         // Indexes
         builder.HasIndex(lt => lt.TenantId);

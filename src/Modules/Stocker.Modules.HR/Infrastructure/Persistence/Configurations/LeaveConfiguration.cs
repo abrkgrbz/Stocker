@@ -50,7 +50,7 @@ public class LeaveConfiguration : IEntityTypeConfiguration<Leave>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(l => l.LeaveType)
-            .WithMany()
+            .WithMany(lt => lt.Leaves)
             .HasForeignKey(l => l.LeaveTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
