@@ -135,8 +135,17 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
                 <Input placeholder="Acil durumda aranacak kişi" variant="filled" />
               </Form.Item>
               <div className="text-xs text-gray-400 mb-1">Telefon</div>
-              <Form.Item name="emergencyContactPhone" className="mb-3">
-                <Input placeholder="Telefon numarası" variant="filled" />
+              <Form.Item
+                name="emergencyContactPhone"
+                className="mb-3"
+                rules={[
+                  {
+                    pattern: /^\+?[1-9]\d{1,14}$/,
+                    message: 'Geçerli telefon formatı: +905551234567',
+                  },
+                ]}
+              >
+                <Input placeholder="+905551234567" variant="filled" />
               </Form.Item>
               <div className="text-xs text-gray-400 mb-1">Yakınlık</div>
               <Form.Item name="emergencyContactRelation" className="mb-0">
@@ -303,8 +312,17 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
               </Col>
               <Col span={12}>
                 <div className="text-xs text-gray-400 mb-1">Telefon</div>
-                <Form.Item name="phone" className="mb-4">
-                  <Input placeholder="Telefon numarası" variant="filled" />
+                <Form.Item
+                  name="phone"
+                  className="mb-4"
+                  rules={[
+                    {
+                      pattern: /^\+?[1-9]\d{1,14}$/,
+                      message: 'Geçerli telefon formatı: +905551234567',
+                    },
+                  ]}
+                >
+                  <Input placeholder="+905551234567" variant="filled" />
                 </Form.Item>
               </Col>
             </Row>
