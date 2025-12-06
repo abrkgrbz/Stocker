@@ -2,18 +2,16 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Select, TimePicker, Row, Col, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, FieldTimeOutlined } from '@ant-design/icons';
-import { useCheckIn, useEmployees } from '@/lib/api/hooks/useHR';
+import { AttendanceCheckInForm } from '@/components/hr';
+import { useCheckIn } from '@/lib/api/hooks/useHR';
 import type { CheckInDto } from '@/lib/api/services/hr.types';
-
-const { Text } = Typography;
 
 export default function NewAttendancePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const checkIn = useCheckIn();
-  const { data: employees = [] } = useEmployees();
 
   const handleSubmit = async (values: any) => {
     try {
@@ -77,55 +75,11 @@ export default function NewAttendancePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Giriş Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="employeeId"
-                        label="Çalışan"
-                        rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Çalışan seçin"
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="checkInTime" label="Giriş Saati">
-                        <TimePicker
-                          format="HH:mm"
-                          style={{ width: '100%' }}
-                          placeholder="Boş bırakılırsa şu anki saat"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <AttendanceCheckInForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={checkIn.isPending}
+        />
       </div>
     </div>
   );

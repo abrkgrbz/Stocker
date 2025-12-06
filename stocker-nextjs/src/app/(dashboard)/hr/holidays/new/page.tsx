@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, DatePicker, Row, Col, Switch, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, CalendarOutlined } from '@ant-design/icons';
+import { HolidayForm } from '@/components/hr';
 import { useCreateHoliday } from '@/lib/api/hooks/useHR';
 import type { CreateHolidayDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewHolidayPage() {
   const router = useRouter();
@@ -79,77 +77,11 @@ export default function NewHolidayPage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form
+        <HolidayForm
           form={form}
-          layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ isRecurring: false }}
-        >
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Tatil Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="Tatil Adı"
-                        rules={[{ required: true, message: 'Tatil adı gerekli' }]}
-                      >
-                        <Input placeholder="Örn: Yılbaşı, Ramazan Bayramı" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="date"
-                        label="Tarih"
-                        rules={[{ required: true, message: 'Tarih gerekli' }]}
-                      >
-                        <DatePicker
-                          format="DD.MM.YYYY"
-                          style={{ width: '100%' }}
-                          placeholder="Tarih seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="Tatil günü açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Settings Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Ayarlar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Yıllık Tekrarlayan</div>
-                      <div className="text-xs text-gray-400">Her yıl aynı tarihte tekrarlansın</div>
-                    </div>
-                    <Form.Item name="isRecurring" valuePropName="checked" noStyle>
-                      <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-                    </Form.Item>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+          loading={createHoliday.isPending}
+        />
       </div>
     </div>
   );

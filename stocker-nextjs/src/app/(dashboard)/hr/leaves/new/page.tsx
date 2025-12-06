@@ -2,21 +2,16 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Select, DatePicker, Input, Row, Col, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, CalendarOutlined } from '@ant-design/icons';
-import { useCreateLeave, useEmployees, useLeaveTypes } from '@/lib/api/hooks/useHR';
+import { LeaveForm } from '@/components/hr';
+import { useCreateLeave } from '@/lib/api/hooks/useHR';
 import type { CreateLeaveDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
-const { Text } = Typography;
 
 export default function NewLeavePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createLeave = useCreateLeave();
-  const { data: employees = [] } = useEmployees();
-  const { data: leaveTypes = [] } = useLeaveTypes();
 
   const handleSubmit = async (values: any) => {
     try {
@@ -83,83 +78,11 @@ export default function NewLeavePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Leave Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  İzin Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="employeeId"
-                        label="Çalışan"
-                        rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Çalışan seçin"
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="leaveTypeId"
-                        label="İzin Türü"
-                        rules={[{ required: true, message: 'İzin türü seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="İzin türü seçin"
-                          variant="filled"
-                          options={leaveTypes.map((lt) => ({
-                            value: lt.id,
-                            label: lt.name,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    name="dateRange"
-                    label="İzin Tarihleri"
-                    rules={[{ required: true, message: 'İzin tarihleri gerekli' }]}
-                  >
-                    <RangePicker
-                      format="DD.MM.YYYY"
-                      style={{ width: '100%' }}
-                      placeholder={['Başlangıç Tarihi', 'Bitiş Tarihi']}
-                      variant="filled"
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="reason"
-                    label="İzin Nedeni"
-                    rules={[{ required: true, message: 'İzin nedeni gerekli' }]}
-                    className="mb-0"
-                  >
-                    <TextArea rows={4} placeholder="İzin talebinizin nedenini açıklayın" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <LeaveForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={createLeave.isPending}
+        />
       </div>
     </div>
   );

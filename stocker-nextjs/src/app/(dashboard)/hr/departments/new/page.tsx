@@ -2,34 +2,20 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, Select, Row, Col, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, ApartmentOutlined } from '@ant-design/icons';
-import { useCreateDepartment, useDepartments, useEmployees } from '@/lib/api/hooks/useHR';
+import { DepartmentForm } from '@/components/hr';
+import { useCreateDepartment } from '@/lib/api/hooks/useHR';
 import type { CreateDepartmentDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewDepartmentPage() {
   const router = useRouter();
   const [form] = Form.useForm();
-
-  // API Hooks
   const createDepartment = useCreateDepartment();
-  const { data: departments = [] } = useDepartments();
-  const { data: employees = [] } = useEmployees();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreateDepartmentDto) => {
     try {
-      const data: CreateDepartmentDto = {
-        name: values.name,
-        code: values.code,
-        description: values.description,
-        parentDepartmentId: values.parentDepartmentId,
-        managerId: values.managerId,
-      };
-
-      await createDepartment.mutateAsync(data);
+      await createDepartment.mutateAsync(values);
       router.push('/hr/departments');
     } catch (error) {
       // Error handled by hook
@@ -84,87 +70,11 @@ export default function NewDepartmentPage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Departman Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="Departman Adı"
-                        rules={[{ required: true, message: 'Departman adı gerekli' }]}
-                      >
-                        <Input placeholder="Departman adı" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="code"
-                        label="Departman Kodu"
-                        rules={[{ required: true, message: 'Departman kodu gerekli' }]}
-                      >
-                        <Input placeholder="Örn: HR, IT, FIN" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="Departman açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Organization Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Organizasyon
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="parentDepartmentId" label="Üst Departman">
-                        <Select
-                          placeholder="Üst departman seçin"
-                          allowClear
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={departments.map((d) => ({ value: d.id, label: d.name }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="managerId" label="Departman Yöneticisi">
-                        <Select
-                          placeholder="Yönetici seçin"
-                          allowClear
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <DepartmentForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={createDepartment.isPending}
+        />
       </div>
     </div>
   );

@@ -2,19 +2,16 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Select, DatePicker, InputNumber, Input, Row, Col, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, WalletOutlined } from '@ant-design/icons';
-import { useCreateExpense, useEmployees } from '@/lib/api/hooks/useHR';
+import { ExpenseForm } from '@/components/hr';
+import { useCreateExpense } from '@/lib/api/hooks/useHR';
 import type { CreateExpenseDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewExpensePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createExpense = useCreateExpense();
-  const { data: employees = [] } = useEmployees();
 
   const handleSubmit = async (values: any) => {
     try {
@@ -82,121 +79,11 @@ export default function NewExpensePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Harcama Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="employeeId"
-                        label="Çalışan"
-                        rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Çalışan seçin"
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="expenseDate"
-                        label="Harcama Tarihi"
-                        rules={[{ required: true, message: 'Tarih gerekli' }]}
-                      >
-                        <DatePicker
-                          format="DD.MM.YYYY"
-                          style={{ width: '100%' }}
-                          placeholder="Tarih seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="category"
-                        label="Kategori"
-                        rules={[{ required: true, message: 'Kategori gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Kategori seçin"
-                          variant="filled"
-                          options={[
-                            { value: 'Travel', label: 'Seyahat' },
-                            { value: 'Meals', label: 'Yemek' },
-                            { value: 'Supplies', label: 'Malzeme' },
-                            { value: 'Equipment', label: 'Ekipman' },
-                            { value: 'Training', label: 'Eğitim' },
-                            { value: 'Communication', label: 'İletişim' },
-                            { value: 'Transportation', label: 'Ulaşım' },
-                            { value: 'Accommodation', label: 'Konaklama' },
-                            { value: 'Other', label: 'Diğer' },
-                          ]}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="amount"
-                        label="Tutar"
-                        rules={[{ required: true, message: 'Tutar gerekli' }]}
-                      >
-                        <InputNumber
-                          placeholder="0"
-                          style={{ width: '100%' }}
-                          formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
-                          min={0}
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    name="description"
-                    label="Açıklama"
-                    rules={[{ required: true, message: 'Açıklama gerekli' }]}
-                  >
-                    <Input placeholder="Harcama açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Notes Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Ek Notlar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item name="notes" label="Notlar" className="mb-0">
-                    <TextArea rows={3} placeholder="Ek notlar" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <ExpenseForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={createExpense.isPending}
+        />
       </div>
     </div>
   );

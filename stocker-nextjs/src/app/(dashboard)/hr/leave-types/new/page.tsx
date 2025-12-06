@@ -2,32 +2,20 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, InputNumber, Row, Col, Switch, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
+import { LeaveTypeForm } from '@/components/hr';
 import { useCreateLeaveType } from '@/lib/api/hooks/useHR';
 import type { CreateLeaveTypeDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewLeaveTypePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createLeaveType = useCreateLeaveType();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreateLeaveTypeDto) => {
     try {
-      const data: CreateLeaveTypeDto = {
-        name: values.name,
-        code: values.code,
-        description: values.description,
-        defaultDays: values.defaultDays,
-        isPaid: values.isPaid ?? true,
-        requiresApproval: values.requiresApproval ?? true,
-        isActive: values.isActive ?? true,
-      };
-
-      await createLeaveType.mutateAsync(data);
+      await createLeaveType.mutateAsync(values);
       router.push('/hr/leave-types');
     } catch (error) {
       // Error handled by hook
@@ -82,106 +70,11 @@ export default function NewLeaveTypePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form
+        <LeaveTypeForm
           form={form}
-          layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ isPaid: true, requiresApproval: true, isActive: true, defaultDays: 0 }}
-        >
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  İzin Türü Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="İzin Türü Adı"
-                        rules={[{ required: true, message: 'İzin türü adı gerekli' }]}
-                      >
-                        <Input placeholder="Örn: Yıllık İzin, Hastalık İzni" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="code"
-                        label="İzin Türü Kodu"
-                        rules={[{ required: true, message: 'İzin türü kodu gerekli' }]}
-                      >
-                        <Input placeholder="Örn: YILLIK, HASTALIK, DOGUM" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    name="defaultDays"
-                    label="Varsayılan Gün Sayısı"
-                    rules={[{ required: true, message: 'Gün sayısı gerekli' }]}
-                  >
-                    <InputNumber
-                      placeholder="Gün"
-                      style={{ width: '100%' }}
-                      min={0}
-                      max={365}
-                      variant="filled"
-                    />
-                  </Form.Item>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="İzin türü açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Settings Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Ayarlar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6 space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Ücretli İzin</div>
-                      <div className="text-xs text-gray-400">Bu izin türü ücretli mi?</div>
-                    </div>
-                    <Form.Item name="isPaid" valuePropName="checked" noStyle>
-                      <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-                    </Form.Item>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Onay Gerekli</div>
-                      <div className="text-xs text-gray-400">İzin talebi onay sürecinden geçsin mi?</div>
-                    </div>
-                    <Form.Item name="requiresApproval" valuePropName="checked" noStyle>
-                      <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
-                    </Form.Item>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">Aktif</div>
-                      <div className="text-xs text-gray-400">İzin türü aktif durumda mı?</div>
-                    </div>
-                    <Form.Item name="isActive" valuePropName="checked" noStyle>
-                      <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-                    </Form.Item>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+          loading={createLeaveType.isPending}
+        />
       </div>
     </div>
   );

@@ -2,36 +2,20 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, Select, Row, Col, InputNumber, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import { useCreatePosition, useDepartments } from '@/lib/api/hooks/useHR';
+import { PositionForm } from '@/components/hr';
+import { useCreatePosition } from '@/lib/api/hooks/useHR';
 import type { CreatePositionDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewPositionPage() {
   const router = useRouter();
   const [form] = Form.useForm();
-
-  // API Hooks
   const createPosition = useCreatePosition();
-  const { data: departments = [] } = useDepartments();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreatePositionDto) => {
     try {
-      const data: CreatePositionDto = {
-        name: values.name,
-        code: values.code,
-        description: values.description,
-        departmentId: values.departmentId,
-        minSalary: values.minSalary,
-        maxSalary: values.maxSalary,
-        requirements: values.requirements,
-        responsibilities: values.responsibilities,
-      };
-
-      await createPosition.mutateAsync(data);
+      await createPosition.mutateAsync(values);
       router.push('/hr/positions');
     } catch (error) {
       // Error handled by hook
@@ -86,116 +70,11 @@ export default function NewPositionPage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Pozisyon Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="Pozisyon Adı"
-                        rules={[{ required: true, message: 'Pozisyon adı gerekli' }]}
-                      >
-                        <Input placeholder="Pozisyon adı" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="code"
-                        label="Pozisyon Kodu"
-                        rules={[{ required: true, message: 'Pozisyon kodu gerekli' }]}
-                      >
-                        <Input placeholder="Örn: DEV, MGR, ANL" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    name="departmentId"
-                    label="Departman"
-                    rules={[{ required: true, message: 'Departman gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Departman seçin"
-                      showSearch
-                      optionFilterProp="children"
-                      variant="filled"
-                      options={departments.map((d) => ({ value: d.id, label: d.name }))}
-                    />
-                  </Form.Item>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="Pozisyon açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Salary Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Maaş Aralığı
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="minSalary" label="Minimum Maaş">
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          placeholder="Minimum maaş"
-                          min={0}
-                          variant="filled"
-                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                          addonAfter="TRY"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="maxSalary" label="Maksimum Maaş">
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          placeholder="Maksimum maaş"
-                          min={0}
-                          variant="filled"
-                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                          addonAfter="TRY"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-
-              {/* Details Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Detaylar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item name="requirements" label="Gereksinimler">
-                    <TextArea rows={4} placeholder="Pozisyon için gerekli nitelikler" variant="filled" />
-                  </Form.Item>
-
-                  <Form.Item name="responsibilities" label="Sorumluluklar" className="mb-0">
-                    <TextArea rows={4} placeholder="Pozisyonun sorumlulukları" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <PositionForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={createPosition.isPending}
+        />
       </div>
     </div>
   );

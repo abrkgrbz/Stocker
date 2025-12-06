@@ -2,19 +2,16 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Select, DatePicker, Input, Row, Col, Rate, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, TrophyOutlined } from '@ant-design/icons';
-import { useCreatePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
+import { PerformanceReviewForm } from '@/components/hr';
+import { useCreatePerformanceReview } from '@/lib/api/hooks/useHR';
 import type { CreatePerformanceReviewDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewPerformancePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createReview = useCreatePerformanceReview();
-  const { data: employees = [] } = useEmployees();
 
   const handleSubmit = async (values: any) => {
     try {
@@ -85,130 +82,11 @@ export default function NewPerformancePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Row gutter={48}>
-            <Col xs={24} lg={18}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Değerlendirme Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={8}>
-                      <Form.Item
-                        name="employeeId"
-                        label="Çalışan"
-                        rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Çalışan seçin"
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item
-                        name="reviewerId"
-                        label="Değerlendiren"
-                        rules={[{ required: true, message: 'Değerlendiren seçimi gerekli' }]}
-                      >
-                        <Select
-                          placeholder="Değerlendiren seçin"
-                          showSearch
-                          optionFilterProp="children"
-                          variant="filled"
-                          options={employees.map((e) => ({
-                            value: e.id,
-                            label: `${e.firstName} ${e.lastName}`,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item
-                        name="reviewDate"
-                        label="Değerlendirme Tarihi"
-                        rules={[{ required: true, message: 'Tarih gerekli' }]}
-                      >
-                        <DatePicker
-                          format="DD.MM.YYYY"
-                          style={{ width: '100%' }}
-                          placeholder="Tarih seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="reviewPeriod"
-                        label="Değerlendirme Dönemi"
-                        rules={[{ required: true, message: 'Dönem gerekli' }]}
-                      >
-                        <Input placeholder="Örn: 2024 Q1, Yıllık 2024" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="overallScore"
-                        label="Genel Puan (1-10)"
-                        rules={[{ required: true, message: 'Puan gerekli' }]}
-                      >
-                        <Rate count={10} allowHalf style={{ fontSize: 20 }} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-
-              {/* Feedback Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Geri Bildirim
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item name="strengths" label="Güçlü Yönler">
-                    <TextArea rows={3} placeholder="Çalışanın güçlü yönlerini yazın" variant="filled" />
-                  </Form.Item>
-
-                  <Form.Item name="areasForImprovement" label="Gelişim Alanları">
-                    <TextArea rows={3} placeholder="Geliştirilmesi gereken alanları yazın" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Goals and Comments Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Hedefler ve Yorumlar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item name="goals" label="Hedefler">
-                    <TextArea rows={3} placeholder="Gelecek dönem hedeflerini yazın" variant="filled" />
-                  </Form.Item>
-
-                  <Form.Item name="comments" label="Genel Yorumlar" className="mb-0">
-                    <TextArea rows={3} placeholder="Ek yorumlar" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+        <PerformanceReviewForm
+          form={form}
+          onFinish={handleSubmit}
+          loading={createReview.isPending}
+        />
       </div>
     </div>
   );

@@ -2,14 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, DatePicker, InputNumber, Row, Col, Switch, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, BookOutlined } from '@ant-design/icons';
+import { TrainingForm } from '@/components/hr';
 import { useCreateTraining } from '@/lib/api/hooks/useHR';
 import type { CreateTrainingDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
-const { RangePicker } = DatePicker;
 
 export default function NewTrainingPage() {
   const router = useRouter();
@@ -85,118 +82,11 @@ export default function NewTrainingPage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form
+        <TrainingForm
           form={form}
-          layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ isActive: true }}
-        >
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Eğitim Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="Eğitim Adı"
-                        rules={[{ required: true, message: 'Eğitim adı gerekli' }]}
-                      >
-                        <Input placeholder="Eğitim adı" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="provider" label="Eğitim Sağlayıcısı">
-                        <Input placeholder="Şirket veya eğitmen adı" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="Eğitim açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Schedule Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Zamanlama ve Konum
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="dateRange"
-                        label="Eğitim Tarihleri"
-                        rules={[{ required: true, message: 'Tarih aralığı gerekli' }]}
-                      >
-                        <RangePicker
-                          format="DD.MM.YYYY"
-                          style={{ width: '100%' }}
-                          placeholder={['Başlangıç', 'Bitiş']}
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="location" label="Konum">
-                        <Input placeholder="Eğitim yeri veya Online" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-
-              {/* Details Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Detaylar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="maxParticipants" label="Maksimum Katılımcı">
-                        <InputNumber
-                          placeholder="0"
-                          style={{ width: '100%' }}
-                          min={1}
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="cost" label="Maliyet">
-                        <InputNumber
-                          placeholder="0"
-                          style={{ width: '100%' }}
-                          formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
-                          min={0}
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="isActive" label="Durum" valuePropName="checked">
-                        <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+          loading={createTraining.isPending}
+        />
       </div>
     </div>
   );

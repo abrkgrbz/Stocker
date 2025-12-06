@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Input, TimePicker, InputNumber, Row, Col, Switch, Typography } from 'antd';
+import { Button, Space, Form } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { ShiftForm } from '@/components/hr';
 import { useCreateShift } from '@/lib/api/hooks/useHR';
 import type { CreateShiftDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 export default function NewShiftPage() {
   const router = useRouter();
@@ -82,116 +80,11 @@ export default function NewShiftPage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form
+        <ShiftForm
           form={form}
-          layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ isActive: true }}
-        >
-          <Row gutter={48}>
-            <Col xs={24} lg={16}>
-              {/* Basic Info Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Vardiya Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="name"
-                        label="Vardiya Adı"
-                        rules={[{ required: true, message: 'Vardiya adı gerekli' }]}
-                      >
-                        <Input placeholder="Örn: Sabah Vardiyası" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="code"
-                        label="Vardiya Kodu"
-                        rules={[{ required: true, message: 'Vardiya kodu gerekli' }]}
-                      >
-                        <Input placeholder="Örn: SABAH, AKSAM, GECE" variant="filled" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item name="description" label="Açıklama">
-                    <TextArea rows={3} placeholder="Vardiya açıklaması" variant="filled" />
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Time Settings Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Zaman Ayarları
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={8}>
-                      <Form.Item
-                        name="startTime"
-                        label="Başlangıç Saati"
-                        rules={[{ required: true, message: 'Başlangıç saati gerekli' }]}
-                      >
-                        <TimePicker
-                          format="HH:mm"
-                          style={{ width: '100%' }}
-                          placeholder="Saat seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item
-                        name="endTime"
-                        label="Bitiş Saati"
-                        rules={[{ required: true, message: 'Bitiş saati gerekli' }]}
-                      >
-                        <TimePicker
-                          format="HH:mm"
-                          style={{ width: '100%' }}
-                          placeholder="Saat seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="breakDurationMinutes" label="Mola Süresi (dk)">
-                        <InputNumber
-                          placeholder="Dakika"
-                          style={{ width: '100%' }}
-                          min={0}
-                          max={180}
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-
-              {/* Status Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Durum
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item name="isActive" label="Vardiya Durumu" valuePropName="checked" className="mb-0">
-                    <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
-          <Form.Item hidden>
-            <Button htmlType="submit" />
-          </Form.Item>
-        </Form>
+          loading={createShift.isPending}
+        />
       </div>
     </div>
   );
