@@ -21,6 +21,7 @@ import {
   LogoutOutlined,
   ShoppingCartOutlined,
   InboxOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -72,6 +73,16 @@ const MODULE_CONFIGS = [
     path: '/inventory',
     description: 'Envanter yönetimi',
     moduleCode: 'inventory',
+  },
+  {
+    id: 'hr',
+    title: 'İK',
+    icon: <IdcardOutlined />,
+    color: '#0ea5e9',
+    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
+    path: '/hr',
+    description: 'İnsan kaynakları',
+    moduleCode: 'hr',
   },
   {
     id: 'dashboards',

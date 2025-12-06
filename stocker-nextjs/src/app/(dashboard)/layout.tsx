@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Layout, Menu, Avatar, Dropdown, Spin, Button, Tooltip } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Spin, Button, Tooltip, Popover, Badge } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -50,6 +50,7 @@ import {
   SlidersOutlined,
   SkinOutlined,
   BarChartOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -60,6 +61,7 @@ import { ConnectionStatus } from '@/components/status';
 import { useSignalRStatus } from '@/lib/signalr/use-signalr-status';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/use-onboarding';
+import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { message } from 'antd';
 
 const { Header, Sider, Content } = Layout;
@@ -70,6 +72,8 @@ const MODULE_MENUS = {
     title: 'CRM',
     icon: <TeamOutlined />,
     color: '#7c3aed',
+    moduleCode: 'crm',
+    description: 'Müşteri ilişkileri yönetimi',
     items: [
       { key: '/crm', icon: <DashboardOutlined />, label: 'Dashboard' },
       {
@@ -116,6 +120,8 @@ const MODULE_MENUS = {
     title: 'Envanter',
     icon: <InboxOutlined />,
     color: '#10b981',
+    moduleCode: 'inventory',
+    description: 'Stok ve depo yönetimi',
     items: [
       { key: '/inventory', icon: <DashboardOutlined />, label: 'Dashboard' },
       {
@@ -183,6 +189,8 @@ const MODULE_MENUS = {
     title: 'Satış',
     icon: <ShoppingCartOutlined />,
     color: '#f59e0b',
+    moduleCode: 'sales',
+    description: 'Sipariş ve fatura yönetimi',
     items: [
       { key: '/sales', icon: <DashboardOutlined />, label: 'Dashboard' },
       {
@@ -210,6 +218,8 @@ const MODULE_MENUS = {
     title: 'Ayarlar',
     icon: <SettingOutlined />,
     color: '#6b7280',
+    moduleCode: null, // Always enabled
+    description: 'Sistem ayarları',
     items: [
       { key: '/settings', icon: <SettingOutlined />, label: 'Genel Ayarlar' },
       {
@@ -236,15 +246,88 @@ const MODULE_MENUS = {
     title: 'İletişim',
     icon: <BellOutlined />,
     color: '#ec4899',
+    moduleCode: null, // Always enabled
+    description: 'Bildirim ve hatırlatıcılar',
     items: [
       { key: '/notifications', icon: <BellOutlined />, label: 'Bildirimler' },
       { key: '/reminders', icon: <ClockCircleOutlined />, label: 'Hatırlatıcılar' },
+    ],
+  },
+  hr: {
+    title: 'İnsan Kaynakları',
+    icon: <IdcardOutlined />,
+    color: '#0ea5e9',
+    moduleCode: 'hr',
+    description: 'Çalışan ve bordro yönetimi',
+    items: [
+      { key: '/hr', icon: <DashboardOutlined />, label: 'Dashboard' },
+      {
+        key: 'hr-employees',
+        icon: <TeamOutlined />,
+        label: 'Çalışan Yönetimi',
+        children: [
+          { key: '/hr/employees', icon: <TeamOutlined />, label: 'Çalışanlar' },
+          { key: '/hr/departments', icon: <ApartmentOutlined />, label: 'Departmanlar' },
+          { key: '/hr/positions', icon: <SafetyCertificateOutlined />, label: 'Pozisyonlar' },
+        ],
+      },
+      {
+        key: 'hr-attendance',
+        icon: <ClockCircleOutlined />,
+        label: 'Devam & İzin',
+        children: [
+          { key: '/hr/attendance', icon: <ClockCircleOutlined />, label: 'Devam Takibi' },
+          { key: '/hr/leaves', icon: <CalendarOutlined />, label: 'İzinler' },
+          { key: '/hr/leave-types', icon: <TagsOutlined />, label: 'İzin Türleri' },
+          { key: '/hr/holidays', icon: <CalendarOutlined />, label: 'Tatil Günleri' },
+        ],
+      },
+      {
+        key: 'hr-payroll',
+        icon: <DollarOutlined />,
+        label: 'Bordro & Masraf',
+        children: [
+          { key: '/hr/payroll', icon: <DollarOutlined />, label: 'Bordro' },
+          { key: '/hr/expenses', icon: <WalletOutlined />, label: 'Masraflar' },
+        ],
+      },
+      {
+        key: 'hr-performance',
+        icon: <RiseOutlined />,
+        label: 'Performans',
+        children: [
+          { key: '/hr/performance-reviews', icon: <RiseOutlined />, label: 'Değerlendirmeler' },
+          { key: '/hr/performance-goals', icon: <FunnelPlotOutlined />, label: 'Hedefler' },
+        ],
+      },
+      {
+        key: 'hr-training',
+        icon: <SafetyCertificateOutlined />,
+        label: 'Eğitim',
+        children: [
+          { key: '/hr/trainings', icon: <SafetyCertificateOutlined />, label: 'Eğitimler' },
+        ],
+      },
+      {
+        key: 'hr-tools',
+        icon: <SettingOutlined />,
+        label: 'Araçlar',
+        children: [
+          { key: '/hr/documents', icon: <FileOutlined />, label: 'Belgeler' },
+          { key: '/hr/announcements', icon: <NotificationOutlined />, label: 'Duyurular' },
+          { key: '/hr/shifts', icon: <ClockCircleOutlined />, label: 'Vardiyalar' },
+          { key: '/hr/work-schedules', icon: <CalendarOutlined />, label: 'Çalışma Programları' },
+          { key: '/hr/work-locations', icon: <EnvironmentOutlined />, label: 'Lokasyonlar' },
+        ],
+      },
     ],
   },
   modules: {
     title: 'Modüller',
     icon: <AppstoreOutlined />,
     color: '#0891b2',
+    moduleCode: null, // Always enabled
+    description: 'Modül yönetimi',
     items: [
       { key: '/modules', icon: <AppstoreOutlined />, label: 'Modül Yönetimi' },
     ],
@@ -256,6 +339,7 @@ function getCurrentModule(pathname: string): keyof typeof MODULE_MENUS | null {
   if (pathname.startsWith('/crm')) return 'crm';
   if (pathname.startsWith('/inventory')) return 'inventory';
   if (pathname.startsWith('/sales')) return 'sales';
+  if (pathname.startsWith('/hr')) return 'hr';
   if (pathname.startsWith('/settings')) return 'settings';
   if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) return 'communication';
   if (pathname.startsWith('/modules')) return 'modules';
@@ -267,6 +351,21 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
   const pathname = usePathname();
+  const [moduleSwitcherOpen, setModuleSwitcherOpen] = useState(false);
+
+  // Fetch active modules for the user
+  const { data: modulesData } = useActiveModules();
+
+  // Create a Set of active module codes for fast lookup
+  const activeModuleCodes = useMemo(() => {
+    const codes = new Set<string>();
+    modulesData?.modules?.forEach(m => {
+      if (m.isActive) {
+        codes.add(m.code.toLowerCase());
+      }
+    });
+    return codes;
+  }, [modulesData]);
 
   // Initialize SignalR notification hub
   useNotificationHub();
@@ -340,6 +439,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/sales/e-invoices': '/sales/e-invoices',
       '/sales/payments': '/sales/payments',
       '/sales/customers': '/sales/customers',
+      // HR Module
+      '/hr/employees': '/hr/employees',
+      '/hr/departments': '/hr/departments',
+      '/hr/positions': '/hr/positions',
+      '/hr/attendance': '/hr/attendance',
+      '/hr/leaves': '/hr/leaves',
+      '/hr/leave-types': '/hr/leave-types',
+      '/hr/holidays': '/hr/holidays',
+      '/hr/payroll': '/hr/payroll',
+      '/hr/expenses': '/hr/expenses',
+      '/hr/performance-reviews': '/hr/performance-reviews',
+      '/hr/performance-goals': '/hr/performance-goals',
+      '/hr/trainings': '/hr/trainings',
+      '/hr/documents': '/hr/documents',
+      '/hr/announcements': '/hr/announcements',
+      '/hr/shifts': '/hr/shifts',
+      '/hr/work-schedules': '/hr/work-schedules',
+      '/hr/work-locations': '/hr/work-locations',
     };
 
     for (const [prefix, key] of Object.entries(routeMappings)) {
@@ -527,9 +644,163 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               borderBottom: '1px solid #f0f0f0',
             }}
           >
-            {/* Left: Tenant Name */}
-            <div style={{ fontWeight: 600, fontSize: 15, color: '#666' }}>
-              {tenant?.name || 'Stocker'}
+            {/* Left: Tenant Name + Module Switcher */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ fontWeight: 600, fontSize: 15, color: '#666' }}>
+                {tenant?.name || 'Stocker'}
+              </div>
+
+              {/* Module Switcher Button */}
+              <Popover
+                open={moduleSwitcherOpen}
+                onOpenChange={setModuleSwitcherOpen}
+                trigger="click"
+                placement="bottomLeft"
+                arrow={false}
+                content={
+                  <div style={{ width: 320, padding: 8 }}>
+                    <div style={{
+                      fontSize: 12,
+                      color: '#999',
+                      marginBottom: 12,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      fontWeight: 600,
+                    }}>
+                      Modüller
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {Object.entries(MODULE_MENUS)
+                        .filter(([key]) => key !== 'modules' && key !== 'communication')
+                        .map(([key, config]) => {
+                          const isActive = config.moduleCode === null || activeModuleCodes.has(config.moduleCode?.toLowerCase() || '');
+                          const isCurrent = currentModule === key;
+
+                          return (
+                            <div
+                              key={key}
+                              onClick={() => {
+                                if (isActive) {
+                                  router.push(config.items[0]?.key || `/${key}`);
+                                  setModuleSwitcherOpen(false);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 12,
+                                padding: '10px 12px',
+                                borderRadius: 8,
+                                cursor: isActive ? 'pointer' : 'not-allowed',
+                                opacity: isActive ? 1 : 0.5,
+                                background: isCurrent ? `${config.color}15` : 'transparent',
+                                border: isCurrent ? `1px solid ${config.color}30` : '1px solid transparent',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (isActive && !isCurrent) {
+                                  e.currentTarget.style.background = '#f5f5f5';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isCurrent) {
+                                  e.currentTarget.style.background = 'transparent';
+                                }
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: 8,
+                                  background: `${config.color}15`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: config.color,
+                                  fontSize: 18,
+                                }}
+                              >
+                                {config.icon}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{
+                                  fontWeight: 600,
+                                  fontSize: 14,
+                                  color: isCurrent ? config.color : '#333',
+                                }}>
+                                  {config.title}
+                                </div>
+                                <div style={{ fontSize: 12, color: '#999' }}>
+                                  {config.description}
+                                </div>
+                              </div>
+                              {isCurrent && (
+                                <Badge color={config.color} />
+                              )}
+                              {!isActive && (
+                                <span style={{
+                                  fontSize: 10,
+                                  color: '#999',
+                                  background: '#f0f0f0',
+                                  padding: '2px 6px',
+                                  borderRadius: 4
+                                }}>
+                                  Pasif
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <div style={{
+                      borderTop: '1px solid #f0f0f0',
+                      marginTop: 12,
+                      paddingTop: 12,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                          router.push('/app');
+                          setModuleSwitcherOpen(false);
+                        }}
+                        style={{ padding: 0, fontSize: 13 }}
+                      >
+                        Tüm Modüller
+                      </Button>
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                          router.push('/modules');
+                          setModuleSwitcherOpen(false);
+                        }}
+                        style={{ padding: 0, fontSize: 13 }}
+                      >
+                        Modül Yönetimi
+                      </Button>
+                    </div>
+                  </div>
+                }
+              >
+                <Button
+                  type="text"
+                  icon={<AppstoreOutlined />}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    color: '#666',
+                    fontWeight: 500,
+                  }}
+                >
+                  Modüller
+                </Button>
+              </Popover>
             </div>
 
             {/* Right: Status, Notifications, User */}
