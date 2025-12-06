@@ -1,17 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
+import { Button, Space, Form, message } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, FileOutlined } from '@ant-design/icons';
 import { DocumentForm } from '@/components/hr';
-import { useCreateDocument } from '@/lib/api/hooks/useHR';
+import { useCreateDocument, useUploadDocumentFile } from '@/lib/api/hooks/useHR';
 import type { CreateEmployeeDocumentDto } from '@/lib/api/services/hr.types';
 
 export default function NewDocumentPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const createDocument = useCreateDocument();
+  const uploadFile = useUploadDocumentFile();
+
+  const isLoading = createDocument.isPending || uploadFile.isPending;
 
   const handleSubmit = async (values: any) => {
     try {
@@ -27,11 +31,26 @@ export default function NewDocumentPage() {
         notes: values.notes,
       };
 
-      await createDocument.mutateAsync(data);
+      // First create the document
+      const newDocument = await createDocument.mutateAsync(data);
+
+      // Then upload file if selected
+      if (selectedFile && newDocument?.id) {
+        try {
+          await uploadFile.mutateAsync({ id: newDocument.id, file: selectedFile });
+        } catch (error) {
+          message.warning('Belge oluşturuldu ancak dosya yüklenemedi. Detay sayfasından tekrar deneyebilirsiniz.');
+        }
+      }
+
       router.push('/hr/documents');
     } catch (error) {
       // Error handled by hook
     }
+  };
+
+  const handleFileChange = (file: File | null) => {
+    setSelectedFile(file);
   };
 
   return (
@@ -66,7 +85,7 @@ export default function NewDocumentPage() {
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              loading={createDocument.isPending}
+              loading={isLoading}
               onClick={() => form.submit()}
               style={{
                 background: '#1a1a1a',
@@ -85,7 +104,8 @@ export default function NewDocumentPage() {
         <DocumentForm
           form={form}
           onFinish={handleSubmit}
-          loading={createDocument.isPending}
+          loading={isLoading}
+          onFileChange={handleFileChange}
         />
       </div>
     </div>
