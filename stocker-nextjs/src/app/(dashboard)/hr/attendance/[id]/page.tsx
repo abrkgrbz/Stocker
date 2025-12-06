@@ -23,6 +23,7 @@ import {
   CalendarOutlined,
 } from '@ant-design/icons';
 import { useAttendanceById } from '@/lib/api/hooks/useHR';
+import { AttendanceStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -40,15 +41,22 @@ export default function AttendanceDetailPage() {
     return time.substring(0, 5);
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Present: { color: 'green', text: 'Mevcut' },
-      Absent: { color: 'red', text: 'Yok' },
-      Late: { color: 'orange', text: 'Geç' },
-      HalfDay: { color: 'blue', text: 'Yarım Gün' },
-      OnLeave: { color: 'purple', text: 'İzinli' },
+  const getStatusConfig = (status?: AttendanceStatus) => {
+    const statusMap: Record<AttendanceStatus, { color: string; text: string }> = {
+      [AttendanceStatus.Present]: { color: 'green', text: 'Mevcut' },
+      [AttendanceStatus.Absent]: { color: 'red', text: 'Yok' },
+      [AttendanceStatus.Late]: { color: 'orange', text: 'Geç' },
+      [AttendanceStatus.HalfDay]: { color: 'blue', text: 'Yarım Gün' },
+      [AttendanceStatus.OnLeave]: { color: 'purple', text: 'İzinli' },
+      [AttendanceStatus.EarlyDeparture]: { color: 'cyan', text: 'Erken Ayrılış' },
+      [AttendanceStatus.Holiday]: { color: 'gold', text: 'Tatil' },
+      [AttendanceStatus.Weekend]: { color: 'default', text: 'Hafta Sonu' },
+      [AttendanceStatus.RemoteWork]: { color: 'geekblue', text: 'Uzaktan Çalışma' },
+      [AttendanceStatus.Overtime]: { color: 'lime', text: 'Fazla Mesai' },
+      [AttendanceStatus.Training]: { color: 'magenta', text: 'Eğitim' },
+      [AttendanceStatus.FieldWork]: { color: 'volcano', text: 'Saha Çalışması' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] || { color: 'default', text: '-' } : { color: 'default', text: '-' };
   };
 
   if (isLoading) {

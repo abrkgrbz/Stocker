@@ -2,34 +2,27 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form, Select, DatePicker, TimePicker, Input, Row, Col, Typography } from 'antd';
+import { Button, Space, Form, Select, TimePicker, Row, Col, Typography } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, FieldTimeOutlined } from '@ant-design/icons';
-import { useCreateAttendance, useEmployees, useShifts } from '@/lib/api/hooks/useHR';
-import type { CreateAttendanceDto } from '@/lib/api/services/hr.types';
+import { useCheckIn, useEmployees } from '@/lib/api/hooks/useHR';
+import type { CheckInDto } from '@/lib/api/services/hr.types';
 
-const { TextArea } = Input;
 const { Text } = Typography;
 
 export default function NewAttendancePage() {
   const router = useRouter();
   const [form] = Form.useForm();
-  const createAttendance = useCreateAttendance();
+  const checkIn = useCheckIn();
   const { data: employees = [] } = useEmployees();
-  const { data: shifts = [] } = useShifts();
 
   const handleSubmit = async (values: any) => {
     try {
-      const data: CreateAttendanceDto = {
+      const data: CheckInDto = {
         employeeId: values.employeeId,
-        date: values.date?.format('YYYY-MM-DD'),
         checkInTime: values.checkInTime?.format('HH:mm:ss'),
-        checkOutTime: values.checkOutTime?.format('HH:mm:ss'),
-        shiftId: values.shiftId,
-        status: values.status,
-        notes: values.notes,
       };
 
-      await createAttendance.mutateAsync(data);
+      await checkIn.mutateAsync(data);
       router.push('/hr/attendance');
     } catch (error) {
       // Error handled by hook
@@ -58,9 +51,9 @@ export default function NewAttendancePage() {
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
                 <FieldTimeOutlined className="mr-2" />
-                Yeni Yoklama Kaydı
+                Manuel Giriş Kaydı
               </h1>
-              <p className="text-sm text-gray-400 m-0">Manuel yoklama kaydı oluşturun</p>
+              <p className="text-sm text-gray-400 m-0">Çalışan için manuel giriş kaydı oluşturun</p>
             </div>
           </div>
           <Space>
@@ -68,7 +61,7 @@ export default function NewAttendancePage() {
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              loading={createAttendance.isPending}
+              loading={checkIn.isPending}
               onClick={() => form.submit()}
               style={{
                 background: '#1a1a1a',
@@ -84,18 +77,13 @@ export default function NewAttendancePage() {
 
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ status: 'Present' }}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={48}>
             <Col xs={24} lg={16}>
               {/* Basic Info Section */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Yoklama Bilgileri
+                  Giriş Bilgileri
                 </Text>
                 <div className="bg-gray-50/50 rounded-xl p-6">
                   <Row gutter={16}>
@@ -118,94 +106,16 @@ export default function NewAttendancePage() {
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="date"
-                        label="Tarih"
-                        rules={[{ required: true, message: 'Tarih gerekli' }]}
-                      >
-                        <DatePicker
-                          format="DD.MM.YYYY"
-                          style={{ width: '100%' }}
-                          placeholder="Tarih seçin"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-
-              {/* Time Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Zaman Bilgileri
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Row gutter={16}>
-                    <Col xs={24} sm={8}>
                       <Form.Item name="checkInTime" label="Giriş Saati">
                         <TimePicker
                           format="HH:mm"
                           style={{ width: '100%' }}
-                          placeholder="Giriş saati"
+                          placeholder="Boş bırakılırsa şu anki saat"
                           variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="checkOutTime" label="Çıkış Saati">
-                        <TimePicker
-                          format="HH:mm"
-                          style={{ width: '100%' }}
-                          placeholder="Çıkış saati"
-                          variant="filled"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Form.Item name="shiftId" label="Vardiya">
-                        <Select
-                          placeholder="Vardiya seçin"
-                          allowClear
-                          variant="filled"
-                          options={shifts.map((s) => ({
-                            value: s.id,
-                            label: s.name,
-                          }))}
                         />
                       </Form.Item>
                     </Col>
                   </Row>
-                </div>
-              </div>
-
-              {/* Status Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  Durum ve Notlar
-                </Text>
-                <div className="bg-gray-50/50 rounded-xl p-6">
-                  <Form.Item
-                    name="status"
-                    label="Durum"
-                    rules={[{ required: true, message: 'Durum gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Durum seçin"
-                      variant="filled"
-                      options={[
-                        { value: 'Present', label: 'Mevcut' },
-                        { value: 'Absent', label: 'Yok' },
-                        { value: 'Late', label: 'Geç' },
-                        { value: 'HalfDay', label: 'Yarım Gün' },
-                        { value: 'OnLeave', label: 'İzinli' },
-                      ]}
-                    />
-                  </Form.Item>
-
-                  <Form.Item name="notes" label="Notlar" className="mb-0">
-                    <TextArea rows={3} placeholder="Ek notlar" variant="filled" />
-                  </Form.Item>
                 </div>
               </div>
             </Col>

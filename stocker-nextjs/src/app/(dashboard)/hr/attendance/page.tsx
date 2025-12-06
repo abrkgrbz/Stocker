@@ -29,6 +29,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useAttendance, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AttendanceDto, AttendanceFilterDto } from '@/lib/api/services/hr.types';
+import { AttendanceStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -44,24 +45,31 @@ export default function AttendancePage() {
 
   // Stats
   const totalRecords = attendances.length;
-  const presentCount = attendances.filter((a) => a.status === 'Present').length;
-  const lateCount = attendances.filter((a) => a.status === 'Late').length;
-  const absentCount = attendances.filter((a) => a.status === 'Absent').length;
+  const presentCount = attendances.filter((a) => a.status === AttendanceStatus.Present).length;
+  const lateCount = attendances.filter((a) => a.status === AttendanceStatus.Late).length;
+  const absentCount = attendances.filter((a) => a.status === AttendanceStatus.Absent).length;
 
   const formatTime = (time?: string) => {
     if (!time) return '-';
     return time.substring(0, 5);
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Present: { color: 'green', text: 'Mevcut' },
-      Absent: { color: 'red', text: 'Yok' },
-      Late: { color: 'orange', text: 'Geç' },
-      HalfDay: { color: 'blue', text: 'Yarım Gün' },
-      OnLeave: { color: 'purple', text: 'İzinli' },
+  const getStatusConfig = (status?: AttendanceStatus) => {
+    const statusMap: Record<AttendanceStatus, { color: string; text: string }> = {
+      [AttendanceStatus.Present]: { color: 'green', text: 'Mevcut' },
+      [AttendanceStatus.Absent]: { color: 'red', text: 'Yok' },
+      [AttendanceStatus.Late]: { color: 'orange', text: 'Geç' },
+      [AttendanceStatus.HalfDay]: { color: 'blue', text: 'Yarım Gün' },
+      [AttendanceStatus.OnLeave]: { color: 'purple', text: 'İzinli' },
+      [AttendanceStatus.EarlyDeparture]: { color: 'cyan', text: 'Erken Ayrılış' },
+      [AttendanceStatus.Holiday]: { color: 'gold', text: 'Tatil' },
+      [AttendanceStatus.Weekend]: { color: 'default', text: 'Hafta Sonu' },
+      [AttendanceStatus.RemoteWork]: { color: 'geekblue', text: 'Uzaktan Çalışma' },
+      [AttendanceStatus.Overtime]: { color: 'lime', text: 'Fazla Mesai' },
+      [AttendanceStatus.Training]: { color: 'magenta', text: 'Eğitim' },
+      [AttendanceStatus.FieldWork]: { color: 'volcano', text: 'Saha Çalışması' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] || { color: 'default', text: '-' } : { color: 'default', text: '-' };
   };
 
   const columns: ColumnsType<AttendanceDto> = [
@@ -109,7 +117,7 @@ export default function AttendancePage() {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: string) => {
+      render: (status: AttendanceStatus) => {
         const config = getStatusConfig(status);
         return <Tag color={config.color}>{config.text}</Tag>;
       },
@@ -243,11 +251,11 @@ export default function AttendancePage() {
               style={{ width: '100%' }}
               onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
               options={[
-                { value: 'Present', label: 'Mevcut' },
-                { value: 'Absent', label: 'Yok' },
-                { value: 'Late', label: 'Geç' },
-                { value: 'HalfDay', label: 'Yarım Gün' },
-                { value: 'OnLeave', label: 'İzinli' },
+                { value: AttendanceStatus.Present, label: 'Mevcut' },
+                { value: AttendanceStatus.Absent, label: 'Yok' },
+                { value: AttendanceStatus.Late, label: 'Geç' },
+                { value: AttendanceStatus.HalfDay, label: 'Yarım Gün' },
+                { value: AttendanceStatus.OnLeave, label: 'İzinli' },
               ]}
             />
           </Col>
