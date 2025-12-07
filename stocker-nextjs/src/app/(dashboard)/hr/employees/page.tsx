@@ -52,7 +52,7 @@ const { Title, Text } = Typography;
 const { Search } = Input;
 
 // Employee status configuration
-const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: string }> = {
+const employeeStatusConfig: Record<number, { color: string; label: string }> = {
   [EmployeeStatus.Active]: { color: 'green', label: 'Aktif' },
   [EmployeeStatus.Inactive]: { color: 'default', label: 'Pasif' },
   [EmployeeStatus.OnLeave]: { color: 'blue', label: 'İzinde' },
@@ -64,6 +64,8 @@ const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: strin
   [EmployeeStatus.MaternityLeave]: { color: 'magenta', label: 'Doğum İzni' },
   [EmployeeStatus.SickLeave]: { color: 'volcano', label: 'Hastalık İzni' },
 };
+
+const defaultStatusConfig = { color: 'default', label: '-' };
 
 
 export default function EmployeesPage() {

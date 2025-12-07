@@ -109,7 +109,7 @@ export default function LeavesPage() {
   };
 
   const getStatusConfig = (status?: LeaveStatus) => {
-    const statusMap: Record<LeaveStatus, { color: string; text: string }> = {
+    const statusMap: Record<number, { color: string; text: string }> = {
       [LeaveStatus.Pending]: { color: 'orange', text: 'Beklemede' },
       [LeaveStatus.Approved]: { color: 'green', text: 'Onaylandı' },
       [LeaveStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
@@ -117,7 +117,9 @@ export default function LeavesPage() {
       [LeaveStatus.Taken]: { color: 'blue', text: 'Kullanıldı' },
       [LeaveStatus.PartiallyTaken]: { color: 'cyan', text: 'Kısmen Kullanıldı' },
     };
-    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-' };
+    if (status === undefined || status === null) return defaultConfig;
+    return statusMap[status] || defaultConfig;
   };
 
   const columns: ColumnsType<LeaveDto> = [

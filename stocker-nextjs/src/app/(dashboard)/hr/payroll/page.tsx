@@ -101,7 +101,7 @@ export default function PayrollPage() {
   };
 
   const getStatusConfig = (status?: PayrollStatus) => {
-    const statusMap: Record<PayrollStatus, { color: string; text: string }> = {
+    const statusMap: Record<number, { color: string; text: string }> = {
       [PayrollStatus.Draft]: { color: 'default', text: 'Taslak' },
       [PayrollStatus.Calculated]: { color: 'processing', text: 'Hesaplandı' },
       [PayrollStatus.PendingApproval]: { color: 'orange', text: 'Onay Bekliyor' },
@@ -110,7 +110,9 @@ export default function PayrollPage() {
       [PayrollStatus.Cancelled]: { color: 'red', text: 'İptal' },
       [PayrollStatus.Rejected]: { color: 'volcano', text: 'Reddedildi' },
     };
-    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-' };
+    if (status === undefined || status === null) return defaultConfig;
+    return statusMap[status] || defaultConfig;
   };
 
   const columns: ColumnsType<PayrollDto> = [

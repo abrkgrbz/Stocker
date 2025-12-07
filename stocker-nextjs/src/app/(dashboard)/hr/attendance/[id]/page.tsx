@@ -42,7 +42,7 @@ export default function AttendanceDetailPage() {
   };
 
   const getStatusConfig = (status?: AttendanceStatus) => {
-    const statusMap: Record<AttendanceStatus, { color: string; text: string }> = {
+    const statusMap: Record<number, { color: string; text: string }> = {
       [AttendanceStatus.Present]: { color: 'green', text: 'Mevcut' },
       [AttendanceStatus.Absent]: { color: 'red', text: 'Yok' },
       [AttendanceStatus.Late]: { color: 'orange', text: 'Geç' },
@@ -56,7 +56,9 @@ export default function AttendanceDetailPage() {
       [AttendanceStatus.Training]: { color: 'magenta', text: 'Eğitim' },
       [AttendanceStatus.FieldWork]: { color: 'volcano', text: 'Saha Çalışması' },
     };
-    return status !== undefined ? statusMap[status] || { color: 'default', text: '-' } : { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-' };
+    if (status === undefined || status === null) return defaultConfig;
+    return statusMap[status] || defaultConfig;
   };
 
   if (isLoading) {

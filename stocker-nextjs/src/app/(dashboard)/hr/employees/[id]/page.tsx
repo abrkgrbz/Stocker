@@ -55,7 +55,7 @@ const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 // Status configuration
-const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: string }> = {
+const employeeStatusConfig: Record<number, { color: string; label: string }> = {
   [EmployeeStatus.Active]: { color: 'green', label: 'Aktif' },
   [EmployeeStatus.Inactive]: { color: 'default', label: 'Pasif' },
   [EmployeeStatus.OnLeave]: { color: 'blue', label: 'İzinde' },
@@ -67,6 +67,8 @@ const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: strin
   [EmployeeStatus.MaternityLeave]: { color: 'magenta', label: 'Doğum İzni' },
   [EmployeeStatus.SickLeave]: { color: 'volcano', label: 'Hastalık İzni' },
 };
+
+const defaultStatusConfig = { color: 'default', label: '-' };
 
 const genderLabels: Record<Gender, string> = {
   [Gender.Male]: 'Erkek',
@@ -152,7 +154,7 @@ export default function EmployeeDetailPage() {
     );
   }
 
-  const statusConfig = employeeStatusConfig[employee.status];
+  const statusConfig = employeeStatusConfig[employee.status] || defaultStatusConfig;
 
   // Calculate years of service
   const yearsOfService = employee.hireDate

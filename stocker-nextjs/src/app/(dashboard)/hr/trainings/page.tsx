@@ -73,15 +73,17 @@ export default function TrainingsPage() {
     });
   };
 
-  const getStatusConfig = (status: TrainingStatus) => {
-    const statusMap: Record<TrainingStatus, { color: string; text: string }> = {
+  const getStatusConfig = (status?: TrainingStatus) => {
+    const statusMap: Record<number, { color: string; text: string }> = {
       [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandı' },
       [TrainingStatus.InProgress]: { color: 'green', text: 'Devam Ediyor' },
       [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandı' },
       [TrainingStatus.Cancelled]: { color: 'red', text: 'İptal Edildi' },
       [TrainingStatus.Postponed]: { color: 'orange', text: 'Ertelendi' },
     };
-    return statusMap[status] || { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-' };
+    if (status === undefined || status === null) return defaultConfig;
+    return statusMap[status] || defaultConfig;
   };
 
   const columns: ColumnsType<TrainingDto> = [

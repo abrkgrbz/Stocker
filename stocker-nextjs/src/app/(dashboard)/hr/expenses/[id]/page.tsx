@@ -101,7 +101,7 @@ export default function ExpenseDetailPage() {
   };
 
   const getStatusConfig = (status?: ExpenseStatus) => {
-    const statusMap: Record<ExpenseStatus, { color: string; text: string }> = {
+    const statusMap: Record<number, { color: string; text: string }> = {
       [ExpenseStatus.Draft]: { color: 'default', text: 'Taslak' },
       [ExpenseStatus.Pending]: { color: 'orange', text: 'Beklemede' },
       [ExpenseStatus.Approved]: { color: 'green', text: 'Onaylandı' },
@@ -109,7 +109,9 @@ export default function ExpenseDetailPage() {
       [ExpenseStatus.Paid]: { color: 'blue', text: 'Ödendi' },
       [ExpenseStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
     };
-    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
+    const defaultConfig = { color: 'default', text: '-' };
+    if (status === undefined || status === null) return defaultConfig;
+    return statusMap[status] || defaultConfig;
   };
 
   const getExpenseTypeLabel = (expenseType?: ExpenseType) => {
