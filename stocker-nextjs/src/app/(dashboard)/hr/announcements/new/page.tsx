@@ -21,7 +21,7 @@ export default function NewAnnouncementPage() {
         summary: values.summary,
         announcementType: values.announcementType || 'General',
         priority: values.priority || 'Normal',
-        authorId: 0, // Will be set by backend from current user
+        authorId: values.authorId,
         publishDate: values.publishDate?.format('YYYY-MM-DD') || new Date().toISOString().split('T')[0],
         expiryDate: values.expiryDate?.format('YYYY-MM-DD'),
         isPinned: values.isPinned ?? false,

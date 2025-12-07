@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Select, Row, Col, Typography, Switch } from 'antd';
 import { NotificationOutlined } from '@ant-design/icons';
-import { useDepartments } from '@/lib/api/hooks/useHR';
+import { useDepartments, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
@@ -22,6 +22,7 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
   const [requiresAck, setRequiresAck] = useState(false);
 
   const { data: departments = [] } = useDepartments();
+  const { data: employees = [] } = useEmployees();
 
   useEffect(() => {
     if (initialValues) {
@@ -247,24 +248,27 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
           {/* Divider */}
           <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-          {/* Target Department */}
+          {/* Author & Type */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Hedef Kitle
+              Yazar ve Tip
             </Text>
             <Row gutter={16}>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Departman (boş = herkese)</div>
-                <Form.Item name="targetDepartmentId" className="mb-0">
+                <div className="text-xs text-gray-400 mb-1">Yazar *</div>
+                <Form.Item
+                  name="authorId"
+                  className="mb-0"
+                  rules={[{ required: true, message: 'Yazar seçimi zorunludur' }]}
+                >
                   <Select
-                    placeholder="Tüm departmanlar"
-                    allowClear
+                    placeholder="Yazar seçin"
                     showSearch
                     optionFilterProp="label"
                     variant="filled"
-                    options={departments.map((d) => ({
-                      value: d.id,
-                      label: d.name,
+                    options={employees.map((e) => ({
+                      value: e.id,
+                      label: e.fullName,
                     }))}
                   />
                 </Form.Item>
@@ -283,6 +287,34 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
                       { value: 'Welcome', label: 'Hoşgeldin' },
                       { value: 'Farewell', label: 'Veda' },
                     ]}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+
+          {/* Target Department */}
+          <div className="mb-8">
+            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+              Hedef Kitle
+            </Text>
+            <Row gutter={16}>
+              <Col span={24}>
+                <div className="text-xs text-gray-400 mb-1">Departman (boş = herkese)</div>
+                <Form.Item name="targetDepartmentId" className="mb-0">
+                  <Select
+                    placeholder="Tüm departmanlar"
+                    allowClear
+                    showSearch
+                    optionFilterProp="label"
+                    variant="filled"
+                    options={departments.map((d) => ({
+                      value: d.id,
+                      label: d.name,
+                    }))}
                   />
                 </Form.Item>
               </Col>
