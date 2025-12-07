@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, DatePicker, InputNumber, Row, Col, Typography, Switch } from 'antd';
+import { Form, Input, DatePicker, InputNumber, Row, Col, Typography, Switch, Select } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 import type { TrainingDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -18,7 +18,7 @@ interface TrainingFormProps {
 }
 
 export default function TrainingForm({ form, initialValues, onFinish, loading }: TrainingFormProps) {
-  const [isActive, setIsActive] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
 
   useEffect(() => {
     if (initialValues) {
@@ -28,7 +28,7 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
           ? [dayjs(initialValues.startDate), dayjs(initialValues.endDate)]
           : undefined,
       });
-      // TrainingDto uses 'status' instead of 'isActive'
+      setIsOnline(initialValues.isOnline || false);
     }
   }, [form, initialValues]);
 
@@ -38,7 +38,7 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      initialValues={{ isActive: true }}
+      initialValues={{ isOnline: false, isMandatory: false, hasCertification: false }}
       className="training-form-modern"
     >
       <Row gutter={48}>
@@ -64,30 +64,64 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
             </div>
           </div>
 
-          {/* Status Toggle */}
+          {/* Training Options */}
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
               <div>
                 <Text strong className="text-gray-700">
-                  Durum
+                  Online Eğitim
                 </Text>
                 <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Eğitim aktif' : 'Eğitim pasif'}
+                  {isOnline ? 'Çevrimiçi eğitim' : 'Yüz yüze eğitim'}
                 </div>
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+              <Form.Item name="isOnline" valuePropName="checked" noStyle>
                 <Switch
-                  checked={isActive}
+                  checked={isOnline}
                   onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
+                    setIsOnline(val);
+                    form.setFieldValue('isOnline', val);
                   }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
+                  checkedChildren="Online"
+                  unCheckedChildren="Yüz yüze"
                   style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
+                    backgroundColor: isOnline ? '#1890ff' : '#d9d9d9',
                     minWidth: '80px',
                   }}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
+              <div>
+                <Text strong className="text-gray-700">
+                  Zorunlu Eğitim
+                </Text>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  Tüm çalışanlar için zorunlu
+                </div>
+              </div>
+              <Form.Item name="isMandatory" valuePropName="checked" noStyle>
+                <Switch
+                  checkedChildren="Evet"
+                  unCheckedChildren="Hayır"
+                  style={{ minWidth: '70px' }}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
+              <div>
+                <Text strong className="text-gray-700">
+                  Sertifikalı
+                </Text>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  Tamamlayanlara sertifika verilir
+                </div>
+              </div>
+              <Form.Item name="hasCertification" valuePropName="checked" noStyle>
+                <Switch
+                  checkedChildren="Evet"
+                  unCheckedChildren="Hayır"
+                  style={{ minWidth: '70px' }}
                 />
               </Form.Item>
             </div>
@@ -114,18 +148,18 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
 
         {/* Right Panel - Form Content (60%) */}
         <Col xs={24} lg={14}>
-          {/* Training Name - Hero Input */}
+          {/* Training Title - Hero Input */}
           <div className="mb-8">
             <Form.Item
-              name="name"
+              name="title"
               rules={[
-                { required: true, message: 'Eğitim adı zorunludur' },
+                { required: true, message: 'Eğitim başlığı zorunludur' },
                 { max: 200, message: 'En fazla 200 karakter' },
               ]}
               className="mb-0"
             >
               <Input
-                placeholder="Eğitim adı"
+                placeholder="Eğitim başlığı"
                 variant="borderless"
                 style={{
                   fontSize: '28px',
@@ -155,22 +189,36 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
           {/* Divider */}
           <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
-          {/* Provider & Location */}
+          {/* Provider & Instructor */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Sağlayıcı ve Konum
+              Sağlayıcı ve Eğitmen
             </Text>
             <Row gutter={16}>
               <Col span={12}>
                 <div className="text-xs text-gray-400 mb-1">Eğitim Sağlayıcısı</div>
                 <Form.Item name="provider" className="mb-0">
-                  <Input placeholder="Şirket veya eğitmen adı" variant="filled" />
+                  <Input placeholder="Şirket adı" variant="filled" />
                 </Form.Item>
               </Col>
+              <Col span={12}>
+                <div className="text-xs text-gray-400 mb-1">Eğitmen</div>
+                <Form.Item name="instructor" className="mb-0">
+                  <Input placeholder="Eğitmen adı" variant="filled" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16} className="mt-4">
               <Col span={12}>
                 <div className="text-xs text-gray-400 mb-1">Konum</div>
                 <Form.Item name="location" className="mb-0">
                   <Input placeholder="Eğitim yeri veya Online" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <div className="text-xs text-gray-400 mb-1">Eğitim Türü</div>
+                <Form.Item name="trainingType" className="mb-0">
+                  <Input placeholder="Teknik, Davranışsal, vb." variant="filled" />
                 </Form.Item>
               </Col>
             </Row>
@@ -208,7 +256,22 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
               Detaylar
             </Text>
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={8}>
+                <div className="text-xs text-gray-400 mb-1">Süre (Saat) *</div>
+                <Form.Item
+                  name="durationHours"
+                  className="mb-0"
+                  rules={[{ required: true, message: 'Süre zorunludur' }]}
+                >
+                  <InputNumber
+                    placeholder="0"
+                    style={{ width: '100%' }}
+                    min={1}
+                    variant="filled"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
                 <div className="text-xs text-gray-400 mb-1">Maksimum Katılımcı</div>
                 <Form.Item name="maxParticipants" className="mb-0">
                   <InputNumber
@@ -219,14 +282,14 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <div className="text-xs text-gray-400 mb-1">Maliyet</div>
                 <Form.Item name="cost" className="mb-0">
                   <InputNumber
                     placeholder="0"
                     style={{ width: '100%' }}
                     formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
+                    parser={(value) => parseFloat(String(value).replace(/₺\s?|(,*)/g, '')) as unknown as 0}
                     min={0}
                     variant="filled"
                   />
