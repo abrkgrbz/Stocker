@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Application.Features.Payroll.Commands;
 using Stocker.Modules.HR.Application.Features.Payroll.Queries;
+using Stocker.Modules.HR.Application.Services;
 using Stocker.Modules.HR.Domain.Enums;
 using Stocker.SharedKernel.Authorization;
 using Stocker.SharedKernel.Interfaces;
@@ -20,11 +21,16 @@ public class PayrollController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ITenantService _tenantService;
+    private readonly ITurkishPayrollCalculationService _calculationService;
 
-    public PayrollController(IMediator mediator, ITenantService tenantService)
+    public PayrollController(
+        IMediator mediator,
+        ITenantService tenantService,
+        ITurkishPayrollCalculationService calculationService)
     {
         _mediator = mediator;
         _tenantService = tenantService;
+        _calculationService = calculationService;
     }
 
     /// <summary>
@@ -259,8 +265,78 @@ public class PayrollController : ControllerBase
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Get Turkish payroll calculation parameters (2024)
+    /// </summary>
+    [HttpGet("parameters")]
+    [ProducesResponseType(typeof(TurkishPayrollParameters), 200)]
+    public ActionResult<TurkishPayrollParameters> GetPayrollParameters()
+    {
+        var parameters = _calculationService.GetParameters();
+        return Ok(parameters);
+    }
+
+    /// <summary>
+    /// Preview payroll calculation without saving
+    /// </summary>
+    [HttpPost("calculate-preview")]
+    [ProducesResponseType(typeof(PayrollCalculationResult), 200)]
+    [ProducesResponseType(400)]
+    public ActionResult<PayrollCalculationResult> CalculatePreview(CalculatePreviewDto dto)
+    {
+        var input = new PayrollCalculationInput
+        {
+            BaseSalary = dto.BaseSalary,
+            OvertimePay = dto.OvertimePay,
+            Bonus = dto.Bonus,
+            Allowances = dto.Allowances,
+            CumulativeGrossEarnings = dto.CumulativeGrossEarnings,
+            ApplyMinWageExemption = dto.ApplyMinWageExemption
+        };
+
+        var result = _calculationService.Calculate(input);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get cumulative gross for an employee up to a specific period
+    /// </summary>
+    [HttpGet("employee/{employeeId}/cumulative/{year}/{month}")]
+    [ProducesResponseType(typeof(decimal), 200)]
+    [ProducesResponseType(400)]
+    public async Task<ActionResult<decimal>> GetEmployeeCumulativeGross(int employeeId, int year, int month)
+    {
+        var tenantId = _tenantService.GetCurrentTenantId();
+        if (!tenantId.HasValue) return BadRequest(CreateTenantError());
+
+        var query = new GetEmployeeCumulativeGrossQuery
+        {
+            TenantId = tenantId.Value,
+            EmployeeId = employeeId,
+            Year = year,
+            Month = month
+        };
+
+        var result = await _mediator.Send(query);
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
+    }
+
     private static Error CreateTenantError()
     {
         return new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation);
     }
+}
+
+/// <summary>
+/// DTO for payroll calculation preview
+/// </summary>
+public class CalculatePreviewDto
+{
+    public decimal BaseSalary { get; set; }
+    public decimal OvertimePay { get; set; }
+    public decimal Bonus { get; set; }
+    public decimal Allowances { get; set; }
+    public decimal CumulativeGrossEarnings { get; set; }
+    public bool ApplyMinWageExemption { get; set; } = true;
 }

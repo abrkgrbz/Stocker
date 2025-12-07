@@ -45,6 +45,16 @@ public class PayrollConfiguration : IEntityTypeConfiguration<Payroll>
         builder.Property(p => p.SocialSecurityEmployer).HasPrecision(18, 2);
         builder.Property(p => p.UnemploymentInsuranceEmployer).HasPrecision(18, 2);
 
+        // Turkish tax calculation fields
+        builder.Property(p => p.CumulativeGrossEarnings).HasPrecision(18, 2);
+        builder.Property(p => p.MinWageExemption).HasPrecision(18, 2);
+        builder.Property(p => p.TaxBase).HasPrecision(18, 2);
+        builder.Property(p => p.TaxBracket).HasDefaultValue(1);
+        builder.Property(p => p.TaxBracketRate).HasPrecision(5, 4);
+        builder.Property(p => p.SgkCeilingApplied).HasDefaultValue(false);
+        builder.Property(p => p.SgkBase).HasPrecision(18, 2);
+        builder.Property(p => p.EffectiveTaxRate).HasPrecision(5, 4);
+
         // Working days
         builder.Property(p => p.OvertimeHours).HasPrecision(8, 2);
 

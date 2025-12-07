@@ -65,6 +65,9 @@ import type {
   ApprovePayrollDto,
   MarkPayrollPaidDto,
   PayrollFilterDto,
+  TurkishPayrollParameters,
+  PayrollCalculationResult,
+  CalculatePreviewDto,
   // Expense
   ExpenseDto,
   CreateExpenseDto,
@@ -536,6 +539,25 @@ export class HRService {
 
   static async deletePayrollItem(payrollId: number, itemId: number): Promise<void> {
     return ApiService.delete<void>(this.getPath(`payroll/${payrollId}/items/${itemId}`));
+  }
+
+  // Turkish Payroll Calculation Endpoints
+  static async getPayrollParameters(): Promise<TurkishPayrollParameters> {
+    return ApiService.get<TurkishPayrollParameters>(this.getPath('payroll/parameters'));
+  }
+
+  static async calculatePayrollPreview(data: CalculatePreviewDto): Promise<PayrollCalculationResult> {
+    return ApiService.post<PayrollCalculationResult>(this.getPath('payroll/calculate-preview'), data);
+  }
+
+  static async getEmployeeCumulativeGross(
+    employeeId: number,
+    year: number,
+    month: number
+  ): Promise<number> {
+    return ApiService.get<number>(
+      this.getPath(`payroll/employee/${employeeId}/cumulative/${year}/${month}`)
+    );
   }
 
   // =====================================

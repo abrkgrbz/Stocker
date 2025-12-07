@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.HR.Application.DTOs;
+using Stocker.Modules.HR.Application.Services;
 using Stocker.Modules.HR.Domain.Entities;
 using Stocker.Modules.HR.Domain.Repositories;
 using Stocker.SharedKernel.Interfaces;
@@ -52,15 +53,18 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
     private readonly IPayrollRepository _payrollRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITurkishPayrollCalculationService _calculationService;
 
     public CreatePayrollCommandHandler(
         IPayrollRepository payrollRepository,
         IEmployeeRepository employeeRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ITurkishPayrollCalculationService calculationService)
     {
         _payrollRepository = payrollRepository;
         _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
+        _calculationService = calculationService;
     }
 
     public async Task<Result<PayrollDto>> Handle(CreatePayrollCommand request, CancellationToken cancellationToken)
@@ -89,15 +93,79 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
         var periodStartDate = new DateTime(data.Year, data.Month, 1);
         var periodEndDate = periodStartDate.AddMonths(1).AddDays(-1);
 
+        // Use provided base salary or employee's base salary
+        var baseSalary = data.BaseSalary > 0 ? data.BaseSalary : employee.BaseSalary;
+
         var payroll = new Domain.Entities.Payroll(
             data.EmployeeId,
             data.Year,
             data.Month,
             periodStartDate,
             periodEndDate,
-            employee.BaseSalary);
+            baseSalary);
 
         payroll.SetTenantId(request.TenantId);
+
+        // Set earnings
+        payroll.SetEarnings(
+            overtime: data.OvertimePay,
+            bonus: data.Bonus,
+            allowances: data.Allowances);
+
+        // Calculate deductions
+        if (data.AutoCalculate)
+        {
+            // Use Turkish payroll calculation service
+            var calcInput = new PayrollCalculationInput
+            {
+                BaseSalary = baseSalary,
+                OvertimePay = data.OvertimePay,
+                Bonus = data.Bonus,
+                Allowances = data.Allowances,
+                CumulativeGrossEarnings = data.CumulativeGrossEarnings,
+                ApplyMinWageExemption = data.ApplyMinWageExemption
+            };
+
+            var calcResult = _calculationService.Calculate(calcInput);
+
+            // Set deductions from calculation
+            payroll.SetDeductions(
+                incomeTax: calcResult.IncomeTax,
+                socialSecurityEmployee: calcResult.SgkInsuranceEmployee,
+                unemploymentInsuranceEmployee: calcResult.SgkUnemploymentEmployee,
+                stampTax: calcResult.StampTax);
+
+            // Set employer contributions
+            payroll.SetEmployerContributions(
+                socialSecurityEmployer: calcResult.SgkInsuranceEmployer,
+                unemploymentInsuranceEmployer: calcResult.SgkUnemploymentEmployer);
+
+            // Set Turkish tax calculation details
+            payroll.SetTurkishTaxCalculation(
+                cumulativeGrossEarnings: data.CumulativeGrossEarnings,
+                minWageExemption: calcResult.MinWageExemption,
+                taxBase: calcResult.TaxBase,
+                taxBracket: calcResult.TaxBracket,
+                taxBracketRate: calcResult.TaxBracketRate,
+                sgkCeilingApplied: calcResult.SgkCeilingApplied,
+                sgkBase: calcResult.SgkBase,
+                effectiveTaxRate: calcResult.EffectiveTaxRate);
+        }
+        else
+        {
+            // Use manually provided values
+            payroll.SetDeductions(
+                incomeTax: data.IncomeTax ?? 0,
+                socialSecurityEmployee: data.SocialSecurityEmployee ?? 0,
+                unemploymentInsuranceEmployee: data.UnemploymentInsuranceEmployee ?? 0,
+                stampTax: data.StampTax ?? 0,
+                otherDeductions: data.OtherDeductions ?? 0);
+        }
+
+        if (!string.IsNullOrEmpty(data.Notes))
+        {
+            payroll.SetNotes(data.Notes);
+        }
 
         await _payrollRepository.AddAsync(payroll, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -134,7 +202,29 @@ public class CreatePayrollCommandHandler : IRequestHandler<CreatePayrollCommand,
             PaidDate = payroll.PaidDate,
             PaymentReference = payroll.PaymentReference,
             Notes = payroll.Notes,
-            CreatedAt = payroll.CreatedDate
+            CreatedAt = payroll.CreatedDate,
+            // Detaylı Kesinti Alanları
+            IncomeTax = payroll.IncomeTax,
+            SocialSecurityEmployee = payroll.SocialSecurityEmployee,
+            UnemploymentInsuranceEmployee = payroll.UnemploymentInsuranceEmployee,
+            StampTax = payroll.StampTax,
+            OtherDeductions = payroll.OtherDeductions,
+            // İşveren Maliyetleri
+            SocialSecurityEmployer = payroll.SocialSecurityEmployer,
+            UnemploymentInsuranceEmployer = payroll.UnemploymentInsuranceEmployer,
+            // Türkiye Vergi Hesaplama
+            CumulativeGrossEarnings = payroll.CumulativeGrossEarnings,
+            MinWageExemption = payroll.MinWageExemption,
+            TaxBase = payroll.TaxBase,
+            TaxBracket = payroll.TaxBracket,
+            TaxBracketRate = payroll.TaxBracketRate,
+            SgkCeilingApplied = payroll.SgkCeilingApplied,
+            SgkBase = payroll.SgkBase,
+            EffectiveTaxRate = payroll.EffectiveTaxRate,
+            // Kazanç Detayları
+            OvertimePay = payroll.OvertimePay,
+            Bonus = payroll.Bonus,
+            Allowances = payroll.Allowances
         };
     }
 }

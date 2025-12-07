@@ -36,6 +36,32 @@ public class PayrollDto
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<PayrollItemDto> Items { get; set; } = new();
+
+    // Detaylı Kesinti Alanları
+    public decimal IncomeTax { get; set; }
+    public decimal SocialSecurityEmployee { get; set; }
+    public decimal UnemploymentInsuranceEmployee { get; set; }
+    public decimal StampTax { get; set; }
+    public decimal OtherDeductions { get; set; }
+
+    // İşveren Maliyetleri
+    public decimal SocialSecurityEmployer { get; set; }
+    public decimal UnemploymentInsuranceEmployer { get; set; }
+
+    // Türkiye Vergi Hesaplama Alanları
+    public decimal CumulativeGrossEarnings { get; set; }
+    public decimal MinWageExemption { get; set; }
+    public decimal TaxBase { get; set; }
+    public int TaxBracket { get; set; }
+    public decimal TaxBracketRate { get; set; }
+    public bool SgkCeilingApplied { get; set; }
+    public decimal SgkBase { get; set; }
+    public decimal EffectiveTaxRate { get; set; }
+
+    // Kazanç Detayları
+    public decimal OvertimePay { get; set; }
+    public decimal Bonus { get; set; }
+    public decimal Allowances { get; set; }
 }
 
 /// <summary>
@@ -65,6 +91,24 @@ public class CreatePayrollDto
     public int Year { get; set; }
     public int Month { get; set; }
     public string? Notes { get; set; }
+
+    // Kazançlar
+    public decimal BaseSalary { get; set; }
+    public decimal OvertimePay { get; set; }
+    public decimal Bonus { get; set; }
+    public decimal Allowances { get; set; }
+
+    // Otomatik Hesaplama
+    public bool AutoCalculate { get; set; } = true;
+    public decimal CumulativeGrossEarnings { get; set; }  // Önceki ayların toplamı
+    public bool ApplyMinWageExemption { get; set; } = true;
+
+    // Manuel Giriş (AutoCalculate = false ise)
+    public decimal? IncomeTax { get; set; }
+    public decimal? SocialSecurityEmployee { get; set; }
+    public decimal? UnemploymentInsuranceEmployee { get; set; }
+    public decimal? StampTax { get; set; }
+    public decimal? OtherDeductions { get; set; }
 }
 
 /// <summary>

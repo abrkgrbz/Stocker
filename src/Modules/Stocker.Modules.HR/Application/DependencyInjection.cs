@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Stocker.Modules.HR.Application.Services;
 using System.Reflection;
 
 namespace Stocker.Modules.HR.Application;
@@ -22,6 +23,9 @@ public static class DependencyInjection
 
         // Add FluentValidation
         services.AddValidatorsFromAssembly(assembly);
+
+        // Add Turkish Payroll Calculation Service
+        services.AddScoped<ITurkishPayrollCalculationService, TurkishPayrollCalculationService>();
 
         return services;
     }

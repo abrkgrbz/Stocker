@@ -994,6 +994,28 @@ export interface PayrollDto {
   notes?: string;
   createdAt: string;
   items: PayrollItemDto[];
+  // Detaylı Kesinti Alanları
+  incomeTax: number;
+  socialSecurityEmployee: number;
+  unemploymentInsuranceEmployee: number;
+  stampTax: number;
+  otherDeductions: number;
+  // İşveren Maliyetleri
+  socialSecurityEmployer: number;
+  unemploymentInsuranceEmployer: number;
+  // Türkiye Vergi Hesaplama Alanları
+  cumulativeGrossEarnings: number;
+  minWageExemption: number;
+  taxBase: number;
+  taxBracket: number;
+  taxBracketRate: number;
+  sgkCeilingApplied: boolean;
+  sgkBase: number;
+  effectiveTaxRate: number;
+  // Kazanç Detayları
+  overtimePay: number;
+  bonus: number;
+  allowances: number;
 }
 
 export interface PayrollItemDto {
@@ -1015,6 +1037,72 @@ export interface CreatePayrollDto {
   year: number;
   month: number;
   notes?: string;
+  // Kazançlar
+  baseSalary: number;
+  overtimePay: number;
+  bonus: number;
+  allowances: number;
+  // Otomatik Hesaplama
+  autoCalculate: boolean;
+  cumulativeGrossEarnings: number;
+  applyMinWageExemption: boolean;
+  // Manuel Giriş (autoCalculate = false ise)
+  incomeTax?: number;
+  socialSecurityEmployee?: number;
+  unemploymentInsuranceEmployee?: number;
+  stampTax?: number;
+  otherDeductions?: number;
+}
+
+// Türk Bordro Hesaplama Parametreleri
+export interface TurkishPayrollParameters {
+  minimumWage: number;
+  sgkCeiling: number;
+  sgkEmployeeInsurance: number;
+  sgkEmployeeUnemployment: number;
+  sgkEmployerInsurance: number;
+  sgkEmployerUnemployment: number;
+  stampTaxRate: number;
+  taxBrackets: TaxBracket[];
+  year: number;
+}
+
+export interface TaxBracket {
+  minAmount: number;
+  maxAmount: number;
+  rate: number;
+  bracketNumber: number;
+}
+
+// Bordro Hesaplama Sonucu
+export interface PayrollCalculationResult {
+  grossEarnings: number;
+  sgkBase: number;
+  sgkCeilingApplied: boolean;
+  sgkInsuranceEmployee: number;
+  sgkUnemploymentEmployee: number;
+  sgkInsuranceEmployer: number;
+  sgkUnemploymentEmployer: number;
+  stampTax: number;
+  taxBase: number;
+  taxBracket: number;
+  taxBracketRate: number;
+  incomeTax: number;
+  minWageExemption: number;
+  totalDeductions: number;
+  netSalary: number;
+  totalEmployerCost: number;
+  effectiveTaxRate: number;
+}
+
+// Hesaplama Önizleme DTO
+export interface CalculatePreviewDto {
+  baseSalary: number;
+  overtimePay: number;
+  bonus: number;
+  allowances: number;
+  cumulativeGrossEarnings: number;
+  applyMinWageExemption: boolean;
 }
 
 export interface BatchCreatePayrollDto {

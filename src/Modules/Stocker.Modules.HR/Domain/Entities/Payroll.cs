@@ -40,6 +40,16 @@ public class Payroll : BaseEntity
     public decimal NetSalary => GrossEarnings - TotalDeductions;
     public decimal TotalEmployerCost => GrossEarnings + SocialSecurityEmployer + UnemploymentInsuranceEmployer;
 
+    // Türkiye Vergi Hesaplama Alanları
+    public decimal CumulativeGrossEarnings { get; private set; }  // Yılbaşından bu aya kadar kümülatif brüt
+    public decimal MinWageExemption { get; private set; }          // Asgari ücret istisnası tutarı
+    public decimal TaxBase { get; private set; }                   // Gelir vergisi matrahı
+    public int TaxBracket { get; private set; }                    // Vergi dilimi (1-5)
+    public decimal TaxBracketRate { get; private set; }            // Vergi dilimi oranı
+    public bool SgkCeilingApplied { get; private set; }            // SGK tavanı uygulandı mı
+    public decimal SgkBase { get; private set; }                   // SGK matrahı (tavan uygulanmış)
+    public decimal EffectiveTaxRate { get; private set; }          // Efektif vergi oranı
+
     // Çalışma Bilgileri
     public int WorkDays { get; private set; }
     public int AbsentDays { get; private set; }
@@ -124,6 +134,26 @@ public class Payroll : BaseEntity
     {
         SocialSecurityEmployer = socialSecurityEmployer;
         UnemploymentInsuranceEmployer = unemploymentInsuranceEmployer;
+    }
+
+    public void SetTurkishTaxCalculation(
+        decimal cumulativeGrossEarnings,
+        decimal minWageExemption,
+        decimal taxBase,
+        int taxBracket,
+        decimal taxBracketRate,
+        bool sgkCeilingApplied,
+        decimal sgkBase,
+        decimal effectiveTaxRate)
+    {
+        CumulativeGrossEarnings = cumulativeGrossEarnings;
+        MinWageExemption = minWageExemption;
+        TaxBase = taxBase;
+        TaxBracket = taxBracket;
+        TaxBracketRate = taxBracketRate;
+        SgkCeilingApplied = sgkCeilingApplied;
+        SgkBase = sgkBase;
+        EffectiveTaxRate = effectiveTaxRate;
     }
 
     public void SetWorkingDays(
