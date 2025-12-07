@@ -36,7 +36,7 @@ export function useNotificationHub() {
           type: 'info',
           category: 'inventory',
           isRead: false,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
           metadata: { productId: data.productId, stockLevel: data.stockLevel },
         });
 
@@ -58,7 +58,7 @@ export function useNotificationHub() {
           type: 'success',
           category: 'order',
           isRead: false,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
           metadata: { orderId: data.orderId, status: data.status },
           link: `/orders/${data.orderId}`,
         });
@@ -85,7 +85,7 @@ export function useNotificationHub() {
           type: data.severity === 'error' ? 'error' : data.severity === 'warning' ? 'warning' : 'info',
           category: 'system',
           isRead: false,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         });
 
         // Always show toast for system alerts

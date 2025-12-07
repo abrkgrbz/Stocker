@@ -336,7 +336,14 @@ public sealed class TenantNotification : Entity
         ReadAt = DateTime.UtcNow;
         Status = NotificationStatus.Read;
     }
-    
+
+    public void MarkAsUnread()
+    {
+        IsRead = false;
+        ReadAt = null;
+        Status = NotificationStatus.Delivered;
+    }
+
     public void MarkAsDismissed()
     {
         if (!AllowDismiss && !RequiresAcknowledgment)

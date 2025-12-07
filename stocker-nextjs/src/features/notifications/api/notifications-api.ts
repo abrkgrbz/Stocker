@@ -1,4 +1,4 @@
-import { Notification, NotificationFilter } from '../types/notification.types';
+import { Notification, NotificationFilter, mapNotification } from '../types/notification.types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5249';
 
@@ -7,11 +7,7 @@ export const notificationsApi = {
   getNotifications: async (filter?: NotificationFilter): Promise<Notification[]> => {
     const params = new URLSearchParams();
 
-    if (filter?.type) params.append('type', filter.type);
-    if (filter?.category) params.append('category', filter.category);
     if (filter?.isRead !== undefined) params.append('isRead', String(filter.isRead));
-    if (filter?.dateFrom) params.append('dateFrom', filter.dateFrom.toISOString());
-    if (filter?.dateTo) params.append('dateTo', filter.dateTo.toISOString());
 
     const queryString = params.toString();
     const url = `${API_BASE_URL}/api/notifications${queryString ? `?${queryString}` : ''}`;
@@ -25,7 +21,10 @@ export const notificationsApi = {
     }
 
     const data = await response.json();
-    return data.data || [];
+    const notifications = data.data || [];
+
+    // Map backend notifications to frontend format
+    return notifications.map((n: any) => mapNotification(n));
   },
 
   // Mark notification as read
@@ -110,6 +109,9 @@ export const notificationsApi = {
     }
     if (typeof data.data?.unreadCount === 'number') {
       return data.data.unreadCount;
+    }
+    if (typeof data.data?.UnreadCount === 'number') {
+      return data.data.UnreadCount;
     }
     if (typeof data.unreadCount === 'number') {
       return data.unreadCount;

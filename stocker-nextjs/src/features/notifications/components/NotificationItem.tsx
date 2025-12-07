@@ -23,13 +23,15 @@ interface NotificationItemProps {
   onClick?: (notification: Notification) => void;
 }
 
-const typeConfig: Record<NotificationType, {
+type TypeConfigValue = {
   icon: React.ReactNode;
   gradient: string;
   bgLight: string;
   borderColor: string;
   iconBg: string;
-}> = {
+};
+
+const typeConfig: Record<string, TypeConfigValue> = {
   success: {
     icon: <CheckCircleOutlined />,
     gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
