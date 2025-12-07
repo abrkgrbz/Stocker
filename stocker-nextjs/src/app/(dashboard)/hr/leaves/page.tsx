@@ -40,6 +40,7 @@ import {
   useLeaveTypes,
 } from '@/lib/api/hooks/useHR';
 import type { LeaveDto, LeaveFilterDto } from '@/lib/api/services/hr.types';
+import { LeaveStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -59,9 +60,9 @@ export default function LeavesPage() {
 
   // Stats
   const totalLeaves = leaves.length;
-  const pendingLeaves = leaves.filter((l) => l.status === 'Pending').length;
-  const approvedLeaves = leaves.filter((l) => l.status === 'Approved').length;
-  const rejectedLeaves = leaves.filter((l) => l.status === 'Rejected').length;
+  const pendingLeaves = leaves.filter((l) => l.status === LeaveStatus.Pending).length;
+  const approvedLeaves = leaves.filter((l) => l.status === LeaveStatus.Approved).length;
+  const rejectedLeaves = leaves.filter((l) => l.status === LeaveStatus.Rejected).length;
 
   const handleDelete = (leave: LeaveDto) => {
     Modal.confirm({
@@ -82,7 +83,7 @@ export default function LeavesPage() {
 
   const handleApprove = async (leave: LeaveDto) => {
     try {
-      await approveLeave.mutateAsync(leave.id);
+      await approveLeave.mutateAsync({ id: leave.id });
       message.success('İzin talebi onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -98,7 +99,7 @@ export default function LeavesPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          await rejectLeave.mutateAsync({ id: leave.id });
+          await rejectLeave.mutateAsync({ id: leave.id, data: { reason: 'Reddedildi' } });
           message.success('İzin talebi reddedildi');
         } catch (error) {
           // Error handled by hook
@@ -107,14 +108,16 @@ export default function LeavesPage() {
     });
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'green', text: 'Onaylandı' },
-      Rejected: { color: 'red', text: 'Reddedildi' },
-      Cancelled: { color: 'default', text: 'İptal Edildi' },
+  const getStatusConfig = (status?: LeaveStatus) => {
+    const statusMap: Record<LeaveStatus, { color: string; text: string }> = {
+      [LeaveStatus.Pending]: { color: 'orange', text: 'Beklemede' },
+      [LeaveStatus.Approved]: { color: 'green', text: 'Onaylandı' },
+      [LeaveStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
+      [LeaveStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
+      [LeaveStatus.Taken]: { color: 'blue', text: 'Kullanıldı' },
+      [LeaveStatus.PartiallyTaken]: { color: 'cyan', text: 'Kısmen Kullanıldı' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
 
   const columns: ColumnsType<LeaveDto> = [
@@ -161,7 +164,7 @@ export default function LeavesPage() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => {
+      render: (status: LeaveStatus) => {
         const config = getStatusConfig(status);
         return <Tag color={config.color}>{config.text}</Tag>;
       },
@@ -185,10 +188,10 @@ export default function LeavesPage() {
                 icon: <EditOutlined />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/leaves/${record.id}/edit`),
-                disabled: record.status !== 'Pending',
+                disabled: record.status !== LeaveStatus.Pending,
               },
               { type: 'divider' },
-              ...(record.status === 'Pending'
+              ...(record.status === LeaveStatus.Pending
                 ? [
                     {
                       key: 'approve',
@@ -318,10 +321,11 @@ export default function LeavesPage() {
               style={{ width: '100%' }}
               onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
               options={[
-                { value: 'Pending', label: 'Beklemede' },
-                { value: 'Approved', label: 'Onaylanan' },
-                { value: 'Rejected', label: 'Reddedilen' },
-                { value: 'Cancelled', label: 'İptal Edilen' },
+                { value: LeaveStatus.Pending, label: 'Beklemede' },
+                { value: LeaveStatus.Approved, label: 'Onaylanan' },
+                { value: LeaveStatus.Rejected, label: 'Reddedilen' },
+                { value: LeaveStatus.Cancelled, label: 'İptal Edilen' },
+                { value: LeaveStatus.Taken, label: 'Kullanıldı' },
               ]}
             />
           </Col>

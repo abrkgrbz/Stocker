@@ -20,7 +20,12 @@ export default function NewLeavePage() {
         leaveTypeId: values.leaveTypeId,
         startDate: values.dateRange[0]?.format('YYYY-MM-DD'),
         endDate: values.dateRange[1]?.format('YYYY-MM-DD'),
+        isHalfDay: values.isHalfDay ?? false,
+        isHalfDayMorning: values.isHalfDayMorning ?? false,
         reason: values.reason,
+        contactDuringLeave: values.contactDuringLeave,
+        handoverNotes: values.handoverNotes,
+        substituteEmployeeId: values.substituteEmployeeId,
       };
 
       await createLeave.mutateAsync(data);

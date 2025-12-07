@@ -24,11 +24,18 @@ export default function EditLeaveTypePage() {
     if (leaveType) {
       form.setFieldsValue({
         name: leaveType.name,
-        code: leaveType.code,
         description: leaveType.description,
         defaultDays: leaveType.defaultDays,
         isPaid: leaveType.isPaid,
         requiresApproval: leaveType.requiresApproval,
+        requiresDocument: leaveType.requiresDocument,
+        maxConsecutiveDays: leaveType.maxConsecutiveDays,
+        minNoticeDays: leaveType.minNoticeDays,
+        allowHalfDay: leaveType.allowHalfDay,
+        allowNegativeBalance: leaveType.allowNegativeBalance,
+        carryForward: leaveType.carryForward,
+        maxCarryForwardDays: leaveType.maxCarryForwardDays,
+        color: leaveType.color,
       });
     }
   }, [leaveType, form]);
@@ -37,11 +44,18 @@ export default function EditLeaveTypePage() {
     try {
       const data: UpdateLeaveTypeDto = {
         name: values.name,
-        code: values.code,
         description: values.description,
         defaultDays: values.defaultDays,
-        isPaid: values.isPaid,
-        requiresApproval: values.requiresApproval,
+        isPaid: values.isPaid ?? false,
+        requiresApproval: values.requiresApproval ?? true,
+        requiresDocument: values.requiresDocument ?? false,
+        maxConsecutiveDays: values.maxConsecutiveDays,
+        minNoticeDays: values.minNoticeDays,
+        allowHalfDay: values.allowHalfDay ?? true,
+        allowNegativeBalance: values.allowNegativeBalance ?? false,
+        carryForward: values.carryForward ?? false,
+        maxCarryForwardDays: values.maxCarryForwardDays,
+        color: values.color,
       };
 
       await updateLeaveType.mutateAsync({ id, data });
@@ -135,13 +149,11 @@ export default function EditLeaveTypePage() {
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="code"
-                    label="İzin Türü Kodu"
-                    rules={[{ required: true, message: 'İzin türü kodu gerekli' }]}
-                  >
-                    <Input placeholder="Örn: YILLIK, HASTALIK, DOGUM" variant="filled" />
-                  </Form.Item>
+                  <div className="text-xs text-gray-400 mb-1">İzin Türü Kodu</div>
+                  <div className="py-2 px-3 bg-gray-100 rounded-md text-gray-600">
+                    {leaveType.code}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Kod değiştirilemez</div>
                 </Col>
               </Row>
               <Form.Item name="description" label="Açıklama">

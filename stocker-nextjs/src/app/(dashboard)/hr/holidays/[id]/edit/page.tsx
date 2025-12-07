@@ -28,6 +28,10 @@ export default function EditHolidayPage() {
         date: holiday.date ? dayjs(holiday.date) : null,
         description: holiday.description,
         isRecurring: holiday.isRecurring,
+        holidayType: holiday.holidayType,
+        isHalfDay: holiday.isHalfDay,
+        isNational: holiday.isNational,
+        affectedRegions: holiday.affectedRegions,
       });
     }
   }, [holiday, form]);
@@ -38,7 +42,11 @@ export default function EditHolidayPage() {
         name: values.name,
         date: values.date?.format('YYYY-MM-DD'),
         description: values.description,
-        isRecurring: values.isRecurring,
+        isRecurring: values.isRecurring ?? false,
+        holidayType: values.holidayType,
+        isHalfDay: values.isHalfDay ?? false,
+        isNational: values.isNational ?? true,
+        affectedRegions: values.affectedRegions,
       };
 
       await updateHoliday.mutateAsync({ id, data });

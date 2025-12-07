@@ -106,12 +106,6 @@ export default function DepartmentForm({ form, initialValues, onFinish, loading 
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Çalışan</div>
               </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.positionCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Pozisyon</div>
-              </div>
             </div>
           )}
         </Col>

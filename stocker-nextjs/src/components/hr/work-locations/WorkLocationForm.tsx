@@ -22,9 +22,9 @@ export default function WorkLocationForm({ form, initialData, onFinish }: WorkLo
               name: initialData.name,
               code: initialData.code,
               description: initialData.description,
-              address: initialData.address,
+              street: initialData.street,
               city: initialData.city,
-              district: initialData.district,
+              state: initialData.state,
               postalCode: initialData.postalCode,
               country: initialData.country,
               latitude: initialData.latitude,
@@ -75,7 +75,7 @@ export default function WorkLocationForm({ form, initialData, onFinish }: WorkLo
 
           {/* Address Info */}
           <Card title="Adres Bilgileri" className="mb-6">
-            <Form.Item name="address" label="Adres">
+            <Form.Item name="street" label="Adres">
               <Input.TextArea rows={2} placeholder="Sokak, mahalle, bina no..." />
             </Form.Item>
 
@@ -86,7 +86,7 @@ export default function WorkLocationForm({ form, initialData, onFinish }: WorkLo
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <Form.Item name="district" label="İlçe">
+                <Form.Item name="state" label="İlçe">
                   <Input placeholder="Örn: Kadıköy" />
                 </Form.Item>
               </Col>

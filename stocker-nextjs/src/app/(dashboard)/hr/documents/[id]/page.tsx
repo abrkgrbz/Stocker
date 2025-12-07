@@ -15,7 +15,10 @@ import {
   Statistic,
   Empty,
   Modal,
+  Upload,
+  message,
 } from 'antd';
+import type { UploadProps } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -27,10 +30,14 @@ import {
   UserOutlined,
   DownloadOutlined,
   CheckCircleOutlined,
+  UploadOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
-import { useDocument, useDeleteDocument, useVerifyDocument } from '@/lib/api/hooks/useHR';
+import { useDocument, useDeleteDocument, useVerifyDocument, useUploadDocumentFile } from '@/lib/api/hooks/useHR';
 import { DocumentType } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
+
+const { Dragger } = Upload;
 
 const { Title, Text } = Typography;
 
@@ -61,9 +68,36 @@ export default function DocumentDetailPage() {
   const id = Number(params.id);
 
   // API Hooks
-  const { data: document, isLoading, error } = useDocument(id);
+  const { data: document, isLoading, error, refetch } = useDocument(id);
   const deleteDocument = useDeleteDocument();
   const verifyDocument = useVerifyDocument();
+  const uploadFile = useUploadDocumentFile();
+
+  const uploadProps: UploadProps = {
+    name: 'file',
+    multiple: false,
+    showUploadList: false,
+    beforeUpload: (file) => {
+      // Validate file size (max 10MB)
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('Dosya boyutu 10MB\'dan küçük olmalıdır!');
+        return false;
+      }
+      return true;
+    },
+    customRequest: async ({ file, onSuccess, onError }) => {
+      try {
+        await uploadFile.mutateAsync({ id, file: file as File });
+        message.success('Dosya başarıyla yüklendi');
+        refetch();
+        onSuccess?.(null);
+      } catch (error) {
+        message.error('Dosya yüklenirken bir hata oluştu');
+        onError?.(error as Error);
+      }
+    },
+  };
 
   const handleDelete = () => {
     if (!document) return;
@@ -287,28 +321,52 @@ export default function DocumentDetailPage() {
 
             {/* File Info */}
             <Card title="Dosya Bilgileri">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Dosya Adı">
-                  {document.fileName || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Dosya Türü">
-                  {document.fileType || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Dosya Boyutu">
-                  {formatFileSize(document.fileSize)}
-                </Descriptions.Item>
-              </Descriptions>
-              {document.fileUrl && (
-                <Button
-                  type="primary"
-                  icon={<DownloadOutlined />}
-                  block
-                  className="mt-4"
-                  href={document.fileUrl}
-                  target="_blank"
-                >
-                  Dosyayı İndir
-                </Button>
+              {document.fileName ? (
+                <>
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="Dosya Adı">
+                      {document.fileName}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Dosya Türü">
+                      {document.fileType || '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Dosya Boyutu">
+                      {formatFileSize(document.fileSize)}
+                    </Descriptions.Item>
+                  </Descriptions>
+                  <Space direction="vertical" style={{ width: '100%' }} className="mt-4">
+                    {document.fileUrl && (
+                      <Button
+                        type="primary"
+                        icon={<DownloadOutlined />}
+                        block
+                        href={document.fileUrl}
+                        target="_blank"
+                      >
+                        Dosyayı İndir
+                      </Button>
+                    )}
+                    <Dragger {...uploadProps} disabled={uploadFile.isPending}>
+                      <p className="ant-upload-drag-icon">
+                        <InboxOutlined />
+                      </p>
+                      <p className="ant-upload-text">Yeni Dosya Yükle</p>
+                      <p className="ant-upload-hint">
+                        Mevcut dosyayı değiştirmek için tıklayın veya sürükleyin
+                      </p>
+                    </Dragger>
+                  </Space>
+                </>
+              ) : (
+                <Dragger {...uploadProps} disabled={uploadFile.isPending}>
+                  <p className="ant-upload-drag-icon">
+                    <InboxOutlined />
+                  </p>
+                  <p className="ant-upload-text">Dosya Yükle</p>
+                  <p className="ant-upload-hint">
+                    Dosya yüklemek için tıklayın veya buraya sürükleyin (max 10MB)
+                  </p>
+                </Dragger>
               )}
             </Card>
 

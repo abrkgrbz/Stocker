@@ -26,7 +26,7 @@ import {
   useEmployees,
   useDepartments,
   usePositions,
-  useAttendances,
+  useAttendance,
   useLeaves,
   usePayrolls,
   useTrainings,
@@ -87,7 +87,7 @@ export default function HRDashboardPage() {
   const { data: employees = [], isLoading: employeesLoading, refetch: refetchEmployees } = useEmployees();
   const { data: departments = [], isLoading: departmentsLoading } = useDepartments();
   const { data: positions = [], isLoading: positionsLoading } = usePositions();
-  const { data: attendances = [], isLoading: attendancesLoading } = useAttendances();
+  const { data: attendances = [], isLoading: attendancesLoading } = useAttendance();
   const { data: leaves = [], isLoading: leavesLoading } = useLeaves();
   const { data: payrolls = [], isLoading: payrollsLoading } = usePayrolls();
   const { data: trainings = [], isLoading: trainingsLoading } = useTrainings();
@@ -455,7 +455,7 @@ export default function HRDashboardPage() {
                     cy="50%"
                     outerRadius={100}
                     dataKey="value"
-                    label={({ name, value, percent }) => `${name}: ${value} (%${(percent * 100).toFixed(0)})`}
+                    label={(props: any) => `${props.name}: ${props.value} (%${(props.percent * 100).toFixed(0)})`}
                   >
                     {employmentTypeDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

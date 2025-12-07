@@ -40,7 +40,7 @@ export default function HolidaysPage() {
   const [yearFilter, setYearFilter] = useState<number | undefined>(dayjs().year());
 
   // API Hooks
-  const { data: holidays = [], isLoading } = useHolidays({ year: yearFilter });
+  const { data: holidays = [], isLoading } = useHolidays(yearFilter);
   const deleteHoliday = useDeleteHoliday();
 
   // Filter holidays by search text

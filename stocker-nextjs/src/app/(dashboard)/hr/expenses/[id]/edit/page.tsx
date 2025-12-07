@@ -4,8 +4,9 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Select, DatePicker, InputNumber, Input, Row, Col, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, WalletOutlined } from '@ant-design/icons';
-import { useExpense, useUpdateExpense, useEmployees } from '@/lib/api/hooks/useHR';
+import { useExpense, useUpdateExpense } from '@/lib/api/hooks/useHR';
 import type { UpdateExpenseDto } from '@/lib/api/services/hr.types';
+import { ExpenseStatus, ExpenseType } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -19,17 +20,17 @@ export default function EditExpensePage() {
   // API Hooks
   const { data: expense, isLoading, error } = useExpense(id);
   const updateExpense = useUpdateExpense();
-  const { data: employees = [] } = useEmployees();
 
   // Populate form when expense data loads
   useEffect(() => {
     if (expense) {
       form.setFieldsValue({
-        employeeId: expense.employeeId,
         expenseDate: expense.expenseDate ? dayjs(expense.expenseDate) : null,
-        category: expense.category,
+        expenseType: expense.expenseType,
         amount: expense.amount,
         description: expense.description,
+        merchantName: expense.merchantName,
+        receiptNumber: expense.receiptNumber,
         notes: expense.notes,
       });
     }
@@ -38,11 +39,12 @@ export default function EditExpensePage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: UpdateExpenseDto = {
-        employeeId: values.employeeId,
         description: values.description,
         amount: values.amount,
-        category: values.category,
+        expenseType: values.expenseType,
         expenseDate: values.expenseDate?.format('YYYY-MM-DD'),
+        merchantName: values.merchantName,
+        receiptNumber: values.receiptNumber,
         notes: values.notes,
       };
 
@@ -72,7 +74,7 @@ export default function EditExpensePage() {
     );
   }
 
-  if (expense.status !== 'Pending') {
+  if (expense.status !== ExpenseStatus.Pending) {
     return (
       <div className="p-6">
         <Empty description="Bu harcama kaydı düzenlenemez. Sadece bekleyen harcamalar düzenlenebilir." />
@@ -140,24 +142,6 @@ export default function EditExpensePage() {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    name="employeeId"
-                    label="Çalışan"
-                    rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Çalışan seçin"
-                      showSearch
-                      optionFilterProp="children"
-                      variant="filled"
-                      options={employees.map((e) => ({
-                        value: e.id,
-                        label: e.fullName,
-                      }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
                     name="expenseDate"
                     label="Harcama Tarihi"
                     rules={[{ required: true, message: 'Tarih gerekli' }]}
@@ -170,31 +154,31 @@ export default function EditExpensePage() {
                     />
                   </Form.Item>
                 </Col>
-              </Row>
-              <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    name="category"
-                    label="Kategori"
-                    rules={[{ required: true, message: 'Kategori gerekli' }]}
+                    name="expenseType"
+                    label="Harcama Türü"
+                    rules={[{ required: true, message: 'Harcama türü gerekli' }]}
                   >
                     <Select
-                      placeholder="Kategori seçin"
+                      placeholder="Harcama türü seçin"
                       variant="filled"
                       options={[
-                        { value: 'Travel', label: 'Seyahat' },
-                        { value: 'Meals', label: 'Yemek' },
-                        { value: 'Supplies', label: 'Malzeme' },
-                        { value: 'Equipment', label: 'Ekipman' },
-                        { value: 'Training', label: 'Eğitim' },
-                        { value: 'Communication', label: 'İletişim' },
-                        { value: 'Transportation', label: 'Ulaşım' },
-                        { value: 'Accommodation', label: 'Konaklama' },
-                        { value: 'Other', label: 'Diğer' },
+                        { value: ExpenseType.Transportation, label: 'Ulaşım' },
+                        { value: ExpenseType.Meal, label: 'Yemek' },
+                        { value: ExpenseType.Accommodation, label: 'Konaklama' },
+                        { value: ExpenseType.Communication, label: 'İletişim' },
+                        { value: ExpenseType.OfficeSupplies, label: 'Ofis Malzemeleri' },
+                        { value: ExpenseType.Training, label: 'Eğitim' },
+                        { value: ExpenseType.Medical, label: 'Sağlık' },
+                        { value: ExpenseType.Entertainment, label: 'Eğlence' },
+                        { value: ExpenseType.Other, label: 'Diğer' },
                       ]}
                     />
                   </Form.Item>
                 </Col>
+              </Row>
+              <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="amount"
@@ -209,6 +193,18 @@ export default function EditExpensePage() {
                       parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       min={0}
                     />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="merchantName" label="İşyeri Adı">
+                    <Input placeholder="İşyeri adı" variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="receiptNumber" label="Fiş/Fatura No">
+                    <Input placeholder="Fiş veya fatura numarası" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>

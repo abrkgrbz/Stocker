@@ -43,10 +43,10 @@ export default function EditDepartmentPage() {
     try {
       const data: UpdateDepartmentDto = {
         name: values.name,
-        code: values.code,
         description: values.description,
         parentDepartmentId: values.parentDepartmentId,
         managerId: values.managerId,
+        displayOrder: values.displayOrder ?? 0,
       };
 
       await updateDepartment.mutateAsync({ id, data });

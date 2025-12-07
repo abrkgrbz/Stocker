@@ -49,32 +49,41 @@ import {
   useDeactivateEmployee,
   useTerminateEmployee,
 } from '@/lib/api/hooks/useHR';
-import type { EmployeeStatus, Gender, EmploymentType } from '@/lib/api/services/hr.types';
+import { EmployeeStatus, Gender, EmploymentType } from '@/lib/api/services/hr.types';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 // Status configuration
 const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: string }> = {
-  Active: { color: 'green', label: 'Aktif' },
-  OnLeave: { color: 'blue', label: 'İzinde' },
-  Suspended: { color: 'orange', label: 'Askıda' },
-  Terminated: { color: 'red', label: 'İşten Ayrıldı' },
-  Retired: { color: 'gray', label: 'Emekli' },
+  [EmployeeStatus.Active]: { color: 'green', label: 'Aktif' },
+  [EmployeeStatus.Inactive]: { color: 'default', label: 'Pasif' },
+  [EmployeeStatus.OnLeave]: { color: 'blue', label: 'İzinde' },
+  [EmployeeStatus.Terminated]: { color: 'red', label: 'İşten Çıkarıldı' },
+  [EmployeeStatus.Resigned]: { color: 'orange', label: 'İstifa' },
+  [EmployeeStatus.Retired]: { color: 'gray', label: 'Emekli' },
+  [EmployeeStatus.Probation]: { color: 'purple', label: 'Deneme Süresinde' },
+  [EmployeeStatus.MilitaryService]: { color: 'cyan', label: 'Askerde' },
+  [EmployeeStatus.MaternityLeave]: { color: 'magenta', label: 'Doğum İzni' },
+  [EmployeeStatus.SickLeave]: { color: 'volcano', label: 'Hastalık İzni' },
 };
 
 const genderLabels: Record<Gender, string> = {
-  Male: 'Erkek',
-  Female: 'Kadın',
-  Other: 'Diğer',
+  [Gender.Male]: 'Erkek',
+  [Gender.Female]: 'Kadın',
+  [Gender.Other]: 'Diğer',
+  [Gender.PreferNotToSay]: 'Belirtilmemiş',
 };
 
 const employmentTypeLabels: Record<EmploymentType, string> = {
-  FullTime: 'Tam Zamanlı',
-  PartTime: 'Yarı Zamanlı',
-  Contract: 'Sözleşmeli',
-  Intern: 'Stajyer',
-  Temporary: 'Geçici',
+  [EmploymentType.FullTime]: 'Tam Zamanlı',
+  [EmploymentType.PartTime]: 'Yarı Zamanlı',
+  [EmploymentType.Contract]: 'Sözleşmeli',
+  [EmploymentType.Intern]: 'Stajyer',
+  [EmploymentType.Temporary]: 'Geçici',
+  [EmploymentType.Consultant]: 'Danışman',
+  [EmploymentType.Freelance]: 'Freelance',
+  [EmploymentType.Probation]: 'Deneme Süresi',
 };
 
 export default function EmployeeDetailPage() {
@@ -114,7 +123,7 @@ export default function EmployeeDetailPage() {
   const handleToggleActive = async () => {
     if (!employee) return;
     try {
-      if (employee.status === 'Active') {
+      if (employee.status === EmployeeStatus.Active) {
         await deactivateEmployee.mutateAsync(id);
       } else {
         await activateEmployee.mutateAsync(id);
@@ -230,10 +239,10 @@ export default function EmployeeDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={employee.status === 'Active' ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={employee.status === EmployeeStatus.Active ? <StopOutlined /> : <CheckCircleOutlined />}
             onClick={handleToggleActive}
           >
-            {employee.status === 'Active' ? 'Pasifleştir' : 'Aktifleştir'}
+            {employee.status === EmployeeStatus.Active ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
           <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/employees/${id}/edit`)}>
             Düzenle
@@ -293,10 +302,10 @@ export default function EmployeeDetailPage() {
                     <Text>{employee.phone}</Text>
                   </Space>
                 )}
-                {employee.address && (
+                {(employee.street || employee.city) && (
                   <Space align="start">
                     <HomeOutlined />
-                    <Text>{employee.address}</Text>
+                    <Text>{[employee.street, employee.city, employee.country].filter(Boolean).join(', ')}</Text>
                   </Space>
                 )}
               </Space>
@@ -325,9 +334,8 @@ export default function EmployeeDetailPage() {
                   <Descriptions.Item label="Doğum Tarihi">
                     {employee.birthDate ? new Date(employee.birthDate).toLocaleDateString('tr-TR') : '-'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Doğum Yeri">{employee.birthPlace || '-'}</Descriptions.Item>
                   <Descriptions.Item label="Medeni Durum">{employee.maritalStatus || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="Kan Grubu">{employee.bloodType || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Uyruk">{employee.nationality || '-'}</Descriptions.Item>
                 </Descriptions>
               </Card>
 

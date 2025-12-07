@@ -111,12 +111,6 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
             <div className="grid grid-cols-2 gap-3 mt-6">
               <div className="p-4 bg-gray-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.leaveBalance || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">İzin Bakiyesi</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
                   {initialValues.yearsOfService || 0}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Kıdem Yılı</div>
@@ -327,23 +321,29 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
               </Col>
             </Row>
             <div className="text-xs text-gray-400 mb-1">Adres</div>
-            <Form.Item name="address" className="mb-4">
+            <Form.Item name="street" className="mb-4">
               <TextArea rows={2} placeholder="Adres" variant="filled" />
             </Form.Item>
             <Row gutter={16}>
-              <Col span={8}>
+              <Col span={6}>
                 <div className="text-xs text-gray-400 mb-1">Şehir</div>
                 <Form.Item name="city" className="mb-0">
                   <Input placeholder="Şehir" variant="filled" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
+                <div className="text-xs text-gray-400 mb-1">İlçe</div>
+                <Form.Item name="state" className="mb-0">
+                  <Input placeholder="İlçe" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
                 <div className="text-xs text-gray-400 mb-1">Posta Kodu</div>
                 <Form.Item name="postalCode" className="mb-0">
                   <Input placeholder="Posta kodu" variant="filled" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <div className="text-xs text-gray-400 mb-1">Ülke</div>
                 <Form.Item name="country" className="mb-0">
                   <Input placeholder="Ülke" variant="filled" />
@@ -505,18 +505,6 @@ export default function EmployeeForm({ form, initialValues, onFinish, loading }:
             </Row>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Notes */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Notlar
-            </Text>
-            <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Ek notlar..." variant="filled" />
-            </Form.Item>
-          </div>
         </Col>
       </Row>
 

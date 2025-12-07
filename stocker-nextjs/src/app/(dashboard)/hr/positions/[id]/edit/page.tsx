@@ -24,12 +24,14 @@ export default function EditPositionPage() {
   useEffect(() => {
     if (position) {
       form.setFieldsValue({
-        name: position.name,
-        code: position.code,
+        title: position.title,
         description: position.description,
         departmentId: position.departmentId,
+        level: position.level,
         minSalary: position.minSalary,
         maxSalary: position.maxSalary,
+        currency: position.currency,
+        headCount: position.headCount,
         requirements: position.requirements,
         responsibilities: position.responsibilities,
       });
@@ -39,12 +41,14 @@ export default function EditPositionPage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: UpdatePositionDto = {
-        name: values.name,
-        code: values.code,
+        title: values.title,
         description: values.description,
         departmentId: values.departmentId,
-        minSalary: values.minSalary,
-        maxSalary: values.maxSalary,
+        level: values.level || 1,
+        minSalary: values.minSalary || 0,
+        maxSalary: values.maxSalary || 0,
+        currency: values.currency,
+        headCount: values.headCount,
         requirements: values.requirements,
         responsibilities: values.responsibilities,
       };
@@ -98,7 +102,7 @@ export default function EditPositionPage() {
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Pozisyon Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">
-                  {position.name} - {position.code}
+                  {position.title} - {position.code}
                 </p>
               </div>
             </div>
@@ -132,7 +136,7 @@ export default function EditPositionPage() {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    name="name"
+                    name="title"
                     label="Pozisyon Adı"
                     rules={[{ required: true, message: 'Pozisyon adı gerekli' }]}
                   >
@@ -141,11 +145,10 @@ export default function EditPositionPage() {
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    name="code"
-                    label="Pozisyon Kodu"
-                    rules={[{ required: true, message: 'Pozisyon kodu gerekli' }]}
+                    name="level"
+                    label="Seviye"
                   >
-                    <Input placeholder="Örn: DEV, MGR, HR" variant="filled" />
+                    <InputNumber placeholder="Seviye" style={{ width: '100%' }} variant="filled" min={1} />
                   </Form.Item>
                 </Col>
               </Row>

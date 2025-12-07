@@ -16,11 +16,10 @@ import {
   Empty,
   Modal,
   message,
-  Divider,
+  Table,
 } from 'antd';
 import {
   ArrowLeftOutlined,
-  EditOutlined,
   CloseCircleOutlined,
   CheckCircleOutlined,
   SendOutlined,
@@ -32,6 +31,10 @@ import {
   useApprovePayroll,
   useMarkPayrollPaid,
 } from '@/lib/api/hooks/useHR';
+import { PayrollStatus } from '@/lib/api/services/hr.types';
+import type { PayrollItemDto } from '@/lib/api/services/hr.types';
+import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -56,7 +59,7 @@ export default function PayrollDetailPage() {
       cancelText: 'Vazgeç',
       onOk: async () => {
         try {
-          await cancelPayroll.mutateAsync(id);
+          await cancelPayroll.mutateAsync({ id, reason: 'İptal edildi' });
           router.push('/hr/payroll');
         } catch (error) {
           // Error handled by hook
@@ -67,7 +70,7 @@ export default function PayrollDetailPage() {
 
   const handleApprove = async () => {
     try {
-      await approvePayroll.mutateAsync(id);
+      await approvePayroll.mutateAsync({ id });
       message.success('Bordro onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -76,7 +79,7 @@ export default function PayrollDetailPage() {
 
   const handleMarkPaid = async () => {
     try {
-      await markPaid.mutateAsync(id);
+      await markPaid.mutateAsync({ id });
       message.success('Bordro ödendi olarak işaretlendi');
     } catch (error) {
       // Error handled by hook
@@ -88,16 +91,58 @@ export default function PayrollDetailPage() {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Draft: { color: 'default', text: 'Taslak' },
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'blue', text: 'Onaylandı' },
-      Processed: { color: 'green', text: 'Ödendi' },
-      Cancelled: { color: 'red', text: 'İptal' },
+  const getStatusConfig = (status?: PayrollStatus) => {
+    const statusMap: Record<PayrollStatus, { color: string; text: string }> = {
+      [PayrollStatus.Draft]: { color: 'default', text: 'Taslak' },
+      [PayrollStatus.Calculated]: { color: 'processing', text: 'Hesaplandı' },
+      [PayrollStatus.PendingApproval]: { color: 'orange', text: 'Onay Bekliyor' },
+      [PayrollStatus.Approved]: { color: 'blue', text: 'Onaylandı' },
+      [PayrollStatus.Paid]: { color: 'green', text: 'Ödendi' },
+      [PayrollStatus.Cancelled]: { color: 'red', text: 'İptal' },
+      [PayrollStatus.Rejected]: { color: 'volcano', text: 'Reddedildi' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
+
+  // Separate items into earnings and deductions
+  const earnings = payroll?.items?.filter((item) => !item.isDeduction) || [];
+  const deductions = payroll?.items?.filter((item) => item.isDeduction && !item.isEmployerContribution) || [];
+  const employerContributions = payroll?.items?.filter((item) => item.isEmployerContribution) || [];
+
+  const itemColumns: ColumnsType<PayrollItemDto> = [
+    {
+      title: 'Açıklama',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Kod',
+      dataIndex: 'itemCode',
+      key: 'itemCode',
+      width: 100,
+    },
+    {
+      title: 'Miktar',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 80,
+      render: (val) => val || '-',
+    },
+    {
+      title: 'Oran',
+      dataIndex: 'rate',
+      key: 'rate',
+      width: 100,
+      render: (val) => (val ? formatCurrency(val) : '-'),
+    },
+    {
+      title: 'Tutar',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: 140,
+      render: (val) => formatCurrency(val),
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -143,7 +188,7 @@ export default function PayrollDetailPage() {
           </div>
         </Space>
         <Space>
-          {(payroll.status === 'Pending' || payroll.status === 'Draft') && (
+          {(payroll.status === PayrollStatus.PendingApproval || payroll.status === PayrollStatus.Draft || payroll.status === PayrollStatus.Calculated) && (
             <Button
               type="primary"
               icon={<CheckCircleOutlined />}
@@ -153,7 +198,7 @@ export default function PayrollDetailPage() {
               Onayla
             </Button>
           )}
-          {payroll.status === 'Approved' && (
+          {payroll.status === PayrollStatus.Approved && (
             <Button
               type="primary"
               icon={<SendOutlined />}
@@ -163,14 +208,7 @@ export default function PayrollDetailPage() {
               Öde
             </Button>
           )}
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/hr/payroll/${id}/edit`)}
-            disabled={payroll.status === 'Processed' || payroll.status === 'Cancelled'}
-          >
-            Düzenle
-          </Button>
-          {payroll.status !== 'Processed' && payroll.status !== 'Cancelled' && (
+          {payroll.status !== PayrollStatus.Paid && payroll.status !== PayrollStatus.Cancelled && (
             <Button
               danger
               icon={<CloseCircleOutlined />}
@@ -189,10 +227,20 @@ export default function PayrollDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Brüt Maaş"
-                  value={payroll.grossSalary || 0}
+                  title="Temel Maaş"
+                  value={payroll.baseSalary || 0}
                   formatter={(val) => formatCurrency(Number(val))}
                   valueStyle={{ color: '#7c3aed', fontSize: 18 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card size="small">
+                <Statistic
+                  title="Toplam Kazanç"
+                  value={payroll.totalEarnings || 0}
+                  formatter={(val) => formatCurrency(Number(val))}
+                  valueStyle={{ color: '#52c41a', fontSize: 18 }}
                 />
               </Card>
             </Col>
@@ -212,23 +260,14 @@ export default function PayrollDetailPage() {
                   title="Net Maaş"
                   value={payroll.netSalary || 0}
                   formatter={(val) => formatCurrency(Number(val))}
-                  valueStyle={{ color: '#52c41a', fontSize: 18 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Card size="small">
-                <Statistic
-                  title="Dönem"
-                  value={`${payroll.month}/${payroll.year}`}
-                  valueStyle={{ color: '#1890ff', fontSize: 20 }}
+                  valueStyle={{ color: '#1890ff', fontSize: 18 }}
                 />
               </Card>
             </Col>
           </Row>
         </Col>
 
-        {/* Details */}
+        {/* Employee Info */}
         <Col xs={24} lg={12}>
           <Card title="Çalışan Bilgileri">
             <Descriptions column={1} bordered size="small">
@@ -238,54 +277,27 @@ export default function PayrollDetailPage() {
                   {payroll.employeeName || `Çalışan #${payroll.employeeId}`}
                 </Space>
               </Descriptions.Item>
+              {payroll.employeeCode && (
+                <Descriptions.Item label="Sicil No">
+                  {payroll.employeeCode}
+                </Descriptions.Item>
+              )}
+              {payroll.departmentName && (
+                <Descriptions.Item label="Departman">
+                  {payroll.departmentName}
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label="Bordro No">
+                {payroll.payrollNumber}
+              </Descriptions.Item>
               <Descriptions.Item label="Dönem">
                 {payroll.month}/{payroll.year}
               </Descriptions.Item>
+              <Descriptions.Item label="Dönem Tarihleri">
+                {dayjs(payroll.periodStartDate).format('DD.MM.YYYY')} - {dayjs(payroll.periodEndDate).format('DD.MM.YYYY')}
+              </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Earnings */}
-        <Col xs={24} lg={12}>
-          <Card title="Kazançlar">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Temel Maaş">
-                {formatCurrency(payroll.baseSalary)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Fazla Mesai">
-                {formatCurrency(payroll.overtimePay)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Prim/Bonus">
-                {formatCurrency(payroll.bonus)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Yan Haklar">
-                {formatCurrency(payroll.allowances)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Brüt Maaş">
-                <strong>{formatCurrency(payroll.grossSalary)}</strong>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Deductions */}
-        <Col xs={24} lg={12}>
-          <Card title="Kesintiler">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Vergi Kesintisi">
-                {formatCurrency(payroll.taxDeduction)}
-              </Descriptions.Item>
-              <Descriptions.Item label="SGK Kesintisi">
-                {formatCurrency(payroll.socialSecurityDeduction)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Diğer Kesintiler">
-                {formatCurrency(payroll.otherDeductions)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Toplam Kesinti">
-                <strong style={{ color: '#ff4d4f' }}>{formatCurrency(payroll.totalDeductions)}</strong>
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -295,18 +307,100 @@ export default function PayrollDetailPage() {
         <Col xs={24} lg={12}>
           <Card title="Özet">
             <Descriptions column={1} bordered size="small">
+              <Descriptions.Item label="Temel Maaş">
+                {formatCurrency(payroll.baseSalary)}
+              </Descriptions.Item>
               <Descriptions.Item label="Brüt Maaş">
                 {formatCurrency(payroll.grossSalary)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Toplam Kazanç">
+                <span style={{ color: '#52c41a' }}>{formatCurrency(payroll.totalEarnings)}</span>
               </Descriptions.Item>
               <Descriptions.Item label="Toplam Kesinti">
                 <span style={{ color: '#ff4d4f' }}>- {formatCurrency(payroll.totalDeductions)}</span>
               </Descriptions.Item>
+              <Descriptions.Item label="İşveren Maliyeti">
+                {formatCurrency(payroll.totalEmployerCost)}
+              </Descriptions.Item>
               <Descriptions.Item label="Net Maaş">
-                <strong style={{ color: '#52c41a', fontSize: 16 }}>{formatCurrency(payroll.netSalary)}</strong>
+                <strong style={{ color: '#1890ff', fontSize: 16 }}>{formatCurrency(payroll.netSalary)}</strong>
               </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
+
+        {/* Earnings Table */}
+        {earnings.length > 0 && (
+          <Col xs={24}>
+            <Card title="Kazançlar" size="small">
+              <Table
+                columns={itemColumns}
+                dataSource={earnings}
+                rowKey="id"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        )}
+
+        {/* Deductions Table */}
+        {deductions.length > 0 && (
+          <Col xs={24}>
+            <Card title="Kesintiler" size="small">
+              <Table
+                columns={itemColumns}
+                dataSource={deductions}
+                rowKey="id"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        )}
+
+        {/* Employer Contributions Table */}
+        {employerContributions.length > 0 && (
+          <Col xs={24}>
+            <Card title="İşveren Katkıları" size="small">
+              <Table
+                columns={itemColumns}
+                dataSource={employerContributions}
+                rowKey="id"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        )}
+
+        {/* Approval Info */}
+        {(payroll.calculatedDate || payroll.approvedDate || payroll.paidDate) && (
+          <Col xs={24} lg={12}>
+            <Card title="İşlem Geçmişi">
+              <Descriptions column={1} bordered size="small">
+                {payroll.calculatedDate && (
+                  <Descriptions.Item label="Hesaplama Tarihi">
+                    {dayjs(payroll.calculatedDate).format('DD.MM.YYYY HH:mm')}
+                    {payroll.calculatedByName && ` - ${payroll.calculatedByName}`}
+                  </Descriptions.Item>
+                )}
+                {payroll.approvedDate && (
+                  <Descriptions.Item label="Onay Tarihi">
+                    {dayjs(payroll.approvedDate).format('DD.MM.YYYY HH:mm')}
+                    {payroll.approvedByName && ` - ${payroll.approvedByName}`}
+                  </Descriptions.Item>
+                )}
+                {payroll.paidDate && (
+                  <Descriptions.Item label="Ödeme Tarihi">
+                    {dayjs(payroll.paidDate).format('DD.MM.YYYY HH:mm')}
+                    {payroll.paymentReference && ` (Ref: ${payroll.paymentReference})`}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+          </Col>
+        )}
 
         {/* Notes */}
         {payroll.notes && (

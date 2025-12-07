@@ -34,6 +34,7 @@ import {
   useActivateDepartment,
   useDeactivateDepartment,
 } from '@/lib/api/hooks/useHR';
+import { EmployeeStatus } from '@/lib/api/services/hr.types';
 
 const { Title, Text } = Typography;
 
@@ -49,8 +50,8 @@ export default function DepartmentDetailPage() {
   const activateDepartment = useActivateDepartment();
   const deactivateDepartment = useDeactivateDepartment();
 
-  // Filter employees for this department
-  const departmentEmployees = allEmployees.filter((e) => e.departmentId === id);
+  // Employees for this department (already filtered by API)
+  const departmentEmployees = allEmployees;
 
   const handleDelete = () => {
     if (!department) return;
@@ -184,7 +185,7 @@ export default function DepartmentDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Aktif Çalışan"
-                  value={departmentEmployees.filter((e) => e.status === 'Active').length}
+                  value={departmentEmployees.filter((e) => e.status === EmployeeStatus.Active).length}
                   prefix={<CheckCircleOutlined />}
                   valueStyle={{ color: '#52c41a' }}
                 />

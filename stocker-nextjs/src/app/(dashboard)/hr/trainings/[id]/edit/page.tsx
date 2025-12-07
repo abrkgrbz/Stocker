@@ -2,10 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Input, DatePicker, InputNumber, Row, Col, Spin, Empty, Switch } from 'antd';
+import { Button, Form, Input, DatePicker, InputNumber, Row, Col, Spin, Empty, Switch, Select } from 'antd';
 import { ArrowLeftOutlined, BookOutlined } from '@ant-design/icons';
 import { useTraining, useUpdateTraining } from '@/lib/api/hooks/useHR';
 import type { UpdateTrainingDto } from '@/lib/api/services/hr.types';
+import { TrainingStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -25,17 +26,28 @@ export default function EditTrainingPage() {
   useEffect(() => {
     if (training) {
       form.setFieldsValue({
-        name: training.name,
+        title: training.title,
         description: training.description,
+        trainingType: training.trainingType,
         provider: training.provider,
+        instructor: training.instructor,
         dateRange: [
           training.startDate ? dayjs(training.startDate) : null,
           training.endDate ? dayjs(training.endDate) : null,
         ],
         location: training.location,
+        isOnline: training.isOnline,
+        onlineUrl: training.onlineUrl,
+        durationHours: training.durationHours,
         maxParticipants: training.maxParticipants,
         cost: training.cost,
-        isActive: training.isActive,
+        currency: training.currency,
+        isMandatory: training.isMandatory,
+        hasCertification: training.hasCertification,
+        certificationValidityMonths: training.certificationValidityMonths,
+        passingScore: training.passingScore,
+        prerequisites: training.prerequisites,
+        materials: training.materials,
       });
     }
   }, [training, form]);
@@ -43,15 +55,26 @@ export default function EditTrainingPage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: UpdateTrainingDto = {
-        name: values.name,
+        title: values.title,
         description: values.description,
+        trainingType: values.trainingType,
         provider: values.provider,
+        instructor: values.instructor,
         startDate: values.dateRange?.[0]?.format('YYYY-MM-DD'),
         endDate: values.dateRange?.[1]?.format('YYYY-MM-DD'),
         location: values.location,
+        isOnline: values.isOnline ?? false,
+        onlineUrl: values.onlineUrl,
+        durationHours: values.durationHours || 0,
         maxParticipants: values.maxParticipants,
         cost: values.cost,
-        isActive: values.isActive,
+        currency: values.currency,
+        isMandatory: values.isMandatory ?? false,
+        hasCertification: values.hasCertification ?? false,
+        certificationValidityMonths: values.certificationValidityMonths,
+        passingScore: values.passingScore,
+        prerequisites: values.prerequisites,
+        materials: values.materials,
       };
 
       await updateTraining.mutateAsync({ id, data });
@@ -102,7 +125,7 @@ export default function EditTrainingPage() {
               <BookOutlined className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Eğitim Düzenle</h1>
-                <p className="text-sm text-gray-500 m-0">{training.name}</p>
+                <p className="text-sm text-gray-500 m-0">{training.title}</p>
               </div>
             </div>
           </div>
@@ -135,7 +158,7 @@ export default function EditTrainingPage() {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    name="name"
+                    name="title"
                     label="Eğitim Adı"
                     rules={[{ required: true, message: 'Eğitim adı gerekli' }]}
                   >
@@ -143,8 +166,20 @@ export default function EditTrainingPage() {
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
+                  <Form.Item name="trainingType" label="Eğitim Türü">
+                    <Input placeholder="Örn: Teknik, Soft Skills" variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="provider" label="Eğitim Sağlayıcısı">
-                    <Input placeholder="Şirket veya eğitmen adı" variant="filled" />
+                    <Input placeholder="Şirket veya kuruluş adı" variant="filled" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="instructor" label="Eğitmen">
+                    <Input placeholder="Eğitmen adı" variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -165,11 +200,7 @@ export default function EditTrainingPage() {
             <div className="bg-gray-50/50 rounded-xl p-6">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="dateRange"
-                    label="Eğitim Tarihleri"
-                    rules={[{ required: true, message: 'Tarih aralığı gerekli' }]}
-                  >
+                  <Form.Item name="dateRange" label="Eğitim Tarihleri">
                     <RangePicker
                       format="DD.MM.YYYY"
                       style={{ width: '100%' }}
@@ -179,8 +210,25 @@ export default function EditTrainingPage() {
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
+                  <Form.Item name="durationHours" label="Süre (Saat)">
+                    <InputNumber placeholder="0" style={{ width: '100%' }} min={0} variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="isOnline" label="Online Eğitim" valuePropName="checked">
+                    <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={8}>
                   <Form.Item name="location" label="Konum">
-                    <Input placeholder="Eğitim yeri veya Online" variant="filled" />
+                    <Input placeholder="Eğitim yeri" variant="filled" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="onlineUrl" label="Online URL">
+                    <Input placeholder="https://..." variant="filled" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -208,18 +256,78 @@ export default function EditTrainingPage() {
                       placeholder="0"
                       style={{ width: '100%' }}
                       variant="filled"
-                      formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
                       min={0}
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={8}>
-                  <Form.Item name="isActive" label="Durum" valuePropName="checked">
-                    <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
+                  <Form.Item name="currency" label="Para Birimi">
+                    <Select
+                      placeholder="Seçin"
+                      variant="filled"
+                      options={[
+                        { value: 'TRY', label: 'TRY' },
+                        { value: 'USD', label: 'USD' },
+                        { value: 'EUR', label: 'EUR' },
+                      ]}
+                    />
                   </Form.Item>
                 </Col>
               </Row>
+              <Row gutter={16}>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="isMandatory" label="Zorunlu Eğitim" valuePropName="checked">
+                    <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+          </div>
+
+          {/* Certification */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Sertifikasyon
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
+              <Row gutter={16}>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="hasCertification" label="Sertifika Verilecek mi?" valuePropName="checked">
+                    <Switch checkedChildren="Evet" unCheckedChildren="Hayır" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="certificationValidityMonths" label="Sertifika Geçerlilik (Ay)">
+                    <InputNumber placeholder="0" style={{ width: '100%' }} min={0} variant="filled" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Form.Item name="passingScore" label="Geçme Puanı">
+                    <InputNumber placeholder="0" style={{ width: '100%' }} min={0} max={100} variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Ek Bilgiler
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
+            </div>
+            <div className="bg-gray-50/50 rounded-xl p-6">
+              <Form.Item name="prerequisites" label="Ön Koşullar">
+                <TextArea rows={3} placeholder="Eğitime katılım için gerekli ön koşullar" variant="filled" />
+              </Form.Item>
+              <Form.Item name="materials" label="Materyaller" className="mb-0">
+                <TextArea rows={3} placeholder="Eğitim materyalleri ve kaynaklar" variant="filled" />
+              </Form.Item>
             </div>
           </div>
 

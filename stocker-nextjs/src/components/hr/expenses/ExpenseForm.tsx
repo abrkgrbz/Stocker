@@ -5,6 +5,7 @@ import { Form, Select, DatePicker, InputNumber, Input, Row, Col, Typography } fr
 import { WalletOutlined } from '@ant-design/icons';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { ExpenseDto } from '@/lib/api/services/hr.types';
+import { ExpenseType } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -137,25 +138,25 @@ export default function ExpenseForm({ form, initialValues, onFinish, loading }: 
             </Text>
             <Row gutter={16}>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kategori *</div>
+                <div className="text-xs text-gray-400 mb-1">Harcama Türü *</div>
                 <Form.Item
-                  name="category"
+                  name="expenseType"
                   rules={[{ required: true, message: 'Gerekli' }]}
                   className="mb-4"
                 >
                   <Select
-                    placeholder="Kategori seçin"
+                    placeholder="Harcama türü seçin"
                     variant="filled"
                     options={[
-                      { value: 'Travel', label: 'Seyahat' },
-                      { value: 'Meals', label: 'Yemek' },
-                      { value: 'Supplies', label: 'Malzeme' },
-                      { value: 'Equipment', label: 'Ekipman' },
-                      { value: 'Training', label: 'Eğitim' },
-                      { value: 'Communication', label: 'İletişim' },
-                      { value: 'Transportation', label: 'Ulaşım' },
-                      { value: 'Accommodation', label: 'Konaklama' },
-                      { value: 'Other', label: 'Diğer' },
+                      { value: ExpenseType.Transportation, label: 'Ulaşım' },
+                      { value: ExpenseType.Meal, label: 'Yemek' },
+                      { value: ExpenseType.Accommodation, label: 'Konaklama' },
+                      { value: ExpenseType.Communication, label: 'İletişim' },
+                      { value: ExpenseType.OfficeSupplies, label: 'Ofis Malzemeleri' },
+                      { value: ExpenseType.Training, label: 'Eğitim' },
+                      { value: ExpenseType.Medical, label: 'Sağlık' },
+                      { value: ExpenseType.Entertainment, label: 'Eğlence' },
+                      { value: ExpenseType.Other, label: 'Diğer' },
                     ]}
                   />
                 </Form.Item>

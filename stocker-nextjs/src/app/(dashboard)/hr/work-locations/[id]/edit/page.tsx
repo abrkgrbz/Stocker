@@ -21,11 +21,10 @@ export default function EditWorkLocationPage() {
     try {
       const data: UpdateWorkLocationDto = {
         name: values.name,
-        code: values.code,
         description: values.description,
-        address: values.address,
+        street: values.street,
         city: values.city,
-        district: values.district,
+        state: values.state,
         postalCode: values.postalCode,
         country: values.country,
         latitude: values.latitude,
@@ -35,7 +34,6 @@ export default function EditWorkLocationPage() {
         capacity: values.capacity,
         isHeadquarters: values.isHeadquarters ?? false,
         isRemote: values.isRemote ?? false,
-        isActive: values.isActive ?? true,
       };
 
       await updateLocation.mutateAsync({ id, data });

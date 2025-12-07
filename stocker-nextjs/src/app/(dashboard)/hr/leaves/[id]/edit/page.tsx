@@ -6,6 +6,7 @@ import { Button, Form, Select, DatePicker, Input, Row, Col, Spin, Empty } from '
 import { ArrowLeftOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useLeave, useUpdateLeave, useEmployees, useLeaveTypes } from '@/lib/api/hooks/useHR';
 import type { UpdateLeaveDto } from '@/lib/api/services/hr.types';
+import { LeaveStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -41,11 +42,15 @@ export default function EditLeavePage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: UpdateLeaveDto = {
-        employeeId: values.employeeId,
         leaveTypeId: values.leaveTypeId,
         startDate: values.dateRange[0]?.format('YYYY-MM-DD'),
         endDate: values.dateRange[1]?.format('YYYY-MM-DD'),
+        isHalfDay: values.isHalfDay ?? false,
+        isHalfDayMorning: values.isHalfDayMorning ?? false,
         reason: values.reason,
+        contactDuringLeave: values.contactDuringLeave,
+        handoverNotes: values.handoverNotes,
+        substituteEmployeeId: values.substituteEmployeeId,
       };
 
       await updateLeave.mutateAsync({ id, data });
@@ -74,7 +79,7 @@ export default function EditLeavePage() {
     );
   }
 
-  if (leave.status !== 'Pending') {
+  if (leave.status !== LeaveStatus.Pending) {
     return (
       <div className="p-6">
         <Empty description="Bu izin talebi düzenlenemez. Sadece bekleyen talepler düzenlenebilir." />

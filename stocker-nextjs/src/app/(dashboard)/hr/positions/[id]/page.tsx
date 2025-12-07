@@ -49,8 +49,8 @@ export default function PositionDetailPage() {
   const activatePosition = useActivatePosition();
   const deactivatePosition = useDeactivatePosition();
 
-  // Filter employees for this position
-  const positionEmployees = allEmployees.filter((e) => e.positionId === id);
+  // Employees are already filtered by positionId in the API call
+  const positionEmployees = allEmployees;
 
   const handleDelete = () => {
     if (!position) return;
@@ -180,7 +180,7 @@ export default function PositionDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Çalışan Sayısı"
-                  value={position.employeeCount || 0}
+                  value={position.filledPositions || 0}
                   prefix={<TeamOutlined />}
                   valueStyle={{ color: '#7c3aed' }}
                 />

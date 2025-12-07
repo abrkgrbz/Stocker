@@ -127,7 +127,7 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
             <div className="grid grid-cols-2 gap-3 mt-6">
               <div className="p-4 bg-gray-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.acknowledgedCount || 0}
+                  {initialValues.acknowledgmentCount || 0}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Onaylayan</div>
               </div>

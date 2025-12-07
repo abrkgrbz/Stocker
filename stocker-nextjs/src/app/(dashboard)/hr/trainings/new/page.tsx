@@ -16,15 +16,27 @@ export default function NewTrainingPage() {
   const handleSubmit = async (values: any) => {
     try {
       const data: CreateTrainingDto = {
-        name: values.name,
+        code: values.code || `TRN-${Date.now()}`,
+        title: values.title,
         description: values.description,
+        trainingType: values.trainingType,
         provider: values.provider,
+        instructor: values.instructor,
         startDate: values.dateRange?.[0]?.format('YYYY-MM-DD'),
         endDate: values.dateRange?.[1]?.format('YYYY-MM-DD'),
         location: values.location,
+        isOnline: values.isOnline ?? false,
+        onlineUrl: values.onlineUrl,
+        durationHours: values.durationHours || 0,
         maxParticipants: values.maxParticipants,
         cost: values.cost,
-        isActive: values.isActive ?? true,
+        currency: values.currency,
+        isMandatory: values.isMandatory ?? false,
+        hasCertification: values.hasCertification ?? false,
+        certificationValidityMonths: values.certificationValidityMonths,
+        passingScore: values.passingScore,
+        prerequisites: values.prerequisites,
+        materials: values.materials,
       };
 
       await createTraining.mutateAsync(data);

@@ -89,7 +89,7 @@ export default function PositionsPage() {
   // Calculate stats
   const totalPositions = positions.length;
   const activePositions = positions.filter((p) => p.isActive).length;
-  const totalEmployees = positions.reduce((sum, p) => sum + (p.employeeCount || 0), 0);
+  const totalEmployees = positions.reduce((sum, p) => sum + (p.filledPositions || 0), 0);
 
   // CRUD Handlers
   const handleView = (id: number) => {
@@ -179,7 +179,7 @@ export default function PositionsPage() {
     },
     {
       title: 'Çalışan',
-      dataIndex: 'employeeCount',
+      dataIndex: 'filledPositions',
       key: 'employees',
       width: 100,
       align: 'center',

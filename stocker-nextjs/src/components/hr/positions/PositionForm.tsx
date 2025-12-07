@@ -93,7 +93,7 @@ export default function PositionForm({ form, initialValues, onFinish, loading }:
             <div className="grid grid-cols-1 gap-3 mt-6">
               <div className="p-4 bg-gray-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.employeeCount || 0}
+                  {initialValues.filledPositions || 0}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Bu Pozisyondaki Çalışan</div>
               </div>

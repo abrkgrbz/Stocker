@@ -32,6 +32,7 @@ import {
   useApproveLeave,
   useRejectLeave,
 } from '@/lib/api/hooks/useHR';
+import { LeaveStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -68,7 +69,7 @@ export default function LeaveDetailPage() {
 
   const handleApprove = async () => {
     try {
-      await approveLeave.mutateAsync(id);
+      await approveLeave.mutateAsync({ id });
       message.success('İzin talebi onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -84,7 +85,7 @@ export default function LeaveDetailPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          await rejectLeave.mutateAsync({ id });
+          await rejectLeave.mutateAsync({ id, data: { reason: 'Reddedildi' } });
           message.success('İzin talebi reddedildi');
         } catch (error) {
           // Error handled by hook
@@ -93,14 +94,16 @@ export default function LeaveDetailPage() {
     });
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'green', text: 'Onaylandı' },
-      Rejected: { color: 'red', text: 'Reddedildi' },
-      Cancelled: { color: 'default', text: 'İptal Edildi' },
+  const getStatusConfig = (status?: LeaveStatus) => {
+    const statusMap: Record<LeaveStatus, { color: string; text: string }> = {
+      [LeaveStatus.Pending]: { color: 'orange', text: 'Beklemede' },
+      [LeaveStatus.Approved]: { color: 'green', text: 'Onaylandı' },
+      [LeaveStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
+      [LeaveStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
+      [LeaveStatus.Taken]: { color: 'blue', text: 'Kullanıldı' },
+      [LeaveStatus.PartiallyTaken]: { color: 'cyan', text: 'Kısmen Kullanıldı' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
 
   if (isLoading) {
@@ -145,7 +148,7 @@ export default function LeaveDetailPage() {
           </div>
         </Space>
         <Space>
-          {leave.status === 'Pending' && (
+          {leave.status === LeaveStatus.Pending && (
             <>
               <Button
                 type="primary"
@@ -163,7 +166,7 @@ export default function LeaveDetailPage() {
           <Button
             icon={<EditOutlined />}
             onClick={() => router.push(`/hr/leaves/${id}/edit`)}
-            disabled={leave.status !== 'Pending'}
+            disabled={leave.status !== LeaveStatus.Pending}
           >
             Düzenle
           </Button>
@@ -249,9 +252,9 @@ export default function LeaveDetailPage() {
                   {leave.approvedByName || `Kullanıcı #${leave.approvedById}`}
                 </Descriptions.Item>
               )}
-              {leave.approvedAt && (
+              {leave.approvedDate && (
                 <Descriptions.Item label="Onay Tarihi">
-                  {dayjs(leave.approvedAt).format('DD.MM.YYYY HH:mm')}
+                  {dayjs(leave.approvedDate).format('DD.MM.YYYY HH:mm')}
                 </Descriptions.Item>
               )}
             </Descriptions>

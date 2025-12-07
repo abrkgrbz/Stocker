@@ -38,6 +38,7 @@ import {
   useEmployees,
 } from '@/lib/api/hooks/useHR';
 import type { PayrollDto, PayrollFilterDto } from '@/lib/api/services/hr.types';
+import { PayrollStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -55,8 +56,8 @@ export default function PayrollPage() {
 
   // Stats
   const totalPayrolls = payrolls.length;
-  const pendingPayrolls = payrolls.filter((p) => p.status === 'Pending' || p.status === 'Draft').length;
-  const approvedPayrolls = payrolls.filter((p) => p.status === 'Approved').length;
+  const pendingPayrolls = payrolls.filter((p) => p.status === PayrollStatus.PendingApproval || p.status === PayrollStatus.Draft || p.status === PayrollStatus.Calculated).length;
+  const approvedPayrolls = payrolls.filter((p) => p.status === PayrollStatus.Approved).length;
   const totalAmount = payrolls.reduce((sum, p) => sum + (p.netSalary || 0), 0);
 
   const handleCancel = (payroll: PayrollDto) => {
@@ -68,7 +69,7 @@ export default function PayrollPage() {
       cancelText: 'Vazgeç',
       onOk: async () => {
         try {
-          await cancelPayroll.mutateAsync(payroll.id);
+          await cancelPayroll.mutateAsync({ id: payroll.id, reason: 'İptal edildi' });
         } catch (error) {
           // Error handled by hook
         }
@@ -78,7 +79,7 @@ export default function PayrollPage() {
 
   const handleApprove = async (payroll: PayrollDto) => {
     try {
-      await approvePayroll.mutateAsync(payroll.id);
+      await approvePayroll.mutateAsync({ id: payroll.id });
       message.success('Bordro onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -87,7 +88,7 @@ export default function PayrollPage() {
 
   const handleMarkPaid = async (payroll: PayrollDto) => {
     try {
-      await markPaid.mutateAsync(payroll.id);
+      await markPaid.mutateAsync({ id: payroll.id });
       message.success('Bordro ödendi olarak işaretlendi');
     } catch (error) {
       // Error handled by hook
@@ -99,15 +100,17 @@ export default function PayrollPage() {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Draft: { color: 'default', text: 'Taslak' },
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'blue', text: 'Onaylandı' },
-      Processed: { color: 'green', text: 'Ödendi' },
-      Cancelled: { color: 'red', text: 'İptal' },
+  const getStatusConfig = (status?: PayrollStatus) => {
+    const statusMap: Record<PayrollStatus, { color: string; text: string }> = {
+      [PayrollStatus.Draft]: { color: 'default', text: 'Taslak' },
+      [PayrollStatus.Calculated]: { color: 'processing', text: 'Hesaplandı' },
+      [PayrollStatus.PendingApproval]: { color: 'orange', text: 'Onay Bekliyor' },
+      [PayrollStatus.Approved]: { color: 'blue', text: 'Onaylandı' },
+      [PayrollStatus.Paid]: { color: 'green', text: 'Ödendi' },
+      [PayrollStatus.Cancelled]: { color: 'red', text: 'İptal' },
+      [PayrollStatus.Rejected]: { color: 'volcano', text: 'Reddedildi' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
 
   const columns: ColumnsType<PayrollDto> = [
@@ -153,7 +156,7 @@ export default function PayrollPage() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => {
+      render: (status: PayrollStatus) => {
         const config = getStatusConfig(status);
         return <Tag color={config.color}>{config.text}</Tag>;
       },
@@ -177,10 +180,10 @@ export default function PayrollPage() {
                 icon: <EditOutlined />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/payroll/${record.id}/edit`),
-                disabled: record.status === 'Processed',
+                disabled: record.status === PayrollStatus.Paid,
               },
               { type: 'divider' },
-              ...(record.status === 'Pending' || record.status === 'Draft'
+              ...(record.status === PayrollStatus.PendingApproval || record.status === PayrollStatus.Draft || record.status === PayrollStatus.Calculated
                 ? [
                     {
                       key: 'approve',
@@ -190,7 +193,7 @@ export default function PayrollPage() {
                     },
                   ]
                 : []),
-              ...(record.status === 'Approved'
+              ...(record.status === PayrollStatus.Approved
                 ? [
                     {
                       key: 'markPaid',
@@ -207,7 +210,7 @@ export default function PayrollPage() {
                 label: 'İptal Et',
                 danger: true,
                 onClick: () => handleCancel(record),
-                disabled: record.status === 'Processed' || record.status === 'Cancelled',
+                disabled: record.status === PayrollStatus.Paid || record.status === PayrollStatus.Cancelled,
               },
             ],
           }}
@@ -321,11 +324,12 @@ export default function PayrollPage() {
               style={{ width: '100%' }}
               onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
               options={[
-                { value: 'Draft', label: 'Taslak' },
-                { value: 'Pending', label: 'Beklemede' },
-                { value: 'Approved', label: 'Onaylanan' },
-                { value: 'Processed', label: 'Ödenen' },
-                { value: 'Cancelled', label: 'İptal' },
+                { value: PayrollStatus.Draft, label: 'Taslak' },
+                { value: PayrollStatus.Calculated, label: 'Hesaplandı' },
+                { value: PayrollStatus.PendingApproval, label: 'Onay Bekliyor' },
+                { value: PayrollStatus.Approved, label: 'Onaylanan' },
+                { value: PayrollStatus.Paid, label: 'Ödenen' },
+                { value: PayrollStatus.Cancelled, label: 'İptal' },
               ]}
             />
           </Col>

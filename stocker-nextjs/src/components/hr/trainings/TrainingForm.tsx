@@ -28,7 +28,7 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
           ? [dayjs(initialValues.startDate), dayjs(initialValues.endDate)]
           : undefined,
       });
-      setIsActive(initialValues.isActive ?? true);
+      // TrainingDto uses 'status' instead of 'isActive'
     }
   }, [form, initialValues]);
 

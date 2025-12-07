@@ -39,6 +39,7 @@ import {
   useEmployees,
 } from '@/lib/api/hooks/useHR';
 import type { ExpenseDto, ExpenseFilterDto } from '@/lib/api/services/hr.types';
+import { ExpenseStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -57,9 +58,9 @@ export default function ExpensesPage() {
 
   // Stats
   const totalExpenses = expenses.length;
-  const pendingExpenses = expenses.filter((e) => e.status === 'Pending').length;
-  const approvedExpenses = expenses.filter((e) => e.status === 'Approved').length;
-  const totalAmount = expenses.filter((e) => e.status === 'Approved').reduce((sum, e) => sum + (e.amount || 0), 0);
+  const pendingExpenses = expenses.filter((e) => e.status === ExpenseStatus.Pending).length;
+  const approvedExpenses = expenses.filter((e) => e.status === ExpenseStatus.Approved).length;
+  const totalAmount = expenses.filter((e) => e.status === ExpenseStatus.Approved).reduce((sum, e) => sum + (e.amount || 0), 0);
 
   const handleDelete = (expense: ExpenseDto) => {
     Modal.confirm({
@@ -80,7 +81,7 @@ export default function ExpensesPage() {
 
   const handleApprove = async (expense: ExpenseDto) => {
     try {
-      await approveExpense.mutateAsync(expense.id);
+      await approveExpense.mutateAsync({ id: expense.id });
       message.success('Harcama onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -96,7 +97,7 @@ export default function ExpensesPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          await rejectExpense.mutateAsync({ id: expense.id });
+          await rejectExpense.mutateAsync({ id: expense.id, data: { reason: 'Reddedildi' } });
           message.success('Harcama reddedildi');
         } catch (error) {
           // Error handled by hook
@@ -187,10 +188,10 @@ export default function ExpensesPage() {
                 icon: <EditOutlined />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/expenses/${record.id}/edit`),
-                disabled: record.status !== 'Pending',
+                disabled: record.status !== ExpenseStatus.Pending,
               },
               { type: 'divider' },
-              ...(record.status === 'Pending'
+              ...(record.status === ExpenseStatus.Pending
                 ? [
                     {
                       key: 'approve',

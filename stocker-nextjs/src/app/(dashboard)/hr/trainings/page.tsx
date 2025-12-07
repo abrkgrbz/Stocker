@@ -31,6 +31,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useTrainings, useDeleteTraining } from '@/lib/api/hooks/useHR';
 import type { TrainingDto } from '@/lib/api/services/hr.types';
+import { TrainingStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -46,19 +47,19 @@ export default function TrainingsPage() {
   // Filter trainings by search text
   const filteredTrainings = trainings.filter(
     (t) =>
-      t.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      t.title.toLowerCase().includes(searchText.toLowerCase()) ||
       t.provider?.toLowerCase().includes(searchText.toLowerCase())
   );
 
   // Stats
   const totalTrainings = trainings.length;
-  const activeTrainings = trainings.filter((t) => t.isActive).length;
-  const upcomingTrainings = trainings.filter((t) => t.startDate && dayjs(t.startDate).isAfter(dayjs())).length;
+  const activeTrainings = trainings.filter((t) => t.status === TrainingStatus.InProgress || t.status === TrainingStatus.Scheduled).length;
+  const upcomingTrainings = trainings.filter((t) => t.status === TrainingStatus.Scheduled).length;
 
   const handleDelete = (training: TrainingDto) => {
     Modal.confirm({
       title: 'Eğitimi Sil',
-      content: `"${training.name}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${training.title}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -72,30 +73,27 @@ export default function TrainingsPage() {
     });
   };
 
-  const getStatusConfig = (training: TrainingDto) => {
-    const now = dayjs();
-    if (training.endDate && dayjs(training.endDate).isBefore(now)) {
-      return { color: 'default', text: 'Tamamlandı' };
-    }
-    if (training.startDate && dayjs(training.startDate).isAfter(now)) {
-      return { color: 'blue', text: 'Yaklaşan' };
-    }
-    if (training.startDate && training.endDate) {
-      return { color: 'green', text: 'Devam Ediyor' };
-    }
-    return { color: 'default', text: '-' };
+  const getStatusConfig = (status: TrainingStatus) => {
+    const statusMap: Record<TrainingStatus, { color: string; text: string }> = {
+      [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandı' },
+      [TrainingStatus.InProgress]: { color: 'green', text: 'Devam Ediyor' },
+      [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandı' },
+      [TrainingStatus.Cancelled]: { color: 'red', text: 'İptal Edildi' },
+      [TrainingStatus.Postponed]: { color: 'orange', text: 'Ertelendi' },
+    };
+    return statusMap[status] || { color: 'default', text: '-' };
   };
 
   const columns: ColumnsType<TrainingDto> = [
     {
       title: 'Eğitim Adı',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: TrainingDto) => (
+      dataIndex: 'title',
+      key: 'title',
+      sorter: (a, b) => a.title.localeCompare(b.title),
+      render: (title: string, record: TrainingDto) => (
         <Space>
           <BookOutlined style={{ color: '#8b5cf6' }} />
-          <a onClick={() => router.push(`/hr/trainings/${record.id}`)}>{name}</a>
+          <a onClick={() => router.push(`/hr/trainings/${record.id}`)}>{title}</a>
         </Space>
       ),
     },
@@ -127,16 +125,17 @@ export default function TrainingsPage() {
       width: 100,
       render: (max: number, record: TrainingDto) => (
         <span>
-          {record.participantCount || 0}/{max || '-'}
+          {record.currentParticipants || 0}/{max || '-'}
         </span>
       ),
     },
     {
       title: 'Durum',
+      dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (_, record: TrainingDto) => {
-        const config = getStatusConfig(record);
+      render: (status: TrainingStatus) => {
+        const config = getStatusConfig(status);
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },

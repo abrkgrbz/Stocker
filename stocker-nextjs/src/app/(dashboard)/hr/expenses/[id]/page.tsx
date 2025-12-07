@@ -33,6 +33,7 @@ import {
   useApproveExpense,
   useRejectExpense,
 } from '@/lib/api/hooks/useHR';
+import { ExpenseStatus, ExpenseType } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -69,7 +70,7 @@ export default function ExpenseDetailPage() {
 
   const handleApprove = async () => {
     try {
-      await approveExpense.mutateAsync(id);
+      await approveExpense.mutateAsync({ id });
       message.success('Harcama onaylandı');
     } catch (error) {
       // Error handled by hook
@@ -85,7 +86,7 @@ export default function ExpenseDetailPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          await rejectExpense.mutateAsync({ id });
+          await rejectExpense.mutateAsync({ id, data: { reason: 'Reddedildi' } });
           message.success('Harcama reddedildi');
         } catch (error) {
           // Error handled by hook
@@ -99,29 +100,31 @@ export default function ExpenseDetailPage() {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
   };
 
-  const getStatusConfig = (status?: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      Pending: { color: 'orange', text: 'Beklemede' },
-      Approved: { color: 'green', text: 'Onaylandı' },
-      Rejected: { color: 'red', text: 'Reddedildi' },
-      Paid: { color: 'blue', text: 'Ödendi' },
+  const getStatusConfig = (status?: ExpenseStatus) => {
+    const statusMap: Record<ExpenseStatus, { color: string; text: string }> = {
+      [ExpenseStatus.Draft]: { color: 'default', text: 'Taslak' },
+      [ExpenseStatus.Pending]: { color: 'orange', text: 'Beklemede' },
+      [ExpenseStatus.Approved]: { color: 'green', text: 'Onaylandı' },
+      [ExpenseStatus.Rejected]: { color: 'red', text: 'Reddedildi' },
+      [ExpenseStatus.Paid]: { color: 'blue', text: 'Ödendi' },
+      [ExpenseStatus.Cancelled]: { color: 'default', text: 'İptal Edildi' },
     };
-    return statusMap[status || ''] || { color: 'default', text: status || '-' };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
 
-  const getCategoryLabel = (category?: string) => {
-    const categoryMap: Record<string, string> = {
-      Travel: 'Seyahat',
-      Meals: 'Yemek',
-      Supplies: 'Malzeme',
-      Equipment: 'Ekipman',
-      Training: 'Eğitim',
-      Communication: 'İletişim',
-      Transportation: 'Ulaşım',
-      Accommodation: 'Konaklama',
-      Other: 'Diğer',
+  const getExpenseTypeLabel = (expenseType?: ExpenseType) => {
+    const typeMap: Record<ExpenseType, string> = {
+      [ExpenseType.Transportation]: 'Ulaşım',
+      [ExpenseType.Meal]: 'Yemek',
+      [ExpenseType.Accommodation]: 'Konaklama',
+      [ExpenseType.Communication]: 'İletişim',
+      [ExpenseType.OfficeSupplies]: 'Ofis Malzemeleri',
+      [ExpenseType.Training]: 'Eğitim',
+      [ExpenseType.Medical]: 'Sağlık',
+      [ExpenseType.Entertainment]: 'Eğlence',
+      [ExpenseType.Other]: 'Diğer',
     };
-    return categoryMap[category || ''] || category || '-';
+    return expenseType !== undefined ? typeMap[expenseType] : '-';
   };
 
   if (isLoading) {
@@ -166,7 +169,7 @@ export default function ExpenseDetailPage() {
           </div>
         </Space>
         <Space>
-          {expense.status === 'Pending' && (
+          {expense.status === ExpenseStatus.Pending && (
             <>
               <Button
                 type="primary"
@@ -184,7 +187,7 @@ export default function ExpenseDetailPage() {
           <Button
             icon={<EditOutlined />}
             onClick={() => router.push(`/hr/expenses/${id}/edit`)}
-            disabled={expense.status !== 'Pending'}
+            disabled={expense.status !== ExpenseStatus.Pending}
           >
             Düzenle
           </Button>
@@ -212,7 +215,7 @@ export default function ExpenseDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Kategori"
-                  value={getCategoryLabel(expense.category)}
+                  value={getExpenseTypeLabel(expense.expenseType)}
                   valueStyle={{ color: '#1890ff', fontSize: 18 }}
                 />
               </Card>
@@ -244,7 +247,7 @@ export default function ExpenseDetailPage() {
                 {expense.description}
               </Descriptions.Item>
               <Descriptions.Item label="Kategori">
-                {getCategoryLabel(expense.category)}
+                {getExpenseTypeLabel(expense.expenseType)}
               </Descriptions.Item>
               <Descriptions.Item label="Harcama Tarihi">
                 {dayjs(expense.expenseDate).format('DD MMMM YYYY')}
@@ -260,9 +263,9 @@ export default function ExpenseDetailPage() {
                   {expense.approvedByName || `Kullanıcı #${expense.approvedById}`}
                 </Descriptions.Item>
               )}
-              {expense.approvedAt && (
+              {expense.approvedDate && (
                 <Descriptions.Item label="Onay Tarihi">
-                  {dayjs(expense.approvedAt).format('DD.MM.YYYY HH:mm')}
+                  {dayjs(expense.approvedDate).format('DD.MM.YYYY HH:mm')}
                 </Descriptions.Item>
               )}
             </Descriptions>

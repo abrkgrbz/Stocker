@@ -19,13 +19,6 @@ export default function NewPayrollPage() {
         employeeId: values.employeeId,
         month: values.period.month() + 1,
         year: values.period.year(),
-        baseSalary: values.baseSalary,
-        overtimePay: values.overtimePay,
-        bonus: values.bonus,
-        allowances: values.allowances,
-        taxDeduction: values.taxDeduction,
-        socialSecurityDeduction: values.socialSecurityDeduction,
-        otherDeductions: values.otherDeductions,
         notes: values.notes,
       };
 

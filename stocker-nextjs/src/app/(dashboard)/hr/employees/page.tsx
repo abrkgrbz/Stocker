@@ -44,7 +44,8 @@ import {
   useActivateEmployee,
   useDeactivateEmployee,
 } from '@/lib/api/hooks/useHR';
-import type { EmployeeSummaryDto, EmployeeStatus } from '@/lib/api/services/hr.types';
+import type { EmployeeSummaryDto } from '@/lib/api/services/hr.types';
+import { EmployeeStatus } from '@/lib/api/services/hr.types';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -52,11 +53,16 @@ const { Search } = Input;
 
 // Employee status configuration
 const employeeStatusConfig: Record<EmployeeStatus, { color: string; label: string }> = {
-  Active: { color: 'green', label: 'Aktif' },
-  OnLeave: { color: 'blue', label: 'İzinde' },
-  Suspended: { color: 'orange', label: 'Askıda' },
-  Terminated: { color: 'red', label: 'İşten Ayrıldı' },
-  Retired: { color: 'gray', label: 'Emekli' },
+  [EmployeeStatus.Active]: { color: 'green', label: 'Aktif' },
+  [EmployeeStatus.Inactive]: { color: 'default', label: 'Pasif' },
+  [EmployeeStatus.OnLeave]: { color: 'blue', label: 'İzinde' },
+  [EmployeeStatus.Terminated]: { color: 'red', label: 'İşten Çıkarıldı' },
+  [EmployeeStatus.Resigned]: { color: 'orange', label: 'İstifa' },
+  [EmployeeStatus.Retired]: { color: 'gray', label: 'Emekli' },
+  [EmployeeStatus.Probation]: { color: 'purple', label: 'Deneme Süresinde' },
+  [EmployeeStatus.MilitaryService]: { color: 'cyan', label: 'Askerde' },
+  [EmployeeStatus.MaternityLeave]: { color: 'magenta', label: 'Doğum İzni' },
+  [EmployeeStatus.SickLeave]: { color: 'volcano', label: 'Hastalık İzni' },
 };
 
 
@@ -112,8 +118,8 @@ export default function EmployeesPage() {
 
   // Calculate stats
   const totalEmployees = employees.length;
-  const activeEmployees = employees.filter((e) => e.status === 'Active').length;
-  const onLeaveEmployees = employees.filter((e) => e.status === 'OnLeave').length;
+  const activeEmployees = employees.filter((e) => e.status === EmployeeStatus.Active).length;
+  const onLeaveEmployees = employees.filter((e) => e.status === EmployeeStatus.OnLeave).length;
   const departmentCount = new Set(employees.map((e) => e.departmentName).filter(Boolean)).size;
 
   // CRUD Handlers
@@ -144,7 +150,7 @@ export default function EmployeesPage() {
 
   const handleToggleActive = async (employee: EmployeeSummaryDto) => {
     try {
-      if (employee.status === 'Active') {
+      if (employee.status === EmployeeStatus.Active) {
         await deactivateEmployee.mutateAsync(employee.id);
       } else {
         await activateEmployee.mutateAsync(employee.id);
@@ -255,8 +261,8 @@ export default function EmployeesPage() {
           { type: 'divider' as const },
           {
             key: 'toggle',
-            icon: record.status === 'Active' ? <StopOutlined /> : <CheckCircleOutlined />,
-            label: record.status === 'Active' ? 'Pasifleştir' : 'Aktifleştir',
+            icon: record.status === EmployeeStatus.Active ? <StopOutlined /> : <CheckCircleOutlined />,
+            label: record.status === EmployeeStatus.Active ? 'Pasifleştir' : 'Aktifleştir',
             onClick: () => handleToggleActive(record),
           },
           { type: 'divider' as const },

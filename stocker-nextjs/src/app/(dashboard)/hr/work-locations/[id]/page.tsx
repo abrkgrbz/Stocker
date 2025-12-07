@@ -189,9 +189,9 @@ export default function WorkLocationDetailPage() {
               <Descriptions.Item label="Lokasyon Adı">{location.name}</Descriptions.Item>
               <Descriptions.Item label="Kod">{location.code || '-'}</Descriptions.Item>
               <Descriptions.Item label="Açıklama">{location.description || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Adres">{location.address || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Adres">{location.street || '-'}</Descriptions.Item>
               <Descriptions.Item label="Şehir">{location.city || '-'}</Descriptions.Item>
-              <Descriptions.Item label="İlçe">{location.district || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Eyalet/İl">{location.state || '-'}</Descriptions.Item>
               <Descriptions.Item label="Posta Kodu">{location.postalCode || '-'}</Descriptions.Item>
               <Descriptions.Item label="Ülke">{location.country || '-'}</Descriptions.Item>
               <Descriptions.Item label="Enlem">{location.latitude || '-'}</Descriptions.Item>

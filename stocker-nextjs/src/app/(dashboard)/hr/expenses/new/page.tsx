@@ -7,6 +7,7 @@ import { ArrowLeftOutlined, SaveOutlined, WalletOutlined } from '@ant-design/ico
 import { ExpenseForm } from '@/components/hr';
 import { useCreateExpense } from '@/lib/api/hooks/useHR';
 import type { CreateExpenseDto } from '@/lib/api/services/hr.types';
+import { ExpenseType } from '@/lib/api/services/hr.types';
 
 export default function NewExpensePage() {
   const router = useRouter();
@@ -19,8 +20,11 @@ export default function NewExpensePage() {
         employeeId: values.employeeId,
         description: values.description,
         amount: values.amount,
-        category: values.category,
+        expenseType: values.expenseType,
         expenseDate: values.expenseDate?.format('YYYY-MM-DD'),
+        currency: values.currency || 'TRY',
+        merchantName: values.merchantName,
+        receiptNumber: values.receiptNumber,
         notes: values.notes,
       };
 

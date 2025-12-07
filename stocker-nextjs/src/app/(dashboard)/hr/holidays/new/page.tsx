@@ -20,6 +20,10 @@ export default function NewHolidayPage() {
         date: values.date?.format('YYYY-MM-DD'),
         description: values.description,
         isRecurring: values.isRecurring ?? false,
+        holidayType: values.holidayType,
+        isHalfDay: values.isHalfDay ?? false,
+        isNational: values.isNational ?? true,
+        affectedRegions: values.affectedRegions,
       };
 
       await createHoliday.mutateAsync(data);

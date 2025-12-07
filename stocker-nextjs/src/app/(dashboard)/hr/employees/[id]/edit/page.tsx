@@ -50,8 +50,9 @@ export default function EditEmployeePage() {
         gender: employee.gender,
         maritalStatus: employee.maritalStatus,
         bloodType: employee.bloodType,
-        address: employee.address,
+        street: employee.street,
         city: employee.city,
+        state: employee.state,
         postalCode: employee.postalCode,
         country: employee.country,
         hireDate: employee.hireDate ? dayjs(employee.hireDate) : null,
@@ -65,7 +66,6 @@ export default function EditEmployeePage() {
         emergencyContactName: employee.emergencyContactName,
         emergencyContactPhone: employee.emergencyContactPhone,
         emergencyContactRelation: employee.emergencyContactRelation,
-        notes: employee.notes,
       });
     }
   }, [employee, form]);
@@ -77,14 +77,14 @@ export default function EditEmployeePage() {
         lastName: values.lastName,
         email: values.email,
         phone: values.phone,
-        nationalId: values.nationalId,
         birthDate: values.birthDate?.toISOString(),
         birthPlace: values.birthPlace,
         gender: values.gender,
         maritalStatus: values.maritalStatus,
         bloodType: values.bloodType,
-        address: values.address,
+        street: values.street,
         city: values.city,
+        state: values.state,
         postalCode: values.postalCode,
         country: values.country,
         employmentType: values.employmentType,
@@ -97,7 +97,6 @@ export default function EditEmployeePage() {
         emergencyContactName: values.emergencyContactName,
         emergencyContactPhone: values.emergencyContactPhone,
         emergencyContactRelation: values.emergencyContactRelation,
-        notes: values.notes,
       };
 
       await updateEmployee.mutateAsync({ id, data });
@@ -302,21 +301,26 @@ export default function EditEmployeePage() {
                   </Form.Item>
                 </Col>
               </Row>
-              <Form.Item name="address" label="Adres">
+              <Form.Item name="street" label="Adres">
                 <TextArea rows={2} placeholder="Adres" variant="filled" />
               </Form.Item>
               <Row gutter={16}>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
                   <Form.Item name="city" label="Şehir">
                     <Input placeholder="Şehir" variant="filled" />
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
+                  <Form.Item name="state" label="İlçe">
+                    <Input placeholder="İlçe" variant="filled" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={6}>
                   <Form.Item name="postalCode" label="Posta Kodu">
                     <Input placeholder="Posta kodu" variant="filled" />
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
                   <Form.Item name="country" label="Ülke">
                     <Input placeholder="Ülke" variant="filled" />
                   </Form.Item>
@@ -446,7 +450,7 @@ export default function EditEmployeePage() {
                   min={0}
                   variant="filled"
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                  parser={(value: string | undefined) => (value ? parseFloat(value.replace(/\$\s?|(,*)/g, '')) : 0)}
                   addonAfter="TRY"
                 />
               </Form.Item>
@@ -476,21 +480,6 @@ export default function EditEmployeePage() {
               </Row>
               <Form.Item name="emergencyContactRelation" label="Yakınlık Derecesi">
                 <Input placeholder="Örn: Eş, Anne, Baba" variant="filled" />
-              </Form.Item>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Notlar
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
-            </div>
-            <div className="bg-gray-50/50 rounded-xl p-6">
-              <Form.Item name="notes" className="mb-0">
-                <TextArea rows={4} placeholder="Ek notlar..." variant="filled" />
               </Form.Item>
             </div>
           </div>

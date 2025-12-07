@@ -26,9 +26,11 @@ export default function NewEmployeePage() {
         birthPlace: values.birthPlace,
         gender: values.gender,
         maritalStatus: values.maritalStatus,
+        nationality: values.nationality,
         bloodType: values.bloodType,
-        address: values.address,
+        street: values.street,
         city: values.city,
+        state: values.state,
         postalCode: values.postalCode,
         country: values.country,
         hireDate: values.hireDate?.toISOString(),
@@ -42,7 +44,6 @@ export default function NewEmployeePage() {
         emergencyContactName: values.emergencyContactName,
         emergencyContactPhone: values.emergencyContactPhone,
         emergencyContactRelation: values.emergencyContactRelation,
-        notes: values.notes,
       };
 
       await createEmployee.mutateAsync(data);

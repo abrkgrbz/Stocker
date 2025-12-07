@@ -170,9 +170,11 @@ export interface EmployeeDto {
   nationalId?: string;
   birthDate?: string;
   age?: number;
+  birthPlace?: string;
   gender?: Gender;
   maritalStatus?: string;
   nationality?: string;
+  bloodType?: string;
   photoUrl?: string;
   // Contact Information
   email?: string;

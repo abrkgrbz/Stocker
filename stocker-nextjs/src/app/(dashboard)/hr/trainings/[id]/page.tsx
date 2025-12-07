@@ -24,9 +24,10 @@ import {
   TeamOutlined,
   CalendarOutlined,
   EnvironmentOutlined,
-  DollarOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useTraining, useDeleteTraining } from '@/lib/api/hooks/useHR';
+import { TrainingStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -44,7 +45,7 @@ export default function TrainingDetailPage() {
     if (!training) return;
     Modal.confirm({
       title: 'Eğitimi Sil',
-      content: `"${training.name}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      content: `"${training.title}" eğitimini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
@@ -64,19 +65,15 @@ export default function TrainingDetailPage() {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
   };
 
-  const getStatusConfig = () => {
-    if (!training) return { color: 'default', text: '-' };
-    const now = dayjs();
-    if (training.endDate && dayjs(training.endDate).isBefore(now)) {
-      return { color: 'default', text: 'Tamamlandı' };
-    }
-    if (training.startDate && dayjs(training.startDate).isAfter(now)) {
-      return { color: 'blue', text: 'Yaklaşan' };
-    }
-    if (training.startDate && training.endDate) {
-      return { color: 'green', text: 'Devam Ediyor' };
-    }
-    return { color: 'default', text: '-' };
+  const getStatusConfig = (status?: TrainingStatus) => {
+    const statusMap: Record<TrainingStatus, { color: string; text: string }> = {
+      [TrainingStatus.Scheduled]: { color: 'blue', text: 'Planlandı' },
+      [TrainingStatus.InProgress]: { color: 'green', text: 'Devam Ediyor' },
+      [TrainingStatus.Completed]: { color: 'default', text: 'Tamamlandı' },
+      [TrainingStatus.Cancelled]: { color: 'red', text: 'İptal Edildi' },
+      [TrainingStatus.Postponed]: { color: 'orange', text: 'Ertelendi' },
+    };
+    return status !== undefined ? statusMap[status] : { color: 'default', text: '-' };
   };
 
   if (isLoading) {
@@ -98,7 +95,7 @@ export default function TrainingDetailPage() {
     );
   }
 
-  const statusConfig = getStatusConfig();
+  const statusConfig = getStatusConfig(training.status);
 
   return (
     <div className="p-6">
@@ -110,12 +107,15 @@ export default function TrainingDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              {training.name}
+              {training.title}
             </Title>
             <Space>
+              <Text type="secondary">{training.code}</Text>
+              <Text type="secondary">•</Text>
               <Text type="secondary">{training.provider || '-'}</Text>
               <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
-              {training.isActive && <Tag color="green">Aktif</Tag>}
+              {training.isMandatory && <Tag color="red">Zorunlu</Tag>}
+              {training.isOnline && <Tag color="purple">Online</Tag>}
             </Space>
           </div>
         </Space>
@@ -137,7 +137,7 @@ export default function TrainingDetailPage() {
               <Card size="small">
                 <Statistic
                   title="Katılımcı"
-                  value={training.participantCount || 0}
+                  value={training.currentParticipants || 0}
                   suffix={`/ ${training.maxParticipants || '-'}`}
                   prefix={<TeamOutlined />}
                   valueStyle={{ color: '#7c3aed' }}
@@ -147,9 +147,10 @@ export default function TrainingDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Başlangıç"
-                  value={training.startDate ? dayjs(training.startDate).format('DD.MM.YYYY') : '-'}
-                  prefix={<CalendarOutlined />}
+                  title="Süre"
+                  value={training.durationHours || 0}
+                  suffix="saat"
+                  prefix={<ClockCircleOutlined />}
                   valueStyle={{ color: '#52c41a', fontSize: 16 }}
                 />
               </Card>
@@ -157,8 +158,8 @@ export default function TrainingDetailPage() {
             <Col xs={12} sm={6}>
               <Card size="small">
                 <Statistic
-                  title="Bitiş"
-                  value={training.endDate ? dayjs(training.endDate).format('DD.MM.YYYY') : '-'}
+                  title="Başlangıç"
+                  value={training.startDate ? dayjs(training.startDate).format('DD.MM.YYYY') : '-'}
                   prefix={<CalendarOutlined />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
@@ -181,8 +182,11 @@ export default function TrainingDetailPage() {
         <Col xs={24} lg={16}>
           <Card title="Eğitim Bilgileri">
             <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Eğitim Adı">{training.name}</Descriptions.Item>
+              <Descriptions.Item label="Eğitim Kodu">{training.code}</Descriptions.Item>
+              <Descriptions.Item label="Eğitim Adı">{training.title}</Descriptions.Item>
+              <Descriptions.Item label="Eğitim Türü">{training.trainingType || '-'}</Descriptions.Item>
               <Descriptions.Item label="Sağlayıcı">{training.provider || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Eğitmen">{training.instructor || '-'}</Descriptions.Item>
               <Descriptions.Item label="Açıklama">{training.description || '-'}</Descriptions.Item>
               <Descriptions.Item label="Başlangıç Tarihi">
                 {training.startDate ? dayjs(training.startDate).format('DD MMMM YYYY') : '-'}
@@ -190,20 +194,27 @@ export default function TrainingDetailPage() {
               <Descriptions.Item label="Bitiş Tarihi">
                 {training.endDate ? dayjs(training.endDate).format('DD MMMM YYYY') : '-'}
               </Descriptions.Item>
+              <Descriptions.Item label="Süre">{training.durationHours} saat</Descriptions.Item>
               <Descriptions.Item label="Konum">
                 <Space>
                   <EnvironmentOutlined />
-                  {training.location || '-'}
+                  {training.isOnline ? (
+                    <a href={training.onlineUrl} target="_blank" rel="noopener noreferrer">
+                      {training.onlineUrl || 'Online'}
+                    </a>
+                  ) : (
+                    training.location || '-'
+                  )}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Maksimum Katılımcı">
                 {training.maxParticipants || '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Mevcut Katılımcı">
-                {training.participantCount || 0}
+                {training.currentParticipants || 0}
               </Descriptions.Item>
               <Descriptions.Item label="Maliyet">
-                {formatCurrency(training.cost)}
+                {formatCurrency(training.cost)} {training.currency || 'TRY'}
               </Descriptions.Item>
               <Descriptions.Item label="Durum">
                 <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
@@ -211,6 +222,69 @@ export default function TrainingDetailPage() {
             </Descriptions>
           </Card>
         </Col>
+
+        {/* Certification Info */}
+        <Col xs={24} lg={8}>
+          <Card title="Sertifikasyon">
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="Sertifika">
+                {training.hasCertification ? (
+                  <Tag color="green">Var</Tag>
+                ) : (
+                  <Tag color="default">Yok</Tag>
+                )}
+              </Descriptions.Item>
+              {training.hasCertification && (
+                <>
+                  <Descriptions.Item label="Geçerlilik">
+                    {training.certificationValidityMonths
+                      ? `${training.certificationValidityMonths} ay`
+                      : '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Geçme Puanı">
+                    {training.passingScore || '-'}
+                  </Descriptions.Item>
+                </>
+              )}
+              <Descriptions.Item label="Zorunlu">
+                {training.isMandatory ? (
+                  <Tag color="red">Evet</Tag>
+                ) : (
+                  <Tag color="default">Hayır</Tag>
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </Col>
+
+        {/* Prerequisites & Materials */}
+        {(training.prerequisites || training.materials) && (
+          <Col xs={24}>
+            <Card title="Ek Bilgiler">
+              {training.prerequisites && (
+                <>
+                  <Text strong>Ön Koşullar:</Text>
+                  <Paragraph className="mt-2">{training.prerequisites}</Paragraph>
+                </>
+              )}
+              {training.materials && (
+                <>
+                  <Text strong>Materyaller:</Text>
+                  <Paragraph className="mt-2">{training.materials}</Paragraph>
+                </>
+              )}
+            </Card>
+          </Col>
+        )}
+
+        {/* Notes */}
+        {training.notes && (
+          <Col xs={24}>
+            <Card title="Notlar">
+              <Paragraph>{training.notes}</Paragraph>
+            </Card>
+          </Col>
+        )}
       </Row>
     </div>
   );

@@ -38,11 +38,20 @@ export default function EditShiftPage() {
     try {
       const data: UpdateShiftDto = {
         name: values.name,
-        code: values.code,
         description: values.description,
+        shiftType: values.shiftType || 0, // Default to Regular shift type
         startTime: values.startTime?.format('HH:mm:ss'),
         endTime: values.endTime?.format('HH:mm:ss'),
-        breakDurationMinutes: values.breakDurationMinutes,
+        breakStartTime: values.breakStartTime?.format('HH:mm:ss'),
+        breakEndTime: values.breakEndTime?.format('HH:mm:ss'),
+        breakDurationMinutes: values.breakDurationMinutes || 0,
+        nightShiftAllowancePercentage: values.nightShiftAllowancePercentage,
+        gracePeriodMinutes: values.gracePeriodMinutes,
+        earlyDepartureThresholdMinutes: values.earlyDepartureThresholdMinutes,
+        overtimeThresholdMinutes: values.overtimeThresholdMinutes,
+        isFlexible: values.isFlexible ?? false,
+        flexibleStartTime: values.flexibleStartTime?.format('HH:mm:ss'),
+        flexibleEndTime: values.flexibleEndTime?.format('HH:mm:ss'),
       };
 
       await updateShift.mutateAsync({ id, data });
