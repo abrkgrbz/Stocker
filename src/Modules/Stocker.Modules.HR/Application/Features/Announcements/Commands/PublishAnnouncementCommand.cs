@@ -4,6 +4,7 @@ using Stocker.Modules.HR.Application.DTOs;
 using Stocker.Modules.HR.Domain.Repositories;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Results;
+using Stocker.Shared.Events.HR;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Commands;
 
@@ -38,13 +39,16 @@ public class PublishAnnouncementCommandHandler : IRequestHandler<PublishAnnounce
 {
     private readonly IAnnouncementRepository _announcementRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMediator _mediator;
 
     public PublishAnnouncementCommandHandler(
         IAnnouncementRepository announcementRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMediator mediator)
     {
         _announcementRepository = announcementRepository;
         _unitOfWork = unitOfWork;
+        _mediator = mediator;
     }
 
     public async Task<Result<AnnouncementDto>> Handle(PublishAnnouncementCommand request, CancellationToken cancellationToken)
@@ -73,15 +77,37 @@ public class PublishAnnouncementCommandHandler : IRequestHandler<PublishAnnounce
             AnnouncementType = announcement.Type.ToString(),
             Priority = announcement.Priority.ToString(),
             AuthorId = announcement.AuthorId,
+            AuthorName = announcement.Author?.FullName ?? string.Empty,
             PublishDate = announcement.PublishDate,
             ExpiryDate = announcement.ExpiryDate,
             IsPublished = announcement.IsPublished,
             IsPinned = announcement.IsPinned,
             RequiresAcknowledgment = announcement.RequiresAcknowledgment,
             TargetDepartmentId = announcement.DepartmentId,
+            TargetDepartmentName = announcement.Department?.Name,
             ViewCount = announcement.ViewCount,
             CreatedAt = announcement.CreatedDate
         };
+
+        // Publish event to notify users about the new announcement
+        var publishedEvent = new AnnouncementPublishedEvent(
+            AnnouncementId: announcement.Id,
+            TenantId: request.TenantId,
+            Title: announcement.Title,
+            Content: announcement.Content,
+            Summary: null,
+            AnnouncementType: announcement.Type.ToString(),
+            Priority: announcement.Priority.ToString(),
+            AuthorId: announcement.AuthorId,
+            AuthorName: dto.AuthorName,
+            TargetDepartmentId: announcement.DepartmentId,
+            TargetDepartmentName: dto.TargetDepartmentName,
+            RequiresAcknowledgment: announcement.RequiresAcknowledgment,
+            PublishDate: announcement.PublishDate,
+            ExpiryDate: announcement.ExpiryDate
+        );
+
+        await _mediator.Publish(publishedEvent, cancellationToken);
 
         return Result<AnnouncementDto>.Success(dto);
     }

@@ -1,9 +1,12 @@
+using MediatR;
+
 namespace Stocker.Shared.Events;
 
 /// <summary>
 /// Base class for all integration events in the system
+/// Implements INotification for MediatR event handling
 /// </summary>
-public abstract record IntegrationEvent
+public abstract record IntegrationEvent : INotification
 {
     /// <summary>
     /// Unique event identifier
