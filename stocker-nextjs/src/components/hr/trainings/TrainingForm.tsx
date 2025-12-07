@@ -81,6 +81,9 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
                   onChange={(val) => {
                     setIsOnline(val);
                     form.setFieldValue('isOnline', val);
+                    if (!val) {
+                      form.setFieldValue('onlineUrl', undefined);
+                    }
                   }}
                   checkedChildren="Online"
                   unCheckedChildren="Yüz yüze"
@@ -222,6 +225,23 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </Col>
             </Row>
+            {isOnline && (
+              <Row gutter={16} className="mt-4">
+                <Col span={24}>
+                  <div className="text-xs text-gray-400 mb-1">Online Eğitim URL'si *</div>
+                  <Form.Item
+                    name="onlineUrl"
+                    className="mb-0"
+                    rules={[
+                      { required: isOnline, message: 'Online eğitimler için URL zorunludur' },
+                      { type: 'url', message: 'Geçerli bir URL giriniz' },
+                    ]}
+                  >
+                    <Input placeholder="https://zoom.us/j/..." variant="filled" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            )}
           </div>
 
           {/* Divider */}
