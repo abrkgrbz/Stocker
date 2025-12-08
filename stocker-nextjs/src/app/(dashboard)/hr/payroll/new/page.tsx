@@ -20,6 +20,15 @@ export default function NewPayrollPage() {
         month: values.period.month() + 1,
         year: values.period.year(),
         notes: values.notes,
+        // Kazançlar
+        baseSalary: values.baseSalary || 0,
+        overtimePay: values.overtimePay || 0,
+        bonus: values.bonus || 0,
+        allowances: values.allowances || 0,
+        // Otomatik Hesaplama
+        autoCalculate: values.autoCalculate ?? true,
+        cumulativeGrossEarnings: values.cumulativeGrossEarnings || 0,
+        applyMinWageExemption: values.applyMinWageExemption ?? true,
       };
 
       await createPayroll.mutateAsync(data);

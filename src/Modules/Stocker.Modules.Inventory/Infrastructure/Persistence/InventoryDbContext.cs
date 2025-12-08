@@ -60,6 +60,10 @@ public class InventoryDbContext : DbContext, IUnitOfWork
     public DbSet<LotBatch> LotBatches { get; set; } = null!;
     public DbSet<SerialNumber> SerialNumbers { get; set; } = null!;
 
+    // Auto-Reorder Rules
+    public DbSet<ReorderRule> ReorderRules { get; set; } = null!;
+    public DbSet<ReorderSuggestion> ReorderSuggestions { get; set; } = null!;
+
     // Audit Logs
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
@@ -130,6 +134,10 @@ public class InventoryDbContext : DbContext, IUnitOfWork
             // Lot/Batch and Serial Number entities
             modelBuilder.Entity<LotBatch>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<SerialNumber>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Auto-Reorder entities
+            modelBuilder.Entity<ReorderRule>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ReorderSuggestion>().HasQueryFilter(e => e.TenantId == tenantId.Value);
 
             // Audit Log entity
             modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);

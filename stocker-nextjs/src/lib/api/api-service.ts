@@ -41,6 +41,31 @@ export class ApiService {
     const response: AxiosResponse<T> = await apiClient.delete(url, config);
     return response.data;
   }
+
+  /**
+   * GET request that returns a Blob (for file downloads)
+   */
+  static async getBlob(url: string, config?: AxiosRequestConfig): Promise<Blob> {
+    const response: AxiosResponse<Blob> = await apiClient.get(url, {
+      ...config,
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  /**
+   * POST request with FormData (for file uploads)
+   */
+  static async postForm<T>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<T> {
+    const response: AxiosResponse<T> = await apiClient.post(url, formData, {
+      ...config,
+      headers: {
+        ...config?.headers,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
 }
 
 export default ApiService;

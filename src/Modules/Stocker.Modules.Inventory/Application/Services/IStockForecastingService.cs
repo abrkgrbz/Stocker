@@ -1,4 +1,5 @@
 using Stocker.Modules.Inventory.Application.DTOs;
+using Stocker.Modules.Inventory.Domain.Enums;
 
 namespace Stocker.Modules.Inventory.Application.Services;
 

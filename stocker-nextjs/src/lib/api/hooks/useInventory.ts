@@ -143,6 +143,18 @@ import type {
   SetStandardCostDto,
   CostVarianceAnalysisDto,
   CostAdjustmentDto,
+  // Inventory Analysis (ABC/XYZ)
+  AbcXyzAnalysisFilterDto,
+  AbcXyzAnalysisSummaryDto,
+  ProductAbcXyzDto,
+  InventoryTurnoverFilterDto,
+  InventoryTurnoverDto,
+  DeadStockFilterDto,
+  DeadStockAnalysisDto,
+  ServiceLevelFilterDto,
+  ServiceLevelAnalysisDto,
+  InventoryHealthScoreFilterDto,
+  InventoryHealthScoreDto,
 } from '../services/inventory.types';
 
 // =====================================
@@ -315,6 +327,26 @@ export const inventoryKeys = {
   productCostingMethod: (productId: number) =>
     ['inventory', 'costing', 'products', productId, 'method'] as const,
   costingMethods: ['inventory', 'costing', 'methods'] as const,
+
+  // Excel Export/Import
+  excelProductsExport: (productIds?: number[]) => ['inventory', 'excel', 'products', 'export', productIds] as const,
+  excelStockExport: (warehouseId?: number) => ['inventory', 'excel', 'stock', 'export', warehouseId] as const,
+  excelStockSummaryExport: ['inventory', 'excel', 'stock', 'summary', 'export'] as const,
+
+  // Inventory Analysis (ABC/XYZ)
+  analysis: ['inventory', 'analysis'] as const,
+  abcXyzAnalysis: (filter?: AbcXyzAnalysisFilterDto) =>
+    ['inventory', 'analysis', 'abc-xyz', filter] as const,
+  productAbcXyzClassification: (productId: number, analysisPeriodDays?: number, warehouseId?: number) =>
+    ['inventory', 'analysis', 'abc-xyz', 'products', productId, { analysisPeriodDays, warehouseId }] as const,
+  inventoryTurnover: (filter?: InventoryTurnoverFilterDto) =>
+    ['inventory', 'analysis', 'turnover', filter] as const,
+  deadStock: (filter?: DeadStockFilterDto) =>
+    ['inventory', 'analysis', 'dead-stock', filter] as const,
+  serviceLevel: (filter?: ServiceLevelFilterDto) =>
+    ['inventory', 'analysis', 'service-level', filter] as const,
+  inventoryHealthScore: (filter?: InventoryHealthScoreFilterDto) =>
+    ['inventory', 'analysis', 'health-score', filter] as const,
 };
 
 // =====================================
@@ -3152,5 +3184,252 @@ export function useCostingMethods() {
     queryKey: inventoryKeys.costingMethods,
     queryFn: () => InventoryService.getCostingMethods(),
     staleTime: Infinity, // Static data
+  });
+}
+
+// =====================================
+// EXCEL EXPORT/IMPORT HOOKS
+// =====================================
+
+/**
+ * Helper function to download a blob as file
+ */
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export products to Excel
+ */
+export function useExportProductsToExcel() {
+  return useMutation({
+    mutationFn: (productIds?: number[]) => InventoryService.exportProductsToExcel(productIds),
+    onSuccess: (blob) => {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `urunler_${timestamp}.xlsx`);
+      showSuccess('Ürünler Excel dosyası olarak indirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürünler dışa aktarılamadı');
+    },
+  });
+}
+
+/**
+ * Export stock data to Excel
+ */
+export function useExportStockToExcel() {
+  return useMutation({
+    mutationFn: ({ warehouseId, includeZeroStock }: { warehouseId?: number; includeZeroStock?: boolean }) =>
+      InventoryService.exportStockToExcel(warehouseId, includeZeroStock),
+    onSuccess: (blob) => {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `stok_${timestamp}.xlsx`);
+      showSuccess('Stok bilgileri Excel dosyası olarak indirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok bilgileri dışa aktarılamadı');
+    },
+  });
+}
+
+/**
+ * Export stock summary to Excel
+ */
+export function useExportStockSummaryToExcel() {
+  return useMutation({
+    mutationFn: () => InventoryService.exportStockSummaryToExcel(),
+    onSuccess: (blob) => {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `stok_ozet_${timestamp}.xlsx`);
+      showSuccess('Stok özeti Excel dosyası olarak indirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok özeti dışa aktarılamadı');
+    },
+  });
+}
+
+/**
+ * Get product import template
+ */
+export function useGetProductImportTemplate() {
+  return useMutation({
+    mutationFn: () => InventoryService.getProductImportTemplate(),
+    onSuccess: (blob) => {
+      downloadBlob(blob, 'urun_import_sablonu.xlsx');
+      showSuccess('Ürün içe aktarma şablonu indirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Şablon indirilemedi');
+    },
+  });
+}
+
+/**
+ * Get stock adjustment template
+ */
+export function useGetStockAdjustmentTemplate() {
+  return useMutation({
+    mutationFn: () => InventoryService.getStockAdjustmentTemplate(),
+    onSuccess: (blob) => {
+      downloadBlob(blob, 'stok_ayarlama_sablonu.xlsx');
+      showSuccess('Stok ayarlama şablonu indirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Şablon indirilemedi');
+    },
+  });
+}
+
+/**
+ * Import products from Excel
+ */
+export function useImportProductsFromExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ file, updateExisting }: { file: File; updateExisting?: boolean }) =>
+      InventoryService.importProductsFromExcel(file, updateExisting),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.products });
+      if (result.success) {
+        showSuccess(`${result.successCount} ürün başarıyla içe aktarıldı`);
+      } else {
+        showError(`İçe aktarma tamamlandı: ${result.successCount} başarılı, ${result.errorCount} hata`);
+      }
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürünler içe aktarılamadı');
+    },
+  });
+}
+
+/**
+ * Import stock adjustments from Excel
+ */
+export function useImportStockAdjustmentsFromExcel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => InventoryService.importStockAdjustmentsFromExcel(file),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.stockMovements });
+      if (result.success) {
+        showSuccess(`${result.successCount} stok ayarlaması başarıyla içe aktarıldı`);
+      } else {
+        showError(`İçe aktarma tamamlandı: ${result.successCount} başarılı, ${result.errorCount} hata`);
+      }
+    },
+    onError: (error) => {
+      showApiError(error, 'Stok ayarlamaları içe aktarılamadı');
+    },
+  });
+}
+
+/**
+ * Validate Excel import file
+ */
+export function useValidateExcelImport() {
+  return useMutation({
+    mutationFn: ({ file, importType }: { file: File; importType: 'Products' | 'StockAdjustments' }) =>
+      InventoryService.validateExcelImport(file, importType),
+    onError: (error) => {
+      showApiError(error, 'Dosya doğrulanamadı');
+    },
+  });
+}
+
+// =====================================
+// INVENTORY ANALYSIS HOOKS (ABC/XYZ)
+// =====================================
+
+/**
+ * Get ABC/XYZ Analysis Summary
+ * Provides comprehensive inventory classification analysis
+ */
+export function useAbcXyzAnalysis(filter?: AbcXyzAnalysisFilterDto, enabled: boolean = true) {
+  return useQuery({
+    queryKey: inventoryKeys.abcXyzAnalysis(filter),
+    queryFn: () => InventoryService.getAbcXyzAnalysis(filter),
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes - analysis data doesn't change frequently
+  });
+}
+
+/**
+ * Get ABC/XYZ classification for a single product
+ */
+export function useProductAbcXyzClassification(
+  productId: number,
+  analysisPeriodDays: number = 365,
+  warehouseId?: number,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: inventoryKeys.productAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
+    queryFn: () => InventoryService.getProductAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
+    enabled: enabled && !!productId && productId > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Get inventory turnover analysis
+ * Calculates how quickly inventory is sold and replaced
+ */
+export function useInventoryTurnoverAnalysis(filter?: InventoryTurnoverFilterDto, enabled: boolean = true) {
+  return useQuery({
+    queryKey: inventoryKeys.inventoryTurnover(filter),
+    queryFn: () => InventoryService.getInventoryTurnoverAnalysis(filter),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Get dead stock analysis
+ * Identifies products that haven't sold in a specified period
+ */
+export function useDeadStockAnalysis(filter?: DeadStockFilterDto, enabled: boolean = true) {
+  return useQuery({
+    queryKey: inventoryKeys.deadStock(filter),
+    queryFn: () => InventoryService.getDeadStockAnalysis(filter),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Get service level analysis
+ * Measures ability to fulfill customer orders from available inventory
+ */
+export function useServiceLevelAnalysis(filter?: ServiceLevelFilterDto, enabled: boolean = true) {
+  return useQuery({
+    queryKey: inventoryKeys.serviceLevel(filter),
+    queryFn: () => InventoryService.getServiceLevelAnalysis(filter),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Get inventory health score
+ * Comprehensive health indicator combining multiple inventory metrics
+ */
+export function useInventoryHealthScore(filter?: InventoryHealthScoreFilterDto, enabled: boolean = true) {
+  return useQuery({
+    queryKey: inventoryKeys.inventoryHealthScore(filter),
+    queryFn: () => InventoryService.getInventoryHealthScore(filter),
+    enabled,
+    staleTime: 5 * 60 * 1000,
   });
 }

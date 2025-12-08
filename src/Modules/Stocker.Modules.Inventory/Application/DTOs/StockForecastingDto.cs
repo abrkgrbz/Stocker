@@ -1,3 +1,5 @@
+using Stocker.Modules.Inventory.Domain.Enums;
+
 namespace Stocker.Modules.Inventory.Application.DTOs;
 
 // =====================================
@@ -21,27 +23,8 @@ public enum ForecastingMethod
     SeasonalDecomposition
 }
 
-/// <summary>
-/// Auto-reorder rule status
-/// </summary>
-public enum ReorderRuleStatus
-{
-    Active,
-    Paused,
-    Disabled
-}
-
-/// <summary>
-/// Reorder suggestion status
-/// </summary>
-public enum ReorderSuggestionStatus
-{
-    Pending,
-    Approved,
-    Rejected,
-    Ordered,
-    Expired
-}
+// Note: ReorderRuleStatus and ReorderSuggestionStatus are defined in Domain.Enums
+// and imported via 'using Stocker.Modules.Inventory.Domain.Enums;'
 
 /// <summary>
 /// Filter for stock forecasting

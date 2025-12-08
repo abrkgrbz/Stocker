@@ -1,28 +1,30 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Typography, Space, Button, Row, Col, Card, Statistic, Table, Tag, List, Empty, Progress, Tooltip, Select, Spin, DatePicker, Tabs, Alert } from 'antd';
+import { Typography, Space, Button, Row, Col, Card, Statistic, Table, Tag, List, Empty, Progress, Tooltip, Select, Spin, DatePicker, Tabs, Alert, Drawer, Switch, Divider } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
   SwapOutlined,
-  FileSearchOutlined,
   WarningOutlined,
   InboxOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  ReloadOutlined,
   PlusOutlined,
   DollarOutlined,
   RiseOutlined,
   FallOutlined,
   EditOutlined,
   BarChartOutlined,
-  LineChartOutlined,
   PieChartOutlined,
   DashboardOutlined,
   SyncOutlined,
   ExclamationCircleOutlined,
+  FileExcelOutlined,
+  PrinterOutlined,
+  CheckSquareOutlined,
+  SettingOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -41,6 +43,7 @@ import {
 import { TransferStatus, StockCountStatus } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import type { ProductDto, StockMovementDto, CategoryDto, InventoryAlertDto } from '@/lib/api/services/inventory.types';
+import { formatCurrency, formatNumber, formatPercentage } from '@/lib/utils/format';
 import dayjs from 'dayjs';
 import {
   BarChart,
@@ -85,27 +88,32 @@ const alertSeverityColors: Record<string, string> = {
   Info: 'default',
 };
 
-// Format currency
-const formatCurrency = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) return '₺0';
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-};
+// Widget visibility interface
+interface WidgetVisibility {
+  stats: boolean;
+  alerts: boolean;
+  stockHealth: boolean;
+  movementTrend: boolean;
+  topProducts: boolean;
+  categoryValue: boolean;
+  lowStock: boolean;
+  expiringStock: boolean;
+  pendingTransfers: boolean;
+  advancedKpis: boolean;
+}
 
-// Format number
-const formatNumber = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) return '0';
-  return new Intl.NumberFormat('tr-TR').format(value);
-};
-
-// Format percentage
-const formatPercentage = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) return '%0';
-  return `%${value.toFixed(1)}`;
+// Default widget visibility
+const defaultWidgetVisibility: WidgetVisibility = {
+  stats: true,
+  alerts: true,
+  stockHealth: true,
+  movementTrend: true,
+  topProducts: true,
+  categoryValue: true,
+  lowStock: true,
+  expiringStock: true,
+  pendingTransfers: true,
+  advancedKpis: true,
 };
 
 export default function InventoryDashboardPage() {
@@ -117,6 +125,25 @@ export default function InventoryDashboardPage() {
     dayjs().subtract(30, 'day'),
     dayjs(),
   ]);
+
+  // Widget visibility state
+  const [widgetVisibility, setWidgetVisibility] = useState<WidgetVisibility>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('inventoryDashboardWidgets');
+      return saved ? JSON.parse(saved) : defaultWidgetVisibility;
+    }
+    return defaultWidgetVisibility;
+  });
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+
+  // Toggle widget visibility
+  const toggleWidget = (widget: keyof WidgetVisibility) => {
+    const newVisibility = { ...widgetVisibility, [widget]: !widgetVisibility[widget] };
+    setWidgetVisibility(newVisibility);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventoryDashboardWidgets', JSON.stringify(newVisibility));
+    }
+  };
 
   // Fetch inventory data - Backend Analytics API
   const {
@@ -532,6 +559,12 @@ export default function InventoryDashboardPage() {
           <Link href="/inventory/stock-adjustments">
             <Button icon={<EditOutlined />}>Stok Düzeltme</Button>
           </Link>
+          <Button
+            icon={<SettingOutlined />}
+            onClick={() => setSettingsDrawerOpen(true)}
+          >
+            Widget Ayarları
+          </Button>
         </Space>
       </div>
 
@@ -546,6 +579,53 @@ export default function InventoryDashboardPage() {
           closable
         />
       )}
+
+      {/* Quick Actions Panel */}
+      <Card className="mb-6" size="small">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <ThunderboltOutlined className="text-yellow-500 text-lg" />
+            <Text strong>Hızlı İşlemler</Text>
+          </div>
+          <Space wrap size="small">
+            <Link href="/inventory/products/new">
+              <Button type="primary" icon={<PlusOutlined />} size="small">
+                Yeni Ürün
+              </Button>
+            </Link>
+            <Link href="/inventory/stock-transfers/new">
+              <Button icon={<SwapOutlined />} size="small">
+                Stok Transferi
+              </Button>
+            </Link>
+            <Link href="/inventory/stock-counts/new">
+              <Button icon={<CheckSquareOutlined />} size="small">
+                Sayım Başlat
+              </Button>
+            </Link>
+            <Link href="/inventory/stock-adjustments/new">
+              <Button icon={<EditOutlined />} size="small">
+                Stok Düzeltme
+              </Button>
+            </Link>
+            <Link href="/inventory/stock">
+              <Button icon={<FileExcelOutlined />} size="small">
+                Excel İşlemleri
+              </Button>
+            </Link>
+            <Link href="/inventory/reports">
+              <Button icon={<PrinterOutlined />} size="small">
+                Raporlar
+              </Button>
+            </Link>
+            <Link href="/inventory/analytics">
+              <Button icon={<BarChartOutlined />} size="small">
+                Analitik
+              </Button>
+            </Link>
+          </Space>
+        </div>
+      </Card>
 
       {/* Main Stats Cards */}
       <Row gutter={[16, 16]} className="mb-6">
@@ -1141,7 +1221,7 @@ export default function InventoryDashboardPage() {
       )}
 
       {/* Backend Alerts Section */}
-      {alerts.length > 0 && (
+      {alerts.length > 0 && widgetVisibility.alerts && (
         <Row gutter={[16, 16]} className="mt-6">
           <Col span={24}>
             <Card
@@ -1181,6 +1261,151 @@ export default function InventoryDashboardPage() {
           </Col>
         </Row>
       )}
+
+      {/* Widget Settings Drawer */}
+      <Drawer
+        title="Dashboard Widget Ayarları"
+        placement="right"
+        onClose={() => setSettingsDrawerOpen(false)}
+        open={settingsDrawerOpen}
+        width={350}
+      >
+        <div className="space-y-4">
+          <Text type="secondary">
+            Görmek istediğiniz widget'ları açıp kapatabilirsiniz. Ayarlarınız tarayıcınızda saklanır.
+          </Text>
+
+          <Divider orientation="left">Ana Bileşenler</Divider>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>İstatistik Kartları</Text>
+              <div className="text-xs text-gray-500">Toplam ürün, değer, miktar</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.stats}
+              onChange={() => toggleWidget('stats')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Uyarı Kartları</Text>
+              <div className="text-xs text-gray-500">Düşük stok, transfer, sayım uyarıları</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.alerts}
+              onChange={() => toggleWidget('alerts')}
+            />
+          </div>
+
+          <Divider orientation="left">Grafikler</Divider>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Stok Sağlığı</Text>
+              <div className="text-xs text-gray-500">Pasta grafik - stok durumu dağılımı</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.stockHealth}
+              onChange={() => toggleWidget('stockHealth')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Hareket Trendi</Text>
+              <div className="text-xs text-gray-500">Giriş/çıkış hareket grafiği</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.movementTrend}
+              onChange={() => toggleWidget('movementTrend')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>En Değerli Ürünler</Text>
+              <div className="text-xs text-gray-500">Stok değerine göre sıralama</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.topProducts}
+              onChange={() => toggleWidget('topProducts')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Kategori Dağılımı</Text>
+              <div className="text-xs text-gray-500">Kategori bazlı stok değeri</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.categoryValue}
+              onChange={() => toggleWidget('categoryValue')}
+            />
+          </div>
+
+          <Divider orientation="left">Tablolar</Divider>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Düşük Stok Tablosu</Text>
+              <div className="text-xs text-gray-500">Kritik seviyedeki ürünler</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.lowStock}
+              onChange={() => toggleWidget('lowStock')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Son Kullanma Tarihi</Text>
+              <div className="text-xs text-gray-500">Tarihi yaklaşan ürünler</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.expiringStock}
+              onChange={() => toggleWidget('expiringStock')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Bekleyen Transferler</Text>
+              <div className="text-xs text-gray-500">Yoldaki stok transferleri</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.pendingTransfers}
+              onChange={() => toggleWidget('pendingTransfers')}
+            />
+          </div>
+
+          <Divider orientation="left">Gelişmiş</Divider>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Text strong>Gelişmiş KPI'lar</Text>
+              <div className="text-xs text-gray-500">Devir hızı, GMROI, stok gün sayısı</div>
+            </div>
+            <Switch
+              checked={widgetVisibility.advancedKpis}
+              onChange={() => toggleWidget('advancedKpis')}
+            />
+          </div>
+
+          <Divider />
+
+          <Button
+            block
+            onClick={() => {
+              setWidgetVisibility(defaultWidgetVisibility);
+              localStorage.setItem('inventoryDashboardWidgets', JSON.stringify(defaultWidgetVisibility));
+            }}
+          >
+            Varsayılana Sıfırla
+          </Button>
+        </div>
+      </Drawer>
     </div>
   );
 }

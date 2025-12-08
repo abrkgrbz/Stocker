@@ -1,4 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.Inventory.Domain.Entities;
+using Stocker.Modules.Inventory.Domain.Enums;
+using Stocker.Modules.Inventory.Domain.Repositories;
 using Stocker.Shared.Contracts.Inventory;
 using Stocker.SharedKernel.Interfaces;
 
@@ -6,17 +9,29 @@ namespace Stocker.Modules.Inventory.Application.Services;
 
 /// <summary>
 /// Implementation of IInventoryService for cross-module inventory operations
-/// TODO: Complete implementation once Product/Stock repositories are added
+/// Provides stock management capabilities for Sales and CRM modules
 /// </summary>
 public class InventoryService : IInventoryService
 {
+    private readonly IProductRepository _productRepository;
+    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservationRepository _reservationRepository;
+    private readonly IWarehouseRepository _warehouseRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<InventoryService> _logger;
 
     public InventoryService(
+        IProductRepository productRepository,
+        IStockRepository stockRepository,
+        IStockReservationRepository reservationRepository,
+        IWarehouseRepository warehouseRepository,
         IUnitOfWork unitOfWork,
         ILogger<InventoryService> logger)
     {
+        _productRepository = productRepository;
+        _stockRepository = stockRepository;
+        _reservationRepository = reservationRepository;
+        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -25,11 +40,8 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            _logger.LogWarning("HasSufficientStockAsync not yet fully implemented - Product/Stock repositories needed");
-            // TODO: Implement once Product/Stock repositories are added
-            // var availableStock = await GetAvailableStockAsync(productId, tenantId, cancellationToken);
-            // return availableStock >= quantity;
-            return await Task.FromResult(true); // Placeholder - always returns true
+            var availableStock = await GetAvailableStockAsync(productId, tenantId, cancellationToken);
+            return availableStock >= quantity;
         }
         catch (Exception ex)
         {
@@ -42,11 +54,35 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            _logger.LogWarning("GetAvailableStockAsync not yet fully implemented - Stock repository needed");
-            // TODO: Implement once Stock repository is added
-            // var stock = await _stockRepository.GetByProductIdAsync(productId, tenantId, cancellationToken);
-            // return stock?.AvailableQuantity ?? 0;
-            return 0;
+            // Find product by code (using GUID as string code lookup)
+            var product = await _productRepository.GetByCodeAsync(productId.ToString(), cancellationToken);
+
+            if (product == null)
+            {
+                _logger.LogWarning("Product not found: {ProductId}", productId);
+                return 0;
+            }
+
+            // Get total stock across all warehouses
+            var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+
+            // Get total reserved quantity across all warehouses
+            var stocks = await _stockRepository.GetByProductAsync(product.Id, cancellationToken);
+            decimal totalReserved = 0;
+
+            foreach (var stock in stocks)
+            {
+                totalReserved += await _reservationRepository.GetTotalReservedQuantityAsync(
+                    product.Id, stock.WarehouseId, cancellationToken);
+            }
+
+            var availableStock = totalStock - totalReserved;
+
+            _logger.LogDebug(
+                "Stock check for product {ProductId}: Total={Total}, Reserved={Reserved}, Available={Available}",
+                productId, totalStock, totalReserved, availableStock);
+
+            return Math.Max(0, availableStock);
         }
         catch (Exception ex)
         {
@@ -60,17 +96,91 @@ public class InventoryService : IInventoryService
         try
         {
             _logger.LogInformation("Reserving stock for order {OrderId} with {Count} items", orderId, reservations.Count());
-            
-            // TODO: Implement stock reservation once Stock repository is added
-            // For each reservation:
-            // 1. Check if sufficient stock exists
-            // 2. Create stock reservation record
-            // 3. Update available stock (reduce by reserved quantity)
-            // 4. Create stock movement record (type: Reserved)
-            // 5. Publish StockReservedEvent
-            
-            _logger.LogWarning("ReserveStockAsync not yet fully implemented - Stock repository needed");
-            return await Task.FromResult(false);
+
+            // Get default warehouse
+            var defaultWarehouse = await _warehouseRepository.GetDefaultWarehouseAsync(cancellationToken);
+            if (defaultWarehouse == null)
+            {
+                var warehouses = await _warehouseRepository.GetActiveWarehousesAsync(cancellationToken);
+                defaultWarehouse = warehouses.FirstOrDefault();
+            }
+
+            if (defaultWarehouse == null)
+            {
+                _logger.LogError("No active warehouse found for stock reservation");
+                return false;
+            }
+
+            var reservationsList = reservations.ToList();
+            var createdReservations = new List<StockReservation>();
+
+            foreach (var item in reservationsList)
+            {
+                // Find product by code
+                var product = await _productRepository.GetByCodeAsync(item.ProductId.ToString(), cancellationToken);
+
+                if (product == null)
+                {
+                    _logger.LogWarning("Product not found for reservation: {ProductId}", item.ProductId);
+                    continue;
+                }
+
+                // Check available stock
+                var availableStock = await _stockRepository.GetTotalAvailableQuantityAsync(
+                    product.Id, defaultWarehouse.Id, cancellationToken);
+
+                var reservedStock = await _reservationRepository.GetTotalReservedQuantityAsync(
+                    product.Id, defaultWarehouse.Id, cancellationToken);
+
+                var netAvailable = availableStock - reservedStock;
+
+                if (netAvailable < item.Quantity)
+                {
+                    _logger.LogWarning(
+                        "Insufficient stock for product {ProductId}: Required={Required}, Available={Available}",
+                        item.ProductId, item.Quantity, netAvailable);
+
+                    // Rollback created reservations
+                    foreach (var created in createdReservations)
+                    {
+                        created.Cancel("Insufficient stock for batch reservation");
+                    }
+
+                    return false;
+                }
+
+                // Generate reservation number
+                var reservationNumber = await _reservationRepository.GenerateReservationNumberAsync(cancellationToken);
+
+                // Create reservation
+                var reservation = new StockReservation(
+                    reservationNumber,
+                    product.Id,
+                    defaultWarehouse.Id,
+                    item.Quantity,
+                    ReservationType.SalesOrder,
+                    0, // System user
+                    DateTime.UtcNow.AddDays(7) // 7 days expiration
+                );
+
+                reservation.SetReference("SalesOrder", orderId.ToString(), orderId);
+                reservation.SetNotes($"Auto-reserved for order {orderId}");
+
+                await _reservationRepository.AddAsync(reservation, cancellationToken);
+                createdReservations.Add(reservation);
+
+                _logger.LogInformation(
+                    "Created reservation {ReservationNumber} for product {ProductId}, quantity {Quantity}",
+                    reservationNumber, product.Id, item.Quantity);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully reserved stock for order {OrderId}: {Count} reservations created",
+                orderId, createdReservations.Count);
+
+            return createdReservations.Count > 0;
         }
         catch (Exception ex)
         {
@@ -84,16 +194,37 @@ public class InventoryService : IInventoryService
         try
         {
             _logger.LogInformation("Releasing reserved stock for order {OrderId}", orderId);
-            
-            // TODO: Implement stock release once Stock repository is added
-            // 1. Find all stock reservations for order
-            // 2. Update available stock (add back reserved quantity)
-            // 3. Delete or mark reservations as released
-            // 4. Create stock movement records (type: Released)
-            // 5. Publish StockReleasedEvent
-            
-            _logger.LogWarning("ReleaseReservedStockAsync not yet fully implemented - Stock repository needed");
-            return await Task.FromResult(false);
+
+            // Find all reservations for this order using reference lookup
+            var orderReservations = await _reservationRepository.GetByReferenceAsync(
+                ReservationType.SalesOrder, orderId, cancellationToken);
+
+            var activeReservations = orderReservations
+                .Where(r => r.Status == ReservationStatus.Active || r.Status == ReservationStatus.PartiallyFulfilled)
+                .ToList();
+
+            if (!activeReservations.Any())
+            {
+                _logger.LogWarning("No active reservations found for order {OrderId}", orderId);
+                return true; // No reservations to release is not an error
+            }
+
+            foreach (var reservation in activeReservations)
+            {
+                reservation.Cancel($"Order {orderId} cancelled");
+
+                _logger.LogInformation(
+                    "Cancelled reservation {ReservationNumber} for order {OrderId}",
+                    reservation.ReservationNumber, orderId);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully released {Count} reservations for order {OrderId}",
+                activeReservations.Count, orderId);
+
+            return true;
         }
         catch (Exception ex)
         {
@@ -106,13 +237,29 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            _logger.LogWarning("GetProductByIdAsync not yet fully implemented - Product repository needed");
-            // TODO: Implement once Product repository is added
-            // var product = await _productRepository.GetByIdAsync(productId, cancellationToken);
-            // if (product == null || product.TenantId != tenantId)
-            //     return null;
-            // return MapToDto(product);
-            return null;
+            var product = await _productRepository.GetByCodeAsync(productId.ToString(), cancellationToken);
+
+            if (product == null)
+            {
+                return null;
+            }
+
+            // Get available stock
+            var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+
+            return new ProductDto
+            {
+                Id = productId,
+                TenantId = tenantId,
+                ProductCode = product.Code,
+                ProductName = product.Name,
+                Description = product.Description,
+                UnitPrice = product.UnitPrice?.Amount ?? 0,
+                Currency = product.UnitPrice?.Currency ?? "TRY",
+                AvailableStock = totalStock,
+                Unit = product.Unit ?? "Adet",
+                IsActive = product.IsActive
+            };
         }
         catch (Exception ex)
         {
@@ -125,11 +272,29 @@ public class InventoryService : IInventoryService
     {
         try
         {
-            _logger.LogWarning("GetActiveProductsAsync not yet fully implemented - Product repository needed");
-            // TODO: Implement once Product repository is added
-            // var products = await _productRepository.GetActiveByTenantAsync(tenantId, cancellationToken);
-            // return products.Select(MapToDto);
-            return Enumerable.Empty<ProductDto>();
+            var products = await _productRepository.GetActiveProductsAsync(cancellationToken);
+            var result = new List<ProductDto>();
+
+            foreach (var product in products)
+            {
+                var totalStock = await _stockRepository.GetTotalQuantityByProductAsync(product.Id, cancellationToken);
+
+                result.Add(new ProductDto
+                {
+                    Id = Guid.NewGuid(), // Generate ID for cross-module reference
+                    TenantId = tenantId,
+                    ProductCode = product.Code,
+                    ProductName = product.Name,
+                    Description = product.Description,
+                    UnitPrice = product.UnitPrice?.Amount ?? 0,
+                    Currency = product.UnitPrice?.Currency ?? "TRY",
+                    AvailableStock = totalStock,
+                    Unit = product.Unit ?? "Adet",
+                    IsActive = product.IsActive
+                });
+            }
+
+            return result;
         }
         catch (Exception ex)
         {

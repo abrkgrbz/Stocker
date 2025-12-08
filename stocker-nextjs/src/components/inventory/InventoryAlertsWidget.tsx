@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, Badge, List, Tag, Typography, Button, Empty, Tabs, Tooltip, Drawer, Space, Divider } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Badge, List, Tag, Typography, Button, Empty, Tabs, Tooltip, Drawer, Divider, Switch, message } from 'antd';
 import {
   BellOutlined,
   WarningOutlined,
   ExclamationCircleOutlined,
   InfoCircleOutlined,
-  CloseOutlined,
   RightOutlined,
   InboxOutlined,
   ClockCircleOutlined,
@@ -15,9 +14,13 @@ import {
   CalendarOutlined,
   SwapOutlined,
   FileSearchOutlined,
+  NotificationOutlined,
+  SoundOutlined,
+  WifiOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useInventoryAlerts, type InventoryAlert, type AlertType, type AlertSeverity } from '@/hooks/useInventoryAlerts';
+import { useStockAlerts } from '@/hooks/useStockAlerts';
 
 const { Text, Title } = Typography;
 
@@ -85,6 +88,36 @@ interface InventoryAlertsWidgetProps {
   compact?: boolean;
 }
 
+// Browser notification helper
+const requestNotificationPermission = async (): Promise<boolean> => {
+  if (!('Notification' in window)) {
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+};
+
+const showBrowserNotification = (title: string, body: string, icon?: string) => {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: icon || '/logo.png',
+      badge: '/logo.png',
+      tag: 'inventory-alert',
+      requireInteraction: true,
+    });
+  }
+};
+
 export default function InventoryAlertsWidget({
   maxItems = 5,
   showHeader = true,
@@ -92,8 +125,78 @@ export default function InventoryAlertsWidget({
 }: InventoryAlertsWidgetProps) {
   const router = useRouter();
   const { alerts, summary, hasCritical } = useInventoryAlerts();
+  const { isConnected: isSignalRConnected, recentAlerts: realTimeAlerts } = useStockAlerts({
+    showToasts: true, // Show toast notifications for real-time alerts
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [lastNotifiedAlerts, setLastNotifiedAlerts] = useState<Set<string>>(new Set());
+
+  // Load notification preference from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const enabled = localStorage.getItem('inventoryNotificationsEnabled') === 'true';
+      setNotificationsEnabled(enabled);
+
+      // Load previously notified alerts
+      const notified = localStorage.getItem('inventoryNotifiedAlerts');
+      if (notified) {
+        setLastNotifiedAlerts(new Set(JSON.parse(notified)));
+      }
+    }
+  }, []);
+
+  // Send browser notification for new critical alerts
+  useEffect(() => {
+    if (!notificationsEnabled || !hasCritical) return;
+
+    const criticalAlerts = alerts.filter(a => a.severity === 'critical');
+    const newCriticalAlerts = criticalAlerts.filter(a => !lastNotifiedAlerts.has(a.id));
+
+    if (newCriticalAlerts.length > 0) {
+      // Show browser notification for new critical alerts
+      const alertCount = newCriticalAlerts.length;
+      const title = `⚠️ ${alertCount} Kritik Envanter Uyarısı`;
+      const body = newCriticalAlerts.slice(0, 3).map(a => a.title).join(', ');
+
+      showBrowserNotification(title, body);
+
+      // Update notified alerts set
+      const updatedNotified = new Set(lastNotifiedAlerts);
+      newCriticalAlerts.forEach(a => updatedNotified.add(a.id));
+      setLastNotifiedAlerts(updatedNotified);
+      localStorage.setItem('inventoryNotifiedAlerts', JSON.stringify([...updatedNotified]));
+    }
+  }, [alerts, notificationsEnabled, hasCritical, lastNotifiedAlerts]);
+
+  // Toggle notifications
+  const handleToggleNotifications = async (enabled: boolean) => {
+    if (enabled) {
+      const hasPermission = await requestNotificationPermission();
+      if (!hasPermission) {
+        message.warning('Tarayıcı bildirim izni reddedildi. Ayarlardan izin vermeniz gerekiyor.');
+        return;
+      }
+      message.success('Kritik stok uyarıları için bildirimler aktif edildi');
+    } else {
+      message.info('Bildirimler kapatıldı');
+    }
+
+    setNotificationsEnabled(enabled);
+    localStorage.setItem('inventoryNotificationsEnabled', String(enabled));
+  };
+
+  // Test notification
+  const handleTestNotification = () => {
+    if (notificationsEnabled) {
+      showBrowserNotification(
+        '🔔 Test Bildirimi',
+        'Envanter bildirimleri düzgün çalışıyor!'
+      );
+      message.success('Test bildirimi gönderildi');
+    }
+  };
 
   const handleAlertClick = (alert: InventoryAlert) => {
     if (alert.link) {
@@ -212,6 +315,44 @@ export default function InventoryAlertsWidget({
           open={drawerOpen}
           width={400}
         >
+          {/* SignalR Connection Status */}
+          <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${isSignalRConnected ? 'bg-green-50' : 'bg-gray-100'}`}>
+            <WifiOutlined className={isSignalRConnected ? 'text-green-500' : 'text-gray-400'} />
+            <Text type={isSignalRConnected ? 'success' : 'secondary'} className="text-xs">
+              {isSignalRConnected ? 'Anlık bildirimler aktif' : 'Anlık bildirimler bağlanıyor...'}
+            </Text>
+            {realTimeAlerts.length > 0 && (
+              <Badge count={realTimeAlerts.length} size="small" className="ml-auto" />
+            )}
+          </div>
+
+          {/* Notification Settings */}
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <NotificationOutlined className="text-blue-500" />
+                <Text strong>Tarayıcı Bildirimleri</Text>
+              </div>
+              <Switch
+                checked={notificationsEnabled}
+                onChange={handleToggleNotifications}
+                size="small"
+              />
+            </div>
+            <Text type="secondary" className="text-xs block mb-2">
+              Kritik stok uyarıları için anlık bildirim alın
+            </Text>
+            {notificationsEnabled && (
+              <Button
+                size="small"
+                icon={<SoundOutlined />}
+                onClick={handleTestNotification}
+              >
+                Test Et
+              </Button>
+            )}
+          </div>
+          <Divider style={{ margin: '8px 0' }} />
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -289,6 +430,44 @@ export default function InventoryAlertsWidget({
         open={drawerOpen}
         width={400}
       >
+        {/* SignalR Connection Status */}
+        <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${isSignalRConnected ? 'bg-green-50' : 'bg-gray-100'}`}>
+          <WifiOutlined className={isSignalRConnected ? 'text-green-500' : 'text-gray-400'} />
+          <Text type={isSignalRConnected ? 'success' : 'secondary'} className="text-xs">
+            {isSignalRConnected ? 'Anlık bildirimler aktif' : 'Anlık bildirimler bağlanıyor...'}
+          </Text>
+          {realTimeAlerts.length > 0 && (
+            <Badge count={realTimeAlerts.length} size="small" className="ml-auto" />
+          )}
+        </div>
+
+        {/* Notification Settings */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <NotificationOutlined className="text-blue-500" />
+              <Text strong>Tarayıcı Bildirimleri</Text>
+            </div>
+            <Switch
+              checked={notificationsEnabled}
+              onChange={handleToggleNotifications}
+              size="small"
+            />
+          </div>
+          <Text type="secondary" className="text-xs block mb-2">
+            Kritik stok uyarıları için anlık bildirim alın
+          </Text>
+          {notificationsEnabled && (
+            <Button
+              size="small"
+              icon={<SoundOutlined />}
+              onClick={handleTestNotification}
+            >
+              Test Et
+            </Button>
+          )}
+        </div>
+        <Divider style={{ margin: '8px 0' }} />
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}

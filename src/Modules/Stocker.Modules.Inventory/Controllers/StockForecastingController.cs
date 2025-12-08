@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Application.Services;
+using Stocker.Modules.Inventory.Domain.Enums;
 
 namespace Stocker.Modules.Inventory.Controllers;
 

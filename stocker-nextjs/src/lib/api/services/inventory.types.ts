@@ -3076,3 +3076,294 @@ export interface TotalInventoryValueResponse {
 
 // Costing methods dictionary response
 export type CostingMethodsResponse = Record<string, string>;
+
+// =====================================
+// EXCEL EXPORT/IMPORT TYPES
+// =====================================
+
+export interface ExcelImportErrorDto {
+  rowNumber: number;
+  column?: string;
+  value?: string;
+  errorMessage: string;
+}
+
+export interface ExcelImportResultDto {
+  success: boolean;
+  successCount: number;
+  errorCount: number;
+  skippedCount: number;
+  totalRows: number;
+  errors: ExcelImportErrorDto[];
+}
+
+export interface ExcelValidationErrorDto {
+  rowNumber: number;
+  column?: string;
+  value?: string;
+  errorMessage: string;
+}
+
+export interface ExcelValidationResultDto {
+  isValid: boolean;
+  totalRows: number;
+  validRows: number;
+  errorCount: number;
+  errors: ExcelValidationErrorDto[];
+}
+
+export type ExcelImportType = 'Products' | 'StockAdjustments';
+
+// =====================================
+// INVENTORY ANALYSIS (ABC/XYZ Analysis)
+// =====================================
+
+export enum AbcClass {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+}
+
+export enum XyzClass {
+  X = 'X',
+  Y = 'Y',
+  Z = 'Z',
+}
+
+export enum AbcXyzClass {
+  AX = 'AX',
+  AY = 'AY',
+  AZ = 'AZ',
+  BX = 'BX',
+  BY = 'BY',
+  BZ = 'BZ',
+  CX = 'CX',
+  CY = 'CY',
+  CZ = 'CZ',
+}
+
+export interface AbcXyzAnalysisFilterDto {
+  categoryId?: number;
+  warehouseId?: number;
+  brandId?: number;
+  analysisPeriodDays?: number;
+  includeInactiveProducts?: boolean;
+  abcAThreshold?: number;
+  abcBThreshold?: number;
+  xyzXThreshold?: number;
+  xyzYThreshold?: number;
+}
+
+export interface ProductAbcXyzDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+  brandName?: string;
+  totalRevenue: number;
+  totalQuantitySold: number;
+  averageUnitPrice: number;
+  revenuePercentage: number;
+  cumulativeRevenuePercentage: number;
+  averageDailyDemand: number;
+  demandStandardDeviation: number;
+  coefficientOfVariation: number;
+  daysWithDemand: number;
+  totalDays: number;
+  demandFrequency: number;
+  abcClass: AbcClass;
+  xyzClass: XyzClass;
+  combinedClass: AbcXyzClass;
+  currentStock: number;
+  availableStock: number;
+  stockValue: number;
+  estimatedDaysOfStock: number;
+  managementStrategy: string;
+  recommendations: string[];
+}
+
+export interface AbcClassSummaryDto {
+  class: AbcClass;
+  productCount: number;
+  productPercentage: number;
+  totalRevenue: number;
+  revenuePercentage: number;
+  totalStockValue: number;
+  stockValuePercentage: number;
+  averageInventoryTurnover: number;
+}
+
+export interface XyzClassSummaryDto {
+  class: XyzClass;
+  productCount: number;
+  productPercentage: number;
+  averageCoefficientOfVariation: number;
+  averageDemandFrequency: number;
+  demandPattern: string;
+}
+
+export interface AbcXyzMatrixCellDto {
+  combinedClass: AbcXyzClass;
+  productCount: number;
+  productPercentage: number;
+  totalRevenue: number;
+  revenuePercentage: number;
+  totalStockValue: number;
+  managementPriority: string;
+  recommendedStrategy: string;
+}
+
+export interface StrategicRecommendationDto {
+  category: string;
+  priority: string;
+  recommendation: string;
+  impact: string;
+  affectedProductIds: number[];
+  estimatedSavings?: number;
+}
+
+export interface AbcXyzAnalysisSummaryDto {
+  generatedAt: DateTime;
+  analysisPeriodDays: number;
+  totalProductsAnalyzed: number;
+  classA: AbcClassSummaryDto;
+  classB: AbcClassSummaryDto;
+  classC: AbcClassSummaryDto;
+  classX: XyzClassSummaryDto;
+  classY: XyzClassSummaryDto;
+  classZ: XyzClassSummaryDto;
+  matrix: AbcXyzMatrixCellDto[];
+  topAProducts: ProductAbcXyzDto[];
+  highRiskProducts: ProductAbcXyzDto[];
+  totalRevenue: number;
+  totalStockValue: number;
+  averageInventoryTurnover: number;
+  strategicRecommendations: StrategicRecommendationDto[];
+}
+
+// =====================================
+// INVENTORY TURNOVER TYPES
+// =====================================
+
+export interface InventoryTurnoverFilterDto {
+  categoryId?: number;
+  warehouseId?: number;
+  brandId?: number;
+  analysisPeriodDays?: number;
+  minimumTurnover?: number;
+  maximumTurnover?: number;
+}
+
+export interface InventoryTurnoverDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+  costOfGoodsSold: number;
+  averageInventoryValue: number;
+  inventoryTurnoverRatio: number;
+  daysOfInventory: number;
+  turnoverCategory: string;
+  industryBenchmark: number;
+  performanceVsBenchmark: number;
+  currentStock: number;
+  stockValue: number;
+  isOverstocked: boolean;
+  isUnderstocked: boolean;
+  optimalStockLevel: number;
+}
+
+// =====================================
+// DEAD STOCK TYPES
+// =====================================
+
+export interface DeadStockFilterDto {
+  categoryId?: number;
+  warehouseId?: number;
+  minDaysSinceLastSale?: number;
+  minStockValue?: number;
+}
+
+export interface DeadStockItemDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  categoryName?: string;
+  currentStock: number;
+  stockValue: number;
+  daysSinceLastSale: number;
+  daysSinceLastMovement: number;
+  lastSaleDate?: DateTime;
+  lastMovementDate?: DateTime;
+  agingCategory: string;
+  depreciationRate: number;
+  estimatedRecoveryValue: number;
+  disposalOptions: string[];
+}
+
+export interface DeadStockAnalysisDto {
+  generatedAt: DateTime;
+  analysisPeriodDays: number;
+  totalDeadStockItems: number;
+  totalDeadStockValue: number;
+  deadStockPercentage: number;
+  items: DeadStockItemDto[];
+  recommendations: string[];
+  potentialRecoveryValue: number;
+}
+
+// =====================================
+// SERVICE LEVEL TYPES
+// =====================================
+
+export interface ServiceLevelFilterDto {
+  categoryId?: number;
+  warehouseId?: number;
+  targetServiceLevel?: number;
+  analysisPeriodDays?: number;
+}
+
+export interface ServiceLevelAnalysisDto {
+  productId: number;
+  productCode: string;
+  productName: string;
+  currentServiceLevel: number;
+  targetServiceLevel: number;
+  totalOrders: number;
+  fulfilledOrders: number;
+  stockoutEvents: number;
+  averageStockoutDuration: number;
+  estimatedLostSales: number;
+  backorderCost: number;
+  recommendedSafetyStock: number;
+  additionalStockCost: number;
+  expectedServiceLevelImprovement: number;
+}
+
+// =====================================
+// INVENTORY HEALTH SCORE TYPES
+// =====================================
+
+export interface InventoryHealthScoreFilterDto {
+  warehouseId?: number;
+  categoryId?: number;
+}
+
+export interface InventoryHealthScoreDto {
+  generatedAt: DateTime;
+  overallScore: number;
+  turnoverScore: number;
+  stockoutScore: number;
+  deadStockScore: number;
+  accuracyScore: number;
+  balanceScore: number;
+  averageInventoryTurnover: number;
+  stockoutRate: number;
+  deadStockPercentage: number;
+  overstockPercentage: number;
+  serviceLevel: number;
+  turnoverTrend: string;
+  healthTrend: string;
+  improvementAreas: string[];
+  potentialSavings: number;
+}

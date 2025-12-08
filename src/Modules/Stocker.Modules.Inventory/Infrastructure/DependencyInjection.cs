@@ -111,6 +111,15 @@ public static class DependencyInjection
         // Register Inventory Costing Service (FIFO/LIFO/WAC)
         services.AddScoped<IInventoryCostingService, InventoryCostingService>();
 
+        // Register Excel Export/Import Service
+        services.AddScoped<IExcelExportService, ExcelExportService>();
+
+        // Register Stock Alert Notification Service (SignalR-based real-time notifications)
+        services.AddScoped<IStockAlertNotificationService, StockAlertNotificationService>();
+
+        // Register Inventory Analysis Service (ABC/XYZ, turnover, dead stock)
+        services.AddScoped<IInventoryAnalysisService, InventoryAnalysisService>();
+
         return services;
     }
 

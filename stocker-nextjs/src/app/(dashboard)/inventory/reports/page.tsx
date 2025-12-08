@@ -16,12 +16,12 @@ import {
   Progress,
   Tag,
   Empty,
+  Dropdown,
+  message,
 } from 'antd';
 import {
   BarChartOutlined,
-  LineChartOutlined,
   PieChartOutlined,
-  DownloadOutlined,
   FilePdfOutlined,
   FileExcelOutlined,
   DollarOutlined,
@@ -29,9 +29,9 @@ import {
   SwapOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  ShopOutlined,
-  AppstoreOutlined,
   WarningOutlined,
+  FileTextOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import {
   BarChart,
@@ -50,7 +50,6 @@ import {
   AreaChart,
   Area,
   ComposedChart,
-  Treemap,
 } from 'recharts';
 import {
   useProducts,
@@ -790,6 +789,67 @@ export default function InventoryReportsPage() {
           </Title>
           <Text type="secondary">Stok analizi, hareket raporları ve performans metrikleri</Text>
         </div>
+        <Space>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'daily-stock',
+                  icon: <FileTextOutlined />,
+                  label: 'Günlük Stok Raporu',
+                  onClick: () => {
+                    handleExport('pdf', 'stock-value');
+                    message.success('Günlük Stok Raporu oluşturuluyor...');
+                  },
+                },
+                {
+                  key: 'weekly-movements',
+                  icon: <SwapOutlined />,
+                  label: 'Haftalık Hareket Raporu',
+                  onClick: () => {
+                    setDateRange([dayjs().subtract(7, 'day'), dayjs()]);
+                    handleExport('excel', 'movements');
+                    message.success('Haftalık Hareket Raporu oluşturuluyor...');
+                  },
+                },
+                {
+                  key: 'monthly-analysis',
+                  icon: <BarChartOutlined />,
+                  label: 'Aylık ABC Analizi',
+                  onClick: () => {
+                    setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
+                    handleExport('excel', 'abc-analysis');
+                    message.success('Aylık ABC Analizi oluşturuluyor...');
+                  },
+                },
+                { type: 'divider' },
+                {
+                  key: 'low-stock-alert',
+                  icon: <WarningOutlined />,
+                  label: 'Düşük Stok Uyarı Raporu',
+                  onClick: () => {
+                    handleExport('pdf', 'alerts');
+                    message.success('Düşük Stok Uyarı Raporu oluşturuluyor...');
+                  },
+                },
+                {
+                  key: 'full-inventory',
+                  icon: <InboxOutlined />,
+                  label: 'Tam Envanter Listesi',
+                  onClick: () => {
+                    handleExport('excel', 'stock-value');
+                    message.success('Tam Envanter Listesi oluşturuluyor...');
+                  },
+                },
+              ],
+            }}
+            placement="bottomRight"
+          >
+            <Button type="primary" icon={<ThunderboltOutlined />}>
+              Hızlı Rapor Şablonları
+            </Button>
+          </Dropdown>
+        </Space>
       </div>
 
       {/* Filters */}

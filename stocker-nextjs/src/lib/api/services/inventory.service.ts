@@ -78,6 +78,9 @@ import type {
   // Filters
   ProductFilterDto,
   PaginatedResponse,
+  // Excel Types
+  ExcelImportResultDto,
+  ExcelValidationResultDto,
   // Serial Numbers
   SerialNumberDto,
   SerialNumberListDto,
@@ -173,6 +176,18 @@ import type {
   CostVarianceAnalysisDto,
   CostAdjustmentDto,
   CostingMethodsResponse,
+  // Inventory Analysis (ABC/XYZ)
+  AbcXyzAnalysisFilterDto,
+  AbcXyzAnalysisSummaryDto,
+  ProductAbcXyzDto,
+  InventoryTurnoverFilterDto,
+  InventoryTurnoverDto,
+  DeadStockFilterDto,
+  DeadStockAnalysisDto,
+  ServiceLevelFilterDto,
+  ServiceLevelAnalysisDto,
+  InventoryHealthScoreFilterDto,
+  InventoryHealthScoreDto,
 } from './inventory.types';
 
 // Import enums as values (not types) for use as default parameters
@@ -1973,6 +1988,141 @@ export class InventoryService {
    */
   static async getCostingMethods(): Promise<CostingMethodsResponse> {
     return ApiService.get<CostingMethodsResponse>(this.getPath('costing/methods'));
+  }
+
+  // =====================================
+  // EXCEL EXPORT/IMPORT
+  // =====================================
+
+  /**
+   * Export products to Excel
+   */
+  static async exportProductsToExcel(productIds?: number[]): Promise<Blob> {
+    const params = productIds?.length ? { productIds: productIds.join(',') } : {};
+    return ApiService.getBlob(this.getPath('excel/products/export'), { params });
+  }
+
+  /**
+   * Export stock data to Excel
+   */
+  static async exportStockToExcel(warehouseId?: number, includeZeroStock: boolean = false): Promise<Blob> {
+    return ApiService.getBlob(this.getPath('excel/stock/export'), {
+      params: { warehouseId, includeZeroStock },
+    });
+  }
+
+  /**
+   * Export stock summary to Excel
+   */
+  static async exportStockSummaryToExcel(): Promise<Blob> {
+    return ApiService.getBlob(this.getPath('excel/stock/summary/export'));
+  }
+
+  /**
+   * Get product import template
+   */
+  static async getProductImportTemplate(): Promise<Blob> {
+    return ApiService.getBlob(this.getPath('excel/products/template'));
+  }
+
+  /**
+   * Get stock adjustment template
+   */
+  static async getStockAdjustmentTemplate(): Promise<Blob> {
+    return ApiService.getBlob(this.getPath('excel/stock/template'));
+  }
+
+  /**
+   * Import products from Excel
+   */
+  static async importProductsFromExcel(file: File, updateExisting: boolean = false): Promise<ExcelImportResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return ApiService.postForm<ExcelImportResultDto>(
+      this.getPath(`excel/products/import?updateExisting=${updateExisting}`),
+      formData
+    );
+  }
+
+  /**
+   * Import stock adjustments from Excel
+   */
+  static async importStockAdjustmentsFromExcel(file: File): Promise<ExcelImportResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return ApiService.postForm<ExcelImportResultDto>(this.getPath('excel/stock/import'), formData);
+  }
+
+  /**
+   * Validate Excel import file
+   */
+  static async validateExcelImport(file: File, importType: 'Products' | 'StockAdjustments'): Promise<ExcelValidationResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('importType', importType);
+    return ApiService.postForm<ExcelValidationResultDto>(this.getPath('excel/validate'), formData);
+  }
+
+  // =====================================
+  // INVENTORY ANALYSIS (ABC/XYZ)
+  // =====================================
+
+  /**
+   * Get ABC/XYZ Analysis Summary
+   */
+  static async getAbcXyzAnalysis(filter?: AbcXyzAnalysisFilterDto): Promise<AbcXyzAnalysisSummaryDto> {
+    return ApiService.get<AbcXyzAnalysisSummaryDto>(this.getPath('analysis/abc-xyz'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get ABC/XYZ classification for a single product
+   */
+  static async getProductAbcXyzClassification(
+    productId: number,
+    analysisPeriodDays: number = 365,
+    warehouseId?: number
+  ): Promise<ProductAbcXyzDto | null> {
+    return ApiService.get<ProductAbcXyzDto | null>(this.getPath(`analysis/abc-xyz/products/${productId}`), {
+      params: { analysisPeriodDays, warehouseId },
+    });
+  }
+
+  /**
+   * Get inventory turnover analysis
+   */
+  static async getInventoryTurnoverAnalysis(filter?: InventoryTurnoverFilterDto): Promise<InventoryTurnoverDto[]> {
+    return ApiService.get<InventoryTurnoverDto[]>(this.getPath('analysis/turnover'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get dead stock analysis
+   */
+  static async getDeadStockAnalysis(filter?: DeadStockFilterDto): Promise<DeadStockAnalysisDto> {
+    return ApiService.get<DeadStockAnalysisDto>(this.getPath('analysis/dead-stock'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get service level analysis
+   */
+  static async getServiceLevelAnalysis(filter?: ServiceLevelFilterDto): Promise<ServiceLevelAnalysisDto[]> {
+    return ApiService.get<ServiceLevelAnalysisDto[]>(this.getPath('analysis/service-level'), {
+      params: filter,
+    });
+  }
+
+  /**
+   * Get inventory health score
+   */
+  static async getInventoryHealthScore(filter?: InventoryHealthScoreFilterDto): Promise<InventoryHealthScoreDto> {
+    return ApiService.get<InventoryHealthScoreDto>(this.getPath('analysis/health-score'), {
+      params: filter,
+    });
   }
 }
 
