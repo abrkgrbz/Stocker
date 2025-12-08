@@ -339,6 +339,16 @@ const MODULE_MENUS = {
         label: 'Tedarikçi Yönetimi',
         children: [
           { key: '/purchase/suppliers', icon: <ShopOutlined />, label: 'Tedarikçiler' },
+          { key: '/purchase/evaluations', icon: <LineChartOutlined />, label: 'Değerlendirmeler' },
+        ],
+      },
+      {
+        key: 'purchase-requests',
+        icon: <FileOutlined />,
+        label: 'Talepler & Teklifler',
+        children: [
+          { key: '/purchase/requests', icon: <FileOutlined />, label: 'Satın Alma Talepleri' },
+          { key: '/purchase/quotations', icon: <FileDoneOutlined />, label: 'Teklif Talepleri (RFQ)' },
         ],
       },
       {
@@ -357,6 +367,15 @@ const MODULE_MENUS = {
         children: [
           { key: '/purchase/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
           { key: '/purchase/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
+          { key: '/purchase/budgets', icon: <WalletOutlined />, label: 'Bütçeler' },
+        ],
+      },
+      {
+        key: 'purchase-pricing',
+        icon: <DollarOutlined />,
+        label: 'Fiyatlandırma',
+        children: [
+          { key: '/purchase/price-lists', icon: <DollarOutlined />, label: 'Fiyat Listeleri' },
         ],
       },
       {
@@ -365,6 +384,14 @@ const MODULE_MENUS = {
         label: 'İadeler',
         children: [
           { key: '/purchase/returns', icon: <RollbackOutlined />, label: 'İade Belgeleri' },
+        ],
+      },
+      {
+        key: 'purchase-reports',
+        icon: <BarChartOutlined />,
+        label: 'Raporlar',
+        children: [
+          { key: '/purchase/reports', icon: <BarChartOutlined />, label: 'Raporlar' },
         ],
       },
     ],
@@ -507,11 +534,17 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/work-locations': '/hr/work-locations',
       // Purchase Module
       '/purchase/suppliers': '/purchase/suppliers',
+      '/purchase/evaluations': '/purchase/evaluations',
+      '/purchase/requests': '/purchase/requests',
+      '/purchase/quotations': '/purchase/quotations',
       '/purchase/orders': '/purchase/orders',
       '/purchase/goods-receipts': '/purchase/goods-receipts',
       '/purchase/invoices': '/purchase/invoices',
       '/purchase/payments': '/purchase/payments',
+      '/purchase/budgets': '/purchase/budgets',
+      '/purchase/price-lists': '/purchase/price-lists',
       '/purchase/returns': '/purchase/returns',
+      '/purchase/reports': '/purchase/reports',
     };
 
     for (const [prefix, key] of Object.entries(routeMappings)) {
