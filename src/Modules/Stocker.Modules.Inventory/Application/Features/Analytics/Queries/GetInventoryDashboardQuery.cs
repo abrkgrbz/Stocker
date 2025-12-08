@@ -190,25 +190,15 @@ public class GetInventoryDashboardQueryHandler : IRequestHandler<GetInventoryDas
         var weekAgo = today.AddDays(-7);
         var monthAgo = today.AddDays(-30);
 
-        // Get all data in parallel for performance
-        var productsTask = _productRepository.GetAllAsync(cancellationToken);
-        var categoriesTask = _categoryRepository.GetAllAsync(cancellationToken);
-        var brandsTask = _brandRepository.GetAllAsync(cancellationToken);
-        var warehousesTask = _warehouseRepository.GetAllAsync(cancellationToken);
-        var suppliersTask = _supplierRepository.GetAllAsync(cancellationToken);
-        var stocksTask = _stockRepository.GetAllAsync(cancellationToken);
-        var lotBatchesTask = _lotBatchRepository.GetAllAsync(cancellationToken);
-
-        await Task.WhenAll(productsTask, categoriesTask, brandsTask, warehousesTask,
-                          suppliersTask, stocksTask, lotBatchesTask);
-
-        var products = await productsTask;
-        var categories = await categoriesTask;
-        var brands = await brandsTask;
-        var warehouses = await warehousesTask;
-        var suppliers = await suppliersTask;
-        var stocks = await stocksTask;
-        var lotBatches = await lotBatchesTask;
+        // Get all data sequentially to avoid DbContext threading issues
+        // DbContext is not thread-safe and cannot handle concurrent operations
+        var products = await _productRepository.GetAllAsync(cancellationToken);
+        var categories = await _categoryRepository.GetAllAsync(cancellationToken);
+        var brands = await _brandRepository.GetAllAsync(cancellationToken);
+        var warehouses = await _warehouseRepository.GetAllAsync(cancellationToken);
+        var suppliers = await _supplierRepository.GetAllAsync(cancellationToken);
+        var stocks = await _stockRepository.GetAllAsync(cancellationToken);
+        var lotBatches = await _lotBatchRepository.GetAllAsync(cancellationToken);
 
         // Overview KPIs
         dashboard.TotalProducts = products.Count;
