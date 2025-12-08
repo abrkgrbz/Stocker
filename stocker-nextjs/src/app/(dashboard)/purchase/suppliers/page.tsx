@@ -17,6 +17,7 @@ import {
   Row,
   Col,
   Statistic,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -33,8 +34,10 @@ import {
   FilterOutlined,
   ReloadOutlined,
   ExportOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { TableProps } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   useSuppliers,
@@ -44,6 +47,8 @@ import {
   useBlockSupplier,
 } from '@/lib/api/hooks/usePurchase';
 import type { SupplierListDto, SupplierStatus, SupplierType } from '@/lib/api/services/purchase.types';
+import { exportToCSV, exportToExcel, type ExportColumn } from '@/lib/utils/export';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -80,6 +85,8 @@ export default function SuppliersPage() {
   const [statusFilter, setStatusFilter] = useState<SupplierStatus | undefined>();
   const [typeFilter, setTypeFilter] = useState<SupplierType | undefined>();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const { data: suppliersData, isLoading, refetch } = useSuppliers({
     searchTerm: searchText || undefined,
@@ -134,6 +141,131 @@ export default function SuppliersPage() {
         onOk: () => blockSupplier.mutate({ id: record.id, reason: 'Manual block' }),
       });
     }
+  };
+
+  // Bulk Actions
+  const selectedSuppliers = suppliers.filter(s => selectedRowKeys.includes(s.id));
+
+  const handleBulkActivate = async () => {
+    const inactiveSuppliers = selectedSuppliers.filter(s => s.status !== 'Active');
+    if (inactiveSuppliers.length === 0) {
+      message.warning('Seçili tedarikçiler arasında aktifleştirilecek tedarikçi yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(inactiveSuppliers.map(s => activateSupplier.mutateAsync(s.id)));
+      message.success(`${inactiveSuppliers.length} tedarikçi aktifleştirildi`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı tedarikçiler aktifleştirilemedi');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    const activeSuppliers = selectedSuppliers.filter(s => s.status === 'Active');
+    if (activeSuppliers.length === 0) {
+      message.warning('Seçili tedarikçiler arasında pasifleştirilecek tedarikçi yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(activeSuppliers.map(s => deactivateSupplier.mutateAsync(s.id)));
+      message.success(`${activeSuppliers.length} tedarikçi pasifleştirildi`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı tedarikçiler pasifleştirilemedi');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkBlock = () => {
+    const blockableSuppliers = selectedSuppliers.filter(s => s.status !== 'Blacklisted');
+    if (blockableSuppliers.length === 0) {
+      message.warning('Seçili tedarikçiler arasında bloklanacak tedarikçi yok');
+      return;
+    }
+    Modal.confirm({
+      title: 'Toplu Blokla',
+      content: `${blockableSuppliers.length} tedarikçiyi bloklamak istediğinizden emin misiniz?`,
+      okText: 'Blokla',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(blockableSuppliers.map(s => blockSupplier.mutateAsync({ id: s.id, reason: 'Bulk block' })));
+          message.success(`${blockableSuppliers.length} tedarikçi bloklandı`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı tedarikçiler bloklanamadı');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSuppliers.length === 0) return;
+    Modal.confirm({
+      title: 'Toplu Sil',
+      content: `${selectedSuppliers.length} tedarikçiyi silmek istediğinizden emin misiniz?`,
+      okText: 'Sil',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(selectedSuppliers.map(s => deleteSupplier.mutateAsync(s.id)));
+          message.success(`${selectedSuppliers.length} tedarikçi silindi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı tedarikçiler silinemedi');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  // Export Functions
+  const exportColumns: ExportColumn<SupplierListDto>[] = [
+    { key: 'code', title: 'Tedarikçi Kodu' },
+    { key: 'name', title: 'Tedarikçi Adı' },
+    { key: 'type', title: 'Tip', render: (v) => typeLabels[v as SupplierType] || v },
+    { key: 'email', title: 'E-posta' },
+    { key: 'phone', title: 'Telefon' },
+    { key: 'city', title: 'Şehir' },
+    { key: 'currentBalance', title: 'Bakiye', render: (v, r) => `${(v || 0).toLocaleString('tr-TR')} ${r.currency || 'TRY'}` },
+    { key: 'rating', title: 'Puan', render: (v) => v?.toFixed(1) || '-' },
+    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as SupplierStatus] || v },
+  ];
+
+  const handleExportCSV = () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedSuppliers : suppliers;
+    exportToCSV(dataToExport, exportColumns, `tedarikciler-${dayjs().format('YYYY-MM-DD')}`);
+    message.success('CSV dosyası indirildi');
+  };
+
+  const handleExportExcel = async () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedSuppliers : suppliers;
+    await exportToExcel(dataToExport, exportColumns, `tedarikciler-${dayjs().format('YYYY-MM-DD')}`, 'Tedarikçiler');
+    message.success('Excel dosyası indirildi');
+  };
+
+  // Row Selection
+  const rowSelection: TableProps<SupplierListDto>['rowSelection'] = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+    preserveSelectedRowKeys: true,
   };
 
   const columns: ColumnsType<SupplierListDto> = [
@@ -400,11 +532,72 @@ export default function SuppliersPage() {
             <Tooltip title="Yenile">
               <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
             </Tooltip>
-            <Tooltip title="Dışa Aktar">
-              <Button icon={<ExportOutlined />} />
-            </Tooltip>
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
+                  { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
+                ],
+              }}
+            >
+              <Button icon={<ExportOutlined />}>
+                Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
+              </Button>
+            </Dropdown>
           </Space>
         </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedRowKeys.length > 0 && (
+          <div className="mt-4 p-3 bg-purple-50 rounded-lg flex items-center justify-between">
+            <span className="text-purple-700 font-medium">
+              {selectedRowKeys.length} tedarikçi seçildi
+            </span>
+            <Space>
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={handleBulkActivate}
+                loading={bulkLoading}
+              >
+                Toplu Aktifleştir
+              </Button>
+              <Button
+                size="small"
+                icon={<StopOutlined />}
+                onClick={handleBulkDeactivate}
+                loading={bulkLoading}
+              >
+                Toplu Pasifleştir
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<StopOutlined />}
+                onClick={handleBulkBlock}
+                loading={bulkLoading}
+              >
+                Toplu Blokla
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={handleBulkDelete}
+                loading={bulkLoading}
+              >
+                Toplu Sil
+              </Button>
+              <Button
+                size="small"
+                type="link"
+                onClick={() => setSelectedRowKeys([])}
+              >
+                Seçimi Temizle
+              </Button>
+            </Space>
+          </div>
+        )}
       </Card>
 
       {/* Table */}
@@ -413,7 +606,8 @@ export default function SuppliersPage() {
           columns={columns}
           dataSource={suppliers}
           rowKey="id"
-          loading={isLoading}
+          loading={isLoading || bulkLoading}
+          rowSelection={rowSelection}
           scroll={{ x: 1200 }}
           pagination={{
             current: pagination.current,

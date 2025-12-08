@@ -17,6 +17,8 @@ import {
   Col,
   Statistic,
   DatePicker,
+  Space,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -33,8 +35,10 @@ import {
   ReloadOutlined,
   ExportOutlined,
   FilterOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { TableProps } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   usePurchaseOrders,
@@ -45,6 +49,7 @@ import {
   useCancelPurchaseOrder,
 } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseOrderListDto, PurchaseOrderStatus } from '@/lib/api/services/purchase.types';
+import { exportToCSV, exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -86,6 +91,8 @@ export default function PurchaseOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<PurchaseOrderStatus | undefined>();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const { data: ordersData, isLoading, refetch } = usePurchaseOrders({
     searchTerm: searchText || undefined,
@@ -155,6 +162,133 @@ export default function PurchaseOrdersPage() {
       cancelText: 'Vazgeç',
       onOk: () => cancelOrder.mutate({ id: record.id, reason: 'Manual cancellation' }),
     });
+  };
+
+  // Bulk Actions
+  const selectedOrders = orders.filter(o => selectedRowKeys.includes(o.id));
+
+  const handleBulkApprove = async () => {
+    const pendingOrders = selectedOrders.filter(o => o.status === 'PendingApproval');
+    if (pendingOrders.length === 0) {
+      message.warning('Seçili siparişler arasında onay bekleyen sipariş yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(pendingOrders.map(o => approveOrder.mutateAsync({ id: o.id })));
+      message.success(`${pendingOrders.length} sipariş onaylandı`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı siparişler onaylanamadı');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkReject = () => {
+    const pendingOrders = selectedOrders.filter(o => o.status === 'PendingApproval');
+    if (pendingOrders.length === 0) {
+      message.warning('Seçili siparişler arasında onay bekleyen sipariş yok');
+      return;
+    }
+    Modal.confirm({
+      title: 'Toplu Reddet',
+      content: `${pendingOrders.length} siparişi reddetmek istediğinizden emin misiniz?`,
+      okText: 'Reddet',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(pendingOrders.map(o => rejectOrder.mutateAsync({ id: o.id, reason: 'Bulk rejection' })));
+          message.success(`${pendingOrders.length} sipariş reddedildi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı siparişler reddedilemedi');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkSend = async () => {
+    const confirmedOrders = selectedOrders.filter(o => o.status === 'Confirmed');
+    if (confirmedOrders.length === 0) {
+      message.warning('Seçili siparişler arasında gönderilebilecek sipariş yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(confirmedOrders.map(o => sendOrder.mutateAsync(o.id)));
+      message.success(`${confirmedOrders.length} sipariş tedarikçilere gönderildi`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı siparişler gönderilemedi');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkCancel = () => {
+    const cancellableOrders = selectedOrders.filter(o => !['Cancelled', 'Completed', 'Closed'].includes(o.status));
+    if (cancellableOrders.length === 0) {
+      message.warning('Seçili siparişler arasında iptal edilebilecek sipariş yok');
+      return;
+    }
+    Modal.confirm({
+      title: 'Toplu İptal',
+      content: `${cancellableOrders.length} siparişi iptal etmek istediğinizden emin misiniz?`,
+      okText: 'İptal Et',
+      okType: 'danger',
+      cancelText: 'Vazgeç',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(cancellableOrders.map(o => cancelOrder.mutateAsync({ id: o.id, reason: 'Bulk cancellation' })));
+          message.success(`${cancellableOrders.length} sipariş iptal edildi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı siparişler iptal edilemedi');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  // Export Functions
+  const exportColumns: ExportColumn<PurchaseOrderListDto>[] = [
+    { key: 'orderNumber', title: 'Sipariş No' },
+    { key: 'orderDate', title: 'Sipariş Tarihi', render: (v) => formatDateForExport(v) },
+    { key: 'supplierName', title: 'Tedarikçi' },
+    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as PurchaseOrderStatus] || v },
+    { key: 'itemCount', title: 'Kalem Sayısı' },
+    { key: 'totalAmount', title: 'Toplam Tutar', render: (v, r) => formatCurrencyForExport(v, r.currency) },
+    { key: 'expectedDeliveryDate', title: 'Beklenen Teslim', render: (v) => formatDateForExport(v) },
+  ];
+
+  const handleExportCSV = () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedOrders : orders;
+    exportToCSV(dataToExport, exportColumns, `satin-alma-siparisleri-${dayjs().format('YYYY-MM-DD')}`);
+    message.success('CSV dosyası indirildi');
+  };
+
+  const handleExportExcel = async () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedOrders : orders;
+    await exportToExcel(dataToExport, exportColumns, `satin-alma-siparisleri-${dayjs().format('YYYY-MM-DD')}`, 'Siparişler');
+    message.success('Excel dosyası indirildi');
+  };
+
+  // Row Selection
+  const rowSelection: TableProps<PurchaseOrderListDto>['rowSelection'] = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+    preserveSelectedRowKeys: true,
   };
 
   const getActionMenu = (record: PurchaseOrderListDto) => {
@@ -391,10 +525,71 @@ export default function PurchaseOrdersPage() {
           <Tooltip title="Yenile">
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
           </Tooltip>
-          <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
-          </Tooltip>
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
+                { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
+              ],
+            }}
+          >
+            <Button icon={<ExportOutlined />}>
+              Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
+            </Button>
+          </Dropdown>
         </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedRowKeys.length > 0 && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
+            <span className="text-blue-700 font-medium">
+              {selectedRowKeys.length} sipariş seçildi
+            </span>
+            <Space>
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={handleBulkApprove}
+                loading={bulkLoading}
+              >
+                Toplu Onayla
+              </Button>
+              <Button
+                size="small"
+                icon={<SendOutlined />}
+                onClick={handleBulkSend}
+                loading={bulkLoading}
+              >
+                Toplu Gönder
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={handleBulkReject}
+                loading={bulkLoading}
+              >
+                Toplu Reddet
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={handleBulkCancel}
+                loading={bulkLoading}
+              >
+                Toplu İptal
+              </Button>
+              <Button
+                size="small"
+                type="link"
+                onClick={() => setSelectedRowKeys([])}
+              >
+                Seçimi Temizle
+              </Button>
+            </Space>
+          </div>
+        )}
       </Card>
 
       {/* Table */}
@@ -403,7 +598,8 @@ export default function PurchaseOrdersPage() {
           columns={columns}
           dataSource={orders}
           rowKey="id"
-          loading={isLoading}
+          loading={isLoading || bulkLoading}
+          rowSelection={rowSelection}
           scroll={{ x: 1200 }}
           pagination={{
             current: pagination.current,

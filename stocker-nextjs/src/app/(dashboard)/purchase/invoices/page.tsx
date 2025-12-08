@@ -17,6 +17,8 @@ import {
   Col,
   Statistic,
   DatePicker,
+  Space,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -31,8 +33,10 @@ import {
   DollarOutlined,
   ReloadOutlined,
   ExportOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { TableProps } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   usePurchaseInvoices,
@@ -42,6 +46,7 @@ import {
   useMarkInvoiceAsPaid,
 } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseInvoiceListDto, PurchaseInvoiceStatus } from '@/lib/api/services/purchase.types';
+import { exportToCSV, exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -74,6 +79,8 @@ export default function PurchaseInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState<PurchaseInvoiceStatus | undefined>();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const { data: invoicesData, isLoading, refetch } = usePurchaseInvoices({
     searchTerm: searchText || undefined,
@@ -101,6 +108,134 @@ export default function PurchaseInvoicesPage() {
       cancelText: 'İptal',
       onOk: () => deleteInvoice.mutate(record.id),
     });
+  };
+
+  // Bulk Actions
+  const selectedInvoices = invoices.filter(i => selectedRowKeys.includes(i.id));
+
+  const handleBulkApprove = async () => {
+    const pendingInvoices = selectedInvoices.filter(i => i.status === 'PendingApproval');
+    if (pendingInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında onay bekleyen fatura yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(pendingInvoices.map(i => approveInvoice.mutateAsync({ id: i.id })));
+      message.success(`${pendingInvoices.length} fatura onaylandı`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı faturalar onaylanamadı');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkReject = () => {
+    const pendingInvoices = selectedInvoices.filter(i => i.status === 'PendingApproval');
+    if (pendingInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında onay bekleyen fatura yok');
+      return;
+    }
+    Modal.confirm({
+      title: 'Toplu Reddet',
+      content: `${pendingInvoices.length} faturayı reddetmek istediğinizden emin misiniz?`,
+      okText: 'Reddet',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(pendingInvoices.map(i => rejectInvoice.mutateAsync({ id: i.id, reason: 'Bulk rejection' })));
+          message.success(`${pendingInvoices.length} fatura reddedildi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı faturalar reddedilemedi');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleBulkMarkPaid = async () => {
+    const approvedInvoices = selectedInvoices.filter(i => i.status === 'Approved' || i.status === 'PartiallyPaid');
+    if (approvedInvoices.length === 0) {
+      message.warning('Seçili faturalar arasında ödendi işaretlenecek fatura yok');
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(approvedInvoices.map(i => markAsPaid.mutateAsync({ id: i.id })));
+      message.success(`${approvedInvoices.length} fatura ödendi olarak işaretlendi`);
+      setSelectedRowKeys([]);
+      refetch();
+    } catch {
+      message.error('Bazı faturalar güncellenemedi');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    const draftInvoices = selectedInvoices.filter(i => i.status === 'Draft');
+    if (draftInvoices.length === 0) {
+      message.warning('Sadece taslak faturalar silinebilir');
+      return;
+    }
+    Modal.confirm({
+      title: 'Toplu Sil',
+      content: `${draftInvoices.length} faturayı silmek istediğinizden emin misiniz?`,
+      okText: 'Sil',
+      okType: 'danger',
+      cancelText: 'İptal',
+      onOk: async () => {
+        setBulkLoading(true);
+        try {
+          await Promise.all(draftInvoices.map(i => deleteInvoice.mutateAsync(i.id)));
+          message.success(`${draftInvoices.length} fatura silindi`);
+          setSelectedRowKeys([]);
+          refetch();
+        } catch {
+          message.error('Bazı faturalar silinemedi');
+        } finally {
+          setBulkLoading(false);
+        }
+      },
+    });
+  };
+
+  // Export Functions
+  const exportColumns: ExportColumn<PurchaseInvoiceListDto>[] = [
+    { key: 'invoiceNumber', title: 'Fatura No' },
+    { key: 'invoiceDate', title: 'Fatura Tarihi', render: (v) => formatDateForExport(v) },
+    { key: 'supplierName', title: 'Tedarikçi' },
+    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as PurchaseInvoiceStatus] || v },
+    { key: 'totalAmount', title: 'Toplam Tutar', render: (v, r) => formatCurrencyForExport(v, r.currency) },
+    { key: 'paidAmount', title: 'Ödenen', render: (v) => formatCurrencyForExport(v, 'TRY') },
+    { key: 'remainingAmount', title: 'Kalan', render: (v) => formatCurrencyForExport(v, 'TRY') },
+    { key: 'dueDate', title: 'Vade Tarihi', render: (v) => formatDateForExport(v) },
+  ];
+
+  const handleExportCSV = () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedInvoices : invoices;
+    exportToCSV(dataToExport, exportColumns, `satin-alma-faturalari-${dayjs().format('YYYY-MM-DD')}`);
+    message.success('CSV dosyası indirildi');
+  };
+
+  const handleExportExcel = async () => {
+    const dataToExport = selectedRowKeys.length > 0 ? selectedInvoices : invoices;
+    await exportToExcel(dataToExport, exportColumns, `satin-alma-faturalari-${dayjs().format('YYYY-MM-DD')}`, 'Faturalar');
+    message.success('Excel dosyası indirildi');
+  };
+
+  // Row Selection
+  const rowSelection: TableProps<PurchaseInvoiceListDto>['rowSelection'] = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+    preserveSelectedRowKeys: true,
   };
 
   const columns: ColumnsType<PurchaseInvoiceListDto> = [
@@ -282,10 +417,71 @@ export default function PurchaseInvoicesPage() {
           <Tooltip title="Yenile">
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
           </Tooltip>
-          <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
-          </Tooltip>
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
+                { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
+              ],
+            }}
+          >
+            <Button icon={<ExportOutlined />}>
+              Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
+            </Button>
+          </Dropdown>
         </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedRowKeys.length > 0 && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
+            <span className="text-blue-700 font-medium">
+              {selectedRowKeys.length} fatura seçildi
+            </span>
+            <Space>
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={handleBulkApprove}
+                loading={bulkLoading}
+              >
+                Toplu Onayla
+              </Button>
+              <Button
+                size="small"
+                icon={<DollarOutlined />}
+                onClick={handleBulkMarkPaid}
+                loading={bulkLoading}
+              >
+                Toplu Ödendi İşaretle
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={handleBulkReject}
+                loading={bulkLoading}
+              >
+                Toplu Reddet
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={handleBulkDelete}
+                loading={bulkLoading}
+              >
+                Toplu Sil
+              </Button>
+              <Button
+                size="small"
+                type="link"
+                onClick={() => setSelectedRowKeys([])}
+              >
+                Seçimi Temizle
+              </Button>
+            </Space>
+          </div>
+        )}
       </Card>
 
       {/* Table */}
@@ -294,7 +490,8 @@ export default function PurchaseInvoicesPage() {
           columns={columns}
           dataSource={invoices}
           rowKey="id"
-          loading={isLoading}
+          loading={isLoading || bulkLoading}
+          rowSelection={rowSelection}
           scroll={{ x: 1200 }}
           pagination={{
             current: pagination.current,
