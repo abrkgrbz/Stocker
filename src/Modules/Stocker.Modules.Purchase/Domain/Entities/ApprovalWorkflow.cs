@@ -23,6 +23,11 @@ public class ApprovalWorkflowConfig : TenantAggregateRoot
     // Priority (lower number = higher priority)
     public int Priority { get; private set; }
 
+    // Amount thresholds (workflow level)
+    public decimal? MinAmount { get; private set; }
+    public decimal? MaxAmount { get; private set; }
+    public string? Currency { get; private set; }
+
     // Notes
     public string? Notes { get; private set; }
 
@@ -41,29 +46,43 @@ public class ApprovalWorkflowConfig : TenantAggregateRoot
     protected ApprovalWorkflowConfig() : base() { }
 
     public static ApprovalWorkflowConfig Create(
-        string code,
         string name,
-        ApprovalWorkflowType workflowType,
         ApprovalEntityType entityType,
         Guid tenantId,
+        ApprovalWorkflowType workflowType = ApprovalWorkflowType.Sequential,
         string? description = null,
-        int priority = 100)
+        int priority = 100,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string? currency = null)
     {
         var config = new ApprovalWorkflowConfig();
         config.Id = Guid.NewGuid();
         config.SetTenantId(tenantId);
-        config.Code = code;
+        config.Code = $"WF-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
         config.Name = name;
         config.Description = description;
         config.WorkflowType = workflowType;
         config.EntityType = entityType;
         config.Priority = priority;
+        config.MinAmount = minAmount;
+        config.MaxAmount = maxAmount;
+        config.Currency = currency;
         config.IsActive = true;
         config.CreatedAt = DateTime.UtcNow;
         return config;
     }
 
-    public void Update(
+    public void Update(string name, int priority, decimal? minAmount, decimal? maxAmount)
+    {
+        Name = name;
+        Priority = priority;
+        MinAmount = minAmount;
+        MaxAmount = maxAmount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateFull(
         string name,
         string? description,
         ApprovalWorkflowType workflowType,
@@ -78,6 +97,20 @@ public class ApprovalWorkflowConfig : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetDepartment(Guid? departmentId, string? departmentName)
+    {
+        DepartmentId = departmentId;
+        DepartmentName = departmentName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCategory(Guid? categoryId, string? categoryName)
+    {
+        CategoryId = categoryId;
+        CategoryName = categoryName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetScope(Guid? departmentId, string? departmentName, Guid? categoryId, string? categoryName)
     {
         DepartmentId = departmentId;
@@ -87,7 +120,7 @@ public class ApprovalWorkflowConfig : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SetCreator(Guid createdById, string createdByName)
+    public void SetCreator(Guid createdById, string? createdByName)
     {
         CreatedById = createdById;
         CreatedByName = createdByName;
@@ -161,6 +194,10 @@ public class ApprovalWorkflowConfig : TenantAggregateRoot
     {
         if (!IsActive) return false;
 
+        // Check workflow-level amount thresholds
+        if (MinAmount.HasValue && amount < MinAmount.Value) return false;
+        if (MaxAmount.HasValue && amount > MaxAmount.Value) return false;
+
         // Check scope
         if (DepartmentId.HasValue && DepartmentId != departmentId) return false;
         if (CategoryId.HasValue && CategoryId != categoryId) return false;
@@ -189,14 +226,49 @@ public class ApprovalWorkflowRule : TenantEntity
     public Guid WorkflowConfigId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public ApprovalRuleType RuleType { get; private set; }
+    public string? Field { get; private set; }
     public ApprovalRuleOperator Operator { get; private set; }
     public string? Value { get; private set; }
     public decimal? NumericValue { get; private set; }
+    public int Order { get; private set; }
     public bool IsActive { get; private set; }
+
+    // For DTO mapping compatibility
+    public Guid WorkflowId => WorkflowConfigId;
 
     protected ApprovalWorkflowRule() : base() { }
 
     public static ApprovalWorkflowRule Create(
+        Guid workflowConfigId,
+        Guid tenantId,
+        ApprovalRuleType ruleType,
+        string? field,
+        ApprovalRuleOperator @operator,
+        string? value = null,
+        int order = 0)
+    {
+        var rule = new ApprovalWorkflowRule();
+        rule.Id = Guid.NewGuid();
+        rule.SetTenantId(tenantId);
+        rule.WorkflowConfigId = workflowConfigId;
+        rule.Name = $"{ruleType} Rule";
+        rule.RuleType = ruleType;
+        rule.Field = field;
+        rule.Operator = @operator;
+        rule.Value = value;
+        rule.Order = order;
+        rule.IsActive = true;
+
+        // Parse numeric value from string if applicable
+        if (!string.IsNullOrEmpty(value) && decimal.TryParse(value, out var numericVal))
+        {
+            rule.NumericValue = numericVal;
+        }
+
+        return rule;
+    }
+
+    public static ApprovalWorkflowRule CreateWithName(
         Guid workflowConfigId,
         Guid tenantId,
         string name,
@@ -286,6 +358,7 @@ public class ApprovalWorkflowStep : TenantEntity
 {
     public Guid WorkflowConfigId { get; private set; }
     public string Name { get; private set; } = string.Empty;
+    public string? Description { get; private set; }
     public int StepOrder { get; private set; }
     public ApprovalStepType StepType { get; private set; }
     public bool IsActive { get; private set; }
@@ -297,16 +370,22 @@ public class ApprovalWorkflowStep : TenantEntity
     // Approver configuration
     public Guid? ApproverId { get; private set; }
     public string? ApproverName { get; private set; }
+    public string? ApproverRole { get; private set; }
     public Guid? ApproverRoleId { get; private set; }
     public string? ApproverRoleName { get; private set; }
     public Guid? ApproverGroupId { get; private set; }
-    public string? ApproverGroupName { get; private set; }
+    public string? ApprovalGroupName { get; private set; }
 
     // Approval rules
+    public int RequiredApprovals { get; private set; }
     public bool RequireAllGroupMembers { get; private set; }
     public int? MinApproversRequired { get; private set; }
     public bool AllowSelfApproval { get; private set; }
     public bool AllowDelegation { get; private set; }
+
+    // Fallback
+    public Guid? FallbackApproverId { get; private set; }
+    public string? FallbackApproverName { get; private set; }
 
     // SLA
     public int? SLAHours { get; private set; }
@@ -317,6 +396,10 @@ public class ApprovalWorkflowStep : TenantEntity
     // Notes
     public string? Instructions { get; private set; }
 
+    // For DTO mapping compatibility
+    public Guid WorkflowId => WorkflowConfigId;
+    public string? ApproverGroupName => ApprovalGroupName;
+
     protected ApprovalWorkflowStep() : base() { }
 
     public static ApprovalWorkflowStep Create(
@@ -325,18 +408,42 @@ public class ApprovalWorkflowStep : TenantEntity
         string name,
         int stepOrder,
         ApprovalStepType stepType,
+        Guid? approverId = null,
+        string? approverName = null,
+        string? approverRole = null,
+        Guid? approvalGroupId = null,
+        string? approvalGroupName = null,
+        int requiredApprovals = 1,
+        string? description = null,
         decimal? minAmount = null,
-        decimal? maxAmount = null)
+        decimal? maxAmount = null,
+        bool allowDelegation = false,
+        Guid? fallbackApproverId = null,
+        string? fallbackApproverName = null,
+        int? slaHours = null,
+        bool autoEscalate = false)
     {
         var step = new ApprovalWorkflowStep();
         step.Id = Guid.NewGuid();
         step.SetTenantId(tenantId);
         step.WorkflowConfigId = workflowConfigId;
         step.Name = name;
+        step.Description = description;
         step.StepOrder = stepOrder;
         step.StepType = stepType;
         step.MinAmount = minAmount;
         step.MaxAmount = maxAmount;
+        step.ApproverId = approverId;
+        step.ApproverName = approverName;
+        step.ApproverRole = approverRole;
+        step.ApproverGroupId = approvalGroupId;
+        step.ApprovalGroupName = approvalGroupName;
+        step.RequiredApprovals = requiredApprovals;
+        step.AllowDelegation = allowDelegation;
+        step.FallbackApproverId = fallbackApproverId;
+        step.FallbackApproverName = fallbackApproverName;
+        step.SLAHours = slaHours;
+        step.AutoEscalate = autoEscalate;
         step.IsActive = true;
         return step;
     }
@@ -363,7 +470,7 @@ public class ApprovalWorkflowStep : TenantEntity
         ApproverRoleId = null;
         ApproverRoleName = null;
         ApproverGroupId = null;
-        ApproverGroupName = null;
+        ApprovalGroupName = null;
     }
 
     public void SetApproverRole(Guid roleId, string roleName)
@@ -371,17 +478,18 @@ public class ApprovalWorkflowStep : TenantEntity
         StepType = ApprovalStepType.Role;
         ApproverRoleId = roleId;
         ApproverRoleName = roleName;
+        ApproverRole = roleName;
         ApproverId = null;
         ApproverName = null;
         ApproverGroupId = null;
-        ApproverGroupName = null;
+        ApprovalGroupName = null;
     }
 
     public void SetApproverGroup(Guid groupId, string groupName, bool requireAll = false, int? minApprovers = null)
     {
         StepType = ApprovalStepType.Group;
         ApproverGroupId = groupId;
-        ApproverGroupName = groupName;
+        ApprovalGroupName = groupName;
         RequireAllGroupMembers = requireAll;
         MinApproversRequired = minApprovers;
         ApproverId = null;
@@ -429,6 +537,8 @@ public class ApprovalGroup : TenantAggregateRoot
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
+    public ApprovalGroupType ApprovalType { get; private set; }
+    public int RequiredApprovals { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
@@ -439,26 +549,30 @@ public class ApprovalGroup : TenantAggregateRoot
     protected ApprovalGroup() : base() { }
 
     public static ApprovalGroup Create(
-        string code,
         string name,
         Guid tenantId,
+        ApprovalGroupType approvalType = ApprovalGroupType.Any,
+        int requiredApprovals = 1,
         string? description = null)
     {
         var group = new ApprovalGroup();
         group.Id = Guid.NewGuid();
         group.SetTenantId(tenantId);
-        group.Code = code;
+        group.Code = $"GRP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
         group.Name = name;
         group.Description = description;
+        group.ApprovalType = approvalType;
+        group.RequiredApprovals = requiredApprovals;
         group.IsActive = true;
         group.CreatedAt = DateTime.UtcNow;
         return group;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string name, string? description, int requiredApprovals)
     {
         Name = name;
         Description = description;
+        RequiredApprovals = requiredApprovals;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -471,7 +585,17 @@ public class ApprovalGroup : TenantAggregateRoot
         }
     }
 
-    public void RemoveMember(Guid userId)
+    public void RemoveMember(Guid memberId)
+    {
+        var member = _members.FirstOrDefault(m => m.Id == memberId);
+        if (member != null)
+        {
+            _members.Remove(member);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RemoveMemberByUserId(Guid userId)
     {
         var member = _members.FirstOrDefault(m => m.UserId == userId);
         if (member != null)
@@ -491,21 +615,24 @@ public class ApprovalGroupMember : TenantEntity
     public Guid UserId { get; private set; }
     public string UserName { get; private set; } = string.Empty;
     public string? UserEmail { get; private set; }
+    public string? Role { get; private set; }
     public bool IsActive { get; private set; }
     public bool CanDelegate { get; private set; }
     public Guid? DelegateToId { get; private set; }
     public string? DelegateToName { get; private set; }
     public DateTime? DelegationStartDate { get; private set; }
     public DateTime? DelegationEndDate { get; private set; }
+    public DateTime AddedAt { get; private set; }
 
     protected ApprovalGroupMember() : base() { }
 
     public static ApprovalGroupMember Create(
         Guid groupId,
+        Guid tenantId,
         Guid userId,
         string userName,
-        Guid tenantId,
         string? userEmail = null,
+        string? role = null,
         bool canDelegate = false)
     {
         var member = new ApprovalGroupMember();
@@ -515,8 +642,10 @@ public class ApprovalGroupMember : TenantEntity
         member.UserId = userId;
         member.UserName = userName;
         member.UserEmail = userEmail;
+        member.Role = role;
         member.CanDelegate = canDelegate;
         member.IsActive = true;
+        member.AddedAt = DateTime.UtcNow;
         return member;
     }
 
@@ -601,5 +730,14 @@ public enum ApprovalStepType
     Role,
     Group,
     Manager,
-    DepartmentHead
+    DepartmentHead,
+    AnyApprover  // Any user from a pool can approve
+}
+
+public enum ApprovalGroupType
+{
+    Any,        // Any member can approve
+    All,        // All members must approve
+    Majority,   // Majority must approve
+    Minimum     // Minimum number must approve
 }

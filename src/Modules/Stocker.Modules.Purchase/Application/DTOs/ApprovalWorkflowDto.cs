@@ -147,7 +147,7 @@ public record CreateApprovalWorkflowStepDto
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public int StepOrder { get; init; }
-    public ApprovalStepType StepType { get; init; } = ApprovalStepType.SingleApprover;
+    public ApprovalStepType StepType { get; init; } = ApprovalStepType.SpecificUser;
     public decimal? MinAmount { get; init; }
     public decimal? MaxAmount { get; init; }
     public Guid? ApproverId { get; init; }
@@ -180,7 +180,7 @@ public record CreateApprovalGroupDto
 {
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
-    public ApprovalStepType ApprovalType { get; init; } = ApprovalStepType.AnyApprover;
+    public ApprovalGroupType ApprovalType { get; init; } = ApprovalGroupType.Any;
     public int RequiredApprovals { get; init; } = 1;
     public List<CreateApprovalGroupMemberDto> Members { get; init; } = new();
 }

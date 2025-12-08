@@ -82,4 +82,20 @@ public class CurrentUserService : SharedKernel.Interfaces.ICurrentUserService, A
     
     public Dictionary<string, string>? Claims => _httpContextAccessor.HttpContext?.User?.Claims
         .ToDictionary(c => c.Type, c => c.Value);
+
+    /// <summary>
+    /// Gets the current user information
+    /// </summary>
+    public Stocker.SharedKernel.Interfaces.CurrentUserInfo? GetCurrentUser()
+    {
+        if (!IsAuthenticated || UserId == null)
+            return null;
+
+        return new Stocker.SharedKernel.Interfaces.CurrentUserInfo
+        {
+            Id = UserId.Value,
+            Name = UserName ?? "System",
+            Email = Email
+        };
+    }
 }

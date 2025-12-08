@@ -60,6 +60,12 @@ public class PurchaseContract : TenantAggregateRoot
     public string? PenaltyClause { get; private set; }
     public string? WarrantyTerms { get; private set; }
     public string? QualityRequirements { get; private set; }
+    public string? PaymentTerms { get; private set; }
+    public string? QualityTerms { get; private set; }
+    public string? PenaltyTerms { get; private set; }
+    public string? OtherTerms { get; private set; }
+    public int? WarrantyPeriodMonths { get; private set; }
+    public string? ApprovalNotes { get; private set; }
 
     // Document
     public string? DocumentPath { get; private set; }
@@ -155,6 +161,68 @@ public class PurchaseContract : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    // Simple Update overload for Controller compatibility
+    public void Update(string title, string? description, DateTime endDate)
+    {
+        Title = title;
+        Description = description;
+        EndDate = endDate;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // Nullable DateTime overload for DTO compatibility
+    public void Update(string? title, string? description, DateTime? endDate)
+    {
+        if (title != null)
+            Title = title;
+        if (description != null)
+            Description = description;
+        if (endDate.HasValue)
+            EndDate = endDate.Value;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetContractValue(decimal? totalContractValue, decimal? minimumOrderValue, decimal? maximumOrderValue)
+    {
+        TotalContractValue = totalContractValue;
+        MinimumOrderValue = minimumOrderValue;
+        MaximumOrderValue = maximumOrderValue;
+        CalculateRemainingAmount();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetTerms(string? deliveryTerms, string? paymentTerms, string? qualityTerms, string? penaltyTerms, string? otherTerms, int? warrantyPeriodMonths)
+    {
+        DeliveryTerms = deliveryTerms;
+        PaymentTerms = paymentTerms;
+        QualityTerms = qualityTerms;
+        PenaltyTerms = penaltyTerms;
+        OtherTerms = otherTerms;
+        WarrantyPeriodMonths = warrantyPeriodMonths;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAutoRenewal(bool autoRenew, int? renewalNoticeDays)
+    {
+        AutoRenew = autoRenew;
+        RenewalNoticeDays = renewalNoticeDays;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetNotes(string? terminationReason, string? notes, string? internalNotes)
+    {
+        if (terminationReason != null) TerminationReason = terminationReason;
+        Notes = notes;
+        InternalNotes = internalNotes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCreator(Guid createdById, string? createdByName)
+    {
+        CreatedById = createdById;
+        CreatedByName = createdByName;
+    }
+
     public void SetRenewalTerms(bool autoRenew, int? renewalPeriodMonths, int? renewalNoticeDays)
     {
         AutoRenew = autoRenew;
@@ -226,7 +294,7 @@ public class PurchaseContract : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Approve(Guid approvedById, string approvedByName)
+    public void Approve(Guid approvedById, string approvedByName, string? approvalNotes = null)
     {
         if (Status != PurchaseContractStatus.PendingApproval)
             throw new InvalidOperationException("Only pending contracts can be approved.");
@@ -234,6 +302,7 @@ public class PurchaseContract : TenantAggregateRoot
         Status = PurchaseContractStatus.Approved;
         ApprovedById = approvedById;
         ApprovedByName = approvedByName;
+        ApprovalNotes = approvalNotes;
         ApprovalDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -250,11 +319,8 @@ public class PurchaseContract : TenantAggregateRoot
 
     public void Activate()
     {
-        if (Status != PurchaseContractStatus.Approved && Status != PurchaseContractStatus.Suspended)
-            throw new InvalidOperationException("Only approved or suspended contracts can be activated.");
-
-        if (DateTime.UtcNow < StartDate)
-            throw new InvalidOperationException("Contract cannot be activated before start date.");
+        if (Status != PurchaseContractStatus.Approved && Status != PurchaseContractStatus.Suspended && Status != PurchaseContractStatus.Draft)
+            throw new InvalidOperationException("Only approved, draft, or suspended contracts can be activated.");
 
         Status = PurchaseContractStatus.Active;
         UpdatedAt = DateTime.UtcNow;
@@ -263,6 +329,15 @@ public class PurchaseContract : TenantAggregateRoot
     public void Sign(DateTime signedDate)
     {
         SignedDate = signedDate;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Suspend()
+    {
+        if (Status != PurchaseContractStatus.Active)
+            throw new InvalidOperationException("Only active contracts can be suspended.");
+
+        Status = PurchaseContractStatus.Suspended;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -377,8 +452,22 @@ public class PurchaseContractItem : TenantEntity
     public string? Notes { get; private set; }
     public bool IsActive { get; private set; }
 
+    // Additional properties for Controller compatibility
+    public decimal RemainingQuantity => (ContractedQuantity ?? 0) - UsedQuantity;
+    public decimal? MinOrderQuantity { get; private set; }
+    public decimal? MaxOrderQuantity { get; private set; }
+    public string Currency { get; private set; } = "TRY";
+    public decimal? VatRate { get; private set; }
+    public DateTime? EffectiveFrom { get; private set; }
+    public DateTime? EffectiveTo { get; private set; }
+    public string? Specifications { get; private set; }
+
+    private readonly List<PurchaseContractPriceBreak> _priceBreaks = new();
+    public IReadOnlyCollection<PurchaseContractPriceBreak> PriceBreaks => _priceBreaks.AsReadOnly();
+
     protected PurchaseContractItem() : base() { }
 
+    // Original Create method
     public static PurchaseContractItem Create(
         Guid contractId,
         Guid tenantId,
@@ -414,6 +503,52 @@ public class PurchaseContractItem : TenantEntity
         return item;
     }
 
+    // New Create overload for Controller compatibility
+    public static PurchaseContractItem Create(
+        Guid contractId,
+        Guid tenantId,
+        Guid? productId,
+        string productCode,
+        string productName,
+        string unit,
+        decimal unitPrice,
+        string currency,
+        decimal? discountRate,
+        decimal? vatRate,
+        decimal? contractedQuantity,
+        decimal? minOrderQuantity,
+        decimal? maxOrderQuantity,
+        DateTime? effectiveFrom,
+        DateTime? effectiveTo,
+        int? leadTimeDays,
+        string? specifications,
+        string? notes)
+    {
+        var item = new PurchaseContractItem();
+        item.Id = Guid.NewGuid();
+        item.SetTenantId(tenantId);
+        item.ContractId = contractId;
+        item.ProductId = productId;
+        item.ProductCode = productCode;
+        item.ProductName = productName;
+        item.Unit = unit;
+        item.UnitPrice = unitPrice;
+        item.Currency = currency;
+        item.DiscountRate = discountRate;
+        item.VatRate = vatRate;
+        item.ContractedQuantity = contractedQuantity;
+        item.MinOrderQuantity = minOrderQuantity;
+        item.MaxOrderQuantity = maxOrderQuantity;
+        item.EffectiveFrom = effectiveFrom;
+        item.EffectiveTo = effectiveTo;
+        item.LeadTimeDays = leadTimeDays;
+        item.Specifications = specifications;
+        item.Notes = notes;
+        item.UsedQuantity = 0;
+        item.IsActive = true;
+        return item;
+    }
+
     public void Update(
         string productCode,
         string productName,
@@ -443,6 +578,40 @@ public class PurchaseContractItem : TenantEntity
         UsedQuantity += quantity;
     }
 
+    public void AddPriceBreak(PurchaseContractPriceBreak priceBreak)
+    {
+        _priceBreaks.Add(priceBreak);
+    }
+
+    public void RemovePriceBreak(Guid priceBreakId)
+    {
+        var priceBreak = _priceBreaks.FirstOrDefault(p => p.Id == priceBreakId);
+        if (priceBreak != null)
+            _priceBreaks.Remove(priceBreak);
+    }
+
+    public decimal GetEffectivePrice(decimal quantity)
+    {
+        var priceBreak = _priceBreaks
+            .Where(pb => pb.MinQuantity <= quantity && (!pb.MaxQuantity.HasValue || pb.MaxQuantity.Value >= quantity))
+            .OrderByDescending(pb => pb.MinQuantity)
+            .FirstOrDefault();
+
+        if (priceBreak != null)
+            return priceBreak.UnitPrice;
+
+        return UnitPrice;
+    }
+
+    public bool IsWithinLimits(decimal quantity)
+    {
+        if (!IsActive) return false;
+        if (MinOrderQuantity.HasValue && quantity < MinOrderQuantity.Value) return false;
+        if (MaxOrderQuantity.HasValue && quantity > MaxOrderQuantity.Value) return false;
+        if (ContractedQuantity.HasValue && (UsedQuantity + quantity) > ContractedQuantity.Value) return false;
+        return true;
+    }
+
     public void Activate() => IsActive = true;
     public void Deactivate() => IsActive = false;
 }
@@ -460,6 +629,7 @@ public class PurchaseContractPriceBreak : TenantEntity
 
     protected PurchaseContractPriceBreak() : base() { }
 
+    // Original Create
     public static PurchaseContractPriceBreak Create(
         Guid contractId,
         Guid tenantId,
@@ -478,6 +648,26 @@ public class PurchaseContractPriceBreak : TenantEntity
         priceBreak.ContractItemId = contractItemId;
         priceBreak.ProductId = productId;
         priceBreak.ProductCode = productCode;
+        priceBreak.MinQuantity = minQuantity;
+        priceBreak.MaxQuantity = maxQuantity;
+        priceBreak.UnitPrice = unitPrice;
+        priceBreak.DiscountRate = discountRate;
+        return priceBreak;
+    }
+
+    // New Create overload for Controller compatibility (for item price breaks)
+    public static PurchaseContractPriceBreak Create(
+        Guid contractItemId,
+        Guid tenantId,
+        decimal minQuantity,
+        decimal? maxQuantity,
+        decimal unitPrice,
+        decimal? discountRate)
+    {
+        var priceBreak = new PurchaseContractPriceBreak();
+        priceBreak.Id = Guid.NewGuid();
+        priceBreak.SetTenantId(tenantId);
+        priceBreak.ContractItemId = contractItemId;
         priceBreak.MinQuantity = minQuantity;
         priceBreak.MaxQuantity = maxQuantity;
         priceBreak.UnitPrice = unitPrice;

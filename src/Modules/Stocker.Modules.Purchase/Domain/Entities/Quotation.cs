@@ -28,6 +28,10 @@ public class Quotation : TenantAggregateRoot
     public Guid? PurchaseRequestId { get; private set; }
     public string? PurchaseRequestNumber { get; private set; }
 
+    // Warehouse info
+    public Guid? WarehouseId { get; private set; }
+    public string? WarehouseName { get; private set; }
+
     // Amounts (calculated from selected quote)
     public decimal? EstimatedAmount { get; private set; }
     public decimal? SelectedAmount { get; private set; }
@@ -37,10 +41,16 @@ public class Quotation : TenantAggregateRoot
     public Guid? SelectedSupplierId { get; private set; }
     public string? SelectedSupplierName { get; private set; }
     public Guid? SelectedQuoteResponseId { get; private set; }
+    public string? SelectionReason { get; private set; }
+    public DateTime? SelectionDate { get; private set; }
+    public Guid? SelectionById { get; private set; }
+    public string? SelectionByName { get; private set; }
 
     // Converted to
     public Guid? PurchaseOrderId { get; private set; }
     public string? PurchaseOrderNumber { get; private set; }
+    public Guid? ConvertedPurchaseOrderId { get; private set; }
+    public string? ConvertedOrderNumber { get; private set; }
 
     // Notes
     public string? Notes { get; private set; }
@@ -48,6 +58,8 @@ public class Quotation : TenantAggregateRoot
     public string? Terms { get; private set; }
 
     // Audit
+    public Guid? CreatedById { get; private set; }
+    public string? CreatedByName { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? ClosedDate { get; private set; }
@@ -63,18 +75,18 @@ public class Quotation : TenantAggregateRoot
 
     public static Quotation Create(
         string quotationNumber,
-        string title,
+        QuotationType type,
+        QuotationPriority priority,
+        DateTime? validUntil,
         Guid tenantId,
-        QuotationType type = QuotationType.Standard,
-        QuotationPriority priority = QuotationPriority.Normal,
-        string currency = "TRY",
-        DateTime? validUntil = null)
+        string? title = null,
+        string currency = "TRY")
     {
         var quotation = new Quotation();
         quotation.Id = Guid.NewGuid();
         quotation.SetTenantId(tenantId);
         quotation.QuotationNumber = quotationNumber;
-        quotation.Title = title;
+        quotation.Title = title ?? string.Empty;
         quotation.QuotationDate = DateTime.UtcNow;
         quotation.ValidUntil = validUntil ?? DateTime.UtcNow.AddDays(14);
         quotation.Type = type;
@@ -85,24 +97,11 @@ public class Quotation : TenantAggregateRoot
         return quotation;
     }
 
-    public void Update(
-        string title,
-        string? description,
-        QuotationType type,
-        QuotationPriority priority,
-        DateTime? validUntil,
-        string? notes,
-        string? internalNotes,
-        string? terms)
+    public void Update(string title, DateTime? validUntil, QuotationPriority priority)
     {
         Title = title;
-        Description = description;
-        Type = type;
-        Priority = priority;
         ValidUntil = validUntil;
-        Notes = notes;
-        InternalNotes = internalNotes;
-        Terms = terms;
+        Priority = priority;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -115,11 +114,39 @@ public class Quotation : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void LinkToPurchaseRequest(Guid purchaseRequestId, string? purchaseRequestNumber)
+    {
+        PurchaseRequestId = purchaseRequestId;
+        PurchaseRequestNumber = purchaseRequestNumber;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetPurchaseRequest(Guid purchaseRequestId, string purchaseRequestNumber)
     {
         PurchaseRequestId = purchaseRequestId;
         PurchaseRequestNumber = purchaseRequestNumber;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetWarehouse(Guid warehouseId, string? warehouseName)
+    {
+        WarehouseId = warehouseId;
+        WarehouseName = warehouseName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetNotes(string? notes, string? internalNotes, string? terms)
+    {
+        Notes = notes;
+        InternalNotes = internalNotes;
+        Terms = terms;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCreator(Guid createdById, string? createdByName)
+    {
+        CreatedById = createdById;
+        CreatedByName = createdByName;
     }
 
     public void AddItem(QuotationItem item)
@@ -171,7 +198,7 @@ public class Quotation : TenantAggregateRoot
         EstimatedAmount = _items.Sum(i => i.EstimatedUnitPrice * i.Quantity);
     }
 
-    public void SendToSuppliers()
+    public void Send()
     {
         if (Status != QuotationStatus.Draft)
             throw new InvalidOperationException("Only draft quotations can be sent.");
@@ -186,6 +213,39 @@ public class Quotation : TenantAggregateRoot
         foreach (var supplier in _suppliers)
         {
             supplier.MarkAsSent();
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SendToSuppliers()
+    {
+        Send();
+    }
+
+    public void ReceiveSupplierResponse(
+        Guid supplierId,
+        decimal totalAmount,
+        string? currency,
+        int? deliveryDays,
+        string? paymentTerms,
+        DateTime? validityDate,
+        string? supplierNotes,
+        List<QuotationSupplierItem> items)
+    {
+        var supplier = _suppliers.FirstOrDefault(s => s.SupplierId == supplierId);
+        if (supplier == null)
+            throw new InvalidOperationException("Supplier not found in this quotation.");
+
+        supplier.ReceiveResponse(totalAmount, currency ?? Currency, deliveryDays, paymentTerms, validityDate, supplierNotes, items);
+
+        if (_suppliers.All(s => s.ResponseStatus == QuotationResponseStatus.Received ||
+                                s.ResponseStatus == QuotationResponseStatus.Declined))
+        {
+            Status = QuotationStatus.QuotesReceived;
+        }
+        else
+        {
+            Status = QuotationStatus.PartiallyReceived;
         }
         UpdatedAt = DateTime.UtcNow;
     }
@@ -210,7 +270,7 @@ public class Quotation : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SelectSupplier(Guid supplierId, decimal selectedAmount)
+    public void SelectSupplier(Guid supplierId, string? selectionReason, Guid? selectionById, string? selectionByName)
     {
         var supplier = _suppliers.FirstOrDefault(s => s.SupplierId == supplierId);
         if (supplier == null)
@@ -225,25 +285,36 @@ public class Quotation : TenantAggregateRoot
             s.Deselect();
         }
 
-        supplier.Select();
+        supplier.Select(selectionReason);
         SelectedSupplierId = supplierId;
         SelectedSupplierName = supplier.SupplierName;
         SelectedQuoteResponseId = supplier.Id;
-        SelectedAmount = selectedAmount;
+        SelectedAmount = supplier.TotalAmount;
+        SelectionReason = selectionReason;
+        SelectionDate = DateTime.UtcNow;
+        SelectionById = selectionById;
+        SelectionByName = selectionByName;
         Status = QuotationStatus.SupplierSelected;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ConvertToPurchaseOrder(Guid purchaseOrderId, string purchaseOrderNumber)
+    public void ConvertToOrder(Guid purchaseOrderId, string purchaseOrderNumber)
     {
         if (Status != QuotationStatus.SupplierSelected)
             throw new InvalidOperationException("A supplier must be selected before converting to PO.");
 
+        ConvertedPurchaseOrderId = purchaseOrderId;
+        ConvertedOrderNumber = purchaseOrderNumber;
         PurchaseOrderId = purchaseOrderId;
         PurchaseOrderNumber = purchaseOrderNumber;
         Status = QuotationStatus.Converted;
         ClosedDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ConvertToPurchaseOrder(Guid purchaseOrderId, string purchaseOrderNumber)
+    {
+        ConvertToOrder(purchaseOrderId, purchaseOrderNumber);
     }
 
     public void Cancel(string reason)
@@ -293,22 +364,21 @@ public class QuotationItem : TenantEntity
     public DateTime? RequiredDate { get; private set; }
     public string? Notes { get; private set; }
     public int SortOrder { get; private set; }
+    public int LineNumber { get; private set; }
 
     protected QuotationItem() : base() { }
 
     public static QuotationItem Create(
         Guid quotationId,
         Guid tenantId,
+        Guid? productId,
         string productCode,
         string productName,
+        string unit,
         decimal quantity,
-        string unit = "Adet",
-        decimal estimatedUnitPrice = 0,
-        Guid? productId = null,
-        string? description = null,
         string? specifications = null,
-        DateTime? requiredDate = null,
-        int sortOrder = 0)
+        string? notes = null,
+        int lineNumber = 0)
     {
         var item = new QuotationItem();
         item.Id = Guid.NewGuid();
@@ -317,13 +387,12 @@ public class QuotationItem : TenantEntity
         item.ProductId = productId;
         item.ProductCode = productCode;
         item.ProductName = productName;
-        item.Description = description;
         item.Unit = unit;
         item.Quantity = quantity;
-        item.EstimatedUnitPrice = estimatedUnitPrice;
         item.Specifications = specifications;
-        item.RequiredDate = requiredDate;
-        item.SortOrder = sortOrder;
+        item.Notes = notes;
+        item.LineNumber = lineNumber;
+        item.SortOrder = lineNumber;
         return item;
     }
 
@@ -354,8 +423,10 @@ public class QuotationSupplier : TenantEntity
     public Guid SupplierId { get; private set; }
     public string SupplierCode { get; private set; } = string.Empty;
     public string SupplierName { get; private set; } = string.Empty;
-    public string? SupplierEmail { get; private set; }
     public string? ContactPerson { get; private set; }
+    public string? ContactEmail { get; private set; }
+    public string? ContactPhone { get; private set; }
+    public DateTime? ResponseDeadline { get; private set; }
 
     // Request tracking
     public DateTime? SentDate { get; private set; }
@@ -365,10 +436,20 @@ public class QuotationSupplier : TenantEntity
     // Response
     public QuotationResponseStatus ResponseStatus { get; private set; }
     public DateTime? ResponseDate { get; private set; }
+    public decimal? TotalAmount { get; private set; }
     public decimal? QuotedAmount { get; private set; }
+    public string? Currency { get; private set; }
+    public int? DeliveryDays { get; private set; }
+    public string? PaymentTerms { get; private set; }
+    public DateTime? ValidityDate { get; private set; }
     public DateTime? QuoteValidUntil { get; private set; }
+    public string? SupplierNotes { get; private set; }
     public string? ResponseNotes { get; private set; }
     public string? DeclineReason { get; private set; }
+
+    // Evaluation
+    public string? InternalEvaluation { get; private set; }
+    public decimal? EvaluationScore { get; private set; }
 
     // Selection
     public bool IsSelected { get; private set; }
@@ -376,29 +457,33 @@ public class QuotationSupplier : TenantEntity
     public string? SelectionReason { get; private set; }
 
     // Quote details (for detailed responses)
-    private readonly List<QuotationSupplierItem> _responseItems = new();
-    public IReadOnlyCollection<QuotationSupplierItem> ResponseItems => _responseItems.AsReadOnly();
+    private readonly List<QuotationSupplierItem> _items = new();
+    public IReadOnlyCollection<QuotationSupplierItem> Items => _items.AsReadOnly();
 
     protected QuotationSupplier() : base() { }
 
     public static QuotationSupplier Create(
         Guid quotationId,
-        Guid supplierId,
-        string supplierCode,
-        string supplierName,
         Guid tenantId,
-        string? supplierEmail = null,
-        string? contactPerson = null)
+        Guid supplierId,
+        string? supplierCode,
+        string supplierName,
+        string? contactPerson = null,
+        string? contactEmail = null,
+        string? contactPhone = null,
+        DateTime? responseDeadline = null)
     {
         var supplier = new QuotationSupplier();
         supplier.Id = Guid.NewGuid();
         supplier.SetTenantId(tenantId);
         supplier.QuotationId = quotationId;
         supplier.SupplierId = supplierId;
-        supplier.SupplierCode = supplierCode;
+        supplier.SupplierCode = supplierCode ?? string.Empty;
         supplier.SupplierName = supplierName;
-        supplier.SupplierEmail = supplierEmail;
         supplier.ContactPerson = contactPerson;
+        supplier.ContactEmail = contactEmail;
+        supplier.ContactPhone = contactPhone;
+        supplier.ResponseDeadline = responseDeadline;
         supplier.ResponseStatus = QuotationResponseStatus.Pending;
         supplier.ReminderCount = 0;
         return supplier;
@@ -416,11 +501,42 @@ public class QuotationSupplier : TenantEntity
         ReminderCount++;
     }
 
+    public void ReceiveResponse(
+        decimal totalAmount,
+        string currency,
+        int? deliveryDays,
+        string? paymentTerms,
+        DateTime? validityDate,
+        string? supplierNotes,
+        List<QuotationSupplierItem> items)
+    {
+        TotalAmount = totalAmount;
+        QuotedAmount = totalAmount;
+        Currency = currency;
+        DeliveryDays = deliveryDays;
+        PaymentTerms = paymentTerms;
+        ValidityDate = validityDate;
+        QuoteValidUntil = validityDate;
+        SupplierNotes = supplierNotes;
+        ResponseNotes = supplierNotes;
+        ResponseDate = DateTime.UtcNow;
+        ResponseStatus = QuotationResponseStatus.Received;
+
+        _items.Clear();
+        foreach (var item in items)
+        {
+            _items.Add(item);
+        }
+    }
+
     public void ReceiveQuote(decimal quotedAmount, DateTime? validUntil, string? notes = null)
     {
         QuotedAmount = quotedAmount;
+        TotalAmount = quotedAmount;
         QuoteValidUntil = validUntil;
+        ValidityDate = validUntil;
         ResponseNotes = notes;
+        SupplierNotes = notes;
         ResponseDate = DateTime.UtcNow;
         ResponseStatus = QuotationResponseStatus.Received;
     }
@@ -446,14 +562,20 @@ public class QuotationSupplier : TenantEntity
         SelectionReason = null;
     }
 
+    public void SetEvaluation(string? evaluation, decimal? score)
+    {
+        InternalEvaluation = evaluation;
+        EvaluationScore = score;
+    }
+
     public void AddResponseItem(QuotationSupplierItem item)
     {
-        _responseItems.Add(item);
+        _items.Add(item);
     }
 
     public void ClearResponseItems()
     {
-        _responseItems.Clear();
+        _items.Clear();
     }
 }
 
@@ -461,12 +583,18 @@ public class QuotationSupplierItem : TenantEntity
 {
     public Guid QuotationSupplierId { get; private set; }
     public Guid QuotationItemId { get; private set; }
-    public decimal UnitPrice { get; private set; }
+    public Guid? ProductId { get; private set; }
+    public string? ProductCode { get; private set; }
+    public string? ProductName { get; private set; }
+    public string? Unit { get; private set; }
     public decimal Quantity { get; private set; }
+    public decimal UnitPrice { get; private set; }
     public decimal? DiscountRate { get; private set; }
     public decimal? DiscountAmount { get; private set; }
     public decimal VatRate { get; private set; }
+    public decimal VatAmount { get; private set; }
     public decimal TotalAmount { get; private set; }
+    public string? Currency { get; private set; }
     public int? LeadTimeDays { get; private set; }
     public string? Notes { get; private set; }
     public bool IsAvailable { get; private set; }
@@ -477,24 +605,36 @@ public class QuotationSupplierItem : TenantEntity
         Guid quotationSupplierId,
         Guid quotationItemId,
         Guid tenantId,
-        decimal unitPrice,
+        Guid? productId,
+        string? productCode,
+        string? productName,
+        string? unit,
         decimal quantity,
-        decimal vatRate = 20,
-        decimal? discountRate = null,
+        decimal unitPrice,
+        decimal? discountRate,
+        decimal vatRate,
+        string? currency,
         int? leadTimeDays = null,
-        bool isAvailable = true)
+        bool isAvailable = true,
+        string? notes = null)
     {
         var item = new QuotationSupplierItem();
         item.Id = Guid.NewGuid();
         item.SetTenantId(tenantId);
         item.QuotationSupplierId = quotationSupplierId;
         item.QuotationItemId = quotationItemId;
-        item.UnitPrice = unitPrice;
+        item.ProductId = productId;
+        item.ProductCode = productCode;
+        item.ProductName = productName;
+        item.Unit = unit;
         item.Quantity = quantity;
-        item.VatRate = vatRate;
+        item.UnitPrice = unitPrice;
         item.DiscountRate = discountRate;
+        item.VatRate = vatRate;
+        item.Currency = currency;
         item.LeadTimeDays = leadTimeDays;
         item.IsAvailable = isAvailable;
+        item.Notes = notes;
         item.CalculateTotal();
         return item;
     }
@@ -504,8 +644,8 @@ public class QuotationSupplierItem : TenantEntity
         var subTotal = UnitPrice * Quantity;
         DiscountAmount = DiscountRate.HasValue ? subTotal * (DiscountRate.Value / 100) : 0;
         var afterDiscount = subTotal - (DiscountAmount ?? 0);
-        var vatAmount = afterDiscount * (VatRate / 100);
-        TotalAmount = afterDiscount + vatAmount;
+        VatAmount = afterDiscount * (VatRate / 100);
+        TotalAmount = afterDiscount + VatAmount;
     }
 }
 

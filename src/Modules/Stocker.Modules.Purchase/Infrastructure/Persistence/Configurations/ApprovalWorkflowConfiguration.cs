@@ -12,6 +12,10 @@ public class ApprovalWorkflowConfigConfiguration : IEntityTypeConfiguration<Appr
 
         builder.HasKey(w => w.Id);
 
+        builder.Property(w => w.Code)
+            .IsRequired()
+            .HasMaxLength(50);
+
         builder.Property(w => w.Name)
             .IsRequired()
             .HasMaxLength(200);
@@ -27,6 +31,12 @@ public class ApprovalWorkflowConfigConfiguration : IEntityTypeConfiguration<Appr
             .HasConversion<string>()
             .HasMaxLength(50);
 
+        builder.Property(w => w.DepartmentName)
+            .HasMaxLength(200);
+
+        builder.Property(w => w.CategoryName)
+            .HasMaxLength(200);
+
         builder.Property(w => w.MinAmount)
             .HasPrecision(18, 4);
 
@@ -36,26 +46,24 @@ public class ApprovalWorkflowConfigConfiguration : IEntityTypeConfiguration<Appr
         builder.Property(w => w.Currency)
             .HasMaxLength(10);
 
-        builder.Property(w => w.DepartmentName)
-            .HasMaxLength(200);
-
-        builder.Property(w => w.CategoryName)
-            .HasMaxLength(200);
+        builder.Property(w => w.Notes)
+            .HasMaxLength(2000);
 
         builder.Property(w => w.CreatedByName)
             .HasMaxLength(200);
 
         builder.HasMany(w => w.Rules)
             .WithOne()
-            .HasForeignKey(r => r.WorkflowId)
+            .HasForeignKey(r => r.WorkflowConfigId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(w => w.Steps)
             .WithOne()
-            .HasForeignKey(s => s.WorkflowId)
+            .HasForeignKey(s => s.WorkflowConfigId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(w => new { w.TenantId, w.Name }).IsUnique();
+        builder.HasIndex(w => new { w.TenantId, w.Code }).IsUnique();
+        builder.HasIndex(w => new { w.TenantId, w.Name });
         builder.HasIndex(w => new { w.TenantId, w.EntityType });
         builder.HasIndex(w => new { w.TenantId, w.IsActive });
         builder.HasIndex(w => new { w.TenantId, w.DepartmentId });
@@ -70,12 +78,15 @@ public class ApprovalWorkflowRuleConfiguration : IEntityTypeConfiguration<Approv
 
         builder.HasKey(r => r.Id);
 
+        builder.Property(r => r.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
         builder.Property(r => r.RuleType)
             .HasConversion<string>()
             .HasMaxLength(30);
 
         builder.Property(r => r.Field)
-            .IsRequired()
             .HasMaxLength(100);
 
         builder.Property(r => r.Operator)
@@ -83,10 +94,12 @@ public class ApprovalWorkflowRuleConfiguration : IEntityTypeConfiguration<Approv
             .HasMaxLength(30);
 
         builder.Property(r => r.Value)
-            .IsRequired()
             .HasMaxLength(500);
 
-        builder.HasIndex(r => new { r.TenantId, r.WorkflowId });
+        builder.Property(r => r.NumericValue)
+            .HasPrecision(18, 4);
+
+        builder.HasIndex(r => new { r.TenantId, r.WorkflowConfigId });
     }
 }
 
@@ -103,7 +116,10 @@ public class ApprovalWorkflowStepConfiguration : IEntityTypeConfiguration<Approv
             .HasMaxLength(200);
 
         builder.Property(s => s.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(1000);
+
+        builder.Property(s => s.Instructions)
+            .HasMaxLength(2000);
 
         builder.Property(s => s.StepType)
             .HasConversion<string>()
@@ -119,7 +135,10 @@ public class ApprovalWorkflowStepConfiguration : IEntityTypeConfiguration<Approv
             .HasMaxLength(200);
 
         builder.Property(s => s.ApproverRole)
-            .HasMaxLength(100);
+            .HasMaxLength(200);
+
+        builder.Property(s => s.ApproverRoleName)
+            .HasMaxLength(200);
 
         builder.Property(s => s.ApprovalGroupName)
             .HasMaxLength(200);
@@ -127,9 +146,12 @@ public class ApprovalWorkflowStepConfiguration : IEntityTypeConfiguration<Approv
         builder.Property(s => s.FallbackApproverName)
             .HasMaxLength(200);
 
-        builder.HasIndex(s => new { s.TenantId, s.WorkflowId });
+        builder.Property(s => s.EscalateToName)
+            .HasMaxLength(200);
+
+        builder.HasIndex(s => new { s.TenantId, s.WorkflowConfigId });
         builder.HasIndex(s => new { s.TenantId, s.ApproverId });
-        builder.HasIndex(s => new { s.TenantId, s.ApprovalGroupId });
+        builder.HasIndex(s => new { s.TenantId, s.ApproverGroupId });
     }
 }
 
@@ -140,6 +162,10 @@ public class ApprovalGroupConfiguration : IEntityTypeConfiguration<ApprovalGroup
         builder.ToTable("ApprovalGroups");
 
         builder.HasKey(g => g.Id);
+
+        builder.Property(g => g.Code)
+            .IsRequired()
+            .HasMaxLength(50);
 
         builder.Property(g => g.Name)
             .IsRequired()
@@ -157,7 +183,8 @@ public class ApprovalGroupConfiguration : IEntityTypeConfiguration<ApprovalGroup
             .HasForeignKey(m => m.GroupId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(g => new { g.TenantId, g.Name }).IsUnique();
+        builder.HasIndex(g => new { g.TenantId, g.Code }).IsUnique();
+        builder.HasIndex(g => new { g.TenantId, g.Name });
         builder.HasIndex(g => new { g.TenantId, g.IsActive });
     }
 }
@@ -179,6 +206,9 @@ public class ApprovalGroupMemberConfiguration : IEntityTypeConfiguration<Approva
 
         builder.Property(m => m.Role)
             .HasMaxLength(100);
+
+        builder.Property(m => m.DelegateToName)
+            .HasMaxLength(200);
 
         builder.HasIndex(m => new { m.TenantId, m.GroupId });
         builder.HasIndex(m => new { m.TenantId, m.UserId });

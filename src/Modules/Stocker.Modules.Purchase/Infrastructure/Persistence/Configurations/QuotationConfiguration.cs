@@ -19,6 +19,9 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
         builder.Property(q => q.Title)
             .HasMaxLength(500);
 
+        builder.Property(q => q.Description)
+            .HasMaxLength(2000);
+
         builder.Property(q => q.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
@@ -31,6 +34,12 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
             .HasConversion<string>()
             .HasMaxLength(30);
 
+        builder.Property(q => q.RequesterName)
+            .HasMaxLength(200);
+
+        builder.Property(q => q.DepartmentName)
+            .HasMaxLength(200);
+
         builder.Property(q => q.PurchaseRequestNumber)
             .HasMaxLength(50);
 
@@ -39,6 +48,12 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
 
         builder.Property(q => q.Currency)
             .HasMaxLength(10);
+
+        builder.Property(q => q.EstimatedAmount)
+            .HasPrecision(18, 4);
+
+        builder.Property(q => q.SelectedAmount)
+            .HasPrecision(18, 4);
 
         builder.Property(q => q.Notes)
             .HasMaxLength(2000);
@@ -57,6 +72,9 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
 
         builder.Property(q => q.SelectionByName)
             .HasMaxLength(200);
+
+        builder.Property(q => q.PurchaseOrderNumber)
+            .HasMaxLength(50);
 
         builder.Property(q => q.ConvertedOrderNumber)
             .HasMaxLength(50);
@@ -81,6 +99,7 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
         builder.HasIndex(q => new { q.TenantId, q.Status });
         builder.HasIndex(q => new { q.TenantId, q.QuotationDate });
         builder.HasIndex(q => new { q.TenantId, q.PurchaseRequestId });
+        builder.HasIndex(q => new { q.TenantId, q.WarehouseId });
     }
 }
 
@@ -100,10 +119,16 @@ public class QuotationItemConfiguration : IEntityTypeConfiguration<QuotationItem
             .IsRequired()
             .HasMaxLength(300);
 
+        builder.Property(i => i.Description)
+            .HasMaxLength(2000);
+
         builder.Property(i => i.Unit)
             .HasMaxLength(50);
 
         builder.Property(i => i.Quantity)
+            .HasPrecision(18, 4);
+
+        builder.Property(i => i.EstimatedUnitPrice)
             .HasPrecision(18, 4);
 
         builder.Property(i => i.Specifications)
@@ -148,17 +173,32 @@ public class QuotationSupplierConfiguration : IEntityTypeConfiguration<Quotation
         builder.Property(s => s.TotalAmount)
             .HasPrecision(18, 4);
 
+        builder.Property(s => s.QuotedAmount)
+            .HasPrecision(18, 4);
+
         builder.Property(s => s.Currency)
             .HasMaxLength(10);
 
+        builder.Property(s => s.PaymentTerms)
+            .HasMaxLength(500);
+
         builder.Property(s => s.SupplierNotes)
             .HasMaxLength(2000);
+
+        builder.Property(s => s.ResponseNotes)
+            .HasMaxLength(2000);
+
+        builder.Property(s => s.DeclineReason)
+            .HasMaxLength(1000);
 
         builder.Property(s => s.InternalEvaluation)
             .HasMaxLength(2000);
 
         builder.Property(s => s.EvaluationScore)
             .HasPrecision(5, 2);
+
+        builder.Property(s => s.SelectionReason)
+            .HasMaxLength(1000);
 
         builder.HasMany(s => s.Items)
             .WithOne()

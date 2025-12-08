@@ -13,10 +13,10 @@ public class PriceList : TenantAggregateRoot
     public PriceListStatus Status { get; private set; }
     public PriceListType Type { get; private set; }
 
-    // Supplier
-    public Guid SupplierId { get; private set; }
-    public string SupplierCode { get; private set; } = string.Empty;
-    public string SupplierName { get; private set; } = string.Empty;
+    // Supplier (nullable for general price lists)
+    public Guid? SupplierId { get; private set; }
+    public string? SupplierCode { get; private set; }
+    public string? SupplierName { get; private set; }
 
     // Validity
     public DateTime EffectiveFrom { get; private set; }
@@ -55,6 +55,7 @@ public class PriceList : TenantAggregateRoot
 
     protected PriceList() : base() { }
 
+    // Original Create (for backward compatibility)
     public static PriceList Create(
         string code,
         string name,
@@ -87,7 +88,47 @@ public class PriceList : TenantAggregateRoot
         return priceList;
     }
 
-    public void Update(
+    // New Create for controller compatibility (nullable supplier)
+    public static PriceList Create(
+        string code,
+        string name,
+        DateTime effectiveFrom,
+        Guid tenantId,
+        PriceListType type = PriceListType.Standard,
+        string currency = "TRY",
+        DateTime? effectiveTo = null,
+        Guid? supplierId = null,
+        string? supplierCode = null,
+        string? supplierName = null)
+    {
+        var priceList = new PriceList();
+        priceList.Id = Guid.NewGuid();
+        priceList.SetTenantId(tenantId);
+        priceList.Code = code;
+        priceList.Name = name;
+        priceList.SupplierId = supplierId;
+        priceList.SupplierCode = supplierCode;
+        priceList.SupplierName = supplierName;
+        priceList.EffectiveFrom = effectiveFrom;
+        priceList.EffectiveTo = effectiveTo;
+        priceList.Type = type;
+        priceList.Status = PriceListStatus.Draft;
+        priceList.Currency = currency;
+        priceList.ExchangeRate = 1;
+        priceList.DefaultVatRate = 20;
+        priceList.Version = 1;
+        priceList.CreatedAt = DateTime.UtcNow;
+        return priceList;
+    }
+
+    public void Update(string name, DateTime? effectiveTo)
+    {
+        Name = name;
+        EffectiveTo = effectiveTo;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateFull(
         string name,
         string? description,
         PriceListType type,
@@ -112,6 +153,19 @@ public class PriceList : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetDescription(string? description)
+    {
+        Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetNotes(string? notes, string? internalNotes)
+    {
+        Notes = notes;
+        InternalNotes = internalNotes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetCurrency(string currency, decimal exchangeRate)
     {
         Currency = currency;
@@ -119,7 +173,7 @@ public class PriceList : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SetCreator(Guid createdById, string createdByName)
+    public void SetCreator(Guid createdById, string? createdByName)
     {
         CreatedById = createdById;
         CreatedByName = createdByName;
@@ -175,8 +229,8 @@ public class PriceList : TenantAggregateRoot
 
     public void Approve(Guid approvedById, string approvedByName)
     {
-        if (Status != PriceListStatus.PendingApproval)
-            throw new InvalidOperationException("Only pending price lists can be approved.");
+        if (Status != PriceListStatus.PendingApproval && Status != PriceListStatus.Draft)
+            throw new InvalidOperationException("Only pending or draft price lists can be approved.");
 
         Status = PriceListStatus.Approved;
         ApprovedById = approvedById;
@@ -197,8 +251,8 @@ public class PriceList : TenantAggregateRoot
 
     public void Activate()
     {
-        if (Status != PriceListStatus.Approved && Status != PriceListStatus.Inactive)
-            throw new InvalidOperationException("Only approved or inactive price lists can be activated.");
+        if (Status != PriceListStatus.Approved && Status != PriceListStatus.Inactive && Status != PriceListStatus.Draft)
+            throw new InvalidOperationException("Only approved, draft, or inactive price lists can be activated.");
 
         Status = PriceListStatus.Active;
         UpdatedAt = DateTime.UtcNow;
@@ -215,9 +269,6 @@ public class PriceList : TenantAggregateRoot
 
     public void SetAsDefault()
     {
-        if (Status != PriceListStatus.Active)
-            throw new InvalidOperationException("Only active price lists can be set as default.");
-
         IsDefault = true;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -238,19 +289,19 @@ public class PriceList : TenantAggregateRoot
         }
     }
 
-    public PriceList CreateNewVersion(string changeNotes)
+    public PriceList CreateNewVersion(Guid tenantId, string? changeNotes = null)
     {
         var newVersion = PriceList.Create(
             Code,
             Name,
-            SupplierId,
-            SupplierCode,
-            SupplierName,
             DateTime.UtcNow,
-            TenantId,
+            tenantId,
             Type,
             Currency,
-            EffectiveTo);
+            EffectiveTo,
+            SupplierId,
+            SupplierCode,
+            SupplierName);
 
         newVersion.Description = Description;
         newVersion.GlobalDiscountRate = GlobalDiscountRate;
@@ -267,7 +318,7 @@ public class PriceList : TenantAggregateRoot
         {
             var newItem = PriceListItem.Create(
                 newVersion.Id,
-                TenantId,
+                tenantId,
                 item.ProductCode,
                 item.ProductName,
                 item.UnitPrice,
@@ -284,11 +335,11 @@ public class PriceList : TenantAggregateRoot
         return newVersion;
     }
 
-    public decimal GetPrice(Guid productId, decimal quantity = 1)
+    public decimal? GetPrice(Guid productId, decimal quantity = 1)
     {
         var item = _items.FirstOrDefault(i => i.ProductId == productId && i.IsActive);
         if (item == null)
-            return 0;
+            return null;
 
         var basePrice = item.UnitPrice;
 
@@ -336,6 +387,15 @@ public class PriceListItem : TenantEntity
     public bool IsActive { get; private set; }
     public string? Notes { get; private set; }
 
+    // Additional pricing properties
+    public decimal BasePrice { get; private set; }
+    public decimal DiscountedPrice => DiscountRate.HasValue ? BasePrice * (1 - DiscountRate.Value / 100) : BasePrice;
+    public string Currency { get; private set; } = "TRY";
+    public int? MinQuantity { get; private set; }
+    public int? MaxQuantity { get; private set; }
+    public DateTime? EffectiveFrom { get; private set; }
+    public DateTime? EffectiveTo { get; private set; }
+
     private readonly List<PriceListItemTier> _tiers = new();
     public IReadOnlyCollection<PriceListItemTier> Tiers => _tiers.AsReadOnly();
 
@@ -365,12 +425,85 @@ public class PriceListItem : TenantEntity
         item.Description = description;
         item.Unit = unit;
         item.UnitPrice = unitPrice;
+        item.BasePrice = unitPrice;
         item.VatRate = vatRate;
         item.DiscountRate = discountRate;
         item.MinOrderQuantity = minOrderQuantity;
         item.LeadTimeDays = leadTimeDays;
         item.IsActive = true;
         return item;
+    }
+
+    // New Create overload for controller compatibility
+    public static PriceListItem Create(
+        Guid priceListId,
+        Guid tenantId,
+        Guid? productId,
+        string productCode,
+        string productName,
+        string unit,
+        decimal basePrice,
+        decimal? discountRate,
+        string currency,
+        int? minQuantity,
+        int? maxQuantity,
+        DateTime? effectiveFrom,
+        DateTime? effectiveTo,
+        string? notes)
+    {
+        var item = new PriceListItem();
+        item.Id = Guid.NewGuid();
+        item.SetTenantId(tenantId);
+        item.PriceListId = priceListId;
+        item.ProductId = productId;
+        item.ProductCode = productCode;
+        item.ProductName = productName;
+        item.Unit = unit;
+        item.UnitPrice = basePrice;
+        item.BasePrice = basePrice;
+        item.DiscountRate = discountRate;
+        item.Currency = currency;
+        item.MinQuantity = minQuantity;
+        item.MaxQuantity = maxQuantity;
+        item.EffectiveFrom = effectiveFrom;
+        item.EffectiveTo = effectiveTo;
+        item.Notes = notes;
+        item.IsActive = true;
+        return item;
+    }
+
+    // Create overload with decimal? quantity parameters for DTO compatibility
+    public static PriceListItem Create(
+        Guid priceListId,
+        Guid tenantId,
+        Guid? productId,
+        string productCode,
+        string productName,
+        string unit,
+        decimal basePrice,
+        decimal? discountRate,
+        string currency,
+        decimal? minQuantity,
+        decimal? maxQuantity,
+        DateTime? effectiveFrom,
+        DateTime? effectiveTo,
+        string? notes)
+    {
+        return Create(
+            priceListId,
+            tenantId,
+            productId,
+            productCode,
+            productName,
+            unit,
+            basePrice,
+            discountRate,
+            currency,
+            minQuantity.HasValue ? (int?)Convert.ToInt32(minQuantity.Value) : null,
+            maxQuantity.HasValue ? (int?)Convert.ToInt32(maxQuantity.Value) : null,
+            effectiveFrom,
+            effectiveTo,
+            notes);
     }
 
     public void UpdatePrice(decimal unitPrice, decimal? discountRate = null, int? minQuantity = null, int? leadTimeDays = null)
@@ -422,6 +555,7 @@ public class PriceListItemTier : TenantEntity
     public decimal? MaxQuantity { get; private set; }
     public decimal UnitPrice { get; private set; }
     public decimal? DiscountRate { get; private set; }
+    public int TierLevel { get; private set; }
 
     protected PriceListItemTier() : base() { }
 
@@ -441,6 +575,28 @@ public class PriceListItemTier : TenantEntity
         tier.MaxQuantity = maxQuantity;
         tier.UnitPrice = unitPrice;
         tier.DiscountRate = discountRate;
+        return tier;
+    }
+
+    // New Create overload for controller compatibility
+    public static PriceListItemTier Create(
+        Guid priceListItemId,
+        Guid tenantId,
+        decimal minQuantity,
+        decimal? maxQuantity,
+        decimal unitPrice,
+        decimal? discountRate,
+        int tierLevel)
+    {
+        var tier = new PriceListItemTier();
+        tier.Id = Guid.NewGuid();
+        tier.SetTenantId(tenantId);
+        tier.PriceListItemId = priceListItemId;
+        tier.MinQuantity = minQuantity;
+        tier.MaxQuantity = maxQuantity;
+        tier.UnitPrice = unitPrice;
+        tier.DiscountRate = discountRate;
+        tier.TierLevel = tierLevel;
         return tier;
     }
 }
@@ -463,5 +619,6 @@ public enum PriceListType
     Promotional,
     Contract,
     Seasonal,
-    Volume
+    Volume,
+    Supplier
 }

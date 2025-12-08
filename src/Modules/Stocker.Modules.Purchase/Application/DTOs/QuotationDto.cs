@@ -85,10 +85,10 @@ public record QuotationSupplierItemDto
     public string? Unit { get; init; }
     public decimal Quantity { get; init; }
     public decimal UnitPrice { get; init; }
-    public decimal DiscountRate { get; init; }
-    public decimal DiscountAmount { get; init; }
+    public decimal? DiscountRate { get; init; }
+    public decimal? DiscountAmount { get; init; }
     public decimal VatRate { get; init; }
-    public decimal VatAmount { get; init; }
+    public decimal? VatAmount { get; init; }
     public decimal TotalAmount { get; init; }
     public string? Currency { get; init; }
     public int? LeadTimeDays { get; init; }

@@ -441,7 +441,7 @@ public class ApprovalWorkflowsController : ControllerBase
                 ApproverId = s.ApproverId,
                 ApproverName = s.ApproverName,
                 ApproverRole = s.ApproverRole,
-                ApprovalGroupId = s.ApprovalGroupId,
+                ApprovalGroupId = s.ApproverGroupId,
                 ApprovalGroupName = s.ApprovalGroupName,
                 RequiredApprovals = s.RequiredApprovals,
                 AllowDelegation = s.AllowDelegation,

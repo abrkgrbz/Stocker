@@ -1,3 +1,5 @@
+using Stocker.SharedKernel.Interfaces;
+
 namespace Stocker.Application.Common.Interfaces;
 
 public interface ICurrentUserService
@@ -10,4 +12,9 @@ public interface ICurrentUserService
     bool IsMasterAdmin { get; }
     string[]? Roles { get; }
     Dictionary<string, string>? Claims { get; }
+
+    /// <summary>
+    /// Gets the current user information
+    /// </summary>
+    CurrentUserInfo? GetCurrentUser();
 }

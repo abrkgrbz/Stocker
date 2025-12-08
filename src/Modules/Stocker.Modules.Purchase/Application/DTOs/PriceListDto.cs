@@ -40,7 +40,7 @@ public record PriceListItemDto
     public string ProductName { get; init; } = string.Empty;
     public string Unit { get; init; } = "Adet";
     public decimal BasePrice { get; init; }
-    public decimal DiscountRate { get; init; }
+    public decimal? DiscountRate { get; init; }
     public decimal DiscountedPrice { get; init; }
     public string Currency { get; init; } = "TRY";
     public decimal? MinQuantity { get; init; }
@@ -59,7 +59,7 @@ public record PriceListItemTierDto
     public decimal MinQuantity { get; init; }
     public decimal? MaxQuantity { get; init; }
     public decimal UnitPrice { get; init; }
-    public decimal DiscountRate { get; init; }
+    public decimal? DiscountRate { get; init; }
     public int TierLevel { get; init; }
 }
 

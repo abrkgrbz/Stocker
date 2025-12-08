@@ -57,8 +57,8 @@ public record PurchaseContractItemDto
     public decimal? MaxOrderQuantity { get; init; }
     public decimal UnitPrice { get; init; }
     public string Currency { get; init; } = "TRY";
-    public decimal DiscountRate { get; init; }
-    public decimal VatRate { get; init; }
+    public decimal? DiscountRate { get; init; }
+    public decimal? VatRate { get; init; }
     public DateTime? EffectiveFrom { get; init; }
     public DateTime? EffectiveTo { get; init; }
     public int? LeadTimeDays { get; init; }
@@ -71,11 +71,11 @@ public record PurchaseContractItemDto
 public record PurchaseContractPriceBreakDto
 {
     public Guid Id { get; init; }
-    public Guid ContractItemId { get; init; }
+    public Guid? ContractItemId { get; init; }
     public decimal MinQuantity { get; init; }
     public decimal? MaxQuantity { get; init; }
     public decimal UnitPrice { get; init; }
-    public decimal DiscountRate { get; init; }
+    public decimal? DiscountRate { get; init; }
 }
 
 public record PurchaseContractListDto
@@ -134,6 +134,7 @@ public record CreatePurchaseContractItemDto
     public decimal? MinOrderQuantity { get; init; }
     public decimal? MaxOrderQuantity { get; init; }
     public decimal UnitPrice { get; init; }
+    public string? Currency { get; init; }
     public decimal DiscountRate { get; init; }
     public decimal VatRate { get; init; } = 20;
     public DateTime? EffectiveFrom { get; init; }
