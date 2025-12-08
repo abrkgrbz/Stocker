@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Statistic, Typography, Button, Space, List, Tag, Tooltip, Progress } from 'antd';
 import {
@@ -26,9 +26,27 @@ import {
   useSupplierPaymentSummary,
   usePurchaseReturnSummary,
 } from '@/lib/api/hooks/usePurchase';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  BarChart,
+  Bar,
+} from 'recharts';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
+
+// Chart color palette
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function PurchaseDashboardPage() {
   const router = useRouter();
@@ -47,6 +65,53 @@ export default function PurchaseDashboardPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  // Order status pie chart data
+  const orderStatusData = useMemo(() => {
+    if (!orderSummary) return [];
+    return [
+      { name: 'Taslak', value: orderSummary.draftOrders || 0, color: '#94a3b8' },
+      { name: 'Onay Bekliyor', value: orderSummary.pendingOrders || 0, color: '#f59e0b' },
+      { name: 'Onaylandı', value: orderSummary.confirmedOrders || 0, color: '#3b82f6' },
+      { name: 'Tamamlandı', value: orderSummary.completedOrders || 0, color: '#10b981' },
+    ].filter(item => item.value > 0);
+  }, [orderSummary]);
+
+  // Invoice status pie chart data
+  const invoiceStatusData = useMemo(() => {
+    if (!invoiceSummary) return [];
+    return [
+      { name: 'Taslak', value: invoiceSummary.draftInvoices || 0, color: '#94a3b8' },
+      { name: 'Bekleyen', value: invoiceSummary.pendingInvoices || 0, color: '#f59e0b' },
+      { name: 'Onaylı', value: invoiceSummary.approvedInvoices || 0, color: '#3b82f6' },
+      { name: 'Ödenmiş', value: invoiceSummary.paidInvoices || 0, color: '#10b981' },
+      { name: 'Vadesi Geçmiş', value: invoiceSummary.overdueInvoices || 0, color: '#ef4444' },
+    ].filter(item => item.value > 0);
+  }, [invoiceSummary]);
+
+  // Monthly trend data (mock data - replace with actual API data when available)
+  const monthlyTrendData = useMemo(() => {
+    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    const currentMonth = dayjs().month();
+    return months.slice(0, currentMonth + 1).map((month, index) => ({
+      name: month,
+      siparisler: Math.floor(Math.random() * 50) + 10,
+      faturalar: Math.floor(Math.random() * 40) + 5,
+    }));
+  }, []);
+
+  // Custom tooltip for pie chart
+  const renderCustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 shadow-lg rounded-lg border">
+          <p className="font-medium">{payload[0].name}</p>
+          <p className="text-gray-600">{payload[0].value} adet</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   const quickActions = [
@@ -322,6 +387,197 @@ export default function PurchaseDashboardPage() {
                 </div>
               </div>
             </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Charts Section */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} lg={16}>
+          <Card title="Aylık Trend" className="h-full">
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <AreaChart data={monthlyTrendData}>
+                  <defs>
+                    <linearGradient id="colorSiparisler" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorFaturalar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="siparisler"
+                    name="Siparişler"
+                    stroke="#3b82f6"
+                    fillOpacity={1}
+                    fill="url(#colorSiparisler)"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="faturalar"
+                    name="Faturalar"
+                    stroke="#10b981"
+                    fillOpacity={1}
+                    fill="url(#colorFaturalar)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card title="Sipariş Durumu Dağılımı" className="h-full">
+            <div style={{ width: '100%', height: 300 }}>
+              {orderStatusData.length > 0 ? (
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={orderStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {orderStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip content={renderCustomTooltip} />
+                    <Legend
+                      formatter={(value: string) => <span className="text-sm">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  Sipariş verisi bulunamadı
+                </div>
+              )}
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Invoice Status Chart */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} lg={12}>
+          <Card title="Fatura Durumu Dağılımı">
+            <div style={{ width: '100%', height: 280 }}>
+              {invoiceStatusData.length > 0 ? (
+                <ResponsiveContainer>
+                  <BarChart data={invoiceStatusData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      tick={{ fontSize: 12 }}
+                      width={100}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                      formatter={(value: number) => [`${value} adet`, 'Miktar']}
+                    />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      {invoiceStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  Fatura verisi bulunamadı
+                </div>
+              )}
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <Card title="Tedarikçi Özeti">
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {supplierSummary?.activeSuppliers || 0}
+                  </div>
+                  <div className="text-gray-600 mt-1">Aktif Tedarikçi</div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-bold text-gray-600">
+                    {supplierSummary?.inactiveSuppliers || 0}
+                  </div>
+                  <div className="text-gray-600 mt-1">Pasif Tedarikçi</div>
+                </div>
+              </Col>
+              <Col span={24}>
+                <div className="mt-2">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-500">Aktif Oran</span>
+                    <span className="font-medium">
+                      {supplierSummary?.totalSuppliers
+                        ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
+                        : 0}%
+                    </span>
+                  </div>
+                  <Progress
+                    percent={
+                      supplierSummary?.totalSuppliers
+                        ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
+                        : 0
+                    }
+                    strokeColor={{
+                      '0%': '#8b5cf6',
+                      '100%': '#a855f7',
+                    }}
+                    showInfo={false}
+                  />
+                </div>
+              </Col>
+              <Col span={24}>
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-gray-500">Toplam Bakiye</span>
+                    <span className="font-semibold text-lg">
+                      {formatCurrency(supplierSummary?.totalBalance || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Tipe Göre</span>
+                    <Tag color="purple">{Object.keys(supplierSummary?.suppliersByType || {}).length} kategori</Tag>
+                  </div>
+                </div>
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>
