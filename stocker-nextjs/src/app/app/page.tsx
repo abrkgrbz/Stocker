@@ -22,6 +22,7 @@ import {
   ShoppingCartOutlined,
   InboxOutlined,
   IdcardOutlined,
+  ReconciliationOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -83,6 +84,16 @@ const MODULE_CONFIGS = [
     path: '/hr',
     description: 'İnsan kaynakları',
     moduleCode: 'hr',
+  },
+  {
+    id: 'purchase',
+    title: 'Satın Alma',
+    icon: <ReconciliationOutlined />,
+    color: '#8b5cf6',
+    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
+    path: '/purchase',
+    description: 'Tedarik ve satın alma',
+    moduleCode: 'purchase',
   },
   {
     id: 'dashboards',
